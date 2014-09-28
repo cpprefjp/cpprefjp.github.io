@@ -1,0 +1,138 @@
+<h1>コンストラクタ (C++11)</h1>
+<p><pre class="codehilite"><code class="language-cpp"><a href="http://cpprefjp.github.io/reference/initializer_list.html">initializer_list</a>&lt;double&gt; wl);
+
+template&lt;class UnaryOperation&gt;
+discrete_distribution(size_t nw, double xmin, double xmax, UnaryOperation fw);
+
+explicit discrete_distribution(const param_type&amp; parm);<span style="color: #000">discrete_distribution();
+
+template&lt;class InputIterator&gt;
+discrete_distribution(InputIterator firstW, InputIterator lastW);
+
+discrete_distribution(</span></code></pre>
+</p>
+<h2>discrete_distributionオブジェクトの構築</h2>
+<ul>
+<li><code><span style="color: #000">discrete_distribution();</span></code></li>
+</ul>
+<p>デフォルトコンストラクタ。確率列の要素数を1、0番目の確率を1で初期化する。<br />
+このコンストラクタで構築された場合、乱数生成は常に0を返す。</p>
+<ul>
+<li><code><span style="color: #000">template&lt;class InputIterator&gt;</span></code><br /><code><span style="color: #000">discrete_distribution(InputIterator firstW, InputIterator lastW);</span></code></li>
+</ul>
+<p>確率列の範囲を受け取るコンストラクタ。受け取った範囲を、乱数生成のパラメータとして保持する。<br />
+<code><span style="color: #000">firstW == lastW</span></code>の場合(要素数0の場合)、確率列の要素数1、0番目の確率を1で初期化し、乱数生成が常に0を返すようになる。  </p>
+<p>要件： <code><span style="color: #000">InputIterator</span></code>の要素型が、double型に変換可能であること。 </p>
+<ul>
+<li><code><span style="color: #000">discrete_distribution(initializer_list&lt;double&gt; wl);</span></code></li>
+</ul>
+<p>確率列の初期化子リストを受け取るコンストラクタ。受け取ったリストの範囲を、乱数生成のパラメータとして保持する。<br />
+<code><span style="color: #000">discrete_distribution(wl.begin(), wl.end())</span></code> と同じ効果を持つ。 </p>
+<ul>
+<li><code><span style="color: #000">template&lt;class UnaryOperation&gt;</span></code><br /><code><span style="color: #000">discrete_distribution(size_t nw, double xmin, double xmax, UnaryOperation fw);</span></code></li>
+</ul>
+<p>確率値の範囲を受け取るコンストラクタ。<br />
+<code><span style="color: #000">nw</span></code>は確率列の要素数、<code><span style="color: #000">xmin</span></code>は最小確率、<code><span style="color: #000">xmax</span></code>は最大確率、<code><span style="color: #000">fw</span></code>は確率列それぞれのインデックスに対する確率値を求めるための単項関数オブジェクトである。<code><span style="color: #000">UnaryOperation</span></code>関数オブジェクトは、<code><span style="color: #000">double</span></code>型に変換可能な確率値を受け取り、新たな確率値を返す。</p>
+<p>以下の公式で確率列を構築する。δの値を<code><span style="color: #000">0 &lt; δ = (xmax−xmin)/n</span></code>として、<code><span style="color: #000">k番目の確率 = fw(xmin + k・δ + δ/2)</span></code>。<br />
+<code><span style="color: #000">nw</span></code>が0だった場合、確率列の要素数を1、0番目の確率を1で初期化する。</p>
+<p>計算量：<code><span style="color: #000">fw</span></code>関数オブジェクトの呼び出しが、要素数nを超えないものとする。 </p>
+<ul>
+<li><code><span style="color: #000">explicit discrete_distribution(const param_type&amp; parm);</span></code></li>
+</ul>
+<p>パラメータオブジェクトを受け取るコンストラクタ。<code><span style="color: #000">param_type</span></code>は、このクラスのコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、<code><span style="color: #000">param</span></code>オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。 </p>
+<h2>例</h2>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">#include &lt;iostream&gt;
+#include &lt;random&gt;
+#include &lt;vector&gt;
+
+int main()
+{
+  std::random_device seed_gen;
+  std::mt19937 engine(seed_gen());
+
+  // discrete_distribution();
+  {
+    std::discrete_distribution&lt;&gt; dist;
+
+    int result = dist(engine);
+    std::cout &lt;&lt; "default constructor : " &lt;&lt; result &lt;&lt; std::endl;
+  }
+
+  // template&lt;class InputIterator&gt;
+  // discrete_distribution(InputIterator firstW, InputIterator lastW);
+  {
+    std::vector&lt;double&gt; probabilities = {0.1, 0.2, 0.3};
+    std::discrete_distribution&lt;&gt; dist(
+      probabilities.begin(),
+      probabilities.end()
+    );
+
+    int result = dist(engine);
+    std::cout &lt;&lt; "iterator range constructor : " &lt;&lt; result &lt;&lt; std::endl;
+  }
+
+  // discrete_distribution(initializer_list&lt;double&gt; wl);
+  {
+    std::discrete_distribution&lt;&gt; dist = {0.1, 0.2, 0.3};
+
+    int result = dist(engine);
+    std::cout &lt;&lt; "initializer list constructor : " &lt;&lt; result &lt;&lt; std::endl;
+  }
+
+  // template&lt;class UnaryOperation&gt;
+  // discrete_distribution(size_t nw, double xmin, double xmax, UnaryOperation fw);
+  {
+    std::discrete_distribution&lt;&gt; dist(10, 0.1, 1.0, [](double prob) {
+      std::cout &lt;&lt; "  probability : " &lt;&lt; prob &lt;&lt; std::endl;
+      return prob;
+    });
+
+    int result = dist(engine);
+    std::cout &lt;&lt; "min-max constructor : " &lt;&lt; result &lt;&lt; std::endl;
+  }
+
+  // explicit discrete_distribution(const param_type&amp; parm);
+  {
+    typedef std::discrete_distribution&lt;&gt; dist_type;
+
+    // 初期化子リストで確率列を作成
+    dist_type::param_type param = {0.1, 0.2, 0.3};
+    dist_type dist(param);
+
+    int result = dist(engine);
+    std::cout &lt;&lt; "parameter constructor : " &lt;&lt; result &lt;&lt; std::endl;
+  }
+}</span></code></pre>
+</p>
+<h3>出力例</h3>
+<p><pre><code><span style="color: #000">default constructor : 0
+iterator range constructor : 1
+initializer list constructor : 2
+  probability : 0.145
+  probability : 0.235
+  probability : 0.325
+  probability : 0.415
+  probability : 0.505
+  probability : 0.595
+  probability : 0.685
+  probability : 0.775
+  probability : 0.865
+  probability : 0.955
+min-max constructor : 3
+parameter constructor : 2
+</span></code></pre></p>
+<h2>バージョン</h2>
+<h3>言語</h3>
+<ul>
+<li>C++11</li>
+</ul>
+<h3>処理系</h3>
+<ul>
+<li><a href="http://cpprefjp.github.io/implementation.html#clang">Clang</a>: ??</li>
+<li><a href="http://cpprefjp.github.io/implementation.html#gcc">GCC</a>: </li>
+<li><a href="http://cpprefjp.github.io/implementation.html#gcc">GCC, C++0x mode</a>: 4.7.2</li>
+<li><a href="http://cpprefjp.github.io/implementation.html#icc">ICC</a>: ??</li>
+<li><a href="http://cpprefjp.github.io/implementation.html#visual_cpp">Visual C++</a> ??</li>
+</ul>
+<h2>参照</h2>
+<footer><a href="https://github.com/cpprefjp/site/edit/master/reference/random/discrete_distribution/discrete_distribution.md" target="_blank">編集</a></footer>

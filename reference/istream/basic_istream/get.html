@@ -1,0 +1,96 @@
+<h1>get</h1>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">// 1文字
+int_type get();
+basic_istream&lt;CharT, Traits&gt;&amp; get(char_type c);
+
+// 文字列
+basic_istream&lt;CharT, Traits&gt;&amp; get(char_type* s, streamsize n);
+basic_istream&lt;CharT, Traits&gt;&amp; get(char_type* s, streamsize n, char_type delim);
+basic_istream&lt;CharT, Traits&gt;&amp; get(basic_streambuf&lt;char_type, Traits&gt;* sb);
+basic_istream&lt;CharT, Traits&gt;&amp; get(basic_streambuf&lt;char_type, Traits&gt;* sb, char_type delim);</span></code></pre>
+</p>
+<h2>概要</h2>
+<p>（非書式化入力関数）ストリームから文字または文字列を入力する。</p>
+<ul>
+<li>上2つの多重定義は1文字のみの入力を行う。</li>
+<li>残りの多重定義は<code><span style="color: #000">delim</span></code>または改行までの文字を入力する。入力した文字の受け取り先に応じてさらに多重定義されている。<ul>
+<li>配列要素へのポインタ<code><span style="color: #000">s</span></code>（要素数<code><span style="color: #000">n</span></code>）へ書き込むもの。</li>
+<li>ストリームバッファ<code><span style="color: #000">sb</span></code>へ書き込むもの。</li>
+</ul>
+</li>
+</ul>
+<h2>効果</h2>
+<h3>1文字</h3>
+<ol>
+<li><code><span style="color: #000">sentry</span></code>オブジェクトを構築する。<code><span style="color: #000">sentry</span></code>オブジェクトが失敗を示した場合、何もしない。</li>
+<li>ストリームバッファから1文字入力を行う。</li>
+<li>入力が行えなかった場合、<code><span style="color: #000">setstate(failbit)</span></code>を呼び出す。</li>
+<li>（引数<code><span style="color: #000">c</span></code>を受け取るもののみ）入力した文字を<code><span style="color: #000">c</span></code>に代入する。</li>
+</ol>
+<h3>文字列</h3>
+<p>仮引数<code><span style="color: #000">delim</span></code>を持たない2つの多重定義は、それぞれ以下を実行する。</p>
+<ul>
+<li><code><span style="color: #000">get(s, n, widen('\n'))</span></code></li>
+<li><code><span style="color: #000">get(sb, n, widen('\n'))</span></code></li>
+</ul>
+<p>仮引数<code><span style="color: #000">delim</span></code>を持つ残りの2つは以下の処理を実行する。</p>
+<ol>
+<li><code><span style="color: #000">sentry</span></code>オブジェクトを構築する。<code><span style="color: #000">sentry</span></code>オブジェクトが失敗を示した場合、何もしない。</li>
+<li>以下のいずれかを満たすまで、文字を入力して書き込む。<ul>
+<li>配列要素へのポインタ<code><span style="color: #000">s</span></code>を引数に取るもの<ul>
+<li>引数<code><span style="color: #000">n</span></code>文字より1文字少ない文字数まで入力した。</li>
+<li>EOFに達した。この場合、<code><span style="color: #000">setstate(eofbit)</span></code>を呼び出す。</li>
+<li>次に入力する文字を<code><span style="color: #000">c</span></code>として、<code><span style="color: #000">Traits::eq_int_type(Traits::to_int_type(c), delim)</span></code>が真となった。</li>
+</ul>
+</li>
+<li>ストリームバッファへのポインタ<code><span style="color: #000">sb</span></code>を引数に取るもの<ul>
+<li>EOFに達した。この場合、<code><span style="color: #000">setstate(eofbit)</span></code>を呼び出す。</li>
+<li><code><span style="color: #000">sb</span></code>への出力処理に失敗した。</li>
+<li>次に入力する文字を<code><span style="color: #000">c</span></code>として、<code><span style="color: #000">Traits::eq_int_type(Traits::to_int_type(c), delim)</span></code>が真となった。</li>
+<li>例外が送出された（例外は捕捉され、再送出されることはない）。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<p><code><span style="color: #000">str</span></code>に1文字も入力が行われなかった場合、<code><span style="color: #000">is.setstate(ios_base::failbit)</span></code>が呼び出される。</p>
+<p>配列要素へのポインタ<code><span style="color: #000">s</span></code>を引数に取るものについては、入力の如何に関わらず末尾にヌル文字を書き込む処理が行われる。</p>
+<h2>戻り値</h2>
+<ul>
+<li><code><span style="color: #000">int_type</span></code>を返すものについては入力した文字。入力が行われなければ<code><span style="color: #000">Traits::eof()</span></code>。</li>
+<li><code><span style="color: #000">basic_istream&lt;CharT, Traits&gt;&amp;</span></code>を返すものについては<code><span style="color: #000">*this</span></code>。</li>
+</ul>
+<h2>例（文字）</h2>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">#include &lt;iostream&gt;
+#include &lt;locale&gt;
+#include &lt;string&gt;
+
+int main() {
+  int x = std::cin.get();
+  if (x != EOF) {
+    std::cout &lt;&lt; std::char_traits&lt;char&gt;::to_char_type(x) &lt;&lt; std::endl;
+  }
+
+  char y;
+  if (std::cin.get(y)) {
+    std::cout &lt;&lt; y &lt;&lt; std::endl;
+  }
+}</span></code></pre>
+</p>
+<h2>出力（文字）</h2>
+<p><pre><code><span style="color: #000">（12を入力）
+1
+2
+</span></code></pre></p>
+<h2>実装例</h2>
+<p>TBD</p>
+<h2>バージョン</h2>
+<h3>言語</h3>
+<ul>
+<li>C++98</li>
+</ul>
+<h2>参照</h2>
+<ul>
+<li><a href="http://cpprefjp.github.io/reference/streambuf/basic_streambuf.html"><code><span style="color: #000">basic_streambuf</span></code></a></li>
+</ul>
+<footer><a href="https://github.com/cpprefjp/site/edit/master/reference/istream/basic_istream/get.md" target="_blank">編集</a></footer>

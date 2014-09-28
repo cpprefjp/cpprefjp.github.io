@@ -1,0 +1,74 @@
+<h1>get</h1>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">basic_istream&lt;CharT, Traits&gt;&amp; read(char_type* s, streamsize n);</span></code></pre>
+</p>
+<h2>概要</h2>
+<p>（非書式化入力関数）ストリームから指定した数の文字を入力する。</p>
+<p>実引数として配列要素へのポインタ<code><span style="color: #000">s</span></code>とその要素数<code><span style="color: #000">n</span></code>を受け取る。
+<a href="http://cpprefjp.github.io/reference/istream/basic_istream/get.html"><code><span style="color: #000">get</span></code></a>メンバ関数などと異なり、<code><span style="color: #000">s</span></code>の末尾にヌル文字を書き込む処理がない。</p>
+<p>また、<code><span style="color: #000">n</span></code>文字より少ない段階でEOFに達した場合を入力失敗として扱う（<code><span style="color: #000">failbit</span></code>を立てる）点も、他の多くのメンバ関数と異なる。</p>
+<h2>効果</h2>
+<ol>
+<li><code><span style="color: #000">sentry</span></code>オブジェクトを構築する。<code><span style="color: #000">sentry</span></code>オブジェクトが失敗を示した場合、何もしない。</li>
+<li><code><span style="color: #000">good()</span></code>メンバ関数を呼び出して<code><span style="color: #000">false</span></code>であったら、<code><span style="color: #000">setstate(failbit)</span></code>を呼び出して終了する。</li>
+<li>以下のいずれかを満たすまで、文字を入力して書き込む。<ul>
+<li>実引数で指定された<code><span style="color: #000">n</span></code>文字まで入力した。</li>
+<li>EOFに達した。この場合、<code><span style="color: #000">setstate(failbit | eofbit)</span></code>を呼び出す。</li>
+</ul>
+</li>
+</ol>
+<h2>戻り値</h2>
+<p><code><span style="color: #000">*this</span></code></p>
+<h2>例</h2>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">#include &lt;iostream&gt;
+
+int main() {
+  char s[8];
+  std::cin.read(s, sizeof s);
+  auto size = std::cin.gcount();
+  std::cout.write(s, size);
+  std::cout &lt;&lt; std::endl;
+}</span></code></pre>
+</p>
+<h2>出力</h2>
+<p><pre><code><span style="color: #000">（ShinjukuNishiguchi）と入力
+Shinjuku
+</span></code></pre></p>
+<h2>実装例</h2>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">basic_istream&lt;CharT, Traits&gt;&amp; read(char_type* s, streamsize n) {
+  iostate state = goodbit;
+  try {
+    sentry s(*this, true);
+    if (s) {
+      if (good()) {
+        for (streamsize i = 0; i &lt; n; ++i) {
+          auto c = rdbuf()-&gt;sbumpc();
+          if (c == Traits::eof()) {
+            state |= failbit | eofbit;
+            break;
+          }
+          s[i] = Traits::to_char_type(c);
+        }
+      } else {
+        state |= failbit;
+      }
+    }
+  } catch (...) {
+    例外を投げずにbadbitを設定する;
+    if ((exceptions() &amp; badbit) != 0) {
+      throw;
+    }
+  }
+  setstate(state);
+  return *this;
+}</span></code></pre>
+</p>
+<h2>バージョン</h2>
+<h3>言語</h3>
+<ul>
+<li>C++98</li>
+</ul>
+<h2>参照</h2>
+<ul>
+<li><a href="http://cpprefjp.github.io/reference/istream/basic_istream/readsome.html">readsome</a></li>
+</ul>
+<footer><a href="https://github.com/cpprefjp/site/edit/master/reference/istream/basic_istream/read.md" target="_blank">編集</a></footer>

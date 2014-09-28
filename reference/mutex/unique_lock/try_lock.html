@@ -1,0 +1,74 @@
+<h1>try_lock (C++11)</h1>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">bool try_lock();</span></code></pre>
+</p>
+<h2>概要</h2>
+<p>ロックの取得を試みる</p>
+<h2>要件</h2>
+<p><code><span style="color: #000">Mutex</span></code>型が、<code><span style="color: #000">try_lock()</span></code>メンバ関数をサポートするミューテックス型であること</p>
+<h2>効果</h2>
+<p><code><span style="color: #000">pm-&gt;try_lock();</span></code> 
+※<code><span style="color: #000">pm</span></code>はメンバ変数として保持している、ミューテックスオブジェクトへのポインタ</p>
+<h2>事後条件</h2>
+<p><a href="http://cpprefjp.github.io/reference/mutex/unique_lock/owns_lock.html"><code><span style="color: #000">owns_lock()</span></code></a>の値が、<code><span style="color: #000">pm-&gt;try_lock()</span></code>の戻り値になること</p>
+<h2>戻り値</h2>
+<p><code><span style="color: #000">pm-&gt;try_lock()</span></code>の戻り値が返る</p>
+<h2>例外</h2>
+<p>この関数は、<code><span style="color: #000">pm-&gt;try_lock()</span></code> 関数内で投げられうるあらゆる例外を投げる可能性がある。 </p>
+<p>そのほかに、以下のerror conditionを持つ<a href="http://cpprefjp.github.io/reference/system_error/system_error.html"><code><span style="color: #000">system_error</span></code></a>例外オブジェクトを送出する可能性がある：
+- <a href="http://cpprefjp.github.io/reference/system_error/errc.html"><code><span style="color: #000">operation_not_permitted</span></code></a> ： <code><span style="color: #000">pm</span></code>が<code><span style="color: #000">NULL</span></code>
+- <a href="http://cpprefjp.github.io/reference/system_error/errc.html"><code><span style="color: #000">resource_deadlock_would_occur</span></code></a> ： <a href="http://cpprefjp.github.io/reference/mutex/unique_lock/owns_lock.html"><code><span style="color: #000">owns_lock()</span></code></a><code><span style="color: #000">== true</span></code>の状態でこの関数が呼び出された</p>
+<h2>例</h2>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color:#ff0000">try_lock</span>()) {
+      // ロックの取得に失敗
+      std::error_code ec(static_cast&lt;int&gt;(std::errc::device_or_resource_busy), std::generic_category());
+      throw std::system_error(ec);
+    }
+    value_ = value;
+  }
+};
+
+int main()
+{
+  X x;
+
+  std::thread t1([&amp;x]{ x.add_value(1); });
+  std::thread t2([&amp;x]{ x.add_value(2); });
+
+  t1.join();
+  t2.join();
+}<span style="color: #000">#include &lt;iostream&gt;
+#include &lt;thread&gt;
+#include &lt;mutex&gt;
+#include &lt;vector&gt;
+#include &lt;system_error&gt;
+
+class X {
+  std::mutex mtx_;
+  int value_ = 0;
+public:
+  // メンバ変数value_への書き込みを排他的にする
+  void add_value(int value)
+  {
+    std::unique_lock&lt;std::mutex&gt; lk(mtx_, std::defer_lock);
+
+    if (!lk.</span></code></pre>
+</p>
+<h3>出力</h3>
+<p><pre><code><span style="color: #000">terminate called after throwing an instance of 'std::system_error'
+  what():  Device or resource busy
+</span></code></pre></p>
+<h2>バージョン</h2>
+<h3>言語</h3>
+<ul>
+<li>C++11</li>
+</ul>
+<h3>処理系</h3>
+<ul>
+<li><a href="http://cpprefjp.github.io/implementation.html#clang">Clang</a>: ??</li>
+<li><a href="http://cpprefjp.github.io/implementation.html#gcc">GCC</a>: </li>
+<li><a href="http://cpprefjp.github.io/implementation.html#gcc">GCC, C++0x mode</a>: 4.7.0</li>
+<li><a href="http://cpprefjp.github.io/implementation.html#icc">ICC</a>: ??</li>
+<li><a href="http://cpprefjp.github.io/implementation.html#visual_cpp">Visual C++</a> ??</li>
+</ul>
+<h2>参照</h2>
+<footer><a href="https://github.com/cpprefjp/site/edit/master/reference/mutex/unique_lock/try_lock.md" target="_blank">編集</a></footer>

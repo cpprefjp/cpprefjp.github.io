@@ -1,0 +1,126 @@
+<h1>wait_for (C++11)</h1>
+<p><pre class="codehilite"><code class="language-cpp"><a href="http://cpprefjp.github.io/reference/condition_variable/cv_status.html">cv_status</a> wait_for(Lock&amp; lock, const chrono::<a href="http://cpprefjp.github.io/reference/chrono/duration.html">duration</a>&lt;Rep, Period&gt;&amp; rel_time);
+
+template &lt;class Lock, class Rep, class Period, class Predicate&gt;
+bool wait_for(Lock&amp; lock, const chrono::<a href="http://cpprefjp.github.io/reference/chrono/duration.html">duration</a>&lt;Rep, Period&gt;&amp; rel_time, Predicate pred);<span style="color: #000">template &lt;class Lock, class Rep, class Period&gt;
+</span></code></pre>
+</p>
+<h2>概要</h2>
+<p>相対時間でタイムアウトを指定して、起床されるまで待機する。</p>
+<p>この関数は、処理をするための準備ができたことを<code><span style="color: #000">notify_one()</span></code>/<code><span style="color: #000">notify_all()</span></code>によって通知されるまでスレッドを待機するために使用する。
+述語を指定しない場合、<code><span style="color: #000">notify_one()</span></code>/<code><span style="color: #000">notify_all()</span></code>が呼び出された時点でこの関数のブロッキングが解除される。
+述語を指定する場合、述語呼び出しが<code><span style="color: #000">true</span></code>になるまで待機を続行する。</p>
+<h2>効果</h2>
+<p>述語を指定しないバージョン：
+<code><span style="color: #000">return</span></code><a href="http://cpprefjp.github.io/reference/condition_variable/condition_variable_any/wait_until.html"><code><span style="color: #000">wait_until</span></code></a><code><span style="color: #000">(lock, chrono::</span></code><a href="http://cpprefjp.github.io/reference/chrono/steady_clock.html"><code><span style="color: #000">steady_clock</span></code></a><code><span style="color: #000">::</span></code><a href="http://cpprefjp.github.io/reference/chrono/steady_clock/now.html"><code><span style="color: #000">now</span></code></a><code><span style="color: #000">() + rel_time);</span></code>
+戻り値：<code><span style="color: #000">rel_time</span></code>で指定された相対時間内に起床されない場合、タイムアウトとなり<a href="http://cpprefjp.github.io/reference/condition_variable/cv_status.html"><code><span style="color: #000">cv_status::timeout</span></code></a>が返る。そうでない場合は<a href="http://cpprefjp.github.io/reference/condition_variable/cv_status.html"><code><span style="color: #000">cv_status::no_timeout</span></code></a>が返る。 </p>
+<p>述語を指定するバージョン：
+<code><span style="color: #000">return</span></code><a href="http://cpprefjp.github.io/reference/condition_variable/condition_variable_any/wait_until.html"><code><span style="color: #000">wait_until</span></code></a><code><span style="color: #000">(lock, chrono::</span></code><a href="http://cpprefjp.github.io/reference/chrono/steady_clock.html"><code><span style="color: #000">steady_clock</span></code></a><code><span style="color: #000">::</span></code><a href="http://cpprefjp.github.io/reference/chrono/steady_clock/now.html"><code><span style="color: #000">now</span></code></a><code><span style="color: #000">() + rel_time, std::</span></code><a href="http://cpprefjp.github.io/reference/utility/move.html"><code><span style="color: #000">move</span></code></a><code><span style="color: #000">(pred));</span></code>
+戻り値：<code><span style="color: #000">pred()</span></code>の結果が返る備考：<code><span style="color: #000">pred()</span></code>が最初から<code><span style="color: #000">true</span></code>の場合、またはすでに期限が過ぎている場合、この関数はブロッキングしない</p>
+<h2>事後条件</h2>
+<p><code><span style="color: #000">lock</span></code>が参照しているミューテックスオブジェクトが、この関数を呼び出したスレッドでロック取得されていること</p>
+<h2>例外</h2>
+<p>この関数は、<code><span style="color: #000">lock.</span></code><a href="http://cpprefjp.github.io/reference/mutex/unique_lock/lock.html"><code><span style="color: #000">lock()</span></code></a>および<code><span style="color: #000">lock.</span></code><a href="http://cpprefjp.github.io/reference/mutex/unique_lock/unlock.html"><code><span style="color: #000">unlock()</span></code></a>によって送出されうる、あらゆる例外が送出される可能性がある。</p>
+<h2>例</h2>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color:#ff0000">wait_for</span>(lk, chrono::seconds(3));
+      if (result == std::cv_status::timeout) {
+        std::cout &lt;&lt; "wait_for_data_to_process1 : timeout" &lt;&lt; std::endl;
+        return;
+      }
+    }
+    process_data();
+  }
+
+  void wait_for_data_to_process2()
+  {
+    std::unique_lock&lt;std::recursive_mutex&gt; lk(mtx_);
+
+    // データの準備ができるまで待機してから処理する
+
+    // 述語を指定するバージョン
+    // 3秒でタイムアウト
+    if (!cond_.<span style="color:#ff0000">wait_for</span>(lk, chrono::seconds(3), [this] { return data_ready_; })) {
+      // data_ready == false
+      std::cout &lt;&lt; "data is not ready" &lt;&lt; std::endl;
+      return;
+    }
+    process_data();
+  }
+
+private:
+  void process_data()
+  {
+    // ...データを処理する...
+    std::cout &lt;&lt; "process data" &lt;&lt; std::endl;
+  }
+};
+
+int main()
+{
+  ProcessData p;
+
+  std::thread t1([&amp;] { p.prepare_data_for_processing(); });
+  std::thread t2([&amp;] { p.wait_for_data_to_process1(); });
+  std::thread t3([&amp;] { p.wait_for_data_to_process2(); });
+
+  t1.join();
+  t2.join();
+  t3.join();
+}<span style="color: #000">#include &lt;iostream&gt;
+#include &lt;condition_variable&gt;
+#include &lt;mutex&gt;
+#include &lt;thread&gt;
+#include &lt;chrono&gt;
+
+namespace chrono = std::chrono;
+
+struct ProcessData {
+  std::recursive_mutex mtx_;
+  std::condition_variable_any cond_;
+
+  bool data_ready_ = false;
+
+public:
+  // 処理に必要なデータの準備をする
+  void prepare_data_for_processing()
+  {
+    // ...準備処理...
+
+    {
+      std::lock_guard&lt;std::recursive_mutex&gt; lk(mtx_);
+      data_ready_ = true;
+    }
+
+    // 準備完了したので待機スレッドを全て起床させる
+    cond_.notify_all();
+  }
+
+  void wait_for_data_to_process1()
+  {
+    std::unique_lock&lt;std::recursive_mutex&gt; lk(mtx_);
+
+    // データの準備ができるまで待機してから処理する
+    while (!data_ready_) {
+      // 述語を指定しないバージョン
+      // 3秒でタイムアウト
+      std::cv_status result = cond_.</span></code></pre>
+</p>
+<h3>出力例</h3>
+<p><pre><code><span style="color: #000">process data
+process data
+</span></code></pre></p>
+<h2>バージョン</h2>
+<h3>言語</h3>
+<ul>
+<li>C++11</li>
+</ul>
+<h3>処理系</h3>
+<ul>
+<li><a href="http://cpprefjp.github.io/implementation.html#clang">Clang</a>: ??</li>
+<li><a href="http://cpprefjp.github.io/implementation.html#gcc">GCC</a>: </li>
+<li><a href="http://cpprefjp.github.io/implementation.html#gcc">GCC, C++0x mode</a>: 4.7.0</li>
+<li><a href="http://cpprefjp.github.io/implementation.html#icc">ICC</a>: ??</li>
+<li><a href="http://cpprefjp.github.io/implementation.html#visual_cpp">Visual C++</a>: 11.0, 12.0</li>
+</ul>
+<h2>参照</h2>
+<footer><a href="https://github.com/cpprefjp/site/edit/master/reference/condition_variable/condition_variable_any/wait_for.md" target="_blank">編集</a></footer>

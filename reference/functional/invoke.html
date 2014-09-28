@@ -1,0 +1,33 @@
+<h1>INVOKE</h1>
+<h2>用語定義</h2>
+<ul>
+<li><em>call-signature</em> とは、戻り値型に続けて丸括弧の中に0個以上の引数型を並べたものである。 <em>cf.</em> <code><span style="color: #000">int ( std::string, int )</span></code></li>
+<li><em>callable-type</em> とは、関数呼び出し演算子を適用できる型 ( 関数、関数への参照、関数へのポインタ、<code><span style="color: #000">operator ()</span></code> をオーバーロードした型もしくはそれを(直接または間接的に) <code><span style="color: #000">public</span></code> 継承した型 ) もしくはメンバへのポインタ型を指す。</li>
+<li><em>callable-object</em> は、 <em>callable-type</em> 型のオブジェクトである。</li>
+<li><em>call-wrapper-type</em> は、 <em>callable-object</em> を保持し、自身に対する関数呼び出し操作が行われたとき、保持しているオブジェクトに委譲する。</li>
+<li><em>call-wrapper</em> は、 <em>call-wrapper-type</em> 型のオブジェクトである。</li>
+<li><em>target-object</em> とは、 <em>callable-object</em> に保持されているオブジェクトのことである。</li>
+</ul>
+<h2>要件</h2>
+<ol>
+<li>仮想操作 <em>INVOKE</em><code><span style="color: #000">(f, t1, t2, ..., tN)</span></code> を次のように定義する。<ul>
+<li><code><span style="color: #000">f</span></code> が型 <code><span style="color: #000">T</span></code> のメンバ関数へのポインタであり、 <code><span style="color: #000">t1</span></code> が T 型のオブジェクトあるいは <code><span style="color: #000">T</span></code> または <code><span style="color: #000">T</span></code> を継承した型への参照であるとき、 <code><span style="color: #000">(t1.*f)(t2, ..., tN)</span></code> と同じ効果を持つ。</li>
+<li><code><span style="color: #000">f</span></code> が型 <code><span style="color: #000">T</span></code> のメンバ関数へのポインタであり、 <code><span style="color: #000">t1</span></code> が上記の条件に当てはまらない場合、<code><span style="color: #000">((*t1).*f)(t2, ..., tN)</span></code> と同じ効果を持つ。</li>
+<li><code><span style="color: #000">N == 1</span></code> で、<code><span style="color: #000">f</span></code> が型 <code><span style="color: #000">T</span></code> のメンバオブジェクトへのポインタであり、<code><span style="color: #000">t1</span></code> が <code><span style="color: #000">T</span></code> 型のオブジェクトあるいは <code><span style="color: #000">T</span></code> または <code><span style="color: #000">T</span></code> を継承した型への参照であるとき、 <code><span style="color: #000">t1.*f</span></code> と同じ効果を持つ。</li>
+<li><code><span style="color: #000">N == 1</span></code> で、<code><span style="color: #000">f</span></code> が型 <code><span style="color: #000">T</span></code> のメンバオブジェクトへのポインタであり、<code><span style="color: #000">t1</span></code> が上記の条件に当てはまらない場合、 <code><span style="color: #000">(*t1).*f</span></code> と同じ効果を持つ。</li>
+<li>上記の条件のどれにも当てはまらない場合、 <code><span style="color: #000">f(t1, t2, ..., tN)</span></code> と同じ効果を持つ。</li>
+</ul>
+</li>
+<li><em>INVOKE</em><code><span style="color: #000">(f, t1, t2, ..., tN, R)</span></code> を、 <em>INVOKE</em><code><span style="color: #000">(f, t1, t2, ..., tN)</span></code> の実行結果の戻り値が型 <code><span style="color: #000">R</span></code> に暗黙的に変換されること、と定義する。</li>
+<li><em>call-wrapper</em> が <em>weak-result-type</em> を用意している場合、メンバ型 <code><span style="color: #000">result_type</span></code> は<em>target-object</em> の型 <code><span style="color: #000">T</span></code> に応じて次のように定義される。<ul>
+<li><code><span style="color: #000">T</span></code> が関数へのポインタ型であるとき、 <code><span style="color: #000">result_type</span></code> は <code><span style="color: #000">T</span></code> の戻り値型と等しい。</li>
+<li><code><span style="color: #000">T</span></code> がメンバ関数へのポインタ型であるとき、 <code><span style="color: #000">result_type</span></code> は <code><span style="color: #000">T</span></code> の戻り値型と等しい。</li>
+<li><code><span style="color: #000">T</span></code> が <code><span style="color: #000">result_type</span></code> という名前のメンバ型を持つとき、 <code><span style="color: #000">result_type</span></code> は <code><span style="color: #000">T::result_type</span></code> と等しい。</li>
+<li>どの条件にも当てはまらない場合、 <code><span style="color: #000">result_type</span></code> は定義されない。</li>
+</ul>
+</li>
+<li>すべての<em> call-wrapper</em> は、<em>MoveAssignable</em> でなければならない。</li>
+</ol>
+<h2>まとめ</h2>
+<p><a href="http://twitter.com/Cryolite/status/216814363221303296" target="_blank">第1引数がメンバ関数へのポインタの場合でも非静的メンバデータへのポインタの場合でも，第2引数がクラスオブジェクトへの参照の場合でもポインタの場合でもポインタっぽいものの場合でも，なんか知らんけどそれっぽく上手くいく</a> ように取り計らった操作のことである。</p>
+<footer><a href="https://github.com/cpprefjp/site/edit/master/reference/functional/invoke.md" target="_blank">編集</a></footer>

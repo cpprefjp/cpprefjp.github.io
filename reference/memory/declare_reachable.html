@@ -1,0 +1,67 @@
+<h1>declare_reachable (C++11)</h1>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">namespace std {
+  void declare_reachable(void* p);
+}</span></code></pre>
+</p>
+<h2>概要</h2>
+<p>ポインタが到達可能であることを宣言する。</p>
+<h2>要件</h2>
+<p>ポインタ<code><span style="color: #000">p</span></code>が<a href="http://cpprefjp.github.io/reference/memory/pointer_safety.html">Safely-derived Pointer</a>か、またはヌルである。</p>
+<h2>効果</h2>
+<p><code><span style="color: #000">p</span></code>が非ヌルである場合、<code><span style="color: #000">p</span></code>の参照するオブジェクトは到達可能であるとされる。</p>
+<p>到達可能であるということは、万一どのポインタも<code><span style="color: #000">p</span></code>を参照しないことがあってもGCにより解放されることはなくなる。</p>
+<p>すなわち、GCにおいてルートとして機能する。</p>
+<h2>戻り値</h2>
+<p>なし</p>
+<h2>例外</h2>
+<p>渡されたオブジェクトを追跡するために、システムが必要な追加メモリを確保しようとし、それに失敗した場合、<a href="http://cpprefjp.github.io/reference/new/bad_alloc.html"><code><span style="color: #000">std::bad_alloc</span></code></a>を送出する。</p>
+<h2>例</h2>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">#include &lt;memory&gt;
+#include &lt;iostream&gt;
+#include &lt;cstdlib&gt;
+
+// GC負荷が大きい関数のダミー定義
+void some_operation_that_cause_gc() {}
+
+int main()
+{
+  int* p = new int(100);
+  std::declare_reachable(p);
+  // `p`の参照するオブジェクトは到達可能と宣言されているので、
+  // ポインタ`p`の値が変わっても元の`p`が参照していたオブジェクトは解放されない
+  p += 10;
+
+  // `std::declare_reachable(p)`がない場合、
+  // 次のGC負荷が大きい関数呼び出しで、`p`が参照していたオブジェクトを解放される可能性がある
+  some_operation_that_cause_gc();
+
+  std::cout &lt;&lt; *(p - 10) &lt;&lt; std::endl;
+
+  p -= 10;
+  std::undeclare_reachable(p);
+
+  return EXIT_SUCCESS;
+}</span></code></pre>
+</p>
+<h3>出力</h3>
+<p><pre><code><span style="color: #000">100
+</span></code></pre></p>
+<h2>バージョン</h2>
+<h3>言語</h3>
+<ul>
+<li>C++11</li>
+</ul>
+<h3>処理系</h3>
+<ul>
+<li><a href="http://cpprefjp.github.io/implementation.html#gcc">GCC</a>: ?</li>
+<li><a href="http://cpprefjp.github.io/implementation.html#clang">Clang libc++, C++11 mode</a>: 3.4 relaxed実装</li>
+<li><a href="http://cpprefjp.github.io/implementation.html#icc">ICC</a>: ?</li>
+<li><a href="http://cpprefjp.github.io/implementation.html#visual_cpp">Visual C++</a>: 10.0, 11.0, 12.0 relaxed実装</li>
+</ul>
+<h2>参照</h2>
+<ul>
+<li><a href="http://faithandbrave.hateblo.jp/entry/20081117/1226913980" target="_blank">C++0x ガベージコレクションと到達可能性ベースリーク検知の最小支援 - Faith and Brave - C++で遊ぼう</a></li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2670.htm" target="_blank">N2670: Minimal Support for Garbage Collection and Reachability-Based Leak Detection (revised)</a></li>
+<li><a href="http://www.stroustrup.com/C++11FAQ.html#gc-abi" target="_blank">Garbage Collection ABI - C++ FAQ - www.stroustrup.com</a></li>
+</ul>
+<footer><a href="https://github.com/cpprefjp/site/edit/master/reference/memory/declare_reachable.md" target="_blank">編集</a></footer>

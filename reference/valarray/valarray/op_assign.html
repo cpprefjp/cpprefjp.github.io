@@ -1,0 +1,120 @@
+<h1>代入演算子</h1>
+<p><pre class="codehilite"><code class="language-cpp"><a href="http://cpprefjp.github.io/reference/initializer_list.html">initializer_list</a>&lt;T&gt; init);   // (3) C++11
+valarray&amp; operator=(const T&amp; value);             // (4)
+valarray&amp; operator=(const <a href="http://cpprefjp.github.io/reference/valarray/slice_array.html">slice_array</a>&lt;T&gt;&amp; x);    // (5)
+valarray&amp; operator=(const <a href="http://cpprefjp.github.io/reference/valarray/gslice_array.html">gslice_array</a>&lt;T&gt;&amp; x);   // (6)
+valarray&amp; operator=(const <a href="http://cpprefjp.github.io/reference/valarray/mask_array.html">mask_array</a>&lt;T&gt;&amp; x);     // (7)
+valarray&amp; operator=(const <a href="http://cpprefjp.github.io/reference/valarray/indirect_array.html">indirect_array</a>&lt;T&gt;&amp; x); // (8)<span style="color: #000">valarray&amp; operator=(const valarray&lt;T&gt;&amp; x);       // (1)
+valarray&amp; operator=(valarray&lt;T&gt;&amp;&amp; x) noexcept;   // (2) C++11
+valarray&amp; operator=(</span></code></pre>
+</p>
+<h2>概要</h2>
+<ul>
+<li>(1) : コピー代入</li>
+<li>(2) : ムーブ代入</li>
+<li>(3) : 初期化子リストの代入</li>
+<li>(4) : 全ての要素に<code><span style="color: #000">value</span></code>を代入する</li>
+<li>(5) : <a href="http://cpprefjp.github.io/reference/valarray/slice_array.html"><code><span style="color: #000">slice_array</span></code></a>オブジェクトから<code><span style="color: #000">valarray</span></code>への変換を行う。</li>
+<li>(6) : <a href="http://cpprefjp.github.io/reference/valarray/gslice_array.html"><code><span style="color: #000">gslice_array</span></code></a>オブジェクトから<code><span style="color: #000">valarray</span></code>への変換を行う。</li>
+<li>(7) : <a href="http://cpprefjp.github.io/reference/valarray/mask_array.html"><code><span style="color: #000">mask_array</span></code></a>オブジェクトから<code><span style="color: #000">valarray</span></code>への変換を行う。</li>
+<li>(8) : <a href="http://cpprefjp.github.io/reference/valarray/indirect_array.html"><code><span style="color: #000">indirect_array</span></code></a>オブジェクトから<code><span style="color: #000">valarray</span></code>への変換を行う。</li>
+</ul>
+<h2>効果</h2>
+<ul>
+<li>(1) : <code><span style="color: #000">*this</span></code>と<code><span style="color: #000">x</span></code>が異なる要素数の場合、<code><span style="color: #000">resize(x.size())</span></code>を呼び出す。<code><span style="color: #000">*this</span></code>の各要素に、<code><span style="color: #000">x</span></code>の各要素を代入する。</li>
+<li>(2) : <code><span style="color: #000">*this</span></code>に<code><span style="color: #000">x</span></code>の所有権を譲渡する。ムーブ後の<code><span style="color: #000">x</span></code>の状態は未規定。</li>
+<li>(3) : <code><span style="color: #000">*this = valarray(init)</span></code>と等価。</li>
+<li>(4) : <code><span style="color: #000">*this</span></code>の全ての要素に値<code><span style="color: #000">value</span></code>を代入する。</li>
+<li>(5), (6), (7), (8) : <code><span style="color: #000">x</span></code>が参照している要素を、<code><span style="color: #000">*this</span></code>に代入する。</li>
+</ul>
+<h2>計算量</h2>
+<ul>
+<li>(2) : 定数時間</li>
+</ul>
+<h2>例</h2>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">#include &lt;iostream&gt;
+#include &lt;valarray&gt;
+
+template &lt;class T&gt;
+void print(const char* name, const std::valarray&lt;T&gt;&amp; v)
+{
+  std::cout &lt;&lt; name &lt;&lt; " : {";
+  bool first = true;
+
+  for (const T&amp; x : v) {
+    if (first) {
+      first = false;
+    }
+    else {
+      std::cout &lt;&lt; ',';
+    }
+    std::cout &lt;&lt; x;
+  }
+  std::cout &lt;&lt; "}" &lt;&lt; std::endl;
+}
+
+int main()
+{
+  // (1)
+  // コピー代入
+  std::valarray&lt;int&gt; v1_org = {1, 2, 3};
+  std::valarray&lt;int&gt; v1 = v1_org;
+  print("v1", v1);
+
+  // (2)
+  // ムーブ代入
+  std::valarray&lt;int&gt; v2 = std::move(v1);
+  print("v2", v2);
+
+  // (3)
+  // 初期化子リストを代入
+  std::valarray&lt;int&gt; v3;
+  v3 = {1, 2, 3};
+  print("v3", v3);
+
+  // (4)
+  // 値を全要素に代入
+  std::valarray&lt;int&gt; v4(3);
+  v4 = 1;
+  print("v4", v4);
+
+  // (5)
+  // スライスされたvalarrayオブジェクトを代入
+  std::valarray&lt;int&gt; v5_org = {1, 2, 3, 4, 5};
+  std::valarray&lt;int&gt; v5 = v5_org[std::slice(0, 3, 1)]; // 先頭3要素
+  print("v5", v5);
+
+  // (6)
+  // 行列スライスされたvalarrayオブジェクトを代入
+  std::valarray&lt;int&gt; v6_org = {1, 2, 3, 4, 5};
+  std::valarray&lt;std::size_t&gt; v6_len = {1, 2, 2};
+  std::valarray&lt;std::size_t&gt; v6_stride = {2, 3, 1};
+  std::valarray&lt;int&gt; v6 = v6_org[std::gslice(0, v6_len, v6_stride)];
+  print("v6", v6);
+
+  // (7)
+  // マスクされたvalarrayオブジェクトを代入
+  std::valarray&lt;int&gt; v7_org = {1, 2, 3, 4, 5};
+  std::valarray&lt;bool&gt; v7_mask = {true, false, true, false, true};
+  std::valarray&lt;int&gt; v7 = v7_org[v7_mask];
+  print("v7", v7);
+
+  // (8)
+  // インデックス列の指定によってマスクされたvalarrayオブジェクトを代入
+  std::valarray&lt;int&gt; v8_org = {1, 2, 3, 4, 5};
+  std::valarray&lt;std::size_t&gt; v8_indices = {0, 2, 4};
+  std::valarray&lt;int&gt; v8 = v8_org[v8_indices];
+  print("v8", v8);
+}</span></code></pre>
+</p>
+<h3>出力</h3>
+<p><pre><code><span style="color: #000">v1 : {1,2,3}
+v2 : {1,2,3}
+v3 : {1,2,3}
+v4 : {1,1,1}
+v5 : {1,2,3}
+v6 : {1,2,4,5}
+v7 : {1,3,5}
+v8 : {1,3,5}
+</span></code></pre></p>
+<footer><a href="https://github.com/cpprefjp/site/edit/master/reference/valarray/valarray/op_assign.md" target="_blank">編集</a></footer>

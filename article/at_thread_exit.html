@@ -1,0 +1,113 @@
+<h1>_at_thread_exit系の関数が存在している理由</h1>
+<p><a href="http://cpprefjp.github.io/reference/future.html"><code><span style="color: #000">&lt;future&gt;</span></code></a> や <a href="http://cpprefjp.github.io/reference/condition_variable.html"><code><span style="color: #000">&lt;condition_variable&gt;</span></code></a> には、<code><span style="color: #000">*_at_thread_exit</span></code> という名前の関数が定義されている。</p>
+<p><pre class="codehilite"><code class="language-cpp"><a href="http://cpprefjp.github.io/reference/condition_variable/condition_variable/notify_all_at_thread_exit.html">notify_all_at_thread_exit</a>(<a href="http://cpprefjp.github.io/reference/condition_variable/condition_variable.html">condition_variable</a>&amp; cond, <a href="http://cpprefjp.github.io/reference/mutex/unique_lock.html">unique_lock</a>&lt;<a href="http://cpprefjp.github.io/reference/mutex/mutex.html">mutex</a>&gt; lk);
+
+  template &lt;class R&gt;
+  class <a href="http://cpprefjp.github.io/reference/future/promise.html">promise</a> {
+  public:
+    ...
+    void <a href="http://cpprefjp.github.io/reference/future/promise/set_value_at_thread_exit.html">set_value_at_thread_exit</a>(const R&amp; r);
+    void <a href="http://cpprefjp.github.io/reference/future/promise/set_exception_at_thread_exit.html">set_exception_at_thread_exit</a>(<a href="http://cpprefjp.github.io/reference/exception/exception_ptr.html">exception_ptr</a> p);
+  };
+
+  template &lt;class R, class... ArgTypes&gt;
+  class <a href="http://cpprefjp.github.io/reference/future/packaged_task.html">packaged_task</a>&lt;R(ArgTypes...)&gt; {
+  public:
+    ...
+    void <a href="http://cpprefjp.github.io/reference/future/packaged_task/make_ready_at_thread_exit.html">make_ready_at_thread_exit</a>(ArgTypes... args);
+  };
+}<span style="color: #000">namespace std {
+  void </span></code></pre>
+
+これらの関数は、スレッドローカル記憶域が破棄された後に通知を行なったり、状態を変更する。 </p>
+<p>また、<a href="http://cpprefjp.github.io/reference/thread/thread.html"><code><span style="color: #000">thread</span></code></a><code><span style="color: #000">::</span></code><a href="http://cpprefjp.github.io/reference/thread/thread/detach.html"><code><span style="color: #000">detach</span></code></a><code><span style="color: #000">()</span></code> されたスレッド上で、
+スレッドローカル記憶域との同期を取る唯一の方法でもある。</p>
+<p>デタッチされたスレッドにおいて、スレッドローカル記憶域にあるオブジェクトがいつ破棄されるかという規定は無い。
+そのため、未定義動作を含まずにこれらのオブジェクトを破棄するのは難しい。 </p>
+<p>例えば、以下のようなケースで問題になる。</p>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">#include &lt;type_traits&gt;
+#include &lt;future&gt;
+#include &lt;thread&gt;
+#include &lt;iostream&gt;
+
+template&lt;class F&gt;
+std::future&lt;typename std::result_of&lt;F()&gt;::type&gt; spawn_task(F f) {
+  typedef typename std::result_of&lt;F()&gt;::type result_type;
+  std::packaged_task&lt;result_type ()&gt; task(std::move(f));
+  std::future&lt;result_type&gt; future(task.get_future());
+  std::thread th(std::move(task));
+  th.detach();
+  return future;
+}
+
+
+struct Hoge {
+  ~Hoge() { std::cout &lt;&lt; "Hoge destructor" &lt;&lt; std::endl; }
+};
+
+int f() {
+  thread_local Hoge h;
+  return 42;
+}
+
+int main() {
+  std::future&lt;int&gt; res(spawn_task(f));
+  std::cout &lt;&lt; res.get() &lt;&lt; std::endl;
+}</span></code></pre>
+
+出力:</p>
+<p><pre><code><span style="color: #000">42Hoge destructor
+</span></code></pre>
+<code><span style="color: #000">spawn_task</span></code> は、渡された任意の処理を別スレッドで行なう一般的な関数である。関数内部でスレッドを作り、デタッチを行なっている。 </p>
+<p>出力は、<code><span style="color: #000">main()</span></code> 関数での出力と、<code><span style="color: #000">Hoge</span></code> デストラクタでの出力が混在している。これはスレッドローカル記憶域と <code><span style="color: #000">future</span></code> オブジェクトが正しく同期されていないからである。そのため、これ以外の出力も起こり得る。</p>
+<p>これは <code><span style="color: #000">*_at_thread_exit</span></code> 系の関数を利用することで修正できる。</p>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color:#ff0000">make_ready_at_thread_exit</span>(); // operator() を呼び出す代わりに <span style="color:#ff0000">make_ready_at_thread_exit</span>() を呼び出す。
+  }
+};
+
+template&lt;class F&gt;
+std::future&lt;typename std::result_of&lt;F()&gt;::type&gt; spawn_task(F f) {
+  typedef typename std::result_of&lt;F()&gt;::type result_type;
+  std::packaged_task&lt;result_type ()&gt; task(std::move(f));
+  std::future&lt;result_type&gt; future(task.get_future());
+  std::thread th(task_executor{}, std::move(task));
+  th.detach();
+  return future;
+}
+
+
+struct Hoge {
+  ~Hoge() { std::cout &lt;&lt; "Hoge destructor" &lt;&lt; std::endl; }
+};
+
+int f() {
+  thread_local Hoge h;
+  return 42;
+}
+
+int main() {
+  std::future&lt;int&gt; res(spawn_task(f));
+  std::cout &lt;&lt; res.get() &lt;&lt; std::endl;
+}<span style="color: #000">#include &lt;type_traits&gt;
+#include &lt;future&gt;
+#include &lt;thread&gt;
+#include &lt;iostream&gt;
+
+struct task_executor
+{
+  template &lt;class R&gt;
+  void operator()( std::packaged_task&lt;R&gt; task )
+  {
+    task.</span></code></pre>
+
+出力:</p>
+<p><pre><code><span style="color: #000">Hoge destructor
+42
+</span></code></pre>
+このプログラムの出力は、必ずこの通りになる。つまり、確実にスレッドローカル記憶域のオブジェクトが破棄された後に <code><span style="color: #000">res.get()</span></code> の結果が出力される。</p>
+<h2>参考</h2>
+<ul>
+<li><a href="http://d.hatena.ne.jp/yohhoy/20120131/p1" target="_blank">futureとpromiseのあれこれ（理論編） - yohhoyの日記</a></li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2010/n3070.html" target="_blank">N3070 - Handling Detached Threads and thread_local Variables</a></li>
+</ul>
+<footer><a href="https://github.com/cpprefjp/site/edit/master/article/at_thread_exit.md" target="_blank">編集</a></footer>

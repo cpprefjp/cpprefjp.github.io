@@ -1,0 +1,86 @@
+<h1>unget</h1>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">basic_istream&lt;CharT, Traits&gt;&amp; unget();</span></code></pre>
+</p>
+<h2>概要</h2>
+<p>（非書式化入力関数）最後に読み取った1文字をストリームバッファの入力に戻す。</p>
+<p>非書式化入力関数であるが、初めに<code><span style="color: #000">eofbit</span></code>を消去する点が通常と異なる。</p>
+<h2>効果</h2>
+<ol>
+<li><code><span style="color: #000">eofbit</span></code>を消去する。</li>
+<li><code><span style="color: #000">sentry</span></code>オブジェクトを構築する。</li>
+<li><code><span style="color: #000">!good()</span></code>なら<code><span style="color: #000">setstate(failbit)</span></code>して終わる。</li>
+<li><code><span style="color: #000">rdbuf()-&gt;sungetc()</span></code>を呼び出す。<ul>
+<li><code><span style="color: #000">rdbuf()</span></code>がヌルポインタであるか、<code><span style="color: #000">sungetc()</span></code>が<code><span style="color: #000">Traits::eof()</span></code>を返した場合、<code><span style="color: #000">setstate(badbit)</span></code>を呼び出す。</li>
+</ul>
+</li>
+</ol>
+<h2>戻り値</h2>
+<p><code><span style="color: #000">*this</span></code>。</p>
+<h2>備考</h2>
+<p>この関数は1文字も入力を行わないため、この後の<code><span style="color: #000">gcount()</span></code>は<code><span style="color: #000">0</span></code>を返す。</p>
+<h2>例</h2>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">#include &lt;iostream&gt;
+#include &lt;locale&gt;
+#include &lt;sstream&gt;
+#include &lt;string&gt;
+
+// isからアルファベットだけを読み込んで返す関数。
+std::string input_alphabet(std::istream&amp; is) {
+  std::string s;
+  char c;
+  while (is.get(c)) {
+    // getで得た文字がアルファベットではなかったら、ungetでストリームに戻す。
+    if (!std::isalpha(c, is.getloc())) {
+      is.unget();
+      break;
+    }
+    s.push_back(c);
+  }
+  return s;
+}
+
+int main() {
+  std::istringstream iss("abc123");
+  std::cout &lt;&lt; input_alphabet(iss) &lt;&lt; std::endl;
+
+  // 残りを出力
+  std::cout &lt;&lt; iss.rdbuf() &lt;&lt; std::endl;
+}</span></code></pre>
+</p>
+<h2>出力</h2>
+<p><pre><code><span style="color: #000">abc
+123
+</span></code></pre></p>
+<h2>実装例</h2>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">basic_istream&lt;CharT, Traits&gt;&amp; unget() {
+  clear(rdstate() &amp; ~eofbit);
+  try {
+    sentry s(*this, true);
+    if (s) {
+      if (auto sb = rdbuf()) {
+        if (sb-&gt;sungetc() != Traits::eof()) {
+          return *this;
+        }
+      }
+      setstate(badbit);
+    }
+  } catch (...) {
+    例外を投げずにbadbitを設定する;
+    if ((exceptions() &amp; badbit) != 0) {
+      throw;
+    }
+  }
+  return *this;
+}</span></code></pre>
+</p>
+<h2>バージョン</h2>
+<h3>言語</h3>
+<ul>
+<li>C++98</li>
+</ul>
+<h2>参照</h2>
+<ul>
+<li><a href="http://cpprefjp.github.io/reference/istream/basic_istream/putback.html"><code><span style="color: #000">basic_istream::putback</span></code></a></li>
+<li><code><span style="color: #000">basic_streambuf::sungetc</span></code></li>
+</ul>
+<footer><a href="https://github.com/cpprefjp/site/edit/master/reference/istream/basic_istream/unget.md" target="_blank">編集</a></footer>

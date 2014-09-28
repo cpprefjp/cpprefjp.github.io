@@ -1,0 +1,86 @@
+<h1>lock (C++11)</h1>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">namespace std {
+  template &lt;class L1, class L2, class... L3&gt;
+  void lock(L1&amp;, L2&amp;, L3&amp;...);
+}</span></code></pre>
+</p>
+<h2>概要</h2>
+<p>複数のミューテックスオブジェクトに対してlock操作を行う</p>
+<h2>要件</h2>
+<p>テンプレートパラメータの型が<code><span style="color: #000">lock()</span></code>、<code><span style="color: #000">unlock()</span></code>、<code><span style="color: #000">try_lock()</span></code>メンバ関数をサポートしていること</p>
+<h2>効果</h2>
+<p>各ミューテックスオブジェクトに対して、<code><span style="color: #000">lock()</span></code>、<code><span style="color: #000">try_lock()</span></code>、あるいは<code><span style="color: #000">unlock()</span></code>メンバ関数を順次呼び出すことで、デッドロックを引き起こさずに全ミューテックスをロックする。 
+いずれかの<code><span style="color: #000">lock()</span></code>/<code><span style="color: #000">try_lock()</span></code>が例外を送出した場合、以降の<code><span style="color: #000">lock()</span></code>/<code><span style="color: #000">try_lock()</span></code>呼び出しを行わず、それ以前にロック取得したミューテックスオブジェクトに対して<code><span style="color: #000">unlock()</span></code>メンバ関数を呼び出す。</p>
+<h2>戻り値</h2>
+<p>なし</p>
+<h2>例</h2>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color:#ff0000">std::lock</span>(mtx1, mtx2);
+
+    mtx1.unlock();
+    mtx2.unlock();
+  }
+
+  // unique_lockに対してロック取得を行う
+  {
+    std::unique_lock&lt;std::mutex&gt; lk1(mtx1, std::defer_lock);
+    std::unique_lock&lt;std::recursive_mutex&gt; lk2(mtx2, std::defer_lock);
+
+    <span style="color:#ff0000">std::lock</span>(lk1, lk2);
+  }
+
+  // 一部のlock()が失敗する場合
+  {
+    std::unique_lock&lt;std::mutex&gt; lk1(mtx1, std::defer_lock);
+    std::unique_lock&lt;std::recursive_mutex&gt; lk2(mtx2, std::defer_lock);
+
+    lk2.lock(); // ロック取得済みにしてlock()に渡す
+
+    try {
+      <span style="color:#ff0000">std::lock</span>(lk1, lk2);
+    }
+    catch (std::system_error&amp; e) {
+      std::cout &lt;&lt; e.what() &lt;&lt; std::endl;
+    }
+
+    // lk2が失敗したので、<span style="color:#ff0000">std::lock</span>()内でlk2より前にロック取得が
+    // 成功した全てのミューテックスオブジェクトがunlock()される
+    assert(!lk1.owns_lock());
+
+    // lk2はロック取得済みで渡したので、ロック取得済み状態のまま
+    assert(lk2.owns_lock());
+  }
+}<span style="color: #000">#include &lt;iostream&gt;
+#include &lt;cassert&gt;
+#include &lt;mutex&gt;
+
+int main()
+{
+  std::mutex mtx1;
+  std::recursive_mutex mtx2;
+
+  // 複数のミューテックスオブジェクトのロック取得を行う
+  {
+    </span></code></pre>
+</p>
+<h3>出力例</h3>
+<p><pre><code><span style="color: #000">Resource deadlock avoided
+</span></code></pre></p>
+<h2>バージョン</h2>
+<h3>言語</h3>
+<ul>
+<li>C++11</li>
+</ul>
+<h3>処理系</h3>
+<ul>
+<li><a href="http://cpprefjp.github.io/implementation.html#clang">Clang</a>: ??</li>
+<li><a href="http://cpprefjp.github.io/implementation.html#gcc">GCC</a>: </li>
+<li><a href="http://cpprefjp.github.io/implementation.html#gcc">GCC, C++0x mode</a>: 4.7.0</li>
+<li><a href="http://cpprefjp.github.io/implementation.html#icc">ICC</a>: ??</li>
+<li><a href="http://cpprefjp.github.io/implementation.html#visual_cpp">Visual C++</a> ??</li>
+</ul>
+<h2>参照</h2>
+<ul>
+<li><a href="http://d.hatena.ne.jp/yohhoy/20120919/p1" target="_blank">lock非メンバ関数の使いどころ - yohhoyの日記</a></li>
+<li><a href="http://www.justsoftwaresolutions.co.uk/threading/acquiring-multiple-locks-without-deadlock.html" target="_blank">Acquiring Multiple Locks Without Deadlock</a></li>
+</ul>
+<footer><a href="https://github.com/cpprefjp/site/edit/master/reference/mutex/lock.md" target="_blank">編集</a></footer>

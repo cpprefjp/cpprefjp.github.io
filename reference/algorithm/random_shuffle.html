@@ -1,0 +1,92 @@
+<h1>random_shuffle</h1>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">namespace std {
+  template &lt;class RandomAccessIterator&gt;
+  void random_shuffle(RandomAccessIterator first,
+                      RandomAccessIterator last);    // (1)
+
+  template &lt;class RandomAccessIterator, class RandomNumberGenerator&gt;
+  void random_shuffle(RandomAccessIterator first,
+                      RandomAccessIterator last,
+                      RandomNumberGenerator&amp; rand);  // (2) C++03
+
+  template &lt;class RandomAccessIterator, class RandomNumberGenerator&gt;
+  void random_shuffle(RandomAccessIterator first,
+                      RandomAccessIterator last,
+                      RandomNumberGenerator&amp;&amp; rand); // (2) C++11
+}</span></code></pre>
+
+この関数は、C++14から非推奨である。代わりに<a href="http://cpprefjp.github.io/reference/algorithm/shuffle.html"><code><span style="color: #000">shuffle()</span></code></a>関数を使用すること。</p>
+<h2>概要</h2>
+<p><code><span style="color: #000">[first,last)</span></code> のそれぞれの要素を同じ確率で並び替える。</p>
+<h2>要件</h2>
+<ul>
+<li><code><span style="color: #000">RandomAccessIterator</span></code> は <code><span style="color: #000">ValueSwappable</span></code> の要件を満たしている必要がある。</li>
+<li>乱数生成関数オブジェクトである <code><span style="color: #000">rand</span></code> の戻り値は <a href="http://cpprefjp.github.io/reference/iterator/iterator_traits.html"><code><span style="color: #000">iterator_traits</span></code></a><code><span style="color: #000">&lt;RandomAccessIterator&gt;::difference_type</span></code> へ変換可能でなければならない。</li>
+<li>0 より大きい <a href="http://cpprefjp.github.io/reference/iterator/iterator_traits.html"><code><span style="color: #000">iterator_traits</span></code></a><code><span style="color: #000">&lt;RandomAccessIterator&gt;::difference_type</span></code> 型の <code><span style="color: #000">n</span></code> について、<code><span style="color: #000">rand(n)</span></code> という呼び出しは <code><span style="color: #000">[0,n)</span></code> の範囲から無作為に選ばれた値を返す必要がある。</li>
+</ul>
+<h2>計算量</h2>
+<p>正確に <code><span style="color: #000">(last - first) - 1</span></code> 回 swap する。</p>
+<h2>備考</h2>
+<p>最初の形式がC互換ライブラリの <code><span style="color: #000">std::rand()</span></code>関数を使うかどうかは実装依存である。</p>
+<h2>非推奨の詳細(C++14)</h2>
+<p>C++14では、C互換ライブラリの乱数生成関数である<code><span style="color: #000">std::rand()</span></code>と<code><span style="color: #000">std::srand()</span></code>が非推奨となった。</p>
+<p>これらの関数には、以下のような問題が合った：</p>
+<ul>
+<li>値の範囲が小さい。<code><span style="color: #000">RAND_MAX</span></code>の値が非常に小さく、範囲<code><span style="color: #000">[0, 32767]</span></code>の値しか生成できなかった。</li>
+<li>任意の範囲を取得するために、剰余演算が使われていた。これはMudulo biasという問題によって、生成確率が一様にならない。</li>
+<li>これらの関数は<code><span style="color: #000">static</span></code>な唯一の状態を持つため、複数の状態が必要な状況に対処できなかった。</li>
+</ul>
+<p>こういった問題により、多くのプロジェクトがこれらの関数を使用することを、明確に禁止していた。そのため、これらの関数が非推奨となった。</p>
+<p><code><span style="color: #000">std::random_shuffle()</span></code>関数は<code><span style="color: #000">std::rand()</span></code>に依存したアルゴリズムであるため、共に非推奨となった。</p>
+<p><code><span style="color: #000">std::rand()</span></code>と<code><span style="color: #000">std::srand()</span></code>の代わりに、<a href="http://cpprefjp.github.io/reference/random.html"><code><span style="color: #000">&lt;random&gt;</span></code></a>ヘッダで定義される乱数生成器と分布を使用すること。<code><span style="color: #000">std::random_shuffle()</span></code>関数の代わりに、<a href="http://cpprefjp.github.io/reference/algorithm/shuffle.html"><code><span style="color: #000">std::shuffle()</span></code></a>関数を使用すること。</p>
+<h2>例</h2>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color:#ff0000">random_shuffle</span>(v.begin(), v.end());
+
+  std::cout &lt;&lt; " after: ";
+  std::copy(v.begin(), v.end(), std::ostream_iterator&lt;int&gt;(std::cout));
+  std::cout &lt;&lt; std::endl;
+}<span style="color: #000">#include &lt;iostream&gt;
+#include &lt;vector&gt;
+#include &lt;algorithm&gt;
+#include &lt;numeric&gt; // for iota
+#include &lt;iterator&gt;
+
+int main() {
+  std::vector&lt;int&gt; v(10);
+  std::iota(v.begin(), v.end(), 0); // 0～9 までの値を生成
+
+  std::cout &lt;&lt; "before: ";
+  std::copy(v.begin(), v.end(), std::ostream_iterator&lt;int&gt;(std::cout));
+  std::cout &lt;&lt; std::endl;
+
+  // シャッフル
+  std::</span></code></pre>
+</p>
+<h3>出力</h3>
+<p><pre><code><span style="color: #000">before: 0123456789
+ after: 4378052169
+</span></code></pre></p>
+<h2>実装例</h2>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">// [0,n) のどれかの値を返す内部関数
+T get_random_number(T n);
+
+template &lt;class RandomAccessIterator&gt;
+void random_shuffle(RandomAccessIterator first, RandomAccessIterator last) {
+  if (first == last) return;
+  for (auto it = first + 1; it != last; ++it)
+    iter_swap(it, first + get_random_number(it - first + 1));
+}
+
+template &lt;class RandomAccessIterator&gt;
+void random_shuffle(RandomAccessIterator first, RandomAccessIterator last, RandomNumberGenerator&amp;&amp; rand) {
+  if (first == last) return;
+  for (auto it = first + 1; it != last; ++it)
+    iter_swap(it, first + rand(it - first + 1));
+}</span></code></pre>
+</p>
+<h2>参照</h2>
+<ul>
+<li><a href="http://channel9.msdn.com/Events/GoingNative/2013/rand-Considered-Harmful" target="_blank">rand() Considered Harmful - Going Native 2013</a></li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n3924.pdf" target="_blank">N3924 Discouraging rand() in C++14, v2</a></li>
+</ul>
+<footer><a href="https://github.com/cpprefjp/site/edit/master/reference/algorithm/random_shuffle.md" target="_blank">編集</a></footer>

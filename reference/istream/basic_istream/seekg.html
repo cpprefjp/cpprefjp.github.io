@@ -1,0 +1,96 @@
+<h1>seekg</h1>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">basic_istream&lt;CharT, Traits&gt;&amp; seekg(pos_type pos);
+basic_istream&lt;CharT, Traits&gt;&amp; seekg(off_type off, seekdir dir);</span></code></pre>
+</p>
+<h2>概要</h2>
+<p>（非書式化入力関数）ストリームバッファに対し、読み取り位置の移動を指示する。</p>
+<p>非書式化入力関数であるが、後続の<code><span style="color: #000">gcount()</span></code>呼び出しに影響を及ぼさない点が通常と異なる。</p>
+<h2>効果</h2>
+<ol>
+<li>（<code><span style="color: #000">pos_type</span></code>を引数に取るもののみ）初めにeofbitを消去する。</li>
+<li><code><span style="color: #000">sentry</span></code>オブジェクトを構築する。<code><span style="color: #000">sentry</span></code>オブジェクトが失敗を示した場合、何もしない。</li>
+<li>与えられた実引数により、以下のいずれかを実行する。<ul>
+<li><code><span style="color: #000">rdbuf()-&gt;pubseekpos(pos, ios_base::in)</span></code></li>
+<li><code><span style="color: #000">rdbuf()-&gt;pubseekoff(off, dir, ios_base::in)</span></code></li>
+</ul>
+</li>
+<li>失敗した場合、<code><span style="color: #000">setstate(failbit)</span></code>を呼び出す。</li>
+</ol>
+<h2>戻り値</h2>
+<p><code><span style="color: #000">*this</span></code></p>
+<h2>例</h2>
+<p>以下は、<code><span style="color: #000">off_type</span></code>と<code><span style="color: #000">seekdir</span></code>を使用する例。
+<code><span style="color: #000">pos_type</span></code>のみを引数に取る多重定義の例は、<a href="http://cpprefjp.github.io/reference/istream/basic_istream/tellg.html"><code><span style="color: #000">tellg</span></code></a>を参照。</p>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">#include &lt;iostream&gt;
+#include &lt;sstream&gt;
+
+int main() {
+  std::istringstream is("ABC");
+  char x;
+
+  is &gt;&gt; x;
+  std::cout &lt;&lt; x &lt;&lt; std::endl;
+
+  is.seekg(0, std::ios_base::beg);
+  is &gt;&gt; x;
+  std::cout &lt;&lt; x &lt;&lt; std::endl;
+}</span></code></pre>
+</p>
+<h2>出力</h2>
+<p><pre><code><span style="color: #000">A
+A
+</span></code></pre></p>
+<h2>実装例</h2>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">basic_istream&lt;CharT, Traits&gt;&amp; seekg(pos_type pos) {
+  iostate state = goodbit;
+  try {
+    this-&gt;clear(this-&gt;rdstate() &amp; ~eofbit);
+    sentry s(*this, true);
+    if (s) {
+      if (this-&gt;rdbuf()-&gt;pubseekpos(pos, ios_base::in) == -1) {
+        state |= failbit;
+      }
+    }
+  } catch (...) {
+    例外を投げずにbadbitを設定する;
+    if ((this-&gt;exceptions() &amp; badbit) != 0) {
+      throw;
+    }
+  }
+  this-&gt;setstate(state);
+  return *this;
+}
+
+basic_istream&lt;CharT, Traits&gt;&amp; seekg(off_type off, seekdir dir) {
+  iostate state = goodbit;
+  try {
+    sentry s(*this, true);
+    if (s) {
+      if (this-&gt;rdbuf()-&gt;pubseekoff(off, dir, ios_base::in) == -1) {
+        state |= failbit;
+      }
+    }
+  } catch (...) {
+    例外を投げずにbadbitを設定する;
+    if ((this-&gt;exceptions() &amp; badbit) != 0) {
+      throw;
+    }
+  }
+  this-&gt;setstate(state);
+  return *this;
+}</span></code></pre>
+</p>
+<h2>バージョン</h2>
+<h3>言語</h3>
+<ul>
+<li>C++98</li>
+</ul>
+<h2>参照</h2>
+<ul>
+<li><a href="http://cpprefjp.github.io/reference/istream/basic_istream/tellg.html"><code><span style="color: #000">basic_istream::tellg</span></code></a></li>
+<li><code><span style="color: #000">basic_streambuf::pubseekpos</span></code></li>
+<li><code><span style="color: #000">basic_streambuf::pubseekoff</span></code></li>
+<li><code><span style="color: #000">basic_streambuf::seekpos</span></code></li>
+<li><code><span style="color: #000">basic_streambuf::seekoff</span></code></li>
+</ul>
+<footer><a href="https://github.com/cpprefjp/site/edit/master/reference/istream/basic_istream/seekg.md" target="_blank">編集</a></footer>

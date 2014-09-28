@@ -1,0 +1,94 @@
+<h1>operator=</h1>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">private:
+  gslice_array&amp; operator=(const gslice_array&amp;); // (1) C++03 宣言のみ
+
+public:
+  const gslice_array&amp; operator=(const gslice_array&amp; ar) const; // (1) C++11
+  void operator=(const valarray&lt;T&gt;&amp; ar) const;                 // (2)
+  void operator=(const T&amp; value) const;                        // (3)</span></code></pre>
+</p>
+<h2>概要</h2>
+<ul>
+<li>(1) : 元となる<code><span style="color: #000">valarray</span></code>オブジェクトから参照によって抽出した各要素に、<code><span style="color: #000">ar</span></code>が参照する各要素を代入する</li>
+<li>(2) : 元となる<code><span style="color: #000">valarray</span></code>オブジェクトから参照によって抽出した各要素に、<code><span style="color: #000">ar</span></code>の各要素を代入する</li>
+<li>(3) : 元となる<code><span style="color: #000">valarray</span></code>オブジェクトから参照によって抽出した各要素に、<code><span style="color: #000">value</span></code>を代入する</li>
+</ul>
+<h2>効果</h2>
+<p>概要通り</p>
+<h2>戻り値</h2>
+<ul>
+<li>(1) : <code><span style="color: #000">*this</span></code></li>
+<li>(2), (3) : なし</li>
+</ul>
+<h2>備考</h2>
+<ul>
+<li>(1) : C++03まで、このオーバーロードは使用できなかった。</li>
+<li>(2) : <code><span style="color: #000">valarray</span></code>から抽出した要素数と<code><span style="color: #000">ar</span></code>の要素数が異なる場合、その挙動は未定義。</li>
+</ul>
+<h2>例</h2>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">#include &lt;iostream&gt;
+#include &lt;valarray&gt;
+#include &lt;numeric&gt; // accumulate
+#include &lt;functional&gt; // multiplies
+
+std::size_t product(const std::valarray&lt;std::size_t&gt;&amp; v)
+{
+  return std::accumulate(
+           std::begin(v),
+           std::end(v),
+           1u,
+           std::multiplies&lt;std::size_t&gt;());
+}
+
+template &lt;class T&gt;
+void print(const char* name, const std::valarray&lt;T&gt;&amp; v)
+{
+  std::cout &lt;&lt; name &lt;&lt; " : {";
+  bool first = true;
+
+  for (const T&amp; x : v) {
+    if (first) {
+      first = false;
+    }
+    else {
+      std::cout &lt;&lt; ',';
+    }
+    std::cout &lt;&lt; x;
+  }
+  std::cout &lt;&lt; "}" &lt;&lt; std::endl;
+}
+
+int main()
+{
+  std::valarray&lt;int&gt; v = {1, 2, 3, 4, 5, 6};
+
+  const std::size_t start = 1u;  // 開始位置
+  const std::valarray&lt;std::size_t&gt; lengths = {3u}; // 要素数
+  const std::valarray&lt;std::size_t&gt; strides = {2u}; // 何個置きに処理するか
+
+  // (1)
+  // 左辺のgslice_arrayが参照する各要素に、右辺のgslice_arrayが参照する各要素を代入する
+  std::valarray&lt;int&gt; v1 = {1, 2, 3, 4, 5, 6};
+  v1[std::gslice(
+        0,
+        std::valarray&lt;std::size_t&gt;(3u, 1),
+        std::valarray&lt;std::size_t&gt;(1u, 1))] = v[std::gslice(start, lengths, strides)];
+  print("assign gslice_array", v1);
+
+  // (2)
+  // 抽出した要素全てに33を代入する
+  v[std::gslice(start, lengths, strides)] = std::valarray&lt;int&gt;(33, product(lengths));
+  print("assign valarray", v);
+
+  // (3)
+  // 抽出した要素全てに55を代入する
+  v[std::gslice(start, lengths, strides)] = 55;
+  print("assign value", v);
+}</span></code></pre>
+</p>
+<h3>出力</h3>
+<p><pre><code><span style="color: #000">assign gslice_array : {2,4,6,4,5,6}
+assign valarray : {1,33,3,33,5,33}
+assign value : {1,55,3,55,5,55}
+</span></code></pre></p>
+<footer><a href="https://github.com/cpprefjp/site/edit/master/reference/valarray/gslice_array/op_assign.md" target="_blank">編集</a></footer>

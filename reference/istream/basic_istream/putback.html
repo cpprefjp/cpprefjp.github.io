@@ -1,0 +1,79 @@
+<h1>putback</h1>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">basic_istream&lt;CharT, Traits&gt;&amp; putback(char_type c);</span></code></pre>
+</p>
+<h2>概要</h2>
+<p>（非書式化入力関数）指定した1文字をストリームバッファの入力に戻す。
+実引数で戻す文字を指定する点が<code><span style="color: #000">unget</span></code>メンバ関数と異なる。</p>
+<p>非書式化入力関数であるが、初めに<code><span style="color: #000">eofbit</span></code>を消去する点が通常と異なる。</p>
+<h2>効果</h2>
+<ol>
+<li><code><span style="color: #000">sentry</span></code>オブジェクトを構築する。</li>
+<li><code><span style="color: #000">!good()</span></code>なら<code><span style="color: #000">setstate(failbit)</span></code>を呼び出して終わる。</li>
+<li><code><span style="color: #000">rdbuf()-&gt;sputbackc()</span></code>を呼び出す。<ul>
+<li><code><span style="color: #000">rdbuf()</span></code>がヌルポインタであるか、<code><span style="color: #000">sputbackc()</span></code>が<code><span style="color: #000">Traits::eof()</span></code>を返した場合、<code><span style="color: #000">setstate(badbit)</span></code>を呼び出す。</li>
+</ul>
+</li>
+</ol>
+<h2>戻り値</h2>
+<p><code><span style="color: #000">*this</span></code>。</p>
+<h2>備考</h2>
+<p>この関数は1文字も入力を行わないため、この後の<code><span style="color: #000">gcount()</span></code>は常に<code><span style="color: #000">0</span></code>を返す。</p>
+<h2>例</h2>
+<p><pre><code><span style="color: #000">#include &lt;iostream&gt;
+#include &lt;locale&gt;
+#include &lt;string&gt;
+
+// 入力の先頭を大文字にしてから文字列として読み込む
+std::string get_word(std::istream&amp; is) {
+  std::string s;
+  char c;
+  if (is &gt;&gt; c) {
+    // 大文字にしてからput_backで戻す。
+    is.putback(std::toupper(c, is.getloc()));
+
+    std::cin &gt;&gt; s;
+  }
+  return s;
+}
+
+int main() {
+  std::cout &lt;&lt; get_word(std::cin) &lt;&lt; std::endl;
+}
+</span></code></pre></p>
+<h2>出力</h2>
+<p><pre><code><span style="color: #000">（tomatoと入力）
+Tomato
+</span></code></pre></p>
+<h2>実装例</h2>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">basic_istream&lt;CharT, Traits&gt;&amp; putback(char_type c) {
+  clear(rdstate() &amp; ~eofbit);
+  try {
+    sentry s(*this, true);
+    if (s) {
+      if (auto sb = rdbuf()) {
+        if (sb-&gt;sputbackc(c) != Traits::eof()) {
+          return *this;
+        }
+      }
+      setstate(badbit);
+    }
+  } catch (...) {
+    例外を投げずにbadbitを設定する;
+    if ((exceptions() &amp; badbit) != 0) {
+      throw;
+    }
+  }
+  return *this;
+}</span></code></pre>
+</p>
+<h2>バージョン</h2>
+<h3>言語</h3>
+<ul>
+<li>C++98</li>
+</ul>
+<h2>参照</h2>
+<ul>
+<li><a href="http://cpprefjp.github.io/reference/istream/basic_istream/unget.html"><code><span style="color: #000">basic_istream::unget</span></code></a></li>
+<li><code><span style="color: #000">basic_streambuf::sputbackc</span></code></li>
+</ul>
+<footer><a href="https://github.com/cpprefjp/site/edit/master/reference/istream/basic_istream/putback.md" target="_blank">編集</a></footer>

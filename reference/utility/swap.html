@@ -1,0 +1,115 @@
+<h1>swap (C++11)</h1>
+<p><pre class="codehilite"><code class="language-cpp"><i>see below</i>);
+
+  template &lt;class T, size_t N&gt;
+  void swap(T (&amp;a)[N], T (&amp;b)[N]) noexcept(noexcept(swap(*a, *b)));
+}<span style="color: #000">namespace std {
+  template &lt;class T&gt;
+  void swap(T&amp; a, T&amp; b) noexcept(</span></code></pre>
+</p>
+<h2>概要</h2>
+<p>2つの値を入れ替える。</p>
+<h2>要件</h2>
+<ul>
+<li>値版型<code><span style="color: #000">T</span></code>は<code><span style="color: #000">MoveConstructible</span></code>かつ<code><span style="color: #000">MoveAssignable</span></code>でなければならない。</li>
+<li>配列版範囲<code><span style="color: #000">[0, N)</span></code>内の全ての<code><span style="color: #000">i</span></code>において、<code><span style="color: #000">a[i]</span></code>と<code><span style="color: #000">b[i]</span></code>は<code><span style="color: #000">Swappable</span></code>でなければならない。</li>
+</ul>
+<h2>効果</h2>
+<p>値版の振る舞いは、以下のコードと等価である：</p>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">template &lt;class T&gt;
+void swap(T&amp; a, T&amp; b) {
+  T t = std::move(a);
+  a = std::move(b);
+  b = std::move(t);
+}</span></code></pre>
+
+配列版の振る舞いは、以下のコードと等価である：</p>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">template &lt;class T, size_t N&gt;
+void swap(T (&amp;a)[N], T (&amp;b)[N]) {
+  for (size_t i = 0; i &lt; N; ++i) {
+    swap(a[i], b[i]);
+  }
+}</span></code></pre>
+
+つまり、範囲<code><span style="color: #000">[0, N)</span></code>内の全ての<code><span style="color: #000">i</span></code>について、 <code><span style="color: #000">swap(a[i], b[i]);</span></code> を呼び出す。</p>
+<p>この関数の内部における<code><span style="color: #000">swap()</span></code>呼び出しは、 <code><span style="color: #000">std::swap(a[i], b[i]);</span></code> という形ではなく、 <code><span style="color: #000">swap(a[i], b[i]);</span></code>という形で行われる。すなわち、<code><span style="color: #000">T</span></code>型に対して多重定義された<code><span style="color: #000">swap()</span></code>関数がある場合には、常にそちらが呼ばれる。</p>
+<p>そのため、<code><span style="color: #000">swap()</span></code>関数を呼び出す場合は、直接<code><span style="color: #000">std::swap(a, b);</span></code>と呼び出すのではなく、</p>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">using std::swap;
+swap(a, b);</span></code></pre>
+
+のように呼び出し、各クラスに対し個別に定義された swap がある場合には そちらが呼ばれるようにするべきである。</p>
+<h2>戻り値</h2>
+<p>なし</p>
+<h2>例外</h2>
+<ul>
+<li>値版<code><span style="color: #000">noexcept</span></code>中の式は、以下と等価である：<code><span style="color: #000">is_nothrow_move_constructible&lt;T&gt;::value &amp;&amp; is_nothrow_move_assignable&lt;T&gt;::value</span></code></li>
+<li>配列版配列の要素型<code><span style="color: #000">T</span></code>に対する<code><span style="color: #000">swap()</span></code>操作が例外を投げない場合、この関数もまた例外を投げない</li>
+</ul>
+<h2>例</h2>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color:#ff0000">swap</span>;
+    <span style="color:#ff0000">swap</span>(a, b);
+
+    std::cout &lt;&lt; a &lt;&lt; ", " &lt;&lt; b &lt;&lt; std::endl;
+  }
+
+  // 配列版
+  {
+    int a[] = {1, 2, 3};
+    int b[] = {4, 5, 6};
+
+    using std::<span style="color:#ff0000">swap</span>;
+    <span style="color:#ff0000">swap</span>(a, b);
+
+    print(a);
+    std::cout &lt;&lt; ", ";
+    print(b);
+    std::cout &lt;&lt; std::endl;
+  }
+}<span style="color: #000">#include &lt;iostream&gt;
+#include &lt;utility&gt;
+
+template &lt;class Array&gt;
+void print(const Array&amp; ar)
+{
+  std::cout &lt;&lt; '[';
+  bool first = true;
+  for (auto x : ar) {
+    if (first) {
+      first = false;
+    }
+    else {
+      std::cout &lt;&lt; ',';
+    }
+    std::cout &lt;&lt; x;
+  }
+  std::cout &lt;&lt; ']';
+}
+
+int main()
+{
+  // 値版
+  {
+    int a = 1;
+    int b = 2;
+
+    using std::</span></code></pre>
+</p>
+<h3>出力</h3>
+<p><pre><code><span style="color: #000">2, 1
+[4,5,6], [1,2,3]
+</span></code></pre></p>
+<h2>バージョン</h2>
+<h3>言語</h3>
+<ul>
+<li>C++11</li>
+</ul>
+<h3>処理系</h3>
+<ul>
+<li><a href="http://cpprefjp.github.io/implementation.html#clang">Clang</a>: ??</li>
+<li><a href="http://cpprefjp.github.io/implementation.html#gcc">GCC</a>: </li>
+<li><a href="http://cpprefjp.github.io/implementation.html#gcc">GCC, C++0x mode</a>: 4.7.0</li>
+<li><a href="http://cpprefjp.github.io/implementation.html#icc">ICC</a>: ??</li>
+<li><a href="http://cpprefjp.github.io/implementation.html#visual_cpp">Visual C++</a> ??</li>
+</ul>
+<h2>参照</h2>
+<footer><a href="https://github.com/cpprefjp/site/edit/master/reference/utility/swap.md" target="_blank">編集</a></footer>

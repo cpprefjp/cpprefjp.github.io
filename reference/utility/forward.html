@@ -1,0 +1,78 @@
+<h1>forward (C++11)</h1>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">namespace std {
+  template &lt;class T&gt;
+  T&amp;&amp; forward(typename remove_reference&lt;T&gt;::type&amp; t) noexcept;
+
+  template &lt;class T&gt;
+  T&amp;&amp; forward(typename remove_reference&lt;T&gt;::type&amp;&amp; t) noexcept;
+}</span></code></pre>
+</p>
+<h2>概要</h2>
+<p>関数テンプレートの引数を転送する。</p>
+<p>この関数は、渡された引数を<code><span style="color: #000">T&amp;&amp;</span></code>型にキャストして返す。（注：<code><span style="color: #000">T</span></code>が左辺値参照の場合には<code><span style="color: #000">T&amp;&amp;</span></code>も左辺値参照になり、それ以外の場合に<code><span style="color: #000">T&amp;&amp;</span></code>は右辺値参照になる。）</p>
+<p>この関数は、主に転送関数（ forwarding function ）の実装を単純化する目的で使われる：</p>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">template &lt;class... Args&gt;
+void forward_to_f(Args&amp;&amp;... args)
+{
+  f(std::forward&lt;Args&gt;(args)...);
+}</span></code></pre>
+
+この関数に渡した引数は、多くのケースにおいて右辺値参照にキャストされ、移動されることに注意すること。同じ引数に対して二回以上関数を呼び出しを行いたい場合は、<code><span style="color: #000">std::forward()</span></code>は使ってはならない：</p>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">templat e&lt;class T&gt;
+void bad(T&amp;&amp; x)
+{
+  f(std::forward&lt;T&gt;(x));  // xはここでムーブされるかもしれないので
+  g(std::forward&lt;T&gt;(x));  // この関数呼び出しは予想外の結果になる可能性がある
+}
+
+template &lt;class T&gt;
+void good(T&amp;&amp; x)
+{
+  f(x);                   // まだ使う場合は転送は行わず、
+  g(std::forward&lt;T&gt;(x));  // 最後に使うときのみ転送すれば安全
+}</span></code></pre>
+</p>
+<h2>戻り値</h2>
+<p><code><span style="color: #000">static_cast&lt;T&amp;&amp;&gt;(t)</span></code></p>
+<h2>例外</h2>
+<p>投げない</p>
+<h2>備考</h2>
+<p>二番目の形式（ <code><span style="color: #000">template &lt;class T&gt; T&amp;&amp; forward(typename remove_reference&lt;T&gt;::type&amp;&amp;) noexcept;</span></code> ）が左辺値参照の型に対して呼ばれた場合、プログラムは不適格である。（例： <code><span style="color: #000">std::forward&lt;int&amp;&gt;(1)</span></code> は不適格）</p>
+<h2>例</h2>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color:#ff0000">forward</span>&lt;A1&gt;(a1), std::<span style="color:#ff0000">forward</span>&lt;A2&gt;(a2)));
+}
+
+struct A {
+  A(int&amp;, const double&amp;) {}
+};
+
+int main()
+{
+//std::shared_ptr&lt;A&gt; sp1 = factory&lt;A&gt;(2, 1.414);  // error: 2 will not bind to int&amp;
+
+  int i = 2;
+  std::shared_ptr&lt;A&gt; sp2 = factory&lt;A&gt;(i, 1.414);  // OK
+}<span style="color: #000">#include &lt;memory&gt;
+#include &lt;utility&gt;
+
+template &lt;class T, class A1, class A2&gt;
+std::shared_ptr&lt;T&gt; factory(A1&amp;&amp; a1, A2&amp;&amp; a2) {
+  return std::shared_ptr&lt;T&gt;(new T(std::</span></code></pre>
+</p>
+<h3>出力</h3>
+<p><pre><code><span style="color: #000"></span></code></pre></p>
+<h2>バージョン</h2>
+<h3>言語</h3>
+<ul>
+<li>C++11</li>
+</ul>
+<h3>処理系</h3>
+<ul>
+<li><a href="http://cpprefjp.github.io/implementation.html#clang">Clang</a>: ??</li>
+<li><a href="http://cpprefjp.github.io/implementation.html#gcc">GCC</a>: </li>
+<li><a href="http://cpprefjp.github.io/implementation.html#gcc">GCC, C++0x mode</a>: 4.6.1</li>
+<li><a href="http://cpprefjp.github.io/implementation.html#icc">ICC</a>: ??</li>
+<li><a href="http://cpprefjp.github.io/implementation.html#visual_cpp">Visual C++</a> ??</li>
+</ul>
+<h2>参照</h2>
+<footer><a href="https://github.com/cpprefjp/site/edit/master/reference/utility/forward.md" target="_blank">編集</a></footer>

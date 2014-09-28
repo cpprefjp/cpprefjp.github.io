@@ -1,0 +1,82 @@
+<h1>search</h1>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">namespace std {
+  template&lt;class ForwardIterator1, class ForwardIterator2&gt;
+  ForwardIterator1 search(ForwardIterator1 first1, ForwardIterator1 last1,
+                          ForwardIterator2 first2, ForwardIterator2 last2);
+
+  template&lt;class ForwardIterator1, class ForwardIterator2, class BinaryPredicate&gt;
+  ForwardIterator1 search(ForwardIterator1 first1, ForwardIterator1 last1,
+                          ForwardIterator2 first2, ForwardIterator2 last2,
+                          BinaryPredicate pred);
+}</span></code></pre>
+</p>
+<h2>概要</h2>
+<p>あるシーケンスの中から、特定のサブシーケンスを探す</p>
+<h2>戻り値</h2>
+<p><code><span style="color: #000">[first1,last1 - (last2 - first2))</span></code> 内のイテレータ <code><span style="color: #000">i</span></code> があるとき、0 以上 <code><span style="color: #000">last2 - first2</span></code> 未満の整数 <code><span style="color: #000">n</span></code> について、それぞれ <code><span style="color: #000">*(i + n) == *(first2 + n)</span></code> もしくは <code><span style="color: #000">pred(*(i + n), *(first2 + n)) != false</span></code> であるようなサブシーケンスを探し、見つかった最初のサブシーケンスの先頭のイテレータを返す。</p>
+<p>そのようなイテレータが見つからない場合は <code><span style="color: #000">last1</span></code> を返し、<code><span style="color: #000">[first2,last2)</span></code> が空である場合には <code><span style="color: #000">first1</span></code> を返す。</p>
+<h2>計算量</h2>
+<p>最大で <code><span style="color: #000">(last1 - first1) * (last2 - first2)</span></code> 回の、対応する比較もしくは述語が適用される</p>
+<h2>備考</h2>
+<p><code><span style="color: #000">search()</span></code> と <a href="http://cpprefjp.github.io/reference/algorithm/find_end.html"><code><span style="color: #000">find_end()</span></code></a> は共にサブシーケンスを検索する関数だが、以下の点が異なる。</p>
+<ul>
+<li><code><span style="color: #000">search()</span></code> は見つかった最初のサブシーケンスを返すが <a href="http://cpprefjp.github.io/reference/algorithm/find_end.html"><code><span style="color: #000">find_end()</span></code></a> は見つかった最後のサブシーケンスを返す</li>
+<li><code><span style="color: #000">[first2,last2)</span></code> が空であるときに <code><span style="color: #000">search()</span></code> は <code><span style="color: #000">first1</span></code> を返すが、<a href="http://cpprefjp.github.io/reference/algorithm/find_end.html"><code><span style="color: #000">find_end()</span></code></a> は <code><span style="color: #000">last1</span></code> を返す</li>
+</ul>
+<h2>例</h2>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">#include &lt;algorithm&gt;
+#include &lt;iostream&gt;
+#include &lt;vector&gt;
+#include &lt;list&gt;
+
+int main() {
+  std::vector&lt;int&gt; v = { 1,2,1,2,3 };
+  std::list&lt;int&gt; v2 = { 1,2 };
+
+  // 1,2 と連続している最初のシーケンスを探す
+  std::vector&lt;int&gt;::iterator it = std::search(v.begin(), v.end(), v2.begin(), v2.end());
+  // v[0] の位置を指すイテレータが見つかる。
+  if (it == v.end()) {
+    std::cout &lt;&lt; "not found" &lt;&lt; std::endl;
+  } else {
+    std::cout &lt;&lt; "found: index==" &lt;&lt; std::distance(v.begin(), it) &lt;&lt; std::endl;
+  }
+}</span></code></pre>
+</p>
+<h3>出力</h3>
+<p><pre><code><span style="color: #000">found: index==0
+</span></code></pre></p>
+<h2>実装例</h2>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">template&lt;class ForwardIterator1, class ForwardIterator2&gt;
+ForwardIterator1 search(ForwardIterator1 first1, ForwardIterator1 last1,
+                        ForwardIterator2 first2, ForwardIterator2 last2) {
+  for ( ; first1 != last1; ++first1) {
+    ForwardIterator1 p1 = first1;
+    ForwardIterator2 p2 = first2;
+    while (true) {
+      if (p2 == last2) return first1;
+      if (p1 == last1) return last1;
+      if (!bool(*p1 == *p2)) break;
+      ++p1, ++p2;
+    }
+  }
+  return first1;
+}
+
+template&lt;class ForwardIterator1, class ForwardIterator2, class BinaryPredicate&gt;
+ForwardIterator1 search(ForwardIterator1 first1, ForwardIterator1 last1,
+                        ForwardIterator2 first2, ForwardIterator2 last2, BinaryPredicate pred) {
+  for ( ; first1 != last1; ++first1) {
+    ForwardIterator1 p1 = first1;
+    ForwardIterator2 p2 = first2;
+    while (true) {
+      if (p2 == last2) return first1;
+      if (p1 == last1) return last1;
+      if (!bool(pred(*p1, *p2))) break;
+      ++p1, ++p2;
+    }
+  }
+  return first1;
+}</span></code></pre>
+</p>
+<footer><a href="https://github.com/cpprefjp/site/edit/master/reference/algorithm/search.md" target="_blank">編集</a></footer>

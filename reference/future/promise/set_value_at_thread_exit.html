@@ -1,0 +1,193 @@
+<h1>set_value_at_thread_exit (C++11)</h1>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">// テンプレートパラメータRが下記特殊ケースでない場合
+void promise::set_value_at_thread_exit(const R&amp; r);
+void promise::set_value_at_thread_exit(R&amp;&amp; r);
+
+// テンプレートパラメータRが参照の場合
+void promise&lt;R&amp;&gt;::set_value_at_thread_exit(R&amp; r);
+
+// テンプレートパラメータRがvoidの場合
+void promise&lt;void&gt;::set_value_at_thread_exit();</span></code></pre>
+</p>
+<h2>概要</h2>
+<p>スレッド終了時に結果の値を設定する</p>
+<h2>効果</h2>
+<p>値<code><span style="color: #000">r</span></code>を、すぐに準備完了状態(<a href="http://cpprefjp.github.io/reference/future/future_status.html"><code><span style="color: #000">future_status::ready</span></code></a>)にはせずに共有状態に格納する。現在のスレッドが終了し、スレッドローカル記憶域を持つ全てのオブジェクトを破棄したあと、準備完了状態にする。</p>
+<h2>戻り値</h2>
+<p>なし</p>
+<h2>例外</h2>
+<p>この関数は、以下のerror conditionを持つ<a href="http://cpprefjp.github.io/reference/future/future_error.html"><code><span style="color: #000">future_error</span></code></a>例外オブジェクトを送出する可能性がある：</p>
+<ul>
+<li><a href="http://cpprefjp.github.io/reference/future/future_errc.html"><code><span style="color: #000">promise_already_satisfied</span></code></a> ： すでに値もしくは例外が設定されている</li>
+<li><a href="http://cpprefjp.github.io/reference/future/future_errc.html"><code><span style="color: #000">no_state</span></code></a> ： <code><span style="color: #000">*this</span></code>が共有状態を持っていない(<code><span style="color: #000">promise</span></code>オブジェクトがムーブされると起こりうる)</li>
+</ul>
+<h2>例</h2>
+<p><pre class="codehilite"><code class="language-cpp"><a href="http://connect.microsoft.com/VisualStudio/feedback/details/737812" target="_blank">http://connect.microsoft.com/VisualStudio/feedback/details/737812</a>
+void calc(std::promise&lt;int&gt;&amp; p)
+{
+  int sum = 0;
+  for (int i = 0; i &lt; 10; ++i) {
+    sum += i + 1;
+  }
+
+  // 結果値を書き込み、スレッド終了時に準備完了状態にする
+  p.<span style="color:#ff0000">set_value_at_thread_exit</span>(sum);
+}
+
+int main()
+{
+  std::promise&lt;int&gt; p;
+  std::future&lt;int&gt; f = p.get_future();
+
+  // 別スレッドで計算を行う
+  std::thread t(calc, std::ref(p));
+
+  // calc()によって書き込まれた結果を取得
+  std::cout &lt;&lt; f.get() &lt;&lt; std::endl;
+
+  t.join();
+}<span style="color: #000">#include &lt;iostream&gt;
+#include &lt;future&gt;
+#include &lt;thread&gt;
+#include &lt;utility&gt;
+#include &lt;functional&gt;
+
+// promiseを左辺値参照にしているのはVisual C++ 2012のバグのため
+// </span></code></pre>
+</p>
+<h3>出力</h3>
+<p><pre><code><span style="color: #000">55
+</span></code></pre></p>
+<h2>例：<code><span style="color: #000">promise&lt;R&amp;&gt;</span></code></h2>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color:#ff0000">set_value_at_thread_exit</span>(sum_);
+  }
+};
+
+int main()
+{
+  Calculator c;
+
+  // 非同期に計算を開始する
+  c.start();
+
+  // 計算結果を取得する
+  int result = c.get();
+
+  std::cout &lt;&lt; result &lt;&lt; std::endl;
+}<span style="color: #000">#include &lt;iostream&gt;
+#include &lt;future&gt;
+#include &lt;thread&gt;
+#include &lt;utility&gt;
+#include &lt;functional&gt;
+
+class Calculator {
+  int sum_;
+  std::future&lt;int&amp;&gt; async_calc_;
+  std::promise&lt;int&amp;&gt; p_;
+
+public:
+  Calculator() : sum_(0) {}
+
+  void start()
+  {
+    async_calc_ = p_.get_future();
+
+    std::thread t(&amp;Calculator::calc, this, std::ref(p_));
+    t.detach();
+  }
+
+  int get()
+  {
+    return async_calc_.get();
+  }
+
+  void calc(std::promise&lt;int&amp;&gt;&amp; p)
+  {
+    int sum = 0;
+    for (int i = 0; i &lt; 10; ++i) {
+      sum += i + 1;
+    }
+
+    // メンバ変数への参照を結果値として書き込み、
+    // スレッド終了時に準備完了状態にする
+    sum_ = sum;
+    p.</span></code></pre>
+</p>
+<h3>出力</h3>
+<p><pre><code><span style="color: #000">55
+</span></code></pre></p>
+<h2>例：<code><span style="color: #000">promise&lt;void&gt;</span></code></h2>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color:#ff0000">set_value_at_thread_exit</span>();
+  }
+};
+
+int main()
+{
+  Calculator c;
+
+  // 非同期に計算を開始する
+  c.start();
+
+  // 計算結果を取得する
+  int result = c.get();
+
+  std::cout &lt;&lt; result &lt;&lt; std::endl;
+}<span style="color: #000">#include &lt;iostream&gt;
+#include &lt;future&gt;
+#include &lt;thread&gt;
+#include &lt;utility&gt;
+#include &lt;functional&gt;
+
+class Calculator {
+  int sum_;
+  std::promise&lt;void&gt; p_;
+  std::future&lt;void&gt; async_calc_;
+
+public:
+  Calculator() : sum_(0) {}
+
+  void start()
+  {
+    async_calc_ = p_.get_future();
+
+    std::thread t(&amp;Calculator::calc, this, std::ref(p_));
+    t.detach();
+  }
+
+  int get()
+  {
+    async_calc_.get();
+    return sum_;
+  }
+
+  void calc(std::promise&lt;void&gt;&amp; p)
+  {
+    int sum = 0;
+    for (int i = 0; i &lt; 10; ++i) {
+      sum += i + 1;
+    }
+
+    // メンバ変数として結果を保持し、promiseでは計算終了の通知のみ行う
+    // 通知はスレッド終了時に行われる
+    sum_ = sum;
+    p.</span></code></pre>
+</p>
+<h3>出力</h3>
+<p><pre><code><span style="color: #000">55
+</span></code></pre></p>
+<h2>バージョン</h2>
+<h3>言語</h3>
+<ul>
+<li>C++11</li>
+</ul>
+<h3>処理系</h3>
+<ul>
+<li><a href="http://cpprefjp.github.io/implementation.html#clang">Clang</a>: ??</li>
+<li><a href="http://cpprefjp.github.io/implementation.html#gcc">GCC</a>: </li>
+<li><a href="http://cpprefjp.github.io/implementation.html#gcc">GCC, C++0x mode</a>: </li>
+<li><a href="http://cpprefjp.github.io/implementation.html#icc">ICC</a>: ??</li>
+<li><a href="http://cpprefjp.github.io/implementation.html#visual_cpp">Visual C++</a>: 11.0</li>
+</ul>
+<h2>参照</h2>
+<p><a href="http://cpprefjp.github.io/article/at_thread_exit.html">_at_thread_exit系の関数が存在している理由</a></p>
+<footer><a href="https://github.com/cpprefjp/site/edit/master/reference/future/promise/set_value_at_thread_exit.md" target="_blank">編集</a></footer>

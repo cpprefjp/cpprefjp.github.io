@@ -1,0 +1,249 @@
+<h1>basic_istream</h1>
+<p><pre class="codehilite"><code class="language-cpp"><a href="http://cpprefjp.github.io/reference/string/char_traits.html">char_traits</a>&lt;CharT&gt;&gt;
+  class basic_istream : virtual public <a href="http://cpprefjp.github.io/reference/ios/basic_ios.html">basic_ios</a>&lt;CharT, Traits&gt; { …… };
+
+  typedef basic_istream&lt;char&gt; istream;
+  typedef basic_istream&lt;wchar_t&gt; wistream;
+}<span style="color: #000">namespace std {
+  template&lt;class CharT, class Traits = </span></code></pre>
+</p>
+<h2>概要</h2>
+<p><code><span style="color: #000">basic_istream</span></code>は、入力ストリームを表現するクラスである。
+すなわち、<code><span style="color: #000">rdbuf()</span></code>が指し示すストリームバッファオブジェクトに対する読み取り操作を提供する。</p>
+<p>各種の入力関数——特に<code><span style="color: #000">&gt;&gt;</span></code>演算子——がこのクラスのメンバ関数・非メンバ関数として定義されている。
+このため、ユーザーコードで入力処理を実装する際には、<code><span style="color: #000">basic_istream</span></code>、あるいはそれに対するtypedefである<code><span style="color: #000">istream</span></code>や<code><span style="color: #000">wistream</span></code>などの型への参照を実引数として受け取るようにすると良い。</p>
+<p>テンプレートパラメータとして文字型を受け取るようになっており、使用を容易にするため、以下のパラメータ設定済みエイリアスが定義されている。
+このエイリアスは<code><span style="color: #000">&lt;istream&gt;</span></code>ヘッダと<code><span style="color: #000">&lt;iosfwd&gt;</span></code>ヘッダで定義されている。</p>
+<table border="1" bordercolor="#888" style="border-collapse:collapse">
+<thead>
+<tr>
+<th>エイリアス</th>
+<th>説明</th>
+<th>対応バージョン</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code><span style="color: #000">istream</span></code></td>
+<td><code><span style="color: #000">char</span></code>型。ASCII、UTF-8等のマルチバイト文字列や、バイナリデータとして使用する。</td>
+<td></td>
+</tr>
+<tr>
+<td><code><span style="color: #000">wistream</span></code></td>
+<td><code><span style="color: #000">wchar_t</span></code>型。ワイド文字列として使用する。</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2>書式化入力関数と非書式化入力関数</h2>
+<p><code><span style="color: #000">basic_istream</span></code>での入力操作は、書式化入力関数と非書式化入力関数の2種類に分類される。</p>
+<h3>書式化入力関数</h3>
+<p>書式化入力関数は、そのほとんどがストリームバッファから抽出した文字の並びから目的のオブジェクトに変換する処理を伴う入力処理である。
+以下の共通した機能を持つ。</p>
+<ul>
+<li><code><span style="color: #000">skipws</span></code>フラグが設定されている場合、入力処理開始時に空白文字を読み飛ばす処理が挿入される。</li>
+<li>オブジェクトへの変換処理が失敗した場合、<code><span style="color: #000">setstate(ios_base::failbit)</span></code>が呼び出される。</li>
+</ul>
+<p><code><span style="color: #000">&gt;&gt;</span></code>演算子での入力処理の多くは書式化入力関数である。</p>
+<h3>非書式化入力関数</h3>
+<p>非書式化入力関数は、ストリームバッファから抽出した文字の並びをそのまま呼び出し元に引き渡す入力処理である。
+また、ストリームバッファからの読み取りを伴わない入力操作も便宜上こちらに分類される。</p>
+<p>非書式化関数で入力した文字数は<code><span style="color: #000">gcount</span></code>メンバ関数で取得できる。</p>
+<h3>書式化入力関数と非書式化入力関数の効果</h3>
+<p>注意：書式化入力関数と非書式化入力関数すべてについて、「効果」の項目は以下の処理を前提として記載している。</p>
+<p>書式化入力関数・非書式化入力関数は、入力処理に先立って<code><span style="color: #000">sentry</span></code>オブジェクトを構築し、関数から脱出する前に破棄する。</p>
+<ul>
+<li>書式化入力関数は、<code><span style="color: #000">sentry</span></code>コンストラクタの2番目の仮引数<code><span style="color: #000">noskipws</span></code>に<code><span style="color: #000">false</span></code>を渡す。</li>
+<li>非書式化入力関数は、<code><span style="color: #000">sentry</span></code>コンストラクタの2番目の仮引数<code><span style="color: #000">noskipws</span></code>に<code><span style="color: #000">true</span></code>を渡す。</li>
+</ul>
+<p>構築した<code><span style="color: #000">sentry</span></code>オブジェクトが<code><span style="color: #000">explict operator bool</span></code>関数で<code><span style="color: #000">true</span></code>に変換できる場合のみ、実際の入力処理（各関数の「効果」として記載した処理）が実行される。</p>
+<p>関数内部で例外が送出された場合、<code><span style="color: #000">ios_base::bad_bit</span></code>をセットする。
+そして、<code><span style="color: #000">(exceptions() &amp; bad_bit) != 0</span></code>であれば例外を再送出する。</p>
+<h2>メンバ</h2>
+<p>基底クラスである<a href="http://cpprefjp.github.io/reference/ios/ios_base.html"><code><span style="color: #000">ios_base</span></code></a>と<a href="http://cpprefjp.github.io/reference/ios/basic_ios.html"><code><span style="color: #000">basic_ios</span></code></a>も参照のこと。</p>
+<h3>型</h3>
+<table border="1" bordercolor="#888" style="border-collapse:collapse">
+<thead>
+<tr>
+<th>名前</th>
+<th>説明</th>
+<th>対応バージョン</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="http://cpprefjp.github.io/reference/istream/basic_istream/sentry.html"><code><span style="color: #000">sentry</span></code></a></td>
+<td>入力操作の前処理・後処理</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3>構築・破棄</h3>
+<table border="1" bordercolor="#888" style="border-collapse:collapse">
+<thead>
+<tr>
+<th>名前</th>
+<th>説明</th>
+<th>対応バージョン</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="http://cpprefjp.github.io/reference/istream/basic_istream/basic_istream.html"><code><span style="color: #000">(constructor)</span></code></a></td>
+<td>コンストラクタ</td>
+<td></td>
+</tr>
+<tr>
+<td><code><span style="color: #000">(destructor)</span></code></td>
+<td>デストラクタ</td>
+<td></td>
+</tr>
+<tr>
+<td><code><span style="color: #000">operator=</span></code></td>
+<td>ムーブ代入</td>
+<td>C++11</td>
+</tr>
+<tr>
+<td><code><span style="color: #000">swap</span></code></td>
+<td>値の交換</td>
+<td>C++11</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>コピーコンストラクタとコピー代入演算子はdelete定義されている。</li>
+<li>ムーブコンストラクタ・ムーブ代入演算子と<code><span style="color: #000">swap</span></code>はprotectedで定義されている。</li>
+</ul>
+<h3>入力処理</h3>
+<table border="1" bordercolor="#888" style="border-collapse:collapse">
+<thead>
+<tr>
+<th>名前</th>
+<th>説明</th>
+<th>対応バージョン</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="http://cpprefjp.github.io/reference/istream/basic_istream/op_istream.html"><code><span style="color: #000">operator&gt;&gt;</span></code></a></td>
+<td>書式化入力・マニピュレータの実行</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="http://cpprefjp.github.io/reference/istream/basic_istream/get.html"><code><span style="color: #000">get</span></code></a></td>
+<td>文字・文字列の入力</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="http://cpprefjp.github.io/reference/istream/basic_istream/getline.html"><code><span style="color: #000">getline</span></code></a></td>
+<td>1行の文字列の入力</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="http://cpprefjp.github.io/reference/istream/basic_istream/peek.html"><code><span style="color: #000">peek</span></code></a></td>
+<td>次の入力文字を確認する</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="http://cpprefjp.github.io/reference/istream/basic_istream/read.html"><code><span style="color: #000">read</span></code></a></td>
+<td>指定した数ちょうどの文字の入力</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="http://cpprefjp.github.io/reference/istream/basic_istream/readsome.html"><code><span style="color: #000">readsome</span></code></a></td>
+<td>指定した数までの文字の入力</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="http://cpprefjp.github.io/reference/istream/basic_istream/ignore.html"><code><span style="color: #000">ignore</span></code></a></td>
+<td>入力文字を読み捨てる</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><code><span style="color: #000">&gt;&gt;</span></code>演算子のほとんどは書式化入力関数である。
+その他のメンバ関数は非書式化入力関数である。</p>
+<h3>読み戻し</h3>
+<table border="1" bordercolor="#888" style="border-collapse:collapse">
+<thead>
+<tr>
+<th>名前</th>
+<th>説明</th>
+<th>対応バージョン</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="http://cpprefjp.github.io/reference/istream/basic_istream/putback.html"><code><span style="color: #000">putback</span></code></a></td>
+<td>任意の文字を1文字を入力ストリームに戻す</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="http://cpprefjp.github.io/reference/istream/basic_istream/unget.html"><code><span style="color: #000">unget</span></code></a></td>
+<td>最後に読み取った1文字を入力ストリームに戻す</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>これらは非書式化入力関数である。</p>
+<h3>シーク</h3>
+<table border="1" bordercolor="#888" style="border-collapse:collapse">
+<thead>
+<tr>
+<th>名前</th>
+<th>説明</th>
+<th>対応バージョン</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="http://cpprefjp.github.io/reference/istream/basic_istream/tellg.html"><code><span style="color: #000">tellg</span></code></a></td>
+<td>現在の読み取り位置を取得する</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="http://cpprefjp.github.io/reference/istream/basic_istream/seekg.html"><code><span style="color: #000">seekg</span></code></a></td>
+<td>読み取り位置を移動する</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>これらは非書式化入力関数である。</p>
+<h3>入力処理その他</h3>
+<table border="1" bordercolor="#888" style="border-collapse:collapse">
+<thead>
+<tr>
+<th>名前</th>
+<th>説明</th>
+<th>対応バージョン</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="http://cpprefjp.github.io/reference/istream/basic_istream/gcount.html"><code><span style="color: #000">gcount</span></code></a></td>
+<td>最後に実行した非書式化入力関数での入力文字数を取得する</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="http://cpprefjp.github.io/reference/istream/basic_istream/sync.html"><code><span style="color: #000">sync</span></code></a></td>
+<td>ストリームバッファの同期</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>gcountは書式化入力関数・非書式化入力関数いずれでもない。
+syncは非書式化入力関数である。</p>
+<h2>参照</h2>
+<ul>
+<li>基底クラス<ul>
+<li><a href="http://cpprefjp.github.io/reference/ios/ios_base.html"><code><span style="color: #000">ios_base</span></code></a></li>
+<li><a href="http://cpprefjp.github.io/reference/ios/basic_ios.html"><code><span style="color: #000">basic_ios</span></code></a></li>
+</ul>
+</li>
+<li><code><span style="color: #000">basic_istream&lt;&gt;</span></code>型のオブジェクト<ul>
+<li><a href="http://cpprefjp.github.io/reference/iostream/cin.html"><code><span style="color: #000">cin</span></code></a></li>
+<li><a href="http://cpprefjp.github.io/reference/iostream/wcin.html"><code><span style="color: #000">wcin</span></code></a></li>
+</ul>
+</li>
+</ul>
+<footer><a href="https://github.com/cpprefjp/site/edit/master/reference/istream/basic_istream.md" target="_blank">編集</a></footer>

@@ -1,0 +1,106 @@
+<h1>コンストラクタ (C++11)</h1>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">scoped_allocator_adaptor();                                                 // (1)
+
+template &lt;class OuterA2&gt;
+scoped_allocator_adaptor(
+  OuterA2&amp;&amp; outerAlloc,
+  const InnerAllocs&amp;... innerAllocs) noexcept;                              // (2)
+
+scoped_allocator_adaptor(
+  const scoped_allocator_adaptor&amp; other) noexcept;                          // (3)
+
+scoped_allocator_adaptor(
+  scoped_allocator_adaptor&amp;&amp; other) noexcept;                               // (4)
+
+template &lt;class OuterA2&gt;
+scoped_allocator_adaptor(
+  const scoped_allocator_adaptor&lt;OuterA2, InnerAllocs...&gt;&amp; other) noexcept; // (5)
+
+template &lt;class OuterA2&gt;
+scoped_allocator_adaptor(
+  scoped_allocator_adaptor&lt;OuterA2, InnerAllocs...&gt;&amp;&amp; other) noexcept;      // (6)</span></code></pre>
+</p>
+<h2>scoped_allocator_adaptorオブジェクトの構築</h2>
+<ul>
+<li>(1) : デフォルト構築。各アロケータオブジェクトを値初期化する。</li>
+<li>(2) : 外側のアロケータ、内側のアロケータという順番で、各アロケータオブジェクトを受け取る。</li>
+<li>(3) : コピー構築。<code><span style="color: #000">other</span></code>が持つアロケータオブジェクトを<code><span style="color: #000">*this</span></code>にコピーする。</li>
+<li>(4) : ムーブ構築。<code><span style="color: #000">other</span></code>が持つアロケータオブジェクトを<code><span style="color: #000">*this</span></code>にムーブする。</li>
+<li>(5) : 変換可能な外側のアロケータを持つ<code><span style="color: #000">scoped_allocator_adaptor</span></code>オブジェクトからのコピー構築。</li>
+<li>(6) : 変換可能な外側のアロケータを持つ<code><span style="color: #000">scoped_allocator_adaptor</span></code>オブジェクトからのムーブ構築。</li>
+</ul>
+<h2>要件</h2>
+<ul>
+<li>(2), (5), (6) : クラステンプレートのパラメータ<code><span style="color: #000">OuterAlloc</span></code>は、テンプレートパラメータの型<code><span style="color: #000">OuterA2</span></code>から構築可能であること。</li>
+</ul>
+<h2>効果</h2>
+<ul>
+<li>(1) : 外側と内側のアロケータオブジェクトを値初期化する。</li>
+<li>(2) : 外側のアロケータを<a href="http://cpprefjp.github.io/reference/utility/forward.html"><code><span style="color: #000">std::forward</span></code></a><code><span style="color: #000">&lt;OuterA2&gt;(outerAlloc)</span></code>でムーブ構築する。内側のアロケータオブジェクトはコピー構築する。</li>
+<li>(3) : <code><span style="color: #000">other</span></code>が持つアロケータオブジェクトを、<code><span style="color: #000">*this</span></code>の対応する各アロケータオブジェクトにコピーする。</li>
+<li>(4) : <code><span style="color: #000">other</span></code>が持つアロケータオブジェクトを、<code><span style="color: #000">*this</span></code>の対応する各アロケータオブジェクトにムーブする。</li>
+<li>(5) : <code><span style="color: #000">other</span></code>が持つアロケータオブジェクトを、<code><span style="color: #000">*this</span></code>の対応する各アロケータオブジェクトにコピーする。</li>
+<li>(6) : <code><span style="color: #000">other</span></code>が持つアロケータオブジェクトを、<code><span style="color: #000">*this</span></code>の対応する各アロケータオブジェクトにムーブする。</li>
+</ul>
+<h2>例</h2>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">#include &lt;iostream&gt;
+#include &lt;vector&gt;
+#include &lt;string&gt;
+
+#include &lt;scoped_allocator&gt;
+
+template &lt;class T&gt;
+using alloc_t = std::allocator&lt;T&gt;;
+
+// コンテナの要素(Inner)
+using string = std::basic_string&lt;
+  char,
+  std::char_traits&lt;char&gt;,
+  alloc_t&lt;char&gt;
+&gt;;
+
+// コンテナ(Outer)
+template &lt;class T&gt;
+using vector = std::vector&lt;
+  T,
+  std::scoped_allocator_adaptor&lt;alloc_t&lt;T&gt;, alloc_t&lt;typename T::value_type&gt;&gt;
+&gt;;
+
+int main()
+{
+  // (1)
+  // デフォルト構築。
+  // 各アロケータを値初期化する。
+  vector&lt;string&gt;::allocator_type alloc1;
+
+  // (2)
+  // 外側のアロケータと内側のアロケータ、それぞれを渡す
+  vector&lt;string&gt;::allocator_type alloc2 {
+    alloc_t&lt;string&gt;(), // vector自体のアロケータオブジェクト
+    alloc_t&lt;char&gt;()    // vectorの全ての要素に使用するアロケータオブジェクト
+  };
+
+  // (3)
+  // コピー構築。対応するアロケータオブジェクトにコピーする。
+  vector&lt;string&gt;::allocator_type alloc3 = alloc2;
+
+  // (4)
+  // ムーブ構築。対応するアロケータオブジェクトにムーブする。
+  vector&lt;string&gt;::allocator_type alloc4 = std::move(alloc3);
+}</span></code></pre>
+</p>
+<h3>出力</h3>
+<p><pre><code><span style="color: #000"></span></code></pre></p>
+<h2>バージョン</h2>
+<h3>言語</h3>
+<ul>
+<li>C++11</li>
+</ul>
+<h3>処理系</h3>
+<ul>
+<li><a href="http://cpprefjp.github.io/implementation.html#clang">Clang, C++11 mode</a>: 3.0</li>
+<li><a href="http://cpprefjp.github.io/implementation.html#gcc">GCC, C++11 mode</a>: 4.7.3</li>
+<li><a href="http://cpprefjp.github.io/implementation.html#icc">ICC</a>: ??</li>
+<li><a href="http://cpprefjp.github.io/implementation.html#visual_cpp">Visual C++</a> ??</li>
+</ul>
+<footer><a href="https://github.com/cpprefjp/site/edit/master/reference/scoped_allocator/scoped_allocator_adaptor/scoped_allocator_adaptor.md" target="_blank">編集</a></footer>

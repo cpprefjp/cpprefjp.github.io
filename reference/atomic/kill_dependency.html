@@ -1,0 +1,94 @@
+<h1>kill_dependency (C++11)</h1>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">namespace std {
+  template &lt;class T&gt;
+  T kill_dependency(T y) noexcept;
+}</span></code></pre>
+</p>
+<h2>概要</h2>
+<p>データ依存性を切る。</p>
+<h2>効果</h2>
+<p>引数の依存性を戻り値に持ち運ばない</p>
+<h2>戻り値</h2>
+<p><code><span style="color: #000">y</span></code></p>
+<h2>例外</h2>
+<p>投げない</p>
+<h2>備考</h2>
+<p>この関数は、読み込んだ値に依存する式に対する順序を保証する<a href="http://cpprefjp.github.io/reference/atomic/memory_order.html"><code><span style="color: #000">memory_order_consume</span></code></a>メモリーオーダーにおいて、値の依存性を断ち切り、最適化を許可するために用意されている。
+この関数とは逆に、依存性を持ち運ぶことをコンパイラに指示するための<code><span style="color: #000">[[carries_dependency]]</span></code>属性も用意されている。</p>
+<h2>注意</h2>
+<p>この関数は、並行性およびコンパイラの最適化に関する深い理解をもつ専門家ですら正しく利用することが非常に難しい。
+安易に利用すると、この関数がアトミックウェポンと化してしまうので控えること。</p>
+<h2>例</h2>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">#include &lt;iostream&gt;
+#include &lt;atomic&gt;
+#include &lt;thread&gt;
+
+std::atomic&lt;int&gt; a(-1);
+int table[10];
+
+void f()
+{
+  table[3] = 5;
+  table[5] = -1;
+  a.store(3, std::memory_order_release);
+}
+
+int main()
+{
+  std::thread t1(f);
+
+  int r0;
+  do {
+    r0 = a.load(std::memory_order_consume);
+  } while (r0 &lt; 0);
+  std::cout &lt;&lt; r0 &lt;&lt; std::endl; // 正しく同期化されており、必ず"3"が出力される。
+
+  int r1 = table[r0];
+  std::cout &lt;&lt; r1 &lt;&lt; std::endl; // 正しく同期化されており、必ず"5"が出力される。
+
+  int r2 = table[r1];
+  std::cout &lt;&lt; r2 &lt;&lt; std::endl; // 正しく同期化されており、必ず"-1"が出力される。
+
+  int r3 = table[std::kill_dependency(r1)];  // data race. 未定義動作。
+  std::cout &lt;&lt; r3 &lt;&lt; std::endl; // 最適化などの結果、"-1"以外が出力される可能性がある。
+
+
+  t1.join();
+}</span></code></pre>
+</p>
+<h3>出力例</h3>
+<p><pre><code><span style="color: #000">3
+5
+-1
+0
+</span></code></pre></p>
+<h2>バージョン</h2>
+<h3>言語</h3>
+<ul>
+<li>C++11</li>
+</ul>
+<h3>処理系</h3>
+<ul>
+<li><a href="http://cpprefjp.github.io/implementation.html#clang">Clang</a>: ??</li>
+<li><a href="http://cpprefjp.github.io/implementation.html#gcc">GCC</a>: </li>
+<li><a href="http://cpprefjp.github.io/implementation.html#gcc">GCC, C++0x mode</a>: 4.7.0</li>
+<li><a href="http://cpprefjp.github.io/implementation.html#icc">ICC</a>: ??</li>
+<li><a href="http://cpprefjp.github.io/implementation.html#visual_cpp">Visual C++</a>: 11.0, 12.0</li>
+</ul>
+<h2>実装例</h2>
+<p><pre class="codehilite"><code class="language-cpp"><span style="color: #000">template &lt;class T&gt;
+T kill_dependency(T y) noexcept
+{
+  // この実装では単に引数をそのまま返しているだけであり、データ依存性は切れていない。
+  // よって、仕様を正確に実装しているわけではない。
+  // 仕様通りにデータ依存性の切断を行うためには、コンパイラの最適化のコードに手を加えて
+  // この関数を特別扱いしなければならない。
+  return y;
+}</span></code></pre>
+</p>
+<h2>参照</h2>
+<p><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2664.htm" target="_blank">N2664 C++ Data-Dependency Ordering: Atomics and Memory Model</a>
+<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2643.html" target="_blank">N2643 C++ Data-Dependency Ordering: Function Annotation</a>
+<a href="http://stackoverflow.com/q/7150395/463412" target="_blank">What does <code><span style="color: #000">std::kill_dependency</span></code> do, and why would I want to use it? - StackOverflow</a>
+<a href="http://d.hatena.ne.jp/bsdhouse/20090929/1254237835" target="_blank">C++0xのメモリバリアをより深く解説してみる - yamasaのネタ帳</a></p>
+<footer><a href="https://github.com/cpprefjp/site/edit/master/reference/atomic/kill_dependency.md" target="_blank">編集</a></footer>
