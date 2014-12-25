@@ -2,9 +2,128 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++ Reference Site</title>
   <link href="http://cpprefjp.github.io" />
-  <updated>2014-12-25T14:20:53.546335</updated>
-  <id>d5b4fa71-4a5a-4285-8e2f-7c4bfaf9532d</id>
+  <updated>2014-12-25T14:24:43.267084</updated>
+  <id>404324be-f7fc-4c6a-9b01-34a434ff5053</id>
 
+  
+    <entry>
+      <title>notify_all_at_thread_exit (C++11) -- notify_all_at_thread_exit : GCCの対応が5.0からであることを記載</title>
+      <link href="http://cpprefjp.github.io/reference/condition_variable/condition_variable/notify_all_at_thread_exit.html"/>
+      <id>f7f8362efa341acb03d9c741c5462d49081b4a40:reference/condition_variable/condition_variable/notify_all_at_thread_exit.md</id>
+      <updated>2014-12-25 14:24:28 +0900</updated>
+      
+        <content type="html">&lt;h1&gt;notify_all_at_thread_exit (C++11)&lt;/h1&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;namespace&lt;/span&gt; std {
+  &lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt; notify_all_at_thread_exit(condition_variable&lt;span style=&#34;color: #666666&#34;&gt;&amp;amp;&lt;/span&gt; cond, &lt;a href=&#34;http://cpprefjp.github.io/reference/mutex/unique_lock.html&#34;&gt;unique_lock&lt;/a&gt;&lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/mutex/mutex.html&#34;&gt;mutex&lt;/a&gt;&lt;span style=&#34;color: #666666&#34;&gt;&amp;gt;&lt;/span&gt; lk);
+}
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;概要&lt;/h2&gt;
+&lt;p&gt;現在のスレッド終了時に、条件変数が待っている全てのスレッドを起床させる&lt;/p&gt;
+&lt;h2&gt;要件&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;lk&lt;/code&gt;が呼び出し元スレッドによってロック取得されていること&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;*this&lt;/code&gt;の&lt;code&gt;condition_variable&lt;/code&gt;オブジェクトが他スレッドで待機していないか、もしくは並行に待機している全てのスレッドで&lt;code&gt;lock&lt;/code&gt;パラメータが同じミューテックスオブジェクトを参照していること&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;効果&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;lk&lt;/code&gt;のロック所有権を（スレッドライブラリの）内部ストレージへと移し、スレッド終了時、スレッドローカルなデータを解放した後、&lt;code&gt;cond&lt;/code&gt;を使って通知する。通知は以下のように行う：&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// ここでスレッドローカルストレージを解放&lt;/span&gt;
+lk.unlock();
+cond.&lt;a href=&#34;http://cpprefjp.github.io/reference/condition_variable/condition_variable/notify_all.html&#34;&gt;notify_all&lt;/a&gt;();
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;戻り値&lt;/h2&gt;
+&lt;p&gt;なし&lt;/p&gt;
+&lt;h2&gt;備考&lt;/h2&gt;
+&lt;p&gt;ロックはスレッド終了まで保持され続けるため、デッドロックを避けるためにできるだけ早くスレッドを終了させることを推奨する。&lt;/p&gt;
+&lt;h2&gt;例&lt;/h2&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
+&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;condition_variable&amp;gt;&lt;/span&gt;
+&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;mutex&amp;gt;&lt;/span&gt;
+&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;thread&amp;gt;&lt;/span&gt;
+
+&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;struct&lt;/span&gt; ProcessData {
+  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;mutex mtx_;
+  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;condition_variable cond_;
+
+  &lt;span style=&#34;color: #B00040&#34;&gt;bool&lt;/span&gt; data_ready_;
+
+&lt;span style=&#34;color: #A0A000&#34;&gt;public:&lt;/span&gt;
+  ProcessData() &lt;span style=&#34;color: #666666&#34;&gt;:&lt;/span&gt; data_ready_(&lt;span style=&#34;color: #008000&#34;&gt;false&lt;/span&gt;) {}
+
+  &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 処理に必要なデータの準備をする&lt;/span&gt;
+  &lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt; prepare_data_for_processing()
+  {
+    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// ...準備処理...&lt;/span&gt;
+
+    {
+      std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;unique_lock&lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt;std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;mutex&lt;span style=&#34;color: #666666&#34;&gt;&amp;gt;&lt;/span&gt; lk(mtx_);
+      data_ready_ &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color: #008000&#34;&gt;true&lt;/span&gt;;
+
+      &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// このスレッドが終了したら、cond_を待機している全てのスレッドを起床させる&lt;/span&gt;
+      std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#ff0000&#34;&gt;notify_all_at_thread_exit&lt;/span&gt;(cond_, std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;move(lk));
+    }
+  }
+
+  &lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt; wait_for_data_to_process()
+  {
+    std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;unique_lock&lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt;std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;mutex&lt;span style=&#34;color: #666666&#34;&gt;&amp;gt;&lt;/span&gt; lk(mtx_);
+
+    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// データの準備ができるまで待機してから処理する&lt;/span&gt;
+    cond_.wait(lk, [&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;this&lt;/span&gt;] { &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;return&lt;/span&gt; data_ready_; });
+    process_data();
+  }
+
+&lt;span style=&#34;color: #A0A000&#34;&gt;private:&lt;/span&gt;
+  &lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt; process_data()
+  {
+    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// ...データを処理する...&lt;/span&gt;
+    std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;cout &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;boolalpha &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color: #BA2121&#34;&gt;&#34;data is ready: &#34;&lt;/span&gt; &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; data_ready_ &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;endl;
+  }
+};
+
+&lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color: #0000FF&#34;&gt;main&lt;/span&gt;()
+{
+  ProcessData p;
+
+  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;thread&lt;/span&gt; t1([&lt;span style=&#34;color: #666666&#34;&gt;&amp;amp;&lt;/span&gt;] { p.prepare_data_for_processing(); });
+  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;thread&lt;/span&gt; t2([&lt;span style=&#34;color: #666666&#34;&gt;&amp;amp;&lt;/span&gt;] { p.wait_for_data_to_process(); });
+  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;thread&lt;/span&gt; t3([&lt;span style=&#34;color: #666666&#34;&gt;&amp;amp;&lt;/span&gt;] { p.wait_for_data_to_process(); });
+
+  t1.detach(); &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 準備スレッドの管理を手放す&lt;/span&gt;
+
+  t2.join();
+  t3.join();
+}
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h3&gt;出力&lt;/h3&gt;
+&lt;p&gt;&lt;pre&gt;&lt;code&gt;data is ready: true
+data is ready: true
+&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;h2&gt;バージョン&lt;/h2&gt;
+&lt;h3&gt;言語&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;C++11&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;処理系&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang, C++11 mode&lt;/a&gt;: 3.1, 3.2, 3.3, 3.4&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC, C++11 mode&lt;/a&gt;: 5.0&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#icc&#34;&gt;ICC&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt;: 11.0, 12.0&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;参照&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/article/at_thread_exit.html&#34;&gt;_at_thread_exit系の関数が存在している理由&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2010/n3070.html&#34; target=&#34;_blank&#34;&gt;N3070 - Handling Detached Threads and thread_local Variables&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>size -- list::size : GCC 5.0から定数時間であることを記載。</title>
@@ -1444,229 +1563,6 @@ static_assert(std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;is_fi
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;</content>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>normal_distribution (C++11) -- normal_distribution : 各アルゴリズムの特徴を記載。</title>
-      <link href="http://cpprefjp.github.io/reference/random/normal_distribution.html"/>
-      <id>1f7935e0d95eccfa8b277dccc7df3d9dce6aa1c3:reference/random/normal_distribution.md</id>
-      <updated>2014-12-24 17:53:45 +0900</updated>
-      
-        <content type="html">&lt;h1&gt;normal_distribution (C++11)&lt;/h1&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;namespace&lt;/span&gt; std {
-  &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;template&lt;/span&gt; &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color: #0000FF; font-weight: bold&#34;&gt;RealType&lt;/span&gt; &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color: #B00040&#34;&gt;double&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;&amp;gt;&lt;/span&gt;
-  &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color: #0000FF; font-weight: bold&#34;&gt;normal_distribution&lt;/span&gt;;
-}
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h2&gt;概要&lt;/h2&gt;
-&lt;p&gt;&lt;code&gt;normal_distribution&lt;/code&gt;は、平均μ、標準偏差σの正規分布にしたがった乱数を生成するクラスである。&lt;/p&gt;
-&lt;p&gt;&lt;img alt=&#34;&#34; src=&#34;https://github.com/cpprefjp/image/raw/master/reference/random/normal_distribution/normal.png&#34; /&gt;&lt;/p&gt;
-&lt;p&gt;正規分布は、以下のような用途に使用できる：&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;平均身長170cm、標準偏差5cmというパラメータから、平均付近の身長データを作成する&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;テンプレートパラメータは、以下を意味する：&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;RealType&lt;/code&gt; : 生成する実数の型。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;メンバ関数&lt;/h2&gt;
-&lt;h3&gt;構築・リセット&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/random/normal_distribution/normal_distribution.html&#34;&gt;&lt;code&gt;(constructor)&lt;/code&gt;&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;コンストラクタ&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;~normal_distribution() = default;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;デストラクタ&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/random/normal_distribution/reset.html&#34;&gt;&lt;code&gt;reset&lt;/code&gt;&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;状態をリセットする&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;生成&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/random/normal_distribution/op_call.html&#34;&gt;&lt;code&gt;operator()&lt;/code&gt;&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;乱数を生成する&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;プロパティ&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/random/normal_distribution/mean.html&#34;&gt;&lt;code&gt;mean&lt;/code&gt;&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;コンストラクタで指定された平均を取得する&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/random/normal_distribution/stddev.html&#34;&gt;&lt;code&gt;stddev&lt;/code&gt;&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;コンストラクタで指定された標準偏差を取得する&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/random/normal_distribution/param.html&#34;&gt;&lt;code&gt;param&lt;/code&gt;&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;分布のパラメータを取得／設定する&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/random/normal_distribution/min.html&#34;&gt;&lt;code&gt;min&lt;/code&gt;&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;生成する範囲の最小値を取得する&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/random/normal_distribution/max.html&#34;&gt;&lt;code&gt;max&lt;/code&gt;&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;生成する範囲の最大値を取得する&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;メンバ型&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;型&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;result_type&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;乱数生成結果の実数型 &lt;code&gt;RealType&lt;/code&gt;。&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;param_type&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;分布パラメータの型。未規定。&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;非メンバ関数&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/random/normal_distribution/op_equal.html&#34;&gt;&lt;code&gt;operator==&lt;/code&gt;&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;等値比較&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/random/normal_distribution/op_not_equal.html&#34;&gt;&lt;code&gt;operator!=&lt;/code&gt;&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;非等値比較&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/random/normal_distribution/op_ostream.html&#34;&gt;&lt;code&gt;operator&amp;lt;&amp;lt;&lt;/code&gt;&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;ストリームへの出力&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/random/normal_distribution/op_istream.html&#34;&gt;&lt;code&gt;operator&amp;gt;&amp;gt;&lt;/code&gt;&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;ストリームからの入力&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;例&lt;/h2&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;random&amp;gt;&lt;/span&gt;
-&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;fstream&amp;gt;&lt;/span&gt;
-
-&lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color: #0000FF&#34;&gt;main&lt;/span&gt;()
-{
-  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;random_device seed_gen;
-  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;default_random_engine engine(seed_gen());
-
-  &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 平均100、標準偏差20で分布させる&lt;/span&gt;
-  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;normal_distribution&lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&amp;gt;&lt;/span&gt; dist(&lt;span style=&#34;color: #666666&#34;&gt;100.0&lt;/span&gt;, &lt;span style=&#34;color: #666666&#34;&gt;20.0&lt;/span&gt;);
-
-  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;ofstream file(&lt;span style=&#34;color: #BA2121&#34;&gt;&#34;normal_distribution.tsv&#34;&lt;/span&gt;);
-  &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;for&lt;/span&gt; (std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color: #B00040&#34;&gt;size_t&lt;/span&gt; n &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color: #666666&#34;&gt;0&lt;/span&gt;; n &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color: #666666&#34;&gt;256&lt;/span&gt;; &lt;span style=&#34;color: #666666&#34;&gt;++&lt;/span&gt;n) {
-    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 正規分布で乱数を生成する&lt;/span&gt;
-    &lt;span style=&#34;color: #B00040&#34;&gt;double&lt;/span&gt; result &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; dist(engine);
-    file &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; result &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color: #BA2121&#34;&gt;&#34;&lt;/span&gt;&lt;span style=&#34;color: #BB6622; font-weight: bold&#34;&gt;\t\n&lt;/span&gt;&lt;span style=&#34;color: #BA2121&#34;&gt;&#34;&lt;/span&gt;;
-  }
-}
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h3&gt;出力&lt;/h3&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
-このプログラムによってある時に得られた結果（&lt;a href=&#34;https://github.com/cpprefjp/image/raw/master/reference/random/normal_distribution/normal_distribution.tsv.7z&#34; target=&#34;_blank&#34;&gt;normal_distribution.tsv.7z&lt;/a&gt;）を図示する。&lt;/p&gt;
-&lt;p&gt;&lt;img alt=&#34;&#34; src=&#34;https://github.com/cpprefjp/image/raw/master/reference/random/normal_distribution/normal_distribution.png&#34; /&gt;&lt;/p&gt;
-&lt;h2&gt;バージョン&lt;/h2&gt;
-&lt;h3&gt;言語&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;C++11&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;処理系&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang&lt;/a&gt;:&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC&lt;/a&gt;:&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC, C++0x mode&lt;/a&gt;: 4.6.1&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#icc&#34;&gt;ICC&lt;/a&gt;:&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt;:&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;参考&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;http://ja.wikipedia.org/wiki/%E6%AD%A3%E8%A6%8F%E5%88%86%E5%B8%83&#34; target=&#34;_blank&#34;&gt;正規分布 - Wikipedia&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://en.wikipedia.org/wiki/Marsaglia_polar_method&#34; target=&#34;_blank&#34;&gt;Marsaglia polar method - Wikipedia&lt;/a&gt;&lt;ul&gt;
-&lt;li&gt;GCC 4.9時点においてlibstdc++で使用されているアルゴリズム&lt;/li&gt;
-&lt;li&gt;ボックス＝ミュラー法の変形版。棄却採択処理を含んでいる。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://ja.wikipedia.org/wiki/%E3%83%9C%E3%83%83%E3%82%AF%E3%82%B9%EF%BC%9D%E3%83%9F%E3%83%A5%E3%83%A9%E3%83%BC%E6%B3%95&#34; target=&#34;_blank&#34;&gt;ボックス＝ミュラー法 - Wikipedia&lt;/a&gt;&lt;ul&gt;
-&lt;li&gt;Boost 1.55.0以前まで、Boost.Randomの&lt;code&gt;normal_distribution&lt;/code&gt;の実装に使われていたアルゴリズム。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://en.wikipedia.org/wiki/Ziggurat_algorithm&#34; target=&#34;_blank&#34;&gt;Ziggurat sampling - Wikipedia&lt;/a&gt;&lt;ul&gt;
-&lt;li&gt;Boost 1.56.0以降で、Boost.Randomの&lt;code&gt;normal_distribution&lt;/code&gt;の実装に使われているアルゴリズム。&lt;/li&gt;
-&lt;li&gt;ボックス＝ミュラー法やPolar法など他の方式よりも、効率を大幅に改善しており、生成される乱数の精度も良い。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;</content>
       
       <author>
         <name>Akira Takahashi</name>
