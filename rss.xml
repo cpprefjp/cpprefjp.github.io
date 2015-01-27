@@ -2,9 +2,281 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++ Reference Site</title>
   <link href="http://cpprefjp.github.io" />
-  <updated>2015-01-27T15:11:40.784833</updated>
-  <id>a0a9930f-bd5c-4a20-9c08-a8f1bcf9f79e</id>
+  <updated>2015-01-27T15:24:19.870923</updated>
+  <id>041e36cd-8bce-4d27-bcb2-41a55383fb40</id>
 
+  
+    <entry>
+      <title>コンストラクタ (C++11) -- ミューテックス系のコンストラクタ： オーバーロードの書き方をほかに合わせた</title>
+      <link href="http://cpprefjp.github.io/reference/mutex/mutex/op_constructor.html"/>
+      <id>ff3bded1c1aeac3acfc68953a18ad9d3f785dec6:reference/mutex/mutex/op_constructor.md</id>
+      <updated>2015-01-27 15:23:58 +0900</updated>
+      
+        <content type="html">&lt;h1&gt;コンストラクタ (C++11)&lt;/h1&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;constexpr mutex() noexcept;   &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// (1)&lt;/span&gt;
+mutex(&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;const&lt;/span&gt; mutex&lt;span style=&#34;color: #666666&#34;&gt;&amp;amp;&lt;/span&gt;) &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;delete&lt;/span&gt;; &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// (2)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;mutexオブジェクトの構築&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;(1) : デフォルトコンストラクタ。&lt;code&gt;mutex&lt;/code&gt;オブジェクトの初期化を行う。&lt;/li&gt;
+&lt;li&gt;(2) : コピーコンストラクタ。コピー不可。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;例外&lt;/h2&gt;
+&lt;p&gt;この関数は、以下のerror conditionを持つ&lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/system_error.html&#34;&gt;&lt;code&gt;system_error&lt;/code&gt;&lt;/a&gt;例外オブジェクトを送出する可能性がある：
+- &lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/errc.html&#34;&gt;&lt;code&gt;resource_unavailable_try_again&lt;/code&gt;&lt;/a&gt; : native handle型の計算ができない
+- &lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/errc.html&#34;&gt;&lt;code&gt;operation_not_permitted&lt;/code&gt;&lt;/a&gt; : スレッドにこの操作を行う権限がない
+- &lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/errc.html&#34;&gt;&lt;code&gt;device_or_resource_busy&lt;/code&gt;&lt;/a&gt; : native handle型の計算がロックされている
+- &lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/errc.html&#34;&gt;&lt;code&gt;invalid_argument&lt;/code&gt;&lt;/a&gt; : ミューテックスを構築する一部のnative handle型計算が正しくない&lt;/p&gt;
+&lt;h2&gt;備考&lt;/h2&gt;
+&lt;p&gt;非自明なコンストラクタが定義されるため、ムーブコンストラクタは定義されない。 &lt;/p&gt;
+&lt;p&gt;デフォルトコンストラクタに&lt;code&gt;constexpr&lt;/code&gt;が付加されていることにより、&lt;code&gt;mutex&lt;/code&gt;クラスのオブジェクトは他のスレッド開始よりも前に初期化されることが保証される。
+以下の例は&lt;code&gt;constexpr&lt;/code&gt;が付加されていない場合にはおそらく動作しない。&lt;/p&gt;
+&lt;h2&gt;例&lt;/h2&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// file a.cpp&lt;/span&gt;
+&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
+&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;mutex&amp;gt;&lt;/span&gt;
+
+std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;mutex mutexA;
+&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;extern&lt;/span&gt; std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;mutex mutexB;
+
+&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color: #0000FF; font-weight: bold&#34;&gt;A&lt;/span&gt; {
+&lt;span style=&#34;color: #A0A000&#34;&gt;public:&lt;/span&gt;
+  A() {
+    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// デフォルトコンストラクタがconstexprでない場合、&lt;/span&gt;
+    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 別のファイルで定義されているmutexBはこの時点では&lt;/span&gt;
+    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 初期化されていないかもしれない。&lt;/span&gt;
+    mutexB.lock();
+    std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;cout &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color: #BA2121&#34;&gt;&#34;A&#34;&lt;/span&gt; &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;endl;
+    mutexB.unlock();
+  }
+} glbA;
+
+&lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color: #0000FF&#34;&gt;main&lt;/span&gt;()
+{
+}
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// file b.cpp&lt;/span&gt;
+&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
+&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;mutex&amp;gt;&lt;/span&gt;
+
+std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;mutex mutexB;
+&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;extern&lt;/span&gt; std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;mutex mutexA;
+
+&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color: #0000FF; font-weight: bold&#34;&gt;B&lt;/span&gt; {
+&lt;span style=&#34;color: #A0A000&#34;&gt;public:&lt;/span&gt;
+  B() {
+    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// デフォルトコンストラクタがconstexprでない場合、&lt;/span&gt;
+    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 別のファイルで定義されているmutexAはこの時点では&lt;/span&gt;
+    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 初期化されていないかもしれない。&lt;/span&gt;
+    mutexA.lock();
+    std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;cout &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color: #BA2121&#34;&gt;&#34;B&#34;&lt;/span&gt; &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;endl;
+    mutexA.unlock();
+  }
+} glbB;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h3&gt;出力&lt;/h3&gt;
+&lt;p&gt;&lt;pre&gt;&lt;code&gt;A
+B
+&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;p&gt;&lt;pre&gt;&lt;code&gt;B
+A
+&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;h2&gt;バージョン&lt;/h2&gt;
+&lt;h3&gt;言語&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;C++11&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;処理系&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC&lt;/a&gt;: &lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC, C++0x mode&lt;/a&gt;: 4.7.0&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#icc&#34;&gt;ICC&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt;: 未実装&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;参照&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://zakkas783.tumblr.com/post/25490513807/constant-initialization&#34; target=&#34;_blank&#34;&gt;Constant Initialization - 雑貨&#39;s tumblr&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://d.hatena.ne.jp/yohhoy/20120621/p1&#34; target=&#34;_blank&#34;&gt;mutexのconstexprコンストラクタ - yohhoyの日記&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ (C++11) -- ミューテックス系のコンストラクタ： オーバーロードの書き方をほかに合わせた</title>
+      <link href="http://cpprefjp.github.io/reference/mutex/recursive_mutex/op_constructor.html"/>
+      <id>ff3bded1c1aeac3acfc68953a18ad9d3f785dec6:reference/mutex/recursive_mutex/op_constructor.md</id>
+      <updated>2015-01-27 15:23:58 +0900</updated>
+      
+        <content type="html">&lt;h1&gt;コンストラクタ (C++11)&lt;/h1&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;recursive_mutex();                                &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// (1)&lt;/span&gt;
+recursive_mutex(&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;const&lt;/span&gt; recursive_mutex&lt;span style=&#34;color: #666666&#34;&gt;&amp;amp;&lt;/span&gt;) &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;delete&lt;/span&gt;; &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// (2)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;recursive_mutexオブジェクトの構築&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;(1) : デフォルトコンストラクタ。&lt;code&gt;recursive_mutex&lt;/code&gt;オブジェクトの初期化を行う。&lt;/li&gt;
+&lt;li&gt;(2) : コピーコンストラクタ。コピー不可。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;例外&lt;/h2&gt;
+&lt;p&gt;この関数は、以下のerror conditionを持つ&lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/system_error.html&#34;&gt;&lt;code&gt;system_error&lt;/code&gt;&lt;/a&gt;例外オブジェクトを送出する可能性がある：
+- &lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/errc.html&#34;&gt;&lt;code&gt;resource_unavailable_try_again&lt;/code&gt;&lt;/a&gt; : native handle型の計算ができない
+- &lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/errc.html&#34;&gt;&lt;code&gt;operation_not_permitted&lt;/code&gt;&lt;/a&gt; : スレッドにこの操作を行う権限がない
+- &lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/errc.html&#34;&gt;&lt;code&gt;device_or_resource_busy&lt;/code&gt;&lt;/a&gt; : native handle型の計算がロックされている
+- &lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/errc.html&#34;&gt;&lt;code&gt;invalid_argument&lt;/code&gt;&lt;/a&gt; : ミューテックスを構築する一部のnative handle型計算が正しくない&lt;/p&gt;
+&lt;h2&gt;備考&lt;/h2&gt;
+&lt;p&gt;非自明なコンストラクタが定義されるため、ムーブコンストラクタは定義されない。&lt;/p&gt;
+&lt;h2&gt;例&lt;/h2&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;mutex&amp;gt;&lt;/span&gt;
+
+&lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color: #0000FF&#34;&gt;main&lt;/span&gt;()
+{
+  &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// デフォルト構築：ミューテックスの初期化&lt;/span&gt;
+  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;recursive_mutex mtx;
+}
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h3&gt;出力&lt;/h3&gt;
+&lt;p&gt;&lt;pre&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;h2&gt;バージョン&lt;/h2&gt;
+&lt;h3&gt;言語&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;C++11&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;処理系&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC&lt;/a&gt;: &lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC, C++0x mode&lt;/a&gt;: 4.7.0&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#icc&#34;&gt;ICC&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt; ??&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;参照&lt;/h2&gt;</content>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ (C++11) -- ミューテックス系のコンストラクタ： オーバーロードの書き方をほかに合わせた</title>
+      <link href="http://cpprefjp.github.io/reference/mutex/recursive_timed_mutex/op_constructor.html"/>
+      <id>ff3bded1c1aeac3acfc68953a18ad9d3f785dec6:reference/mutex/recursive_timed_mutex/op_constructor.md</id>
+      <updated>2015-01-27 15:23:58 +0900</updated>
+      
+        <content type="html">&lt;h1&gt;コンストラクタ (C++11)&lt;/h1&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;recursive_timed_mutex();                                      &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// (1)&lt;/span&gt;
+recursive_timed_mutex(&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;const&lt;/span&gt; recursive_timed_mutex&lt;span style=&#34;color: #666666&#34;&gt;&amp;amp;&lt;/span&gt;) &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;delete&lt;/span&gt;; &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// (2)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;recursive_timed_mutexオブジェクトの構築&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;(1) : デフォルトコンストラクタ。&lt;code&gt;recursive_timed_mutex&lt;/code&gt;オブジェクトの初期化を行う。&lt;/li&gt;
+&lt;li&gt;(2) : コピーコンストラクタ。コピー不可。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;例外&lt;/h2&gt;
+&lt;p&gt;この関数は、以下のerror conditionを持つ&lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/system_error.html&#34;&gt;&lt;code&gt;system_error&lt;/code&gt;&lt;/a&gt;例外オブジェクトを送出する可能性がある：
+- &lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/errc.html&#34;&gt;&lt;code&gt;resource_unavailable_try_again&lt;/code&gt;&lt;/a&gt; : native handle型の計算ができない
+- &lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/errc.html&#34;&gt;&lt;code&gt;operation_not_permitted&lt;/code&gt;&lt;/a&gt; : スレッドにこの操作を行う権限がない
+- &lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/errc.html&#34;&gt;&lt;code&gt;device_or_resource_busy&lt;/code&gt;&lt;/a&gt; : native handle型の計算がロックされている
+- &lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/errc.html&#34;&gt;&lt;code&gt;invalid_argument&lt;/code&gt;&lt;/a&gt; : ミューテックスを構築する一部のnative handle型計算が正しくない&lt;/p&gt;
+&lt;h2&gt;備考&lt;/h2&gt;
+&lt;p&gt;非自明なコンストラクタが定義されるため、ムーブコンストラクタは定義されない。&lt;/p&gt;
+&lt;h2&gt;例&lt;/h2&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;mutex&amp;gt;&lt;/span&gt;
+
+&lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color: #0000FF&#34;&gt;main&lt;/span&gt;()
+{
+  &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// デフォルト構築：ミューテックスの初期化&lt;/span&gt;
+  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;recursive_timed_mutex mtx;
+}
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h3&gt;出力&lt;/h3&gt;
+&lt;p&gt;&lt;pre&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;h2&gt;バージョン&lt;/h2&gt;
+&lt;h3&gt;言語&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;C++11&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;処理系&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC&lt;/a&gt;: &lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC, C++0x mode&lt;/a&gt;: 4.7.0&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#icc&#34;&gt;ICC&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt; ??&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;参照&lt;/h2&gt;</content>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ (C++11) -- ミューテックス系のコンストラクタ： オーバーロードの書き方をほかに合わせた</title>
+      <link href="http://cpprefjp.github.io/reference/mutex/timed_mutex/op_constructor.html"/>
+      <id>ff3bded1c1aeac3acfc68953a18ad9d3f785dec6:reference/mutex/timed_mutex/op_constructor.md</id>
+      <updated>2015-01-27 15:23:58 +0900</updated>
+      
+        <content type="html">&lt;h1&gt;コンストラクタ (C++11)&lt;/h1&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;timed_mutex();                            &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// (1)&lt;/span&gt;
+timed_mutex(&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;const&lt;/span&gt; timed_mutex&lt;span style=&#34;color: #666666&#34;&gt;&amp;amp;&lt;/span&gt;) &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;delete&lt;/span&gt;; &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// (2)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;timed_mutexオブジェクトの構築&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;(1) : デフォルトコンストラクタ。&lt;code&gt;timed_mutex&lt;/code&gt;オブジェクトの初期化を行う。&lt;/li&gt;
+&lt;li&gt;(2) : コピーコンストラクタ。コピー不可。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;例外&lt;/h2&gt;
+&lt;p&gt;この関数は、以下のerror conditionを持つ&lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/system_error.html&#34;&gt;&lt;code&gt;system_error&lt;/code&gt;&lt;/a&gt;例外オブジェクトを送出する可能性がある：
+- &lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/errc.html&#34;&gt;&lt;code&gt;resource_unavailable_try_again&lt;/code&gt;&lt;/a&gt;: native handle型の計算ができない
+- &lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/errc.html&#34;&gt;&lt;code&gt;operation_not_permitted&lt;/code&gt;&lt;/a&gt; : スレッドにこの操作を行う権限がない
+- &lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/errc.html&#34;&gt;&lt;code&gt;device_or_resource_busy&lt;/code&gt;&lt;/a&gt; : native handle型の計算がロックされている
+- &lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/errc.html&#34;&gt;&lt;code&gt;invalid_argument&lt;/code&gt;&lt;/a&gt; : ミューテックスを構築する一部のnative handle型計算が正しくない&lt;/p&gt;
+&lt;h2&gt;例&lt;/h2&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;mutex&amp;gt;&lt;/span&gt;
+
+&lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color: #0000FF&#34;&gt;main&lt;/span&gt;()
+{
+  &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// デフォルト構築 ： ミューテックスの初期化&lt;/span&gt;
+  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;timed_mutex mtx;
+}
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h3&gt;出力&lt;/h3&gt;
+&lt;p&gt;&lt;pre&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;h2&gt;バージョン&lt;/h2&gt;
+&lt;h3&gt;言語&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;C++11&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;処理系&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC&lt;/a&gt;: &lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC, C++0x mode&lt;/a&gt;: 4.7.0&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#icc&#34;&gt;ICC&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt; ??&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;参照&lt;/h2&gt;</content>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>コンストラクタ -- C++14対応として、挿入イテレータのポインタ取得方法に、addressof関数を使用することを記載</title>
@@ -841,98 +1113,6 @@ X obj;
 
     &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// ロックの取得を試みる(3秒後にタイムアウト)&lt;/span&gt;
     &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color: #666666&#34;&gt;!&lt;/span&gt;mtx_.&lt;span style=&#34;color:#ff0000&#34;&gt;try_lock_until&lt;/span&gt;(tp &lt;span style=&#34;color: #666666&#34;&gt;+&lt;/span&gt; &lt;a href=&#34;http://cpprefjp.github.io/reference/chrono/seconds.html&#34;&gt;std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;chrono&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;seconds&lt;/a&gt;(&lt;span style=&#34;color: #666666&#34;&gt;3&lt;/span&gt;))) {
-      &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 排他ロックの取得に失敗&lt;/span&gt;
-      &lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/error_code.html&#34;&gt;std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;error_code&lt;/a&gt; ec(&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;static_cast&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;&amp;gt;&lt;/span&gt;(&lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/errc.html&#34;&gt;std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;errc&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;device_or_resource_busy&lt;/a&gt;), &lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/generic_category.html&#34;&gt;std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;generic_category()&lt;/a&gt;);
-      &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;throw&lt;/span&gt; &lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/system_error.html&#34;&gt;std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;system_error&lt;/a&gt;(ec);
-    }
-
-    value_ &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; value;
-    mtx_.&lt;a href=&#34;http://cpprefjp.github.io/reference/shared_mutex/shared_timed_mutex/unlock.html&#34;&gt;unlock()&lt;/a&gt;; &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 排他ロックを手放す&lt;/span&gt;
-  }
-
-  &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// メンバ変数value_の値を読み込む&lt;/span&gt;
-  &lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt; get_value() &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;const&lt;/span&gt;
-  {
-    &lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt; result &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color: #666666&#34;&gt;0&lt;/span&gt;;
-    mtx_.&lt;a href=&#34;http://cpprefjp.github.io/reference/shared_mutex/shared_timed_mutex/lock_shared.html&#34;&gt;lock_shared()&lt;/a&gt;; &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 共有ロックを取得する&lt;/span&gt;
-    result &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; value_;
-    mtx_.&lt;a href=&#34;http://cpprefjp.github.io/reference/shared_mutex/shared_timed_mutex/unlock_shared.html&#34;&gt;unlock_shared()&lt;/a&gt;; &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 共有ロックを手放す&lt;/span&gt;
-    &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;return&lt;/span&gt; result;
-  }
-};
-
-&lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color: #0000FF&#34;&gt;main&lt;/span&gt;()
-{
-  X x;
-
-  &lt;a href=&#34;http://cpprefjp.github.io/reference/thread/thread.html&#34;&gt;std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;thread&lt;/a&gt; t1([&lt;span style=&#34;color: #666666&#34;&gt;&amp;amp;&lt;/span&gt;x]{ x.add_value(&lt;span style=&#34;color: #666666&#34;&gt;1&lt;/span&gt;); &lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt; value &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; x.get_value(); });
-  &lt;a href=&#34;http://cpprefjp.github.io/reference/thread/thread.html&#34;&gt;std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;thread&lt;/a&gt; t2([&lt;span style=&#34;color: #666666&#34;&gt;&amp;amp;&lt;/span&gt;x]{ x.add_value(&lt;span style=&#34;color: #666666&#34;&gt;2&lt;/span&gt;); &lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt; value &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; x.get_value(); });
-
-  t1.&lt;a href=&#34;http://cpprefjp.github.io/reference/thread/thread/join.html&#34;&gt;join()&lt;/a&gt;;
-  t2.&lt;a href=&#34;http://cpprefjp.github.io/reference/thread/thread/join.html&#34;&gt;join()&lt;/a&gt;;
-}
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h3&gt;出力&lt;/h3&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;h2&gt;バージョン&lt;/h2&gt;
-&lt;h3&gt;言語&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;C++14&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;処理系&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang, C++14 mode&lt;/a&gt;: 3.5&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC, C++14 mode&lt;/a&gt;: 4.9&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#icc&#34;&gt;ICC&lt;/a&gt;: ??&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt; ??&lt;/li&gt;
-&lt;/ul&gt;</content>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>try_lock_for (C++14) -- shared_timed_mutex::try_lock_for : サンプルコード中のリンク追加。</title>
-      <link href="http://cpprefjp.github.io/reference/shared_mutex/shared_timed_mutex/try_lock_for.html"/>
-      <id>0535b5a3c04bd28f8a32a2f5891f6b7158d753f9:reference/shared_mutex/shared_timed_mutex/try_lock_for.md</id>
-      <updated>2015-01-27 14:57:36 +0900</updated>
-      
-        <content type="html">&lt;h1&gt;try_lock_for (C++14)&lt;/h1&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;template&lt;/span&gt; &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color: #0000FF; font-weight: bold&#34;&gt;Rep&lt;/span&gt;, &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color: #0000FF; font-weight: bold&#34;&gt;Period&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;span style=&#34;color: #B00040&#34;&gt;bool&lt;/span&gt; try_lock_for(&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;const&lt;/span&gt; chrono&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/chrono/duration.html&#34;&gt;duration&lt;/a&gt;&lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt;Rep, Period&lt;span style=&#34;color: #666666&#34;&gt;&amp;gt;&amp;amp;&lt;/span&gt; rel_time);
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h2&gt;概要&lt;/h2&gt;
-&lt;p&gt;タイムアウトする相対時間を指定して排他ロックの取得を試みる&lt;/p&gt;
-&lt;h2&gt;要件&lt;/h2&gt;
-&lt;p&gt;この関数を呼び出したスレッドが、ミューテックスの所有権を保持していないこと。&lt;/p&gt;
-&lt;h2&gt;効果&lt;/h2&gt;
-&lt;p&gt;&lt;code&gt;rel_time&lt;/code&gt;パラメータで指定された相対時間の間、ミューテックスの排他所有権の取得を試みる。&lt;/p&gt;
-&lt;p&gt;排他所有権が取得できるまで、もしくは&lt;code&gt;rel_time&lt;/code&gt;時間が経過するまでこの関数はブロッキングする。&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;rel_time&lt;/code&gt;が&lt;code&gt;rel_time.&lt;/code&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/chrono/duration/zero.html&#34;&gt;&lt;code&gt;zero()&lt;/code&gt;&lt;/a&gt;より小さい場合、この関数は&lt;a href=&#34;http://cpprefjp.github.io/reference/mutex/timed_mutex/try_lock.html&#34;&gt;&lt;code&gt;try_lock()&lt;/code&gt;&lt;/a&gt;と同じ効果をもち、ブロッキングせずにミューテックスの排他所有権の取得を試みる。&lt;/p&gt;
-&lt;h2&gt;戻り値&lt;/h2&gt;
-&lt;p&gt;排他所有権が取得できた場合は&lt;code&gt;true&lt;/code&gt;を返す。&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;rel_time&lt;/code&gt;パラメータで指定された相対時間の間に排他所有権が取得できなかった場合はタイムアウトとなり、&lt;code&gt;false&lt;/code&gt;を返す。&lt;/p&gt;
-&lt;h2&gt;例外&lt;/h2&gt;
-&lt;p&gt;時計クラス、&lt;a href=&#34;http://cpprefjp.github.io/reference/chrono/time_point.html&#34;&gt;&lt;code&gt;time_point&lt;/code&gt;&lt;/a&gt;クラス、&lt;a href=&#34;http://cpprefjp.github.io/reference/chrono/duration.html&#34;&gt;&lt;code&gt;duration&lt;/code&gt;&lt;/a&gt;クラスの構築が例外を送出する場合、この関数はそれらの例外を送出する。&lt;/p&gt;
-&lt;h2&gt;備考&lt;/h2&gt;
-&lt;p&gt;この関数の実装が、ミューテックスの排他所有権を保持しているスレッドがひとつもない場合でも、排他所有権の取得に失敗する可能性がある。&lt;/p&gt;
-&lt;h2&gt;例&lt;/h2&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;thread&amp;gt;&lt;/span&gt;
-&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;shared_mutex&amp;gt;&lt;/span&gt;
-
-&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color: #0000FF; font-weight: bold&#34;&gt;X&lt;/span&gt; {
-  &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;mutable&lt;/span&gt; std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;shared_timed_mutex mtx_;
-  &lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt; value_ &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color: #666666&#34;&gt;0&lt;/span&gt;;
-&lt;span style=&#34;color: #A0A000&#34;&gt;public:&lt;/span&gt;
-  &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// メンバ変数value_への書き込みを排他的にする&lt;/span&gt;
-  &lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color: #0000FF&#34;&gt;add_value&lt;/span&gt;(&lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt; value)
-  {
-    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 排他ロックの取得を試みる(3秒でタイムアウト)&lt;/span&gt;
-    &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color: #666666&#34;&gt;!&lt;/span&gt;mtx_.&lt;span style=&#34;color:#ff0000&#34;&gt;try_lock_for&lt;/span&gt;(std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;chrono&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;seconds(&lt;span style=&#34;color: #666666&#34;&gt;3&lt;/span&gt;))) {
       &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 排他ロックの取得に失敗&lt;/span&gt;
       &lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/error_code.html&#34;&gt;std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;error_code&lt;/a&gt; ec(&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;static_cast&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;&amp;gt;&lt;/span&gt;(&lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/errc.html&#34;&gt;std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;errc&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;device_or_resource_busy&lt;/a&gt;), &lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/generic_category.html&#34;&gt;std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;generic_category()&lt;/a&gt;);
       &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;throw&lt;/span&gt; &lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/system_error.html&#34;&gt;std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;system_error&lt;/a&gt;(ec);
