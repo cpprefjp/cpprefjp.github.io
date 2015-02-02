@@ -2,9 +2,280 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++ Reference Site</title>
   <link href="http://cpprefjp.github.io" />
-  <updated>2015-02-02T14:49:40.252513</updated>
-  <id>73d82800-fa63-4569-81b3-f8b20fbdfcc2</id>
+  <updated>2015-02-02T14:54:03.523855</updated>
+  <id>59250a33-acd3-43cd-9d7b-6b8733bafc8a</id>
 
+  
+    <entry>
+      <title>lock (C++11) -- unique_lock : 表示崩れを修正</title>
+      <link href="http://cpprefjp.github.io/reference/mutex/unique_lock/lock.html"/>
+      <id>6b13c39a9ddfb6ecb186d71ebc2fcd37f7395208:reference/mutex/unique_lock/lock.md</id>
+      <updated>2015-02-02 14:53:46 +0900</updated>
+      
+        <content type="html">&lt;h1&gt;lock (C++11)&lt;/h1&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color: #0000FF&#34;&gt;lock&lt;/span&gt;();
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;概要&lt;/h2&gt;
+&lt;p&gt;ロックを取得する&lt;/p&gt;
+&lt;h2&gt;効果&lt;/h2&gt;
+&lt;p&gt;&lt;pre&gt;&lt;code&gt;pm-&amp;gt;lock();
+&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;p&gt;※&lt;code&gt;pm&lt;/code&gt;はメンバ変数として保持している、ミューテックスオブジェクトへのポインタ&lt;/p&gt;
+&lt;h2&gt;事後条件&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/mutex/unique_lock/owns_lock.html&#34;&gt;&lt;code&gt;owns_lock()&lt;/code&gt;&lt;/a&gt;&lt;code&gt;== true&lt;/code&gt;&lt;/p&gt;
+&lt;h2&gt;戻り値&lt;/h2&gt;
+&lt;p&gt;なし&lt;/p&gt;
+&lt;h2&gt;例外&lt;/h2&gt;
+&lt;p&gt;この関数は、&lt;code&gt;pm-&amp;gt;lock()&lt;/code&gt; 関数内で投げられうるあらゆる例外を投げる可能性がある。 &lt;/p&gt;
+&lt;p&gt;そのほかに、以下のerror conditionを持つ&lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/system_error.html&#34;&gt;&lt;code&gt;system_error&lt;/code&gt;&lt;/a&gt;例外オブジェクトを送出する可能性がある：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/errc.html&#34;&gt;&lt;code&gt;operation_not_permitted&lt;/code&gt;&lt;/a&gt; ： &lt;code&gt;pm&lt;/code&gt;が&lt;code&gt;NULL&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/errc.html&#34;&gt;&lt;code&gt;resource_deadlock_would_occur&lt;/code&gt;&lt;/a&gt; ： &lt;a href=&#34;http://cpprefjp.github.io/reference/mutex/unique_lock/owns_lock.html&#34;&gt;&lt;code&gt;owns_lock()&lt;/code&gt;&lt;/a&gt;&lt;code&gt;== true&lt;/code&gt;の状態でこの関数が呼び出された&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;例&lt;/h2&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
+&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;thread&amp;gt;&lt;/span&gt;
+&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;mutex&amp;gt;&lt;/span&gt;
+&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;vector&amp;gt;&lt;/span&gt;
+
+&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color: #0000FF; font-weight: bold&#34;&gt;X&lt;/span&gt; {
+  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;mutex mtx_;
+  &lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt; value_ &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color: #666666&#34;&gt;0&lt;/span&gt;;
+&lt;span style=&#34;color: #A0A000&#34;&gt;public:&lt;/span&gt;
+  &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// メンバ変数value_への書き込みを排他的にする&lt;/span&gt;
+  &lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color: #0000FF&#34;&gt;add_value&lt;/span&gt;(&lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt; value)
+  {
+    std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;unique_lock&lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt;std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;mutex&lt;span style=&#34;color: #666666&#34;&gt;&amp;gt;&lt;/span&gt; lk(mtx_, std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;defer_lock);
+    lk.&lt;span style=&#34;color:#ff0000&#34;&gt;lock&lt;/span&gt;(); &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// ロックを取得する&lt;/span&gt;
+
+    value_ &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; value;
+  }
+};
+
+&lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color: #0000FF&#34;&gt;main&lt;/span&gt;()
+{
+  X x;
+
+  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;thread&lt;/span&gt; t1([&lt;span style=&#34;color: #666666&#34;&gt;&amp;amp;&lt;/span&gt;x]{ x.add_value(&lt;span style=&#34;color: #666666&#34;&gt;1&lt;/span&gt;); });
+  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;thread&lt;/span&gt; t2([&lt;span style=&#34;color: #666666&#34;&gt;&amp;amp;&lt;/span&gt;x]{ x.add_value(&lt;span style=&#34;color: #666666&#34;&gt;2&lt;/span&gt;); });
+
+  t1.join();
+  t2.join();
+}
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h3&gt;出力&lt;/h3&gt;
+&lt;p&gt;&lt;pre&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;h2&gt;バージョン&lt;/h2&gt;
+&lt;h3&gt;言語&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;C++11&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;処理系&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC&lt;/a&gt;: &lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC, C++0x mode&lt;/a&gt;: 4.7.0&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#icc&#34;&gt;ICC&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt; ??&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;参照&lt;/h2&gt;</content>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>デストラクタ (C++11) -- unique_lock : 表示崩れを修正</title>
+      <link href="http://cpprefjp.github.io/reference/mutex/unique_lock/op_destructor.html"/>
+      <id>6b13c39a9ddfb6ecb186d71ebc2fcd37f7395208:reference/mutex/unique_lock/op_destructor.md</id>
+      <updated>2015-02-02 14:53:46 +0900</updated>
+      
+        <content type="html">&lt;h1&gt;デストラクタ (C++11)&lt;/h1&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #666666&#34;&gt;~&lt;/span&gt;unique_lock();
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;概要&lt;/h2&gt;
+&lt;p&gt;ロックを手放す&lt;/p&gt;
+&lt;h2&gt;効果&lt;/h2&gt;
+&lt;p&gt;&lt;pre&gt;&lt;code&gt;if (&lt;a href=&#34;http://cpprefjp.github.io/reference/mutex/unique_lock/owns_lock.html&#34;&gt;owns_lock()&lt;/a&gt;) {
+  pm-&amp;gt;unlock();
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;p&gt;※&lt;code&gt;pm&lt;/code&gt;はメンバ変数として保持している、ミューテックスオブジェクトへのポインタ&lt;/p&gt;
+&lt;h2&gt;例&lt;/h2&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h3&gt;出力&lt;/h3&gt;
+&lt;p&gt;&lt;pre&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;h2&gt;バージョン&lt;/h2&gt;
+&lt;h3&gt;言語&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;C++11&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;処理系&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC&lt;/a&gt;: &lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC, C++0x mode&lt;/a&gt;: 4.7.0&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#icc&#34;&gt;ICC&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt; ??&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;参照&lt;/h2&gt;</content>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>swap (非メンバ関数) (C++11) -- unique_lock : 表示崩れを修正</title>
+      <link href="http://cpprefjp.github.io/reference/mutex/unique_lock/swap_free.html"/>
+      <id>6b13c39a9ddfb6ecb186d71ebc2fcd37f7395208:reference/mutex/unique_lock/swap_free.md</id>
+      <updated>2015-02-02 14:53:46 +0900</updated>
+      
+        <content type="html">&lt;h1&gt;swap (非メンバ関数) (C++11)&lt;/h1&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;namespace&lt;/span&gt; std {
+  &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;template&lt;/span&gt; &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color: #0000FF; font-weight: bold&#34;&gt;Mutex&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;&amp;gt;&lt;/span&gt;
+  &lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt; swap(unique_lock&lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt;Mutex&lt;span style=&#34;color: #666666&#34;&gt;&amp;gt;&amp;amp;&lt;/span&gt; x, unique_lock&lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt;Mutex&lt;span style=&#34;color: #666666&#34;&gt;&amp;gt;&amp;amp;&lt;/span&gt; y) noexcept;
+}
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;概要&lt;/h2&gt;
+&lt;p&gt;2つの&lt;code&gt;unique_lock&lt;/code&gt;オブジェクトを入れ替える&lt;/p&gt;
+&lt;h2&gt;効果&lt;/h2&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;x.&lt;a href=&#34;http://cpprefjp.github.io/reference/mutex/unique_lock/swap.html&#34;&gt;swap&lt;/a&gt;(y);
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;戻り値&lt;/h2&gt;
+&lt;p&gt;なし&lt;/p&gt;
+&lt;h2&gt;例外&lt;/h2&gt;
+&lt;p&gt;投げない&lt;/p&gt;
+&lt;h2&gt;例&lt;/h2&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;mutex&amp;gt;&lt;/span&gt;
+&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;utility&amp;gt;&lt;/span&gt;
+
+&lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color: #0000FF&#34;&gt;main&lt;/span&gt;()
+{
+  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;mutex mtx;
+  {
+    std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;unique_lock&lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt;std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;mutex&lt;span style=&#34;color: #666666&#34;&gt;&amp;gt;&lt;/span&gt; lk1(mtx);
+    std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;unique_lock&lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt;std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;mutex&lt;span style=&#34;color: #666666&#34;&gt;&amp;gt;&lt;/span&gt; lk2;
+
+    std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#ff0000&#34;&gt;swap&lt;/span&gt;(lk1, lk2);
+
+  } &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// lk1はunlock()せず、lk2がunlock()する&lt;/span&gt;
+}
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h3&gt;出力&lt;/h3&gt;
+&lt;p&gt;&lt;pre&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;h2&gt;バージョン&lt;/h2&gt;
+&lt;h3&gt;言語&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;C++11&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;処理系&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC&lt;/a&gt;: &lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC, C++0x mode&lt;/a&gt;: 4.7.0&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#icc&#34;&gt;ICC&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt; ??&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;参照&lt;/h2&gt;</content>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>unlock (C++11) -- unique_lock : 表示崩れを修正</title>
+      <link href="http://cpprefjp.github.io/reference/mutex/unique_lock/unlock.html"/>
+      <id>6b13c39a9ddfb6ecb186d71ebc2fcd37f7395208:reference/mutex/unique_lock/unlock.md</id>
+      <updated>2015-02-02 14:53:46 +0900</updated>
+      
+        <content type="html">&lt;h1&gt;unlock (C++11)&lt;/h1&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color: #0000FF&#34;&gt;unlock&lt;/span&gt;();
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;概要&lt;/h2&gt;
+&lt;p&gt;ロックを手放す&lt;/p&gt;
+&lt;h2&gt;効果&lt;/h2&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;pm&lt;span style=&#34;color: #666666&#34;&gt;-&amp;gt;&lt;/span&gt;unlock();
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;p&gt;※&lt;code&gt;pm&lt;/code&gt;はメンバ変数として保持している、ミューテックスオブジェクトへのポインタ&lt;/p&gt;
+&lt;h2&gt;事後条件&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/mutex/unique_lock/owns_lock.html&#34;&gt;&lt;code&gt;owns_lock()&lt;/code&gt;&lt;/a&gt;&lt;code&gt;== false&lt;/code&gt;&lt;/p&gt;
+&lt;h2&gt;戻り値&lt;/h2&gt;
+&lt;p&gt;なし&lt;/p&gt;
+&lt;h2&gt;例外&lt;/h2&gt;
+&lt;p&gt;この関数は、以下のerror conditionを持つ&lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/system_error.html&#34;&gt;&lt;code&gt;system_error&lt;/code&gt;&lt;/a&gt;例外オブジェクトを送出する可能性がある：
+- &lt;a href=&#34;http://cpprefjp.github.io/reference/system_error/errc.html&#34;&gt;&lt;code&gt;operation_not_permitted&lt;/code&gt;&lt;/a&gt; ： &lt;a href=&#34;http://cpprefjp.github.io/reference/mutex/unique_lock/owns_lock.html&#34;&gt;&lt;code&gt;owns_lock()&lt;/code&gt;&lt;/a&gt;&lt;code&gt;== false&lt;/code&gt;の状態でこの関数が呼び出された&lt;/p&gt;
+&lt;h2&gt;例&lt;/h2&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
+&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;thread&amp;gt;&lt;/span&gt;
+&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;mutex&amp;gt;&lt;/span&gt;
+&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;vector&amp;gt;&lt;/span&gt;
+
+&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color: #0000FF; font-weight: bold&#34;&gt;X&lt;/span&gt; {
+  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;mutex mtx_;
+  &lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt; value_ &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color: #666666&#34;&gt;0&lt;/span&gt;;
+&lt;span style=&#34;color: #A0A000&#34;&gt;public:&lt;/span&gt;
+  &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// メンバ変数value_への書き込みを排他的にする&lt;/span&gt;
+  &lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color: #0000FF&#34;&gt;add_value&lt;/span&gt;(&lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt; value)
+  {
+    std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;unique_lock&lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt;std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;mutex&lt;span style=&#34;color: #666666&#34;&gt;&amp;gt;&lt;/span&gt; lk(mtx_);
+
+    value_ &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; value;
+
+    lk.&lt;span style=&#34;color:#ff0000&#34;&gt;unlock&lt;/span&gt;(); &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// ロックを手放す&lt;/span&gt;
+
+  } &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// すでにロックを手放しているため、デストラクト時に&lt;span style=&#34;color:#ff0000&#34;&gt;unlock&lt;/span&gt;()は呼ばれない&lt;/span&gt;
+};
+
+&lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color: #0000FF&#34;&gt;main&lt;/span&gt;()
+{
+  X x;
+
+  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;thread&lt;/span&gt; t1([&lt;span style=&#34;color: #666666&#34;&gt;&amp;amp;&lt;/span&gt;x]{ x.add_value(&lt;span style=&#34;color: #666666&#34;&gt;1&lt;/span&gt;); });
+  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;thread&lt;/span&gt; t2([&lt;span style=&#34;color: #666666&#34;&gt;&amp;amp;&lt;/span&gt;x]{ x.add_value(&lt;span style=&#34;color: #666666&#34;&gt;2&lt;/span&gt;); });
+
+  t1.join();
+  t2.join();
+}
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h3&gt;出力&lt;/h3&gt;
+&lt;p&gt;&lt;pre&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;h2&gt;バージョン&lt;/h2&gt;
+&lt;h3&gt;言語&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;C++11&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;処理系&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC&lt;/a&gt;: &lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC, C++0x mode&lt;/a&gt;: 4.7.0&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#icc&#34;&gt;ICC&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt; ??&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;参照&lt;/h2&gt;</content>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>shared_lock (C++14) -- shared_lock : unlockを追加</title>
@@ -888,87 +1159,6 @@
       <author>
         <name>Akira Takahashi</name>
         <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>includes -- algorithm: includes に実装例を追加</title>
-      <link href="http://cpprefjp.github.io/reference/algorithm/includes.html"/>
-      <id>5894c72f1920b2163cfe9f411ac78c43eebcf48b:reference/algorithm/includes.md</id>
-      <updated>2015-02-02 13:19:21 +0900</updated>
-      
-        <content type="html">&lt;h1&gt;includes&lt;/h1&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;namespace&lt;/span&gt; std {
-  &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;template&lt;/span&gt; &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color: #0000FF; font-weight: bold&#34;&gt;InputIterator1&lt;/span&gt;, &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color: #0000FF; font-weight: bold&#34;&gt;InputIterator2&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;&amp;gt;&lt;/span&gt;
-  &lt;span style=&#34;color: #B00040&#34;&gt;bool&lt;/span&gt; includes(InputIterator1 first1, InputIterator1 last1,
-                InputIterator2 first2, InputIterator2 last2);
-
-  &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;template&lt;/span&gt; &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color: #0000FF; font-weight: bold&#34;&gt;InputIterator1&lt;/span&gt;, &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color: #0000FF; font-weight: bold&#34;&gt;InputIterator2&lt;/span&gt;, &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color: #0000FF; font-weight: bold&#34;&gt;Compare&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;&amp;gt;&lt;/span&gt;
-  &lt;span style=&#34;color: #B00040&#34;&gt;bool&lt;/span&gt; includes(InputIterator1 first1, InputIterator1 last1,
-                InputIterator2 first2, InputIterator2 last2,
-                Compare comp);
-}
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h2&gt;概要&lt;/h2&gt;
-&lt;p&gt;2つのソート済み範囲において、一方の範囲の要素がもう一方の範囲に全て含まれているかを判定する。&lt;/p&gt;
-&lt;h2&gt;戻り値&lt;/h2&gt;
-&lt;p&gt;&lt;code&gt;[first2,last2)&lt;/code&gt; が &lt;code&gt;empty&lt;/code&gt; であるか、&lt;code&gt;[first2,last2)&lt;/code&gt; の全ての要素が &lt;code&gt;[first1,last1)&lt;/code&gt; に含まれている場合は &lt;code&gt;true&lt;/code&gt;、そうでない場合は &lt;code&gt;false&lt;/code&gt; を返す。&lt;/p&gt;
-&lt;h2&gt;計算量&lt;/h2&gt;
-&lt;p&gt;最大で &lt;code&gt;2 * ((last1 - first1) + (last2 - first2)) - 1&lt;/code&gt; 回比較する&lt;/p&gt;
-&lt;h2&gt;例&lt;/h2&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;&lt;a href=&#34;http://cpprefjp.github.io/reference/iostream.html&#34;&gt;iostream&lt;/a&gt;&amp;gt;&lt;/span&gt;
-&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;&lt;a href=&#34;http://cpprefjp.github.io/reference/set.html&#34;&gt;set&lt;/a&gt;&amp;gt;&lt;/span&gt;
-&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;&lt;a href=&#34;http://cpprefjp.github.io/reference/algorithm.html&#34;&gt;algorithm&lt;/a&gt;&amp;gt;&lt;/span&gt;
-
-&lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color: #0000FF&#34;&gt;main&lt;/span&gt;()
-{
-  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/set.html&#34;&gt;set&lt;/a&gt;&lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;&amp;gt;&lt;/span&gt; a &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; {&lt;span style=&#34;color: #666666&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color: #666666&#34;&gt;2&lt;/span&gt;, &lt;span style=&#34;color: #666666&#34;&gt;3&lt;/span&gt;, &lt;span style=&#34;color: #666666&#34;&gt;4&lt;/span&gt;, &lt;span style=&#34;color: #666666&#34;&gt;5&lt;/span&gt;, &lt;span style=&#34;color: #666666&#34;&gt;6&lt;/span&gt;};
-  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/set.html&#34;&gt;set&lt;/a&gt;&lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;&amp;gt;&lt;/span&gt; b &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; {&lt;span style=&#34;color: #666666&#34;&gt;2&lt;/span&gt;, &lt;span style=&#34;color: #666666&#34;&gt;4&lt;/span&gt;, &lt;span style=&#34;color: #666666&#34;&gt;6&lt;/span&gt;};
-  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/set.html&#34;&gt;set&lt;/a&gt;&lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;&amp;gt;&lt;/span&gt; c &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; {&lt;span style=&#34;color: #666666&#34;&gt;2&lt;/span&gt;, &lt;span style=&#34;color: #666666&#34;&gt;4&lt;/span&gt;, &lt;span style=&#34;color: #666666&#34;&gt;7&lt;/span&gt;};
-
-  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;cout&lt;/a&gt; &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/ios/boolalpha.html&#34;&gt;boolalpha&lt;/a&gt;;
-
-  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;cout&lt;/a&gt; &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#ff0000&#34;&gt;includes&lt;/span&gt;(a.&lt;a href=&#34;http://cpprefjp.github.io/reference/set/set/begin.html&#34;&gt;begin&lt;/a&gt;(), a.&lt;a href=&#34;http://cpprefjp.github.io/reference/set/set/end.html&#34;&gt;end&lt;/a&gt;(), b.&lt;a href=&#34;http://cpprefjp.github.io/reference/set/set/begin.html&#34;&gt;begin&lt;/a&gt;(), b.&lt;a href=&#34;http://cpprefjp.github.io/reference/set/set/end.html&#34;&gt;end&lt;/a&gt;()) &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/ostream/endl.html&#34;&gt;endl&lt;/a&gt;;
-  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;cout&lt;/a&gt; &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#ff0000&#34;&gt;includes&lt;/span&gt;(a.&lt;a href=&#34;http://cpprefjp.github.io/reference/set/set/begin.html&#34;&gt;begin&lt;/a&gt;(), a.&lt;a href=&#34;http://cpprefjp.github.io/reference/set/set/end.html&#34;&gt;end&lt;/a&gt;(), c.&lt;a href=&#34;http://cpprefjp.github.io/reference/set/set/begin.html&#34;&gt;begin&lt;/a&gt;(), c.&lt;a href=&#34;http://cpprefjp.github.io/reference/set/set/end.html&#34;&gt;end&lt;/a&gt;()) &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/ostream/endl.html&#34;&gt;endl&lt;/a&gt;;
-}
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h3&gt;出力&lt;/h3&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;true
-false
-&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;h2&gt;実装例&lt;/h2&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;template&lt;/span&gt; &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color: #0000FF; font-weight: bold&#34;&gt;InputIterator1&lt;/span&gt;, &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color: #0000FF; font-weight: bold&#34;&gt;InputIterator2&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;span style=&#34;color: #B00040&#34;&gt;bool&lt;/span&gt; includes(InputIterator1 first1, InputIterator1 last1,
-              InputIterator2 first2, InputIterator2 last2)
-{
-  &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;for&lt;/span&gt; (; first2 &lt;span style=&#34;color: #666666&#34;&gt;!=&lt;/span&gt; last2; &lt;span style=&#34;color: #666666&#34;&gt;++&lt;/span&gt;first1)
-    &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;if&lt;/span&gt; (first1 &lt;span style=&#34;color: #666666&#34;&gt;==&lt;/span&gt; last1 &lt;span style=&#34;color: #666666&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt;first2 &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt;first1)
-      &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color: #008000&#34;&gt;false&lt;/span&gt;;
-    &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;else&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color: #666666&#34;&gt;!&lt;/span&gt;(&lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt;first1 &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt;first2))
-      &lt;span style=&#34;color: #666666&#34;&gt;++&lt;/span&gt;first2;
-  &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color: #008000&#34;&gt;true&lt;/span&gt;;
-}
-
-&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;template&lt;/span&gt; &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color: #0000FF; font-weight: bold&#34;&gt;InputIterator1&lt;/span&gt;, &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color: #0000FF; font-weight: bold&#34;&gt;InputIterator2&lt;/span&gt;, &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color: #0000FF; font-weight: bold&#34;&gt;Compare&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;span style=&#34;color: #B00040&#34;&gt;bool&lt;/span&gt; includes(InputIterator1 first1, InputIterator1 last1,
-              InputIterator2 first2, InputIterator2 last2,
-              Compare comp)
-{
-  &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;for&lt;/span&gt; (; first2 &lt;span style=&#34;color: #666666&#34;&gt;!=&lt;/span&gt; last2; &lt;span style=&#34;color: #666666&#34;&gt;++&lt;/span&gt;first1)
-    &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;if&lt;/span&gt; (first1 &lt;span style=&#34;color: #666666&#34;&gt;==&lt;/span&gt; last1 &lt;span style=&#34;color: #666666&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt;first2 &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt;first1)
-      &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color: #008000&#34;&gt;false&lt;/span&gt;;
-    &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;else&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color: #666666&#34;&gt;!&lt;/span&gt;&lt;span style=&#34;color: #B00040&#34;&gt;bool&lt;/span&gt;(comp(&lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt;first1 &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt;first2)))
-      &lt;span style=&#34;color: #666666&#34;&gt;++&lt;/span&gt;first2;
-  &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color: #008000&#34;&gt;true&lt;/span&gt;;
-}
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;</content>
-      
-      <author>
-        <name>Mitsuru Kariya</name>
-        <email>kariya_mitsuru@hotmail.com</email>
       </author>
     </entry>
   
