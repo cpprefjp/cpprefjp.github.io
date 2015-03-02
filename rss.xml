@@ -2,9 +2,184 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="http://cpprefjp.github.io" />
-  <updated>2015-03-02T16:33:22.739595</updated>
-  <id>fc613322-439a-44a3-be4c-829d0eedfa9f</id>
+  <updated>2015-03-02T16:51:42.678178</updated>
+  <id>6431403f-8b87-41fd-b042-c470a303ae1d</id>
 
+  
+    <entry>
+      <title>wait (C++11) -- condition_variable::wait : C++14対応として、例外の条件を見直し</title>
+      <link href="http://cpprefjp.github.io/reference/condition_variable/condition_variable/wait.html"/>
+      <id>3b74affddf3abbd2ad5c03035e171debed9da7de:reference/condition_variable/condition_variable/wait.md</id>
+      <updated>2015-03-02 16:51:27 +0900</updated>
+      
+        <content type="html">&lt;h1 itemprop=&#34;name&#34;&gt;wait (C++11)&lt;/h1&gt;
+&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;ul&gt;
+&lt;li&gt;condition_variable[meta header]&lt;/li&gt;
+&lt;li&gt;std[meta namespace]&lt;/li&gt;
+&lt;li&gt;condition_variable[meta class]&lt;/li&gt;
+&lt;li&gt;function[meta id-type]&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color: #0000FF&#34;&gt;wait&lt;/span&gt;(&lt;a href=&#34;http://cpprefjp.github.io/reference/mutex/unique_lock.html&#34;&gt;unique_lock&lt;/a&gt;&lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/mutex/mutex.html&#34;&gt;mutex&lt;/a&gt;&lt;span style=&#34;color: #666666&#34;&gt;&amp;gt;&amp;amp;&lt;/span&gt; lock);                 &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// (1)&lt;/span&gt;
+
+&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;template&lt;/span&gt; &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color: #0000FF; font-weight: bold&#34;&gt;Predicate&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt; wait(&lt;a href=&#34;http://cpprefjp.github.io/reference/mutex/unique_lock.html&#34;&gt;unique_lock&lt;/a&gt;&lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/mutex/mutex.html&#34;&gt;mutex&lt;/a&gt;&lt;span style=&#34;color: #666666&#34;&gt;&amp;gt;&amp;amp;&lt;/span&gt; lock, Predicate pred); &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// (2)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;概要&lt;/h2&gt;
+&lt;p&gt;起床されるまで待機する。&lt;/p&gt;
+&lt;p&gt;この関数は、処理をするための準備ができたことを&lt;code&gt;notify_one()&lt;/code&gt;/&lt;code&gt;notify_all()&lt;/code&gt;によって通知されるまでスレッドを待機するために使用する。&lt;/p&gt;
+&lt;p&gt;述語を指定しない場合、&lt;code&gt;notify_one()&lt;/code&gt;/&lt;code&gt;notify_all()&lt;/code&gt;が呼び出された時点でこの関数のブロッキングが解除される。&lt;/p&gt;
+&lt;p&gt;述語を指定する場合、述語呼び出しが&lt;code&gt;true&lt;/code&gt;になるまで待機を続行する。&lt;/p&gt;
+&lt;h2&gt;要件&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;lock.&lt;/code&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/mutex/unique_lock/owns_lock.html&#34;&gt;&lt;code&gt;owns_lock()&lt;/code&gt;&lt;/a&gt;&lt;code&gt;== true&lt;/code&gt;であること&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;lock&lt;/code&gt;が参照しているミューテックスオブジェクトが、この関数を呼び出したスレッドでロック取得されていること&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;*this&lt;/code&gt;の&lt;code&gt;condition_variable&lt;/code&gt;オブジェクトが他スレッドで待機していないか、もしくは並行に待機している全てのスレッドで&lt;code&gt;lock&lt;/code&gt;パラメータが同じミューテックスオブジェクトを参照していること&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;効果&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;(1) :&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;アトミックに&lt;code&gt;lock.&lt;/code&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/mutex/unique_lock/unlock.html&#34;&gt;&lt;code&gt;unlock()&lt;/code&gt;&lt;/a&gt;し、&lt;code&gt;*this&lt;/code&gt;に対してブロッキングする&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/condition_variable/condition_variable/notify_one.html&#34;&gt;&lt;code&gt;notify_one()&lt;/code&gt;&lt;/a&gt;/&lt;a href=&#34;http://cpprefjp.github.io/reference/condition_variable/condition_variable/notify_all.html&#34;&gt;&lt;code&gt;notify_all()&lt;/code&gt;&lt;/a&gt;もしくはそれ以外の理由で通知があるまでブロッキングされる&lt;/li&gt;
+&lt;li&gt;この関数を抜ける際に&lt;code&gt;lock.&lt;/code&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/mutex/unique_lock/lock.html&#34;&gt;&lt;code&gt;lock()&lt;/code&gt;&lt;/a&gt;する&lt;/li&gt;
+&lt;li&gt;この関数が例外送出によって終了する場合、関数を抜ける前に&lt;code&gt;lock.&lt;/code&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/mutex/unique_lock/lock.html&#34;&gt;&lt;code&gt;lock()&lt;/code&gt;&lt;/a&gt;する&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;(2) : 以下と同等の処理を行う&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;while&lt;/span&gt; (&lt;span style=&#34;color: #666666&#34;&gt;!&lt;/span&gt;pred()) {
+  wait(lock);
+}
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;事後条件&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;lock.&lt;/code&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/mutex/unique_lock/owns_lock.html&#34;&gt;&lt;code&gt;owns_lock()&lt;/code&gt;&lt;/a&gt;&lt;code&gt;== true&lt;/code&gt;であること&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;lock&lt;/code&gt;が参照しているミューテックスオブジェクトが、この関数を呼び出したスレッドでロック取得されていること&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;戻り値&lt;/h2&gt;
+&lt;p&gt;なし&lt;/p&gt;
+&lt;h2&gt;例外&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;(1) :&lt;ul&gt;
+&lt;li&gt;C++11まで : この関数は、&lt;code&gt;lock.&lt;/code&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/mutex/unique_lock/lock.html&#34;&gt;&lt;code&gt;lock()&lt;/code&gt;&lt;/a&gt;および&lt;code&gt;lock.&lt;/code&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/mutex/unique_lock/unlock.html&#34;&gt;&lt;code&gt;unlock()&lt;/code&gt;&lt;/a&gt;によって送出されうる、あらゆる例外が送出される可能性がある。&lt;/li&gt;
+&lt;li&gt;C++14 : 投げない&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;(2) : &lt;ul&gt;
+&lt;li&gt;C++11まで : この関数は、&lt;code&gt;lock.&lt;/code&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/mutex/unique_lock/lock.html&#34;&gt;&lt;code&gt;lock()&lt;/code&gt;&lt;/a&gt;および&lt;code&gt;lock.&lt;/code&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/mutex/unique_lock/unlock.html&#34;&gt;&lt;code&gt;unlock()&lt;/code&gt;&lt;/a&gt;によって送出されうる、あらゆる例外が送出される可能性がある。&lt;/li&gt;
+&lt;li&gt;C++14 : 時計クラス、&lt;a href=&#34;http://cpprefjp.github.io/reference/chrono/time_point.html&#34;&gt;&lt;code&gt;time_point&lt;/code&gt;&lt;/a&gt;クラス、&lt;a href=&#34;http://cpprefjp.github.io/reference/chrono/duration.html&#34;&gt;&lt;code&gt;duration&lt;/code&gt;&lt;/a&gt;クラスの構築が例外を送出する場合、この関数はそれらの例外を送出する。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;備考&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;C++14 : 事後条件を満たさない場合、&lt;a href=&#34;http://cpprefjp.github.io/reference/exception/terminate.html&#34;&gt;&lt;code&gt;std::terminate()&lt;/code&gt;&lt;/a&gt;関数を呼び出して、プログラムを異常終了させる。これは、ミューテックスの再ロック取得が例外を送出した場合に発生する。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;例&lt;/h2&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
+&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;condition_variable&amp;gt;&lt;/span&gt;
+&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;mutex&amp;gt;&lt;/span&gt;
+&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;thread&amp;gt;&lt;/span&gt;
+
+&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;struct&lt;/span&gt; ProcessData {
+  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;mutex mtx_;
+  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;condition_variable cond_;
+
+  &lt;span style=&#34;color: #B00040&#34;&gt;bool&lt;/span&gt; data_ready_ &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color: #008000&#34;&gt;false&lt;/span&gt;;
+
+&lt;span style=&#34;color: #A0A000&#34;&gt;public:&lt;/span&gt;
+  &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 処理に必要なデータの準備をする&lt;/span&gt;
+  &lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color: #0000FF&#34;&gt;prepare_data_for_processing&lt;/span&gt;()
+  {
+    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// ...準備処理...&lt;/span&gt;
+
+    {
+      std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;lock_guard&lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt;std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;mutex&lt;span style=&#34;color: #666666&#34;&gt;&amp;gt;&lt;/span&gt; lk(mtx_);
+      data_ready_ &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color: #008000&#34;&gt;true&lt;/span&gt;;
+    }
+
+    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 準備完了したので待機スレッドを全て起床させる&lt;/span&gt;
+    cond_.notify_all();
+  }
+
+  &lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color: #0000FF&#34;&gt;wait_for_data_to_process1&lt;/span&gt;()
+  {
+    std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;unique_lock&lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt;std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;mutex&lt;span style=&#34;color: #666666&#34;&gt;&amp;gt;&lt;/span&gt; lk(mtx_);
+
+    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// データの準備ができるまで待機してから処理する&lt;/span&gt;
+    &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;while&lt;/span&gt; (&lt;span style=&#34;color: #666666&#34;&gt;!&lt;/span&gt;data_ready_) {
+      &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 述語を指定しないバージョン&lt;/span&gt;
+      cond_.&lt;span style=&#34;color:#ff0000&#34;&gt;wait&lt;/span&gt;(lk);
+    }
+    process_data();
+  }
+
+  &lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color: #0000FF&#34;&gt;wait_for_data_to_process2&lt;/span&gt;()
+  {
+    std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;unique_lock&lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&lt;/span&gt;std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;mutex&lt;span style=&#34;color: #666666&#34;&gt;&amp;gt;&lt;/span&gt; lk(mtx_);
+
+    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// データの準備ができるまで待機してから処理する&lt;/span&gt;
+
+    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 述語を指定するバージョン&lt;/span&gt;
+    cond_.&lt;span style=&#34;color:#ff0000&#34;&gt;wait&lt;/span&gt;(lk, [&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;this&lt;/span&gt;] { &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;return&lt;/span&gt; data_ready_; });
+    process_data();
+  }
+
+&lt;span style=&#34;color: #A0A000&#34;&gt;private:&lt;/span&gt;
+  &lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color: #0000FF&#34;&gt;process_data&lt;/span&gt;()
+  {
+    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// ...データを処理する...&lt;/span&gt;
+    std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;cout &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color: #BA2121&#34;&gt;&#34;process data&#34;&lt;/span&gt; &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;endl;
+  }
+};
+
+&lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color: #0000FF&#34;&gt;main&lt;/span&gt;()
+{
+  ProcessData p;
+
+  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;thread&lt;/span&gt; t1([&lt;span style=&#34;color: #666666&#34;&gt;&amp;amp;&lt;/span&gt;] { p.prepare_data_for_processing(); });
+  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;thread&lt;/span&gt; t2([&lt;span style=&#34;color: #666666&#34;&gt;&amp;amp;&lt;/span&gt;] { p.wait_for_data_to_process1(); });
+  std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;thread&lt;/span&gt; t3([&lt;span style=&#34;color: #666666&#34;&gt;&amp;amp;&lt;/span&gt;] { p.wait_for_data_to_process2(); });
+
+  t1.join();
+  t2.join();
+  t3.join();
+}
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h3&gt;出力&lt;/h3&gt;
+&lt;p&gt;&lt;pre&gt;&lt;code&gt;process data
+process data
+&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;h2&gt;バージョン&lt;/h2&gt;
+&lt;h3&gt;言語&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;C++11&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;処理系&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC&lt;/a&gt;: &lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC, C++0x mode&lt;/a&gt;: 4.7.0&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#icc&#34;&gt;ICC&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt;: 11.0, 12.0&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;参照&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#2093&#34; target=&#34;_blank&#34;&gt;LWG Issue 2093. Throws clause of &lt;code&gt;condition_variable::wait&lt;/code&gt; with predicate&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#2135&#34; target=&#34;_blank&#34;&gt;LWG Issue 2135. Unclear requirement for exceptions thrown in &lt;code&gt;condition_variable::wait()&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/div&gt;</content>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>operator delete -- operator delete 等に C++03 までの宣言と、C++14 で追加された関数を追加</title>
@@ -749,165 +924,6 @@ condition_variable_any(&lt;span style=&#34;color: #008000; font-weight: bold&#34
 &lt;li&gt;function[meta id-type]&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 単純な記憶域の確保&lt;/span&gt;
-&lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;operator&lt;/span&gt; &lt;span style=&#34;color: #0000FF&#34;&gt;new&lt;/span&gt;(std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color: #B00040&#34;&gt;size_t&lt;/span&gt; size);
-
-&lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 単純な記憶域の確保（例外をスローしない）&lt;/span&gt;
-&lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;operator&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;new&lt;/span&gt;(std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color: #B00040&#34;&gt;size_t&lt;/span&gt; size, &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;const&lt;/span&gt; std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/new/nothrow_t.html&#34;&gt;nothrow_t&lt;/a&gt;&lt;span style=&#34;color: #666666&#34;&gt;&amp;amp;&lt;/span&gt;) noexcept;
-
-&lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 単純な配列の記憶域の確保&lt;/span&gt;
-&lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;operator&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;new&lt;/span&gt;[](std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color: #B00040&#34;&gt;size_t&lt;/span&gt; size);
-
-&lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 単純な配列の記憶域の確保（例外をスローしない）&lt;/span&gt;
-&lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;operator&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;new&lt;/span&gt;[](std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color: #B00040&#34;&gt;size_t&lt;/span&gt; size, &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;const&lt;/span&gt; std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/new/nothrow_t.html&#34;&gt;nothrow_t&lt;/a&gt;&lt;span style=&#34;color: #666666&#34;&gt;&amp;amp;&lt;/span&gt;) noexcept;
-
-&lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 配置newによる記憶域の確保&lt;/span&gt;
-&lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;operator&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;new&lt;/span&gt;(std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color: #B00040&#34;&gt;size_t&lt;/span&gt; size, &lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt; ptr) noexcept;
-
-&lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 配置newによる配列の記憶域の確保&lt;/span&gt;
-&lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;operator&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;new&lt;/span&gt;[](std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color: #B00040&#34;&gt;size_t&lt;/span&gt; size, &lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt; ptr) noexcept;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h2&gt;効果&lt;/h2&gt;
-&lt;p&gt;プログラムが動的に記憶域を確保する。&lt;/p&gt;
-&lt;h2&gt;戻り値&lt;/h2&gt;
-&lt;p&gt;確保した記憶域の先頭アドレスを指すポインタ。&lt;/p&gt;
-&lt;h2&gt;備考&lt;/h2&gt;
-&lt;p&gt;一般にプログラム実行中の記憶域の動的確保は処理系がOSからヒープを割り当てるのに対し、placement-new では既にプログラムに割り当て済みの任意の記憶域を新たに確保を求められた際に便宜上割り当てる手法で、上手く使った場合は new / delete を大量に繰り返す必要のある処理を高速に実現しうる。&lt;/p&gt;
-&lt;h2&gt;例&lt;/h2&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
-&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;new&amp;gt;&lt;/span&gt;
-
-&lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color: #0000FF&#34;&gt;main&lt;/span&gt;()
-{
-  try {
-    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// int型変数を動的に作成&lt;/span&gt;
-    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 確保失敗時にbad_alloc例外が送出される&lt;/span&gt;
-    &lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt; p1 &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;new&lt;/span&gt; &lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt;();
-    &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;delete&lt;/span&gt; p1;
-
-    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// int型変数を動的に作成&lt;/span&gt;
-    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 確保失敗時にヌルポインタが返される&lt;/span&gt;
-    &lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt; p2 &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;new&lt;/span&gt; (std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;nothrow) &lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt;();
-    &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;delete&lt;/span&gt; p2;
-
-    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 3要素のint型配列を動的に作成&lt;/span&gt;
-    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 確保失敗時にbad_alloc例外が送出される&lt;/span&gt;
-    &lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt; p3 &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;new&lt;/span&gt; &lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt;[&lt;span style=&#34;color: #666666&#34;&gt;3&lt;/span&gt;];
-    &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;delete&lt;/span&gt;[] p3;
-
-    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 3要素のint型配列を動的に作成&lt;/span&gt;
-    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 確保失敗時にbad_alloc例外が送出される&lt;/span&gt;
-    &lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt; p4 &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;new&lt;/span&gt; (std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;nothrow) &lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt;[&lt;span style=&#34;color: #666666&#34;&gt;3&lt;/span&gt;];
-    &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;delete&lt;/span&gt;[] p4;
-
-    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// char配列のスタック領域に、int型変数を動的に作成&lt;/span&gt;
-    &lt;span style=&#34;color: #B00040&#34;&gt;char&lt;/span&gt; one_field[&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;sizeof&lt;/span&gt;(&lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt;)] &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; {};
-    &lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt; p5 &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;new&lt;/span&gt;(one_field) &lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt;();
-
-    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// char配列のスタック領域に、3要素のint型配列を動的に作成&lt;/span&gt;
-    &lt;span style=&#34;color: #B00040&#34;&gt;char&lt;/span&gt; array_field[&lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;sizeof&lt;/span&gt;(&lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt;) &lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color: #666666&#34;&gt;3&lt;/span&gt;] &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; {};
-    &lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt; p6 &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;new&lt;/span&gt;(array_field) &lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt;[&lt;span style=&#34;color: #666666&#34;&gt;3&lt;/span&gt;];
-  }
-  &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;catch&lt;/span&gt; (std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;bad_alloc&lt;span style=&#34;color: #666666&#34;&gt;&amp;amp;&lt;/span&gt; e) {
-    std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;cout &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; e.what() &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;endl;
-    &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;throw&lt;/span&gt;;
-  }
-}
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h3&gt;出力&lt;/h3&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>Mitsuru Kariya</name>
-        <email>kariya_mitsuru@hotmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>delete -- new、delete はグローバル名前空間なので名前空間メタ情報を削除</title>
-      <link href="http://cpprefjp.github.io/reference/new/op_delete.html"/>
-      <id>3bdc172f12f3b9f04598c1b157e63609550bbed1:reference/new/op_delete.md</id>
-      <updated>2015-03-02 14:04:21 +0900</updated>
-      
-        <content type="html">&lt;h1 itemprop=&#34;name&#34;&gt;delete&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;ul&gt;
-&lt;li&gt;new[meta header]&lt;/li&gt;
-&lt;li&gt;function[meta id-type]&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 単純な記憶域の解放&lt;/span&gt;
-&lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;operator&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;delete&lt;/span&gt;(&lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt; ptr) noexcept;
-&lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 単純な記憶域の解放（例外をスローしない）&lt;/span&gt;
-&lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;operator&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;delete&lt;/span&gt;(&lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt; ptr, &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;const&lt;/span&gt; std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/new/nothrow_t.html&#34;&gt;nothrow_t&lt;/a&gt;&lt;span style=&#34;color: #666666&#34;&gt;&amp;amp;&lt;/span&gt;) noexcept;
-
-&lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 単純な配列の記憶域の解放&lt;/span&gt;
-&lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;operator&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;delete&lt;/span&gt;[](&lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt; ptr) noexcept;
-&lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 単純な配列の記憶域の解放（例外をスローしない）&lt;/span&gt;
-&lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;operator&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;delete&lt;/span&gt;(&lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt; ptr, &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;const&lt;/span&gt; std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/new/nothrow_t.html&#34;&gt;nothrow_t&lt;/a&gt;&lt;span style=&#34;color: #666666&#34;&gt;&amp;amp;&lt;/span&gt;) noexcept;
-
-&lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// replacement-new に対応する記憶域の解放&lt;/span&gt;
-&lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;operator&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;delete&lt;/span&gt;(&lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt; ptr, &lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt;) noexcept;
-&lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// replacement-new による配列の記憶域の確保&lt;/span&gt;
-&lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;operator&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;delete&lt;/span&gt;[](&lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt; ptr, &lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt;) noexcept;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h2&gt;効果&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/new/op_new.html&#34;&gt;&lt;code&gt;new&lt;/code&gt;&lt;/a&gt;演算子によって動的に確保した記憶域を解放する。&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;nothrow&lt;/code&gt;版の&lt;code&gt;delete&lt;/code&gt;演算子は、&lt;code&gt;nothrow&lt;/code&gt;版の&lt;a href=&#34;http://cpprefjp.github.io/reference/new/op_new.html&#34;&gt;&lt;code&gt;new&lt;/code&gt;&lt;/a&gt;演算子によって生成されたオブジェクトのコンストラクタが例外を送出した場合に呼び出される。&lt;/p&gt;
-&lt;h2&gt;例&lt;/h2&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
-&lt;span style=&#34;color: #BC7A00&#34;&gt;#include &amp;lt;new&amp;gt;&lt;/span&gt;
-
-&lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color: #0000FF&#34;&gt;main&lt;/span&gt;()
-{
-  try {
-    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// int型変数を動的に作成&lt;/span&gt;
-    &lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt; p1 &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;new&lt;/span&gt; &lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt;();
-    &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;delete&lt;/span&gt; p1; &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// p1の領域を解放&lt;/span&gt;
-
-    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// int型変数を動的に作成&lt;/span&gt;
-    &lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt; p2 &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;new&lt;/span&gt; (std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;nothrow) &lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt;();
-    &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;delete&lt;/span&gt; p2;
-
-    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 3要素のint型配列を動的に作成&lt;/span&gt;
-    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 確保失敗時にbad_alloc例外が送出される&lt;/span&gt;
-    &lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt; p3 &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;new&lt;/span&gt; &lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt;[&lt;span style=&#34;color: #666666&#34;&gt;3&lt;/span&gt;];
-    &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;delete&lt;/span&gt;[] p3; &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// p3の配列領域を解放&lt;/span&gt;
-
-    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 3要素のint型配列を動的に作成&lt;/span&gt;
-    &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 確保失敗時にbad_alloc例外が送出される&lt;/span&gt;
-    &lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt; p4 &lt;span style=&#34;color: #666666&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;new&lt;/span&gt; (std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;nothrow) &lt;span style=&#34;color: #B00040&#34;&gt;int&lt;/span&gt;[&lt;span style=&#34;color: #666666&#34;&gt;3&lt;/span&gt;];
-    &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;delete&lt;/span&gt;[] p4;
-  }
-  &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;catch&lt;/span&gt; (std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;bad_alloc&lt;span style=&#34;color: #666666&#34;&gt;&amp;amp;&lt;/span&gt; e) {
-    std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;cout &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; e.what() &lt;span style=&#34;color: #666666&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;endl;
-    &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;throw&lt;/span&gt;;
-  }
-}
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h3&gt;出力&lt;/h3&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>Mitsuru Kariya</name>
-        <email>kariya_mitsuru@hotmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>new -- new、delete はグローバル名前空間なので名前空間メタ情報を削除</title>
-      <link href="http://cpprefjp.github.io/reference/new/op_new.html"/>
-      <id>3bdc172f12f3b9f04598c1b157e63609550bbed1:reference/new/op_new.md</id>
-      <updated>2015-03-02 14:04:21 +0900</updated>
-      
-        <content type="html">&lt;h1 itemprop=&#34;name&#34;&gt;new&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;ul&gt;
-&lt;li&gt;new[meta header]&lt;/li&gt;
-&lt;li&gt;function[meta id-type]&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34; style=&#34;background: #f8f8f8&#34;&gt;&lt;pre style=&#34;line-height: 125%&#34;&gt;&lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 単純な記憶域の確保&lt;/span&gt;
-
 &lt;span style=&#34;color: #B00040&#34;&gt;void&lt;/span&gt;&lt;span style=&#34;color: #666666&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color: #008000; font-weight: bold&#34;&gt;operator&lt;/span&gt; &lt;span style=&#34;color: #0000FF&#34;&gt;new&lt;/span&gt;(std&lt;span style=&#34;color: #666666&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color: #B00040&#34;&gt;size_t&lt;/span&gt; size);
 
 &lt;span style=&#34;color: #408080; font-style: italic&#34;&gt;// 単純な記憶域の確保（例外をスローしない）&lt;/span&gt;
