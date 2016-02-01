@@ -2,9 +2,209 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="http://cpprefjp.github.io" />
-  <updated>2016-02-01T17:31:34.331780</updated>
-  <id>067d7453-f069-4641-95df-8554cf9384a1</id>
+  <updated>2016-02-01T17:36:34.592372</updated>
+  <id>d75a6cbf-d45c-4c48-bb5a-c8a4fdc18d2c</id>
 
+  
+    <entry>
+      <title>ブロックスコープを持つstatic変数初期化のスレッドセーフ化 -- C++11 ブロックスコープを持つ`static`変数初期化のスレッドセーフ化 : タイトルでのコード修飾をやめた(#320) マークダウン記法からHTMLに変換される際に、タイトルだけは複数箇所で変換されずに使われるため。</title>
+      <link href="http://cpprefjp.github.io/lang/cpp11/static_initialization_thread_safely.html"/>
+      <id>8000769f208c1c3051ace0026b2f39d34b46541d:lang/cpp11/static_initialization_thread_safely.md</id>
+      <updated>2016-02-01 17:36:16 +0900</updated>
+      
+        <content type="html">&lt;h1 itemprop=&#34;name&#34;&gt;ブロックスコープを持つstatic変数初期化のスレッドセーフ化&lt;span class=&#34;cpp cpp11&#34; title=&#34;C++11で追加&#34;&gt;(C++11)&lt;/span&gt;&lt;/h1&gt;
+&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;h2&gt;概要&lt;/h2&gt;
+&lt;p&gt;ブロックスコープを持つ&lt;code&gt;static&lt;/code&gt;変数の初期化は、スレッドセーフであることが規定された。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;static&lt;/code&gt;変数の初期化が完了するまで、他のスレッドは初期化処理の前で待機する。&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;singleton&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+&lt;span class=&#34;nl&#34;&gt;public:&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;static&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;singleton&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;get_instance&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;static&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;singleton&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;instance&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// この初期化はスレッドセーフ&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;instance&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;仕様&lt;/h2&gt;
+&lt;h3&gt;staticローカル変数の初期化&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;ローカルの&lt;code&gt;static&lt;/code&gt;変数を宣言と同時に初期化した場合、並行実行は初期化が完了するまで待機しなければならない&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;非ローカルなstatic変数の初期化&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;非ローカルな&lt;code&gt;static&lt;/code&gt;変数の初期化は、&lt;code&gt;main()&lt;/code&gt;関数が開始する前に行われること&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;static変数のデストラクタ&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;static&lt;/code&gt;変数のデストラクタは、全てのスレッドが終了したあとに、宣言と逆の順番にデストラクタが呼び出され、破棄される&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;例&lt;/h2&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;thread&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;vector&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;cassert&amp;gt;&lt;/span&gt;
+
+&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;singleton&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;value_&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;nl&#34;&gt;public:&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;static&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;singleton&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;get_instance&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;static&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;singleton&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;instance&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// この初期化はスレッドセーフ&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;instance&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+
+  &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;get&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;const&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;value_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
+
+&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// 4スレッドで並行に、&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// singletonのstatic変数へとアクセスする&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/vector.html&#34;&gt;std::vector&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/thread/thread.html&#34;&gt;std::thread&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;threads&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;for&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;i&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;i&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;4&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;++&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;i&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/thread/thread.html&#34;&gt;std::thread&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;t&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;([]&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+      &lt;span class=&#34;c1&#34;&gt;// singletonのメンバ変数value_が&lt;/span&gt;
+      &lt;span class=&#34;c1&#34;&gt;// 常に初期化された状態であることを確認&lt;/span&gt;
+      &lt;span class=&#34;n&#34;&gt;assert&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;singleton&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;get_instance&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;().&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;get&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;==&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+    &lt;span class=&#34;p&#34;&gt;});&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;threads&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/vector/push_back.html&#34;&gt;push_back&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/utility/move.html&#34;&gt;std::move&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;t&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;));&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+
+  &lt;span class=&#34;k&#34;&gt;for&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/thread/thread.html&#34;&gt;std::thread&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;t&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;threads&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;t&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/thread/thread/join.html&#34;&gt;join()&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h3&gt;出力&lt;/h3&gt;
+&lt;p&gt;&lt;pre&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;h2&gt;この機能が必要になった背景・経緯&lt;/h2&gt;
+&lt;p&gt;ローカルの&lt;code&gt;static&lt;/code&gt;変数を初期化することがスレッドセーフではなかった前バージョンまでは、同じことをするために、Double Checked Lockingという技法によって、ユーザーが初期化をスレッドセーフにしていた。それは、以下のようなものである：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;static&lt;/code&gt;ローカル変数の代わりに、ポインタを&lt;code&gt;static&lt;/code&gt;メンバ変数として持つ&lt;/li&gt;
+&lt;li&gt;ポインタがヌルかどうかをチェックし、ヌルであればロックを取得する&lt;/li&gt;
+&lt;li&gt;ヌルチェックとロック取得の間に有効なポインタになる可能性があるためにロック取得後にさらにヌルチェックをし、ヌルであれば初期化をする&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;こういった技法は非常に難しく、潜在的なデッドロックの可能性があるためにユーザーの行動を制限していた。&lt;/p&gt;
+&lt;p&gt;そのために、言語によって&lt;code&gt;static&lt;/code&gt;変数の初期化がスレッドセーフであることを保証することとなった。&lt;/p&gt;
+&lt;h2&gt;参照&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2148.html&#34; target=&#34;_blank&#34;&gt;N2148 Dynamic Initialization and Destruction with Concurrency&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2325.html&#34; target=&#34;_blank&#34;&gt;N2325 Dynamic Initialization and Destruction with Concurrency&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2382.html&#34; target=&#34;_blank&#34;&gt;N2382 Dynamic Initialization and Destruction with Concurrency&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2444.html&#34; target=&#34;_blank&#34;&gt;N2444 Dynamic Initialization and Destruction with Concurrency&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2513.html&#34; target=&#34;_blank&#34;&gt;N2513 Dynamic Initialization and Destruction with Concurrency&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2660.htm&#34; target=&#34;_blank&#34;&gt;N2660 Dynamic Initialization and Destruction with Concurrency&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://yamasa.hatenablog.jp/entry/20100128/1264693781&#34; target=&#34;_blank&#34;&gt;C++0x時代の Double-Checked Locking - yamasaのネタ帳&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/div&gt;</content>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>ブロックスコープを持つ`static`変数初期化のスレッドセーフ化 -- C++11 ブロックスコープを持つstatic変数初期化のスレッドセーフ化 : コードブロック中のリンク切れを修正(#320)</title>
+      <link href="http://cpprefjp.github.io/lang/cpp11/static_initialization_thread_safely.html"/>
+      <id>51c1669df8be919217e5e8207cf86364e63a9c26:lang/cpp11/static_initialization_thread_safely.md</id>
+      <updated>2016-02-01 17:35:10 +0900</updated>
+      
+        <content type="html">&lt;h1 itemprop=&#34;name&#34;&gt;ブロックスコープを持つ&lt;code&gt;static&lt;/code&gt;変数初期化のスレッドセーフ化&lt;span class=&#34;cpp cpp11&#34; title=&#34;C++11で追加&#34;&gt;(C++11)&lt;/span&gt;&lt;/h1&gt;
+&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;h2&gt;概要&lt;/h2&gt;
+&lt;p&gt;ブロックスコープを持つ&lt;code&gt;static&lt;/code&gt;変数の初期化は、スレッドセーフであることが規定された。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;static&lt;/code&gt;変数の初期化が完了するまで、他のスレッドは初期化処理の前で待機する。&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;singleton&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+&lt;span class=&#34;nl&#34;&gt;public:&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;static&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;singleton&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;get_instance&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;static&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;singleton&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;instance&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// この初期化はスレッドセーフ&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;instance&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;仕様&lt;/h2&gt;
+&lt;h3&gt;staticローカル変数の初期化&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;ローカルの&lt;code&gt;static&lt;/code&gt;変数を宣言と同時に初期化した場合、並行実行は初期化が完了するまで待機しなければならない&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;非ローカルなstatic変数の初期化&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;非ローカルな&lt;code&gt;static&lt;/code&gt;変数の初期化は、&lt;code&gt;main()&lt;/code&gt;関数が開始する前に行われること&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;static変数のデストラクタ&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;static&lt;/code&gt;変数のデストラクタは、全てのスレッドが終了したあとに、宣言と逆の順番にデストラクタが呼び出され、破棄される&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;例&lt;/h2&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;thread&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;vector&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;cassert&amp;gt;&lt;/span&gt;
+
+&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;singleton&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;value_&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;nl&#34;&gt;public:&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;static&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;singleton&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;get_instance&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;static&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;singleton&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;instance&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// この初期化はスレッドセーフ&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;instance&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+
+  &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;get&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;const&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;value_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
+
+&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// 4スレッドで並行に、&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// singletonのstatic変数へとアクセスする&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/vector.html&#34;&gt;std::vector&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/thread/thread.html&#34;&gt;std::thread&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;threads&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;for&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;i&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;i&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;4&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;++&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;i&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/thread/thread.html&#34;&gt;std::thread&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;t&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;([]&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+      &lt;span class=&#34;c1&#34;&gt;// singletonのメンバ変数value_が&lt;/span&gt;
+      &lt;span class=&#34;c1&#34;&gt;// 常に初期化された状態であることを確認&lt;/span&gt;
+      &lt;span class=&#34;n&#34;&gt;assert&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;singleton&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;get_instance&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;().&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;get&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;==&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+    &lt;span class=&#34;p&#34;&gt;});&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;threads&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/vector/push_back.html&#34;&gt;push_back&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/utility/move.html&#34;&gt;std::move&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;t&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;));&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+
+  &lt;span class=&#34;k&#34;&gt;for&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/thread/thread.html&#34;&gt;std::thread&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;t&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;threads&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;t&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/thread/thread/join.html&#34;&gt;join()&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h3&gt;出力&lt;/h3&gt;
+&lt;p&gt;&lt;pre&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;h2&gt;この機能が必要になった背景・経緯&lt;/h2&gt;
+&lt;p&gt;ローカルの&lt;code&gt;static&lt;/code&gt;変数を初期化することがスレッドセーフではなかった前バージョンまでは、同じことをするために、Double Checked Lockingという技法によって、ユーザーが初期化をスレッドセーフにしていた。それは、以下のようなものである：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;static&lt;/code&gt;ローカル変数の代わりに、ポインタを&lt;code&gt;static&lt;/code&gt;メンバ変数として持つ&lt;/li&gt;
+&lt;li&gt;ポインタがヌルかどうかをチェックし、ヌルであればロックを取得する&lt;/li&gt;
+&lt;li&gt;ヌルチェックとロック取得の間に有効なポインタになる可能性があるためにロック取得後にさらにヌルチェックをし、ヌルであれば初期化をする&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;こういった技法は非常に難しく、潜在的なデッドロックの可能性があるためにユーザーの行動を制限していた。&lt;/p&gt;
+&lt;p&gt;そのために、言語によって&lt;code&gt;static&lt;/code&gt;変数の初期化がスレッドセーフであることを保証することとなった。&lt;/p&gt;
+&lt;h2&gt;参照&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2148.html&#34; target=&#34;_blank&#34;&gt;N2148 Dynamic Initialization and Destruction with Concurrency&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2325.html&#34; target=&#34;_blank&#34;&gt;N2325 Dynamic Initialization and Destruction with Concurrency&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2382.html&#34; target=&#34;_blank&#34;&gt;N2382 Dynamic Initialization and Destruction with Concurrency&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2444.html&#34; target=&#34;_blank&#34;&gt;N2444 Dynamic Initialization and Destruction with Concurrency&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2513.html&#34; target=&#34;_blank&#34;&gt;N2513 Dynamic Initialization and Destruction with Concurrency&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2660.htm&#34; target=&#34;_blank&#34;&gt;N2660 Dynamic Initialization and Destruction with Concurrency&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://yamasa.hatenablog.jp/entry/20100128/1264693781&#34; target=&#34;_blank&#34;&gt;C++0x時代の Double-Checked Locking - yamasaのネタ帳&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/div&gt;</content>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>コンパイラの実装状況 -- C++11 : 「ブロックスコープを持つstatic変数初期化のスレッドセーフ化」の解説を追加(#320)</title>
@@ -1769,416 +1969,6 @@ end
 &lt;h2&gt;検討されたほかの選択肢&lt;/h2&gt;
 &lt;p&gt;プレフィックスの&lt;code&gt;R&lt;/code&gt;は、最初に提案された頃から変わっていない。これは「Raw」を意味する。&lt;/p&gt;
 &lt;p&gt;生文字列リテラル内にユニバーサルキャラクタ名を入力できるようにして、それだけはエスケープを無視せずに変換する案があったが、バグの元となるために却下された。&lt;/p&gt;
-&lt;h2&gt;参照&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n2053.html&#34; target=&#34;_blank&#34;&gt;N2053 Raw String Literals&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2146.html&#34; target=&#34;_blank&#34;&gt;N2146 Raw String Literals (Revision 1)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2295.html&#34; target=&#34;_blank&#34;&gt;N2295 Raw and Unicode String Literals; Unified Proposal&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2384.html&#34; target=&#34;_blank&#34;&gt;N2384 Raw and Unicode String Literals; Unified Proposal (Rev. 1)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2442.htm&#34; target=&#34;_blank&#34;&gt;N2442 Raw and Unicode String Literals; Unified Proposal (Rev. 2)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2010/n3077.html&#34; target=&#34;_blank&#34;&gt;N3077 Alternative approach to Raw String issues&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>生文字列リテラル -- C++11 生文字列リテラル : 雛形HTMLの見出しレベルが間違っていたので修正(#299)</title>
-      <link href="http://cpprefjp.github.io/lang/cpp11/raw_string_literals.html"/>
-      <id>efdcb306b0bb7b3f869077f639f19bea158aa687:lang/cpp11/raw_string_literals.md</id>
-      <updated>2016-02-01 14:28:39 +0900</updated>
-      
-        <content type="html">&lt;h1 itemprop=&#34;name&#34;&gt;生文字列リテラル&lt;span class=&#34;cpp cpp11&#34; title=&#34;C++11で追加&#34;&gt;(C++11)&lt;/span&gt;&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;h2&gt;概要&lt;/h2&gt;
-&lt;p&gt;&lt;code&gt;R&lt;/code&gt;プレフィックスを付けた文字列リテラル内の丸カッコ&lt;code&gt;( )&lt;/code&gt;で囲まれた部分は、エスケープシーケンスが無視される。この機能を「生文字列リテラル (Raw string literals)」という。&lt;/p&gt;
-&lt;p&gt;たとえばJSON形式でデータを記述する場合、通常の文字列リテラルでは以下のように書くことになる：&lt;/p&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::string&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;json&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34;{&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;\&#34;&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;user_id&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;\&#34;&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;: 123, &lt;/span&gt;&lt;span class=&#34;se&#34;&gt;\&#34;&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;name&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;\&#34;&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;: &lt;/span&gt;&lt;span class=&#34;se&#34;&gt;\&#34;&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;Alice&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;\&#34;&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;}&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;p&gt;文字列リテラル内にダブルクォーテーションを入力するために、多くのエスケープ文字&lt;code&gt;\&lt;/code&gt;が必要となっている。このような状況で生文字列リテラルを使用することで、エスケープ文字をなくし、以下のように書ける：&lt;/p&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::string&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;json&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;R&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;({&#34;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;user_id&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;: 123, &#34;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;name&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;: &#34;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Alice&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;})&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;p&gt;この機能は、正規表現を書く場合、ファイルパスをコード中に記述するような場合にも役立つ。&lt;/p&gt;
-&lt;p&gt;そのほか、改行を含む文章を文字列リテラルで記述する場合にも、生文字列リテラルは使用できる：&lt;/p&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;string&amp;gt;&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::string&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;text&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;R&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;(begin&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;a&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;b&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;c&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;end&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;;&lt;/span&gt;
-
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;std::cout&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;text&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/ostream/endl.html&#34;&gt;std::endl&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;p&gt;出力：&lt;/p&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;begin
-a,
-b,
-c
-end
-&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;p&gt;生文字列リテラルの範囲内では、改行をすることでエスケープ文字&lt;code&gt;&#39;\n&#39;&lt;/code&gt;に変換される。&lt;/p&gt;
-&lt;h2&gt;仕様&lt;/h2&gt;
-&lt;p&gt;生文字列リテラルは、以下の構文を持つ：&lt;/p&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;encoding-prefix R&#34;d-char-sequence &lt;i&gt;opt&lt;/i&gt; (r-char-sequence &lt;i&gt;opt&lt;/i&gt;) d-char-sequence &lt;i&gt;opt&lt;/i&gt;&#34;
-&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;p&gt;encoding-prefixとは、&lt;code&gt;u8&lt;/code&gt;、&lt;code&gt;u&lt;/code&gt;、&lt;code&gt;U&lt;/code&gt;、&lt;code&gt;L&lt;/code&gt;といった、文字列リテラルの文字エンコードを指定するプレフィックス。たとえば、UTF-8の生文字列リテラルは、&lt;code&gt;u8R&#34;(hello)&#34;&lt;/code&gt;のように書く。&lt;/p&gt;
-&lt;p&gt;文字列中の丸カッコのなか&lt;code&gt;r-char-sequence&lt;/code&gt;には、エスケープシーケンスを無視する文字列リテラルを書く。丸カッコのなかは省略可能。&lt;/p&gt;
-&lt;p&gt;丸カッコの前後&lt;code&gt;d-char-sequence&lt;/code&gt;には、生文字列の範囲を明確にするための文字列を指定する。これは前後で同じ文字列を指定する必要がある。これは、文字列リテラルのなかにダブルクォーテーションや閉じ丸カッコが指定されるような状況で必要となる：&lt;/p&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;string&amp;gt;&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::string&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;s&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;R&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;***(文字列中に生文字列リテラルの閉じカッコと閉じダブルクォーテーションを書く)&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;***&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;std::cout&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;s&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/ostream/endl.html&#34;&gt;std::endl&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;p&gt;出力：&lt;/p&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;文字列中に生文字列リテラルの閉じカッコと閉じダブルクォーテーションを書く)&#34;
-&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;p&gt;ここで、生文字列リテラルの範囲を単なる丸カッコではなく、ユーザーがカッコの形を指定できれば、すなわち&lt;code&gt;***(&lt;/code&gt;を開きカッコ、&lt;code&gt;)***&lt;/code&gt;を閉じカッコ、のように指定できれば、文字列リテラルのなかに単純な閉じ丸カッコが指定されたとしても、それが生文字列リテラルの範囲終了とは見なされなくなる。&lt;/p&gt;
-&lt;p&gt;生文字列リテラルの内容である&lt;code&gt;r-char-sequence&lt;/code&gt;には、「&lt;code&gt;&#39;)&#39;&lt;/code&gt; + &lt;code&gt;d-char-sequence&lt;/code&gt;で指定された文字列 + &lt;code&gt;&#34;&lt;/code&gt;」の組み合わせは使用できない。&lt;/p&gt;
-&lt;p&gt;生文字列リテラルの範囲をユーザーが規定するための&lt;code&gt;d-char-sequence&lt;/code&gt;の各文字には、以下の文字は使用できない： スペース &lt;code&gt;&#39; &#39;&lt;/code&gt;、左丸カッコ &lt;code&gt;&#39;(&#39;&lt;/code&gt;、右丸カッコ &lt;code&gt;&#39;)&#39;&lt;/code&gt;、バックスラッシュ &lt;code&gt;\&lt;/code&gt;に加えて、水平タブ &lt;code&gt;&#39;\t&#39;&lt;/code&gt;、垂直タブ &lt;code&gt;&#39;\v&#39;&lt;/code&gt;、改ページ &lt;code&gt;&#39;\f&#39;&lt;/code&gt;、改行&lt;code&gt;&#39;\n&#39;&lt;/code&gt;の制御文字。&lt;/p&gt;
-&lt;p&gt;生文字列リテラルの内容である&lt;code&gt;r-char-sequence&lt;/code&gt;の要素として改行が入力された場合、それは改行の制御文字&lt;code&gt;&#39;\n&#39;&lt;/code&gt;に変換される。&lt;/p&gt;
-&lt;h2&gt;例&lt;/h2&gt;
-&lt;h3&gt;JSON文字列を構築する&lt;/h3&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;cstdio&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;string&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;sstream&amp;gt;&lt;/span&gt;
-
-&lt;span class=&#34;c1&#34;&gt;// 文字列のフォーマット関数&lt;/span&gt;
-&lt;span class=&#34;c1&#34;&gt;// not thread-safe, スレッドセーフな実装ではないので注意&lt;/span&gt;
-&lt;span class=&#34;c1&#34;&gt;// &lt;a href=&#34;http://www.boost.org/libs/format&#34; target=&#34;_blank&#34;&gt;Boost.Format&lt;/a&gt;や&lt;a href=&#34;https://github.com/cppformat/cppformat&#34; target=&#34;_blank&#34;&gt;cppformat&lt;/a&gt;を使用することを推奨&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;class&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Args&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::string&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;format&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;const&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;char&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;fmt&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Args&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;args&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/streambuf/basic_streambuf.html&#34;&gt;std::streambuf&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;backup&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;std::cout&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/ios/basic_ios/rdbuf.html&#34;&gt;rdbuf&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/sstream/basic_stringstream.md.nolink&#34;&gt;std::stringstream&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;sout&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/streambuf/basic_streambuf.html&#34;&gt;std::streambuf&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;soutbuf&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;sout&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/ios/basic_ios/rdbuf.html&#34;&gt;rdbuf&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;std::cout&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/ios/basic_ios/rdbuf.html&#34;&gt;rdbuf&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;soutbuf&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/cstdio/fprintf.md.nolink&#34;&gt;std::fprintf&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;stdout&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;fmt&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;args&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;...);&lt;/span&gt;
-
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::string&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;result&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;sout&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/sstream/basic_stringstream/str.md.nolink&#34;&gt;str()&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;std::cout&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/ios/basic_ios/rdbuf.html&#34;&gt;rdbuf&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;backup&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-  &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;result&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;user_id&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;123&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::string&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;name&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34;Alice&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::string&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;json&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;format&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;R&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;({&#34;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;user_id&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;: %d, &#34;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;name&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;: &#34;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;%&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;s&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;})&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;user_id&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;name&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string/c_str.html&#34;&gt;c_str()&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;std::cout&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;json&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/ostream/endl.html&#34;&gt;std::endl&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h4&gt;出力&lt;/h4&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;{&#34;user_id&#34;: 123, &#34;name&#34;: &#34;Alice&#34;}
-&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;h3&gt;ファイルパスを入力する&lt;/h3&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;string&amp;gt;&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;c1&#34;&gt;// バックスラッシュ区切りになっているWindowsのファイルパスを入力&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::string&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;path&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;R&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;(C:\language\cpp\main.cpp)&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;std::cout&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;path&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/ostream/endl.html&#34;&gt;std::endl&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h4&gt;出力&lt;/h4&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;C:\language\cpp\main.cpp
-&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;h3&gt;バックスラッシュを含む正規表現を入力する&lt;/h3&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;regex&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;string&amp;gt;&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;c1&#34;&gt;// 「英数字、バックスラッシュ、英数字」の順に&lt;/span&gt;
-  &lt;span class=&#34;c1&#34;&gt;// なっていることを要求する正規表現。&lt;/span&gt;
-  &lt;span class=&#34;c1&#34;&gt;// 生文字列リテラルを使わない場合は&#34;\\w\\\\\\w&#34;となる。&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/regex/basic_regex.html&#34;&gt;std::regex&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;rex&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;R&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;(\w&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;\\&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;\w)&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::string&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;input&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;R&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;(a&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;\b&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;)&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;k&#34;&gt;if&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/regex/regex_match.html&#34;&gt;std::regex_match&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;input&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;rex&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;))&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-    &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;std::cout&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34;matched&#34;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/ostream/endl.html&#34;&gt;std::endl&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-  &lt;span class=&#34;k&#34;&gt;else&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-    &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;std::cout&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34;not matched&#34;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/ostream/endl.html&#34;&gt;std::endl&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h4&gt;出力&lt;/h4&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;matched
-&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;h3&gt;雛形のHTMLを処理する&lt;/h3&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;fstream&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;string&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;regex&amp;gt;&lt;/span&gt;
-
-&lt;span class=&#34;c1&#34;&gt;// 雛形のHTMLを用意して、その一部の要素を文字列置換によってプログラムから入力する。&lt;/span&gt;
-&lt;span class=&#34;c1&#34;&gt;//&lt;/span&gt;
-&lt;span class=&#34;c1&#34;&gt;// 雛形のHTMLを事前にファイルとして作成し、それをあとからプログラムに文字列リテラルとして&lt;/span&gt;
-&lt;span class=&#34;c1&#34;&gt;// 貼り付ける。その際、生文字列リテラルを使用することで、改行文字やバックスラッシュを&lt;/span&gt;
-&lt;span class=&#34;c1&#34;&gt;// 加工することなくそのまま扱える。&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;const&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::string&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;html_template&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;u8R&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;(&amp;lt;html&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;head&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-  &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;meta&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;http&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;-&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;equiv&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;Content-Type&#34;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;content&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;text/html; charset=utf-8&#34;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;/&amp;gt;&lt;/span&gt;
-  &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;title&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;$&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;title&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;$&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;/&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;title&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;o&#34;&gt;&amp;lt;/&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;head&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;body&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-  &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;p&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;$&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;body&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;$&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;/&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;p&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;o&#34;&gt;&amp;lt;/&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;body&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;o&#34;&gt;&amp;lt;/&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;html&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;;&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::string&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;html&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;html_template&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-
-  &lt;span class=&#34;n&#34;&gt;html&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/regex/regex_replace.html&#34;&gt;std::regex_replace&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;html&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/regex/basic_regex.html&#34;&gt;std::regex&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;u8R&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;(\$title\$)&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;),&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;u8&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;タイトル&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;html&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/regex/regex_replace.html&#34;&gt;std::regex_replace&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;html&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/regex/basic_regex.html&#34;&gt;std::regex&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;u8R&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;(\$body\$)&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;),&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;u8&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;ボディ&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/fstream/basic_ofstream.md.nolink&#34;&gt;std::ofstream&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;file&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;index.html&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/ostream/basic_ostream/write.html&#34;&gt;file.write&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string/data.html&#34;&gt;html.data()&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string/size.html&#34;&gt;html.size()&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h4&gt;出力(index.html)&lt;/h4&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;&amp;lt;html&amp;gt;
-&amp;lt;head&amp;gt;
-  &amp;lt;meta http-equiv=&#34;Content-Type&#34; content=&#34;text/html; charset=utf-8&#34;/&amp;gt;
-  &amp;lt;title&amp;gt;タイトル&amp;lt;/title&amp;gt;
-&amp;lt;/head&amp;gt;
-&amp;lt;body&amp;gt;
-  &amp;lt;p&amp;gt;ボディ&amp;lt;/p&amp;gt;
-&amp;lt;/body&amp;gt;
-&amp;lt;/html&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;p&gt;(執筆中)&lt;/p&gt;
-&lt;h2&gt;参照&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n2053.html&#34; target=&#34;_blank&#34;&gt;N2053 Raw String Literals&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2146.html&#34; target=&#34;_blank&#34;&gt;N2146 Raw String Literals (Revision 1)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2295.html&#34; target=&#34;_blank&#34;&gt;N2295 Raw and Unicode String Literals; Unified Proposal&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2384.html&#34; target=&#34;_blank&#34;&gt;N2384 Raw and Unicode String Literals; Unified Proposal (Rev. 1)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2442.htm&#34; target=&#34;_blank&#34;&gt;N2442 Raw and Unicode String Literals; Unified Proposal (Rev. 2)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2010/n3077.html&#34; target=&#34;_blank&#34;&gt;N3077 Alternative approach to Raw String issues&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>生文字列リテラル -- C++11 生文字列リテラル : 雛形HTMLの例に、識別子のリンクを追加(#299)</title>
-      <link href="http://cpprefjp.github.io/lang/cpp11/raw_string_literals.html"/>
-      <id>525b742d4ff6cc33feabcdfce2c4d34ad94f48fa:lang/cpp11/raw_string_literals.md</id>
-      <updated>2016-02-01 14:27:52 +0900</updated>
-      
-        <content type="html">&lt;h1 itemprop=&#34;name&#34;&gt;生文字列リテラル&lt;span class=&#34;cpp cpp11&#34; title=&#34;C++11で追加&#34;&gt;(C++11)&lt;/span&gt;&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;h2&gt;概要&lt;/h2&gt;
-&lt;p&gt;&lt;code&gt;R&lt;/code&gt;プレフィックスを付けた文字列リテラル内の丸カッコ&lt;code&gt;( )&lt;/code&gt;で囲まれた部分は、エスケープシーケンスが無視される。この機能を「生文字列リテラル (Raw string literals)」という。&lt;/p&gt;
-&lt;p&gt;たとえばJSON形式でデータを記述する場合、通常の文字列リテラルでは以下のように書くことになる：&lt;/p&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::string&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;json&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34;{&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;\&#34;&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;user_id&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;\&#34;&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;: 123, &lt;/span&gt;&lt;span class=&#34;se&#34;&gt;\&#34;&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;name&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;\&#34;&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;: &lt;/span&gt;&lt;span class=&#34;se&#34;&gt;\&#34;&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;Alice&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;\&#34;&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;}&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;p&gt;文字列リテラル内にダブルクォーテーションを入力するために、多くのエスケープ文字&lt;code&gt;\&lt;/code&gt;が必要となっている。このような状況で生文字列リテラルを使用することで、エスケープ文字をなくし、以下のように書ける：&lt;/p&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::string&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;json&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;R&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;({&#34;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;user_id&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;: 123, &#34;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;name&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;: &#34;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Alice&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;})&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;p&gt;この機能は、正規表現を書く場合、ファイルパスをコード中に記述するような場合にも役立つ。&lt;/p&gt;
-&lt;p&gt;そのほか、改行を含む文章を文字列リテラルで記述する場合にも、生文字列リテラルは使用できる：&lt;/p&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;string&amp;gt;&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::string&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;text&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;R&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;(begin&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;a&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;b&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;c&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;end&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;;&lt;/span&gt;
-
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;std::cout&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;text&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/ostream/endl.html&#34;&gt;std::endl&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;p&gt;出力：&lt;/p&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;begin
-a,
-b,
-c
-end
-&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;p&gt;生文字列リテラルの範囲内では、改行をすることでエスケープ文字&lt;code&gt;&#39;\n&#39;&lt;/code&gt;に変換される。&lt;/p&gt;
-&lt;h2&gt;仕様&lt;/h2&gt;
-&lt;p&gt;生文字列リテラルは、以下の構文を持つ：&lt;/p&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;encoding-prefix R&#34;d-char-sequence &lt;i&gt;opt&lt;/i&gt; (r-char-sequence &lt;i&gt;opt&lt;/i&gt;) d-char-sequence &lt;i&gt;opt&lt;/i&gt;&#34;
-&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;p&gt;encoding-prefixとは、&lt;code&gt;u8&lt;/code&gt;、&lt;code&gt;u&lt;/code&gt;、&lt;code&gt;U&lt;/code&gt;、&lt;code&gt;L&lt;/code&gt;といった、文字列リテラルの文字エンコードを指定するプレフィックス。たとえば、UTF-8の生文字列リテラルは、&lt;code&gt;u8R&#34;(hello)&#34;&lt;/code&gt;のように書く。&lt;/p&gt;
-&lt;p&gt;文字列中の丸カッコのなか&lt;code&gt;r-char-sequence&lt;/code&gt;には、エスケープシーケンスを無視する文字列リテラルを書く。丸カッコのなかは省略可能。&lt;/p&gt;
-&lt;p&gt;丸カッコの前後&lt;code&gt;d-char-sequence&lt;/code&gt;には、生文字列の範囲を明確にするための文字列を指定する。これは前後で同じ文字列を指定する必要がある。これは、文字列リテラルのなかにダブルクォーテーションや閉じ丸カッコが指定されるような状況で必要となる：&lt;/p&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;string&amp;gt;&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::string&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;s&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;R&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;***(文字列中に生文字列リテラルの閉じカッコと閉じダブルクォーテーションを書く)&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;***&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;std::cout&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;s&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/ostream/endl.html&#34;&gt;std::endl&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;p&gt;出力：&lt;/p&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;文字列中に生文字列リテラルの閉じカッコと閉じダブルクォーテーションを書く)&#34;
-&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;p&gt;ここで、生文字列リテラルの範囲を単なる丸カッコではなく、ユーザーがカッコの形を指定できれば、すなわち&lt;code&gt;***(&lt;/code&gt;を開きカッコ、&lt;code&gt;)***&lt;/code&gt;を閉じカッコ、のように指定できれば、文字列リテラルのなかに単純な閉じ丸カッコが指定されたとしても、それが生文字列リテラルの範囲終了とは見なされなくなる。&lt;/p&gt;
-&lt;p&gt;生文字列リテラルの内容である&lt;code&gt;r-char-sequence&lt;/code&gt;には、「&lt;code&gt;&#39;)&#39;&lt;/code&gt; + &lt;code&gt;d-char-sequence&lt;/code&gt;で指定された文字列 + &lt;code&gt;&#34;&lt;/code&gt;」の組み合わせは使用できない。&lt;/p&gt;
-&lt;p&gt;生文字列リテラルの範囲をユーザーが規定するための&lt;code&gt;d-char-sequence&lt;/code&gt;の各文字には、以下の文字は使用できない： スペース &lt;code&gt;&#39; &#39;&lt;/code&gt;、左丸カッコ &lt;code&gt;&#39;(&#39;&lt;/code&gt;、右丸カッコ &lt;code&gt;&#39;)&#39;&lt;/code&gt;、バックスラッシュ &lt;code&gt;\&lt;/code&gt;に加えて、水平タブ &lt;code&gt;&#39;\t&#39;&lt;/code&gt;、垂直タブ &lt;code&gt;&#39;\v&#39;&lt;/code&gt;、改ページ &lt;code&gt;&#39;\f&#39;&lt;/code&gt;、改行&lt;code&gt;&#39;\n&#39;&lt;/code&gt;の制御文字。&lt;/p&gt;
-&lt;p&gt;生文字列リテラルの内容である&lt;code&gt;r-char-sequence&lt;/code&gt;の要素として改行が入力された場合、それは改行の制御文字&lt;code&gt;&#39;\n&#39;&lt;/code&gt;に変換される。&lt;/p&gt;
-&lt;h2&gt;例&lt;/h2&gt;
-&lt;h3&gt;JSON文字列を構築する&lt;/h3&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;cstdio&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;string&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;sstream&amp;gt;&lt;/span&gt;
-
-&lt;span class=&#34;c1&#34;&gt;// 文字列のフォーマット関数&lt;/span&gt;
-&lt;span class=&#34;c1&#34;&gt;// not thread-safe, スレッドセーフな実装ではないので注意&lt;/span&gt;
-&lt;span class=&#34;c1&#34;&gt;// &lt;a href=&#34;http://www.boost.org/libs/format&#34; target=&#34;_blank&#34;&gt;Boost.Format&lt;/a&gt;や&lt;a href=&#34;https://github.com/cppformat/cppformat&#34; target=&#34;_blank&#34;&gt;cppformat&lt;/a&gt;を使用することを推奨&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;class&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Args&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::string&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;format&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;const&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;char&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;fmt&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Args&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;args&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/streambuf/basic_streambuf.html&#34;&gt;std::streambuf&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;backup&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;std::cout&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/ios/basic_ios/rdbuf.html&#34;&gt;rdbuf&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/sstream/basic_stringstream.md.nolink&#34;&gt;std::stringstream&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;sout&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/streambuf/basic_streambuf.html&#34;&gt;std::streambuf&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;soutbuf&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;sout&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/ios/basic_ios/rdbuf.html&#34;&gt;rdbuf&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;std::cout&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/ios/basic_ios/rdbuf.html&#34;&gt;rdbuf&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;soutbuf&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/cstdio/fprintf.md.nolink&#34;&gt;std::fprintf&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;stdout&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;fmt&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;args&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;...);&lt;/span&gt;
-
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::string&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;result&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;sout&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/sstream/basic_stringstream/str.md.nolink&#34;&gt;str()&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;std::cout&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/ios/basic_ios/rdbuf.html&#34;&gt;rdbuf&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;backup&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-  &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;result&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;user_id&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;123&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::string&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;name&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34;Alice&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::string&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;json&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;format&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;R&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;({&#34;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;user_id&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;: %d, &#34;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;name&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;: &#34;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;%&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;s&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;})&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;user_id&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;name&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string/c_str.html&#34;&gt;c_str()&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;std::cout&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;json&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/ostream/endl.html&#34;&gt;std::endl&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h4&gt;出力&lt;/h4&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;{&#34;user_id&#34;: 123, &#34;name&#34;: &#34;Alice&#34;}
-&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;h3&gt;ファイルパスを入力する&lt;/h3&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;string&amp;gt;&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;c1&#34;&gt;// バックスラッシュ区切りになっているWindowsのファイルパスを入力&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::string&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;path&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;R&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;(C:\language\cpp\main.cpp)&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;std::cout&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;path&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/ostream/endl.html&#34;&gt;std::endl&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h4&gt;出力&lt;/h4&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;C:\language\cpp\main.cpp
-&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;h3&gt;バックスラッシュを含む正規表現を入力する&lt;/h3&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;regex&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;string&amp;gt;&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;c1&#34;&gt;// 「英数字、バックスラッシュ、英数字」の順に&lt;/span&gt;
-  &lt;span class=&#34;c1&#34;&gt;// なっていることを要求する正規表現。&lt;/span&gt;
-  &lt;span class=&#34;c1&#34;&gt;// 生文字列リテラルを使わない場合は&#34;\\w\\\\\\w&#34;となる。&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/regex/basic_regex.html&#34;&gt;std::regex&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;rex&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;R&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;(\w&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;\\&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;\w)&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::string&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;input&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;R&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;(a&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;\b&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;)&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;k&#34;&gt;if&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/regex/regex_match.html&#34;&gt;std::regex_match&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;input&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;rex&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;))&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-    &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;std::cout&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34;matched&#34;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/ostream/endl.html&#34;&gt;std::endl&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-  &lt;span class=&#34;k&#34;&gt;else&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-    &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;std::cout&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34;not matched&#34;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/ostream/endl.html&#34;&gt;std::endl&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h4&gt;出力&lt;/h4&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;matched
-&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;h4&gt;雛形のHTMLを処理する&lt;/h4&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;fstream&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;string&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;regex&amp;gt;&lt;/span&gt;
-
-&lt;span class=&#34;c1&#34;&gt;// 雛形のHTMLを用意して、その一部の要素を文字列置換によってプログラムから入力する。&lt;/span&gt;
-&lt;span class=&#34;c1&#34;&gt;//&lt;/span&gt;
-&lt;span class=&#34;c1&#34;&gt;// 雛形のHTMLを事前にファイルとして作成し、それをあとからプログラムに文字列リテラルとして&lt;/span&gt;
-&lt;span class=&#34;c1&#34;&gt;// 貼り付ける。その際、生文字列リテラルを使用することで、改行文字やバックスラッシュを&lt;/span&gt;
-&lt;span class=&#34;c1&#34;&gt;// 加工することなくそのまま扱える。&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;const&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::string&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;html_template&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;u8R&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;(&amp;lt;html&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;head&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-  &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;meta&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;http&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;-&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;equiv&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;Content-Type&#34;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;content&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;text/html; charset=utf-8&#34;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;/&amp;gt;&lt;/span&gt;
-  &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;title&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;$&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;title&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;$&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;/&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;title&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;o&#34;&gt;&amp;lt;/&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;head&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;body&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-  &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;p&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;$&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;body&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;$&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;/&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;p&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;o&#34;&gt;&amp;lt;/&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;body&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;o&#34;&gt;&amp;lt;/&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;html&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;;&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::string&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;html&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;html_template&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-
-  &lt;span class=&#34;n&#34;&gt;html&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/regex/regex_replace.html&#34;&gt;std::regex_replace&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;html&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/regex/basic_regex.html&#34;&gt;std::regex&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;u8R&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;(\$title\$)&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;),&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;u8&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;タイトル&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;html&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/regex/regex_replace.html&#34;&gt;std::regex_replace&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;html&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/regex/basic_regex.html&#34;&gt;std::regex&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;u8R&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;(\$body\$)&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;),&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;u8&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;ボディ&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/fstream/basic_ofstream.md.nolink&#34;&gt;std::ofstream&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;file&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;index.html&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/ostream/basic_ostream/write.html&#34;&gt;file.write&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string/data.html&#34;&gt;html.data()&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string/size.html&#34;&gt;html.size()&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h4&gt;出力(index.html)&lt;/h4&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;&amp;lt;html&amp;gt;
-&amp;lt;head&amp;gt;
-  &amp;lt;meta http-equiv=&#34;Content-Type&#34; content=&#34;text/html; charset=utf-8&#34;/&amp;gt;
-  &amp;lt;title&amp;gt;タイトル&amp;lt;/title&amp;gt;
-&amp;lt;/head&amp;gt;
-&amp;lt;body&amp;gt;
-  &amp;lt;p&amp;gt;ボディ&amp;lt;/p&amp;gt;
-&amp;lt;/body&amp;gt;
-&amp;lt;/html&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;p&gt;(執筆中)&lt;/p&gt;
 &lt;h2&gt;参照&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n2053.html&#34; target=&#34;_blank&#34;&gt;N2053 Raw String Literals&lt;/a&gt;&lt;/li&gt;
