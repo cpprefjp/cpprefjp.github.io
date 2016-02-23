@@ -2,9 +2,122 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="http://cpprefjp.github.io" />
-  <updated>2016-02-23T00:08:16.828409</updated>
-  <id>d880700a-7b3e-4606-a08d-bbab844b562f</id>
+  <updated>2016-02-23T14:35:14.584106</updated>
+  <id>9038151d-63a2-42b8-bc53-59539c3033ad</id>
 
+  
+    <entry>
+      <title>メンバ関数の左辺値／右辺値修飾 -- C++11 メンバ関数の左辺値／右辺値修飾 : 検証したところ、data() &amp;&amp;のreturn文は明示的にmoveする必要があった</title>
+      <link href="http://cpprefjp.github.io/lang/cpp11/ref_qualifier_for_this.html"/>
+      <id>674dd65d63f693d58d9e55cc9a036a04aadede2d:lang/cpp11/ref_qualifier_for_this.md</id>
+      <updated>2016-02-23 14:34:43 +0900</updated>
+      
+        <content type="html">&lt;h1 itemprop=&#34;name&#34;&gt;メンバ関数の左辺値／右辺値修飾&lt;span class=&#34;cpp cpp11&#34; title=&#34;C++11で追加&#34;&gt;(C++11)&lt;/span&gt;&lt;/h1&gt;
+&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;h2&gt;概要&lt;/h2&gt;
+&lt;p&gt;メンバ関数の&lt;code&gt;CV&lt;/code&gt;修飾は、&lt;code&gt;*this&lt;/code&gt;が&lt;code&gt;const&lt;/code&gt;／&lt;code&gt;volatile&lt;/code&gt;である場合とそうでない場合でメンバ関数をオーバーロードできる。&lt;/p&gt;
+&lt;p&gt;同じように、メンバ関数に対して&lt;code&gt;&amp;amp;&lt;/code&gt;もしくは&lt;code&gt;&amp;amp;&amp;amp;&lt;/code&gt;の参照修飾子を付加することで、&lt;code&gt;*this&lt;/code&gt;が左辺値である場合に呼び出されるメンバ関数のオーバーロード、&lt;code&gt;*this&lt;/code&gt;が右辺値である場合に呼び出されるメンバ関数のオーバーロードを定義できる。&lt;/p&gt;
+&lt;p&gt;これを使用することで、「一時オブジェクトな&lt;code&gt;*this&lt;/code&gt;に対して特定のメンバ関数を呼び出せてはならない制約」、「&lt;code&gt;*this&lt;/code&gt;が左辺値もしくは右辺値である場合の効率的な実装を使い分ける」といった設計ができるようになる。&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// 代入演算子は、*thisが左辺値である場合のみ呼び出せるようにする&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;operator&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;const&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;this&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
+
+&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;lvalue&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;lvalue&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// OK : lvalueオブジェクトは左辺値&lt;/span&gt;
+
+&lt;span class=&#34;c1&#34;&gt;//X() = lvalue; // コンパイルエラー！右辺値のオブジェクトに対して代入演算子は呼び出せない&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;p&gt;参照修飾子は、CV修飾子と組み合わせて使用できる：&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
+
+&lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;f&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;       &lt;span class=&#34;c1&#34;&gt;// *thisが非constな左辺値である場合に呼び出される&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+
+  &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;f&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;const&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// *thisがconstな左辺値である場合に呼び出される&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+
+  &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;f&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt;      &lt;span class=&#34;c1&#34;&gt;// *thisが右辺値である場合に呼び出される&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
+
+&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;const&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;cx&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+
+  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;std::cout&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;f&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/ostream/endl.html&#34;&gt;std::endl&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;   &lt;span class=&#34;c1&#34;&gt;// 1&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;std::cout&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;cx&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;f&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/ostream/endl.html&#34;&gt;std::endl&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;  &lt;span class=&#34;c1&#34;&gt;// 2&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;std::cout&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;().&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;f&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/ostream/endl.html&#34;&gt;std::endl&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// 3&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;仕様&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;コンストラクタとデストラクタに対しては、参照修飾子を付加できない&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;CV修飾のみされたメンバ関数と、参照修飾のみされたメンバ関数ではオーバーロードできない&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;f&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;const&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;f&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;     &lt;span class=&#34;c1&#34;&gt;// コンパイルエラー！&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;仮想関数は、基本クラスと派生クラスで、同じ参照修飾子を持たなくてはならない&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;例&lt;/h2&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;vector&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;utility&amp;gt;&lt;/span&gt;
+
+&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;X&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/vector.html&#34;&gt;std::vector&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;data_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;nl&#34;&gt;public:&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;data_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;100&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{}&lt;/span&gt;
+
+  &lt;span class=&#34;c1&#34;&gt;// *thisが左辺値の場合は、保持しているvectorオブジェクトへの参照を返す&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;const&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/vector.html&#34;&gt;std::vector&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&amp;amp;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;data&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;const&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;data_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+
+  &lt;span class=&#34;c1&#34;&gt;// *thisが右辺値の場合は参照を返すと一時オブジェクトの寿命が尽きてしまうため、&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// ムーブで返す&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/vector.html&#34;&gt;std::vector&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;data&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/utility/move.html&#34;&gt;std::move&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;data_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
+
+&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+
+  &lt;span class=&#34;k&#34;&gt;const&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/vector.html&#34;&gt;std::vector&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&amp;amp;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;v1&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;data&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/vector.html&#34;&gt;std::vector&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;v2&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;().&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;data&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h3&gt;出力&lt;/h3&gt;
+&lt;p&gt;&lt;pre&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;h2&gt;参照&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1784.htm&#34; target=&#34;_blank&#34;&gt;N1784 A proposal to add l-value member function qualifier&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1821.htm&#34; target=&#34;_blank&#34;&gt;N1821 Extending Move Semantics To &lt;code&gt;*this&lt;/code&gt; (Revision 1)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2377.htm&#34; target=&#34;_blank&#34;&gt;N2377 Extending move semantics to &lt;code&gt;*this&lt;/code&gt; (revised wording)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2439.htm&#34; target=&#34;_blank&#34;&gt;N2439 Extending move semantics to &lt;code&gt;*this&lt;/code&gt; (revised wording)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/div&gt;</content>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>整数に対する除算と剰余算の丸め結果を規定 -- C++11 整数に対する除算と剰余算の丸め結果を規定 : a4lgさんの記事を参考にさせてもらったので、参照に追加</title>
@@ -1779,258 +1892,6 @@
       <author>
         <name>Kazutoshi SATODA</name>
         <email>k_satoda@f2.dion.ne.jp</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>char16_tとchar32_t -- Merge pull request #348 from tshino/fix-typo
-</title>
-      <link href="http://cpprefjp.github.io/lang/cpp11/char16_32.html"/>
-      <id>f3e39faf07676b5152f3649aef995e03e44f2f7e:lang/cpp11/char16_32.md</id>
-      <updated>2016-02-21 23:38:08 +0900
-</updated>
-      
-        <content type="html">&lt;h1 itemprop=&#34;name&#34;&gt;char16_tとchar32_t&lt;span class=&#34;cpp cpp11&#34; title=&#34;C++11で追加&#34;&gt;(C++11)&lt;/span&gt;&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;h2&gt;概要&lt;/h2&gt;
-&lt;p&gt;&lt;code&gt;char16_t&lt;/code&gt;はUTF-16符号化形式の文字型、&lt;code&gt;char32_t&lt;/code&gt;はUTF-32符号化形式の文字型である。&lt;/p&gt;
-&lt;p&gt;UTF-16とUTF-32は、ISO/IEC 10646で標準化されている文字コード「UCS (Universal Coded Character Set)」とその互換文字コードである「Unicode (ユニコード)」で定義されている符号化形式である。UTF-16は、ひとつのコードポイント(≒文字)を表すために16ビットを基本的に使用する。UTF-32は32ビットである。&lt;/p&gt;
-&lt;p&gt;標準C++では、これらの文字符号化形式を表す文字型、そのリテラル、および文字コード・符号化形式を変換する機能を提供する。&lt;/p&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;c1&#34;&gt;// UTF-16／UTF-32符号化形式の文字列。&lt;/span&gt;
-&lt;span class=&#34;c1&#34;&gt;// uプレフィックスを付けた文字列リテラルはchar16_tのシーケンスとなる。&lt;/span&gt;
-&lt;span class=&#34;c1&#34;&gt;// Uプレフィックスを付けた文字列リテラルはchar32_tのシーケンスとなる。&lt;/span&gt;
-&lt;span class=&#34;kt&#34;&gt;char16_t&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;s16&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[]&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;u&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;あいうえお&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;span class=&#34;kt&#34;&gt;char32_t&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;s32&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[]&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;U&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;あいうえお&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-
-&lt;span class=&#34;c1&#34;&gt;// 文字列中にユニバーサルキャラクタ名を直接入力できる。&lt;/span&gt;
-&lt;span class=&#34;c1&#34;&gt;// \uからはじめて4桁、もしくは\Uからはじめて8桁がユニバーサルキャラクタ名として扱われる。&lt;/span&gt;
-&lt;span class=&#34;kt&#34;&gt;char16_t&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;s&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[]&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;u&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;\U00020BB7&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;野家&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// 𠮷野家&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;p&gt;ただし、C++11時点で、標準ライブラリでは&lt;code&gt;char16_t&lt;/code&gt;と&lt;code&gt;char32_t&lt;/code&gt;の入出力はサポートしない。そのため、それらの文字・文字列はシステムの文字コードに変換して入出力する必要がある。&lt;/p&gt;
-&lt;h2&gt;仕様&lt;/h2&gt;
-&lt;h3&gt;char16_t型、char32_t型の文字・文字列リテラルと文字コード&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;char16_t&lt;/code&gt;と&lt;code&gt;char32_t&lt;/code&gt;は予約語(キーワード)である。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;u&lt;/code&gt;プレフィックスが付く文字リテラルの型は&lt;code&gt;char16_t&lt;/code&gt;であり、&lt;code&gt;u&lt;/code&gt;プレフィックスが付く文字列リテラルの要素型は&lt;code&gt;char16_t&lt;/code&gt;である。&lt;ul&gt;
-&lt;li&gt;ひとつの文字を含む&lt;code&gt;char16_t&lt;/code&gt;リテラルの値は、ひとつの16ビットコードポイントで表現できるISO 10646のコードポイント値と同じである。&lt;/li&gt;
-&lt;li&gt;ひとつの値を16ビットで表現できない場合、プログラムは不適格となる。&lt;/li&gt;
-&lt;li&gt;複数の文字を含む&lt;code&gt;char16_t&lt;/code&gt;文字リテラルは不適格である。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;char16_t&lt;/code&gt;文字リテラルが、基本文字集合とユニバーサルキャラクタ名より多くを含む場合は実装定義となる。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;char16_t&lt;/code&gt;の場合、ひとつの文字がひとつ以上の&lt;code&gt;char16_t&lt;/code&gt;を生成することがある。その文字はサロゲートペアと呼ばれる。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;char16_t&lt;/code&gt;型の文字列リテラルは、静的ストレージに配置される。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;U&lt;/code&gt;プレフィックスが付く文字リテラルの型は&lt;code&gt;char32_t&lt;/code&gt;であり、&lt;code&gt;U&lt;/code&gt;プレフィックスが付く文字列リテラルの要素型は&lt;code&gt;char32_t&lt;/code&gt;である。&lt;ul&gt;
-&lt;li&gt;ひとつの文字を含む&lt;code&gt;char32_t&lt;/code&gt;リテラルの値は、ひとつの32ビットコードポイントで表現できるISO 10646のコードポイント値と同じである。&lt;/li&gt;
-&lt;li&gt;ひとつの値を32ビットで表現できない場合、プログラムは不適格となる。&lt;/li&gt;
-&lt;li&gt;複数の文字を含む&lt;code&gt;char32_t&lt;/code&gt;文字リテラルは不適格である。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;char32_t&lt;/code&gt;文字リテラルが、基本文字集合とユニバーサルキャラクタ名より多くを含む場合は実装定義となる。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;char32_t&lt;/code&gt;型の文字列リテラルは、静的ストレージに配置される。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;char16_t&lt;/code&gt;と&lt;code&gt;char32_t&lt;/code&gt;はそれぞれ、&lt;code&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/cstdint.html&#34;&gt;&amp;lt;cstdint&amp;gt;&lt;/a&gt;&lt;/code&gt;ヘッダで定義される&lt;code&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/cstdint/uint_least16_t.html&#34;&gt;uint_least16_t&lt;/a&gt;&lt;/code&gt;と&lt;code&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/cstdint/uint_least32_t.html&#34;&gt;uint_least32_t&lt;/a&gt;&lt;/code&gt;と、サイズ、符号の有無、アライメントが同じである。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&amp;lt;uchar&amp;gt;&lt;/code&gt;ヘッダでマクロ&lt;code&gt;__STDC_UTF_16__&lt;/code&gt;が定義される場合、&lt;code&gt;char16_t&lt;/code&gt;型の値はUTF-16の妥当なコードポイントを持つ。そうでない場合、&lt;code&gt;char16_t&lt;/code&gt;型の値は実装定義の文字コードとなる。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&amp;lt;uchar&amp;gt;&lt;/code&gt;ヘッダでマクロ&lt;code&gt;__STDC_UTF_32__&lt;/code&gt;が定義される場合、&lt;code&gt;char32_t&lt;/code&gt;型の値はUTF-32の妥当なコードポイントを持つ。そうでない場合、&lt;code&gt;char32_t&lt;/code&gt;型の値は実装定義の文字コードとなる。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;ユニバーサルキャラクタ名&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;
-&lt;p&gt;&lt;code&gt;char16_t&lt;/code&gt;文字・文字列リテラルと&lt;code&gt;char32_t&lt;/code&gt;文字・文字列リテラルのなかには、UCS／Unicodeのユニバーサルキャラクタ名を直接記述できる。たとえば、&lt;code&gt;char16_t&lt;/code&gt;文字リテラル&lt;code&gt;u&#39;\u215A&#39;&lt;/code&gt;は&lt;a href=&#34;http://www.charbase.com/215a-unicode-vulgar-fraction-five-sixths&#34; target=&#34;_blank&#34;&gt;U+215A&lt;/a&gt;コードポイントの文字である&lt;code&gt;&#39;⅚&#39;&lt;/code&gt; (VULGAR FRACTION FIVE SIXTHS) を表す。&lt;code&gt;\u&lt;/code&gt;の場合は16進数で4桁固定のユニバーサルキャラクタ名を、&lt;code&gt;\U&lt;/code&gt;の場合は16進数で8桁固定のユニバーサルキャラクタ名を記述する。&lt;/p&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;cassert&amp;gt;&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;kt&#34;&gt;char16_t&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;a&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;u&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;&#39;\&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;u215A&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;&#39;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;kt&#34;&gt;char16_t&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;b&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;u&lt;/span&gt;&lt;span class=&#34;sc&#34;&gt;&#39;⅚&#39;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/cassert/assert.html&#34;&gt;assert&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;a&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;==&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;b&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;&lt;code&gt;char16_t&lt;/code&gt;と&lt;code&gt;char32_t&lt;/code&gt;のユニバーサルキャラクタ名は、&lt;code&gt;[0x0, 0x10FFFF]&lt;/code&gt;の範囲内であること。&lt;/p&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;参照するUCSの規格&lt;/h3&gt;
-&lt;p&gt;C++11時点の規格では、UCSの規格としてISO/IEC 10646-1:1993を参照する。&lt;/p&gt;
-&lt;h2&gt;例&lt;/h2&gt;
-&lt;h3&gt;サロゲートペアを含む状況&lt;/h3&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;cassert&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;string&amp;gt;&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::u16string&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;s16&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;u&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;𠮷野家&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::u32string&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;s32&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;U&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;𠮷野家&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/cassert/assert.html&#34;&gt;assert&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;s16&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;size&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;==&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;4&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// サロゲートペアを含むので1文字分多い&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/cassert/assert.html&#34;&gt;assert&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;s32&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;size&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;==&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// UTF-32にサロゲートペアはない&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h4&gt;出力&lt;/h4&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;h3&gt;UTF-32に文字コード変換して簡易的にコードポイント数を算出する&lt;/h3&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;string&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;locale&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;codecvt&amp;gt;&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;c1&#34;&gt;// UTF-8とUTF-32の相互変換を行うコンバーター&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;wstring_convert&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/codecvt/codecvt_utf8.html&#34;&gt;std::codecvt_utf8&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;char32_t&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;char32_t&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;converter&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-
-  &lt;span class=&#34;c1&#34;&gt;// UTF-8からUTF-32に変換&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::string&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;u8str&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;u8&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;あいうえお&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::u32string&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;u32str&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;converter&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/locale/wstring_convert/from_bytes.html&#34;&gt;from_bytes&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;u8str&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-
-  &lt;span class=&#34;c1&#34;&gt;// コードポイント数を取得&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/cstddef/size_t.html&#34;&gt;std::size_t&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;codepoint_count&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;u32str&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string/size.html&#34;&gt;size()&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;std::cout&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;codepoint_count&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/ostream/endl.html&#34;&gt;std::endl&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h4&gt;出力&lt;/h4&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;5
-&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;h2&gt;この機能が必要になった背景・経緯&lt;/h2&gt;
-&lt;p&gt;この機能が提案された2004年当時にはすでにUCS／Unicodeが広く普及していた。多くのユーザーがその文字コードを扱うことを望んでいたために、標準C++で正式にサポートすることとなった。&lt;/p&gt;
-&lt;h2&gt;関連項目&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;u16string&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;u32string&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/locale/wstring_convert.html&#34;&gt;wstring_convert&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://cpprefjp.github.io/lang/cpp11/utf8_string_literals.html&#34;&gt;C++11 UTF-8文字列リテラル&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;参照&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1040.pdf&#34; target=&#34;_blank&#34;&gt;WG14 N1040 Extensions for the programming language C to support new character data types&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1628.htm&#34; target=&#34;_blank&#34;&gt;N1628 Extensions for the Programming Language C++ to Support New Character Data Types&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1823.html&#34; target=&#34;_blank&#34;&gt;N1823 New Character Types in C++&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n1955.html&#34; target=&#34;_blank&#34;&gt;N1955 New Character Types in C++&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n2018.html&#34; target=&#34;_blank&#34;&gt;N2018 New Character Types in C++&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2149.html&#34; target=&#34;_blank&#34;&gt;N2149 New Character Types in C++&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2249.html&#34; target=&#34;_blank&#34;&gt;N2249 New Character Types in C++&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2170.html&#34; target=&#34;_blank&#34;&gt;N2170 Universal Character Names in Literals&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>Akira Takahashi
-</name>
-        <email>faithandbrave@gmail.com
-</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>スコープを持つ列挙型 -- Merge pull request #348 from tshino/fix-typo
-</title>
-      <link href="http://cpprefjp.github.io/lang/cpp11/scoped_enum.html"/>
-      <id>f3e39faf07676b5152f3649aef995e03e44f2f7e:lang/cpp11/scoped_enum.md</id>
-      <updated>2016-02-21 23:38:08 +0900
-</updated>
-      
-        <content type="html">&lt;h1 itemprop=&#34;name&#34;&gt;スコープを持つ列挙型&lt;span class=&#34;cpp cpp11&#34; title=&#34;C++11で追加&#34;&gt;(C++11)&lt;/span&gt;&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;h2&gt;概要&lt;/h2&gt;
-&lt;p&gt;&lt;code&gt;enum class&lt;/code&gt;で定義した列挙型は、従来の&lt;code&gt;enum&lt;/code&gt;に加えて、「整数型への暗黙の型変換を行わない」「列挙型のスコープを持つ」という機能を持つ。&lt;/p&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;enum&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;Color&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Red&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Green&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Blue&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
-
-&lt;span class=&#34;c1&#34;&gt;// 単にRedと指定するのではなく、どの列挙型に属するのかを指定する&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;Color&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;c&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Color&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Red&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-
-&lt;span class=&#34;c1&#34;&gt;// 明示的な型変換は許可する&lt;/span&gt;
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;color&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;static_cast&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Color&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Red&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-&lt;span class=&#34;c1&#34;&gt;//int color = Color::Red; // コンパイルエラー : 暗黙の型変換はできない&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h2&gt;仕様&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;enum class&lt;/code&gt;もしくは&lt;code&gt;enum struct&lt;/code&gt;で定義した列挙型は、「スコープを持つ列挙型 (scoped enumeration type)」という。&lt;code&gt;enum class&lt;/code&gt;と&lt;code&gt;enum struct&lt;/code&gt;に、機能の違いはない&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;enum&lt;/code&gt;で定義した列挙型は、「スコープを持たない列挙型 (unscoped enumeration type)」という&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;列挙型には、型名の後ろにコロン &lt;code&gt;:&lt;/code&gt; 区切りで、基底の整数型を指定できる。基底型として指定した整数型のCV修飾は無視される&lt;/p&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;c1&#34;&gt;// 基底型をintとする&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;enum&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;Color&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;Red&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Green&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Blue&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;列挙子の値が基底型の範囲に収まらない場合、プログラムは不適格となる&lt;/li&gt;
-&lt;li&gt;列挙型の基底型を取得するには、&lt;code&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/type_traits.html&#34;&gt;&amp;lt;type_traits&amp;gt;&lt;/a&gt;&lt;/code&gt;ヘッダで定義される&lt;code&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/type_traits/underlying_type.html&#34;&gt;std::underlying_type&lt;/a&gt;&lt;/code&gt;を使用する&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;列挙型は、先行宣言でも基底型を指定できる。その場合、再宣言および定義でも、同じ基底型を明示的に指定する必要がある&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;スコープを持つ列挙型に基底型を指定しない場合、基底型は&lt;code&gt;int&lt;/code&gt;となる&lt;/li&gt;
-&lt;li&gt;スコープを持たない列挙型に基底型を指定しない場合、その列挙型の全ての列挙子の値が&lt;code&gt;int&lt;/code&gt;型に収まる限り、&lt;code&gt;int&lt;/code&gt;もしくは&lt;code&gt;unsigned int&lt;/code&gt;が基底型となる。&lt;code&gt;int&lt;/code&gt;型に収まらない場合は、実装定義の整数型が基底型となる&lt;/li&gt;
-&lt;li&gt;スコープを持たない列挙型の列挙子が空である場合、値&lt;code&gt;0&lt;/code&gt;ひとつを列挙子として持つ&lt;/li&gt;
-&lt;li&gt;2つの列挙型の基底型が同じである場合、それらの列挙型は互換性のあるメモリレイアウトを持つ&lt;/li&gt;
-&lt;li&gt;列挙子に値を指定しない場合、最初の列挙子には定数値&lt;code&gt;0&lt;/code&gt;が設定される。2つ目以降の列挙子は、ひとつ前の値を&lt;code&gt;1&lt;/code&gt;進めた値を持つ&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a href=&#34;http://cpprefjp.github.io/lang/cpp11/scoped_enum.html#extended-unscoped-enum&#34; name=&#34;extended-unscoped-enum&#34;&gt;スコープを持つ列挙型に合わせた、enumの拡張&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;スコープを持つ列挙型の導入に合わせて、スコープを持たない列挙型もC++11で以下の機能拡張が行われた&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;先行宣言ができるようになった&lt;/li&gt;
-&lt;li&gt;基底型を指定できるようになった&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;詳細は、上述した仕様を参照。&lt;/p&gt;
-&lt;h2&gt;例&lt;/h2&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;cassert&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;type_traits&amp;gt;&lt;/span&gt;
-
-&lt;span class=&#34;k&#34;&gt;enum&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;Color&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Red&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Green&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Blue&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;enum&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;CharColor&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;char&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Red&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Green&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Blue&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;};&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// 基底型をcharにする&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;c1&#34;&gt;// 単にRedと指定するのではなく、どの列挙型に属するのかを指定する&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;Color&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;c&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Color&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Red&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-
-  &lt;span class=&#34;c1&#34;&gt;// 明示的な型変換は許可する&lt;/span&gt;
-  &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;colorValue&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;static_cast&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Color&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Red&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-  &lt;span class=&#34;c1&#34;&gt;//int colorValue = Color::Red; // コンパイルエラー : 暗黙の型変換はできない&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/cassert/assert.html&#34;&gt;assert&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;colorValue&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;==&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-
-  &lt;span class=&#34;c1&#34;&gt;// 列挙型の基底型を取得して、その型にキャスト&lt;/span&gt;
-  &lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;colorValue2&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;static_cast&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/type_traits/underlying_type.html&#34;&gt;std::underlying_type&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Color&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;type&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Color&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Red&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/cassert/assert.html&#34;&gt;assert&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;colorValue2&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;==&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h3&gt;出力&lt;/h3&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;h2&gt;この機能が必要になった背景・経緯&lt;/h2&gt;
-&lt;p&gt;C++03は、C99の列挙型に対する改善は提供していたが、依然として以下のような問題が残っていた：&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;型の安全性&lt;/li&gt;
-&lt;li&gt;予期しないエラー(スコープがないことによる名前衝突、上記の型安全性の問題による予期しない型変換)&lt;/li&gt;
-&lt;li&gt;コードのわかりやすさ(明確さ)&lt;/li&gt;
-&lt;li&gt;コードの移植性&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;ECMA規格になっているC++/CLIが、現在のスコープを持つ列挙型と同等の機能を持っていたために、その経験を標準C++に取り入れることとなった。&lt;/p&gt;
-&lt;h2&gt;関連項目&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;http://cpprefjp.github.io/reference/type_traits/underlying_type.html&#34;&gt;underlying_type&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;参照&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2003/n1513.pdf&#34; target=&#34;_blank&#34;&gt;N1513 Improving Enumeration Types&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1579.pdf&#34; target=&#34;_blank&#34;&gt;N1579 Strongly Typed Enums&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1719.pdf&#34; target=&#34;_blank&#34;&gt;N1579 Strongly Typed Enums (revision 1)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2213.pdf&#34; target=&#34;_blank&#34;&gt;N2213 Strongly Typed Enums (revision 2)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2347.pdf&#34; target=&#34;_blank&#34;&gt;N2347 Strongly Typed Enums (revision 3)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2499.pdf&#34; target=&#34;_blank&#34;&gt;N2499 Forward declaration of enumerations&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>Akira Takahashi
-</name>
-        <email>faithandbrave@gmail.com
-</email>
       </author>
     </entry>
   
