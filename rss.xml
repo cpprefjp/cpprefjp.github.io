@@ -2,9 +2,530 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2017-02-20T14:47:31.890221</updated>
-  <id>2cfef228-f9a5-4c94-9c81-4788f35ac23a</id>
+  <updated>2017-02-20T14:50:33.868398</updated>
+  <id>4d11957d-da35-4340-8b56-25a6854e3183</id>
 
+  
+    <entry>
+      <title>lock -- timed_mutexクラスのコード修飾を整理</title>
+      <link href="https://cpprefjp.github.io/reference/mutex/timed_mutex/lock.html"/>
+      <id>0b93bdb1a75fb79fa87c6d71ffb808df6c59145f:reference/mutex/timed_mutex/lock.md</id>
+      <updated>2017-02-20 14:49:55 +0900</updated>
+      
+        <content type="html">&lt;div class=&#34;identifier-type&#34;&gt;function&lt;/div&gt;&lt;div class=&#34;header&#34;&gt;&amp;lt;mutex&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;namespace&#34; title=&#34;namespace std&#34;&gt;std::&lt;/span&gt;&lt;span class=&#34;class&#34; title=&#34;class timed_mutex&#34;&gt;timed_mutex::&lt;/span&gt;lock&lt;span class=&#34;cpp cpp11&#34; title=&#34;C++11で追加&#34;&gt;(C++11)&lt;/span&gt;&lt;/h1&gt;
+&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;kt&#34;&gt;void&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;lock&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;概要&lt;/h2&gt;
+&lt;p&gt;ロックを取得する&lt;/p&gt;
+&lt;h2&gt;要件&lt;/h2&gt;
+&lt;p&gt;この関数を呼び出したスレッドが、ミューテックスの所有権を保持していないこと&lt;/p&gt;
+&lt;h2&gt;効果&lt;/h2&gt;
+&lt;p&gt;この関数を呼び出したスレッドがミューテックスの所有権を取得できるまでブロックする&lt;/p&gt;
+&lt;h2&gt;戻り値&lt;/h2&gt;
+&lt;p&gt;なし&lt;/p&gt;
+&lt;h2&gt;例外&lt;/h2&gt;
+&lt;p&gt;この関数は、以下のerror conditionを持つ&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/system_error/system_error.html&#34;&gt;system_error&lt;/a&gt;&lt;/code&gt;例外オブジェクトを送出する可能性がある：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/system_error/errc.html&#34;&gt;operation_not_permitted&lt;/a&gt;&lt;/code&gt; : スレッドにこの操作を行う権限がない&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/system_error/errc.html&#34;&gt;resource_deadlock_would_occur&lt;/a&gt;&lt;/code&gt; : デッドロックが発生することを検出した(実装依存)&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/system_error/errc.html&#34;&gt;device_or_resource_busy&lt;/a&gt;&lt;/code&gt; : ミューテックスがすでにロックされていて、ブロッキングできない&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;例&lt;/h2&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;thread&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;mutex&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;vector&amp;gt;&lt;/span&gt;
+
+&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;X&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;timed_mutex&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;mtx_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;value_&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;nl&#34;&gt;public:&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// メンバ変数value_への書き込みを排他的にする&lt;/span&gt;
+  &lt;span class=&#34;kt&#34;&gt;void&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;add_value&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;value&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;mtx_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;span style=&#34;color:#ff0000&#34;&gt;lock()&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// ロックを取得する&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;value_&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;value&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/mutex/timed_mutex/unlock.html&#34;&gt;mtx_.unlock()&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// ロックを手放す&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
+
+&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;kr&#34;&gt;thread&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;t1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;([&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]{&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;add_value&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;});&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;kr&#34;&gt;thread&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;t2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;([&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]{&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;add_value&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;});&lt;/span&gt;
+
+  &lt;span class=&#34;n&#34;&gt;t1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;join&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;t2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;join&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h3&gt;出力&lt;/h3&gt;
+&lt;p&gt;&lt;pre&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;h2&gt;バージョン&lt;/h2&gt;
+&lt;h3&gt;言語&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;C++11&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;処理系&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC&lt;/a&gt;: &lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC, C++11 mode&lt;/a&gt;: 4.7.0&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#icc&#34;&gt;ICC&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt;: 11.0, 12.0, 14.0&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;参照&lt;/h2&gt;&lt;/div&gt;</content>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>native_handle -- timed_mutexクラスのコード修飾を整理</title>
+      <link href="https://cpprefjp.github.io/reference/mutex/timed_mutex/native_handle.html"/>
+      <id>0b93bdb1a75fb79fa87c6d71ffb808df6c59145f:reference/mutex/timed_mutex/native_handle.md</id>
+      <updated>2017-02-20 14:49:55 +0900</updated>
+      
+        <content type="html">&lt;div class=&#34;identifier-type&#34;&gt;function&lt;/div&gt;&lt;div class=&#34;header&#34;&gt;&amp;lt;mutex&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;namespace&#34; title=&#34;namespace std&#34;&gt;std::&lt;/span&gt;&lt;span class=&#34;class&#34; title=&#34;class timed_mutex&#34;&gt;timed_mutex::&lt;/span&gt;native_handle&lt;span class=&#34;cpp cpp11&#34; title=&#34;C++11で追加&#34;&gt;(C++11)&lt;/span&gt;&lt;/h1&gt;
+&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;n&#34;&gt;native_handle_type&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;native_handle&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;概要&lt;/h2&gt;
+&lt;p&gt;ミューテックスのハンドルを取得する。&lt;/p&gt;
+&lt;h2&gt;効果&lt;/h2&gt;
+&lt;p&gt;この関数は、実装依存のミューテックスハンドルを返す。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Unix系環境におけるlibstdc++とlibc++では、pthreadライブラリのミューテックス型&lt;code&gt;pthread_mutex_t*&lt;/code&gt;を表す。&lt;/li&gt;
+&lt;li&gt;Visual C++では、付属ライブラリの同時実行ランタイムの型&lt;code&gt;concurrency::critical_section*&lt;/code&gt;を表す。ただし、&lt;code&gt;native_handle&lt;/code&gt;の戻り値はそれを&lt;code&gt;void*&lt;/code&gt;にキャストした値であり、&lt;code&gt;native_handle_type&lt;/code&gt;は&lt;code&gt;void*&lt;/code&gt;である。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;ハンドル型に対する操作は汎用的ではないため、環境依存のプログラミングが必要な場合に使用する。&lt;/p&gt;
+&lt;h2&gt;戻り値&lt;/h2&gt;
+&lt;p&gt;実装依存のミューテックスハンドル&lt;/p&gt;
+&lt;h2&gt;例&lt;/h2&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;c1&#34;&gt;// libstdc++(pthread)環境での、ミューテックスの優先順位上限取得&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;mutex&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;pthread.h&amp;gt;&lt;/span&gt;
+
+&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;timed_mutex&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;mtx&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+
+  &lt;span class=&#34;c1&#34;&gt;// ミューテックスの優先順位上限を取得する&lt;/span&gt;
+  &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;prioceiling&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;pthread_mutex_getprioceiling&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mtx&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;span style=&#34;color:#ff0000&#34;&gt;native_handle()&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;prioceiling&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;prioceiling&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;endl&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h3&gt;出力&lt;/h3&gt;
+&lt;p&gt;&lt;pre&gt;&lt;code&gt;0
+&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;h2&gt;バージョン&lt;/h2&gt;
+&lt;h3&gt;言語&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;C++11&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;処理系&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC&lt;/a&gt;: &lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC, C++11 mode&lt;/a&gt;: 4.7.0&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#icc&#34;&gt;ICC&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt;: 11.0, 12.0, 14.0&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;参照&lt;/h2&gt;&lt;/div&gt;</content>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>デストラクタ -- timed_mutexクラスのコード修飾を整理</title>
+      <link href="https://cpprefjp.github.io/reference/mutex/timed_mutex/op_destructor.html"/>
+      <id>0b93bdb1a75fb79fa87c6d71ffb808df6c59145f:reference/mutex/timed_mutex/op_destructor.md</id>
+      <updated>2017-02-20 14:49:55 +0900</updated>
+      
+        <content type="html">&lt;div class=&#34;identifier-type&#34;&gt;function&lt;/div&gt;&lt;div class=&#34;header&#34;&gt;&amp;lt;mutex&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;namespace&#34; title=&#34;namespace std&#34;&gt;std::&lt;/span&gt;&lt;span class=&#34;class&#34; title=&#34;class timed_mutex&#34;&gt;timed_mutex::&lt;/span&gt;デストラクタ&lt;span class=&#34;cpp cpp11&#34; title=&#34;C++11で追加&#34;&gt;(C++11)&lt;/span&gt;&lt;/h1&gt;
+&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;o&#34;&gt;~&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;timed_mutex&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;概要&lt;/h2&gt;
+&lt;p&gt;ミューテックスの破棄を行う&lt;/p&gt;
+&lt;h2&gt;バージョン&lt;/h2&gt;
+&lt;h3&gt;言語&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;C++11&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;処理系&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC&lt;/a&gt;: &lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC, C++11 mode&lt;/a&gt;: 4.7.0&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#icc&#34;&gt;ICC&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt;: 11.0, 12.0, 14.0&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;参照&lt;/h2&gt;&lt;/div&gt;</content>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>try_lock -- timed_mutexクラスのコード修飾を整理</title>
+      <link href="https://cpprefjp.github.io/reference/mutex/timed_mutex/try_lock.html"/>
+      <id>0b93bdb1a75fb79fa87c6d71ffb808df6c59145f:reference/mutex/timed_mutex/try_lock.md</id>
+      <updated>2017-02-20 14:49:55 +0900</updated>
+      
+        <content type="html">&lt;div class=&#34;identifier-type&#34;&gt;function&lt;/div&gt;&lt;div class=&#34;header&#34;&gt;&amp;lt;mutex&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;namespace&#34; title=&#34;namespace std&#34;&gt;std::&lt;/span&gt;&lt;span class=&#34;class&#34; title=&#34;class timed_mutex&#34;&gt;timed_mutex::&lt;/span&gt;try_lock&lt;span class=&#34;cpp cpp11&#34; title=&#34;C++11で追加&#34;&gt;(C++11)&lt;/span&gt;&lt;/h1&gt;
+&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;kt&#34;&gt;bool&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;try_lock&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;概要&lt;/h2&gt;
+&lt;p&gt;ロックの取得を試みる&lt;/p&gt;
+&lt;h2&gt;要件&lt;/h2&gt;
+&lt;p&gt;この関数を呼び出したスレッドが、ミューテックスの所有権を保持していないこと&lt;/p&gt;
+&lt;h2&gt;効果&lt;/h2&gt;
+&lt;p&gt;ブロッキングせずに、この関数を呼び出したスレッドがミューテックスの所有権を取得する&lt;/p&gt;
+&lt;h2&gt;戻り値&lt;/h2&gt;
+&lt;p&gt;所有権が取得できなかった場合は何もせずに関数が&lt;code&gt;false&lt;/code&gt;で返り、所有権を取得できた場合は&lt;code&gt;true&lt;/code&gt;を返す。&lt;/p&gt;
+&lt;h2&gt;例外&lt;/h2&gt;
+&lt;p&gt;投げない&lt;/p&gt;
+&lt;h2&gt;備考&lt;/h2&gt;
+&lt;p&gt;この関数の実装が、ミューテックスの所有権を保持しているスレッドがひとつもない場合でも、所有権の取得に失敗する可能性がある。&lt;/p&gt;
+&lt;h2&gt;例&lt;/h2&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;thread&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;mutex&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;vector&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;system_error&amp;gt;&lt;/span&gt;
+
+&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;X&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;timed_mutex&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;mtx_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;value_&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;nl&#34;&gt;public:&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// メンバ変数value_への書き込みを排他的にする&lt;/span&gt;
+  &lt;span class=&#34;kt&#34;&gt;void&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;add_value&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;value&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;if&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;!&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mtx_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;span style=&#34;color:#ff0000&#34;&gt;try_lock()&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+      &lt;span class=&#34;c1&#34;&gt;// ロックの取得に失敗&lt;/span&gt;
+      &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/system_error/error_code.html&#34;&gt;std::error_code&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ec&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;static_cast&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/system_error/errc.html&#34;&gt;std::errc::device_or_resource_busy&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;),&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/system_error/generic_category.html&#34;&gt;std::generic_category()&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+      &lt;span class=&#34;k&#34;&gt;throw&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/system_error/system_error.html&#34;&gt;std::system_error&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;ec&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+    &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;value_&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;value&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/mutex/timed_mutex/unlock.html&#34;&gt;mtx_.unlock()&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
+
+&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;kr&#34;&gt;thread&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;t1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;([&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]{&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;add_value&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;});&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;kr&#34;&gt;thread&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;t2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;([&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]{&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;add_value&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;});&lt;/span&gt;
+
+  &lt;span class=&#34;n&#34;&gt;t1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;join&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;t2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;join&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h3&gt;出力&lt;/h3&gt;
+&lt;p&gt;&lt;pre&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;h2&gt;バージョン&lt;/h2&gt;
+&lt;h3&gt;言語&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;C++11&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;処理系&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC&lt;/a&gt;: &lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC, C++11 mode&lt;/a&gt;: 4.7.0&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#icc&#34;&gt;ICC&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt;: 11.0, 12.0, 14.0&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;参照&lt;/h2&gt;&lt;/div&gt;</content>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>try_lock_for -- timed_mutexクラスのコード修飾を整理</title>
+      <link href="https://cpprefjp.github.io/reference/mutex/timed_mutex/try_lock_for.html"/>
+      <id>0b93bdb1a75fb79fa87c6d71ffb808df6c59145f:reference/mutex/timed_mutex/try_lock_for.md</id>
+      <updated>2017-02-20 14:49:55 +0900</updated>
+      
+        <content type="html">&lt;div class=&#34;identifier-type&#34;&gt;function&lt;/div&gt;&lt;div class=&#34;header&#34;&gt;&amp;lt;mutex&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;namespace&#34; title=&#34;namespace std&#34;&gt;std::&lt;/span&gt;&lt;span class=&#34;class&#34; title=&#34;class timed_mutex&#34;&gt;timed_mutex::&lt;/span&gt;try_lock_for&lt;span class=&#34;cpp cpp11&#34; title=&#34;C++11で追加&#34;&gt;(C++11)&lt;/span&gt;&lt;/h1&gt;
+&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;Rep&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;Period&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;kt&#34;&gt;bool&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;try_lock_for&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;const&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;chrono&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/chrono/duration.html&#34;&gt;duration&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Rep&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Period&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&amp;amp;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;rel_time&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;概要&lt;/h2&gt;
+&lt;p&gt;タイムアウトする相対時間を指定してロックの取得を試みる&lt;/p&gt;
+&lt;h2&gt;要件&lt;/h2&gt;
+&lt;p&gt;この関数を呼び出したスレッドが、ミューテックスの所有権を保持していないこと。&lt;/p&gt;
+&lt;h2&gt;効果&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;rel_time&lt;/code&gt;パラメータで指定された相対時間の間、ミューテックスの所有権取得を試みる。&lt;/p&gt;
+&lt;p&gt;所有権が取得できるまで、もしくは&lt;code&gt;rel_time&lt;/code&gt;時間が経過するまでこの関数はブロッキングする。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;rel_time&lt;/code&gt;が&lt;code&gt;rel_time.&lt;a href=&#34;https://cpprefjp.github.io/reference/chrono/duration/zero.html&#34;&gt;zero()&lt;/a&gt;&lt;/code&gt;より小さい場合、この関数は&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/mutex/timed_mutex/try_lock.html&#34;&gt;try_lock()&lt;/a&gt;&lt;/code&gt;と同じ効果をもち、ブロッキングせずにミューテックスの所有権取得を試みる。&lt;/p&gt;
+&lt;h2&gt;戻り値&lt;/h2&gt;
+&lt;p&gt;所有権が取得できた場合は&lt;code&gt;true&lt;/code&gt;を返す。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;rel_time&lt;/code&gt;パラメータで指定された相対時間の間に所有権が取得できなかった場合はタイムアウトとなり、&lt;code&gt;false&lt;/code&gt;を返す。&lt;/p&gt;
+&lt;h2&gt;例外&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;C++11 : 投げない&lt;/li&gt;
+&lt;li&gt;C++14 : 時計クラス、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/chrono/time_point.html&#34;&gt;time_point&lt;/a&gt;&lt;/code&gt;クラス、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/chrono/duration.html&#34;&gt;duration&lt;/a&gt;&lt;/code&gt;クラスの構築が例外を送出する場合、この関数はそれらの例外を送出する。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;備考&lt;/h2&gt;
+&lt;p&gt;この関数の実装が、ミューテックスの所有権を保持しているスレッドがひとつもない場合でも、所有権の取得に失敗する可能性がある。&lt;/p&gt;
+&lt;h2&gt;例&lt;/h2&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;thread&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;mutex&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;chrono&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;vector&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;system_error&amp;gt;&lt;/span&gt;
+
+&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;X&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;timed_mutex&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;mtx_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;value_&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;nl&#34;&gt;public:&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// メンバ変数value_への書き込みを排他的にする&lt;/span&gt;
+  &lt;span class=&#34;kt&#34;&gt;void&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;add_value&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;value&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;c1&#34;&gt;// ロックの取得を試みる(3秒でタイムアウト)&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;if&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;!&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mtx_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;span style=&#34;color:#ff0000&#34;&gt;try_lock_for&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/chrono/seconds.html&#34;&gt;std::chrono::seconds&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)))&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+      &lt;span class=&#34;c1&#34;&gt;// ロックの取得に失敗&lt;/span&gt;
+      &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/system_error/error_code.html&#34;&gt;std::error_code&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ec&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;static_cast&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/system_error/errc.html&#34;&gt;std::errc::device_or_resource_busy&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;),&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/system_error/generic_category.html&#34;&gt;std::generic_category()&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+      &lt;span class=&#34;k&#34;&gt;throw&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/system_error/system_error.html&#34;&gt;std::system_error&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;ec&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+    &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;value_&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;value&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/mutex/timed_mutex/unlock.html&#34;&gt;mtx_.unlock()&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
+
+&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;kr&#34;&gt;thread&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;t1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;([&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]{&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;add_value&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;});&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;kr&#34;&gt;thread&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;t2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;([&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]{&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;add_value&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;});&lt;/span&gt;
+
+  &lt;span class=&#34;n&#34;&gt;t1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;join&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;t2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;join&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h3&gt;出力&lt;/h3&gt;
+&lt;p&gt;&lt;pre&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;h2&gt;バージョン&lt;/h2&gt;
+&lt;h3&gt;言語&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;C++11&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;処理系&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC&lt;/a&gt;: &lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC, C++11 mode&lt;/a&gt;: 4.7.0&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#icc&#34;&gt;ICC&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt;: 11.0, 12.0, 14.0&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;参照&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#2091&#34; target=&#34;_blank&#34;&gt;LWG Issue 2091. Misplaced effect in &lt;code&gt;m.try_lock_for()&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#2093&#34; target=&#34;_blank&#34;&gt;LWG Issue 2093. Throws clause of &lt;code&gt;condition_variable::wait&lt;/code&gt; with predicate&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/div&gt;</content>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>try_lock_until -- timed_mutexクラスのコード修飾を整理</title>
+      <link href="https://cpprefjp.github.io/reference/mutex/timed_mutex/try_lock_until.html"/>
+      <id>0b93bdb1a75fb79fa87c6d71ffb808df6c59145f:reference/mutex/timed_mutex/try_lock_until.md</id>
+      <updated>2017-02-20 14:49:55 +0900</updated>
+      
+        <content type="html">&lt;div class=&#34;identifier-type&#34;&gt;function&lt;/div&gt;&lt;div class=&#34;header&#34;&gt;&amp;lt;mutex&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;namespace&#34; title=&#34;namespace std&#34;&gt;std::&lt;/span&gt;&lt;span class=&#34;class&#34; title=&#34;class timed_mutex&#34;&gt;timed_mutex::&lt;/span&gt;try_lock_until&lt;span class=&#34;cpp cpp11&#34; title=&#34;C++11で追加&#34;&gt;(C++11)&lt;/span&gt;&lt;/h1&gt;
+&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;Clock&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;Duration&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;kt&#34;&gt;bool&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;try_lock_until&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;const&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;chrono&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/chrono/time_point.html&#34;&gt;time_point&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Clock&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Duration&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&amp;amp;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;abs_time&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;概要&lt;/h2&gt;
+&lt;p&gt;タイムアウトする絶対時間を指定してロックの取得を試みる&lt;/p&gt;
+&lt;h2&gt;要件&lt;/h2&gt;
+&lt;p&gt;この関数を呼び出したスレッドが、ミューテックスの所有権を保持していないこと。&lt;/p&gt;
+&lt;h2&gt;効果&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;abs_time&lt;/code&gt;パラメータで指定された絶対時間に到達するまで、ミューテックスの所有権取得を試みる。&lt;/p&gt;
+&lt;p&gt;所有権が取得できるまで、もしくは&lt;code&gt;abs_time&lt;/code&gt;時間に到達するまでこの関数はブロッキングする。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;abs_timeにすでに到達していた場合&lt;/code&gt;、この関数は&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/mutex/timed_mutex/try_lock.html&#34;&gt;try_lock()&lt;/a&gt;&lt;/code&gt;と同じ効果をもち、ブロッキングせずにミューテックスの所有権取得を試みる。&lt;/p&gt;
+&lt;h2&gt;戻り値&lt;/h2&gt;
+&lt;p&gt;所有権が取得できた場合は&lt;code&gt;true&lt;/code&gt;を返す。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;abs_time&lt;/code&gt;パラメータで指定された相対時間の間に所有権が取得できなかった場合はタイムアウトとなり、&lt;code&gt;false&lt;/code&gt;を返す。&lt;/p&gt;
+&lt;h2&gt;例外&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;C++11 : 投げない&lt;/li&gt;
+&lt;li&gt;C++14 : 時計クラス、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/chrono/time_point.html&#34;&gt;time_point&lt;/a&gt;&lt;/code&gt;クラス、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/chrono/duration.html&#34;&gt;duration&lt;/a&gt;&lt;/code&gt;クラスの構築が例外を送出する場合、この関数はそれらの例外を送出する。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;備考&lt;/h2&gt;
+&lt;p&gt;この関数の実装が、ミューテックスの所有権を保持しているスレッドがひとつもない場合でも、所有権の取得に失敗する可能性がある。&lt;/p&gt;
+&lt;h2&gt;例&lt;/h2&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;thread&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;mutex&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;chrono&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;vector&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;system_error&amp;gt;&lt;/span&gt;
+
+&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;X&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;timed_mutex&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;mtx_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;value_&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;nl&#34;&gt;public:&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// メンバ変数value_への書き込みを排他的にする&lt;/span&gt;
+  &lt;span class=&#34;kt&#34;&gt;void&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;add_value&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;value&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;namespace&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;chrono&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;chrono&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+
+    &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/chrono/system_clock.html&#34;&gt;chrono::system_clock&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;time_point&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;tp&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/chrono/system_clock.html&#34;&gt;chrono::system_clock&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/chrono/system_clock/now().html&#34;&gt;now()&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+
+    &lt;span class=&#34;c1&#34;&gt;// ロックの取得を試みる(3秒後にタイムアウト)&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;if&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;!&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mtx_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;span style=&#34;color:#ff0000&#34;&gt;try_lock_until&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;tp&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;+&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/chrono/seconds.html&#34;&gt;std::chrono::seconds&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)))&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+      &lt;span class=&#34;c1&#34;&gt;// ロックの取得に失敗&lt;/span&gt;
+      &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/system_error/error_code.html&#34;&gt;std::error_code&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ec&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;static_cast&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/system_error/errc.html&#34;&gt;std::errc::device_or_resource_busy&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;),&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/system_error/generic_category.html&#34;&gt;std::generic_category()&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+      &lt;span class=&#34;k&#34;&gt;throw&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/system_error/system_error.html&#34;&gt;std::system_error&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;ec&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+    &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;value_&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;value&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/mutex/timed_mutex/unlock.html&#34;&gt;mtx_.unlock()&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
+
+&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;kr&#34;&gt;thread&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;t1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;([&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]{&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;add_value&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;});&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;kr&#34;&gt;thread&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;t2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;([&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]{&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;add_value&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;});&lt;/span&gt;
+
+  &lt;span class=&#34;n&#34;&gt;t1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;join&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;t2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;join&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h3&gt;出力&lt;/h3&gt;
+&lt;p&gt;&lt;pre&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;h2&gt;バージョン&lt;/h2&gt;
+&lt;h3&gt;言語&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;C++11&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;処理系&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC&lt;/a&gt;: &lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC, C++11 mode&lt;/a&gt;: 4.7.0&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#icc&#34;&gt;ICC&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt;: 11.0, 12.0, 14.0&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;参照&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#2093&#34; target=&#34;_blank&#34;&gt;LWG Issue 2093. Throws clause of &lt;code&gt;condition_variable::wait&lt;/code&gt; with predicate&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/div&gt;</content>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>unlock -- timed_mutexクラスのコード修飾を整理</title>
+      <link href="https://cpprefjp.github.io/reference/mutex/timed_mutex/unlock.html"/>
+      <id>0b93bdb1a75fb79fa87c6d71ffb808df6c59145f:reference/mutex/timed_mutex/unlock.md</id>
+      <updated>2017-02-20 14:49:55 +0900</updated>
+      
+        <content type="html">&lt;div class=&#34;identifier-type&#34;&gt;function&lt;/div&gt;&lt;div class=&#34;header&#34;&gt;&amp;lt;mutex&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;namespace&#34; title=&#34;namespace std&#34;&gt;std::&lt;/span&gt;&lt;span class=&#34;class&#34; title=&#34;class timed_mutex&#34;&gt;timed_mutex::&lt;/span&gt;unlock&lt;span class=&#34;cpp cpp11&#34; title=&#34;C++11で追加&#34;&gt;(C++11)&lt;/span&gt;&lt;/h1&gt;
+&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;kt&#34;&gt;void&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;unlock&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;概要&lt;/h2&gt;
+&lt;p&gt;ロックを手放す&lt;/p&gt;
+&lt;h2&gt;要件&lt;/h2&gt;
+&lt;p&gt;この関数を実行するスレッドがミューテックスの所有権を持っていること&lt;/p&gt;
+&lt;h2&gt;効果&lt;/h2&gt;
+&lt;p&gt;この関数を呼び出したスレッドが持つミューテックスの所有権を手放す&lt;/p&gt;
+&lt;h2&gt;戻り値&lt;/h2&gt;
+&lt;p&gt;なし&lt;/p&gt;
+&lt;h2&gt;例外&lt;/h2&gt;
+&lt;p&gt;投げない&lt;/p&gt;
+&lt;h2&gt;例&lt;/h2&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;thread&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;mutex&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;vector&amp;gt;&lt;/span&gt;
+
+&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;X&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;timed_mutex&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;mtx_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;value_&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;nl&#34;&gt;public:&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// メンバ変数value_への書き込みを排他的にする&lt;/span&gt;
+  &lt;span class=&#34;kt&#34;&gt;void&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;add_value&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;value&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/mutex/timed_mutex/lock.html&#34;&gt;mtx_.lock()&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// ロックを取得する&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;value_&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;value&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;mtx_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;span style=&#34;color:#ff0000&#34;&gt;unlock()&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// ロックを手放す&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
+
+&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;kr&#34;&gt;thread&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;t1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;([&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]{&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;add_value&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;});&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;kr&#34;&gt;thread&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;t2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;([&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]{&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;add_value&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;});&lt;/span&gt;
+
+  &lt;span class=&#34;n&#34;&gt;t1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;join&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;t2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;join&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h3&gt;出力&lt;/h3&gt;
+&lt;p&gt;&lt;pre&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;h2&gt;バージョン&lt;/h2&gt;
+&lt;h3&gt;言語&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;C++11&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;処理系&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC&lt;/a&gt;: &lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC, C++11 mode&lt;/a&gt;: 4.7.0&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#icc&#34;&gt;ICC&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt;: 11.0, 12.0, 14.0&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;参照&lt;/h2&gt;&lt;/div&gt;</content>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>lock -- recursive_timed_mutexクラスのコード修飾を整理</title>
@@ -1610,93 +2131,6 @@ A
 &lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt;: 11.0, 12.0, 14.0&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h2&gt;参照&lt;/h2&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>min_element -- コミット https://github.com/cpprefjp/site/commit/f9e1ffe18e5a448875b92d2bde40484922f64f7a と同様にmin_elementも対応</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/min_element.html"/>
-      <id>04f5e126cb4d706e21486fd12c39290899b62e10:reference/algorithm/min_element.md</id>
-      <updated>2017-02-20 14:21:29 +0900</updated>
-      
-        <content type="html">&lt;div class=&#34;identifier-type&#34;&gt;function template&lt;/div&gt;&lt;div class=&#34;header&#34;&gt;&amp;lt;algorithm&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;namespace&#34; title=&#34;namespace std&#34;&gt;std::&lt;/span&gt;min_element&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;namespace&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;k&#34;&gt;template&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;ForwardIterator&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;ForwardIterator&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;min_element&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;ForwardIterator&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;first&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ForwardIterator&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;last&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-
-  &lt;span class=&#34;k&#34;&gt;template&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;ForwardIterator&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;Compare&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;ForwardIterator&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;min_element&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;ForwardIterator&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;first&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ForwardIterator&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;last&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-                              &lt;span class=&#34;n&#34;&gt;Compare&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;comp&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h2&gt;概要&lt;/h2&gt;
-&lt;p&gt;&lt;code&gt;[first, last)&lt;/code&gt;の範囲において、最小要素を指す最初のイテレータを取得する。&lt;/p&gt;
-&lt;h2&gt;戻り値&lt;/h2&gt;
-&lt;p&gt;&lt;code&gt;*i &amp;lt; *j&lt;/code&gt;もしくは&lt;code&gt;comp(*i, *j)&lt;/code&gt;の比較によって最小と判断された最初の要素を指すイテレータ&lt;/p&gt;
-&lt;h2&gt;計算量&lt;/h2&gt;
-&lt;p&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/algorithm/max.html&#34;&gt;max&lt;/a&gt;((last - first) - 1, 0)&lt;/code&gt;回の比較を行う&lt;/p&gt;
-&lt;h2&gt;例&lt;/h2&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;cassert&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;algorithm&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;vector&amp;gt;&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;vector&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;v&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;4&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
-
-  &lt;span class=&#34;n&#34;&gt;decltype&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;v&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;iterator&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;i&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;span style=&#34;color:#ff0000&#34;&gt;std::min_element&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;v&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;begin&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(),&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;v&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;end&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;());&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;assert&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;i&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;==&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-
-  &lt;span class=&#34;n&#34;&gt;decltype&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;v&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;iterator&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;j&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;span style=&#34;color:#ff0000&#34;&gt;std::min_element&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;v&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;begin&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(),&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;v&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;end&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(),&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;[](&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;a&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;b&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-                              &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;a&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;b&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-                            &lt;span class=&#34;p&#34;&gt;});&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;assert&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;j&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;==&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;4&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h3&gt;出力&lt;/h3&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;h2&gt;実装例&lt;/h2&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;ForwardIterator&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;ForwardIterator&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;min_element&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;ForwardIterator&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;first&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ForwardIterator&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;last&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;k&#34;&gt;if&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;first&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;==&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;last&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
-    &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;first&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-
-  &lt;span class=&#34;n&#34;&gt;ForwardIterator&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;result&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;first&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;++&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;k&#34;&gt;for&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;first&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;!=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;last&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;++&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;first&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-    &lt;span class=&#34;k&#34;&gt;if&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;first&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;result&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-      &lt;span class=&#34;n&#34;&gt;result&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;first&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-    &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-  &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;result&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-
-&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;ForwardIterator&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;Compare&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;ForwardIterator&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;min_element&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;ForwardIterator&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;first&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ForwardIterator&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;last&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Compare&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;comp&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;k&#34;&gt;if&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;first&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;==&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;last&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
-    &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;first&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-
-  &lt;span class=&#34;n&#34;&gt;ForwardIterator&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;result&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;first&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;++&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;k&#34;&gt;for&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;first&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;!=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;last&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;++&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;first&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-    &lt;span class=&#34;k&#34;&gt;if&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;comp&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;first&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;result&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;))&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-      &lt;span class=&#34;n&#34;&gt;result&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;first&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-    &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-  &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;result&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h2&gt;参照&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#2150&#34; target=&#34;_blank&#34;&gt;LWG Issue 2150. Unclear specification of &lt;code&gt;find_end&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/div&gt;</content>
       
       <author>
         <name>Akira Takahashi</name>
