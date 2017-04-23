@@ -2,9 +2,507 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2017-04-24T04:20:43.940250</updated>
-  <id>fc1713e8-64e8-4437-bc3f-bb12be3e3fc3</id>
+  <updated>2017-04-24T04:41:39.809498</updated>
+  <id>14beccbc-a3bf-4e8b-9fff-38ec4a7432c8</id>
 
+  
+    <entry>
+      <title>畳み込み式 -- Merge branch &#39;master&#39; of https://github.com/cpprefjp/site
+</title>
+      <link href="https://cpprefjp.github.io/lang/cpp17/folding_expressions.html"/>
+      <id>594c5daf281e11f36141f7552b11c6ef4244b2dd:lang/cpp17/folding_expressions.md</id>
+      <updated>2017-04-24 04:41:25 +0900
+</updated>
+      
+        <content type="html">&lt;h1 itemprop=&#34;name&#34;&gt;畳み込み式&lt;span class=&#34;cpp cpp17&#34; title=&#34;C++17で追加&#34;&gt;(C++17)&lt;/span&gt;&lt;/h1&gt;
+&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;h2&gt;概要&lt;/h2&gt;
+&lt;p&gt;畳み込み式 (fold expression) は可変引数テンプレートのパラメータパックに対して二項演算を累積的に行う (畳み込む fold)。&lt;/p&gt;
+&lt;h2&gt;仕様&lt;/h2&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;i&gt;pack&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;i&gt;op&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;          &lt;span class=&#34;c1&#34;&gt;// (1) 単項右畳み込み&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;i&gt;op&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;i&gt;pack&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;          &lt;span class=&#34;c1&#34;&gt;// (2) 単項左畳み込み&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;i&gt;pack&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;i&gt;op&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;i&gt;op&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;i&gt;init&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;  &lt;span class=&#34;c1&#34;&gt;// (3) 二項右畳み込み&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;i&gt;init&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;i&gt;op&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;i&gt;op&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;i&gt;pack&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;  &lt;span class=&#34;c1&#34;&gt;// (4) 二項左畳み込み&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;畳み込み式は括弧 &lt;code&gt;()&lt;/code&gt; で囲まれなければならない&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;op&lt;/code&gt; は後述する二項演算子&lt;br /&gt;
+    二項畳み込み (3, 4) の場合 &lt;code&gt;op&lt;/code&gt; は同一でなければならない&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;pack&lt;/code&gt; は未展開のパラメータパック (規格ではキャスト式 cast-expression と呼ばれる)&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;init&lt;/code&gt; は未展開のパラメータパック以外 (規格ではキャスト式 cast-expression と呼ばれる)&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;畳み込み式は以下のように展開される:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;単項右畳み込みは &lt;code&gt;arg1 op (... op (argN-1 op argN))&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;単項左畳み込みは &lt;code&gt;((arg1 op arg2) op ...) op argN&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;二項右畳み込みは &lt;code&gt;arg1 op (... op (argN-1 op (argN op init)))&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;二項左畳み込みは &lt;code&gt;(((init op arg1) op arg2) op ...) op argN&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;ただし &lt;code&gt;argi&lt;/code&gt; はパラメータパックの i 番目の要素&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;機能テストマクロは &lt;code&gt;__cpp_fold_expressions&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;演算子&lt;/h3&gt;
+&lt;p&gt;オーバーロードを含めて以下の演算子を畳み込み式で使用できる:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;+&lt;/code&gt;
+&lt;code&gt;-&lt;/code&gt;
+&lt;code&gt;*&lt;/code&gt;
+&lt;code&gt;/&lt;/code&gt;
+&lt;code&gt;%&lt;/code&gt;
+&lt;code&gt;^&lt;/code&gt;
+&lt;code&gt;&amp;amp;&lt;/code&gt;
+&lt;code&gt;|&lt;/code&gt;
+&lt;code&gt;=&lt;/code&gt;
+&lt;code&gt;&amp;lt;&lt;/code&gt;
+&lt;code&gt;&amp;gt;&lt;/code&gt;
+&lt;code&gt;&amp;lt;&amp;lt;&lt;/code&gt;
+&lt;code&gt;&amp;gt;&amp;gt;&lt;/code&gt;
+&lt;code&gt;+=&lt;/code&gt;
+&lt;code&gt;-=&lt;/code&gt;
+&lt;code&gt;*=&lt;/code&gt;
+&lt;code&gt;/=&lt;/code&gt;
+&lt;code&gt;%=&lt;/code&gt;
+&lt;code&gt;^=&lt;/code&gt;
+&lt;code&gt;&amp;amp;=&lt;/code&gt;
+&lt;code&gt;|=&lt;/code&gt;
+&lt;code&gt;&amp;lt;&amp;lt;=&lt;/code&gt;
+&lt;code&gt;&amp;gt;&amp;gt;=&lt;/code&gt;
+&lt;code&gt;==&lt;/code&gt;
+&lt;code&gt;!=&lt;/code&gt;
+&lt;code&gt;&amp;lt;=&lt;/code&gt;
+&lt;code&gt;&amp;gt;=&lt;/code&gt;
+&lt;code&gt;&amp;amp;&amp;amp;&lt;/code&gt;
+&lt;code&gt;||&lt;/code&gt;
+&lt;code&gt;,&lt;/code&gt;
+&lt;code&gt;.*&lt;/code&gt;
+&lt;code&gt;-&amp;gt;*&lt;/code&gt;&lt;/p&gt;
+&lt;h3&gt;パラメータパックが空のときの式の値&lt;/h3&gt;
+&lt;p&gt;単項畳み込み (1, 2) でパラメータパックが空の場合、以下の演算子については式の値が設定される:&lt;/p&gt;
+&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;演算子&lt;/th&gt;
+&lt;th&gt;値&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&amp;amp;&amp;amp;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;true&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;`&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;,&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;void()&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;上記以外の演算子に対し空のパラメータパックが適用された場合、プログラムは不適格となる。&lt;/p&gt;
+&lt;p&gt;空のパラメータパックが適用された場合の挙動を変えるには二項畳み込み (3, 4) で値を与える。&lt;/p&gt;
+&lt;h2&gt;例&lt;/h2&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
+
+&lt;span class=&#34;c1&#34;&gt;// 単項右畳み込みで和を計算&lt;/span&gt;
+&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;typename&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Args&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;sum&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Args&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;args&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;args&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;+&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;...);&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+
+&lt;span class=&#34;c1&#34;&gt;// 二項右畳み込みで和を計算、フォールバック値 0&lt;/span&gt;
+&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;typename&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Args&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;sum0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Args&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;args&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;args&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;+&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;+&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+
+&lt;span class=&#34;c1&#34;&gt;// 単項左畳み込みで引数が全て true かどうかを返す&lt;/span&gt;
+&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;typename&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Args&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;bool&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;all&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Args&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;args&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(...&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;args&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+
+&lt;span class=&#34;c1&#34;&gt;// 二項左畳み込みで引数を出力&lt;/span&gt;
+&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;typename&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;...&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Args&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;void&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;print_all&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;ostream&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;os&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Args&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;args&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;os&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;args&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+
+&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;boolalpha&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;sum&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;4&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;5&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;sc&#34;&gt;&#39;\n&#39;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;//std::cout &amp;lt;&amp;lt; sum() &amp;lt;&amp;lt; &#39;\n&#39;;  // 不適格: 引数が必要&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;sum0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;sc&#34;&gt;&#39;\n&#39;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;   &lt;span class=&#34;c1&#34;&gt;// 引数がないので設定した 0 にフォールバック&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;all&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;sc&#34;&gt;&#39;\n&#39;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;    &lt;span class=&#34;c1&#34;&gt;// 引数がないので true にフォールバック&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;print_all&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;sc&#34;&gt;&#39;\n&#39;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h3&gt;出力&lt;/h3&gt;
+&lt;p&gt;&lt;pre&gt;&lt;code&gt;15
+0
+true
+123
+&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;h2&gt;この機能が必要になった背景・経緯&lt;/h2&gt;
+&lt;p&gt;今までは、累積的に二項演算を行うには以下のように可変長引数関数を再帰的に呼び出さなければならなかった:&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;sum&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;typename&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;sum&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;T&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;t&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;t&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;typename&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;typename&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Ts&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;sum&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;T&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;t&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Ts&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ts&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;t&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;+&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;sum&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;ts&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;...);&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;p&gt;畳み込み式によってこれを簡潔に書けるようになった。&lt;/p&gt;
+&lt;h2&gt;検討されたほかの選択肢&lt;/h2&gt;
+&lt;h3&gt;パラメータパックが空のときの &lt;code&gt;*&lt;/code&gt;, &lt;code&gt;+&lt;/code&gt;, &lt;code&gt;&amp;amp;&lt;/code&gt;, &lt;code&gt;|&lt;/code&gt; の値&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4191.html&#34; target=&#34;_blank&#34;&gt;N4191&lt;/a&gt;,
+&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4295.html&#34; target=&#34;_blank&#34;&gt;N4295&lt;/a&gt;
+では以下の演算子についてもパラメータパックが空のときに値を設定することが提案されていた:&lt;/p&gt;
+&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;演算子&lt;/th&gt;
+&lt;th&gt;値&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;*&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;1&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;+&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;int()&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&amp;amp;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;-1&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;`\&lt;/td&gt;
+&lt;td&gt;`&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;二項演算の単位元を設定するのは自然なことだと考えられた。&lt;/p&gt;
+&lt;p&gt;しかしながら、&lt;code&gt;operator+&lt;/code&gt; をオーバーロードしてコンテナや文字列の連結に用いる (cf. &lt;code&gt;std::string&lt;/code&gt;) のは一般的なことである。
+そのような場合、空のパラメータパックを与えたときに &lt;code&gt;int()&lt;/code&gt; が適用されるのは思わぬ挙動につながり、
+しかもバグ発見が困難であることが
+&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4358.pdf&#34; target=&#34;_blank&#34;&gt;N4358&lt;/a&gt;
+で指摘された。&lt;br /&gt;
+&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4072.html&#34; target=&#34;_blank&#34;&gt;N4072 Fixed Size Parameter Packs&lt;/a&gt;
+との兼ね合いもあったが、
+上記のフォールバック値は削除され、パラメータパックが空の場合は不適格となった。&lt;/p&gt;
+&lt;p&gt;一方 &lt;code&gt;operator&amp;amp;&amp;amp;&lt;/code&gt;, &lt;code&gt;operator||&lt;/code&gt;, &lt;code&gt;operator,&lt;/code&gt; はオーバーロードがバッドプラクティスとされているため残された。&lt;/p&gt;
+&lt;h4&gt;上記の問題を解決するのに考えられた方法&lt;/h4&gt;
+&lt;h5&gt;単位元 &lt;code&gt;identity_element&lt;/code&gt;&lt;/h5&gt;
+&lt;p&gt;空のパラメータパックが与えられた場合、単項畳み込み式は以下のように実装される &lt;code&gt;empty_fold&lt;/code&gt; オブジェクトを返す:&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;typename&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;BinaryFunction&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;empty_fold&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;template&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;typename&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;constexpr&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;operator&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;const&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;identity_element&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;BinaryFunction&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;identity_element&lt;/code&gt; は単位元を持つあらゆるマグマに対して特殊化され、例えば &lt;code&gt;std::string::operator+&lt;/code&gt; では &lt;code&gt;&#34;&#34;s&lt;/code&gt; とする。&lt;br /&gt;
+演算の左単位元と右単位元が異なる場合は、それぞれ &lt;code&gt;left_identity_element&lt;/code&gt; と &lt;code&gt;right_identity_element&lt;/code&gt; を定義する。
+それらは特殊化されなかった場合 &lt;code&gt;identity_element&lt;/code&gt; にフォールバックする。&lt;/p&gt;
+&lt;p&gt;この方法は可能な限りジェネリックであるが、以下のような問題があった:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;空のパラメータパックは型付けされていないが、返り値の型は他の型に文脈的に変換可能である (暗黙の型変換につながり得る)&lt;/li&gt;
+&lt;li&gt;テンプレート特殊化だけのために関数をオブジェクトしなければならない&lt;/li&gt;
+&lt;li&gt;サポートする演算子と等価な関数オブジェクト間のマッピングを用意しなければならない&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;結局のところこれは問題の解決にはつながらず、負担も大きいことから採用されなかった。&lt;/p&gt;
+&lt;h5&gt;返り値の型推論&lt;/h5&gt;
+&lt;p&gt;可能であれば空の畳み込みから返り値の型推論を行い、そうでなければプログラムを不適格とする。&lt;br /&gt;
+例えば以下の例では &lt;code&gt;std::string&lt;/code&gt; に推論する:&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;res&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;  &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;string&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;args&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;+&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;...);&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;p&gt;これは &lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4072.html&#34; target=&#34;_blank&#34;&gt;N4072 Fixed Size Parameter Packs&lt;/a&gt;
+と適合するが、以下のような問題があった:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;空の単項畳み込みの型が必ずしも正しく推論されない&lt;/li&gt;
+&lt;li&gt;単位元を持つ演算でしか機能しない&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;ルールが多い割に利点があまりないため採用されなかった。&lt;/p&gt;
+&lt;h3&gt;&lt;code&gt;~&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;~&lt;/code&gt; も畳み込み式の演算子として
+&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4191.html&#34; target=&#34;_blank&#34;&gt;N4191&lt;/a&gt;,
+&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4295.html&#34; target=&#34;_blank&#34;&gt;N4295&lt;/a&gt;
+で提案されていたが削除された (理由は発見できず)。&lt;/p&gt;
+&lt;h2&gt;関連項目&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/numeric/accumulate.html&#34;&gt;std::accumulate&lt;/a&gt;&lt;/code&gt; — イテレータの範囲について累積的に二項演算を行う&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;参照&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4191.html&#34; target=&#34;_blank&#34;&gt;N4191 Folding expressions&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4295.html&#34; target=&#34;_blank&#34;&gt;N4295 Folding expressions&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4358.pdf&#34; target=&#34;_blank&#34;&gt;N4358 Unary Folds and Empty Parameter Packs&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0036r0.pdf&#34; target=&#34;_blank&#34;&gt;P0036 Unary Folds and Empty Parameter Packs (revision 1)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/div&gt;</content>
+      
+      <author>
+        <name>melpon
+</name>
+        <email>melt@e-ml.jp
+</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>畳み込み式 -- 見た目の修正</title>
+      <link href="https://cpprefjp.github.io/lang/cpp17/folding_expressions.html"/>
+      <id>44237633d8b57f2c577f48170b5ab50d75e9fd5f:lang/cpp17/folding_expressions.md</id>
+      <updated>2017-04-24 04:41:03 +0900</updated>
+      
+        <content type="html">&lt;h1 itemprop=&#34;name&#34;&gt;畳み込み式&lt;span class=&#34;cpp cpp17&#34; title=&#34;C++17で追加&#34;&gt;(C++17)&lt;/span&gt;&lt;/h1&gt;
+&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;h2&gt;概要&lt;/h2&gt;
+&lt;p&gt;畳み込み式 (fold expression) は可変引数テンプレートのパラメータパックに対して二項演算を累積的に行う (畳み込む fold)。&lt;/p&gt;
+&lt;h2&gt;仕様&lt;/h2&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;i&gt;pack&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;i&gt;op&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;          &lt;span class=&#34;c1&#34;&gt;// (1) 単項右畳み込み&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;i&gt;op&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;i&gt;pack&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;          &lt;span class=&#34;c1&#34;&gt;// (2) 単項左畳み込み&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;i&gt;pack&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;i&gt;op&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;i&gt;op&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;i&gt;init&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;  &lt;span class=&#34;c1&#34;&gt;// (3) 二項右畳み込み&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;i&gt;init&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;i&gt;op&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;i&gt;op&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;i&gt;pack&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;  &lt;span class=&#34;c1&#34;&gt;// (4) 二項左畳み込み&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;畳み込み式は括弧 &lt;code&gt;()&lt;/code&gt; で囲まれなければならない&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;op&lt;/code&gt; は後述する二項演算子&lt;br /&gt;
+    二項畳み込み (3, 4) の場合 &lt;code&gt;op&lt;/code&gt; は同一でなければならない&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;pack&lt;/code&gt; は未展開のパラメータパック (規格ではキャスト式 cast-expression と呼ばれる)&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;init&lt;/code&gt; は未展開のパラメータパック以外 (規格ではキャスト式 cast-expression と呼ばれる)&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;畳み込み式は以下のように展開される:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;単項右畳み込みは &lt;code&gt;arg1 op (... op (argN-1 op argN))&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;単項左畳み込みは &lt;code&gt;((arg1 op arg2) op ...) op argN&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;二項右畳み込みは &lt;code&gt;arg1 op (... op (argN-1 op (argN op init)))&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;二項左畳み込みは &lt;code&gt;(((init op arg1) op arg2) op ...) op argN&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;ただし &lt;code&gt;argi&lt;/code&gt; はパラメータパックの i 番目の要素&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;機能テストマクロは &lt;code&gt;__cpp_fold_expressions&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;演算子&lt;/h3&gt;
+&lt;p&gt;オーバーロードを含めて以下の演算子を畳み込み式で使用できる:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;+&lt;/code&gt;
+&lt;code&gt;-&lt;/code&gt;
+&lt;code&gt;*&lt;/code&gt;
+&lt;code&gt;/&lt;/code&gt;
+&lt;code&gt;%&lt;/code&gt;
+&lt;code&gt;^&lt;/code&gt;
+&lt;code&gt;&amp;amp;&lt;/code&gt;
+&lt;code&gt;|&lt;/code&gt;
+&lt;code&gt;=&lt;/code&gt;
+&lt;code&gt;&amp;lt;&lt;/code&gt;
+&lt;code&gt;&amp;gt;&lt;/code&gt;
+&lt;code&gt;&amp;lt;&amp;lt;&lt;/code&gt;
+&lt;code&gt;&amp;gt;&amp;gt;&lt;/code&gt;
+&lt;code&gt;+=&lt;/code&gt;
+&lt;code&gt;-=&lt;/code&gt;
+&lt;code&gt;*=&lt;/code&gt;
+&lt;code&gt;/=&lt;/code&gt;
+&lt;code&gt;%=&lt;/code&gt;
+&lt;code&gt;^=&lt;/code&gt;
+&lt;code&gt;&amp;amp;=&lt;/code&gt;
+&lt;code&gt;|=&lt;/code&gt;
+&lt;code&gt;&amp;lt;&amp;lt;=&lt;/code&gt;
+&lt;code&gt;&amp;gt;&amp;gt;=&lt;/code&gt;
+&lt;code&gt;==&lt;/code&gt;
+&lt;code&gt;!=&lt;/code&gt;
+&lt;code&gt;&amp;lt;=&lt;/code&gt;
+&lt;code&gt;&amp;gt;=&lt;/code&gt;
+&lt;code&gt;&amp;amp;&amp;amp;&lt;/code&gt;
+&lt;code&gt;||&lt;/code&gt;
+&lt;code&gt;,&lt;/code&gt;
+&lt;code&gt;.*&lt;/code&gt;
+&lt;code&gt;-&amp;gt;*&lt;/code&gt;&lt;/p&gt;
+&lt;h3&gt;パラメータパックが空のときの式の値&lt;/h3&gt;
+&lt;p&gt;単項畳み込み (1, 2) でパラメータパックが空の場合、以下の演算子については式の値が設定される:&lt;/p&gt;
+&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;演算子&lt;/th&gt;
+&lt;th&gt;値&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&amp;amp;&amp;amp;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;true&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;`&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;,&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;void()&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;上記以外の演算子に対し空のパラメータパックが適用された場合、プログラムは不適格となる。&lt;/p&gt;
+&lt;p&gt;空のパラメータパックが適用された場合の挙動を変えるには二項畳み込み (3, 4) で値を与える。&lt;/p&gt;
+&lt;h2&gt;例&lt;/h2&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
+
+&lt;span class=&#34;c1&#34;&gt;// 単項右畳み込みで和を計算&lt;/span&gt;
+&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;typename&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Args&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;sum&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Args&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;args&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;args&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;+&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;...);&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+
+&lt;span class=&#34;c1&#34;&gt;// 二項右畳み込みで和を計算、フォールバック値 0&lt;/span&gt;
+&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;typename&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Args&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;sum0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Args&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;args&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;args&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;+&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;+&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+
+&lt;span class=&#34;c1&#34;&gt;// 単項左畳み込みで引数が全て true かどうかを返す&lt;/span&gt;
+&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;typename&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Args&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;bool&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;all&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Args&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;args&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(...&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;args&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+
+&lt;span class=&#34;c1&#34;&gt;// 二項左畳み込みで引数を出力&lt;/span&gt;
+&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;typename&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;...&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Args&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;void&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;print_all&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;ostream&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;os&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Args&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;args&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;os&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;args&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+
+&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;boolalpha&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;sum&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;4&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;5&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;sc&#34;&gt;&#39;\n&#39;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;//std::cout &amp;lt;&amp;lt; sum() &amp;lt;&amp;lt; &#39;\n&#39;;  // 不適格: 引数が必要&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;sum0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;sc&#34;&gt;&#39;\n&#39;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;   &lt;span class=&#34;c1&#34;&gt;// 引数がないので設定した 0 にフォールバック&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;all&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;sc&#34;&gt;&#39;\n&#39;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;    &lt;span class=&#34;c1&#34;&gt;// 引数がないので true にフォールバック&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;print_all&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;sc&#34;&gt;&#39;\n&#39;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h3&gt;出力&lt;/h3&gt;
+&lt;p&gt;&lt;pre&gt;&lt;code&gt;15
+0
+true
+123
+&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;h2&gt;この機能が必要になった背景・経緯&lt;/h2&gt;
+&lt;p&gt;今までは、累積的に二項演算を行うには以下のように可変長引数関数を再帰的に呼び出さなければならなかった:&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;sum&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;typename&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;sum&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;T&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;t&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;t&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;typename&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;typename&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Ts&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;sum&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;T&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;t&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Ts&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ts&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;t&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;+&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;sum&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;ts&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;...);&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;p&gt;畳み込み式によってこれを簡潔に書けるようになった。&lt;/p&gt;
+&lt;h2&gt;検討されたほかの選択肢&lt;/h2&gt;
+&lt;h3&gt;パラメータパックが空のときの &lt;code&gt;*&lt;/code&gt;, &lt;code&gt;+&lt;/code&gt;, &lt;code&gt;&amp;amp;&lt;/code&gt;, &lt;code&gt;|&lt;/code&gt; の値&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4191.html&#34; target=&#34;_blank&#34;&gt;N4191&lt;/a&gt;,
+&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4295.html&#34; target=&#34;_blank&#34;&gt;N4295&lt;/a&gt;
+では以下の演算子についてもパラメータパックが空のときに値を設定することが提案されていた:&lt;/p&gt;
+&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;演算子&lt;/th&gt;
+&lt;th&gt;値&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;*&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;1&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;+&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;int()&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&amp;amp;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;-1&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;`\&lt;/td&gt;
+&lt;td&gt;`&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;二項演算の単位元を設定するのは自然なことだと考えられた。&lt;/p&gt;
+&lt;p&gt;しかしながら、&lt;code&gt;operator+&lt;/code&gt; をオーバーロードしてコンテナや文字列の連結に用いる (cf. &lt;code&gt;std::string&lt;/code&gt;) のは一般的なことである。
+そのような場合、空のパラメータパックを与えたときに &lt;code&gt;int()&lt;/code&gt; が適用されるのは思わぬ挙動につながり、
+しかもバグ発見が困難であることが
+&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4358.pdf&#34; target=&#34;_blank&#34;&gt;N4358&lt;/a&gt;
+で指摘された。&lt;br /&gt;
+&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4072.html&#34; target=&#34;_blank&#34;&gt;N4072 Fixed Size Parameter Packs&lt;/a&gt;
+との兼ね合いもあったが、
+上記のフォールバック値は削除され、パラメータパックが空の場合は不適格となった。&lt;/p&gt;
+&lt;p&gt;一方 &lt;code&gt;operator&amp;amp;&amp;amp;&lt;/code&gt;, &lt;code&gt;operator||&lt;/code&gt;, &lt;code&gt;operator,&lt;/code&gt; はオーバーロードがバッドプラクティスとされているため残された。&lt;/p&gt;
+&lt;h4&gt;上記の問題を解決するのに考えられた方法&lt;/h4&gt;
+&lt;h5&gt;単位元 &lt;code&gt;identity_element&lt;/code&gt;&lt;/h5&gt;
+&lt;p&gt;空のパラメータパックが与えられた場合、単項畳み込み式は以下のように実装される &lt;code&gt;empty_fold&lt;/code&gt; オブジェクトを返す:&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;typename&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;BinaryFunction&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;empty_fold&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;template&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;typename&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;constexpr&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;operator&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;const&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;identity_element&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;BinaryFunction&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;identity_element&lt;/code&gt; は単位元を持つあらゆるマグマに対して特殊化され、例えば &lt;code&gt;std::string::operator+&lt;/code&gt; では &lt;code&gt;&#34;&#34;s&lt;/code&gt; とする。&lt;br /&gt;
+演算の左単位元と右単位元が異なる場合は、それぞれ &lt;code&gt;left_identity_element&lt;/code&gt; と &lt;code&gt;right_identity_element&lt;/code&gt; を定義する。
+それらは特殊化されなかった場合 &lt;code&gt;identity_element&lt;/code&gt; にフォールバックする。&lt;/p&gt;
+&lt;p&gt;この方法は可能な限りジェネリックであるが、以下のような問題があった:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;空のパラメータパックは型付けされていないが、返り値の型は他の型に文脈的に変換可能である (暗黙の型変換につながり得る)&lt;/li&gt;
+&lt;li&gt;テンプレート特殊化だけのために関数をオブジェクトしなければならない&lt;/li&gt;
+&lt;li&gt;サポートする演算子と等価な関数オブジェクト間のマッピングを用意しなければならない&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;結局のところこれは問題の解決にはつながらず、負担も大きいことから採用されなかった。&lt;/p&gt;
+&lt;h5&gt;返り値の型推論&lt;/h5&gt;
+&lt;p&gt;可能であれば空の畳み込みから返り値の型推論を行い、そうでなければプログラムを不適格とする。&lt;br /&gt;
+例えば以下の例では &lt;code&gt;std::string&lt;/code&gt; に推論する:&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;res&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;  &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;string&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;args&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;+&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;...);&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;p&gt;これは &lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4072.html&#34; target=&#34;_blank&#34;&gt;N4072 Fixed Size Parameter Packs&lt;/a&gt;
+と適合するが、以下のような問題があった:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;空の単項畳み込みの型が必ずしも正しく推論されない&lt;/li&gt;
+&lt;li&gt;単位元を持つ演算でしか機能しない&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;ルールが多い割に利点があまりないため採用されなかった。&lt;/p&gt;
+&lt;h3&gt;&lt;code&gt;~&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;~&lt;/code&gt; も畳み込み式の演算子として
+&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4191.html&#34; target=&#34;_blank&#34;&gt;N4191&lt;/a&gt;,
+&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4295.html&#34; target=&#34;_blank&#34;&gt;N4295&lt;/a&gt;
+で提案されていたが削除された (理由は発見できず)。&lt;/p&gt;
+&lt;h2&gt;関連項目&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/numeric/accumulate.html&#34;&gt;std::accumulate&lt;/a&gt;&lt;/code&gt; — イテレータの範囲について累積的に二項演算を行う&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;参照&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4191.html&#34; target=&#34;_blank&#34;&gt;N4191 Folding expressions&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4295.html&#34; target=&#34;_blank&#34;&gt;N4295 Folding expressions&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4358.pdf&#34; target=&#34;_blank&#34;&gt;N4358 Unary Folds and Empty Parameter Packs&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0036r0.pdf&#34; target=&#34;_blank&#34;&gt;P0036 Unary Folds and Empty Parameter Packs (revision 1)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/div&gt;</content>
+      
+      <author>
+        <name>E Kawashima</name>
+        <email>e-kwsm@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>C++17 -- Merge branch &#39;master&#39; of https://github.com/cpprefjp/site
@@ -1649,178 +2147,6 @@ true
 &lt;h2&gt;関連項目&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp17/extending_static_assert.html&#34;&gt;C++17 &lt;code&gt;static_assert&lt;/code&gt;&lt;/a&gt; — 第2引数の診断メッセージを省略できるようになった&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;参照&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2002/n1381.htm&#34; target=&#34;_blank&#34;&gt;N1381 Proposal to Add Static Assertions to the Core Language&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1604.html&#34; target=&#34;_blank&#34;&gt;N1604 Proposal to Add Static Assertions to the Core Language (Revision 1)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1617.html&#34; target=&#34;_blank&#34;&gt;N1617 Proposal to Add Static Assertions to the Core Language (Revision 2)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1720.html&#34; target=&#34;_blank&#34;&gt;N1720 Proposal to Add Static Assertions to the Core Language (Revision 3)&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>melpon
-</name>
-        <email>melt@e-ml.jp
-</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>コンパイル時アサート -- C++17 static_assert の説明を追加</title>
-      <link href="https://cpprefjp.github.io/lang/cpp11/static_assert.html"/>
-      <id>d245ffeb64ff3effb81d5f999375843947582395:lang/cpp11/static_assert.md</id>
-      <updated>2017-04-23 02:56:53 +0900</updated>
-      
-        <content type="html">&lt;h1 itemprop=&#34;name&#34;&gt;コンパイル時アサート&lt;span class=&#34;cpp cpp11&#34; title=&#34;C++11で追加&#34;&gt;(C++11)&lt;/span&gt;&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;h2&gt;概要&lt;/h2&gt;
-&lt;p&gt;&lt;code&gt;static_assert&lt;/code&gt;宣言は、指定した定数式が真であることを表明するための機能である。&lt;/p&gt;
-&lt;p&gt;これは、コンパイル時に満たされるべき要件を検証するために使用できる。&lt;/p&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;size_t&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;N&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;static_assert&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;N&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34;number of array elements must greater than 0&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;T&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;array&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;N&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;];&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;p&gt;指定した定数式が偽である場合はコンパイルエラーとなり、&lt;code&gt;static_assert&lt;/code&gt;の第2引数で指定した文字列リテラルが診断メッセージとして出力される。&lt;/p&gt;
-&lt;h2&gt;仕様&lt;/h2&gt;
-&lt;p&gt;&lt;code&gt;static_assert&lt;/code&gt;宣言は、以下の形式を持つ：&lt;/p&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;n&#34;&gt;static_assert&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;定数式&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;err&#34;&gt;文字列リテラル&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;定数式は、&lt;code&gt;bool&lt;/code&gt;に変換可能な整数定数式であること&lt;/li&gt;
-&lt;li&gt;この宣言は、名前空間スコープ、ブロックスコープ、メンバ宣言といった場所で記述できる&lt;/li&gt;
-&lt;li&gt;定数式が真であると評価された場合は何も効果がない。定数式が偽であると評価された場合は、指定された文字列リテラルを含む診断メッセージがコンパイラによって問題報告される。ただし、基本ソース文字集合に含まれない文字集合は、診断メッセージに表示することはコンパイラに要求されない&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;static_assert&lt;/code&gt;宣言では、新たな型やオブジェクトは宣言しない。また、実行時にサイズや時間コストは発生しない&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;例&lt;/h2&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits.html&#34;&gt;&amp;lt;type_traits&amp;gt;&lt;/a&gt;&lt;/span&gt;
-
-&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;static_assert&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/is_integral.html&#34;&gt;std::is_integral&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;value&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34;template parameter T must be integral type&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-
-  &lt;span class=&#34;c1&#34;&gt;// …&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// OK&lt;/span&gt;
-&lt;span class=&#34;c1&#34;&gt;//X&amp;lt;double&amp;gt;(); // コンパイルエラー : template parameter T must be integral type&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h3&gt;出力&lt;/h3&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;h2&gt;この機能が必要になった背景・経緯&lt;/h2&gt;
-&lt;p&gt;標準C++にはこれまで、ソフトウェアの正しさを表明するための機能として、&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;実行時の&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/cassert/assert.html&#34;&gt;assert&lt;/a&gt;&lt;/code&gt;マクロ&lt;/li&gt;
-&lt;li&gt;プリプロセス時の&lt;code&gt;#error&lt;/code&gt;ディレクティブ&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;この2つがあった。テンプレートライブラリを作るにあたって、これらはテンプレート引数のアサーションには使用できなかった。&lt;/p&gt;
-&lt;p&gt;この問題を解決する必要性は、&lt;a href=&#34;http://www.boost.org/libs/static_assert&#34; target=&#34;_blank&#34;&gt;Boost Static Assertion Library&lt;/a&gt;と、それを利用する他のBoostライブラリの存在によって示されている。Boostには含まれていないLokiライブラリにも&lt;code&gt;STATIC_CHECK&lt;/code&gt;というマクロの形で同様の機能がある。CzarneckiとEiseneckerによる著書『&lt;a href=&#34;https://www.amazon.co.jp/dp/0201309777&#34; target=&#34;_blank&#34;&gt;Generative Programming&lt;/a&gt; (邦訳 : &lt;a href=&#34;https://www.amazon.co.jp/dp/479811331X&#34; target=&#34;_blank&#34;&gt;ジェネレーティブプログラミング&lt;/a&gt;)』では、コンパイル時アサートをシミュレートするためにテンプレートメタプログラミング手法を使用し、コンフィグレーションを生成する中間段階でのチェックを行っている。&lt;/p&gt;
-&lt;p&gt;Boost Static Assertion Libraryが開発されたときに、コンパイル時アサートの設計要件が認識された：&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;アサーションに関する全ての処理は、コンパイル時に実行する必要がある。実行時に空間的、時間的なコストをかけることは許可しない&lt;/li&gt;
-&lt;li&gt;初心者に教えることが容易な構文を持つ必要がある&lt;/li&gt;
-&lt;li&gt;アサーションの失敗には、意味がわかり(meaningful)、十分な情報がある(informative)診断メッセージが必要である&lt;/li&gt;
-&lt;li&gt;それは名前空間、クラス、ブロックスコープで使用できること&lt;/li&gt;
-&lt;li&gt;この機能の誤用によって静かに故障したりはせず、誤用もまたコンパイル時に診断される&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;今回導入された機能は、これら全ての要件を満たす。&lt;/p&gt;
-&lt;p&gt;コンパイル時アサートのために&lt;code&gt;BOOST_STATIC_ASSERT&lt;/code&gt;や&lt;code&gt;STATIC_CHECK&lt;/code&gt;のようなマクロを使用することは、名前空間を汚染する問題があるが、コア言語にその機能を追加することでその問題は解消される。&lt;/p&gt;
-&lt;h2&gt;関連項目&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp17/extending_static_assert.html&#34;&gt;C++17 &lt;code&gt;static_assert&lt;/code&gt;&lt;/a&gt; — 第2引数の診断メッセージを省略できるようになった&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;参照&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2002/n1381.htm&#34; target=&#34;_blank&#34;&gt;N1381 Proposal to Add Static Assertions to the Core Language&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1604.html&#34; target=&#34;_blank&#34;&gt;N1604 Proposal to Add Static Assertions to the Core Language (Revision 1)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1617.html&#34; target=&#34;_blank&#34;&gt;N1617 Proposal to Add Static Assertions to the Core Language (Revision 2)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1720.html&#34; target=&#34;_blank&#34;&gt;N1720 Proposal to Add Static Assertions to the Core Language (Revision 3)&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>E Kawashima</name>
-        <email>e-kwsm@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>コンパイル時アサート -- Merge branch &#39;master&#39; of https://github.com/cpprefjp/site
-</title>
-      <link href="https://cpprefjp.github.io/lang/cpp11/static_assert.html"/>
-      <id>cbc477101587820d30b8b5479ccf0b184fe1872b:lang/cpp11/static_assert.md</id>
-      <updated>2017-04-23 02:52:16 +0900
-</updated>
-      
-        <content type="html">&lt;h1 itemprop=&#34;name&#34;&gt;コンパイル時アサート&lt;span class=&#34;cpp cpp11&#34; title=&#34;C++11で追加&#34;&gt;(C++11)&lt;/span&gt;&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;h2&gt;概要&lt;/h2&gt;
-&lt;p&gt;&lt;code&gt;static_assert&lt;/code&gt;宣言は、指定した定数式が真であることを表明するための機能である。&lt;/p&gt;
-&lt;p&gt;これは、コンパイル時に満たされるべき要件を検証するために使用できる。&lt;/p&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;size_t&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;N&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;static_assert&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;N&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34;number of array elements must greater than 0&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;T&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;array&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;N&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;];&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;p&gt;指定した定数式が偽である場合はコンパイルエラーとなり、&lt;code&gt;static_assert&lt;/code&gt;の第2引数で指定した文字列リテラルが診断メッセージとして出力される。&lt;/p&gt;
-&lt;h2&gt;仕様&lt;/h2&gt;
-&lt;p&gt;&lt;code&gt;static_assert&lt;/code&gt;宣言は、以下の形式を持つ：&lt;/p&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;n&#34;&gt;static_assert&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;定数式&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;err&#34;&gt;文字列リテラル&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;定数式は、&lt;code&gt;bool&lt;/code&gt;に変換可能な整数定数式であること&lt;/li&gt;
-&lt;li&gt;この宣言は、名前空間スコープ、ブロックスコープ、メンバ宣言といった場所で記述できる&lt;/li&gt;
-&lt;li&gt;定数式が真であると評価された場合は何も効果がない。定数式が偽であると評価された場合は、指定された文字列リテラルを含む診断メッセージがコンパイラによって問題報告される。ただし、基本ソース文字集合に含まれない文字集合は、診断メッセージに表示することはコンパイラに要求されない&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;static_assert&lt;/code&gt;宣言では、新たな型やオブジェクトは宣言しない。また、実行時にサイズや時間コストは発生しない&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;例&lt;/h2&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits.html&#34;&gt;&amp;lt;type_traits&amp;gt;&lt;/a&gt;&lt;/span&gt;
-
-&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;static_assert&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/is_integral.html&#34;&gt;std::is_integral&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;value&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34;template parameter T must be integral type&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-
-  &lt;span class=&#34;c1&#34;&gt;// …&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// OK&lt;/span&gt;
-&lt;span class=&#34;c1&#34;&gt;//X&amp;lt;double&amp;gt;(); // コンパイルエラー : template parameter T must be integral type&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h3&gt;出力&lt;/h3&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;h2&gt;この機能が必要になった背景・経緯&lt;/h2&gt;
-&lt;p&gt;標準C++にはこれまで、ソフトウェアの正しさを表明するための機能として、&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;実行時の&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/cassert/assert.html&#34;&gt;assert&lt;/a&gt;&lt;/code&gt;マクロ&lt;/li&gt;
-&lt;li&gt;プリプロセス時の&lt;code&gt;#error&lt;/code&gt;ディレクティブ&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;この2つがあった。テンプレートライブラリを作るにあたって、これらはテンプレート引数のアサーションには使用できなかった。&lt;/p&gt;
-&lt;p&gt;この問題を解決する必要性は、&lt;a href=&#34;http://www.boost.org/libs/static_assert&#34; target=&#34;_blank&#34;&gt;Boost Static Assertion Library&lt;/a&gt;と、それを利用する他のBoostライブラリの存在によって示されている。Boostには含まれていないLokiライブラリにも&lt;code&gt;STATIC_CHECK&lt;/code&gt;というマクロの形で同様の機能がある。CzarneckiとEiseneckerによる著書『&lt;a href=&#34;https://www.amazon.co.jp/dp/0201309777&#34; target=&#34;_blank&#34;&gt;Generative Programming&lt;/a&gt; (邦訳 : &lt;a href=&#34;https://www.amazon.co.jp/dp/479811331X&#34; target=&#34;_blank&#34;&gt;ジェネレーティブプログラミング&lt;/a&gt;)』では、コンパイル時アサートをシミュレートするためにテンプレートメタプログラミング手法を使用し、コンフィグレーションを生成する中間段階でのチェックを行っている。&lt;/p&gt;
-&lt;p&gt;Boost Static Assertion Libraryが開発されたときに、コンパイル時アサートの設計要件が認識された：&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;アサーションに関する全ての処理は、コンパイル時に実行する必要がある。実行時に空間的、時間的なコストをかけることは許可しない&lt;/li&gt;
-&lt;li&gt;初心者に教えることが容易な構文を持つ必要がある&lt;/li&gt;
-&lt;li&gt;アサーションの失敗には、意味がわかり(meaningful)、十分な情報がある(informative)診断メッセージが必要である&lt;/li&gt;
-&lt;li&gt;それは名前空間、クラス、ブロックスコープで使用できること&lt;/li&gt;
-&lt;li&gt;この機能の誤用によって静かに故障したりはせず、誤用もまたコンパイル時に診断される&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;今回導入された機能は、これら全ての要件を満たす。&lt;/p&gt;
-&lt;p&gt;コンパイル時アサートのために&lt;code&gt;BOOST_STATIC_ASSERT&lt;/code&gt;や&lt;code&gt;STATIC_CHECK&lt;/code&gt;のようなマクロを使用することは、名前空間を汚染する問題があるが、コア言語にその機能を追加することでその問題は解消される。&lt;/p&gt;
-&lt;h2&gt;関連項目&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp17/extending_static_assert.html&#34;&gt;C++17 &lt;code&gt;static_assert&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h2&gt;参照&lt;/h2&gt;
 &lt;ul&gt;
