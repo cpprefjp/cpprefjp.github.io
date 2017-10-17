@@ -2,9 +2,248 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2017-10-17T10:54:14.440187</updated>
-  <id>60c3cdd4-f70e-43c0-83b2-db78418dcce8</id>
+  <updated>2017-10-17T10:57:08.507740</updated>
+  <id>5c37121f-c00c-41e8-ba51-d102594e0596</id>
 
+  
+    <entry>
+      <title>memory_order -- Merge branch &#39;master&#39; of https://github.com/cpprefjp/site
+</title>
+      <link href="https://cpprefjp.github.io/reference/atomic/memory_order.html"/>
+      <id>3d90405e6ca0d9c5aa075a7bf33f5d5b54265154:reference/atomic/memory_order.md</id>
+      <updated>2017-10-17T10:56:34+09:00</updated>
+      
+        <content type="html">&lt;div class=&#34;identifier-type&#34;&gt;enum&lt;/div&gt;&lt;div class=&#34;header&#34;&gt;&amp;lt;atomic&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;namespace&#34; title=&#34;namespace std&#34;&gt;std::&lt;/span&gt;memory_order&lt;span class=&#34;cpp cpp11&#34; title=&#34;C++11で追加&#34;&gt;(C++11)&lt;/span&gt;&lt;/h1&gt;
+&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;namespace&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;enum&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;memory_order&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;memory_order_relaxed&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;memory_order_consume&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;memory_order_acquire&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;memory_order_release&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;memory_order_acq_rel&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;memory_order_seq_cst&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;概要&lt;/h2&gt;
+&lt;p&gt;コンパイラに許可されている最適化の一つに、「プログラムの意味を変えない限りにおいて、メモリアクセスの順番を変えたり、省略したりしてもよい」というものがある。また、マルチコアCPUにおいては、あるCPUコアによるメモリアクセスの順序が他のコアからも同じように見えるとは限らない。このような挙動はマルチスレッドプログラミングにおいて問題になることがある。
+この問題への対処として、C++11では各スレッドの実行に順序付けをするための&#34;happens before&#34;(先行発生)という関係を定義し、それによってあるスレッドでの操作が他スレッドから可視になるか否かを定めている。
+atomic変数においては、&#34;release&#34;操作によって書き込まれた値を&#34;acquire&#34;操作によって別のスレッドが読み出した場合に、そのrelease操作とacquire操作の間に順序付けが行われる。以下に例を挙げる。&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;atomic&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;thread&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;data&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;atomic&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;bool&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ready&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nb&#34;&gt;false&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+
+&lt;span class=&#34;kt&#34;&gt;void&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;f&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;while&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;!&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;ready&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/atomic/atomic/load.html&#34;&gt;load&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;span style=&#34;color:#ff0000&#34;&gt;std::memory_order_acquire&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;))&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;data&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;endl&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;   &lt;span class=&#34;c1&#34;&gt;// (2)&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+
+&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;kr&#34;&gt;thread&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;t&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;f&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+
+  &lt;span class=&#34;n&#34;&gt;data&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;   &lt;span class=&#34;c1&#34;&gt;// (1)&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;ready&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/atomic/atomic/store.html&#34;&gt;store&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nb&#34;&gt;true&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;span style=&#34;color:#ff0000&#34;&gt;std::memory_order_release&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+
+  &lt;span class=&#34;n&#34;&gt;t&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;join&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h3&gt;出力&lt;/h3&gt;
+&lt;p&gt;&lt;pre&gt;&lt;code&gt;3
+&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/atomic/atomic.html&#34;&gt;atomic&amp;lt;bool&amp;gt;&lt;/a&gt;&lt;/code&gt;型の変数&lt;code&gt;ready&lt;/code&gt;への読み書きに注目すると、&lt;code&gt;main()&lt;/code&gt;では変数&lt;code&gt;ready&lt;/code&gt;に &lt;code&gt;true&lt;/code&gt; を&#34;release&#34;操作として書き込み、&lt;code&gt;f()&lt;/code&gt;では&#34;acquire&#34;操作としての読み込みを &lt;code&gt;true&lt;/code&gt; が返されるまで繰り返している。よって、&lt;code&gt;f()&lt;/code&gt;の&lt;code&gt;while&lt;/code&gt;ループを抜けた時点で、&lt;code&gt;main()&lt;/code&gt;の&lt;code&gt;ready.store()&lt;/code&gt;と&lt;code&gt;f()&lt;/code&gt;の&lt;code&gt;ready.load()&lt;/code&gt;の間に順序付け(happens before関係)が成立している。
+ここでさらに変数&lt;code&gt;data&lt;/code&gt;への読み書き(1), (2)に注目すると、(1)は&lt;code&gt;ready.store()&lt;/code&gt;より前、(2)は&lt;code&gt;ready.load()&lt;/code&gt;より後にあるので、以下のようなスレッド間の順序付け(happens before関係)が成立することになる。
+   (1) → &lt;code&gt;ready.store()&lt;/code&gt; → &lt;code&gt;ready.load()&lt;/code&gt; → (2)
+よって、(1)における書き込みが(2)の時点で可視であることが保証される。
+このようにしてC++のマルチスレッドプログラムにおける実行順序および可視性を理解することができる。&lt;/p&gt;
+&lt;p&gt;以下の列挙値はatomic変数への操作に指定可能な順序付けの種類を表す。&lt;/p&gt;
+&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;列挙値&lt;/th&gt;
+&lt;th&gt;説明&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;memory_order_relaxed&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;スレッド間の順序付けの効果は一切持たない。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;memory_order_consume&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;acquire操作と似ているが、それより弱い順序付けでの読み込みを行うことを指示する。acquire操作は後続の全ての操作に対して順序付けを行うのに対し、consume操作は読み込まれた値に依存(ただし条件分岐による依存は除く)する操作のみに順序付けを保証する点が異なる。&lt;a href=&#34;https://cpprefjp.github.io/reference/atomic/atomic/store.html&#34;&gt;store()&lt;/a&gt;など、書き込みのみを行う操作に対しては指定できない。(仕様検討中のため、一時的に非推奨)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;memory_order_acquire&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;aquire操作としての読み込みを行うことを指示する。&lt;a href=&#34;https://cpprefjp.github.io/reference/atomic/atomic/store.html&#34;&gt;store()&lt;/a&gt;など、書き込みのみを行う操作に対しては指定できない。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;memory_order_release&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;release操作としての書き込みを行うことを指示する。&lt;a href=&#34;https://cpprefjp.github.io/reference/atomic/atomic/load.html&#34;&gt;load()&lt;/a&gt;など、読み込みのみを行う操作に対しては指定できない。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;memory_order_acq_rel&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;読み込みと書き込みを同時に行う操作(Read-Modify-Write操作)に対してのみ指定することができ、acquireとreleaseを合わせた効果を持つ。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;memory_order_seq_cst&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;aquire(読み込み操作の場合)、release(書き込み操作の場合)、acq_rel(Read-Modify-Write操作の場合)としての効果を持つ。さらに、同じseq_cstが指定されている他のatomic操作との間での順序一貫性も保証する。これは最も強い保証であり、標準のatomic操作におけるデフォルトのメモリオーダーとして使用される。「seq_cst」は「sequential consistency(順序一貫性)」を意味する。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2&gt;バージョン&lt;/h2&gt;
+&lt;h3&gt;言語&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;C++11&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;処理系&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC&lt;/a&gt;: &lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC, C++11 mode&lt;/a&gt;: 4.7.0&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#icc&#34;&gt;ICC&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt;: 11.0, 12.0&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;参照&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://d.hatena.ne.jp/bsdhouse/20090720/1248085754&#34; target=&#34;_blank&#34;&gt;そろそろvolatileについて一言いっておくか - yamasaのネタ帳&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://d.hatena.ne.jp/bsdhouse/20090816/1250446250&#34; target=&#34;_blank&#34;&gt;次期C++に導入されるメモリバリアについて解説してみる - yamasaのネタ帳&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://d.hatena.ne.jp/bsdhouse/20090929/1254237835&#34; target=&#34;_blank&#34;&gt;C++0xのメモリバリアをより深く解説してみる - yamasaのネタ帳&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.cl.cam.ac.uk/~pes20/cpp/cpp0xmappings.html&#34; target=&#34;_blank&#34;&gt;C/C++11 mappings to processors&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1525.htm&#34; target=&#34;_blank&#34;&gt;N1525: Memory-Order Rationale&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://preshing.com/20140709/the-purpose-of-memory_order_consume-in-cpp11/&#34; target=&#34;_blank&#34;&gt;The Purpose of memory_order_consume in C++11&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://d.hatena.ne.jp/yohhoy/20141115/p1&#34; target=&#34;_blank&#34;&gt;（抄訳）N4215 &lt;code&gt;memory_order_consume&lt;/code&gt;の利用と実装に向けて［§5-6のみ］&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0371r1.html&#34; target=&#34;_blank&#34;&gt;P0371R1 Temporarily discourage &lt;code&gt;memory_order_consume&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/div&gt;</content>
+      
+      <author>
+        <name>melpon
+</name>
+        <email>melt@e-ml.jp
+</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>memory_order -- memory_order_consume : C++17対応として、一時的に非推奨化</title>
+      <link href="https://cpprefjp.github.io/reference/atomic/memory_order.html"/>
+      <id>006ee6aa0a0246cd016265d951f8b1f11cf412ab:reference/atomic/memory_order.md</id>
+      <updated>2017-10-17T10:56:22+09:00</updated>
+      
+        <content type="html">&lt;div class=&#34;identifier-type&#34;&gt;enum&lt;/div&gt;&lt;div class=&#34;header&#34;&gt;&amp;lt;atomic&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;namespace&#34; title=&#34;namespace std&#34;&gt;std::&lt;/span&gt;memory_order&lt;span class=&#34;cpp cpp11&#34; title=&#34;C++11で追加&#34;&gt;(C++11)&lt;/span&gt;&lt;/h1&gt;
+&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;namespace&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;enum&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;memory_order&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;memory_order_relaxed&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;memory_order_consume&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;memory_order_acquire&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;memory_order_release&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;memory_order_acq_rel&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;memory_order_seq_cst&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;概要&lt;/h2&gt;
+&lt;p&gt;コンパイラに許可されている最適化の一つに、「プログラムの意味を変えない限りにおいて、メモリアクセスの順番を変えたり、省略したりしてもよい」というものがある。また、マルチコアCPUにおいては、あるCPUコアによるメモリアクセスの順序が他のコアからも同じように見えるとは限らない。このような挙動はマルチスレッドプログラミングにおいて問題になることがある。
+この問題への対処として、C++11では各スレッドの実行に順序付けをするための&#34;happens before&#34;(先行発生)という関係を定義し、それによってあるスレッドでの操作が他スレッドから可視になるか否かを定めている。
+atomic変数においては、&#34;release&#34;操作によって書き込まれた値を&#34;acquire&#34;操作によって別のスレッドが読み出した場合に、そのrelease操作とacquire操作の間に順序付けが行われる。以下に例を挙げる。&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;atomic&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;thread&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;data&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;atomic&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;bool&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ready&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nb&#34;&gt;false&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+
+&lt;span class=&#34;kt&#34;&gt;void&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;f&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;while&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;!&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;ready&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/atomic/atomic/load.html&#34;&gt;load&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;span style=&#34;color:#ff0000&#34;&gt;std::memory_order_acquire&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;))&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;data&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;endl&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;   &lt;span class=&#34;c1&#34;&gt;// (2)&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+
+&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;kr&#34;&gt;thread&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;t&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;f&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+
+  &lt;span class=&#34;n&#34;&gt;data&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;   &lt;span class=&#34;c1&#34;&gt;// (1)&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;ready&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/atomic/atomic/store.html&#34;&gt;store&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nb&#34;&gt;true&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;span style=&#34;color:#ff0000&#34;&gt;std::memory_order_release&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+
+  &lt;span class=&#34;n&#34;&gt;t&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;join&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h3&gt;出力&lt;/h3&gt;
+&lt;p&gt;&lt;pre&gt;&lt;code&gt;3
+&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/atomic/atomic.html&#34;&gt;atomic&amp;lt;bool&amp;gt;&lt;/a&gt;&lt;/code&gt;型の変数&lt;code&gt;ready&lt;/code&gt;への読み書きに注目すると、&lt;code&gt;main()&lt;/code&gt;では変数&lt;code&gt;ready&lt;/code&gt;に &lt;code&gt;true&lt;/code&gt; を&#34;release&#34;操作として書き込み、&lt;code&gt;f()&lt;/code&gt;では&#34;acquire&#34;操作としての読み込みを &lt;code&gt;true&lt;/code&gt; が返されるまで繰り返している。よって、&lt;code&gt;f()&lt;/code&gt;の&lt;code&gt;while&lt;/code&gt;ループを抜けた時点で、&lt;code&gt;main()&lt;/code&gt;の&lt;code&gt;ready.store()&lt;/code&gt;と&lt;code&gt;f()&lt;/code&gt;の&lt;code&gt;ready.load()&lt;/code&gt;の間に順序付け(happens before関係)が成立している。
+ここでさらに変数&lt;code&gt;data&lt;/code&gt;への読み書き(1), (2)に注目すると、(1)は&lt;code&gt;ready.store()&lt;/code&gt;より前、(2)は&lt;code&gt;ready.load()&lt;/code&gt;より後にあるので、以下のようなスレッド間の順序付け(happens before関係)が成立することになる。
+   (1) → &lt;code&gt;ready.store()&lt;/code&gt; → &lt;code&gt;ready.load()&lt;/code&gt; → (2)
+よって、(1)における書き込みが(2)の時点で可視であることが保証される。
+このようにしてC++のマルチスレッドプログラムにおける実行順序および可視性を理解することができる。&lt;/p&gt;
+&lt;p&gt;以下の列挙値はatomic変数への操作に指定可能な順序付けの種類を表す。&lt;/p&gt;
+&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;列挙値&lt;/th&gt;
+&lt;th&gt;説明&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;memory_order_relaxed&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;スレッド間の順序付けの効果は一切持たない。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;memory_order_consume&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;acquire操作と似ているが、それより弱い順序付けでの読み込みを行うことを指示する。acquire操作は後続の全ての操作に対して順序付けを行うのに対し、consume操作は読み込まれた値に依存(ただし条件分岐による依存は除く)する操作のみに順序付けを保証する点が異なる。&lt;a href=&#34;https://cpprefjp.github.io/reference/atomic/atomic/store.html&#34;&gt;store()&lt;/a&gt;など、書き込みのみを行う操作に対しては指定できない。(仕様検討中のため、一時的に非推奨)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;memory_order_acquire&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;aquire操作としての読み込みを行うことを指示する。&lt;a href=&#34;https://cpprefjp.github.io/reference/atomic/atomic/store.html&#34;&gt;store()&lt;/a&gt;など、書き込みのみを行う操作に対しては指定できない。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;memory_order_release&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;release操作としての書き込みを行うことを指示する。&lt;a href=&#34;https://cpprefjp.github.io/reference/atomic/atomic/load.html&#34;&gt;load()&lt;/a&gt;など、読み込みのみを行う操作に対しては指定できない。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;memory_order_acq_rel&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;読み込みと書き込みを同時に行う操作(Read-Modify-Write操作)に対してのみ指定することができ、acquireとreleaseを合わせた効果を持つ。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;memory_order_seq_cst&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;aquire(読み込み操作の場合)、release(書き込み操作の場合)、acq_rel(Read-Modify-Write操作の場合)としての効果を持つ。さらに、同じseq_cstが指定されている他のatomic操作との間での順序一貫性も保証する。これは最も強い保証であり、標準のatomic操作におけるデフォルトのメモリオーダーとして使用される。「seq_cst」は「sequential consistency(順序一貫性)」を意味する。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2&gt;バージョン&lt;/h2&gt;
+&lt;h3&gt;言語&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;C++11&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;処理系&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC&lt;/a&gt;: &lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC, C++11 mode&lt;/a&gt;: 4.7.0&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#icc&#34;&gt;ICC&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt;: 11.0, 12.0&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;参照&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://d.hatena.ne.jp/bsdhouse/20090720/1248085754&#34; target=&#34;_blank&#34;&gt;そろそろvolatileについて一言いっておくか - yamasaのネタ帳&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://d.hatena.ne.jp/bsdhouse/20090816/1250446250&#34; target=&#34;_blank&#34;&gt;次期C++に導入されるメモリバリアについて解説してみる - yamasaのネタ帳&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://d.hatena.ne.jp/bsdhouse/20090929/1254237835&#34; target=&#34;_blank&#34;&gt;C++0xのメモリバリアをより深く解説してみる - yamasaのネタ帳&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.cl.cam.ac.uk/~pes20/cpp/cpp0xmappings.html&#34; target=&#34;_blank&#34;&gt;C/C++11 mappings to processors&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1525.htm&#34; target=&#34;_blank&#34;&gt;N1525: Memory-Order Rationale&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://preshing.com/20140709/the-purpose-of-memory_order_consume-in-cpp11/&#34; target=&#34;_blank&#34;&gt;The Purpose of memory_order_consume in C++11&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://d.hatena.ne.jp/yohhoy/20141115/p1&#34; target=&#34;_blank&#34;&gt;（抄訳）N4215 &lt;code&gt;memory_order_consume&lt;/code&gt;の利用と実装に向けて［§5-6のみ］&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0371r1.html&#34; target=&#34;_blank&#34;&gt;P0371R1 Temporarily discourage &lt;code&gt;memory_order_consume&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/div&gt;</content>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>atomic -- Merge branch &#39;master&#39; of https://github.com/cpprefjp/site
@@ -1995,442 +2234,6 @@ hypot(3.0, 4.0, 2.0) = 5.385165
 &lt;h2&gt;参照&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0030r1.pdf&#34; target=&#34;_blank&#34;&gt;P0030R1 Proposal to Introduce a 3-Argument Overload to &lt;code&gt;std::hypot&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>melpon
-</name>
-        <email>melt@e-ml.jp
-</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>hypot -- C++17対応として、&lt;cmath&gt;のhypotの3引数版を追加</title>
-      <link href="https://cpprefjp.github.io/reference/cmath/hypot.html"/>
-      <id>93bb7e5752bb45d79c5c85ea016c0bf4bc48193c:reference/cmath/hypot.md</id>
-      <updated>2017-10-16T17:08:05+09:00</updated>
-      
-        <content type="html">&lt;div class=&#34;identifier-type&#34;&gt;function&lt;/div&gt;&lt;div class=&#34;header&#34;&gt;&amp;lt;cmath&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;namespace&#34; title=&#34;namespace std&#34;&gt;std::&lt;/span&gt;hypot&lt;span class=&#34;cpp cpp11&#34; title=&#34;C++11で追加&#34;&gt;(C++11)&lt;/span&gt;&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;namespace&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;kt&#34;&gt;float&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;hypot&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;float&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;float&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;y&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;                                  &lt;span class=&#34;c1&#34;&gt;// (1)&lt;/span&gt;
-  &lt;span class=&#34;kt&#34;&gt;double&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;hypot&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;double&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;double&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;y&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;                               &lt;span class=&#34;c1&#34;&gt;// (2)&lt;/span&gt;
-  &lt;span class=&#34;kt&#34;&gt;long&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;double&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;hypot&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;long&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;double&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;long&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;double&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;y&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;                &lt;span class=&#34;c1&#34;&gt;// (3)&lt;/span&gt;
-
-  &lt;span class=&#34;n&#34;&gt;&lt;i&gt;Promoted&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;hypot&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;i&gt;Arithmetic1&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;i&gt;Arithmetic2&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;y&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;                   &lt;span class=&#34;c1&#34;&gt;// (4)&lt;/span&gt;
-
-  &lt;span class=&#34;kt&#34;&gt;float&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;hypotf&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;float&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;float&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;y&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;                                 &lt;span class=&#34;c1&#34;&gt;// (5) C++17 から&lt;/span&gt;
-  &lt;span class=&#34;kt&#34;&gt;long&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;double&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;hypotl&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;long&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;double&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;long&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;double&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;y&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;               &lt;span class=&#34;c1&#34;&gt;// (6) C++17 から&lt;/span&gt;
-
-  &lt;span class=&#34;kt&#34;&gt;double&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;hypot&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;double&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;double&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;y&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;double&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;z&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;                     &lt;span class=&#34;c1&#34;&gt;// (7) C++17 から&lt;/span&gt;
-  &lt;span class=&#34;kt&#34;&gt;float&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;hypot&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;float&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;float&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;y&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;float&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;z&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;                         &lt;span class=&#34;c1&#34;&gt;// (8) C++17 から&lt;/span&gt;
-  &lt;span class=&#34;kt&#34;&gt;long&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;double&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;hypot&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;long&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;double&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;long&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;double&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;y&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;long&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;double&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;z&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// (9) C++17 から&lt;/span&gt;
-
-  &lt;span class=&#34;n&#34;&gt;&lt;i&gt;Promoted&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;hypot&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;i&gt;Arithmetic1&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;i&gt;Arithmetic2&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;y&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;i&gt;Arithmetic2&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;z&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;    &lt;span class=&#34;c1&#34;&gt;// (10) C++17 から&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h2&gt;概要&lt;/h2&gt;
-&lt;p&gt;算術型の平方和の平方根を求める。この際、余計なオーバーフロー、アンダーフローを起こさない。hypot は hypotenuse（（直角三角形の）斜辺）の略。&lt;/p&gt;
-&lt;p&gt;この関数は、「三平方の定理」によって、直角三角形の斜辺の長さを求めるために使用できる。直角三角形において、直角に隣接する辺aとb、および斜辺cがあったとき、辺の長さは、三平方の定理によって以下の関係が成り立つ：&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;a&lt;sup&gt;2&lt;/sup&gt; + b&lt;sup&gt;2&lt;/sup&gt; = c&lt;sup&gt;2&lt;/sup&gt;&lt;/code&gt;&lt;/p&gt;
-&lt;p&gt;この関数の効果である以下の式は、三平方の定理の式変形である：&lt;/p&gt;
-&lt;p&gt;$$ f(x, y) = \sqrt{x^2 + y^2} $$&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;a&lt;sup&gt;2&lt;/sup&gt; + b&lt;sup&gt;2&lt;/sup&gt;&lt;/code&gt;は&lt;code&gt;c&lt;sup&gt;2&lt;/sup&gt;&lt;/code&gt;と等しくなるため、2乗の和に対する平方根を求めることで、斜辺cの長さが求まる。つまり、この関数に引数として、直角に隣接する辺aとbの長さを与えることで、戻り値として斜辺cの長さが返される。&lt;/p&gt;
-&lt;p&gt;各オーバーロードの概要は、以下の通りである：&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;(1) : &lt;code&gt;double&lt;/code&gt;型について、2引数の平方和の平方根を求める&lt;/li&gt;
-&lt;li&gt;(2) : &lt;code&gt;float&lt;/code&gt;型について、2引数の平方和の平方根を求める&lt;/li&gt;
-&lt;li&gt;(3) : &lt;code&gt;long double&lt;/code&gt;型について、2引数の平方和の平方根を求める&lt;/li&gt;
-&lt;li&gt;(4) : 浮動小数点数型以外の算術型について、2引数の平方和の平方根を求める&lt;/li&gt;
-&lt;li&gt;(5) : &lt;code&gt;float&lt;/code&gt;型について、2引数の平方和の平方根を求める&lt;/li&gt;
-&lt;li&gt;(6) : &lt;code&gt;long double&lt;/code&gt;型について、2引数の平方和の平方根を求める&lt;/li&gt;
-&lt;li&gt;(7) : &lt;code&gt;double&lt;/code&gt;型について、3引数の平方和の平方根を求める&lt;/li&gt;
-&lt;li&gt;(8) : &lt;code&gt;float&lt;/code&gt;型について、3引数の平方和の平方根を求める&lt;/li&gt;
-&lt;li&gt;(9) : &lt;code&gt;long double&lt;/code&gt;型について、3引数の平方和の平方根を求める&lt;/li&gt;
-&lt;li&gt;(10) : 浮動小数点数型以外の算術型について、3引数の平方和の平方根を求める&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;戻り値&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;(1)-(6) : 引数 &lt;code&gt;x&lt;/code&gt; と引数 &lt;code&gt;y&lt;/code&gt; の平方和の平方根を返す。&lt;/li&gt;
-&lt;li&gt;(7)-(10) : 引数 &lt;code&gt;x&lt;/code&gt; 、引数 &lt;code&gt;y&lt;/code&gt; 、引数 &lt;code&gt;z&lt;/code&gt; の平方和の平方根を返す。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;オーバーフローエラー、アンダーフローエラーが発生する可能性がある。&lt;/p&gt;
-&lt;h2&gt;備考&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;(1)-(6) : $$ f(x, y) = \sqrt{x^2 + y^2} $$&lt;/li&gt;
-&lt;li&gt;(7)-(10) : $$ f(x, y, z) = \sqrt{x^2 + y^2 + z^2} $$&lt;/li&gt;
-&lt;li&gt;概要の「余計なオーバーフロー、アンダーフローを起こさない」とは、たとえ &lt;code&gt;x&lt;sup&gt;2&lt;/sup&gt;&lt;/code&gt; が戻り値型の範囲を超えていても、結果が戻り値型の範囲に収まるのであればオーバーフローしないで正しい結果を返す、と言う事である。&lt;/li&gt;
-&lt;li&gt;オーバーフローエラー、アンダーフローエラーが発生した場合の挙動については、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/cmath.html&#34;&gt;&amp;lt;cmath&amp;gt;&lt;/a&gt;&lt;/code&gt; を参照。&lt;/li&gt;
-&lt;li&gt;処理系が IEC 60559 に準拠している場合（&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/limits/numeric_limits.html&#34;&gt;std::numeric_limits&lt;/a&gt;&amp;lt;T&amp;gt;::&lt;a href=&#34;https://cpprefjp.github.io/reference/limits/numeric_limits/is_iec559.html&#34;&gt;is_iec559&lt;/a&gt;() != false&lt;/code&gt;）、以下の規定が追加される。&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;hypot(x, y)&lt;/code&gt; と &lt;code&gt;hypot(y, x)&lt;/code&gt; と &lt;code&gt;hypot(x, -y)&lt;/code&gt; は同一である。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;hypot(x, ±0)&lt;/code&gt; は、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/cmath/fabs.html&#34;&gt;fabs&lt;/a&gt;(x)&lt;/code&gt; と同一である。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;hypot(±∞, y)&lt;/code&gt; の戻り値は、たとえ &lt;code&gt;y&lt;/code&gt; が NaN の場合でも &lt;code&gt;+∞&lt;/code&gt; となる。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;例&lt;/h2&gt;
-&lt;h3&gt;基本的な使い方&lt;/h3&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;cmath&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;limits&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;c1&#34;&gt;// 2引数版&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/ios/fixed.html&#34;&gt;std::fixed&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34;hypot(0.0, 0.0)  = &#34;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;span style=&#34;color:#ff0000&#34;&gt;std::hypot&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mf&#34;&gt;0.0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mf&#34;&gt;0.0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;endl&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34;hypot(1.0, 1.0)  = &#34;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;span style=&#34;color:#ff0000&#34;&gt;std::hypot&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mf&#34;&gt;1.0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mf&#34;&gt;1.0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;endl&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34;hypot(3.0, 4.0)  = &#34;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;span style=&#34;color:#ff0000&#34;&gt;std::hypot&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mf&#34;&gt;3.0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mf&#34;&gt;4.0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;endl&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34;hypot(+∞, NaN)   = &#34;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;span style=&#34;color:#ff0000&#34;&gt;std::hypot&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/limits/numeric_limits.html&#34;&gt;std::numeric_limits&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;double&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/limits/numeric_limits/infinity.html&#34;&gt;infinity&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(),&lt;/span&gt;
-                                                   &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/limits/numeric_limits.html&#34;&gt;std::numeric_limits&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;double&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/limits/numeric_limits/quiet_nan.html&#34;&gt;quiet_NaN&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;())&lt;/span&gt;
-            &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;endl&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-
-  &lt;span class=&#34;c1&#34;&gt;// 3引数版&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34;hypot(3.0, 4.0, 2.0) = &#34;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;span style=&#34;color:#ff0000&#34;&gt;std::hypot&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mf&#34;&gt;3.0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mf&#34;&gt;4.0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mf&#34;&gt;2.0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;endl&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h4&gt;出力&lt;/h4&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;hypot(0.0, 0.0)  = 0.000000
-hypot(1.0, 1.0)  = 1.414214
-hypot(3.0, 4.0)  = 5.000000
-hypot(+∞, NaN)   = inf
-hypot(3.0, 4.0, 2.0) = 5.385165
-&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;h3&gt;ベクトルの長さを求める&lt;/h3&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;cmath&amp;gt;&lt;/span&gt;
-
-&lt;span class=&#34;c1&#34;&gt;// 2次元ベクトル&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Vector2&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;kt&#34;&gt;double&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;kt&#34;&gt;double&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;y&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-
-  &lt;span class=&#34;c1&#34;&gt;// ベクトルの長さ。&lt;/span&gt;
-  &lt;span class=&#34;c1&#34;&gt;// ノルム (norm) とも呼ばれる&lt;/span&gt;
-  &lt;span class=&#34;kt&#34;&gt;double&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;length&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;const&lt;/span&gt;
-  &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-    &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;span style=&#34;color:#ff0000&#34;&gt;std::hypot&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;y&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
-
-&lt;span class=&#34;c1&#34;&gt;// 3次元ベクトル&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Vector3&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;kt&#34;&gt;double&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;kt&#34;&gt;double&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;y&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;kt&#34;&gt;double&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;z&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-
-  &lt;span class=&#34;kt&#34;&gt;double&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;length&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;const&lt;/span&gt;
-  &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-    &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;span style=&#34;color:#ff0000&#34;&gt;std::hypot&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;y&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;z&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Vector2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;&lt;span class=&#34;mf&#34;&gt;3.0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mf&#34;&gt;3.0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;}.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;length&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;endl&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Vector3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;&lt;span class=&#34;mf&#34;&gt;3.0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mf&#34;&gt;2.0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mf&#34;&gt;4.0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;}.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;length&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;endl&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h4&gt;出力&lt;/h4&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;4.24264
-5.38516
-&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;h2&gt;バージョン&lt;/h2&gt;
-&lt;h3&gt;言語&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;C++11&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;処理系&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang&lt;/a&gt;: 2.9, 3.1&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC, C++11 mode&lt;/a&gt;: 4.3.4, 4.4.5, 4.5.2, 4.6.1, 4.7.0&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt;: 11.0, 12.0, 14.0, 14.1&lt;ul&gt;
-&lt;li&gt;7.0, 7.1, 8.0, 9.0, 10.0およびそれ以降では、&lt;code&gt;&amp;lt;math.h&amp;gt;&lt;/code&gt;でグローバル名前空間に以下が定義されている。&lt;ul&gt;
-&lt;li&gt;仮引数・戻り値が&lt;code&gt;float&lt;/code&gt;型の&lt;code&gt;_hypotf&lt;/code&gt;関数が定義されている。&lt;/li&gt;
-&lt;li&gt;仮引数・戻り値が&lt;code&gt;double&lt;/code&gt;型の&lt;code&gt;hypot&lt;/code&gt;関数と&lt;code&gt;_hypot&lt;/code&gt;関数が定義されている。&lt;/li&gt;
-&lt;li&gt;仮引数・戻り値が&lt;code&gt;long double&lt;/code&gt;型の&lt;code&gt;_hypotl&lt;/code&gt;マクロが定義されている。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;10.0, 11.0およびそれ以降では、上記に加え&lt;code&gt;&amp;lt;math.h&amp;gt;&lt;/code&gt;でグローバル名前空間に以下が定義されている。&lt;ul&gt;
-&lt;li&gt;仮引数・戻り値が&lt;code&gt;float&lt;/code&gt;型の&lt;code&gt;hypotf&lt;/code&gt;関数が定義されている。&lt;/li&gt;
-&lt;li&gt;仮引数・戻り値が&lt;code&gt;long double&lt;/code&gt;型の&lt;code&gt;hypotl&lt;/code&gt;マクロが定義されている。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;12.0以降、&lt;code&gt;_hypotl&lt;/code&gt;と&lt;code&gt;hypotl&lt;/code&gt;は関数として定義されている。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4&gt;備考&lt;/h4&gt;
-&lt;p&gt;特定の環境で &lt;code&gt;constexpr&lt;/code&gt; 指定されている場合がある。（独自拡張）&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;GCC 4.6.1 以上&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;実装例&lt;/h2&gt;
-&lt;p&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/cmath/fabs.html&#34;&gt;fabs&lt;/a&gt;&lt;/code&gt; と &lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/cmath/sqrt.html&#34;&gt;sqrt&lt;/a&gt;&lt;/code&gt; があれば、以下のように変換しても求められる。&lt;/p&gt;
-&lt;p&gt;$$ \sqrt{x^2 + y^2} = \left| u \right| \sqrt{1 + \left( \frac{v}{u} \right)^2} \quad \mathrm{for~all} \; (x, y), \; u = \max(|x|, |y|), \; v = \min(|x|, |y|) $$&lt;/p&gt;
-&lt;h2&gt;参照&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0030r1.pdf&#34; target=&#34;_blank&#34;&gt;P0030R1 Proposal to Introduce a 3-Argument Overload to &lt;code&gt;std::hypot&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>owner_less -- Merge branch &#39;master&#39; of https://github.com/cpprefjp/site
-</title>
-      <link href="https://cpprefjp.github.io/reference/memory/owner_less.html"/>
-      <id>e77394fda2f66b8c615a68a281e8d0e107a02281:reference/memory/owner_less.md</id>
-      <updated>2017-10-16T13:47:59+09:00</updated>
-      
-        <content type="html">&lt;div class=&#34;identifier-type&#34;&gt;class template&lt;/div&gt;&lt;div class=&#34;header&#34;&gt;&amp;lt;memory&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;namespace&#34; title=&#34;namespace std&#34;&gt;std::&lt;/span&gt;owner_less&lt;span class=&#34;cpp cpp11&#34; title=&#34;C++11で追加&#34;&gt;(C++11)&lt;/span&gt;&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;namespace&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;k&#34;&gt;template&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-  &lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;owner_less&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// C++11 先行宣言&lt;/span&gt;
-
-  &lt;span class=&#34;k&#34;&gt;template&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;void&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-  &lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;owner_less&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// C++17 void版プライマリテンプレート&lt;/span&gt;
-
-  &lt;span class=&#34;k&#34;&gt;template&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-  &lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;owner_less&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/shared_ptr.html&#34;&gt;shared_ptr&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-
-  &lt;span class=&#34;k&#34;&gt;template&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-  &lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;owner_less&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/weak_ptr.html&#34;&gt;weak_ptr&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-
-  &lt;span class=&#34;k&#34;&gt;template&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;gt;&lt;/span&gt;
-  &lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;owner_less&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;void&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h2&gt;概要&lt;/h2&gt;
-&lt;p&gt;&lt;code&gt;owner_less&lt;/code&gt;は、スマートポインタを所有権ベースで小なり比較するための、2項関数オブジェクトである。&lt;/p&gt;
-&lt;p&gt;スマートポインタを、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/set/set.html&#34;&gt;set&lt;/a&gt;&lt;/code&gt;や&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/map/map.html&#34;&gt;map&lt;/a&gt;&lt;/code&gt;のキーにする際、値ベースではなく所有権ベースに比較することを指定するために使用する。&lt;/p&gt;
-&lt;h2&gt;shared_ptr版&lt;/h2&gt;
-&lt;h3&gt;メンバ関数&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/owner_less/op_call.html&#34;&gt;operator()&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;関数呼び出し演算子&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;メンバ型&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;result_type&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;戻り値型&lt;code&gt;bool&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;first_argument_type&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;第1引数型&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/shared_ptr.html&#34;&gt;shared_ptr&lt;/a&gt;&amp;lt;T&amp;gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;second_argument_type&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;第2引数型&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/shared_ptr.html&#34;&gt;shared_ptr&lt;/a&gt;&amp;lt;T&amp;gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;weak_ptr版&lt;/h2&gt;
-&lt;h3&gt;メンバ関数&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/owner_less/op_call.html&#34;&gt;operator()&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;関数呼び出し演算子&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;メンバ型&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;result_type&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;戻り値型&lt;code&gt;bool&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;first_argument_type&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;第1引数型&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/weak_ptr.html&#34;&gt;weak_ptr&lt;/a&gt;&amp;lt;T&amp;gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;second_argument_type&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;第2引数型&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/weak_ptr.html&#34;&gt;weak_ptr&lt;/a&gt;&amp;lt;T&amp;gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;void版&lt;/h2&gt;
-&lt;h3&gt;メンバ関数&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/owner_less/op_call.html&#34;&gt;operator()&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;関数呼び出し演算子&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;メンバ型&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;is_transparent&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;operator()&lt;/code&gt; が関数テンプレートである事を示すタグ型。&lt;br /&gt;実装依存の型であるがあくまでタグ型であり、型そのものには意味はない。&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;例&lt;/h2&gt;
-&lt;h3&gt;基本的な使い方&lt;/h3&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;memory&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;map&amp;gt;&lt;/span&gt;
-
-&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;Key&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;Value&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;using&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;shared_ptr_map&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;map&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;shared_ptr&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Key&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;Value&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;span style=&#34;color:#ff0000&#34;&gt;std::owner_less&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;shared_ptr&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Key&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-
-&lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;i&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;j&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;shared_ptr_map&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;string&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;m&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;shared_ptr&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;p1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;new&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;));&lt;/span&gt;
-
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;shared_ptr&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;X&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;px&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;new&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;());&lt;/span&gt;
-  &lt;span class=&#34;c1&#34;&gt;// 同じ所有権(px)を持つが、異なるポインタを指すp2とp3&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;shared_ptr&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;p2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;px&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;px&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;i&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;));&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;shared_ptr&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;p3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;px&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;px&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;j&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;));&lt;/span&gt;
-
-  &lt;span class=&#34;n&#34;&gt;m&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;p1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34;Alice&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;m&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;p2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34;Bob&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;m&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;p3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34;Carol&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// owner_lessでは、p2とp3が同じリソースを&lt;/span&gt;
-                   &lt;span class=&#34;c1&#34;&gt;// 指していると見なされるので、&lt;/span&gt;
-                   &lt;span class=&#34;c1&#34;&gt;// p2の要素が上書きされる&lt;/span&gt;
-
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/map/map/at.html&#34;&gt;m.at&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;p1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;endl&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/map/map/at.html&#34;&gt;m.at&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;p2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;endl&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/map/map/at.html&#34;&gt;m.at&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;p3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;endl&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h4&gt;出力&lt;/h4&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;Alice
-Carol
-Carol
-&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;h3&gt;void版のユースケース&lt;/h3&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;memory&amp;gt;&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;shared_ptr&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;sp1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;shared_ptr&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;void&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;sp2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;shared_ptr&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;long&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;sp3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;weak_ptr&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;wp1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;owner_less&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;void&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;cmp&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-
-  &lt;span class=&#34;c1&#34;&gt;// 異なる要素型同士の比較&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;boolalpha&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;cmp&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;sp1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;sp2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;endl&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// void版以外ではコンパイルエラー&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;cmp&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;sp1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;wp1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;endl&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;cmp&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;sp1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;sp3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;endl&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// void版以外ではコンパイルエラー&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;cmp&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;wp1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;sp1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;endl&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;cmp&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;wp1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;wp1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;endl&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// void版以外ではコンパイルエラー&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h4&gt;出力&lt;/h4&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;false
-false
-false
-false
-false
-&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;h2&gt;バージョン&lt;/h2&gt;
-&lt;h3&gt;言語&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;C++11&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;処理系&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC&lt;/a&gt;: 4.4.7&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang libc++, C++11 mode&lt;/a&gt;: 3.0&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#icc&#34;&gt;ICC&lt;/a&gt;: ?&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt;: 10.0, 11.0, 12.0&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;関連項目&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/shared_ptr/owner_before.html&#34;&gt;shared_ptr::owner_before()&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;参照&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2637.pdf&#34; target=&#34;_blank&#34;&gt;N2637 Revisiting &lt;code&gt;std::shared_ptr&lt;/code&gt; comparison&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0074r0.html&#34; target=&#34;_blank&#34;&gt;P0074R0 Making &lt;code&gt;std::owner_less&lt;/code&gt; more flexible&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;&lt;/div&gt;</content>
       
       <author>
