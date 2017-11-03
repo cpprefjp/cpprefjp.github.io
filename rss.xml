@@ -2,351 +2,164 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2017-11-03T07:11:03.597638</updated>
-  <id>5c06aee7-698e-47c2-8151-6d96d0ec580e</id>
+  <updated>2017-11-03T07:38:11.032066</updated>
+  <id>af810c5b-c322-411e-86c3-5bc5f16e3656</id>
 
   
     <entry>
-      <title>optional -- optionalのほかの用途として、初期化タイミングの遅延について記載</title>
-      <link href="https://cpprefjp.github.io/reference/optional/optional.html"/>
-      <id>3ca72250577e35fd5b83376ad431a9a490217a93:reference/optional/optional.md</id>
-      <updated>2017-11-02T12:15:12+09:00</updated>
+      <title>条件変数の利用方法 -- Typo</title>
+      <link href="https://cpprefjp.github.io/article/lib/how_to_use_cv.html"/>
+      <id>dd1982e3a25c7341969278b65de8d2025b16022e:article/lib/how_to_use_cv.md</id>
+      <updated>2017-11-03T16:10:18+09:00</updated>
       
-        <content type="html">&lt;div class=&#34;identifier-type&#34;&gt;class template&lt;/div&gt;&lt;div class=&#34;header&#34;&gt;&amp;lt;optional&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;namespace&#34; title=&#34;namespace std&#34;&gt;std::&lt;/span&gt;&lt;span class=&#34;token&#34;&gt;optional&lt;/span&gt;&lt;span class=&#34;cpp cpp17&#34; title=&#34;C++17で追加&#34;&gt;(C++17)&lt;/span&gt;&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;namespace&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;k&#34;&gt;template&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-  &lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;optional&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+        <content type="html">&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;token&#34;&gt;条件変数の利用方法&lt;/span&gt;&lt;/h1&gt;
+&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;標準ヘッダ&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/condition_variable.html&#34;&gt;&amp;lt;condition_variable&amp;gt;&lt;/a&gt;&lt;/code&gt;で提供される、条件変数(condition variable)の利用方法について説明する。&lt;/p&gt;
+&lt;p&gt;簡単のため、条件変数&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/condition_variable/condition_variable.html&#34;&gt;condition_variable&lt;/a&gt;&lt;/code&gt;とロック&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/mutex/unique_lock.html&#34;&gt;unique_lock&lt;/a&gt;&amp;lt;&lt;a href=&#34;https://cpprefjp.github.io/reference/mutex/mutex.html&#34;&gt;mutex&lt;/a&gt;&amp;gt;&lt;/code&gt;の組に対してのみ説明を行う。
+&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/condition_variable/condition_variable_any.html&#34;&gt;condition_variable_any&lt;/a&gt;&lt;/code&gt;クラスは、任意のロック型と組み合わせ可能なことを除き、その利用方法は&lt;code&gt;condition_variable&lt;/code&gt;と同じである。&lt;/p&gt;
+&lt;h2&gt;利用の目的&lt;/h2&gt;
+&lt;p&gt;条件変数オブジェクトのみを単体で利用するのではなく、必ずミューテックス（排他制御）オブジェクトと、同ミューテックスで保護されるデータ状態を表す変数群（以下、&#34;ステート&#34;と呼ぶ）という3つの組で利用すること。
+条件変数オブジェクトとは、複数スレッドがこの共有&#34;ステート&#34;を更新／参照する場合に、&#34;ステート&#34;の更新を他スレッドに通知／&#34;ステート&#34;が指定条件を満たすまで待機する処理を、効率的に記述するための同期機構である。&lt;/p&gt;
+&lt;p&gt;理論的には条件変数を利用しなくても、ミューテックス保護＋&#34;ステート&#34;参照をループする処理でも条件待機は実現できる。
+ただし、このような実装（ポーリング方式）では参照側スレッドが常に動作し続けるため、一般的には計算機リソース浪費による実行効率の著しい低下をもたらす。
+（対象処理系や特殊ユースケースでは、ポーリング方式の方が望ましい状況も否定しない。）&lt;/p&gt;
+&lt;h2&gt;利用パターン&lt;/h2&gt;
+&lt;p&gt;下記コードでは典型的な利用パターンを示す。なお、通知処理と待機処理は異なるスレッド上で並行実行されるものとする。&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;mutex&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;condition_variable&amp;gt;&lt;/span&gt;
+
+&lt;span class=&#34;c1&#34;&gt;// &#34;ステート&#34;変数＋ミューテックスmtx＋条件変数cv&lt;/span&gt;
+&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;state&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;  &lt;span class=&#34;c1&#34;&gt;// 注: 変数型やその個数は目的による&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mutex&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;mtx&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;condition_variable&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;cv&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;c1&#34;&gt;// 共有&#34;ステート&#34;変数の更新と通知&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;lock_guard&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mutex&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;lk&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mtx&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// &#34;ステート&#34;変数の更新処理&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;cv&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;notify_all&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
 &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 &lt;/p&gt;
-&lt;h2&gt;概要&lt;/h2&gt;
-&lt;p&gt;&lt;code&gt;optional&lt;/code&gt;クラスは、任意の型&lt;code&gt;T&lt;/code&gt;の値を有効値として、あらゆる型に共通の無効値状態を表現できる型である。&lt;/p&gt;
-&lt;p&gt;このクラスには、大きく2つの用途がある：&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;オブジェクトの初期化タイミングを遅延させる&lt;/li&gt;
-&lt;li&gt;エラー報告のために、あらゆる型に共通の無効値表現を持たせる&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;オブジェクトは定義した時点で初期化が行われるが、&lt;code&gt;optional&lt;/code&gt;クラスはその初期化タイミングを遅延させるために使用できる。この用途には、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/shared_ptr.html&#34;&gt;std::shared_ptr&lt;/a&gt;&lt;/code&gt;のようなスマートポインタを使用することもできるが、このクラスは動的メモリ確保を行わないため、リソース管理ではなく初期化タイミングを遅延させるだけであれば、このクラスの方が適している。&lt;/p&gt;
-&lt;p&gt;エラー報告について、このクラスを使用しない場合、従来の方法として有効値と無効値は、以下のように表現されていた：&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;int&lt;/code&gt;型の場合、0以上の値を有効な値とし、エラーが起きたら負数を代入する&lt;/li&gt;
-&lt;li&gt;ポインタの場合、オブジェクトへのポインタを有効な値とし、どこも差さないヌルポインタを無効値として代入する&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;このような有効値と無効値の表現は、変数単位もしくはAPI・ライブラリ単位での仕様である。&lt;code&gt;optional&lt;/code&gt;クラスでは、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/nullopt_t.html&#34;&gt;nullopt&lt;/a&gt;&lt;/code&gt;という特殊な定数を無効値とし、あらゆる型に共通の無効状態を持たせられるようになっている。&lt;/p&gt;
-&lt;p&gt;このクラスは、ヒープからの動的メモリ確保を行わない。実装は配置newや&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/aligned_storage.html&#34;&gt;std::aligned_storage&lt;/a&gt;&lt;/code&gt;のような機能によって、スタック領域のメモリのみを使用する。&lt;/p&gt;
-&lt;h2&gt;要件&lt;/h2&gt;
-&lt;p&gt;型&lt;code&gt;T&lt;/code&gt;が以下のいずれかに該当してはならない：&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;参照型&lt;/li&gt;
-&lt;li&gt;CV修飾された型&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/utility/in_place_t.html&#34;&gt;std::in_place_t&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/nullopt_t.html&#34;&gt;std::nullopt_t&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;また、型&lt;code&gt;T&lt;/code&gt;は&lt;a href=&#34;https://cpprefjp.github.io/reference/concepts/Destructible.html&#34;&gt;破棄可能&lt;/a&gt;であること。&lt;/p&gt;
-&lt;h2&gt;備考&lt;/h2&gt;
-&lt;p&gt;このクラスの前身となった&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/boost.org/libs/optional&#34;&gt;Boost Optional Library&lt;/a&gt;では、&lt;code&gt;optional&amp;lt;int&amp;amp;&amp;gt;&lt;/code&gt;のように左辺値参照を要素型とした場合に、無効値の領域を最適化する機能が入っていた。&lt;/p&gt;
-&lt;p&gt;標準ライブラリの&lt;code&gt;optional&lt;/code&gt;クラスには現在、参照を持たせることはできない。&lt;/p&gt;
-&lt;h2&gt;メンバ関数&lt;/h2&gt;
-&lt;h3&gt;構築・破棄&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/optional/op_constructor.html&#34;&gt;(constructor)&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;コンストラクタ&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/optional/op_destructor.html&#34;&gt;(destructor)&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;デストラクタ&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;代入&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/optional/op_assign.html&#34;&gt;operator=&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;代入演算子&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/optional/emplace.html&#34;&gt;emplace&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;要素型のコンストラクタ引数から直接構築する&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/optional/swap.html&#34;&gt;swap&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;他の&lt;code&gt;optional&lt;/code&gt;オブジェクトとデータを入れ替える&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/optional/reset.html&#34;&gt;reset&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;有効値を保持していない状態にする&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;値の観測&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/optional/op_deref.html&#34;&gt;operator*&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;間接参照&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/optional/op_arrow.html&#34;&gt;operator-&amp;gt;&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;メンバアクセス&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/optional/op_bool.html&#34;&gt;operator bool&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;有効な値を保持しているかを判定する&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/optional/has_value.html&#34;&gt;has_value&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;有効な値を保持しているかを判定する&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/optional/value.html&#34;&gt;value&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;有効値を取得する&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/optional/value_or.html&#34;&gt;value_or&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;有効値もしくは指定された無効値を取得する&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;メンバ型&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;value_type&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;要素型&lt;code&gt;T&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;非メンバ関数&lt;/h2&gt;
-&lt;h3&gt;ヘルパ関数&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/make_optional.html&#34;&gt;make_optional&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;有効な値を保持する&lt;code&gt;optional&lt;/code&gt;オブジェクトを構築する&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;値の入れ替え&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/optional/swap_free.html&#34;&gt;swap&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;2つの&lt;code&gt;optional&lt;/code&gt;オブジェクトを入れ替える&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;比較演算子&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/optional/op_equal.html&#34;&gt;operator==&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;等値比較&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/optional/op_not_equal.html&#34;&gt;operator!=&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;非等値比較&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/optional/op_less.html&#34;&gt;operator&amp;lt;&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;左辺が右辺より小さいかを判定する&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/optional/op_less_equal.html&#34;&gt;operator&amp;lt;=&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;左辺が右辺以下かを判定する&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/optional/op_greater.html&#34;&gt;operator&amp;gt;&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;左辺が右辺より大きいかを判定する&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/optional/op_greater_equal.html&#34;&gt;operator&amp;gt;=&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;左辺が右辺以上かを判定する&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;推論補助&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/optional/op_deduction_guide.html&#34;&gt;(deduction_guide)&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;クラステンプレートの推論補助&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;ハッシュサポート&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;template &amp;lt;class T&amp;gt; struct hash;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;hash&lt;/code&gt;クラスの先行宣言&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;template &amp;lt;class T&amp;gt; struct hash&amp;lt;optional&amp;lt;T&amp;gt;&amp;gt;;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;hash&lt;/code&gt;クラスの&lt;code&gt;optional&lt;/code&gt;に対する特殊化&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;例&lt;/h2&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;optional&amp;gt;&lt;/span&gt;
-
-&lt;span class=&#34;c1&#34;&gt;// 除算をする関数。&lt;/span&gt;
-&lt;span class=&#34;c1&#34;&gt;// ゼロ割りを試みた場合、無効値が返る&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;optional&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;safe_divide&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;a&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;b&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;c1&#34;&gt;// 指定条件を満たすまで待機&lt;/span&gt;
 &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;k&#34;&gt;if&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;b&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;==&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
-    &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/nullopt_t.html&#34;&gt;std::nullopt&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-
-  &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;a&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;/&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;b&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;c1&#34;&gt;// 9/3を計算する&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;optional&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;result1&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;safe_divide&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;9&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/optional/op_bool.html&#34;&gt;if (result1)&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// 計算に成功した場合、有効値が返る&lt;/span&gt;
-    &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/optional/value.html&#34;&gt;result1.value()&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// 有効値を取り出す&lt;/span&gt;
-    &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;endl&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-
-  &lt;span class=&#34;c1&#34;&gt;// 3/0の計算を試みる&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;optional&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;result2&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;safe_divide&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/optional/op_bool.html&#34;&gt;if (!result2)&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// 計算に失敗した場合、無効値が返る&lt;/span&gt;
-    &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34;error&#34;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;endl&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;unique_lock&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mutex&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;lk&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mtx&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;cv&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;wait&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;lk&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]{&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;cm&#34;&gt;/* &#34;ステート&#34;変数を参照し、指定条件を満たす場合はtrueを返す */&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;});&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// &#34;ステート&#34;変数を参照した処理&lt;/span&gt;
 &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 &lt;/p&gt;
-&lt;h3&gt;出力&lt;/h3&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;3
-error
-&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;h2&gt;バージョン&lt;/h2&gt;
-&lt;h3&gt;言語&lt;/h3&gt;
+&lt;p&gt;通知処理の実装では、通知関数として&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/condition_variable/condition_variable/notify_all.html&#34;&gt;notify_all()&lt;/a&gt;&lt;/code&gt;を利用している。
+通知関数としてはもう1種類&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/condition_variable/condition_variable/notify_one.html&#34;&gt;notify_one()&lt;/a&gt;&lt;/code&gt;が提供されるが、&lt;code&gt;notify_one()&lt;/code&gt;で論理的に十分であると判断できないならば、まずは&lt;code&gt;notify_all()&lt;/code&gt;利用を推奨する。
+（&lt;code&gt;notify_all()&lt;/code&gt;が待機中の全スレッドに通知を行うのに対し、&lt;code&gt;notify_one()&lt;/code&gt;は待機中の任意の1スレッドにのみ通知を行うため、後者は実行時オーバーヘッドの観点で有利である。
+一方、待機処理における指定条件によっては、&lt;code&gt;notify_one()&lt;/code&gt;利用ではライブロック(live lock)に陥るケースも存在する。
+なお、&lt;code&gt;nofity_all()&lt;/code&gt;の動作セマンティクスは&lt;code&gt;notify_one()&lt;/code&gt;を完全に包含するため、&lt;code&gt;notify_one()&lt;/code&gt;で正しく動作する並行処理は&lt;code&gt;notify_all()&lt;/code&gt;利用でも正しく動作する。）&lt;/p&gt;
+&lt;p&gt;待機処理の実装では、第2引数に述語をとる&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/condition_variable/condition_variable/wait.html&#34;&gt;wait()&lt;/a&gt;&lt;/code&gt;を利用することで、条件変数のSpurious Wakeupと呼ばれる現象を考慮しなくとも正しい処理を記述できる。
+&lt;code&gt;wait()&lt;/code&gt;メンバ関数はロック型のみを引数にとる1引数オーバーロードも提供するが、特殊なケースを除いて上記の2引数オーバーロード利用を推奨する。
+待機関数によるブロッキング期間以外では、そのスレッド自身がロック&lt;code&gt;lk&lt;/code&gt;保持中であると保証されるため、述語処理（前掲実装ではラムダ式）や&lt;code&gt;wait()&lt;/code&gt;呼出より後に&#34;ステート&#34;変数へと安全にアクセスできる。&lt;/p&gt;
+&lt;h2&gt;条件変数と状態&lt;/h2&gt;
+&lt;p&gt;条件変数オブジェクトはスレッド間通知／待機機能を提供するだけであり、オブジェクトそれ自身は永続的な状態管理を行わない。
+このため条件変数オブジェクトに対する通知関数&lt;code&gt;notify_one()&lt;/code&gt;/&lt;code&gt;notify_all()&lt;/code&gt;は、その通知時点で同オブジェクトの待機関数&lt;code&gt;wait()&lt;/code&gt;/&lt;code&gt;wait_for()&lt;/code&gt;/&lt;code&gt;wait_until()&lt;/code&gt;にてブロックされているスレッド群にしか影響しない。&lt;/p&gt;
+&lt;p&gt;この条件変数オブジェクトの動作は、概念的には「待機／実行可能スレッドのキュー」と解釈する事ができる。
+待機関数&lt;code&gt;wait()&lt;/code&gt;系は呼出スレッドをブロック状態へ遷移してから待機キューに追加する動作、通知関数&lt;code&gt;notify_one()&lt;/code&gt;は待機キューからいずれか1つ／&lt;code&gt;notify_all()&lt;/code&gt;は待機キュー内の全スレッドを実行可能キューへ移動させる動作に相当する。
+待機関数&lt;code&gt;wait()&lt;/code&gt;でブロック中のスレッドは、自スレッドを実行可能キュー内でみつけたら、実行状態へ遷移したのち待機関数の呼出元に制御を戻す。&lt;/p&gt;
+&lt;p&gt;下記コードでは条件変数を誤用した例を示す。なお、通知処理と待機処理は異なるスレッド上で並行実行されるものとする。&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;c1&#34;&gt;// 条件変数を誤用した同期処理&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mutex&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;mtx&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;condition_variable&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;cv&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;c1&#34;&gt;// 誤った通知処理&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;lock_guard&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mutex&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;lk&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mtx&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// 共有データの更新&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;cv&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;notify_all&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;c1&#34;&gt;// 誤った待機処理&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;unique_lock&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mutex&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;lk&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mtx&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;cv&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;wait&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;lk&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// 共有データの参照利用&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;p&gt;上記の誤用例では、プログラマの意図と反するであろう次の実行結果が生じる。
+このプログラムでは非決定的な動作となるため、偶然に期待通り動作したかのように見えるケースもある。&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;C++17&lt;/li&gt;
+&lt;li&gt;通知関数の呼び出し後に待機関数が呼び出された場合、待機処理スレッドはブロッキングされる。（ライブロック状態）&lt;/li&gt;
+&lt;li&gt;待機関数が先に呼び出された場合、待機処理スレッドはブロッキングされる。その後、通知処理スレッドによる通知関数の呼び出しよりも前に、待機処理スレッドのブロックが解除されて待機関数から制御が戻ってくる可能性がある。（Suprious Wakeupの未考慮）&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3&gt;処理系&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang, C++17 mode&lt;/a&gt;: 4.0.1&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC, C++17 mode&lt;/a&gt;: 7.2&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#icc&#34;&gt;ICC&lt;/a&gt;: ??&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt;: ??&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;参照&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1878.htm&#34; target=&#34;_blank&#34;&gt;N1878 A proposal to add an utility class to represent optional objects (Revision 1)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3406.html&#34; target=&#34;_blank&#34;&gt;N3406 A proposal to add a utility class to represent optional objects (Revision 2)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3527.html&#34; target=&#34;_blank&#34;&gt;N3527 A proposal to add a utility class to represent optional objects (Revision 3)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3672.html&#34; target=&#34;_blank&#34;&gt;N3672 A proposal to add a utility class to represent optional objects (Revision 4)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3793.html&#34; target=&#34;_blank&#34;&gt;N3793 A proposal to add a utility class to represent optional objects (Revision 5)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n3966.html&#34; target=&#34;_blank&#34;&gt;N3966 Fixes for optional objects&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n3982.html&#34; target=&#34;_blank&#34;&gt;N3982 Rvalue reference overloads for optional&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4480.html&#34; target=&#34;_blank&#34;&gt;N4480 Programming Languages — C++ Extensions for Library Fundamentals&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0220r0.html&#34; target=&#34;_blank&#34;&gt;P0220R0 Adopt Library Fundamentals TS for C++17&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0220r1.html&#34; target=&#34;_blank&#34;&gt;P0220R1 Adopt Library Fundamentals V1 TS Components for C++17 (R1)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0032r0.pdf&#34; target=&#34;_blank&#34;&gt;P0032R0 Homogeneous interface for &lt;code&gt;variant&lt;/code&gt;, &lt;code&gt;any&lt;/code&gt; and &lt;code&gt;optional&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0032r1.pdf&#34; target=&#34;_blank&#34;&gt;P0032R1 Homogeneous interface for &lt;code&gt;variant&lt;/code&gt;, &lt;code&gt;any&lt;/code&gt; and &lt;code&gt;optional&lt;/code&gt; (Revision 1)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0032r2.pdf&#34; target=&#34;_blank&#34;&gt;P0032R2 Homogeneous interface for &lt;code&gt;variant&lt;/code&gt;, &lt;code&gt;any&lt;/code&gt; and &lt;code&gt;optional&lt;/code&gt; (Revision 2)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0032r3.pdf&#34; target=&#34;_blank&#34;&gt;P0032R3 Homogeneous interface for &lt;code&gt;variant&lt;/code&gt;, &lt;code&gt;any&lt;/code&gt; and &lt;code&gt;optional&lt;/code&gt; (Revision 3)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0307r0.pdf&#34; target=&#34;_blank&#34;&gt;P0307R0 Making Optional Greater Equal Again&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0307r2.pdf&#34; target=&#34;_blank&#34;&gt;P0307R2 Making Optional Greater Equal Again&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0504r0.html&#34; target=&#34;_blank&#34;&gt;P0504R0 Revisiting in-place tag types for &lt;code&gt;any&lt;/code&gt;/&lt;code&gt;optional&lt;/code&gt;/&lt;code&gt;variant&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/div&gt;</content>
+&lt;p&gt;この不具合を修正するには、過去に通知が行われた事実を永続化する変数（&#34;ステート&#34;変数）を導入すれば良い。&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;c1&#34;&gt;// 条件変数による正しい同期処理&lt;/span&gt;
+&lt;span class=&#34;kt&#34;&gt;bool&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;notify&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;nb&#34;&gt;false&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mutex&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;mtx&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;condition_varialbe&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;cv&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;c1&#34;&gt;// 修正した通知処理&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;lock_guard&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mutex&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;lk&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mtx&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// 共有データの更新&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;notify&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;nb&#34;&gt;true&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;cv&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;notify_all&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;c1&#34;&gt;// 修正した待機処理&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;unique_lock&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mutex&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;lk&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mtx&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;cv&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;wait&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;lk&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]{&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;notify&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;});&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// 共有データの参照利用&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;ミューテックスと複数の条件変数&lt;/h2&gt;
+&lt;p&gt;1つのミューテックスで保護される共有&#34;ステート&#34;変数に対して、複数個の条件変数オブジェクトを関連付ける事ができる。
+逆に1つの条件変数オブジェクトに対して、複数個のミューテックス（と共有&#34;ステート&#34;のグループ）を関連付ける事は出来ない。&lt;/p&gt;
+&lt;p&gt;下記に、一般的なProducer-Consumerパターンで利用される境界付きキュー(bounded queue)の簡易実装例を示す。1つのミューテックス&lt;code&gt;guard_&lt;/code&gt;にて&lt;code&gt;*this&lt;/code&gt;オブジェクト自身を保護し、2つの条件変数オブジェクト&lt;code&gt;not_empty_&lt;/code&gt;, &lt;code&gt;not_full_&lt;/code&gt;を関連付ける。この&lt;code&gt;bounded_queue&lt;/code&gt;クラスは、スレッド間同期を実現するモニタ(monitor)として機能する。&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;utility&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;queue&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;mutex&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;condition_variable&amp;gt;&lt;/span&gt;
+
+&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;typename&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;size_t&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;N&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;bounded_queue&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;queue&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;queue_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mutex&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;guard_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;condition_variable&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;not_empty_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;condition_variable&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;not_full_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;nl&#34;&gt;public:&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// 値の挿入&lt;/span&gt;
+  &lt;span class=&#34;kt&#34;&gt;void&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;push&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;T&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;val&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;unique_lock&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mutex&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;lk&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;guard_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;not_full_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;wait&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;lk&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;this&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]{&lt;/span&gt;
+      &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;queue_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;size&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;N&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+    &lt;span class=&#34;p&#34;&gt;});&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;queue_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;push&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;move&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;val&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;));&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;not_empty_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;notify_all&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// 値の取り出し&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;T&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;pop&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;unique_lock&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mutex&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;lk&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;guard_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;not_empty_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;wait&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;lk&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;this&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]{&lt;/span&gt;
+      &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;!&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;queue_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;empty&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+    &lt;span class=&#34;p&#34;&gt;});&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;T&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ret&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;move&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;queue_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;front&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;());&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;queue_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;pop&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;not_full_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;notify_all&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ret&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;&lt;/div&gt;</content>
       
       <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
+        <name>Nana Sakisaka</name>
+        <email>saki7@setna.io</email>
       </author>
     </entry>
   
