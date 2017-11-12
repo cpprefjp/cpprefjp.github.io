@@ -2,9 +2,152 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2017-11-12T18:59:26.529050</updated>
-  <id>de449811-0541-4a8d-b250-eeb594612c49</id>
+  <updated>2017-11-12T19:07:07.993251</updated>
+  <id>ab493230-81a1-42e2-9f20-8c37d331c983</id>
 
+  
+    <entry>
+      <title>厳密な式の評価順 -- 後置式の説明が誤っているので削除</title>
+      <link href="https://cpprefjp.github.io/lang/cpp17/expression_evaluation_order.html"/>
+      <id>38fd1edfe586e8a4cbcdde2f4849b2b27d670a6c:lang/cpp17/expression_evaluation_order.md</id>
+      <updated>2017-11-13T04:04:36+09:00</updated>
+      
+        <content type="html">&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;token&#34;&gt;厳密な式の評価順&lt;/span&gt;&lt;span class=&#34;cpp cpp17&#34; title=&#34;C++17で追加&#34;&gt;(C++17)&lt;/span&gt;&lt;/h1&gt;
+&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;h2&gt;概要&lt;/h2&gt;
+&lt;p&gt;C++14までは式の評価順序が未規定（unspecified）であったが、
+C++17では次の式は全てa, bの順で評価されるように定義された。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;a.b&lt;/li&gt;
+&lt;li&gt;a-&amp;gt;b&lt;/li&gt;
+&lt;li&gt;a-&amp;gt;*b&lt;/li&gt;
+&lt;li&gt;a(b1, b2, b3)&lt;/li&gt;
+&lt;li&gt;b @= a&lt;/li&gt;
+&lt;li&gt;a[b]&lt;/li&gt;
+&lt;li&gt;a &amp;lt;&amp;lt; b&lt;/li&gt;
+&lt;li&gt;a &amp;gt;&amp;gt; b&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;関数の引数リスト内の式（上記例で言えばb1, b2, b3）の評価順序は未規定である。&lt;/p&gt;
+&lt;h2&gt;仕様&lt;/h2&gt;
+&lt;p&gt;C++17では式の評価順序が下記の通りに定められた。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;後置式（postfix-expression）は左から右に評価される。&lt;ul&gt;
+&lt;li&gt;関数呼び出しやメンバを選択する式が当てはまる。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;代入式、複合代入式（compound assignment）は右から左に評価される。&lt;ul&gt;
+&lt;li&gt;複合代入は代入と演算を同時に行う&lt;code&gt;+=&lt;/code&gt;, &lt;code&gt;-=&lt;/code&gt;, &lt;code&gt;|=&lt;/code&gt;などのこと。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;シフト演算子は左から右に評価される。&lt;/li&gt;
+&lt;li&gt;オーバーロードされた演算子の場合、同様の組み込み演算子の評価順序によって決定される。&lt;ul&gt;
+&lt;li&gt;本来はメンバ関数呼び出しだが、わざとメンバ関数呼び出しの規則を適用しない。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;4番目の規則については、
+代入演算子&lt;code&gt;operator=&lt;/code&gt;をオーバーロードした場合を考えるとわかりやすいと思う。
+代入式は2番目の規則により右から左の順、つまりa, bの順で評価される。&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Hoge&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
+
+&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;Hoge&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;a&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;b&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;b&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;a&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// a, bの順で評価される&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;p&gt;Hogeクラスの代入演算子をオーバーロードすると、
+&lt;code&gt;b = a;&lt;/code&gt;は&lt;code&gt;b.operator=(a);&lt;/code&gt;となりメンバ関数呼び出しと等価になる。
+このとき4番目の規則が存在しなかったとすると、1番目の規則が適用される。
+メンバ関数呼び出しの評価順序は左から右の順、つまりb, aの順で評価され、
+代入式の評価順序と逆になってしまう。&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Hoge&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;Hoge&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;operator&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;const&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Hoge&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;a&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;this&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
+
+&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;Hoge&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;a&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;b&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// b.operator=(a); と等価&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// 仮に4番目の規則が存在しなかったら...&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;b&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;a&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// b, aの順で評価される（逆になってしまう！）&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;p&gt;プログラムの見た目は全く同じ代入式にも関わらず、
+代入演算子オーバーロードの有無によって評価順序が逆になってしまう。
+このような振る舞いはプログラマを混乱させるだけだろう。
+4番目の規則は「演算子オーバーロードにわざとメンバ関数呼び出しの規則を当てはめない」ことで、
+演算子オーバーロードの有無に関わらず自然な動作を実現するための規則である。&lt;/p&gt;
+&lt;h2&gt;例&lt;/h2&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;map&amp;gt;&lt;/span&gt;
+
+&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;map&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;m&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;m&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;m&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;size&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// C++17 では右から左に評価されるため m は {{0, 0}} になる&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;m&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;endl&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h3&gt;出力&lt;/h3&gt;
+&lt;p&gt;&lt;pre&gt;&lt;code&gt;0
+&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;h2&gt;この機能が必要になった背景・経緯&lt;/h2&gt;
+&lt;p&gt;C++規格の策定以来、式の評価順序は厳密に定められていなかった。&lt;/p&gt;
+&lt;p&gt;例に出てきたプログラムは非常に単純だが、
+C++14やそれ以前のC++の規格では動作が不定であった。
+代入式の評価順序が規定されていなかったためである。&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;map&amp;gt;&lt;/span&gt;
+
+&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;map&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;m&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;m&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;m&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;size&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// C++14 では m が {{0, 0}} か {{0, 1}} のどちらになるか不定&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;p&gt;下記のプログラムの動作を考える。
+&lt;code&gt;std::cout&lt;/code&gt;, f, g, hが互いに作用する
+（例えばf, g, h内で&lt;code&gt;std::cout&lt;/code&gt;に何か出力するなど）場合、
+このプログラムの動作は不定であった。&lt;/p&gt;
+&lt;p&gt;シフト演算子は左結合なので&lt;code&gt;(((std::cout &amp;lt;&amp;lt; f) &amp;lt;&amp;lt; g) &amp;lt;&amp;lt; h)&lt;/code&gt;の順に評価されそうだが、
+残念ながらそうならない。&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;f&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;g&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;h&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;std::cout&lt;/code&gt;はシフト演算子オーバーロードを行っているため、
+実際にはメンバ関数の呼び出しとして解決される。&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;operator&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;f&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()).&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;operator&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;g&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()).&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;operator&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;h&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;());&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;p&gt;このとき&lt;code&gt;operator&amp;lt;&amp;lt;(f()).operator&amp;lt;&amp;lt;(g())&lt;/code&gt;のように、
+メンバ関数呼び出しの連鎖が発生するが、この評価順は未規定であり、
+右から左、すなわちg, fの順で評価されるかも知れないし、
+左から右、すなわちf, gの順に評価されるかも知れない。&lt;/p&gt;
+&lt;p&gt;以上のように、シンプルな代入演算やメンバ関数の連鎖などC++で広く使われている手法でさえ、
+動作結果が不定となってしまう問題がある。
+この問題はプログラミング作法が悪いのではなく、
+C++規格が現代のプログラミング作法に合わなくなっていることが原因である。
+C/C++規格の制定から約30年の時を経て、C++17で是正されることとなった。&lt;/p&gt;
+&lt;p&gt;C++17では全ての式の評価順を厳密に定めることはあえて避けている。
+C++の既存のプログラムを壊すこと無く、なおかつ、
+広く用いられているプログラミング手法が不定な動作にならないよう、
+対象を限定して注意深く変更した結果である。&lt;/p&gt;
+&lt;h2&gt;関連項目&lt;/h2&gt;
+&lt;h2&gt;参照&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0145r3.pdf&#34; target=&#34;_blank&#34;&gt;P0145R3 Refining Expression Evaluation Order for Idiomatic C++&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0400r0.html&#34; target=&#34;_blank&#34;&gt;Wording for Order of Evaluation of Function Arguments&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/div&gt;</content>
+      
+      <author>
+        <name>Katsuhiro Suzuki</name>
+        <email>katsuhiro@katsuster.net</email>
+      </author>
+    </entry>
   
     <entry>
       <title>cpprefjp - C++日本語リファレンス -- Merge pull request #482 from cpprefjp/hotfix/ga-policy</title>
@@ -245,150 +388,6 @@
       <author>
         <name>Nana Sakisaka</name>
         <email>saki7@setna.io</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>厳密な式の評価順 -- 箇条書きのインデント間違いを直した</title>
-      <link href="https://cpprefjp.github.io/lang/cpp17/expression_evaluation_order.html"/>
-      <id>8255b6b6fbc44c5661d1e96dafbe927bbc3be22e:lang/cpp17/expression_evaluation_order.md</id>
-      <updated>2017-11-12T05:03:13+09:00</updated>
-      
-        <content type="html">&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;token&#34;&gt;厳密な式の評価順&lt;/span&gt;&lt;span class=&#34;cpp cpp17&#34; title=&#34;C++17で追加&#34;&gt;(C++17)&lt;/span&gt;&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;h2&gt;概要&lt;/h2&gt;
-&lt;p&gt;C++14までは式の評価順序が未規定（unspecified）であったが、
-C++17では次の式は全てa, bの順で評価されるように定義された。&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;a.b&lt;/li&gt;
-&lt;li&gt;a-&amp;gt;b&lt;/li&gt;
-&lt;li&gt;a-&amp;gt;*b&lt;/li&gt;
-&lt;li&gt;a(b1, b2, b3)&lt;/li&gt;
-&lt;li&gt;b @= a&lt;/li&gt;
-&lt;li&gt;a[b]&lt;/li&gt;
-&lt;li&gt;a &amp;lt;&amp;lt; b&lt;/li&gt;
-&lt;li&gt;a &amp;gt;&amp;gt; b&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;関数の引数リスト内の式（上記例で言えばb1, b2, b3）の評価順序は未規定である。&lt;/p&gt;
-&lt;h2&gt;仕様&lt;/h2&gt;
-&lt;p&gt;C++17では式の評価順序が下記の通りに定められた。&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;後置式（postfix-expression）は左から右に評価される。&lt;ul&gt;
-&lt;li&gt;関数呼び出しやメンバを選択する式が当てはまる。&lt;/li&gt;
-&lt;li&gt;メンバアクセス演算子&lt;code&gt;.&lt;/code&gt;を例にすると&lt;code&gt;a.b&lt;/code&gt;のうち&lt;code&gt;a&lt;/code&gt;が後置式である。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;代入式、複合代入式（compound assignment）は右から左に評価される。&lt;ul&gt;
-&lt;li&gt;複合代入は代入と演算を同時に行う&lt;code&gt;+=&lt;/code&gt;, &lt;code&gt;-=&lt;/code&gt;, &lt;code&gt;|=&lt;/code&gt;などのこと。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;シフト演算子は左から右に評価される。&lt;/li&gt;
-&lt;li&gt;オーバーロードされた演算子の場合、同様の組み込み演算子の評価順序によって決定される。&lt;ul&gt;
-&lt;li&gt;本来はメンバ関数呼び出しだが、わざとメンバ関数呼び出しの規則を適用しない。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;4番目の規則については、
-代入演算子&lt;code&gt;operator=&lt;/code&gt;をオーバーロードした場合を考えるとわかりやすいと思う。
-代入式は2番目の規則により右から左の順、つまりa, bの順で評価される。&lt;/p&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Hoge&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;Hoge&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;a&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;b&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;b&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;a&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// a, bの順で評価される&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;p&gt;Hogeクラスの代入演算子をオーバーロードすると、
-&lt;code&gt;b = a;&lt;/code&gt;は&lt;code&gt;b.operator=(a);&lt;/code&gt;となりメンバ関数呼び出しと等価になる。
-このとき4番目の規則が存在しなかったとすると、1番目の規則が適用される。
-メンバ関数呼び出しの評価順序は左から右の順、つまりb, aの順で評価され、
-代入式の評価順序と逆になってしまう。&lt;/p&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Hoge&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;Hoge&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;operator&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;const&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Hoge&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;a&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-    &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;this&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;Hoge&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;a&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;b&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;c1&#34;&gt;// b.operator=(a); と等価&lt;/span&gt;
-  &lt;span class=&#34;c1&#34;&gt;// 仮に4番目の規則が存在しなかったら...&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;b&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;a&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// b, aの順で評価される（逆になってしまう！）&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;p&gt;プログラムの見た目は全く同じ代入式にも関わらず、
-代入演算子オーバーロードの有無によって評価順序が逆になってしまう。
-このような振る舞いはプログラマを混乱させるだけだろう。
-4番目の規則は「演算子オーバーロードにわざとメンバ関数呼び出しの規則を当てはめない」ことで、
-演算子オーバーロードの有無に関わらず自然な動作を実現するための規則である。&lt;/p&gt;
-&lt;h2&gt;例&lt;/h2&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;map&amp;gt;&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;map&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;m&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;m&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;m&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;size&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// C++17 では右から左に評価されるため m は {{0, 0}} になる&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;m&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;endl&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h3&gt;出力&lt;/h3&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;0
-&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;h2&gt;この機能が必要になった背景・経緯&lt;/h2&gt;
-&lt;p&gt;C++規格の策定以来、式の評価順序は厳密に定められていなかった。&lt;/p&gt;
-&lt;p&gt;例に出てきたプログラムは非常に単純だが、
-C++14やそれ以前のC++の規格では動作が不定であった。
-代入式の評価順序が規定されていなかったためである。&lt;/p&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;map&amp;gt;&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;map&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;m&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;m&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;m&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;size&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// C++14 では m が {{0, 0}} か {{0, 1}} のどちらになるか不定&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;p&gt;下記のプログラムの動作を考える。
-&lt;code&gt;std::cout&lt;/code&gt;, f, g, hが互いに作用する
-（例えばf, g, h内で&lt;code&gt;std::cout&lt;/code&gt;に何か出力するなど）場合、
-このプログラムの動作は不定であった。&lt;/p&gt;
-&lt;p&gt;シフト演算子は左結合なので&lt;code&gt;(((std::cout &amp;lt;&amp;lt; f) &amp;lt;&amp;lt; g) &amp;lt;&amp;lt; h)&lt;/code&gt;の順に評価されそうだが、
-残念ながらそうならない。&lt;/p&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;f&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;g&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;h&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;std::cout&lt;/code&gt;はシフト演算子オーバーロードを行っているため、
-実際にはメンバ関数の呼び出しとして解決される。&lt;/p&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;operator&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;f&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()).&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;operator&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;g&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()).&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;operator&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;h&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;());&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;p&gt;このとき&lt;code&gt;operator&amp;lt;&amp;lt;(f()).operator&amp;lt;&amp;lt;(g())&lt;/code&gt;のように、
-メンバ関数呼び出しの連鎖が発生するが、この評価順は未規定であり、
-右から左、すなわちg, fの順で評価されるかも知れないし、
-左から右、すなわちf, gの順に評価されるかも知れない。&lt;/p&gt;
-&lt;p&gt;以上のように、シンプルな代入演算やメンバ関数の連鎖などC++で広く使われている手法でさえ、
-動作結果が不定となってしまう問題がある。
-この問題はプログラミング作法が悪いのではなく、
-C++規格が現代のプログラミング作法に合わなくなっていることが原因である。
-C/C++規格の制定から約30年の時を経て、C++17で是正されることとなった。&lt;/p&gt;
-&lt;p&gt;C++17では全ての式の評価順を厳密に定めることはあえて避けている。
-C++の既存のプログラムを壊すこと無く、なおかつ、
-広く用いられているプログラミング手法が不定な動作にならないよう、
-対象を限定して注意深く変更した結果である。&lt;/p&gt;
-&lt;h2&gt;関連項目&lt;/h2&gt;
-&lt;h2&gt;参照&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0145r3.pdf&#34; target=&#34;_blank&#34;&gt;P0145R3 Refining Expression Evaluation Order for Idiomatic C++&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0400r0.html&#34; target=&#34;_blank&#34;&gt;Wording for Order of Evaluation of Function Arguments&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>Katsuhiro Suzuki</name>
-        <email>katsuhiro@katsuster.net</email>
       </author>
     </entry>
   
