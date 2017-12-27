@@ -69,7 +69,7 @@
 
     </head>
     <body>
-<header>
+<header data-kunai-mdinfo="{&#34;sources&#34;: [{&#34;source&#34;: &#34;#include &lt;iostream&gt;\n\ntemplate &lt;class T1, class T2&gt;\nauto is_addable(T1 a, T2 b) -&gt; decltype(a + b, bool())\n{\n  std::cout &lt;&lt; \&#34;\u578bT1\u3068T2\u306e\u9593\u3067\u3001+\u6f14\u7b97\u5b50\u306b\u3088\u308b\u52a0\u7b97\u304c\u53ef\u80fd\&#34; &lt;&lt; std::endl;\n  return true;\n}\n\nauto is_addable(...) -&gt; bool\n{\n  std::cout &lt;&lt; \&#34;\u578bT1\u3068T2\u306e\u9593\u3067\u306f\u3001+\u6f14\u7b97\u5b50\u306b\u3088\u308b\u52a0\u7b97\u306f\u3067\u304d\u306a\u3044\&#34; &lt;&lt; std::endl;\n  return false;\n}\n\nstruct X {};\nint main()\n{\n  // int\u578b\u3068int\u578b\u3067+\u6f14\u7b97\u5b50\u306b\u3088\u308b\u52a0\u7b97\u304c\u53ef\u80fd\u304b\n  is_addable(3, 2);\n\n  // int\u578b\u3068X\u578b\u3067+\u6f14\u7b97\u5b50\u306b\u3088\u308b\u52a0\u7b97\u304c\u53ef\u80fd\u304b\n  is_addable(3, X());\n}\n&#34;, &#34;id&#34;: &#34;11e2de0c0b0a44962452e1b0ada41582fafeadaf&#34;}, {&#34;source&#34;: &#34;#include &lt;utility&gt;\n#include &lt;type_traits&gt;\n\nstruct is_addable_impl {\n  // \u8981\u4ef6\u3092\u6e80\u305f\u3057\u3066\u3044\u308c\u3070true_type\u578b\u3092\u8fd4\u3059\n  template &lt;class T, class U&gt;\n  static auto check(T*, U*) -&gt; decltype(\n    std::declval&lt;T&gt;() + std::declval&lt;U&gt;(),\n    std::true_type());\n\n  // \u8981\u4ef6\u3092\u6e80\u305f\u3057\u3066\u3044\u306a\u3051\u308c\u3070false_type\u578b\u3092\u8fd4\u3059\n  template &lt;class T, class U&gt;\n  static auto check(...) -&gt; std::false_type;\n};\n\ntemplate &lt;class T, class U&gt;\nstruct is_addable\n  : decltype(is_addable_impl::check&lt;T, U&gt;(\n               nullptr, nullptr)) {};\n\nstruct X {};\nint main()\n{\n  // int\u578b\u3068int\u578b\u3067+\u6f14\u7b97\u5b50\u306b\u3088\u308b\u52a0\u7b97\u304c\u53ef\u80fd\u304b\n  static_assert(is_addable&lt;int, int&gt;::value, \&#34;int + int is valid\&#34;);\n\n  // int\u578b\u3068X\u578b\u3067+\u6f14\u7b97\u5b50\u306b\u3088\u308b\u52a0\u7b97\u304c\u53ef\u80fd\u304b\n  static_assert(!is_addable&lt;int, X&gt;::value, \&#34;int + X is invalid\&#34;);\n}\n&#34;, &#34;id&#34;: &#34;bc674b1632b75bcbf2e8bac2261c33640b5e0782&#34;}, {&#34;source&#34;: &#34;#include &lt;type_traits&gt;\n\nstruct is_complete_type_impl {\n  // sizeof(T)\u304c\u6709\u52b9\u304b\u3069\u3046\u304b\u3067\u5b8c\u5168\u578b\u304b\u3092\u5224\u5b9a\u3059\u308b\n  template &lt;class T&gt;\n  static auto check(T*) -&gt; decltype(\n    sizeof(T),\n    std::true_type());\n\n  template &lt;class T&gt;\n  static auto check(...) -&gt; std::false_type;\n};\n\ntemplate &lt;class T&gt;\nstruct is_complete_type\n  : decltype(is_complete_type_impl::check&lt;T&gt;(nullptr)) {};\n\nstruct A {};\nstruct B;\n\nint main()\n{\n  static_assert(is_complete_type&lt;A&gt;::value, \&#34;A is complete type\&#34;);\n  static_assert(!is_complete_type&lt;B&gt;::value, \&#34;B is incomplete type\&#34;);\n}\n&#34;, &#34;id&#34;: &#34;3f5c9e59e5bec4982eba6369a79a36fa628616a6&#34;}, {&#34;source&#34;: &#34;#include &lt;type_traits&gt;\n#include &lt;utility&gt;\n\ntemplate &lt;class... Args&gt;\nstruct is_callable_impl {\n  template &lt;class F&gt;\n  static std::true_type\n    check(decltype(std::declval&lt;F&gt;()(std::declval&lt;Args&gt;()...), (void)0)*);\n\n  template &lt;class F&gt;\n  static std::false_type check(...);\n};\n\ntemplate &lt;class F, class... Args&gt;\nstruct is_callable\n  : decltype(is_callable_impl&lt;Args...&gt;::template check&lt;F&gt;(nullptr)) {};\n\n#include &lt;iostream&gt;\n#include &lt;string&gt;\nint main()\n{\n  auto f = [](int a, char b, const std::string&amp; c) {\n    std::cout &lt;&lt; a &lt;&lt; \&#34;, \&#34; &lt;&lt; b &lt;&lt; \&#34;, \&#34; &lt;&lt; c &lt;&lt; std::endl;\n  };\n\n  static_assert(is_callable&lt;decltype(f), int, char, const std::string&amp;&gt;::value,\n                \&#34;f is callable with follow arguments: [int, char, const std::string&amp;]\&#34;);\n  static_assert(!is_callable&lt;decltype(f), int&gt;::value,\n                \&#34;f is not callable with int type one argument\&#34;);\n}\n&#34;, &#34;id&#34;: &#34;cbdc11d2c4045c4782e502a46dd5a36a1ca2cef7&#34;}], &#34;meta&#34;: {&#34;cpp&#34;: [&#34;cpp11&#34;]}}">
   <nav class="navbar navbar-default" role="navigation">
     <div class="container-fluid">
       <div class="navbar-header">
@@ -218,7 +218,7 @@
 <p>「SFINAE (Substitution Failure Is Not An Errorの略称、スフィネェと読む)」は、テンプレートの置き換えに失敗した際に、即時にコンパイルエラーとはせず、置き換えに失敗した関数をオーバーロード解決の候補から除外するという言語機能である。</p>
 <p>たとえば、関数のシグニチャの一部として「<code>typename T::value_type</code>」が書いてあり、型<code>T</code>が<code>value_type</code>という型を持っていない場合、その関数がオーバーロード解決から除外される。これによって型が任意の機能を持っているかを、コンパイル時に判定できた。</p>
 <p>しかしC++03において、SFINAEによって「型<code>T</code>に関する任意の式が有効かどうかを判定できるか」は仕様として曖昧だった。C++11ではこの曖昧さが取り除かれ、任意の式が有効かどうかでSFINAEが処理されることとなった。</p>
-<p><div class="codehilite"><pre><span class="cp">#include <a href="https://cpprefjp.github.io/reference/iostream.html">&lt;iostream&gt;</a></span>
+<p><div class="yata" id="11e2de0c0b0a44962452e1b0ada41582fafeadaf"><div class="codehilite"><pre><span class="cp">#include <a href="https://cpprefjp.github.io/reference/iostream.html">&lt;iostream&gt;</a></span>
 
 <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T1</span><span class="p">,</span> <span class="k">class</span> <span class="nc">T2</span><span class="o">&gt;</span>
 <span class="k">auto</span> <span class="n">is_addable</span><span class="p">(</span><span class="n">T1</span> <span class="n">a</span><span class="p">,</span> <span class="n">T2</span> <span class="n">b</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">decltype</span><span class="p">(</span><span class="n"><span style="color:#ff0000">a + b</span></span><span class="p">,</span> <span class="kt">bool</span><span class="p">())</span>
@@ -243,7 +243,7 @@
   <span class="n">is_addable</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">X</span><span class="p">());</span>
 <span class="p">}</span>
 </pre></div>
-</p>
+</div></p>
 <p>出力：</p>
 <p><pre><code>型T1とT2の間で、+演算子による加算が可能
 型T1とT2の間では、+演算子による加算はできない
@@ -346,7 +346,7 @@
 </ul>
 <h2>例</h2>
 <h3>is_addableのメタ関数版</h3>
-<p><div class="codehilite"><pre><span class="cp">#include <a href="https://cpprefjp.github.io/reference/utility.html">&lt;utility&gt;</a></span>
+<p><div class="yata" id="bc674b1632b75bcbf2e8bac2261c33640b5e0782"><div class="codehilite"><pre><span class="cp">#include <a href="https://cpprefjp.github.io/reference/utility.html">&lt;utility&gt;</a></span>
 <span class="cp">#include <a href="https://cpprefjp.github.io/reference/type_traits.html">&lt;type_traits&gt;</a></span>
 
 <span class="k">struct</span> <span class="n">is_addable_impl</span> <span class="p">{</span>
@@ -376,11 +376,11 @@
   <span class="n"><a href="https://cpprefjp.github.io/lang/cpp11/static_assert.html">static_assert</a></span><span class="p">(</span><span class="o">!</span><span class="n">is_addable</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="n">X</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">,</span> <span class="s">"int + X is invalid"</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
-</p>
+</div></p>
 <h4>出力</h4>
 <p><pre><code></code></pre></p>
 <h3>型が完全型かを判定するメタ関数is_complete_type</h3>
-<p><div class="codehilite"><pre><span class="cp">#include <a href="https://cpprefjp.github.io/reference/type_traits.html">&lt;type_traits&gt;</a></span>
+<p><div class="yata" id="3f5c9e59e5bec4982eba6369a79a36fa628616a6"><div class="codehilite"><pre><span class="cp">#include <a href="https://cpprefjp.github.io/reference/type_traits.html">&lt;type_traits&gt;</a></span>
 
 <span class="k">struct</span> <span class="n">is_complete_type_impl</span> <span class="p">{</span>
   <span class="c1">// sizeof(T)が有効かどうかで完全型かを判定する</span>
@@ -406,11 +406,11 @@
   <span class="n"><a href="https://cpprefjp.github.io/lang/cpp11/static_assert.html">static_assert</a></span><span class="p">(</span><span class="o">!</span><span class="n">is_complete_type</span><span class="o">&lt;</span><span class="n">B</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">,</span> <span class="s">"B is incomplete type"</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
-</p>
+</div></p>
 <h4>出力</h4>
 <p><pre><code></code></pre></p>
 <h3>関数が特定の引数で呼び出し可能かを判定するメタ関数is_callable</h3>
-<p><div class="codehilite"><pre><span class="cp">#include <a href="https://cpprefjp.github.io/reference/type_traits.html">&lt;type_traits&gt;</a></span>
+<p><div class="yata" id="cbdc11d2c4045c4782e502a46dd5a36a1ca2cef7"><div class="codehilite"><pre><span class="cp">#include <a href="https://cpprefjp.github.io/reference/type_traits.html">&lt;type_traits&gt;</a></span>
 <span class="cp">#include <a href="https://cpprefjp.github.io/reference/utility.html">&lt;utility&gt;</a></span>
 
 <span class="k">template</span> <span class="o">&lt;</span><span class="n">class</span><span class="p">...</span> <span class="n">Args</span><span class="o">&gt;</span>
@@ -441,7 +441,7 @@
                 <span class="s">"f is not callable with int type one argument"</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
-</p>
+</div></p>
 <h4>出力</h4>
 <p><pre><code></code></pre></p>
 <h2>関連項目</h2>
