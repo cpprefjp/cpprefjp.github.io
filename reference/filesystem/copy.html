@@ -189,8 +189,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2018-07-27T07:37:14">
-        2018年07月27日 07時37分14秒
+      <span itemprop="datePublished" content="2018-07-27T07:43:37">
+        2018年07月27日 07時43分37秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -234,7 +234,9 @@
 <ul>
 <li>(1) : <code>return copy(from, to, <a href="https://cpprefjp.github.io/reference/filesystem/copy_options.html">copy_options::none</a>);</code></li>
 <li>(2) : <code>return copy(from, to, <a href="https://cpprefjp.github.io/reference/filesystem/copy_options.html">copy_options::none</a>, ec);</code></li>
-<li>(3), (4) :<ul>
+<li>
+<p>(3), (4) :</p>
+<ul>
 <li>
 <p>まず、コピー元のファイル状態<code>f</code>とコピー先のファイル状態<code>t</code>を、以下のように取得する：
   <br />
@@ -255,6 +257,38 @@
 <span class="p">}</span>
 </pre></div>
 </p>
+</li>
+<li>
+<p><code>f.<a href="https://cpprefjp.github.io/reference/filesystem/file_status/type.html">type()</a></code>もしくは<code>t.<a href="https://cpprefjp.github.io/reference/filesystem/file_status/type.html">type()</a></code>が実装定義のファイル種別であった場合、その効果は実装定義となる</p>
+</li>
+<li>以下のいずれかの場合、エラーを報告する。(3)の場合は例外、(4)の場合は<code>ec</code>にエラー情報を設定することでエラー報告とする：<ul>
+<li><code>!<a href="https://cpprefjp.github.io/reference/filesystem/exists.html">exists</a>(f)</code></li>
+<li><code><a href="https://cpprefjp.github.io/reference/filesystem/equivalent.html">equivalent</a>(from, to)</code></li>
+<li><code><a href="https://cpprefjp.github.io/reference/filesystem/is_other.html">is_other</a>(f) || <a href="https://cpprefjp.github.io/reference/filesystem/is_other.html">is_other</a>(t)</code></li>
+<li><code><a href="https://cpprefjp.github.io/reference/filesystem/is_directory.html">is_directory</a>(f) &amp;&amp; <a href="https://cpprefjp.github.io/reference/filesystem/is_regular_file.html">is_regular_file</a>(t)</code></li>
+<li>また、それ以外に、ファイルコピー、シンボリックリンクのコピー、ディレクトリ作成などにおいてエラーが報告される可能性がある</li>
+</ul>
+</li>
+<li>コピー元がシンボリックリンクである場合、<ul>
+<li><code>(options &amp; copy_options::skip_symlinks) != copy_options::none</code>であれば、なにもしないで終了する</li>
+<li><code>!exists(t) &amp;&amp; (options &amp; copy_options::copy_symlinks) != copy_options::none</code>であれば、<code><a href="https://cpprefjp.github.io/reference/filesystem/copy_symlink.html">copy_symlink</a>(from, to)</code>を実行する</li>
+<li>いずれの条件にも合致しない場合は、エラーを報告する</li>
+</ul>
+</li>
+<li>コピー元が通常ファイルである場合、<ul>
+<li><code>(options &amp; copy_options::directories_only) != copy_options::none</code>であれば、なにもしないで終了する</li>
+<li><code>(options &amp; copy_options::create_symlinks) != copy_options::none</code>であれば、コピー元ファイルのシンボリックリンクを、コピー先に作成する</li>
+<li><code>(options &amp; copy_options::create_hard_links) != copy_options::none</code>であれば、コピー元ファイルのハードリンクを、コピー先に作成する</li>
+<li>コピー先がディレクトリである場合、<code><a href="https://cpprefjp.github.io/reference/filesystem/copy_file.html">copy_file</a>(from, to/<a href="https://cpprefjp.github.io/reference/filesystem/path/filename.html">from.filename()</a>, options)</code>を実行する</li>
+<li>いずれの条件にも合致しない場合は、<code><a href="https://cpprefjp.github.io/reference/filesystem/copy_file.html">copy_file</a>(from, to, options)</code>を実行する</li>
+</ul>
+</li>
+<li>
+<p>コピー元がディレクトリであり、<code>((options &amp; copy_options::recursive) != copy_options::none || options == copy_options::none)</code>である場合、</p>
+<ul>
+<li>コピー先にディレクトリが存在しない場合は、<code><a href="https://cpprefjp.github.io/reference/filesystem/create_directory.html">create_directory</a>(to, from)</code>を実行する</li>
+<li>その後、コピー元ディレクトリの全ての要素を、以下のようにコピーする (<code>in-recursive-copy</code>は、<code><a href="https://cpprefjp.github.io/reference/filesystem/copy_options.html">copy_options</a></code>には含まれないビットマスク要素)：</li>
+</ul>
 <p><div class="codehilite"><pre><span class="k">for</span> <span class="p">(</span><span class="k">const</span> <span class="n"><span href="https://cpprefjp.github.io/reference/filesystem/directory_entry.md.nolink">directory_entry</span></span><span class="o">&amp;</span> <span class="n">x</span> <span class="o">:</span> <span class="n"><span href="https://cpprefjp.github.io/reference/filesystem/directory_iterator.md.nolink">directory_iterator</span></span><span class="p">(</span><span class="n">from</span><span class="p">))</span>
     <span class="n">copy</span><span class="p">(</span><span class="n"><span href="https://cpprefjp.github.io/reference/filesystem/directory_entry/path.md.nolink">x.path()</span></span><span class="p">,</span> <span class="n">to</span><span class="o">/</span><span class="n"><span href="https://cpprefjp.github.io/reference/filesystem/directory_entry/path.md.nolink">x.path()</span></span><span class="p">.</span><span class="n"><a href="https://cpprefjp.github.io/reference/filesystem/path/filename.html">filename()</a></span><span class="p">,</span> <span class="n">options</span> <span class="o">|</span> <span class="n"><a href="https://cpprefjp.github.io/reference/filesystem/copy_options.html">copy_options</a></span><span class="o">::</span><span class="n"><i>in-recursive-copy</i></span><span class="p">)</span>
 </pre></div>
