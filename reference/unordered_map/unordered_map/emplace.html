@@ -201,8 +201,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2018-07-23T04:17:28">
-        2018年07月23日 04時17分28秒
+      <span itemprop="datePublished" content="2018-09-04T10:14:22">
+        2018年09月04日 10時14分22秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -233,9 +233,7 @@
 <h2>概要</h2>
 <p>コンテナ内へ要素を直接構築する</p>
 <h2>要件</h2>
-<p>このコンテナの要素型 <code>value_type</code> は、コンテナに対して引数 <code>args</code> から直接構築可能（EmplaceConstructible）でなければならない。</p>
-<p>ここで、コンテナに対して引数 <code>args</code> から直接構築可能とは、<code>m</code> をアロケータ型 <code>allocator_type</code> の左辺値、<code>p</code> を要素型 <code>value_type</code> へのポインタとすると、以下の式が適格（well-formed）であるということである。</p>
-<p><code>std::<a href="https://cpprefjp.github.io/reference/memory/allocator_traits.html">allocator_traits</a>&lt;allocator_type&gt;::<a href="https://cpprefjp.github.io/reference/memory/allocator_traits/construct.html">construct</a>(m, p, std::<a href="https://cpprefjp.github.io/reference/utility/forward.html">forward</a>&lt;Args&gt;(args)...);</code></p>
+<p>このコンテナの要素型 <code>value_type</code> は、コンテナに対して引数 <code>args</code> から <code><a href="https://cpprefjp.github.io/reference/container_concepts/EmplaceConstructible.html">EmplaceConstructible</a></code> でなければならない。</p>
 <h2>効果</h2>
 <p><code>std::<a href="https://cpprefjp.github.io/reference/utility/forward.html">forward</a>&lt;Args&gt;(args)...</code> から構築された <code>value_type</code> のオブジェクトを <code>t</code> とすると、<code>t.first</code> と等価なキーがコンテナに既に存在していなければ、<code>t</code> をコンテナに挿入する。</p>
 <p>なお、オブジェクト <code>t</code> は、構築後にコンテナにコピー、あるいはムーブされるわけではなく、コンテナ内に直接構築される。</p>
@@ -248,19 +246,26 @@
 <p>平均的なケースでは定数（O(<code>1</code>)）だが、最悪のケースではコンテナの要素数に比例（O(<code><a href="https://cpprefjp.github.io/reference/unordered_map/unordered_map/size.html">size</a>()</code>)）。</p>
 <h2>備考</h2>
 <ul>
-<li>この関数が呼ばれた後も、当該コンテナ内の要素を指す参照は無効にはならない。<br />
-    なお、規格書に明確な記載は無いが、当該コンテナ内の要素を指すポインタも無効にはならない。</li>
 <li>
-<p>この関数が呼ばれた後も、呼び出しの前後でこのコンテナのバケット数（<code><a href="https://cpprefjp.github.io/reference/unordered_map/unordered_map/bucket_count.html">bucket_count</a>()</code> の戻り値）が変わらなかった場合には当該コンテナを指すイテレータは無効にはならない。
+<p>この関数が呼ばれた後も、当該コンテナ内の要素を指す参照は無効にはならない。<br />
+    なお、規格書に明確な記載は無いが、当該コンテナ内の要素を指すポインタも無効にはならない。</p>
+</li>
+<li>
+<p>この関数が呼ばれた後も、呼び出しの前後でこのコンテナのバケット数（<code><a href="https://cpprefjp.github.io/reference/unordered_map/unordered_map/bucket_count.html">bucket_count</a>()</code> の戻り値）が変わらなかった（＝リハッシュが発生しなかった）場合、当該コンテナを指すイテレータは無効にはならない。<br />
     それ以外の場合は、当該コンテナを指すイテレータは無効になる可能性がある。<br />
-    コンテナのバケット数が変わらない場合とは、</p>
+    コンテナのバケット数が変わらない条件は、</p>
 <ul>
-<li>追加しようとした要素と等価なキーの要素が既にコンテナに存在したため、要素が追加されなかった（つまり、戻り値の <code>pair</code> の <code>bool</code> 部分が、<code>false</code> だった）。</li>
-<li>要素追加後の要素数が、要素追加前のバケット数（<code><a href="https://cpprefjp.github.io/reference/unordered_map/unordered_map/bucket_count.html">bucket_count</a>()</code> の戻り値）×最大負荷率（<code><a href="https://cpprefjp.github.io/reference/unordered_map/unordered_map/max_load_factor.html">max_load_factor</a>()</code> の戻り値）よりも小さかった。</li>
+<li>この関数を呼び出した後の要素数が、呼び出す前のバケット数（<code><a href="https://cpprefjp.github.io/reference/unordered_map/unordered_map/bucket_count.html">bucket_count</a>()</code> の戻り値）×最大負荷率（<code><a href="https://cpprefjp.github.io/reference/unordered_map/unordered_map/max_load_factor.html">max_load_factor</a>()</code> の戻り値）以下である。</li>
 </ul>
-<p>のいずれかである。<br />
-なお、後者の条件は「よりも小さい」となっているが、最大負荷率の定義からすると「以下」の方が適切と思われる。<code><a href="https://cpprefjp.github.io/reference/unordered_map/unordered_map/reserve.html">reserve</a></code> も参照。
-- このメンバ関数は、コンテナの種類によってシグネチャが異なるため、注意が必要である。<br />
+<p>となっている。<br />
+なお、この条件は C++14 までは「以下」ではなく「よりも小さい」だったため、最大負荷率の定義と不整合だった。<br />
+これは規格の誤りとして C++17 で修正されたが、使用する処理系やそのバージョンによっては以前の「よりも小さい」という条件でしかイテレータの有効性を保証していない可能性があるため、注意が必要である。</p>
+</li>
+<li>
+<p>C++17 で追加された <code><a href="https://cpprefjp.github.io/reference/unordered_map/unordered_map/try_emplace.html">try_emplace</a></code> と異なり、この関数ではキー重複によって要素の挿入が行われなかった場合に引数が不変である（引数からのムーブが発生しない）という<strong>保証はない</strong>ので、注意すること。</p>
+</li>
+<li>
+<p>このメンバ関数は、コンテナの種類によってシグネチャが異なるため、注意が必要である。<br />
 <code>emplace_hint</code> も含めた一覧を以下に示す。</p>
 <table border="1" bordercolor="#888" style="border-collapse:collapse">
 <thead>
@@ -352,6 +357,11 @@
 <li><a href="https://cpprefjp.github.io/implementation.html#icc">ICC</a>: ?</li>
 <li><a href="https://cpprefjp.github.io/implementation.html#visual_cpp">Visual C++</a>: ?</li>
 </ul>
+<h3>備考</h3>
+<ul>
+<li>Clang 3.3 以降は C++17 モードでなくても C++17 の条件でのリハッシュとなっている。</li>
+<li>GCC は 8.2.0 時点でまだ C++17 の条件でのリハッシュとなっていない。また、バージョンによってリハッシュ条件が微妙に異なるため注意。</li>
+</ul>
 <h2>関連項目</h2>
 <table border="1" bordercolor="#888" style="border-collapse:collapse">
 <thead>
@@ -366,8 +376,16 @@
 <td>挿入位置のヒントを使用したコンテナ内への要素の直接構築</td>
 </tr>
 <tr>
+<td><code><a href="https://cpprefjp.github.io/reference/unordered_map/unordered_map/try_emplace.html">try_emplace</a></code></td>
+<td>キーが存在しない場合のみコンテナ内への要素の直接構築</td>
+</tr>
+<tr>
 <td><code><a href="https://cpprefjp.github.io/reference/unordered_map/unordered_map/insert.html">insert</a></code></td>
 <td>要素の追加</td>
+</tr>
+<tr>
+<td><code><a href="https://cpprefjp.github.io/reference/unordered_map/unordered_map/insert_or_assign.html">insert_or_assign</a></code></td>
+<td>要素の追加、あるいは代入</td>
 </tr>
 <tr>
 <td><code><a href="https://cpprefjp.github.io/reference/unordered_map/unordered_map/erase.html">erase</a></code></td>
@@ -406,6 +424,7 @@
 <h2>参照</h2>
 <ul>
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2680.pdf" target="_blank">N2680 Proposed Wording for Placement Insert (Revision 1)</a></li>
+<li><a href="https://wg21.cmeerw.net/lwg/issue2156" target="_blank">LWG Issue 2156. Unordered containers' reserve(n) reserves for n-1 elements</a></li>
 </ul></div>
 
       </div>
