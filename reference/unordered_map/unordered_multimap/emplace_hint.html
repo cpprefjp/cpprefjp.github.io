@@ -201,8 +201,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2018-07-23T04:17:28">
-        2018年07月23日 04時17分28秒
+      <span itemprop="datePublished" content="2018-09-05T13:43:24">
+        2018年09月05日 13時43分24秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -235,12 +235,10 @@
 <h2>要件</h2>
 <ul>
 <li>
-<p>このコンテナの要素型 <code>value_type</code> は、コンテナに対して引数 <code>args</code> から直接構築可能（EmplaceConstructible）でなければならない。<br />
-    ここで、コンテナに対して引数 <code>args</code> から直接構築可能とは、<code>m</code> をアロケータ型 <code>allocator_type</code> の左辺値、<code>p</code> を要素型 <code>value_type</code> へのポインタとすると、以下の式が適格（well-formed）であるということである。</p>
-<p><code>std::<a href="https://cpprefjp.github.io/reference/memory/allocator_traits.html">allocator_traits</a>&lt;allocator_type&gt;::<a href="https://cpprefjp.github.io/reference/memory/allocator_traits/construct.html">construct</a>(m, p, std::<a href="https://cpprefjp.github.io/reference/utility/forward.html">forward</a>&lt;Args&gt;(args)...);</code></p>
+<p>このコンテナの要素型 <code>value_type</code> は、コンテナに対して引数 <code>args</code> から <code><a href="https://cpprefjp.github.io/reference/container_concepts/EmplaceConstructible.html">EmplaceConstructible</a></code> でなければならない。</p>
 </li>
 <li>
-<p>引数 <code>position</code> は、コンテナの有効な読み取り専用イテレータでなければならないが、間接参照可能（dereferenceable）である必要はない。（つまり、最終要素の次を指すイテレータでも良い）</p>
+<p>引数 <code>position</code> は、コンテナの有効な読み取り専用イテレータでなければならないが、間接参照可能（dereferenceable）である必要はない。（つまり、<code><a href="https://cpprefjp.github.io/reference/unordered_map/unordered_multimap/cend.html">cend</a>()</code> でも良い）</p>
 </li>
 </ul>
 <h2>効果</h2>
@@ -260,10 +258,21 @@
     なお、規格書に明確な記載は無いが、当該コンテナ内の要素を指すポインタも無効にはならない。</p>
 </li>
 <li>
-<p>この関数が呼ばれた後も、呼び出しの前後でこのコンテナのバケット数（<code><a href="https://cpprefjp.github.io/reference/unordered_map/unordered_multimap/bucket_count.html">bucket_count</a>()</code> の戻り値）が変わらなかった場合には当該コンテナを指すイテレータは無効にはならない。
+<p>この関数が呼ばれた後も、呼び出しの前後でこのコンテナのバケット数（<code><a href="https://cpprefjp.github.io/reference/unordered_map/unordered_multimap/bucket_count.html">bucket_count</a>()</code> の戻り値）が変わらなかった（＝リハッシュが発生しなかった）場合、当該コンテナを指すイテレータは無効にはならない。<br />
     それ以外の場合は、当該コンテナを指すイテレータは無効になる可能性がある。<br />
-    コンテナのバケット数が変わらない場合とは、要素追加後の要素数が、要素追加前のバケット数（<code><a href="https://cpprefjp.github.io/reference/unordered_map/unordered_multimap/bucket_count.html">bucket_count</a>()</code> の戻り値）×最大負荷率（<code><a href="https://cpprefjp.github.io/reference/unordered_map/unordered_multimap/max_load_factor.html">max_load_factor</a>()</code> の戻り値）よりも小さかった場合である。<br />
-    なお、条件が「よりも小さい」となっているが、最大負荷率の定義からすると「以下」の方が適切と思われる。<code><a href="https://cpprefjp.github.io/reference/unordered_map/unordered_multimap/reserve.html">reserve</a></code> も参照。</p>
+    コンテナのバケット数が変わらない条件は、</p>
+<ul>
+<li>この関数を呼び出した後の要素数が、呼び出す前のバケット数（<code><a href="https://cpprefjp.github.io/reference/unordered_map/unordered_multimap/bucket_count.html">bucket_count</a>()</code> の戻り値）×最大負荷率（<code><a href="https://cpprefjp.github.io/reference/unordered_map/unordered_multimap/max_load_factor.html">max_load_factor</a>()</code> の戻り値）以下である。</li>
+</ul>
+<p>となっている。<br />
+なお、この条件は C++14 までは「以下」ではなく「よりも小さい」だったため、最大負荷率の定義と不整合だった。<br />
+これは規格の誤りとして C++17 で修正されたが、使用する処理系やそのバージョンによっては以前の「よりも小さい」という条件でしかイテレータの有効性を保証していない可能性があるため、注意が必要である。</p>
+</li>
+<li>
+<p>これらの関数が呼ばれた後、たとえ呼び出しの前後でこのコンテナのバケット数（<code><a href="https://cpprefjp.github.io/reference/unordered_map/unordered_multimap/bucket_count.html">bucket_count</a>()</code> の戻り値）が変わった（＝リハッシュが発生した）場合でも、等価なキーの要素同士の相対的な順序は変わらない。</p>
+</li>
+<li>
+<p>引数 <code>position</code> は、C++14 までは間接参照可能（dereferenceable）でなければならない（つまり、<code><a href="https://cpprefjp.github.io/reference/unordered_map/unordered_multimap/cend.html">cend</a>()</code> ではいけない）との記載になっていたが、これは規格の誤りとして C++17 で修正された。</p>
 </li>
 <li>
 <p>このメンバ関数は、コンテナの種類によってシグネチャが異なるため、注意が必要である。<br />
@@ -436,6 +445,11 @@ after : (2,3rd), (1,1st), (1,4th), (1,2nd),
 <h2>参照</h2>
 <ul>
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2680.pdf" target="_blank">N2680 Proposed Wording for Placement Insert (Revision 1)</a></li>
+<li><a href="https://wg21.cmeerw.net/lwg/issue518" target="_blank">LWG Issue 518. Are <code>insert</code> and <code>erase</code> stable for <code>unordered_multiset</code> and <code>unordered_multimap</code>?</a><ul>
+<li>安定性の保証が規定された経緯のレポート</li>
+</ul>
+</li>
+<li><a href="https://wg21.cmeerw.net/lwg/issue2156" target="_blank">LWG Issue 2156. Unordered containers' reserve(n) reserves for n-1 elements</a></li>
 </ul></div>
 
       </div>
