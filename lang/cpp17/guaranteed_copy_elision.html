@@ -189,8 +189,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2019-01-12T06:17:45">
-        2019年01月12日 06時17分45秒
+      <span itemprop="datePublished" content="2019-01-12T09:47:02">
+        2019年01月12日 09時47分02秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -218,7 +218,7 @@
 <p>C++11で右辺値参照を導入するときに規定された「値カテゴリー (value category)」の仕様（C++17で更新）を利用し、prvalue（詳しくは<a href="https://qiita.com/rinse_/items/cffa87016b7de49391ae" target="_blank">ここ</a>を参照 ）という一時オブジェクトを表すカテゴリーの値を、オブジェクトの初期化のために使用する場合に、コピーが省略される。</p>
 <h2>仕様</h2>
 <p><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/n4659.pdf" target="_blank">n4659</a>[conv.rval]/1 より。</p>
-<p>T型のprvalueは、type型のxvalueに変換できる。この変換はT型の一時的なオブジェクトを初期化する。この変換は、結果オブジェクトとしての一時オブジェクトを使用してprvalueを評価することによって、prvalueから型Tの一時オブジェクトを初期化し、その一時オブジェクトを示すxvalueを生成する。Tは完全型でなければならない。
+<p>T型のprvalueは、T型のxvalueに変換できる。この変換はT型の一時的なオブジェクトを初期化する。この変換は、結果オブジェクトとしての一時オブジェクトを使用してprvalueを評価することによって、prvalueから型Tの一時オブジェクトを初期化し、その一時オブジェクトを示すxvalueを生成する。Tは完全型でなければならない。
  (注：Tがクラス型（またはその配列）の場合、アクセス可能な削除されていないデストラクタが必要)</p>
 <p><div class="codehilite"><pre><span class="k">struct</span> <span class="n">X</span> <span class="p">{</span> <span class="kt">int</span> <span class="n">n</span><span class="p">;</span> <span class="p">};</span>
 <span class="kt">int</span> <span class="n">k</span> <span class="o">=</span> <span class="n">X</span><span class="p">().</span><span class="n">n</span> <span class="c1">// X（）prvalueはxvalueに変換される</span>
@@ -281,34 +281,37 @@ destructed
 <span class="n">Foo</span> <span class="n">x</span> <span class="o">=</span> <span class="n">foo</span><span class="p">();</span> <span class="c1">// Foo型のコピーコンストラクタが動作することなくxが初期化される</span>
 </pre></div>
 </p>
-<p>Foo foo()
-{
-    Foo y;
-    y.value = 42;
-    return y;
-}</p>
-<p>Foo x = foo(); // Foo型のコピーコンストラクタが動作することなくxが初期化される</p>
-<p><pre><code>
-しかし、これらの最適化はコンパイラに対して許可された動作であって、そのように最適化されることが保証されるものではない。そのため、実際には(N)RVOによってコピーは起こらないけどコピーコンストラクタは用意しなければならない、といったことになった。
+<p><div class="codehilite"><pre><span class="c1">// NRVOの最適化が動作した場合</span>
+<span class="k">struct</span> <span class="n">Foo</span> <span class="p">{</span> <span class="kt">int</span> <span class="n">value</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="p">};</span>
 
-C++1zでは、このようなコピー省略を保証する仕組みが導入される。そのため、オブジェクトの初期化のために使用するprvalueは、コピーもムーブもできない型であっても、関数の戻り値として返せるようになる。つまり、NRVOと区別してRVOはの場合は、コピーコンストラクタを用意しなくてもよくなった。
+<span class="n">Foo</span> <span class="nf">foo</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">Foo</span> <span class="n">y</span><span class="p">;</span>
+    <span class="n">y</span><span class="p">.</span><span class="n">value</span> <span class="o">=</span> <span class="mi">42</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">y</span><span class="p">;</span>
+<span class="p">}</span>
 
-```cpp
-// C++17
-struct Foo {
-    // Fooはコピーもムーブもできない
-    Foo() = default;
-    Foo(const Foo&amp;) = delete;
-    Foo(Foo&amp;&amp;) = delete;
-};
+<span class="n">Foo</span> <span class="n">x</span> <span class="o">=</span> <span class="n">foo</span><span class="p">();</span> <span class="c1">// Foo型のコピーコンストラクタが動作することなくxが初期化される</span>
+</pre></div>
+</p>
+<p>しかし、これらの最適化はコンパイラに対して許可された動作であって、そのように最適化されることが保証されるものではない。そのため、実際には(N)RVOによってコピーは起こらないけどコピーコンストラクタは用意しなければならない、といったことになった。</p>
+<p>C++1zでは、このようなコピー省略を保証する仕組みが導入される。そのため、オブジェクトの初期化のために使用するprvalueは、コピーもムーブもできない型であっても、関数の戻り値として返せるようになる。つまり、NRVOと区別してRVOはの場合は、コピーコンストラクタを用意しなくてもよくなった。</p>
+<p><div class="codehilite"><pre><span class="c1">// C++17</span>
+<span class="k">struct</span> <span class="n">Foo</span> <span class="p">{</span>
+    <span class="c1">// Fooはコピーもムーブもできない</span>
+    <span class="n">Foo</span><span class="p">()</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+    <span class="n">Foo</span><span class="p">(</span><span class="k">const</span> <span class="n">Foo</span><span class="o">&amp;</span><span class="p">)</span> <span class="o">=</span> <span class="k">delete</span><span class="p">;</span>
+    <span class="n">Foo</span><span class="p">(</span><span class="n">Foo</span><span class="o">&amp;&amp;</span><span class="p">)</span> <span class="o">=</span> <span class="k">delete</span><span class="p">;</span>
+<span class="p">};</span>
 
-Foo foo()
-{
-    return Foo();
-}
+<span class="n">Foo</span> <span class="nf">foo</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="k">return</span> <span class="n">Foo</span><span class="p">();</span>
+<span class="p">}</span>
 
-Foo y = foo(); // OK
-</code></pre></p>
+<span class="n">Foo</span> <span class="n">y</span> <span class="o">=</span> <span class="n">foo</span><span class="p">();</span> <span class="c1">// OK</span>
+</pre></div>
+</p>
 <p><div class="codehilite"><pre><span class="c1">// C++17</span>
 <span class="k">struct</span> <span class="n">Foo</span> <span class="p">{</span>
     <span class="c1">// Fooはコピーもムーブもできない</span>
