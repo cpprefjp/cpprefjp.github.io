@@ -2,9 +2,170 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2019-01-13T19:27:27.477226</updated>
-  <id>0feb6187-0838-4fda-a319-d156d30feae4</id>
+  <updated>2019-01-13T19:46:16.020303</updated>
+  <id>a130d4b5-3b1a-4d49-a16c-14457d056ce3</id>
 
+  
+    <entry>
+      <title>値のコピー省略を保証 -- chore(cpp17): 「値のコピー省略を保証 」を編集 #409</title>
+      <link href="https://cpprefjp.github.io/lang/cpp17/guaranteed_copy_elision.html"/>
+      <id>b41c859e5eaf2e3adb741d97f16f6a3889dea0a7:lang/cpp17/guaranteed_copy_elision.md</id>
+      <updated>2019-01-14T04:42:44+09:00</updated>
+      
+        <content type="html">&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;token&#34;&gt;値のコピー省略を保証&lt;/span&gt;&lt;span class=&#34;cpp cpp17&#34; title=&#34;C++17で追加&#34;&gt;(C++17)&lt;/span&gt;&lt;/h1&gt;
+&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;h2&gt;概要&lt;/h2&gt;
+&lt;p&gt;C++11で右辺値参照を導入するときに規定された「値カテゴリー (value category)」の仕様（C++17で更新）を利用し、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp11/rvalue_ref_and_move_semantics.html&#34;&gt;prvalue&lt;/a&gt;&lt;/code&gt;&lt;sup&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp17/guaranteed_copy_elision.html#note-1&#34; id=&#34;note_ref-1&#34;&gt;[注1]&lt;/a&gt;&lt;/sup&gt;というカテゴリーの値を、オブジェクトの初期化のために使用する場合に、コピーが省略される。&lt;/p&gt;
+&lt;h2&gt;仕様&lt;/h2&gt;
+&lt;p&gt;まず、prvalueなどの値カテゴリー (value category)については、&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/n4659.pdf&#34; target=&#34;_blank&#34;&gt;n4659&lt;/a&gt;[basic.lval]/1に定義されている。&lt;/p&gt;
+&lt;p&gt;また、[conv.rval]/1 に、次のような記述がある：&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;T&lt;/code&gt;型の&lt;code&gt;prvalue&lt;/code&gt;は、&lt;code&gt;T&lt;/code&gt;型の&lt;code&gt;xvalue&lt;/code&gt;に変換できる。この変換では、一時オブジェクトを結果オブジェクトとして&lt;code&gt;prvalue&lt;/code&gt;を評価することによって、&lt;code&gt;prvalue&lt;/code&gt;から&lt;code&gt;T&lt;/code&gt;型の一時オブジェクトを初期化し、その一時オブジェクトを表す&lt;code&gt;xvalue&lt;/code&gt;を生成する。&lt;code&gt;T&lt;/code&gt;は完全型でなければならない。
+[注：&lt;code&gt;T&lt;/code&gt;がクラス型（またはその配列）の場合、アクセス可能な削除されていないデストラクタが必要である。]
+例:&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;n&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;k&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;().&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;n&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// ok, X() prvalue は xvalue に変換される&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;p&gt;つまり、&lt;code&gt;prvalue&lt;/code&gt;は一時オブジェクトではない（C++17以降）。&lt;/p&gt;
+&lt;p&gt;そして[class.temporary]/2 に、次のような記述がある：&lt;/p&gt;
+&lt;p&gt;不必要な一時オブジェクトの作成を避けるために、一時オブジェクトの実体化は一般に可能な限り遅らせる。
+注：一時オブジェクトは次のとき実体化されている。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;参照を&lt;code&gt;prvalue&lt;/code&gt;にバインドするとき&lt;/li&gt;
+&lt;li&gt;クラス&lt;code&gt;prvalue&lt;/code&gt;でメンバーアクセスを実行するとき&lt;/li&gt;
+&lt;li&gt;配列からポインタへの変換を実行するとき、または配列&lt;code&gt;prvalue&lt;/code&gt;をサブスクライブするとき&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;braced-init-list&lt;/code&gt;から&lt;code&gt;std::initializer_list&amp;lt;T&amp;gt;&lt;/code&gt;型のオブジェクトを初期化するとき&lt;/li&gt;
+&lt;li&gt;特定の未評価のオペランド、および&lt;code&gt;prvalue&lt;/code&gt;が廃棄値式(&lt;code&gt;discarded-value expression&lt;/code&gt;)として現れる場合&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;とあるので、上の例は「クラス&lt;code&gt;prvalue&lt;/code&gt;でメンバーアクセスを実行するとき」にあたり、&lt;code&gt;xvalue&lt;/code&gt;として一時オブジェクトを生成する。&lt;code&gt;prvalue&lt;/code&gt;は一時オブジェクトになれるものにすぎず、一時オブジェクトではない（C++17以前では一時オブジェクトである）。また、&lt;code&gt;prvalue&lt;/code&gt;から&lt;code&gt;prvalue&lt;/code&gt;への変換は、一時オブジェクトの実体化は一般に可能な限り遅らせられることより、一時オブジェクトを実体化しない。また、関数の戻り値は値であり、一時オブジェクトではない。したがって、次の例における&lt;code&gt;prvalue&lt;/code&gt;の&lt;code&gt;T&lt;/code&gt;型の戻り値は、呼び出し元の&lt;code&gt;t&lt;/code&gt;を直接初期化する。&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt; &lt;span class=&#34;n&#34;&gt;T&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;Func&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();}&lt;/span&gt; 
+ &lt;span class=&#34;n&#34;&gt;T&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;t&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Func&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// 直接初期化&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;例&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;https://ja.cppreference.com/w/cpp/language/copy_elision&#34; target=&#34;_blank&#34;&gt;コピー省略 - cppreference.com&lt;/a&gt;より引用した。&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;yata&#34; id=&#34;f91d5e9933ae418f40b8772a01a837cd782cd7c2&#34;&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;&lt;a href=&#34;https://cpprefjp.github.io/reference/vector/vector.html&#34;&gt;vector&lt;/a&gt;&amp;gt;&lt;/span&gt;
+
+&lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Noisy&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;Noisy&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;cout&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34;constructed&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;\n&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;Noisy&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;const&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Noisy&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;cout&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34;copy-constructed&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;\n&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;Noisy&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Noisy&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;cout&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34;move-constructed&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;\n&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+  &lt;span class=&#34;o&#34;&gt;~&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Noisy&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;cout&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34;destructed&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;\n&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
+
+&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/vector/vector.html&#34;&gt;vector&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Noisy&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;f&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/vector/vector.html&#34;&gt;vector&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Noisy&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;v&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/vector/vector.html&#34;&gt;vector&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Noisy&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// v 初期化時、コピーは省略される&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;v&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// NRVO は、C++17でも保証されない&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;             &lt;span class=&#34;c1&#34;&gt;// 最適化されない場合、コピーコンストラクタがよばれる&lt;/span&gt;
+
+&lt;span class=&#34;kt&#34;&gt;void&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;g&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/vector/vector.html&#34;&gt;vector&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Noisy&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;arg&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/iostream/cout.html&#34;&gt;cout&lt;/a&gt;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34;arg.size() = &#34;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;arg&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;size&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;sc&#34;&gt;&#39;\n&#39;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+
+&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/vector/vector.html&#34;&gt;vector&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Noisy&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;v&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;f&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// v 初期化時、コピーは省略される&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;g&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;f&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;());&lt;/span&gt;                     &lt;span class=&#34;c1&#34;&gt;// g()の引数初期化時、コピーは省略される&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;&lt;/p&gt;
+&lt;h3&gt;出力例&lt;/h3&gt;
+&lt;p&gt;最適化された場合&lt;/p&gt;
+&lt;p&gt;&lt;pre&gt;&lt;code&gt;constructed
+constructed
+constructed
+constructed
+constructed
+constructed
+arg.size() = 3
+destructed
+destructed
+destructed
+destructed
+destructed
+destructed
+&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;h2&gt;この機能が必要になった背景・経緯&lt;/h2&gt;
+&lt;p&gt;関数の戻り値のコピーを発生させない手法として、RVO (Return Value Optimization) やNRVO (Named Return Value Optimization) といった最適化があった（注：RVOは、NRVOと区別せずに使われることがある）。&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;c1&#34;&gt;// RVOの最適化が動作した場合&lt;/span&gt;
+&lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Foo&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{};&lt;/span&gt;
+
+&lt;span class=&#34;n&#34;&gt;Foo&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;foo&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Foo&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+
+&lt;span class=&#34;n&#34;&gt;Foo&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;foo&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// Foo型のコピーコンストラクタが動作することなくxが初期化される&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;c1&#34;&gt;// NRVOの最適化が動作した場合&lt;/span&gt;
+&lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Foo&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;value&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
+
+&lt;span class=&#34;n&#34;&gt;Foo&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;foo&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;Foo&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;y&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;y&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;value&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;42&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;y&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+
+&lt;span class=&#34;n&#34;&gt;Foo&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;foo&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// Foo型のコピーコンストラクタが動作することなくxが初期化される&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;p&gt;しかし、これらの最適化はコンパイラに対して許可された動作であって、そのように最適化されることが保証されるものではない。そのため、実際には(N)RVOによってコピーは起こらないけどコピーコンストラクタは用意しなければならない、といったことになった。&lt;/p&gt;
+&lt;p&gt;C++17では、このようなコピー省略を保証する仕組みが導入される。そのため、オブジェクトの初期化のために使用するprvalueは、コピーもムーブもできない型であっても、関数の戻り値として返せるようになる。つまり、NRVOと区別してRVOはの場合は、コピーコンストラクタを用意しなくてもよくなった。NRVOは依然として保証がないことに注意。&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;c1&#34;&gt;// C++17&lt;/span&gt;
+&lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Foo&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// Fooはコピーもムーブもできない&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;Foo&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;default&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;Foo&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;const&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Foo&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;delete&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;Foo&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Foo&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;delete&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
+
+&lt;span class=&#34;n&#34;&gt;Foo&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;foo&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Foo&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+
+&lt;span class=&#34;n&#34;&gt;Foo&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;y&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;foo&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// OK&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;c1&#34;&gt;// C++17&lt;/span&gt;
+&lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Foo&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// Fooはコピーもムーブもできない&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;Foo&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;default&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;Foo&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;const&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Foo&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;delete&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;Foo&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Foo&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;delete&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
+
+&lt;span class=&#34;n&#34;&gt;Foo&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;foo&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;Foo&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;y&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;y&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+
+&lt;span class=&#34;n&#34;&gt;Foo&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;foo&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// error Foo型のコピーコンストラクタが必要&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;参照&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://ja.cppreference.com/w/cpp/language/copy_elision&#34; target=&#34;_blank&#34;&gt;コピー省略 - cppreference.com&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://teratail.com/questions/168515&#34; target=&#34;_blank&#34;&gt;値のコピー省略の保証について｜teratail&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://stackoverflow.com/questions/38043319/how-does-guaranteed-copy-elision-work&#34; target=&#34;_blank&#34;&gt;c++ - How does guaranteed copy elision work? - Stack Overflow&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://qiita.com/rinse_/items/cffa87016b7de49391ae&#34; target=&#34;_blank&#34;&gt;右辺値、左辺値などの細かい定義 - Qiita&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://faithandbrave.hateblo.jp/entry/2017/01/24/161342&#34; target=&#34;_blank&#34;&gt;C++1z 値のコピー省略を保証 - Faith and Brave - C++で遊ぼう&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0135r1.html&#34; target=&#34;_blank&#34;&gt;P0135R1 Wording for guaranteed copy elision through simplified value categories&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0135r0.html&#34; target=&#34;_blank&#34;&gt;P0135R0 Guaranteed copy elision through simplified value categories&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://jonasdevlieghere.com/guaranteed-copy-elision/&#34; target=&#34;_blank&#34;&gt;Guaranteed Copy Elision&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;注釈&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp17/guaranteed_copy_elision.html#note_ref-1&#34; id=&#34;note-1&#34;&gt;^&lt;/a&gt;&lt;/strong&gt; &lt;cite&gt;&lt;a href=&#34;https://qiita.com/rinse_/items/cffa87016b7de49391ae&#34; target=&#34;_blank&#34;&gt;右辺値、左辺値などの細かい定義 - Qiita&lt;/a&gt;&lt;/cite&gt;を参照&lt;/li&gt;
+&lt;/ol&gt;&lt;/div&gt;</content>
+      
+      <author>
+        <name>alphya</name>
+        <email>merukun1125@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>値のコピー省略を保証 -- chore(cpp17): 「値のコピー省略を保証 」を編集 #409</title>
@@ -539,96 +700,6 @@ template&amp;lt;int *p&amp;gt;
 &lt;h2&gt;この機能が必要になった背景・経緯&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0127r1.html&#34; target=&#34;_blank&#34;&gt;P0127R1 Declaring non-type template arguments with auto&lt;/a&gt;より引用。&lt;/p&gt;
 &lt;p&gt;このペーパーでは、&lt;code&gt;auto&lt;/code&gt;プレースホルダ型指定子を使用して型でないテンプレートパラメータを宣言できるようにすることを提案する。望ましい効果は、同様の構文が総称ラムダに対して機能するのと同じように、対応する型ではないテンプレート引数の型が自動的に推定されることである。&lt;/p&gt;
-&lt;p&gt;現在、型ではないテンプレートパラメータの型を明示的に指定しなければならない。これは、任意の型の定数引数を取ることを意図したテンプレートを書くときに不必要な冗長性と柔軟性の低下を招く。&lt;/p&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;typename&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;T&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;v&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;S&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;    &lt;span class=&#34;c1&#34;&gt;// 定義&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;S&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp11/decltype.html&#34;&gt;decltype&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;),&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;s&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;                    &lt;span class=&#34;c1&#34;&gt;// インスタンス化&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;p&gt;この例では、&lt;code&gt;decltype&lt;/code&gt;を使用して、&lt;code&gt;x&lt;/code&gt;の型と値の両方を&lt;code&gt;S&lt;/code&gt;に渡す前に、&lt;code&gt;x&lt;/code&gt;の型（コンパイル時定数）を取得する。目的は、&lt;code&gt;x&lt;/code&gt;の型を別のテンプレート引数として渡す必要がないように&lt;code&gt;S&lt;/code&gt;の宣言を変更できるようにすることである。これにより、次のようなより簡単なインスタンス化が可能になる。&lt;/p&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;n&#34;&gt;S&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;s&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// desired instantiation &lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;p&gt;これは、テンプレートパラメータリストで&lt;code&gt;auto&lt;/code&gt;キーワードを使用できるようにすることで実現できる。&lt;/p&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;v&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;S&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// type of v is deduced&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h2&gt;関連項目&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp17/allow_constant_evaluation_for_all_non-type_template_arguments.html&#34;&gt;全ての非型テンプレート引数の定数式評価を許可&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;参照&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0127r1.html&#34; target=&#34;_blank&#34;&gt;P0127R1 Declaring non-type template arguments with auto&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0127r2.html&#34; target=&#34;_blank&#34;&gt;P0127R2 Declaring non-type template parameters with auto&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://faithandbrave.hateblo.jp/entry/2016/10/26/180406&#34; target=&#34;_blank&#34;&gt;C++1z 非型テンプレートパラメータのauto宣言 - Faith and Brave - C++で遊ぼう&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>alphya</name>
-        <email>merukun1125@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>非型テンプレートパラメータのauto宣言 -- chore(cpp17): 全ての非型テンプレート引数の定数式評価を許可 #421</title>
-      <link href="https://cpprefjp.github.io/lang/cpp17/declaring_non-type_template_arguments_with_auto.html"/>
-      <id>90730dc2831830e405bf7d4b267d8137634d2033:lang/cpp17/declaring_non-type_template_arguments_with_auto.md</id>
-      <updated>2019-01-12T23:19:24+09:00</updated>
-      
-        <content type="html">&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;token&#34;&gt;非型テンプレートパラメータのauto宣言&lt;/span&gt;&lt;span class=&#34;cpp cpp17&#34; title=&#34;C++17で追加&#34;&gt;(C++17)&lt;/span&gt;&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;h2&gt;概要&lt;/h2&gt;
-&lt;p&gt;C++14まで、以下のように書いていた「指定された型の定数を受け取る」意図の非型テンプレートパラメータ(non-type template parameter)だが、&lt;/p&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;T&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;V&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-
-&lt;span class=&#34;n&#34;&gt;X&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;p&gt;C++17ではこの用途のためのシンタックスシュガー(糖衣構文、syntactic sugar)が導入される。そのためには、テンプレートパラメータを&lt;code&gt;auto&lt;/code&gt;にして値を受け取るようにする。&lt;/p&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;A&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{};&lt;/span&gt;
-
-&lt;span class=&#34;n&#34;&gt;A&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;    &lt;span class=&#34;c1&#34;&gt;// OK&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;A&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;nb&#34;&gt;true&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// OK&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;A&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;sc&#34;&gt;&#39;a&#39;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;  &lt;span class=&#34;c1&#34;&gt;// OK&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;A&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;mf&#34;&gt;3.14&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// コンパイルエラー (浮動小数点数は渡せない)&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;p&gt;テンプレートの中では、&lt;code&gt;decltype&lt;/code&gt;を使用すれば&lt;code&gt;X&lt;/code&gt;の型を取得できる。&lt;/p&gt;
-&lt;p&gt;この&lt;code&gt;auto&lt;/code&gt;は、変数宣言の&lt;code&gt;auto&lt;/code&gt;と同じくプレースホルダーという扱いになる。そのため、&lt;code&gt;template &amp;lt;auto* P&amp;gt;&lt;/code&gt;や&lt;code&gt;template &amp;lt;auto&amp;amp; R&amp;gt;&lt;/code&gt;のような推論補助もできる。&lt;/p&gt;
-&lt;h2&gt;仕様&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/n4659.pdf&#34; target=&#34;_blank&#34;&gt;n4659&lt;/a&gt; [temp.param]/4より&lt;/p&gt;
-&lt;p&gt;型ではないテンプレートパラメータは、次の（オプションのcv修飾）型のうちの1つを持たなければならない：&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;整数型または列挙型&lt;/li&gt;
-&lt;li&gt;オブジェクトへのポインタまたは関数へのポインタ&lt;/li&gt;
-&lt;li&gt;オブジェクトへの左辺値参照または関数への左辺値参照&lt;/li&gt;
-&lt;li&gt;メンバーへのポインタ&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/cstddef/nullptr_t.html&#34;&gt;std::nullptr_t&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;プレースホルダタイプを含むタイプ　&amp;lt;-- この行が追加された&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;なお、[temp.param]/4 は C++20 で変更予定である。&lt;a href=&#34;http://eel.is/c++draft/temp.param&#34; target=&#34;_blank&#34;&gt;Working Draft, Standard&lt;/a&gt;を参照。&lt;/p&gt;
-&lt;p&gt;この他にも変更点が多くある。&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0127r2.html&#34; target=&#34;_blank&#34;&gt;P0127R2 Declaring non-type template arguments with auto&lt;/a&gt;を参照。&lt;/p&gt;
-&lt;h2&gt;例&lt;/h2&gt;
-&lt;p&gt;&lt;div class=&#34;yata&#34; id=&#34;745c78ec6bda6712f19f87db6a4e2b30edf9eccd&#34;&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;type_traits&amp;gt;&lt;/span&gt;
-
-&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;A&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;k&#34;&gt;using&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;type&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp11/decltype.html&#34;&gt;decltype&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;X&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;constexpr&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;p&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;nullptr&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;static_assert&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/is_same.html&#34;&gt;is_same&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;A&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;p&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;type&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;{});&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/div&gt;&lt;/p&gt;
-&lt;h3&gt;出力&lt;/h3&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;h2&gt;この機能が必要になった背景・経緯&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0127r1.html&#34; target=&#34;_blank&#34;&gt;P0127R1 Declaring non-type template arguments with auto&lt;/a&gt;より引用。&lt;/p&gt;
-&lt;p&gt;このペーパーでは、&lt;code&gt;auto&lt;/code&gt;プレースホルダ型指定子を使用して型でないテンプレートパラメータを宣言できるようにすることを提案する。望ましい効果は、同様の構文が多態性ラムダに対して機能するのと同じように、対応する型ではないテンプレート引数の型が自動的に推定されることである。&lt;/p&gt;
 &lt;p&gt;現在、型ではないテンプレートパラメータの型を明示的に指定しなければならない。これは、任意の型の定数引数を取ることを意図したテンプレートを書くときに不必要な冗長性と柔軟性の低下を招く。&lt;/p&gt;
 &lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;typename&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;T&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;v&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;S&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;    &lt;span class=&#34;c1&#34;&gt;// 定義&lt;/span&gt;
 &lt;span class=&#34;n&#34;&gt;S&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp11/decltype.html&#34;&gt;decltype&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;),&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;s&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;                    &lt;span class=&#34;c1&#34;&gt;// インスタンス化&lt;/span&gt;
