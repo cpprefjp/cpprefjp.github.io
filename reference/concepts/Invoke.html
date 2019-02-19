@@ -189,12 +189,12 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2018-06-08T11:44:28">
-        2018年06月08日 11時44分28秒
+      <span itemprop="datePublished" content="2019-02-19T04:50:01">
+        2019年02月19日 04時50分01秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">Mitsuru Kariya</span>
+        <span itemprop="name">onihusube</span>
       </span>
       が更新
     </small></p>
@@ -223,7 +223,7 @@
 <li><em>call-wrapper</em> は、 <em>call-wrapper-type</em> 型のオブジェクトである。</li>
 <li><em>target-object</em> とは、 <em>callable-object</em> に保持されているオブジェクトのことである。</li>
 </ul>
-<h2>要件</h2>
+<h2>要件（C++14まで）</h2>
 <ol>
 <li>仮想操作 <em>INVOKE</em><code>(f, t1, t2, ..., tN)</code> を次のように定義する。<ul>
 <li><code>f</code> が型 <code>T</code> のメンバ関数へのポインタであり、 <code>t1</code> が T 型のオブジェクトあるいは <code>T</code> または <code>T</code> を継承した型への参照であるとき、 <code>(t1.*f)(t2, ..., tN)</code> と同じ効果を持つ。</li>
@@ -243,8 +243,40 @@
 </li>
 <li>すべての <em>call-wrapper</em> は、<em>MoveAssignable</em> でなければならない。</li>
 </ol>
+<h2>要件（C++17）</h2>
+<ol>
+<li>仮想操作 <em>INVOKE</em><code>(f, t1, t2, ..., tN)</code> を次のように定義する。<ul>
+<li><code>f</code> が型 <code>T</code> のメンバ関数へのポインタであり、<code><a href="https://cpprefjp.github.io/reference/type_traits/is_base_of.html">std::is_baseof_v</a>&lt;T,<a href="https://cpprefjp.github.io/reference/type_traits/decay.html">std::decay_t</a>&lt;decltype(t1)&gt;&gt; == true</code>（<code>t1</code> が <code>T</code> または <code>T</code> を継承した型のオブジェクト/参照）であるとき、 <code>(t1.*f)(t2, ..., tN)</code> と同じ効果を持つ。</li>
+<li><code>f</code> が型 <code>T</code> のメンバ関数へのポインタであり、<code><a href="https://cpprefjp.github.io/reference/type_traits/decay.html">std::decay_t</a>&lt;decltype(t1)&gt;</code>が<code><a href="https://cpprefjp.github.io/reference/functional/reference_wrapper.html">reference_­wrapper&lt;T&gt;</a></code>（<code>t1</code>が<code><a href="https://cpprefjp.github.io/reference/functional/reference_wrapper.html">reference_­wrapper</a></code>の特殊化）であるとき、 <code>(t1.get().*f)(t2, ..., tN)</code> と同じ効果を持つ。</li>
+<li><code>f</code> が型 <code>T</code> のメンバ関数へのポインタであり、 <code>t1</code> が上記の条件に当てはまらない場合（例えば、t1が<code>T</code>のポインタ）、<code>((*t1).*f)(t2, ..., tN)</code> と同じ効果を持つ。</li>
+<li><code>N == 1</code> で、<code>f</code> が型 <code>T</code> のメンバオブジェクトへのポインタであり、<code><a href="https://cpprefjp.github.io/reference/type_traits/is_base_of.html">std::is_baseof_v</a>&lt;T,<a href="https://cpprefjp.github.io/reference/type_traits/decay.html">std::decay_t</a>&lt;decltype(t1)&gt;&gt; == true</code>（<code>t1</code> が <code>T</code> または <code>T</code> を継承した型のオブジェクト/参照）であるとき、 <code>t1.*f</code> と同じ効果を持つ。</li>
+<li><code>N == 1</code> で、<code>f</code> が型 <code>T</code> のメンバオブジェクトへのポインタであり、<code><a href="https://cpprefjp.github.io/reference/type_traits/decay.html">std::decay_t</a>&lt;decltype(t1)&gt;</code>が<code><a href="https://cpprefjp.github.io/reference/functional/reference_wrapper.html">reference_­wrapper&lt;T&gt;</a></code>（<code>t1</code>が<code><a href="https://cpprefjp.github.io/reference/functional/reference_wrapper.html">reference_­wrapper</a></code>の特殊化）であるとき、 <code>t1.get().*f</code> と同じ効果を持つ。</li>
+<li><code>N == 1</code> で、<code>f</code> が型 <code>T</code> のメンバオブジェクトへのポインタであり、<code>t1</code> が上記の条件に当てはまらない場合（例えば、t1が<code>T</code>のポインタ）、 <code>(*t1).*f</code> と同じ効果を持つ。</li>
+<li>上記の条件のどれにも当てはまらない場合、 <code>f(t1, t2, ..., tN)</code> と同じ効果を持つ。</li>
+</ul>
+</li>
+<li><em>INVOKE</em><code>&lt;R&gt;(f, t1, t2, ..., tN)</code> を次のように定義する。<ul>
+<li><code>R</code>が<code>void</code>かそのcv修飾の場合は、<code>static_cast&lt;void&gt;(</code><em>INVOKE</em><code>(f, t1, t2, ..., tN))</code>。</li>
+<li>それ以外の場合は、<em>INVOKE</em><code>(f, t1, t2, ..., tN)</code> の実行結果の戻り値が型 <code>R</code> に暗黙的に変換されること。</li>
+</ul>
+</li>
+<li>すべての <em>call-wrapper</em> は、<em>MoveConstructible</em> でなければならない。</li>
+</ol>
 <h2>まとめ</h2>
-<p><a href="https://twitter.com/Cryolite/status/216814363221303296" target="_blank">第1引数がメンバ関数へのポインタの場合でも非静的メンバデータへのポインタの場合でも，第2引数がクラスオブジェクトへの参照の場合でもポインタの場合でもポインタっぽいものの場合でも，なんか知らんけどそれっぽく上手くいく</a> ように取り計らった操作のことである。</p></div>
+<p><a href="https://twitter.com/Cryolite/status/216814363221303296" target="_blank">第1引数がメンバ関数へのポインタの場合でも非静的メンバデータへのポインタの場合でも，第2引数がクラスオブジェクトへの参照の場合でもポインタの場合でもポインタっぽいものの場合でも，なんか知らんけどそれっぽく上手くいく</a> ように取り計らった操作のことである。</p>
+<h2>関連項目</h2>
+<ul>
+<li><a href="https://cpprefjp.github.io/reference/functional/invoke.html">invoke</a></li>
+<li><a href="https://cpprefjp.github.io/reference/functional/function.html">function</a></li>
+<li><a href="https://cpprefjp.github.io/reference/functional/reference_wrapper.html">reference_­wrapper</a></li>
+<li><a href="https://cpprefjp.github.io/reference/functional/bind.html">bind</a></li>
+<li><a href="https://cpprefjp.github.io/reference/functional/mem_fn.html">mem_fn</a></li>
+<li><a href="https://cpprefjp.github.io/reference/functional/not_fn.html">not_fn</a></li>
+<li><a href="https://cpprefjp.github.io/reference/thread/thread.html">thread</a></li>
+<li><a href="https://cpprefjp.github.io/reference/future/async.html">async</a></li>
+<li><a href="https://cpprefjp.github.io/reference/future/packaged_task.html">packaged_task</a></li>
+<li><a href="https://cpprefjp.github.io/reference/mutex/call_once.html">call_once</a></li>
+</ul></div>
 
       </div>
     </div>
