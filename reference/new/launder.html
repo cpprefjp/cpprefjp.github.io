@@ -15,11 +15,11 @@
         <meta property="og:url" content="https://cpprefjp.github.io//reference/new/launder.html" />
         <meta property="og:site_name" content="cpprefjp - C++日本語リファレンス" />
         <meta property="og:type" content="article" />
-        <meta property="og:description" content="`placement new`を使用して、参照型や`const`データメンバを含む構造体/クラスを置き換える際、オブジェクト生存期間(lifetime)に基づいた最適化の抑止をコンパイラに伝える関数`std::launder()`を用いることで、未定義動作となるような文脈で参照型や`const`データメンバへのアクセスができる。" />
+        <meta property="og:description" content="`placement new`構文を使用して、参照型や`const`データメンバを含む構造体/クラスのオブジェクトを再構築するケースで、オブジェクト生存期間(lifetime)に基づいた最適化の抑止をコンパイラに伝える関数。" />
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:title" content="launder - cpprefjp C++日本語リファレンス" />
         <meta name="twitter:url" content="https://cpprefjp.github.io//reference/new/launder.html" />
-        <meta name="twitter:description" content="`placement new`を使用して、参照型や`const`データメンバを含む構造体/クラスを置き換える際、オブジェクト生存期間(lifetime)に基づいた最適化の抑止をコンパイラに伝える関数`std::launder()`を用いることで、未定義動作となるような文脈で参照型や`const`データメンバへのアクセスができる。" />
+        <meta name="twitter:description" content="`placement new`構文を使用して、参照型や`const`データメンバを含む構造体/クラスのオブジェクトを再構築するケースで、オブジェクト生存期間(lifetime)に基づいた最適化の抑止をコンパイラに伝える関数。" />
 
         
   <link rel="alternate" type="application/atom+xml" title="Atom" href="https://cpprefjp.github.io/rss.xml" />
@@ -189,12 +189,12 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2019-03-05T00:56:31">
-        2019年03月05日 00時56分31秒
+      <span itemprop="datePublished" content="2019-03-08T09:05:35">
+        2019年03月08日 09時05分35秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">onihusube</span>
+        <span itemprop="name">yoh</span>
       </span>
       が更新
     </small></p>
@@ -223,22 +223,22 @@
 </pre></div>
 </p>
 <h2>概要</h2>
-<p><code>placement new</code>を使用して、参照型や<code>const</code>データメンバを含む構造体/クラスを置き換える際、オブジェクト生存期間(lifetime)に基づいた最適化の抑止をコンパイラに伝える関数<code>std::launder()</code>を用いることで、未定義動作となるような文脈で参照型や<code>const</code>データメンバへのアクセスができる。</p>
+<p><code>placement new</code>構文を使用して、参照型や<code>const</code>データメンバを含む構造体/クラスのオブジェクトを再構築するケースで、オブジェクト生存期間(lifetime)に基づいた最適化の抑止をコンパイラに伝える関数。
+適切に<code>std::launder()</code>を用いることで、ポインタ値の直接利用が未定義動作となってしまう文脈において、参照型や<code>const</code>データメンバへの安全なアクセスが可能となる。</p>
 <h2>要件</h2>
 <ul>
 <li>ポインタの引数<code>p</code>は、メモリ内の1バイトのアドレス A を表す。</li>
 <li>オブジェクト X は、アドレス A にある。</li>
 <li>オブジェクト X は、生存期間(lifetime)内にある。</li>
-<li>オブジェクト X の型が T に類似している。</li>
+<li>オブジェクト X の型が T に類似(similar)している。言い換えると、オブジェクト X の型と T それぞれで、全てのレベルのcv修飾を除去した型が等しい。（例: <code>const int * const *</code>と<code>int**</code>は類似した型）</li>
 <li>結果を通して到達可能であるであろう記憶域のすべてのバイトは<code>p</code>を通して到達可能である。</li>
 </ul>
-<p>注：「類似している」については、<a href="http://eel.is/c++draft/conv.qual#2" target="_blank">[conv.qual]/2</a>を参照。オブジェクトXの型がTと同じであれば問題ないと考えられる。なお、<a href="https://ja.cppreference.com/w/cpp/utility/launder" target="_blank">std::launder - cppreference.com</a>では、この要件を「X の型が T と同じである (すべてのレベルにおける cv 修飾を無視します) 」としている。</p>
 <p>注：「到達可能」について、ストレージの1バイトは、オブジェクトYがYによって占有されているストレージ内にある場合はオブジェクトYを指すポインタ値、Yが配列要素の場合は直接囲む配列オブジェクトを介して到達可能である。</p>
 <h2>戻り値</h2>
-<p>X を指す<code>T*</code>型の値。これは、引数の値と同じであると考えられる。</p>
+<p>オブジェクト X を指す <code>T*</code> 型の値。</p>
 <h2>備考</h2>
-<p>この関数の呼び出しは、その引数の値がコア定数式で使用される場合はいつでもコア定数式で使用されることがある。また、T が関数型または cv void の場合、プログラムは不適格である。 </p>
-<p>一般に、オブジェクトの存続期間が終了した後、そのオブジェクトが占有していたストレージが再利用または解放される前に元のオブジェクトが占有していた保管場所に新規オブジェクトが登録された場合（<code>placement new</code>を使った際）、元のオブジェクトを指すポインタ、元のオブジェクトを指す参照または元のオブジェクトの名前は自動的に新しいオブジェクトを参照する。新しいオブジェクトの有効期間が開始されると、次の場合に新しいオブジェクトを操作できる。それ以外の場合は未定義である。</p>
+<p>この関数の呼び出しは、その引数の値がコア定数式で使用される場合はいつでもコア定数式で使用されることがある。また、T が関数型 ないし （cv修飾された）void の場合、プログラムは不適格である。 </p>
+<p>一般に、オブジェクトの存続期間が終了した後、そのオブジェクトが占有していたストレージが再利用または解放される前に元のオブジェクトが占有していた記憶域に新規オブジェクトが登録された場合（<code>placement new</code>構文を使った際）、元のオブジェクトを指すポインタ、元のオブジェクトを指す参照または元のオブジェクトの名前は自動的に新しいオブジェクトを参照する。新しいオブジェクトの有効期間が開始されると、次の場合に新しいオブジェクトを操作できる。それ以外の場合は未定義動作を引き起こす。</p>
 <ul>
 <li>新しいオブジェクト用の記憶域は、元のオブジェクトが占めていた記憶域を正確にオーバーレイする。</li>
 <li>新しいオブジェクトは元のオブジェクトと同じ型である（最上位の cv 修飾子は無視される）。</li>
@@ -283,7 +283,7 @@
 <span class="n">c1</span><span class="p">.</span><span class="n">f</span><span class="p">();</span>                         <span class="c1">// well-defined; c1はC型の新しいオブジェクトを参照しています</span>
 </pre></div>
 </p>
-<p>そして、上記の条件が満たされていない場合、<code>std::launder</code>を呼び出すことによって、新しいオブジェクトへのポインタをそのストレージのアドレスを表すポインタから取得できる。</p>
+<p>上記の条件が満たされない場合でも、ポインタ値に対して<code>std::launder</code>関数を通すことによって、新しいオブジェクトを指すアドレスとして安全に扱えるようになる。</p>
 <p>つまり、<code>placement new</code>使用時は、<code>std::launder</code>を使用することによって未定義動作を避けることができる。</p>
 <h2>例</h2>
 <p><div class="yata" id="68fc8aa0d69d82774ab6abb376cf873d399d9dab"><div class="codehilite"><pre><span class="cp">#include <a href="https://cpprefjp.github.io/reference/new.html">&lt;new&gt;</a></span>
