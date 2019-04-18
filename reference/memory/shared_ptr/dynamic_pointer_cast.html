@@ -201,12 +201,12 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2018-07-23T04:17:28">
-        2018年07月23日 04時17分28秒
+      <span itemprop="datePublished" content="2019-04-18T15:31:57">
+        2019年04月18日 15時31分57秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">Mitsuru Kariya</span>
+        <span itemprop="name">Akira Takahashi</span>
       </span>
       が更新
     </small></p>
@@ -228,18 +228,37 @@
   <div class="identifier-type">function template</div><div class="header">&lt;memory&gt;</div><h1 itemprop="name"><span class="namespace" title="namespace std">std::</span><span class="token">dynamic_pointer_cast</span><span class="cpp cpp11" title="C++11で追加">(C++11)</span></h1>
 <div itemprop="articleBody"><p><div class="codehilite"><pre><span class="k">namespace</span> <span class="n">std</span> <span class="p">{</span>
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">,</span> <span class="k">class</span> <span class="nc">U</span><span class="o">&gt;</span>
-  <span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">dynamic_pointer_cast</span><span class="p">(</span><span class="k">const</span> <span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">U</span><span class="o">&gt;&amp;</span> <span class="n">r</span><span class="p">)</span> <span class="n">noexcept</span><span class="p">;</span>
+  <span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">dynamic_pointer_cast</span><span class="p">(</span><span class="k">const</span> <span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">U</span><span class="o">&gt;&amp;</span> <span class="n">r</span><span class="p">)</span> <span class="n">noexcept</span><span class="p">;</span> <span class="c1">// (1) C++11</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">,</span> <span class="k">class</span> <span class="nc">U</span><span class="o">&gt;</span>
+  <span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">dynamic_pointer_cast</span><span class="p">(</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">U</span><span class="o">&gt;&amp;&amp;</span> <span class="n">r</span><span class="p">)</span> <span class="n">noexcept</span><span class="p">;</span>      <span class="c1">// (2) C++20</span>
 <span class="p">}</span>
 </pre></div>
 </p>
 <h2>概要</h2>
 <p><code>shared_ptr</code> で管理するインスタンスに対して <code>dynamic_cast</code> を行う。</p>
 <h2>戻り値</h2>
-<p><code>r</code> が空であった場合、この関数は空の <code>shared_ptr&lt;T&gt;</code> を返却する。<br />
-空ではない場合、この関数は <code>dynamic_cast&lt;T*&gt;</code> を行い <code>shared_ptr&lt;T&gt;</code> を返却する。<br />
-この際、<code>shared_ptr&lt;U&gt;</code> の参照カウンタをそのまま使用する。(<code>shared_ptr&lt;U&gt;.use_count() == shared_ptr&lt;T&gt;.use_count()</code>)  </p>
+<ul>
+<li><code>r</code> が空であった場合、この関数は空の <code>shared_ptr&lt;T&gt;</code> を返却する。</li>
+<li>
+<p>(1) :
+  <br />
+<div class="codehilite"><pre><span class="k">return</span> <span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="k">dynamic_cast</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">element_type</span><span class="o">*&gt;</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/memory/shared_ptr/get.html">r.get()</a></span><span class="p">));</span>
+</pre></div>
+</p>
+</li>
+<li>
+<p>(2) :
+  <br />
+<div class="codehilite"><pre><span class="k">return</span> <span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/utility/move.html">std::move</a></span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="k">dynamic_cast</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">element_type</span><span class="o">*&gt;</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/memory/shared_ptr/get.html">r.get()</a></span><span class="p">));</span>
+</pre></div>
+</p>
+</li>
+</ul>
 <h2>備考</h2>
-<p><code>shared_ptr&lt;T&gt;(dynamic_cast&lt;T*&gt;(r.get()))</code> という方法は動作未定義となるので使用しないこと。</p>
+<ul>
+<li><code>shared_ptr&lt;T&gt;(dynamic_cast&lt;T*&gt;(r.get()))</code> という方法は動作未定義となるので使用しないこと。</li>
+</ul>
 <h2>例外</h2>
 <p>投げない</p>
 <h2>例</h2>
@@ -287,6 +306,10 @@
 <li><a href="https://cpprefjp.github.io/implementation.html#gcc">GCC, C++11 mode</a>: 4.3.6</li>
 <li><a href="https://cpprefjp.github.io/implementation.html#icc">ICC</a>: ??</li>
 <li><a href="https://cpprefjp.github.io/implementation.html#visual_cpp">Visual C++</a>: 2008 (TR1), 2010, 2012, 2013</li>
+</ul>
+<h2>参照</h2>
+<ul>
+<li><a href="https://wg21.cmeerw.net/lwg/issue2996" target="_blank">LWG Issue 2996. Missing rvalue overloads for <code>shared_ptr</code> operations</a></li>
 </ul></div>
 
       </div>
