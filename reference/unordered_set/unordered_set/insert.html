@@ -201,12 +201,12 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2019-02-12T07:01:02">
-        2019年02月12日 07時01分02秒
+      <span itemprop="datePublished" content="2019-04-21T05:56:27">
+        2019年04月21日 05時56分27秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">Akira Takahashi</span>
+        <span itemprop="name">alphya</span>
       </span>
       が更新
     </small></p>
@@ -236,6 +236,9 @@
 <span class="kt">void</span> <span class="n">insert</span><span class="p">(</span><span class="n">InputIterator</span> <span class="n">first</span><span class="p">,</span> <span class="n">InputIterator</span> <span class="n">last</span><span class="p">);</span>          <span class="c1">// (3)</span>
 
 <span class="kt">void</span> <span class="nf">insert</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/initializer_list/initializer_list.html">initializer_list</a></span><span class="o">&lt;</span><span class="n">value_type</span><span class="o">&gt;</span> <span class="n">il</span><span class="p">);</span>                  <span class="c1">// (4)</span>
+
+<span class="n">insert_return_type</span> <span class="nf">insert</span><span class="p">(</span><span class="n">node_type</span><span class="o">&amp;&amp;</span> <span class="n">nh</span><span class="p">);</span>                     <span class="c1">// (5) C++17</span>
+<span class="n">iterator</span> <span class="nf">insert</span><span class="p">(</span><span class="n">const_iterator</span> <span class="n">hint</span><span class="p">,</span> <span class="n">node_type</span><span class="o">&amp;&amp;</span> <span class="n">nh</span><span class="p">);</span>          <span class="c1">// (6) C++17</span>
 </pre></div>
 </p>
 <h2>概要</h2>
@@ -266,6 +269,9 @@
 <li>
 <p>(4)の形式では、<code>value_type</code> はコンテナに対してコピー挿入可能でなければならない。</p>
 </li>
+<li>
+<p>(5), (6)の形式では、 <code>nh</code> は空である、または、<code>(*this).get_­allocator() == nh.get_­allocator()</code>でなければならない。</p>
+</li>
 </ul>
 <h2>効果</h2>
 <ul>
@@ -274,6 +280,11 @@
     引数 <code>position</code> は、要素の挿入位置を探し始める場所のヒントとして使用されるが、実装によって無視されるかもしれない。</li>
 <li>(3) : 範囲 <code>[first, last)</code> のすべての要素 <code>t</code> に対して、(1)の形式の <code>insert(t)</code> を呼び出した場合と等価である。</li>
 <li>(4) : (3)の形式を <code>insert(il.begin(), il.end())</code> として呼び出した場合と等価である。</li>
+<li>(5) : <code>nh</code>が空の場合、効果はない。
+それ以外の場合、<code>nh.key()</code>と等価のキーを持つ要素がコンテナにない場合に限り、<code>nh</code>が所有する要素を挿入する。</li>
+<li>(6) : <code>nh</code>が空の場合、効果はなく、<code>(*this).end()</code>を返す。
+それ以外の場合、<code>nh.key()</code>と等価のキーを持つ要素がコンテナにない場合に限り、<code>nh</code>が所有する要素を挿入する。<code>nh.key()</code>と等価のキーの要素を指すイテレータを常に返す。
+要素は、<code>p</code>の直前の位置のできるだけ近くに挿入される。</li>
 </ul>
 <h2>戻り値</h2>
 <ul>
@@ -283,6 +294,12 @@
     新たな要素が追加されなかった場合、既にあった要素を指すイテレータ。</li>
 <li>(3) : なし</li>
 <li>(4) : なし</li>
+<li>(5) : 戻り値としては、<code><a href="https://cpprefjp.github.io/reference/map/map.html">insert_return_type</a></code>を返す。<code>insert_return_type</code>のイテレータ型メンバ変数<code>position</code>、<code>bool</code>型メンバ変数<code>inserted</code>に格納される値は(1), (2)のものと同じ情報である。<code>nh</code>が空の場合は、<code>position</code>は終端イテレータである。<code>node_type</code>型メンバ変数<code>node</code>には、<ul>
+<li>挿入された場合には、空の<a href="https://cpprefjp.github.io/reference/node_handle/node_handle.html">ノードハンドル</a>。</li>
+<li>挿入されなかった場合には、<code>nh</code>の値である。 </li>
+</ul>
+</li>
+<li>(6) : <code>nh</code>が空の場合、<code>(*this).end()</code>を返す。そうではない場合、<code>nh</code>と等価のキーの要素を指すイテレータを常に返す。</li>
 </ul>
 <h2>例外</h2>
 <p>単一要素の形式（(1)と(2)）では、ハッシュ関数以外から例外が投げられた場合には、挿入はされない。</p>
@@ -291,7 +308,12 @@
 <li>(1) : 平均的なケースでは定数（O(1)）だが、最悪のケースではコンテナの要素数 <code><a href="https://cpprefjp.github.io/reference/unordered_set/unordered_set/size.html">size</a>()</code> に比例（O(N)）。</li>
 <li>(2) : 平均的なケースでは定数（O(1)）だが、最悪のケースではコンテナの要素数 <code><a href="https://cpprefjp.github.io/reference/unordered_set/unordered_set/size.html">size</a>()</code> に比例（O(N)）。</li>
 <li>(3) : 平均的なケースでは引数の範囲の要素数 <code>std::<a href="https://cpprefjp.github.io/reference/iterator/distance.html">distance</a>(first, last)</code> に比例（O(N)）するが、最悪のケースでは引数の範囲の要素数 <code>std::<a href="https://cpprefjp.github.io/reference/iterator/distance.html">distance</a>(first, last)</code> とコンテナの要素数 <code><a href="https://cpprefjp.github.io/reference/unordered_set/unordered_set/size.html">size()</a></code> に 1 加えたものの積に比例（O(<code>std::<a href="https://cpprefjp.github.io/reference/iterator/distance.html">distance</a>(first, last) * (<a href="https://cpprefjp.github.io/reference/unordered_set/unordered_set/size.html">size</a>() + 1)</code>)）。</li>
-<li>(4) : (3)の形式を <code>insert(il.begin(), il.end())</code> として呼び出した場合と等価。</li>
+<li>
+<p>(4) : (3)の形式を <code>insert(il.begin(), il.end())</code> として呼び出した場合と等価。</p>
+</li>
+<li>
+<p>(5), (6) : 平均的なケースでは <code>O(1)</code>、最悪のケースでは <code>O(size())</code>。</p>
+</li>
 </ul>
 <h2>備考</h2>
 <ul>
@@ -307,6 +329,9 @@
 </ul>
 <p>のいずれかである。<br />
 なお、後者の条件は「よりも小さい」となっているが、最大負荷率の定義からすると「以下」の方が適切と思われる。<code><a href="https://cpprefjp.github.io/reference/unordered_set/unordered_set/reserve.html">reserve</a></code> も参照。</p>
+</li>
+<li>
+<p>(5), (6) の場合、要素はコピーもムーブもされない。</p>
 </li>
 </ul>
 <h2>例</h2>
@@ -478,6 +503,10 @@ insert initializer_list : 7 8 6 5 4 3 2 1 0
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2350.pdf" target="_blank">N2350 Container insert/erase and iterator constness (Revision 1)</a></li>
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2679.pdf" target="_blank">N2679 Initializer Lists for Standard Containers(Revision 1)</a><ul>
 <li>(4)の経緯となる提案文書</li>
+</ul>
+</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0083r3.pdf" target="_blank">Splicing Maps and Sets(Revision 5)</a><ul>
+<li>(5), (6)経緯となる提案文書</li>
 </ul>
 </li>
 </ul></div>
