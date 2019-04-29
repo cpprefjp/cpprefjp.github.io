@@ -2,9 +2,322 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2019-04-28T14:44:07.128089</updated>
-  <id>2219a57d-9425-4f69-bb44-fe1071d84451</id>
+  <updated>2019-04-29T10:21:53.006048</updated>
+  <id>0d77e3f0-0f7d-426c-9b21-f55962913d2c</id>
 
+  
+    <entry>
+      <title>assume_aligned -- fix #637 std::assume_aligned C++20 P1007R3</title>
+      <link href="https://cpprefjp.github.io/reference/memory/assume_aligned.html"/>
+      <id>5240e20b9ee4e696885f71a8c10b059e01e2e3ff:reference/memory/assume_aligned.md</id>
+      <updated>2019-04-29T19:17:06+09:00</updated>
+      
+        <content type="html">&lt;div class=&#34;identifier-type&#34;&gt;function&lt;/div&gt;&lt;div class=&#34;header&#34;&gt;&amp;lt;memory&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;namespace&#34; title=&#34;namespace std&#34;&gt;std::&lt;/span&gt;&lt;span class=&#34;token&#34;&gt;assume_aligned&lt;/span&gt;&lt;span class=&#34;cpp cpp20&#34; title=&#34;C++20で追加&#34;&gt;(C++20)&lt;/span&gt;&lt;/h1&gt;
+&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;size_t&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;N&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;[[&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;nodiscard&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]]&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;constexpr&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;assume_aligned&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ptr&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;概要&lt;/h2&gt;
+&lt;p&gt;特定のメモリー領域のアライメント情報をプログラマーが明示的にコンパイラーへ与えコンパイラーが最適化のヒントとして活用できるようにする。&lt;/p&gt;
+&lt;h2&gt;効果&lt;/h2&gt;
+&lt;p&gt;本機能の効果はコンパイラーの対象メモリー領域に対する機械語の生成と最適化の選択として現れる。適切に使用した場合はプログラムの実行結果そのものについて効果を持つ事はないが、より高度な最適化が施され、生成されるプログラムの動作速度やフットプリントに良好な効果を及ぼす可能性が得られる。但し、例で示す様に不適切な使用があった場合にはコンパイラーが不正な機械語の選択を行い実行不能なプログラムを生成する可能性も生じる。&lt;/p&gt;
+&lt;h2&gt;戻り値&lt;/h2&gt;
+&lt;p&gt;引数 &lt;code&gt;ptr&lt;/code&gt; がそのまま得られる。（この関数の意義については「効果」を参照されたい。）&lt;/p&gt;
+&lt;h2&gt;備考&lt;/h2&gt;
+&lt;p&gt;この機能によって引数または戻り値として得られるメモリー領域が変化する事はない。アライメント不定のメモリー領域を本機能へ渡してもアライメントされたメモリー領域を得られるわけではない。アライメントされたメモリー領域を得たい場合には、先ず &lt;code&gt;alisnas&lt;/code&gt; を参照すると良い。&lt;/p&gt;
+&lt;h2&gt;例&lt;/h2&gt;
+&lt;p&gt;はじめに、ごく単純な使用例のみを示す。但し、 &lt;code&gt;assume_aligned&lt;/code&gt; の効果はソースコード上の記述と実行結果だけでは分かりにくいため、後にもう1つ、 &lt;code&gt;assume_aligned&lt;/code&gt; の効果をより具体的に解説する例も示す。&lt;/p&gt;
+&lt;h3&gt;例1: ごく単純な仕様例&lt;/h3&gt;
+&lt;p&gt;&lt;div class=&#34;yata&#34; id=&#34;46d41801b2c87720868708566f4155487ebfcb47&#34;&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;memory&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;new&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;cstdint&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
+
+&lt;span class=&#34;c1&#34;&gt;// 例えば翻訳単位が異なる、あるいは他人の作成した仕様はドキュメントでわかるが&lt;/span&gt;
+&lt;span class=&#34;c1&#34;&gt;// ソースコードは不明な実行時にリンクするどこかのライブラリーがあるとしよう。&lt;/span&gt;
+&lt;span class=&#34;k&#34;&gt;namespace&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;external_library&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;static&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;char&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;memory_pool&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;nullptr&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+
+  &lt;span class=&#34;c1&#34;&gt;// そのライブラリーの中で仕様上は領域全体としては 16-byte アライメントされた&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// 4 つ連続した float 型の領域を return してくれる関数があったとしよう。&lt;/span&gt;
+  &lt;span class=&#34;kt&#34;&gt;float&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;get_data&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;if&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;memory_pool&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;==&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;nullptr&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+      &lt;span class=&#34;n&#34;&gt;memory_pool&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;new&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;char&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;32&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;];&lt;/span&gt;
+
+    &lt;span class=&#34;n&#34;&gt;static_assert&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;sizeof&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;decltype&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;memory_pool&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;==&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;8&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+
+    &lt;span class=&#34;c1&#34;&gt;// 特に、このような実装でアライメントの仕様を満たしていた場合には&lt;/span&gt;
+    &lt;span class=&#34;c1&#34;&gt;// 翻訳単位が異なれば、呼び出し元を翻訳するコンパイラーはそれを知るのは難しい。&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;data&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;float&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)(&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;uint64_t&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;memory_pool&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;+&lt;/span&gt; &lt;span class=&#34;mh&#34;&gt;0x0f&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;4&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;4&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+
+    &lt;span class=&#34;k&#34;&gt;for&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;n&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;n&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;4&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;++&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;n&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+      &lt;span class=&#34;n&#34;&gt;data&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;n&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;]&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;n&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+
+    &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;data&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+
+&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// しかし、それを使用するコードのコンパイル時点では、&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// コンパイラーは外部ライブラリ－によって確保されるメモリー領域が&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// アライメントされている事はわからないとしよう。&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;data&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;external_library&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;get_data&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+
+  &lt;span class=&#34;c1&#34;&gt;// そこで、 assume_aligned を使い、ソースコードでプログラマーが明示的に&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// 特定のメモリー領域のアライメントをコンパイラーへ伝える。&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;aligned_data&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;assume_aligned&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;16&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;data&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+
+  &lt;span class=&#34;c1&#34;&gt;// コンパイラーが十分に賢く最適化できるならば、&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// assume_aligned のヒント付けにより次のコードは&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// 16-byte アライメントされた連続した4つの float 領域として、&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// 例えば SSE 命令を用いた最適化により movaps と mulps 命令により&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// ループも排除した単純で高速な機械語を生成してくれるかもしれない。&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// （ assume_aligned はヒント付けでしかないので、どこまでヒントを活かしてくれるかは&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// コンパイラーによって結果は異なるし、まったく最適化に役立ててくれないコンパイラーもあるかもしれません。 ）&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;for&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;n&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;n&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;4&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;++&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;n&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;aligned_data&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;n&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;]&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;*=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;aligned_data&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;n&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;];&lt;/span&gt;
+
+  &lt;span class=&#34;c1&#34;&gt;// （実行結果が見れないと寂しいので付けたが、 assume_aligned の例としてはこの部分に意味はない。）&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;for&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;n&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;n&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;4&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;++&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;n&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34;data[ &#34;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;n&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34; ] = &#34;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;data&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;n&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;]&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;sc&#34;&gt;&#39;\n&#39;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;&lt;/p&gt;
+&lt;h4&gt;出力&lt;/h4&gt;
+&lt;p&gt;次に示す出力は期待動作を示すものではあるが、残念ながら &lt;code&gt;assume_aligned&lt;/code&gt; の効果については読み取れない。&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;data&lt;span class=&#34;o&#34;&gt;[&lt;/span&gt; 0 &lt;span class=&#34;o&#34;&gt;]&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; 0
+data&lt;span class=&#34;o&#34;&gt;[&lt;/span&gt; 1 &lt;span class=&#34;o&#34;&gt;]&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; 1
+data&lt;span class=&#34;o&#34;&gt;[&lt;/span&gt; 2 &lt;span class=&#34;o&#34;&gt;]&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; 4
+data&lt;span class=&#34;o&#34;&gt;[&lt;/span&gt; 3 &lt;span class=&#34;o&#34;&gt;]&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; 9
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h3&gt;例2: 効果をより具体的に解説する例&lt;/h3&gt;
+&lt;p&gt;このソースコードでは x86 系の近年の CPU では一般的に使用可能となっている SSE 命令セットから &lt;code&gt;float&lt;/code&gt; を 4 つ同時に扱う命令が使用可能な環境を想定し、&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;コンパイラーが操作対象のメモリー領域のアライメントに基づく最適化の可否を十分に判断できる場合、&lt;/li&gt;
+&lt;li&gt;十分には判断できない場合、&lt;/li&gt;
+&lt;li&gt;十分には判断できなくともソースコード上に &lt;code&gt;assume_aligned&lt;/code&gt; （または相当するコンパイラーの独自実装機能）を用いてプログラマーが明示的にアライメントをコンパイラーへ指示した場合&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;について &lt;code&gt;define&lt;/code&gt; により選択的にコンパイルできるようにした。&lt;/p&gt;
+&lt;p&gt;この例2ではソースコードの後に通常の「出力」に代えて、 &lt;code&gt;assume_aligned&lt;/code&gt; の効果を確認するため「逆アセンブル」の一部を示す。&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;yata&#34; id=&#34;989ea61d7952ef6c5de3458c7e4e1a2fc3ecfeb6&#34;&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;numeric&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;xmmintrin.h&amp;gt;&lt;/span&gt;
+
+&lt;span class=&#34;c1&#34;&gt;//#define MEMORY_ALLOCATE_ABNORMAL_ALIGNMENT&lt;/span&gt;
+&lt;span class=&#34;c1&#34;&gt;//#define ASSUME_ALIGN_CPP20&lt;/span&gt;
+&lt;span class=&#34;c1&#34;&gt;//#define ASSUME_ALIGN_GCC_OR_CLANG&lt;/span&gt;
+&lt;span class=&#34;c1&#34;&gt;//#define ASSUME_ALIGN_ICC&lt;/span&gt;
+
+&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;typename&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;size_t&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;size&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;size_t&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;alignment&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;alignas&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;alignment&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;aligned_pack&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;T&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;data&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;size&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;];&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
+
+&lt;span class=&#34;k&#34;&gt;using&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;SSE_SINGLE_TYPE&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;float&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;constexpr&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;SSE_SINGLE_PACKING&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;4&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;constexpr&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;SSE_ALIGNMENT&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;16&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+
+&lt;span class=&#34;k&#34;&gt;using&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;f32x4&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; 
+  &lt;span class=&#34;n&#34;&gt;aligned_pack&lt;/span&gt;
+  &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;SSE_SINGLE_TYPE&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;SSE_SINGLE_PACKING&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;SSE_ALIGNMENT&lt;/span&gt;
+  &lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+
+&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;constexpr&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;N&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;256&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+
+&lt;span class=&#34;cp&#34;&gt;#ifdef MEMORY_ALLOCATE_ABNORMAL_ALIGNMENT&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// A アラインで float 要素を N + 1 個の配列を確保するが、&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// わざと 1-byte だけアドレスをずらした実験用の data 領域を定義&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;alignas&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;SSE_ALIGNMENT&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;f32x4&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;memory_pool&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;N&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;+&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;];&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;f32x4&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;packs&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;  &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;f32x4&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)(&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;char&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;memory_pool&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;]&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;+&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#else&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// 素直に A アラインで float 要素を N 個の配列を定義&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;alignas&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;SSE_ALIGNMENT&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;f32x4&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;packs&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;N&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;];&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#endif&lt;/span&gt;
+
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;fill&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;packs&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;].&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;data&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;],&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;packs&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;N&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;].&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;data&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;],&lt;/span&gt; &lt;span class=&#34;mf&#34;&gt;1.0f&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+
+  &lt;span class=&#34;k&#34;&gt;for&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;n&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;n&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;N&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;++&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;n&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;pack&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;packs&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;n&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;];&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;xmm&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#ifdef ASSUME_ALING_CPP20&lt;/span&gt;
+      &lt;span class=&#34;n&#34;&gt;_mm_load_ps&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;assume_aligned&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;SSE_ALIGNMENT&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;pack&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;data&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#elif defined( ASSUME_ALIGN_GCC_OR_CLANG )&lt;/span&gt;
+      &lt;span class=&#34;n&#34;&gt;_mm_load_ps&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;float&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;__builtin_assume_aligned&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;pack&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;data&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;SSE_ALIGNMENT&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#elif defined( ASSUME_ALIGN_ICC )&lt;/span&gt;
+      &lt;span class=&#34;n&#34;&gt;_mm_load_ups&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;float&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;__assume_aligned&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;pack&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;data&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;SSE_ALIGNMENT&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#else&lt;/span&gt;
+      &lt;span class=&#34;n&#34;&gt;_mm_load_ps&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;pack&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;data&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#endif&lt;/span&gt;
+
+    &lt;span class=&#34;n&#34;&gt;xmm&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;_mm_add_ps&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;xmm&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;xmm&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;_mm_store_ps&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;pack&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;data&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;xmm&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+
+  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;accumulate&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;packs&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;].&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;data&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;],&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;packs&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;N&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;].&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;data&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;],&lt;/span&gt; &lt;span class=&#34;mf&#34;&gt;0.0f&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;&lt;/p&gt;
+&lt;h3&gt;逆アセンブル&lt;/h3&gt;
+&lt;p&gt;執筆現在は正式にリリースされた &lt;code&gt;GCC&lt;/code&gt;, &lt;code&gt;Clang&lt;/code&gt;, &lt;code&gt;ICC&lt;/code&gt;, &lt;code&gt;MSVC++&lt;/code&gt; などの主要なツールチェインではまだ &lt;code&gt;assume_aligned&lt;/code&gt; の正式なサポートは未完了のため &lt;code&gt;assume_aligned&lt;/code&gt; に代えて &lt;code&gt;GCC&lt;/code&gt; および &lt;code&gt;Clang&lt;/code&gt; において等価な挙動を示す独自拡張 &lt;code&gt;__builtin_assume_aligned&lt;/code&gt; を用いた場合にコンパイラーが生成するコードの最適化効果を &lt;code&gt;GCC-8.3&lt;/code&gt;, &lt;code&gt;-O2&lt;/code&gt; での実行結果を元に示す。&lt;/p&gt;
+&lt;h4&gt;2.a. 何れの &lt;code&gt;define&lt;/code&gt; も使用しなかった場合&lt;/h4&gt;
+&lt;p&gt;この場合、コンパイラーは &lt;code&gt;packs&lt;/code&gt; が &lt;code&gt;alignas&lt;/code&gt; により 16-byte アライメントを指示された事を知っている。このため、&lt;code&gt;_mm_load_ps&lt;/code&gt; の部分は &lt;code&gt;.L3&lt;/code&gt; ラベルのすぐ後で &lt;code&gt;movaps&lt;/code&gt; として現れている。 &lt;code&gt;_mm_load_ps&lt;/code&gt; は仕様上の直接の対応としては &lt;code&gt;movaps&lt;/code&gt; だが、実際はコンパイラーによって &lt;code&gt;movups&lt;/code&gt; が適切と判断され使用される場合もある。また、 &lt;code&gt;_mm_loadu_ps&lt;/code&gt; をコードしていた場合でも &lt;code&gt;movups&lt;/code&gt; ではなく &lt;code&gt;movaps&lt;/code&gt; へ最適化される場合もある。&lt;/p&gt;
+&lt;p&gt;つまり、この場合の逆アセンブルからは &lt;code&gt;alignas&lt;/code&gt; により 16-byte アライメントで &lt;code&gt;packs&lt;/code&gt; のメモリー領域が確保されているから、 XMM レジスターへの読み出し命令はアライメント不明でも使用可能な代わりに僅かに速度的に不利となる可能性のある &lt;code&gt;movups&lt;/code&gt; ではなく 16-byte アライメントされたメモリー領域を前提とする代わりに僅かに速度的に有利となる可能性のある &lt;code&gt;movaps&lt;/code&gt; が採用される状態となっている事が分かる。&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;n&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;:&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;sub&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;rsp&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;4104&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;movss&lt;/span&gt;   &lt;span class=&#34;n&#34;&gt;xmm0&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;DWORD&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;PTR&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;na&#34;&gt;LC1&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;rip&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;]&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;mov&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;rax&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;rsp&lt;/span&gt;
+&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;na&#34;&gt;L2&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;:&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;movss&lt;/span&gt;   &lt;span class=&#34;n&#34;&gt;DWORD&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;PTR&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;rax&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;],&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;xmm0&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;lea&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;rcx&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;rsp&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;+&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;4096&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;]&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;add&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;rax&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;4&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;cmp&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;rax&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;rcx&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;jne&lt;/span&gt;     &lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;na&#34;&gt;L2&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;mov&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;rax&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;rsp&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;mov&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;rdx&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;rcx&lt;/span&gt;
+&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;na&#34;&gt;L3&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;:&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;movaps&lt;/span&gt;  &lt;span class=&#34;n&#34;&gt;xmm0&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;XMMWORD&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;PTR&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;rax&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;]&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;add&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;rax&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;16&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;addps&lt;/span&gt;   &lt;span class=&#34;n&#34;&gt;xmm0&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;xmm0&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;movaps&lt;/span&gt;  &lt;span class=&#34;n&#34;&gt;XMMWORD&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;PTR&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;rax&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;-&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;16&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;],&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;xmm0&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;cmp&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;rax&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;rdx&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;jne&lt;/span&gt;     &lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;na&#34;&gt;L3&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;pxor&lt;/span&gt;    &lt;span class=&#34;n&#34;&gt;xmm0&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;xmm0&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;mov&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;rax&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;rsp&lt;/span&gt;
+&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;na&#34;&gt;L4&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;:&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;addss&lt;/span&gt;   &lt;span class=&#34;n&#34;&gt;xmm0&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;DWORD&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;PTR&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;rax&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;]&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;lea&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;rsi&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;rsp&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;+&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;4096&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;]&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;add&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;rax&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;4&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;cmp&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;rax&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;rsi&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;jne&lt;/span&gt;     &lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;na&#34;&gt;L4&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;mov&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;edi&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;OFFSET&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;FLAT&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;_ZSt4cout&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;cvtss2sd&lt;/span&gt;        &lt;span class=&#34;n&#34;&gt;xmm0&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;xmm0&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;call&lt;/span&gt;    &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;basic_ostream&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;char&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;char_traits&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;char&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;gt;&amp;amp;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;basic_ostream&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;char&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;char_traits&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;char&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;_M_insert&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;double&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;double&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;)&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;xor&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;eax&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;eax&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;add&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;rsp&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;4104&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;ret&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;_GLOBAL__sub_I_main&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;:&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;sub&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;rsp&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;8&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;mov&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;edi&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;OFFSET&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;FLAT&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;_ZStL8__ioinit&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;call&lt;/span&gt;    &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;ios_base&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Init&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Init&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;complete&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;object&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;constructor&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;]&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;mov&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;edx&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;OFFSET&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;FLAT&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;__dso_handle&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;mov&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;esi&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;OFFSET&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;FLAT&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;_ZStL8__ioinit&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;mov&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;edi&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;OFFSET&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;FLAT&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;_ZNSt8ios_base4InitD1Ev&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;add&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;rsp&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;8&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;jmp&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;__cxa_atexit&lt;/span&gt;
+&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;na&#34;&gt;LC1&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;:&lt;/span&gt;
+        &lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;na&#34;&gt;long&lt;/span&gt;   &lt;span class=&#34;mi&#34;&gt;1065353216&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h4&gt;2.b. &lt;code&gt;MEMORY_ALLOCATE_ABNORMAL_ALIGNMENT&lt;/code&gt; のみ定義した場合&lt;/h4&gt;
+&lt;p&gt;この場合、 &lt;code&gt;packs&lt;/code&gt; は故意に 16-byte アライメントから 1 byte だけずれたメモリー領域となる。すると、 &lt;code&gt;.L3&lt;/code&gt; の部分で &lt;code&gt;_mm_load_ps&lt;/code&gt; は &lt;code&gt;movups&lt;/code&gt; へ翻訳されるようになる。&lt;/p&gt;
+&lt;p&gt;今回はコンパイラーが packs が 16-byte アライメントされていない可能性を検知した事により &lt;code&gt;movaps&lt;/code&gt; ではなく &lt;code&gt;movups&lt;/code&gt; が安全に採用されている。&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;L3&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;:&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;movups&lt;/span&gt;  &lt;span class=&#34;n&#34;&gt;xmm0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;XMMWORD&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;PTR&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;rax&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;add&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;rax&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;16&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;addps&lt;/span&gt;   &lt;span class=&#34;n&#34;&gt;xmm0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;xmm0&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;movups&lt;/span&gt;  &lt;span class=&#34;n&#34;&gt;XMMWORD&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;PTR&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;rax&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;-&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;16&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;],&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;xmm0&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;cmp&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;rdx&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;rax&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;jne&lt;/span&gt;     &lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;L3&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;pxor&lt;/span&gt;    &lt;span class=&#34;n&#34;&gt;xmm0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;xmm0&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;lea&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;rax&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;rsp&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;+&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;lea&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;rdx&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;rsp&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;+&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;4097&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h4&gt;2.c. &lt;code&gt;MEMORY_ALLOCATE_ABNORMAL_ALIGNMENT&lt;/code&gt; と &lt;code&gt;ASSUME_ALIGN_CPP20&lt;/code&gt; または &lt;code&gt;ASSUME_ALIGN_GCC_OR_CLANG&lt;/code&gt; を定義した場合&lt;/h4&gt;
+&lt;p&gt;この場合、 &lt;code&gt;assume_aligned&lt;/code&gt; または &lt;code&gt;__builtin_assume_aligned&lt;/code&gt; によるプログラマーからの明示的なヒント付けにより、コンパイラーはプログラマーからの情報を信じて &lt;code&gt;packs&lt;/code&gt; の要素が 16-byte アライメントされたメモリー領域であり、その領域が &lt;code&gt;_mm_load_ps&lt;/code&gt; の実引数として渡されていると判断して翻訳を行う。結果、コンパイラーは &lt;code&gt;_mm_load_ps&lt;/code&gt; を 2.b. の &lt;code&gt;movups&lt;/code&gt; ではなく &lt;code&gt;movaps&lt;/code&gt; へと翻訳する。&lt;/p&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;L3&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;:&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;movaps&lt;/span&gt;  &lt;span class=&#34;n&#34;&gt;xmm0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;XMMWORD&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;PTR&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;rax&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;add&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;rax&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;16&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;addps&lt;/span&gt;   &lt;span class=&#34;n&#34;&gt;xmm0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;xmm0&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;movups&lt;/span&gt;  &lt;span class=&#34;n&#34;&gt;XMMWORD&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;PTR&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;rax&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;-&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;16&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;],&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;xmm0&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;cmp&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;rax&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;rdx&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;jne&lt;/span&gt;     &lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;L3&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;pxor&lt;/span&gt;    &lt;span class=&#34;n&#34;&gt;xmm0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;xmm0&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;lea&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;rax&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;rsp&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;+&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;lea&lt;/span&gt;     &lt;span class=&#34;n&#34;&gt;rdx&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;rsp&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;+&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;4097&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;p&gt;なお、この例は逆アセンブルから &lt;code&gt;assume_aligned&lt;/code&gt; の効果を確認するために用意し、その意味ではコンパイラーは期待動作してくれるが、この 2.c. から生成される実行バイナリーを実行した場合、出力は得られずプログラムは &lt;code&gt;segmentation fault&lt;/code&gt; して OS に実行を停止させられてしまう。 16-byte アライメントされたメモリー領域を前提とした &lt;code&gt;movaps&lt;/code&gt; を、その前提を確実に満たさないメモリー領域に対して実行する実行プログラムとしては不正な機械語が生成されるため生じる。&lt;/p&gt;
+&lt;p&gt;例え故意でなくとも &lt;code&gt;assume_aligned&lt;/code&gt; を不適切に用いてしまうと、この様にプログラムは期待動作し得ない実行バイナリーを生成してしまう可能性も十分にあるため、使用にあたっては必要性、妥当性について十分に注意すると良い。&lt;/p&gt;
+&lt;h2&gt;実装例&lt;/h2&gt;
+&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;cstddef&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;cstdint&amp;gt;&lt;/span&gt;
+
+&lt;span class=&#34;k&#34;&gt;template&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;size_t&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;N&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;typename&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;T&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#if defined( __clang__ ) || defined( __GNUC__ )&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;__attribute__&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;always_inline&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#elif defined( _MSC_VER )&lt;/span&gt;
+  &lt;span class=&#34;kr&#34;&gt;__forceinline&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#endif&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;[[&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;nodiscard&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;]]&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;constexpr&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;assume_aligned&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ptr&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#if defined( __clang__ ) || ( defined( __GNUC__ ) &amp;amp;&amp;amp; !defined( __ICC ) )&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;reinterpret_cast&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;T&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;__builtin_assume_aligned&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ptr&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;N&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#elif defined(_MSC_VER)&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;if&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;reinterpret_cast&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;uintptr_t&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ptr&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;N&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;-&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;==&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ptr&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;else&lt;/span&gt;
+    &lt;span class=&#34;nf&#34;&gt;__assume&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#elif defined( __ICC )&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;switch&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;N&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;case&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;2&lt;/span&gt;: &lt;span class=&#34;n&#34;&gt;__assume_aligned&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ptr&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;2&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;);&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;break&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;case&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;4&lt;/span&gt;: &lt;span class=&#34;n&#34;&gt;__assume_aligned&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ptr&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;4&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;);&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;break&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;case&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;8&lt;/span&gt;: &lt;span class=&#34;n&#34;&gt;__assume_aligned&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ptr&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;8&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;);&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;break&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;case&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;16&lt;/span&gt;: &lt;span class=&#34;n&#34;&gt;__assume_aligned&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ptr&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;16&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;);&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;break&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;case&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;32&lt;/span&gt;: &lt;span class=&#34;n&#34;&gt;__assume_aligned&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ptr&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;32&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;);&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;break&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;case&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;64&lt;/span&gt;: &lt;span class=&#34;n&#34;&gt;__assume_aligned&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ptr&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;64&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;);&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;break&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;case&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;128&lt;/span&gt;: &lt;span class=&#34;n&#34;&gt;__assume_aligned&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ptr&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;128&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;);&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;break&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ptr&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#else&lt;/span&gt;
+  &lt;span class=&#34;c1&#34;&gt;// Unknown compiler — do nothing&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;ptr&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;cp&#34;&gt;#endif&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;バージョン&lt;/h2&gt;
+&lt;h3&gt;言語&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;C++20&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;処理系&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang&lt;/a&gt;: †&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC&lt;/a&gt;: † ‡&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#icc&#34;&gt;ICC&lt;/a&gt;: †&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt;: †&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;†2019-04-29 時点で正式リリース版の対応はまだ無い。処理系独自拡張による等価な実装はあり。
+‡2019-04-29 時点で &lt;code&gt;GCC-10.0.0 20190426 (experimental)&lt;/code&gt; では使用可能を確認。&lt;/p&gt;
+&lt;p&gt;（本項は初稿時点では処理系の対応がまだ進んでいないため、各処理系の対応情報が明らかとなり記述の更新が求められる。）&lt;/p&gt;
+&lt;h3&gt;備考&lt;/h3&gt;
+&lt;p&gt;C++20 から標準で使用可能となる本機能だが、実装例からも分かるように &lt;code&gt;GCC&lt;/code&gt; や &lt;code&gt;Clang&lt;/code&gt; には等価な独自拡張での実装が以前から存在する。例えば &lt;code&gt;__builtin_assume_aligned&lt;/code&gt; は &lt;code&gt;GCC-4.7&lt;/code&gt; 以降, &lt;code&gt;Clang-3.6&lt;/code&gt; 以降から使用可能だった。&lt;/p&gt;
+&lt;h2&gt;関連項目&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/lang/cpp11/alignas.html&#34;&gt;alignas&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/lang/cpp11/alignof.html&#34;&gt;alignof&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;参照&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1007r3.pdf&#34; target=&#34;_blank&#34;&gt;P1007R3 std::assume_aligned&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cppmap.github.io/standardization/cpp20/#assume_aligned-p1007r3&#34; target=&#34;_blank&#34;&gt;cppmap - C++20 の新機能 - ポインタのアライメントを最適化ヒントとしてコンパイラに伝える assume_aligned() 関数 (P1007R3)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/div&gt;</content>
+      
+      <author>
+        <name>Usagi Ito</name>
+        <email>the@usagi.network</email>
+      </author>
+    </entry>
   
     <entry>
       <title>C++20 -- C++20対応として、unwrap_ref_decayを追加 #635</title>
@@ -4351,127 +4664,6 @@ hello
 &lt;h2&gt;参照&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0318r1.pdf&#34; target=&#34;_blank&#34;&gt;P0318R1 &lt;code&gt;unwrap_ref_decay&lt;/code&gt; and &lt;code&gt;unwrap_reference&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>bind_front -- bind_front : small fix #641</title>
-      <link href="https://cpprefjp.github.io/reference/functional/bind_front.html"/>
-      <id>9b78209e5ea71c798e4df452511401ecb3008b54:reference/functional/bind_front.md</id>
-      <updated>2019-04-25T16:09:33+09:00</updated>
-      
-        <content type="html">&lt;div class=&#34;identifier-type&#34;&gt;function template&lt;/div&gt;&lt;div class=&#34;header&#34;&gt;&amp;lt;functional&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;namespace&#34; title=&#34;namespace std&#34;&gt;std::&lt;/span&gt;&lt;span class=&#34;token&#34;&gt;bind_front&lt;/span&gt;&lt;span class=&#34;cpp cpp20&#34; title=&#34;C++20で追加&#34;&gt;(C++20)&lt;/span&gt;&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;namespace&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;k&#34;&gt;template&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;F&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;class&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Args&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;&lt;i&gt;unspecified&lt;/i&gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;bind_front&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;F&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Args&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;...);&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;h2&gt;概要&lt;/h2&gt;
-&lt;p&gt;関数の引数を先頭から順に部分適用する。&lt;/p&gt;
-&lt;p&gt;この関数は、メンバ関数とレシーバー (&lt;code&gt;*this&lt;/code&gt;) を束縛して持ち運び、引数をあとで渡して呼び出す、というユースケースで使用する。そのようなケースでは、&lt;code&gt;const&lt;/code&gt;性の伝播が難しいラムダ式や&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/bind.html&#34;&gt;std::bind()&lt;/a&gt;&lt;/code&gt;よりも容易になる。&lt;/p&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;using&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;namespace&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/placeholders.html&#34;&gt;std::placeholders&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-
-&lt;span class=&#34;c1&#34;&gt;// 4引数をもつメンバ関数Strategy::process&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Strategy&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;double&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;process&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;string&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;string&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;double&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;double&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
-
-&lt;span class=&#34;c1&#34;&gt;// 1. ラムダ式の場合、非constメンバ関数を呼び出すためにmutableを付けなければならないため、&lt;/span&gt;
-&lt;span class=&#34;c1&#34;&gt;// シンプルなメンバ関数のラップができない。&lt;/span&gt;
-&lt;span class=&#34;c1&#34;&gt;// コーナーケースとしては、decltype(auto)の考慮もときに必要になる&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;f1&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;s&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Strategy&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;{}]&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;...&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;args&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;mutable&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;s&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;process&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/utility/forward.html&#34;&gt;std::forward&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;decltype&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;args&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;args&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)...);&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
-
-&lt;span class=&#34;c1&#34;&gt;// 2. &lt;a href=&#34;https://cpprefjp.github.io/reference/functional/bind.html&#34;&gt;std::bind&lt;/a&gt;()の場合、引数の数をユーザーが知っており、&lt;/span&gt;
-&lt;span class=&#34;c1&#34;&gt;// プレースホルダーを適切に設定しなければならない&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;f2&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/bind.html&#34;&gt;std::bind&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Strategy&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;process&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Strategy&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;{},&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/placeholders.html&#34;&gt;_1&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/placeholders.html&#34;&gt;_2&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/placeholders.html&#34;&gt;_3&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/placeholders.html&#34;&gt;_4&lt;/a&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-
-&lt;span class=&#34;c1&#34;&gt;// 3. std::bind_front()の場合、const性の伝播が自動的に行われ、&lt;/span&gt;
-&lt;span class=&#34;c1&#34;&gt;// プレースホルダーを指定する必要がない&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;f3&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;bind_front&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Strategy&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;process&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Strategy&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;{});&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;p&gt;ただし、この関数はメンバ関数とレシーバーを受け取る専用にはなっておらず、「引数を先頭から順に束縛する」という汎用的な機能になっているため、「メンバ関数ポインタのみを束縛」「関数と引数の一部を束縛」といった利用もできる。&lt;/p&gt;
-&lt;h2&gt;テンプレートパラメータ制約&lt;/h2&gt;
-&lt;p&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/decay.html&#34;&gt;decay_t&lt;/a&gt;&amp;lt;F&amp;gt;&lt;/code&gt;を適用した型を&lt;code&gt;FD&lt;/code&gt;、
-&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/unwrap_ref_decay.md.nolink&#34;&gt;std::unwrap_ref_decay&lt;/a&gt;&amp;lt;Args&amp;gt;...&lt;/code&gt;を適用した型パラメータパックを&lt;code&gt;BoundArgs&lt;/code&gt;であるとして、&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;FD&lt;/code&gt;が&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/concepts/MoveConstructible.html&#34;&gt;std::MoveConstructible&lt;/a&gt;&lt;/code&gt;要件を満たすこと&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;BoundArgs&lt;/code&gt;のそれぞれの型&lt;code&gt;Ti&lt;/code&gt;が&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/is_object.html&#34;&gt;オブジェクト型&lt;/a&gt;である場合、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/concepts/MoveConstructible.html&#34;&gt;std::MoveConstructible&lt;/a&gt;&lt;/code&gt;要件を満たすこと&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;適格要件&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/conjunction.html&#34;&gt;conjunction_v&lt;/a&gt;&amp;lt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/is_constructible.html&#34;&gt;is_constructible&lt;/a&gt;&amp;lt;FD, F&amp;gt;, &lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/is_move_constructible.html&#34;&gt;is_move_constructible&lt;/a&gt;&amp;lt;FD&amp;gt;, &lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/is_constructible.html&#34;&gt;is_constructible&lt;/a&gt;&amp;lt;BoundArgs, Args&amp;gt;..., &lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/is_move_constructible.html&#34;&gt;is_move_constructible&lt;/a&gt;&amp;lt;BoundArgs&amp;gt;...&amp;gt;&lt;/code&gt;が&lt;code&gt;true&lt;/code&gt;であること&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;戻り値&lt;/h2&gt;
-&lt;p&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/invoke.html&#34;&gt;std::invoke()&lt;/a&gt;&lt;/code&gt;の呼び出しにおける引数の先頭一部&lt;code&gt;f&lt;/code&gt;と&lt;code&gt;args...&lt;/code&gt;を完全転送して保持し、残しの引数リストを渡すことで関数オブジェクト&lt;code&gt;f&lt;/code&gt;を呼び出せる未規定の関数オブジェクトを返す。&lt;/p&gt;
-&lt;h2&gt;例外&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;関数オブジェクト&lt;code&gt;f&lt;/code&gt;のムーブによって任意の例外が送出される可能性がある&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;例&lt;/h2&gt;
-&lt;p&gt;&lt;div class=&#34;yata&#34; id=&#34;679d60a543709cfe31a5e2f408e88e2d997534b9&#34;&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
-&lt;span class=&#34;cp&#34;&gt;#include &amp;lt;functional&amp;gt;&lt;/span&gt;
-
-&lt;span class=&#34;k&#34;&gt;struct&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;kt&#34;&gt;void&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;f&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;a&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;b&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;c&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-    &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;a&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;sc&#34;&gt;&#39;,&#39;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;b&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;sc&#34;&gt;&#39;,&#39;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;c&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;endl&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;void&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;g&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;a&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;b&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;c&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;cout&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;a&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;sc&#34;&gt;&#39;,&#39;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;b&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;sc&#34;&gt;&#39;,&#39;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;c&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;endl&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-
-&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-  &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-    &lt;span class=&#34;c1&#34;&gt;// メンバ関数ポインタと*thisを束縛する&lt;/span&gt;
-    &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-    &lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;f&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;&lt;span style=&#34;color:#ff0000&#34;&gt;std::bind_front&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;X&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;f&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-
-    &lt;span class=&#34;c1&#34;&gt;// メンバ関数の引数を渡して呼び出す&lt;/span&gt;
-    &lt;span class=&#34;n&#34;&gt;f&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-
-  &lt;span class=&#34;c1&#34;&gt;// 「メンバ関数ポインタと*thisの束縛」という機能に限定されてはおらず、&lt;/span&gt;
-  &lt;span class=&#34;c1&#34;&gt;// 先頭から順に束縛できる (関数オブジェクトの指定だけは必須)&lt;/span&gt;
-  &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-    &lt;span class=&#34;n&#34;&gt;X&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-    &lt;span class=&#34;n&#34;&gt;&lt;span style=&#34;color:#ff0000&#34;&gt;std::bind_front&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;X&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;f&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-    &lt;span class=&#34;n&#34;&gt;&lt;span style=&#34;color:#ff0000&#34;&gt;std::bind_front&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;X&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;f&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)(&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-
-    &lt;span class=&#34;n&#34;&gt;&lt;span style=&#34;color:#ff0000&#34;&gt;std::bind_front&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;g&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)(&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-    &lt;span class=&#34;n&#34;&gt;&lt;span style=&#34;color:#ff0000&#34;&gt;std::bind_front&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;g&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)(&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/div&gt;&lt;/p&gt;
-&lt;h3&gt;出力&lt;/h3&gt;
-&lt;p&gt;&lt;pre&gt;&lt;code&gt;1,2,3
-1,2,3
-1,2,3
-1,2,3
-1,2,3
-&lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;h2&gt;バージョン&lt;/h2&gt;
-&lt;h3&gt;言語&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;C++20&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;処理系&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang&lt;/a&gt;:&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC&lt;/a&gt;: 9.1&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt;: ??&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;参照&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0356r5.html&#34; target=&#34;_blank&#34;&gt;P0356R5 Simplified partial function application&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;&lt;/div&gt;</content>
       
       <author>
