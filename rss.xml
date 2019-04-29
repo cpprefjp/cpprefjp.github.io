@@ -2,9 +2,241 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2019-04-29T16:12:02.646315</updated>
-  <id>77b3deb7-6986-4610-930c-7ba1ee6c279a</id>
+  <updated>2019-04-29T19:35:25.156321</updated>
+  <id>a5d39bb3-8281-4659-9302-20ab46d868b8</id>
 
+  
+    <entry>
+      <title>pool_resource -- pool_resource : synchronizedとunsynchronizedが逆なのを修正</title>
+      <link href="https://cpprefjp.github.io/reference/memory_resource/pool_resource.html"/>
+      <id>3775d88c58749c5500c0d449d3b3b77c89756b35:reference/memory_resource/pool_resource.md</id>
+      <updated>2019-04-30T04:32:24+09:00</updated>
+      
+        <content type="html">&lt;div class=&#34;identifier-type&#34;&gt;class&lt;/div&gt;&lt;div class=&#34;header&#34;&gt;&amp;lt;memory_resource&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;namespace&#34; title=&#34;namespace std::pmr&#34;&gt;std::pmr::&lt;/span&gt;&lt;span class=&#34;token&#34;&gt;pool_resource&lt;/span&gt;&lt;span class=&#34;cpp cpp17&#34; title=&#34;C++17で追加&#34;&gt;(C++17)&lt;/span&gt;&lt;/h1&gt;
+&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;k&#34;&gt;namespace&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;pmr&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;synchronized_pool_resource&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;unsynchronized_pool_resource&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2&gt;概要&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;pool_resource&lt;/code&gt;は幾つかのブロックサイズ毎のメモリプールを管理し、要求サイズ毎に最適なプールからメモリを割り当てる&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory_resource/memory_resource.html&#34;&gt;memory_resource&lt;/a&gt;&lt;/code&gt;実装である。&lt;br /&gt;
+メモリ割り当て要求に内部のメモリプールから応えられない場合（最大のブロックサイズを超える要求があった場合）は、上流のメモリリソースからメモリを割り当てる。ほとんどの場合、上流メモリリソースへの割り当て要求は内部プールへの割り当て要求よりも少ない。&lt;/p&gt;
+&lt;p&gt;以下2つの&lt;code&gt;pool_resource&lt;/code&gt;が提供される。&lt;/p&gt;
+&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;code&gt;pool_resource&lt;/code&gt;クラス名&lt;/th&gt;
+&lt;th&gt;説明&lt;/th&gt;
+&lt;th&gt;対応バージョン&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;synchronized_pool_resource&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;スレッドセーフな&lt;code&gt;pool_resource&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;C++17&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;unsynchronized_pool_resource&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;スレッドセーフでない&lt;code&gt;pool_resource&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;C++17&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;code&gt;synchronized_pool_resource&lt;/code&gt;は外部同期機構無しで複数のスレッドからスレッドセーフにアクセスできる。&lt;br /&gt;
+実装によっては同期コストの削減のためにスレッド毎にメモリプールを持つ可能性がある。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;unsynchronized_pool_resource&lt;/code&gt;は複数スレッドからアクセスした際にスレッドセーフ性が保証されないが、シングルスレッドで使用する場合に同期のためのオーバーヘッドを避けることができる。&lt;/p&gt;
+&lt;h2&gt;&lt;code&gt;pool_resource&lt;/code&gt;の性質&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;内部管理メモリ領域は様々なブロックサイズのメモリプールに分かれている。&lt;/li&gt;
+&lt;li&gt;それぞれのブロックサイズ毎のメモリプールは幾つかのチャンクの集まりであり、各チャンクは均一なサイズ（ブロックサイズ）のブロックに順番に分割されている。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;do_allocate&lt;/code&gt;によって返されるメモリはブロック単位で割り当てられる。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;do_allocate(bytes, alignment)&lt;/code&gt;は、&lt;code&gt;bytes&lt;/code&gt;以上で最小のブロックサイズのプールからメモリを割り当てる。&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;bytes&lt;/code&gt;が最大ブロックサイズを超える場合、上流メモリリソースから直接割り当てられる。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;あるプールが枯渇した場合、次の&lt;code&gt;do_allocate&lt;/code&gt;時に上流メモリリソースからチャンク単位でプールを補充する。&lt;ul&gt;
+&lt;li&gt;補充の度に補充されるチャンクサイズは等比数列に従って増加する（上限有）。&lt;/li&gt;
+&lt;li&gt;一定のチャンク毎に補充を行うことで連続した割り当てにおける参照局所性を高める狙いがある。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;最大チャンクサイズ及び最大ブロックサイズは&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory_resource/pool_options.html&#34;&gt;pool_options&lt;/a&gt;&lt;/code&gt;構造体をコンストラクタに渡して調整可能。&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;max_blocks_per_chunk&lt;/code&gt; : チャンクサイズの上限値、この値よりは大きくならない&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;largest_required_pool_block&lt;/code&gt; : ブロックサイズの最大値、この値を超える割り当て要求は上流メモリリソースから直接割り当てる&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;管理メモリの解放時は&lt;code&gt;deallocate&lt;/code&gt;が呼び出されていない領域があっても全てのメモリを解放する。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;メンバ関数&lt;/h2&gt;
+&lt;h3&gt;構築・破棄&lt;/h3&gt;
+&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;名前&lt;/th&gt;
+&lt;th&gt;説明&lt;/th&gt;
+&lt;th&gt;対応バージョン&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory_resource/pool_resource/op_constructor.html&#34;&gt;(constructor)&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;コンストラクタ&lt;/td&gt;
+&lt;td&gt;C++17&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory_resource/pool_resource/op_destructor.html&#34;&gt;(destructor)&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;デストラクタ&lt;/td&gt;
+&lt;td&gt;C++17&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;operator=(const pool_resource&amp;amp;) = delete;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;コピー代入演算子（コピー禁止）&lt;/td&gt;
+&lt;td&gt;C++17&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;クラス名を&lt;code&gt;pool_resource&lt;/code&gt;としているのは説明のためのプレースホルダで、&lt;code&gt;synchronized_pool_resource&lt;/code&gt;と&lt;code&gt;unsynchronized_pool_resource&lt;/code&gt;で共通ということである。&lt;/p&gt;
+&lt;h3&gt;共通メンバ関数&lt;/h3&gt;
+&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;名前&lt;/th&gt;
+&lt;th&gt;説明&lt;/th&gt;
+&lt;th&gt;対応バージョン&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory_resource/pool_resource/release.html&#34;&gt;release&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;割り当てられている全てのメモリを解放する&lt;/td&gt;
+&lt;td&gt;C++17&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory_resource/pool_resource/upstream_resource.html&#34;&gt;upstream_resource&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;利用している上流&lt;code&gt;memory_resource&lt;/code&gt;を取得する&lt;/td&gt;
+&lt;td&gt;C++17&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory_resource/pool_resource/options.html&#34;&gt;options&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;適用されているプール設定を&lt;code&gt;pool_options&lt;/code&gt;として取得する&lt;/td&gt;
+&lt;td&gt;C++17&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3&gt;非仮想インターフェース（NVI）&lt;/h3&gt;
+&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;名前&lt;/th&gt;
+&lt;th&gt;説明&lt;/th&gt;
+&lt;th&gt;対応バージョン&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory_resource/memory_resource/allocate.html&#34;&gt;allocate&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;メモリを確保する&lt;/td&gt;
+&lt;td&gt;C++17&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory_resource/memory_resource/deallocate.html&#34;&gt;deallocate&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;メモリを解放する&lt;/td&gt;
+&lt;td&gt;C++17&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory_resource/memory_resource/is_equal.html&#34;&gt;is_equal&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;オブジェクトを超えてメモリ領域の解放を行えるかを調べる&lt;/td&gt;
+&lt;td&gt;C++17&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3&gt;protected オーバーライド関数&lt;/h3&gt;
+&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;名前&lt;/th&gt;
+&lt;th&gt;説明&lt;/th&gt;
+&lt;th&gt;対応バージョン&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory_resource/pool_resource/do_allocate.html&#34;&gt;do_allocate&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;メモリを確保する&lt;/td&gt;
+&lt;td&gt;C++17&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory_resource/pool_resource/do_deallocate.html&#34;&gt;do_deallocate&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;メモリを解放する&lt;/td&gt;
+&lt;td&gt;C++17&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory_resource/pool_resource/do_is_equal.html&#34;&gt;do_is_equal&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;オブジェクトを超えてメモリ領域の解放を行えるかを調べる&lt;/td&gt;
+&lt;td&gt;C++17&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2&gt;非メンバ関数&lt;/h2&gt;
+&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;名前&lt;/th&gt;
+&lt;th&gt;説明&lt;/th&gt;
+&lt;th&gt;対応バージョン&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory_resource/memory_resource/op_equal.html&#34;&gt;operator==&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;等値比較&lt;/td&gt;
+&lt;td&gt;C++17&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory_resource/memory_resource/op_not_equal.html&#34;&gt;operator!=&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;非等値比較&lt;/td&gt;
+&lt;td&gt;C++17&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2&gt;&lt;code&gt;synchronized_pool_resource&lt;/code&gt;の処理系毎の実装&lt;/h2&gt;
+&lt;h3&gt;MSVC 2017, 2019&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;unsynchronized_pool_resource&lt;/code&gt;を継承し、アクセスを&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/mutex/mutex.html&#34;&gt;mutex&lt;/a&gt;&lt;/code&gt;で同期させている。&lt;br /&gt;
+スレッド毎にプールを持たない。&lt;/p&gt;
+&lt;h3&gt;GCC 9.1&lt;/h3&gt;
+&lt;p&gt;スレッド毎にプールを持ち、各プールはリンクリストで管理されている。&lt;/p&gt;
+&lt;h2&gt;バージョン&lt;/h2&gt;
+&lt;h3&gt;言語&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;C++17&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;処理系&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang&lt;/a&gt;: ??&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC&lt;/a&gt;: 9.1&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt;: 2017 update 6&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;関連項目&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory_resource/pool_options.html&#34;&gt;pool_options&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory_resource/memory_resource.html&#34;&gt;memory_resource&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;参照&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://faithandbrave.hateblo.jp/entry/2016/08/08/170454&#34; target=&#34;_blank&#34;&gt;C++1z 多相アロケータとメモリプール - Faith and Brave - C++で遊ぼう &lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpplover.blogspot.com/2015/09/memoryresource.html&#34; target=&#34;_blank&#34;&gt;memory_resourceについて - 本の虫&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://qiita.com/MitsutakaTakeda/items/48980faa9498c46b15b2&#34; target=&#34;_blank&#34;&gt;Polymorphic Allocator in C++17 - Qita&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0220r1.html&#34; target=&#34;_blank&#34;&gt;P0220R1 Adopt Library Fundamentals V1 TS Components for C++17 (R1)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0337r0.html&#34; target=&#34;_blank&#34;&gt;P0337r0 | Delete operator= for polymorphic_allocator&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4562.html#memory.resource.synop&#34; target=&#34;_blank&#34;&gt;Working Draft, C++ Extensions for Library Fundamentals, Version 2&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/div&gt;</content>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>memory -- assume_aligned : 細かい書き方統一</title>
@@ -1194,159 +1426,6 @@ char : true
       <author>
         <name>Akira Takahashi</name>
         <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>memory_resource -- memory_resourceヘッダページ : サンプルコードブロック修正</title>
-      <link href="https://cpprefjp.github.io/reference/memory_resource.html"/>
-      <id>b529f798f48cd9c2fa8a54ae678e72cb2b1c97b8:reference/memory_resource.md</id>
-      <updated>2019-04-30T00:33:36+09:00</updated>
-      
-        <content type="html">&lt;div class=&#34;header&#34;&gt;&amp;lt;memory_resource&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;token&#34;&gt;memory_resource&lt;/span&gt;&lt;span class=&#34;cpp cpp17&#34; title=&#34;C++17で追加&#34;&gt;(C++17)&lt;/span&gt;&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;&lt;code&gt;&amp;lt;memory_resource&amp;gt;&lt;/code&gt;ヘッダでは、ポリモルフィックなアロケータ（多相アロケータ、型に依存しないアロケータ）とそれを実装するためのインターフェース、及びその標準実装を提供する。&lt;/p&gt;
-&lt;h2&gt;インターフェースとアダプタ&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory_resource/memory_resource.html&#34;&gt;memory_resource&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;アロケータ実装を抽象化するためのインターフェース&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory_resource/polymorphic_allocator.html&#34;&gt;polymorphic_allocator&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;型によらないアロケータ実装を利用可能なアロケータ&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;標準&lt;code&gt;memory_resource&lt;/code&gt;実装&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory_resource/pool_resource.html&#34;&gt;synchronized_pool_resource&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;スレッドセーフなメモリプール&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory_resource/pool_resource.html&#34;&gt;unsynchronized_pool_resource&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;スレッドセーフではないメモリプール&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory_resource/monotonic_buffer_resource.html&#34;&gt;monotonic_buffer_resource&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;最後にまとめて領域を解放する&lt;code&gt;memory_resource&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory_resource/pool_options.html&#34;&gt;pool_options&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory_resource/pool_resource.html&#34;&gt;pool_resource&lt;/a&gt;&lt;/code&gt;クラスの内部プール調整のためのクラス&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;関数&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory_resource/new_delete_resource.html&#34;&gt;new_delete_resource&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;operator new&lt;/code&gt;、&lt;code&gt;operator delete&lt;/code&gt;を利用する&lt;code&gt;memory_resource&lt;/code&gt;を取得&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory_resource/null_memory_resource.html&#34;&gt;null_memory_resource&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;確保も開放も行わない&lt;code&gt;memory_resource&lt;/code&gt;を取得&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory_resource/set_default_resource.html&#34;&gt;set_default_resource&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;各コンテナでデフォルト使用される&lt;code&gt;memory_resource&lt;/code&gt;の設定&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory_resource/get_default_resource.html&#34;&gt;get_default_resource&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;各コンテナでデフォルト使用される&lt;code&gt;memory_resource&lt;/code&gt;の取得&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;導入された経緯&lt;/h2&gt;
-&lt;p&gt;このクラス導入以前のアロケータはPolicyベースデザインというパターンに基づく設計であったため、アロケータの型がそれを利用する型にも表れてしまっていた。&lt;br /&gt;
-それによって、利用するアロケータが異なる型は異なるクラスとして扱われてしまいいくつか不便なところがあった。&lt;/p&gt;
-&lt;p&gt;例えば自作のアロケータ&lt;code&gt;original_allocator&lt;/code&gt;を作り、利用しようとすると以下のような問題が生じる。&lt;/p&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;string&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;str1&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34;string&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;sstd&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;basic_string&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;char&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;char_traits&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;char&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;original_allocator&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;char&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;str2&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&#34;string&#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-
-&lt;span class=&#34;c1&#34;&gt;//型が違うので比較不可&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;r&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;str1&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;==&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;str2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;p&gt;&lt;div class=&#34;codehilite&#34;&gt;&lt;pre&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;vector&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;v1&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;4&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
-
-&lt;span class=&#34;c1&#34;&gt;//型が違うのでコピーできない&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;vector&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;original_allocator&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;v2&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;v1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-
-&lt;span class=&#34;c1&#34;&gt;//比較も不可&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;auto&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;r&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;v1&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;==&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;v2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/p&gt;
-&lt;p&gt;これらの問題の解決の必要性は認識されていたが、従来のアロケータの改修は互換性の問題等から難しいために新しく多相アロケータ（&lt;code&gt;polymorphic_allocator&lt;/code&gt;）が導入された。&lt;/p&gt;
-&lt;p&gt;本ヘッダにはその多相アロケータに関連するクラスや関数群が定義されている。&lt;/p&gt;
-&lt;p&gt;また、それに伴い各コンテナにデフォルトで&lt;code&gt;polymorphic_allocator&lt;/code&gt;を利用するエイリアスが導入された。こちらは各コンテナ毎に定義される。&lt;/p&gt;
-&lt;h2&gt;バージョン&lt;/h2&gt;
-&lt;h3&gt;言語&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;C++17&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;処理系&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang&lt;/a&gt;: ??&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC&lt;/a&gt;: 9.1&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt;: 2017 update 6&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;関連項目&lt;/h2&gt;
-&lt;p&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/scoped_allocator.html&#34;&gt;&amp;lt;scoped_allocator&amp;gt;&lt;/a&gt;&lt;/code&gt;&lt;/p&gt;
-&lt;h2&gt;参照&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://faithandbrave.hateblo.jp/entry/2016/08/08/170454&#34; target=&#34;_blank&#34;&gt;C++1z 多相アロケータとメモリプール - Faith and Brave - C++で遊ぼう &lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpplover.blogspot.com/2015/09/memoryresource.html&#34; target=&#34;_blank&#34;&gt;memory_resourceについて - 本の虫&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://qiita.com/MitsutakaTakeda/items/48980faa9498c46b15b2&#34; target=&#34;_blank&#34;&gt;Polymorphic Allocator in C++17 - Qita&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://speakerdeck.com/kariyamitsuru/new-features-of-c-plus-plus-17-allocator&#34; target=&#34;_blank&#34;&gt;C++17の新機能 アロケータ編 / new features of C++17 - allocator&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.slideshare.net/Cryolite/allocator11final&#34; target=&#34;_blank&#34;&gt;Allocators@C++11 - Cryolite&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0220r1.html&#34; target=&#34;_blank&#34;&gt;P0220R1 Adopt Library Fundamentals V1 TS Components for C++17 (R1)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0337r0.html&#34; target=&#34;_blank&#34;&gt;P0337r0 | Delete operator= for polymorphic_allocator&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4562.html#memory.resource.synop&#34; target=&#34;_blank&#34;&gt;Working Draft, C++ Extensions for Library Fundamentals, Version 2&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1850.pdf&#34; target=&#34;_blank&#34;&gt;N1850 Towards a Better Allocator Model&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3525.pdf&#34; target=&#34;_blank&#34;&gt;N3525 Polymorphic Allocators&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3726.pdf&#34; target=&#34;_blank&#34;&gt;N3726 Polymorphic Memory Resources&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3816.pdf&#34; target=&#34;_blank&#34;&gt;N3816 Polymorphic Memory Resources - r1&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n3916.pdf&#34; target=&#34;_blank&#34;&gt;N3916 Polymorphic Memory Resources - r2&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
       </author>
     </entry>
   
