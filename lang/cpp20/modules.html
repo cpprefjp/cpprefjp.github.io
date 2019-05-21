@@ -189,8 +189,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2019-05-17T23:20:38">
-        2019年05月17日 23時20分38秒
+      <span itemprop="datePublished" content="2019-05-21T17:30:16">
+        2019年05月21日 17時30分16秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -217,26 +217,27 @@
 <div itemprop="articleBody"><h2>概要</h2>
 <p>C++20では、インクルードに代わる新たな仕組みとしてモジュールが導入された。</p>
 <p>C++20では、プリプロセッサを用いずにプログラムを分割することができる：</p>
-<p><div class="codehilite"><pre><span class="c1">// a.cpp</span>
-<span class="k">export</span> <span class="n">module</span> <span class="n">a</span><span class="p">;</span> <span class="c1">// aモジュールのインターフェース</span>
+<p><div class="codehilite"><pre><span class="c1">// <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1103r3.pdf" target="_blank">P1103R3</a>より引用</span>
 
-<span class="kt">void</span> <span class="nf">foo</span><span class="p">(){}</span>
-<span class="k">export</span> <span class="kt">void</span> <span class="nf">bar</span><span class="p">();</span> <span class="c1">// 関数barをエクスポート</span>
-</pre></div>
-</p>
-<p><div class="codehilite"><pre><span class="c1">// a_impl.cpp</span>
-<span class="n">module</span> <span class="n">a</span><span class="p">;</span>
+<span class="c1">// a.cpp</span>
+<span class="k">export</span> <span class="n">module</span> <span class="n">A</span><span class="p">;</span> <span class="c1">// モジュールAのインターフェース</span>
 
-<span class="kt">void</span> <span class="nf">bar</span><span class="p">(){</span> <span class="n">foo</span><span class="p">();</span> <span class="p">}</span> <span class="c1">// OK、fooはエクスポートされていないが、同じモジュールの中では見える</span>
-</pre></div>
-</p>
-<p><div class="codehilite"><pre><span class="c1">// main.cpp</span>
-<span class="n">import</span> <span class="n">a</span><span class="p">;</span> <span class="c1">// aモジュールをインポート</span>
+<span class="kt">int</span> <span class="nf">foo</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="mi">1</span><span class="p">;</span> <span class="p">}</span> <span class="c1">// エクスポートしていない関数foo</span>
+<span class="k">export</span> <span class="kt">int</span> <span class="nf">bar</span><span class="p">();</span>       <span class="c1">// エクスポートしている関数bar</span>
 
-<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
-<span class="p">{</span>
-  <span class="n">foo</span><span class="p">();</span> <span class="c1">// エラー、fooはエクスポートされていないので見えない</span>
-  <span class="n">bar</span><span class="p">();</span> <span class="c1">// OK、barはエクスポートされているので見える</span>
+<span class="c1">// a-impl.cpp</span>
+<span class="n">module</span> <span class="n">A</span><span class="p">;</span> <span class="c1">// モジュールAの実装</span>
+
+<span class="kt">int</span> <span class="nf">bar</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="n">foo</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">// OK: fooはエクスポートしていないが、モジュールAの中では見える。</span>
+<span class="p">}</span>
+
+<span class="c1">// unrelated.cpp</span>
+<span class="n">import</span> <span class="n">A</span><span class="p">;</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">bar</span><span class="p">();</span> <span class="c1">// OK: barはAからエクスポートされているので見える</span>
+  <span class="n">foo</span><span class="p">();</span> <span class="c1">// エラー: fooはモジュールAの外では見えない</span>
 <span class="p">}</span>
 </pre></div>
 </p>
@@ -294,12 +295,7 @@
 <li><code>export</code>を付けた宣言が新たな名前を宣言していない場合は、エラーとなる。</li>
 <li>内部リンケージを持つ名前をエクスポートすると、エラーとなる。</li>
 </ul>
-<p><div class="codehilite"><pre><span class="c1">// "a.h"</span>
-<span class="k">export</span> <span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
-
-<span class="c1">// 翻訳単位1</span>
-<span class="n">module</span><span class="p">;</span>
-<span class="cp">#include "a.h"            </span><span class="c1">// エラー: インクルードによって取り込まれたxの宣言がモジュールインターフェースの範囲にない</span>
+<p><div class="codehilite"><pre><span class="c1">// <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1103r3.pdf" target="_blank">P1103R3</a>より引用</span>
 <span class="k">export</span> <span class="n">module</span> <span class="n">M</span><span class="p">;</span>
 <span class="k">export</span> <span class="k">namespace</span> <span class="p">{}</span>       <span class="c1">// エラー: 新たな名前を宣言していない</span>
 <span class="k">export</span> <span class="k">namespace</span> <span class="p">{</span>
@@ -366,13 +362,36 @@
 </ul>
 </li>
 </ul>
-<p><div class="codehilite"><pre><span class="k">export</span> <span class="n">module</span> <span class="n">foo</span><span class="p">;</span>
-<span class="n">import</span> <span class="o">:</span><span class="n">part</span><span class="p">;</span>          <span class="c1">// foo:partをインポート</span>
-<span class="k">export</span> <span class="n">import</span> <span class="o">:</span><span class="n">part2</span><span class="p">;</span>  <span class="c1">// foo:part2を再エクスポート</span>
-<span class="n">import</span> <span class="n">bar</span><span class="o">:</span><span class="n">part3</span><span class="p">;</span>      <span class="c1">// エラー: 別のモジュールからはインポート不可</span>
-<span class="n">import</span> <span class="n">foo</span><span class="o">:</span><span class="n">part4</span><span class="p">;</span>      <span class="c1">// エラー: モジュール名を書くのは不可</span>
+<p>主となるモジュールのインターフェースとパーティションを区別する場合は、プライマリーモジュールインターフェースユニットという事がある。</p>
+<p><div class="codehilite"><pre><span class="c1">// <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1103r3.pdf" target="_blank">P1103R3</a>より引用</span>
+<span class="c1">// 翻訳単位1</span>
+<span class="k">export</span> <span class="n">module</span> <span class="n">A</span><span class="p">;</span>
+<span class="k">export</span> <span class="n">import</span> <span class="o">:</span><span class="n">Foo</span><span class="p">;</span>
+<span class="k">export</span> <span class="kt">int</span> <span class="nf">baz</span><span class="p">();</span>
+
+<span class="c1">// 翻訳単位2</span>
+<span class="k">export</span> <span class="n">module</span> <span class="n">A</span><span class="o">:</span><span class="n">Foo</span><span class="p">;</span>
+<span class="n">import</span> <span class="o">:</span><span class="n">Internals</span><span class="p">;</span>
+<span class="k">export</span> <span class="kt">int</span> <span class="nf">foo</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">bar</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">);</span> <span class="p">}</span>
+
+<span class="c1">// 翻訳単位3</span>
+<span class="n">module</span> <span class="n">A</span><span class="o">:</span><span class="n">Internals</span><span class="p">;</span>
+<span class="kt">int</span> <span class="nf">bar</span><span class="p">();</span>
+
+<span class="c1">// 翻訳単位4</span>
+<span class="n">module</span> <span class="n">A</span><span class="p">;</span>
+<span class="n">import</span> <span class="o">:</span><span class="n">Internals</span><span class="p">;</span>
+<span class="kt">int</span> <span class="nf">bar</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="n">baz</span><span class="p">()</span> <span class="o">-</span> <span class="mi">10</span><span class="p">;</span> <span class="p">}</span>
+<span class="kt">int</span> <span class="nf">baz</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="mi">30</span><span class="p">;</span> <span class="p">}</span>
 </pre></div>
 </p>
+<p>このモジュールAは4つの翻訳単位からなる。上から順に、</p>
+<ol>
+<li>(プライマリー)モジュールインターフェースユニット</li>
+<li>モジュールインターフェースパーティション <code>:Foo</code></li>
+<li>モジュール実装パーティション <code>:Internals</code></li>
+<li>モジュール実装ユニット</li>
+</ol>
 <h3>ODRの緩和</h3>
 <p>C++20では、複数の定義が同時に見えるようにならない限りODR違反とならない。</p>
 <p><div class="codehilite"><pre><span class="c1">// a.cpp</span>
@@ -454,11 +473,12 @@
 </ul>
 </li>
 </ul>
-<p><div class="codehilite"><pre><span class="c1">// a.h</span>
+<p><div class="codehilite"><pre><span class="c1">// <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1103r3.pdf" target="_blank">P1103R3</a>より引用</span>
+<span class="c1">// a.h</span>
 <span class="cp">#define X 123 </span><span class="c1">// #1</span>
 <span class="cp">#define Y 45  </span><span class="c1">// #2</span>
 <span class="cp">#define Z a   </span><span class="c1">// #3</span>
-<span class="cp">#undef X      </span><span class="c1">// a.hではここで#2が無効になる</span>
+<span class="cp">#undef  X      </span><span class="c1">// a.hではここで#1が無効になる</span>
 
 <span class="c1">// b.h</span>
 <span class="n">import</span> <span class="s">"a.h"</span><span class="p">;</span> <span class="c1">// b.hではここで#1, #2, #3が定義され、#1が無効になる</span>
