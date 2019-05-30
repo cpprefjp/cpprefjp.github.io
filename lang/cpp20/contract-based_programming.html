@@ -189,12 +189,12 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2019-05-25T06:51:03">
-        2019年05月25日 06時51分03秒
+      <span itemprop="datePublished" content="2019-05-30T08:36:31">
+        2019年05月30日 08時36分31秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">MATSUMURA Tetsuro</span>
+        <span itemprop="name">onihusube</span>
       </span>
       が更新
     </small></p>
@@ -290,6 +290,46 @@
 <p>2番目の書式では、指定した識別子で関数の戻り値を参照できる。</p>
 <h3>assert属性</h3>
 <p>この属性は空文に対して指定する。</p>
+<h3>契約と継承 - Assertion Redeclaration rule</h3>
+<p>あるクラス内で契約されている関数がそのクラスを継承した別のクラスでオーバーライドされる場合、オーバーライドした関数は少なくとも元の関数になされた契約を遵守しなければならない。より詳細には</p>
+<ul>
+<li>事前条件：継承元と同じかより弱い（緩い）ものである必要がある</li>
+<li>事後条件：継承元と同じかより強い（厳しい）ものである必要がある</li>
+</ul>
+<p>これを満たしていない場合、オーバーライドした関数の利用は危険なものになる。<br />
+この原則はAssertion Redeclaration ruleと呼ばれる。</p>
+<p>C++における契約と継承においてもこの原則に従う。<br />
+契約条件をもつ関数をオーバーライドするとき、オーバーライドした関数にはオーバーライドされた関数と同じ契約条件を指定しなければならない。<br />
+（この時、その条件が異なっていたとしても対応する契約条件が同じ値（<code>true or false</code>）に評価されるならば、診断されない。）</p>
+<p>そのような契約条件の指定がされていない場合、オーバーライドされた関数（のうちの1つ）が持つ契約条件が指定されているとみなされる。</p>
+<p>すなわち、C++における契約の継承時はAssertion Redeclaration ruleを確実に満たすために常に同じ契約を派生先に要求する。<br />
+事前条件を緩くしたり、事後条件を厳しくすることは認められない。</p>
+<p><div class="codehilite"><pre><span class="k">struct</span> <span class="n">base</span> <span class="p">{</span>
+  <span class="k">virtual</span> <span class="kt">double</span> <span class="n">f</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span>
+    <span class="p">[[</span><span class="n">expects</span><span class="o">:</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]]</span>
+    <span class="p">[[</span><span class="n">ensures</span> <span class="n">r</span><span class="o">:</span> <span class="n">r</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+  <span class="k">virtual</span> <span class="kt">int</span> <span class="n">g</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span>
+    <span class="p">[[</span><span class="n">expects</span><span class="o">:</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]]</span>
+    <span class="p">[[</span><span class="n">ensures</span> <span class="n">r</span><span class="o">:</span> <span class="n">r</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">struct</span> <span class="n">derived</span> <span class="o">:</span> <span class="n">base</span> <span class="p">{</span>
+  <span class="c1">//明示的にbase::f()と同じ契約条件を指定する</span>
+  <span class="kt">double</span> <span class="n">f</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="n">override</span>
+    <span class="p">[[</span><span class="n">expects</span><span class="o">:</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]]</span>
+    <span class="p">[[</span><span class="n">ensures</span> <span class="n">r</span><span class="o">:</span> <span class="n">r</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]]</span>
+  <span class="p">{</span>
+    <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="c1">//暗黙的にbase::g()と同じ契約条件を持つとみなされる</span>
+  <span class="kt">double</span> <span class="n">g</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="n">override</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</p>
 <h2>この機能が必要になった背景・経緯</h2>
 <p>C++17までは、実行時のアサーションとしては<a href="https://cpprefjp.github.io/reference/cassert/assert.html"><code>assert</code>マクロ</a>があるのみだった。
 契約属性はアサーションを含む契約を記述する、マクロを用いない新たな方法として導入された。</p>
@@ -303,6 +343,7 @@
 <h2>参照</h2>
 <ul>
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html" target="_blank">P0542R5 Support for contract based programming in C++</a></li>
+<li><a href="https://www.eiffel.org/doc/eiffel/ET-_Inheritance#Inheritance_and_contracts" target="_blank">ET: Inheritance Inheritance and contracts - Eiffel.org</a></li>
 </ul></div>
 
       </div>
