@@ -189,12 +189,12 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2019-05-30T12:16:29">
-        2019年05月30日 12時16分29秒
+      <span itemprop="datePublished" content="2019-06-17T16:53:50">
+        2019年06月17日 16時53分50秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">onihusube</span>
+        <span itemprop="name">MATSUMURA Tetsuro</span>
       </span>
       が更新
     </small></p>
@@ -248,8 +248,52 @@
 <li><code>[[ensure: 述語]]</code>：関数から戻る際に期待する事後条件を定義する。</li>
 <li><code>[[assert: 述語]]</code>：アサーションを定義する。</li>
 </ul>
-<p>述語が副作用を持つ場合、動作は未定義である。</p>
+<p>expectおよびensure属性の述語は、関数の最初の式文と同じセマンティクスで評価される。
+より詳細に言えば、仮引数は見えるがローカル変数は見えない。</p>
 <p>述語が例外を送出すると、<code><a href="https://cpprefjp.github.io/reference/exception/terminate.html">std::terminate()</a></code>関数を呼び出してプログラムを終了させる。</p>
+<p>述語が副作用を持つ場合、動作は未定義である。例えば、グローバル変数の変更、<code>volatile</code>変数の参照、変数を変更する可能性のある関数の呼び出しなどが該当する。</p>
+<p><div class="codehilite"><pre><span class="c1">// <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html" target="_blank">P0542R5</a>より引用</span>
+<span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
+<span class="k">volatile</span> <span class="kt">int</span> <span class="n">y</span><span class="p">;</span>
+
+<span class="kt">void</span> <span class="n">f</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="p">[[</span><span class="n">expects</span><span class="o">:</span> <span class="n">n</span><span class="o">&gt;</span><span class="n">x</span><span class="p">]];</span> <span class="c1">// OK</span>
+<span class="kt">void</span> <span class="n">g</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="p">[[</span><span class="n">expects</span><span class="o">:</span> <span class="n">n</span><span class="o">&gt;</span><span class="n">x</span><span class="o">++</span><span class="p">]];</span> <span class="c1">// Undefined behavior</span>
+<span class="kt">void</span> <span class="n">h</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="p">[[</span><span class="n">expects</span><span class="o">:</span> <span class="n">n</span><span class="o">++&gt;</span><span class="mi">0</span><span class="p">]];</span> <span class="c1">// Undefined behavior</span>
+<span class="kt">void</span> <span class="nf">j</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">n</span><span class="o">=</span><span class="mi">3</span><span class="p">;</span>
+  <span class="p">[[</span><span class="n"><a href="https://cpprefjp.github.io/reference/cassert/assert.html">assert</a></span><span class="o">:</span> <span class="o">++</span><span class="n">n</span><span class="o">&gt;</span><span class="mi">3</span><span class="p">]];</span> <span class="c1">// Undefined behavior</span>
+  <span class="c1">//...</span>
+<span class="p">}</span>
+<span class="kt">void</span> <span class="n">k</span><span class="p">()</span> <span class="p">[[</span><span class="n">expects</span><span class="o">:</span> <span class="n">y</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">]];</span> <span class="c1">// Undefined behavior</span>
+</pre></div>
+</p>
+<p><div class="codehilite"><pre><span class="c1">// <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html" target="_blank">P0542R5</a>より引用</span>
+<span class="kt">bool</span> <span class="nf">might_increment</span><span class="p">(</span><span class="kt">int</span> <span class="o">&amp;</span> <span class="n">x</span><span class="p">);</span>
+
+<span class="kt">void</span> <span class="n">f</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="p">[[</span><span class="n">expects</span><span class="o">:</span> <span class="n">might_increment</span><span class="p">(</span><span class="n">n</span><span class="p">)]];</span> <span class="c1">// Undefined behavior</span>
+
+<span class="kt">bool</span> <span class="nf">is_valid</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"checking x</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span>
+  <span class="k">return</span> <span class="n">x</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="n">g</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="p">[[</span><span class="n">expects</span><span class="o">:</span> <span class="n">is_valid</span><span class="p">(</span><span class="n">n</span><span class="p">)]];</span> <span class="c1">// Undefined behavior</span>
+</pre></div>
+</p>
+<p>ただし、関数の中で閉じている局所的な副作用は問題ない。</p>
+<p><div class="codehilite"><pre><span class="c1">// <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html" target="_blank">P0542R5</a>より引用</span>
+<span class="kt">bool</span> <span class="nf">is_valid</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">a</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span>
+  <span class="k">while</span> <span class="p">(</span><span class="n">a</span><span class="o">&lt;</span><span class="n">x</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">x</span> <span class="o">%</span> <span class="n">a</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+    <span class="n">a</span><span class="o">++</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="n">f</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="p">[[</span><span class="n">expects</span><span class="o">:</span> <span class="n">is_valid</span><span class="p">(</span><span class="n">x</span><span class="p">)]]</span>
+</pre></div>
+</p>
 <h3>契約レベルとビルドレベル</h3>
 <p>契約属性には<strong>契約レベル</strong>を指定できる。</p>
 <p><div class="codehilite"><pre><span class="p">[[</span><span class="err">契約属性名</span> <span class="err">契約レベル</span><span class="o">:</span> <span class="err">述語</span><span class="p">]]</span>
@@ -262,6 +306,11 @@
 <li><code>audit</code>: ビルドレベルが<code>audit</code>の場合のみチェックされる。パフォーマンスへの影響が大きい契約を<code>audit</code>にして、普段はチェックしないでおくことができる。</li>
 <li><code>axiom</code>: チェックされない。主な用途は書式の定まったコメントとして使うことである。</li>
 </ul>
+<p><div class="codehilite"><pre><span class="kt">void</span> <span class="n">f</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">)</span>
+  <span class="p">[[</span><span class="n">expects</span><span class="o">:</span> <span class="n">x</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">]]</span>
+  <span class="p">[[</span><span class="n">expects</span> <span class="n">audit</span><span class="o">:</span> <span class="n">is_prime</span><span class="p">(</span><span class="n">x</span><span class="p">)]];</span>
+</pre></div>
+</p>
 <p>C++20では、プログラムのコンパイルは次の3つのうちどれかの<strong>ビルドレベル</strong>で行われる：</p>
 <ul>
 <li><code>off</code>: 契約はチェックされない。</li>
@@ -280,16 +329,40 @@
 </ul>
 <p>違反ハンドラーおよび違反継続モードを指定する方法は処理系定義である。</p>
 <h3>expect属性</h3>
+<p><div class="codehilite"><pre><span class="p">[[</span><span class="n">expect</span><span class="o">:</span> <span class="err">述語</span><span class="p">]]</span>
+</pre></div>
+</p>
 <p>この属性は関数宣言の関数型に対して指定する。</p>
+<p>述語では、関数の引数を参照できる。</p>
+<p><div class="codehilite"><pre><span class="kt">void</span> <span class="n">f</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">)</span>
+  <span class="p">[[</span><span class="n">expects</span><span class="o">:</span> <span class="n">x</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">]]</span>
+</pre></div>
+</p>
+<p>expect属性の述語は関数の本体を評価する直前に評価される。関数の本体には、関数tryブロックおよびコンストラクタのメンバー初期化子を含む。</p>
 <h3>ensure属性</h3>
 <p><div class="codehilite"><pre><span class="p">[[</span><span class="n">ensure</span><span class="o">:</span> <span class="err">述語</span><span class="p">]]</span>
 <span class="p">[[</span><span class="n">ensure</span> <span class="err">識別子</span><span class="o">:</span> <span class="err">述語</span><span class="p">]]</span>
 </pre></div>
 </p>
 <p>この属性は関数宣言の関数型に対して指定する。</p>
-<p>2番目の書式では、指定した識別子で関数の戻り値を参照できる。</p>
+<p>2番目の書式では、指定した識別子で関数の戻り値を参照できる。ただし、C++20の時点では<a href="https://cpprefjp.github.io/lang/cpp17/structured_bindings.html">構造化束縛</a>はできない。</p>
+<p><div class="codehilite"><pre><span class="c1">// <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html" target="_blank">P0542R5</a>より引用</span>
+<span class="n">std</span><span class="o">::</span><span class="n">tuple</span> <span class="n">f</span><span class="p">()</span> 
+  <span class="p">[[</span><span class="n">ensures</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">]</span><span class="o">:</span> <span class="n">x</span><span class="o">&gt;</span><span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">y</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">]];</span> <span class="c1">// エラー</span>
+<span class="n">std</span><span class="o">::</span><span class="n">tuple</span> <span class="n">f</span><span class="p">()</span> 
+  <span class="p">[[</span><span class="n">ensures</span> <span class="n">r</span><span class="o">:</span> <span class="n">get</span><span class="o">&lt;</span><span class="mi">0</span><span class="o">&gt;</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">get</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;</span><span class="p">(</span><span class="n">r</span><span class="p">).</span><span class="n">size</span><span class="p">()</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">]];</span> <span class="c1">// OK</span>
+</pre></div>
+</p>
+<p>ensure属性の述語は関数から戻る直前に評価される。このとき、ローカル変数や一時オブジェクトの寿命はすでに尽きている。</p>
 <h3>assert属性</h3>
-<p>この属性は空文に対して指定する。</p>
+<p><div class="codehilite"><pre><span class="p">[[</span><span class="n"><a href="https://cpprefjp.github.io/reference/cassert/assert.html">assert</a></span><span class="o">:</span> <span class="err">述語</span><span class="p">]]</span>
+</pre></div>
+</p>
+<p>この属性は空文<code>;</code>に対して指定する。結果として、文のように書くことができる。</p>
+<p><div class="codehilite"><pre><span class="p">[[</span><span class="n"><a href="https://cpprefjp.github.io/reference/cassert/assert.html">assert</a></span><span class="o">:</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]];</span>
+</pre></div>
+</p>
+<p>assert属性の述語は適用先の空文と共に評価される。</p>
 <h3>契約と継承 - Assertion Redeclaration rule</h3>
 <p>あるクラス内で契約されている関数がそのクラスを継承した別のクラスでオーバーライドされる場合、オーバーライドした関数は少なくとも元の関数になされた契約を遵守しなければならない。より詳細には</p>
 <ul>
@@ -334,6 +407,7 @@
 <p>C++17までは、実行時のアサーションとしては<a href="https://cpprefjp.github.io/reference/cassert/assert.html"><code>assert</code>マクロ</a>があるのみだった。
 契約属性はアサーションを含む契約を記述する、マクロを用いない新たな方法として導入された。</p>
 <p>特に、戻り値に対する契約は従来の<a href="https://cpprefjp.github.io/reference/cassert/assert.html"><code>assert</code>マクロ</a>では簡潔に書くことができなかった。</p>
+<p>なお、<a href="https://cpprefjp.github.io/reference/cassert/assert.html"><code>assert</code>マクロ</a>は関数形式のマクロなので、<code>[[assert]]</code>属性を置換してしまうことはない。</p>
 <h2>関連項目</h2>
 <ul>
 <li><a href="https://cpprefjp.github.io/lang/cpp11/attributes.html">C++11 属性構文</a></li>
