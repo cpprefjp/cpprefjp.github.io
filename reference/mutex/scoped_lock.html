@@ -189,12 +189,12 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2019-06-02T05:46:04">
-        2019年06月02日 05時46分04秒
+      <span itemprop="datePublished" content="2019-06-21T07:11:49">
+        2019年06月21日 07時11分49秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">yumetodo</span>
+        <span itemprop="name">Akira Takahashi</span>
       </span>
       が更新
     </small></p>
@@ -223,6 +223,22 @@
 <h2>概要</h2>
 <p><code>scoped_lock</code>は、複数のミューテックスに対するロック取得と解放を、コンストラクタとデストラクタで確実に実行するためのクラスである。</p>
 <p><code><a href="https://cpprefjp.github.io/reference/mutex/lock_guard.html">lock_guard</a></code>クラスは単一のミューテックスのみを扱うが、このクラスは複数のミューテックスを一括して管理する。</p>
+<p>複数のミューテックスを使用する状況では、ロック取得の順番によってはデッドロックが発生する可能性がある：</p>
+<p><div class="codehilite"><pre><span class="c1">// デッドロックが発生するコード：</span>
+<span class="c1">// thread 1</span>
+<span class="p">{</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/mutex/lock_guard.html">std::lock_guard</a></span><span class="o">&lt;</span><span class="n"><a href="https://cpprefjp.github.io/reference/mutex/mutex.html">std::mutex</a></span><span class="o">&gt;</span> <span class="n">lk1</span><span class="p">{</span><span class="n">m1</span><span class="p">};</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/mutex/lock_guard.html">std::lock_guard</a></span><span class="o">&lt;</span><span class="n"><a href="https://cpprefjp.github.io/reference/mutex/mutex.html">std::mutex</a></span><span class="o">&gt;</span> <span class="n">lk2</span><span class="p">{</span><span class="n">m2</span><span class="p">};</span>
+<span class="p">}</span>
+
+<span class="c1">// thread 2</span>
+<span class="p">{</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/mutex/lock_guard.html">std::lock_guard</a></span><span class="o">&lt;</span><span class="n"><a href="https://cpprefjp.github.io/reference/mutex/mutex.html">std::mutex</a></span><span class="o">&gt;</span> <span class="n">lk1</span><span class="p">{</span><span class="n">m2</span><span class="p">};</span> <span class="c1">// ロックの取得順に一貫性がない</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/mutex/lock_guard.html">std::lock_guard</a></span><span class="o">&lt;</span><span class="n"><a href="https://cpprefjp.github.io/reference/mutex/mutex.html">std::mutex</a></span><span class="o">&gt;</span> <span class="n">lk2</span><span class="p">{</span><span class="n">m1</span><span class="p">};</span>
+<span class="p">}</span>
+</pre></div>
+</p>
+<p>このような状況では、従来は<code><a href="https://cpprefjp.github.io/reference/mutex/lock.html">std::lock()</a></code>関数によってロック取得を行い、ロック取得済みのミューテックスを<code><a href="https://cpprefjp.github.io/reference/mutex/adopt_lock.html">std::adopt_lock</a></code>戦略でロックの生存期間管理をすることでデッドロックを回避できた。このクラスでは、可変個のミューテックスをデッドロックを回避しながらロック取得と解放を安全に行える。</p>
 <h2>メンバ関数</h2>
 <table border="1" bordercolor="#888" style="border-collapse:collapse">
 <thead>
