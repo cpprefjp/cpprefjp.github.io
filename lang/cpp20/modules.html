@@ -189,8 +189,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2019-06-24T18:27:43">
-        2019年06月24日 18時27分43秒
+      <span itemprop="datePublished" content="2019-06-27T12:02:10">
+        2019年06月27日 12時02分10秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -287,7 +287,7 @@
 </ul>
 <h3>エクスポート</h3>
 <p>宣言の前に<code>export</code>キーワードを付加することでその対象をエクスポートできる。
-モジュールをインポートするとエクスポートした宣言が見える(名前解決の候補に挙がる)ようになる。</p>
+モジュールをインポートするとエクスポートした宣言が見える(名前探索の候補に挙がる)ようになる。</p>
 <p><div class="codehilite"><pre><span class="k">export</span> <span class="kt">int</span> <span class="n">x</span><span class="p">;</span> <span class="c1">// 変数のエクスポート</span>
 <span class="k">export</span> <span class="k">class</span> <span class="nc">x</span><span class="p">{</span> <span class="cm">/*...*/</span> <span class="p">};</span> <span class="c1">// クラスのエクスポート</span>
 <span class="k">export</span> <span class="k">namespace</span> <span class="n">x</span> <span class="p">{</span> <span class="cm">/*...*/</span> <span class="p">}</span> <span class="c1">// 名前空間のエクスポート</span>
@@ -343,7 +343,7 @@
 <p>インポートした翻訳単位中の宣言について、</p>
 <ul>
 <li>すべての宣言は到達可能となる。</li>
-<li>エクスポートしている宣言は見える(名前解決の候補に挙がる)ようになる。</li>
+<li>エクスポートしている宣言は見える(名前探索の候補に挙がる)ようになる。</li>
 </ul>
 <p>マクロや<code>using namespace</code>は取り込まれない。ヘッダーファイル中での <code>using namespace</code> はしばしば避けられるが、モジュールでは問題なく使うことができる。</p>
 <h4>再エクスポート</h4>
@@ -352,6 +352,30 @@
 </pre></div>
 </p>
 <p>再エクスポートすると、インポートで見えるようになった宣言をそのままエクスポートしたことになる。</p>
+<h4>インターフェース依存</h4>
+<p>翻訳単位がモジュールユニットUに<strong>インターフェース依存</strong>(interface dependency)を持つとは、次のことをいう：</p>
+<ul>
+<li>Uをインポートするモジュールインポート宣言か、Uを暗黙的にインポートするモジュール宣言を含む</li>
+<li>または、Uにインターフェース依存を持つモジュールユニットに対してインターフェース依存を持つ(推移律)</li>
+</ul>
+<p>翻訳単位は、自分自身に対してインターフェース依存を持ってはならない(インターフェース依存関係は循環しない)。</p>
+<h4>到達可能性</h4>
+<p>C++20では、翻訳単位と宣言に対して到達可能という用語を使うようになった。</p>
+<p>翻訳単位Uがプログラムの点Pから<strong>必然的に到達可能</strong>(necessarily reachable) とは、次のことをいう：</p>
+<ul>
+<li>Uがモジュールインターフェースユニットであり、点Pを含む翻訳単位が点Pに先立ってUにインターフェース依存を持っている</li>
+<li>または、点Pを含む翻訳単位が点Pに先立ってUをインポートしている</li>
+</ul>
+<p>必然的に到達可能な翻訳単位は、<strong>到達可能</strong>(reachable)である。その他のインターフェース依存を持つ翻訳単位が到達可能となるかは、未規定である。
+(推移的にインターフェース依存を持つモジュール実装パーティションなどが該当する)</p>
+<p>宣言Dが点Pから到達可能あるいは必然的に到達可能とは、次のことをいう</p>
+<ul>
+<li>DがPと同じ翻訳単位にあり、Pに先立って宣言されている</li>
+<li>または、DがPから到達可能あるいは必然的に到達可能な翻訳単位にあって、破棄(discard)されておらず、プライベートモジュールフラグメント内にもない</li>
+</ul>
+<p>C++20までは到達可能という用語はなかったが、前者の条件を満たす宣言だけが参照できていた。
+宣言の意味論的な性質(semantic property)を使用するには、宣言が到達可能でなければならない。</p>
+<p>例えば、クラス定義はクラスの完全性という性質を持っている。クラス定義が到達可能であるときそのクラスは完全である。</p>
 <h3>モジュールパーティション</h3>
 <p>モジュールは分割することができる。分割したモジュールをモジュールパーティションという。</p>
 <p>モジュールパーティションを宣言する構文は以下のようになる：</p>
@@ -411,7 +435,7 @@
 <li>モジュール実装ユニット</li>
 </ol>
 <h3>ODRの緩和</h3>
-<p>C++20では、複数の定義が同時に見えるようにならない限りODR違反とならない。</p>
+<p>C++20では、複数の定義があっても同時に到達可能でなければODR違反とならない。</p>
 <p><div class="codehilite"><pre><span class="c1">// a.cpp</span>
 <span class="k">export</span> <span class="n">module</span> <span class="n">A</span><span class="p">;</span>
 
