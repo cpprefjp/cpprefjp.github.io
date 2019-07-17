@@ -189,8 +189,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2019-07-12T05:51:48">
-        2019年07月12日 05時51分48秒
+      <span itemprop="datePublished" content="2019-07-17T07:19:28">
+        2019年07月17日 07時19分28秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -222,7 +222,7 @@
 </p>
 <h2>概要</h2>
 <p>ビットレベルの再解釈キャストを行う。</p>
-<p>低レイヤーのプログラムでは、同じビットを維持してほかの型に解釈し直すことが必要とされる。その際、<code>reinterpret_cast</code>や共用体を使用すると、Strict Aliasing規則に抵触してしまい未定義動作になってしまう。そのような目的には<code><a href="https://cpprefjp.github.io/reference/type_traits/aligned_storage.html">std::aligned_storage</a></code>と<code>std::memcpy()</code>を組み合わせて使用することになるが、それを簡単に使用できるようにしたのが本関数である。</p>
+<p>低レイヤーのプログラムでは、同じビットを維持してほかの型に解釈し直したいことがある。その際、<code>reinterpret_cast</code>や共用体を使用すると、Strict Aliasing規則に抵触して未定義動作になってしまう。安全な方法としては<code>std::memcpy()</code>を使用するなどがあるが、面倒なことなどから前述の危険な方法が多く見られた。そこで、同等の操作を簡単で安全にできるようにしたのが本関数である。</p>
 <h2>要件</h2>
 <p>以下の条件のいずれかを満たさない場合、この関数はオーバーロード解決の候補から除外される：</p>
 <ul>
@@ -245,24 +245,17 @@
 <p>投げない</p>
 <h2>備考</h2>
 <ul>
-<li>この関数は、型<code>To</code>にデフォルト構築可能であることの要求を行わない<ul>
-<li><code><a href="https://cpprefjp.github.io/reference/type_traits/aligned_storage.html">std::aligned_storage</a></code>を介して<code>To</code>型オブジェクト用の領域を用意することで、要求の少ない関数となる
-
+<li>この関数は、型<code>To</code>にデフォルト構築可能であることの要求を行わない。以下に実装イメージを示す：
+  <br />
 <div class="codehilite"><pre><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">To</span><span class="p">,</span> <span class="k">typename</span> <span class="n">From</span><span class="o">&gt;</span>
 <span class="n">To</span> <span class="n">bit_cast</span><span class="p">(</span><span class="k">const</span> <span class="n">From</span><span class="o">&amp;</span> <span class="n">from</span><span class="p">)</span> <span class="n">noexcept</span> <span class="p">{</span> <span class="c1">// 実際には、さらに要件チェックが行われる</span>
-  <span class="c1">// To型のオブジェクトに直接memcpyするのではなく、アライメント調整した領域にmemcpyして、</span>
-  <span class="c1">// その領域をTo型に再解釈キャストする。</span>
-  <span class="k">typename</span> <span class="n"><a href="https://cpprefjp.github.io/reference/type_traits/aligned_storage.html">std::aligned_storage</a></span><span class="o">&lt;</span><span class="k">sizeof</span><span class="p">(</span><span class="n">To</span><span class="p">),</span> <span class="n">alignof</span><span class="p">(</span><span class="n">To</span><span class="p">)</span><span class="o">&gt;::</span><span class="n">type</span> <span class="n">storage</span><span class="p">;</span>
-  <span class="n">std</span><span class="o">::</span><span class="n">memcpy</span><span class="p">(</span><span class="o">&amp;</span><span class="n">storage</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">from</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">To</span><span class="p">));</span>  <span class="c1">// memcpyはconstexprではないため、</span>
-                                             <span class="c1">// コンパイラが特殊な実装をする必要がある</span>
-
-  <span class="c1">// 以下のキャスト方法は、本来はString Aliasing規則に違反して未定義動作になるため、</span>
-  <span class="c1">// コンパイラが特殊な実装をする必要がある</span>
-  <span class="k">return</span> <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">To</span><span class="o">&amp;&gt;</span><span class="p">(</span><span class="n">storage</span><span class="p">);</span>
+  <span class="c1">// この実装ではTo型がデフォルト構築可能である必要があるが、C++20のbit_castでは必要ない</span>
+  <span class="n">To</span> <span class="n">result</span><span class="p">;</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">memcpy</span><span class="p">(</span><span class="o">&amp;</span><span class="n">result</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">from</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">To</span><span class="p">));</span>  <span class="c1">// memcpyはconstexprではないため、</span>
+                                            <span class="c1">// コンパイラが特殊な実装をする必要がある</span>
+  <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
-</li>
-</ul>
 </li>
 </ul>
 <h2>例</h2>
