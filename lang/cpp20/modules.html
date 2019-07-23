@@ -189,8 +189,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2019-07-23T04:07:25">
-        2019年07月23日 04時07分25秒
+      <span itemprop="datePublished" content="2019-07-23T14:42:26">
+        2019年07月23日 14時42分26秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -482,52 +482,24 @@
 <p>グローバルモジュールフラグメント内の宣言は、後続のモジュールに属する宣言から参照されていない場合は、<strong>破棄</strong>される(discarded)。</p>
 <p>C++標準ライブラリのヘッダーをヘッダーユニット内でインクルードする場合、グローバルモジュールフラグメント内でインクルードするべきである。</p>
 <h3>ヘッダーユニット</h3>
-<p>ヘッダーユニットは、ヘッダーファイルをモジュールとしてインポートする機能である。
-ヘッダーファイル内の宣言が見えるようになり、通常のモジュールとは異なりマクロも引き継がれる。</p>
+<p>一部のヘッダーファイルは、モジュールとしてインポートすることができる。この機能およびヘッダーファイルから生成される翻訳単位をヘッダーユニットという。</p>
 <p><div class="codehilite"><pre><span class="n">import</span> <span class="o">&lt;</span><span class="n">foo</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span><span class="p">;</span> <span class="c1">// foo.hをヘッダーユニットとしてインポート</span>
 </pre></div>
 </p>
-<p>ただし、どのようなヘッダーファイルでもヘッダーユニットになれるわけではない。
-ヘッダーユニットとしてインポートできるヘッダーファイル(インポータブルヘッダー)は以下のものに限られる。</p>
+<p>ただし、インポートできるヘッダーファイル(インポータブルヘッダー)は以下のものに限られる。</p>
 <ul>
 <li>C++ライブラリヘッダー(C++標準ライブラリヘッダーのうち、C言語標準ライブラリヘッダーに由来するもの(<code>&lt;cstdio&gt;</code>など)を除くもの)</li>
 <li>その他、処理系定義のヘッダー</li>
 </ul>
-<p>インポータブルヘッダーを <code>#include</code> した場合、自動的にヘッダーユニットのインポートに置き換わる。</p>
-<p>ヘッダーユニットは再エクスポートできる。</p>
-<p><div class="codehilite"><pre><span class="c1">// lib.h</span>
-
-<span class="kr">inline</span> <span class="kt">int</span> <span class="nf">f</span><span class="p">(){</span> <span class="k">return</span> <span class="n">NUM</span><span class="p">;</span> <span class="p">}</span>
-
-<span class="cp">#define NUM 1000</span>
-</pre></div>
-</p>
-<p><div class="codehilite"><pre><span class="c1">// lib_mod.cpp</span>
-<span class="c1">// lib.h中の宣言をすべてエクスポートするモジュールlib</span>
-<span class="k">export</span> <span class="n">module</span> <span class="n">lib</span><span class="p">;</span>
-<span class="k">export</span> <span class="n">import</span> <span class="s">"lib.h"</span><span class="p">;</span>
-</pre></div>
-</p>
-<p><div class="codehilite"><pre><span class="c1">// main.cpp</span>
-<span class="n">import</span> <span class="n">lib</span><span class="p">;</span>
-
-<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
-  <span class="mi">1</span> <span class="o">+</span> <span class="n">f</span><span class="p">();</span> <span class="c1">// OK</span>
-  <span class="mi">1</span> <span class="o">+</span> <span class="n">NUM</span><span class="p">;</span> <span class="c1">// エラー: マクロは再エクスポートしても引き継がれない</span>
-<span class="p">}</span>
-</pre></div>
-</p>
-<p>ヘッダーユニットをインポートすると以下のことが起こる。</p>
+<p>ヘッダーユニットをインポートしてもその内容が展開されることはないが、<code>#include</code>とほぼ同じ効果が得られる(そのようなヘッダーファイルだけがインポータブルヘッダーに指定されるともいえる)。</p>
+<p>C++20では、インポータブルヘッダーに対する<code>#include</code>は自動的にインポートに置き換わる。この処理はプリプロセッサで行われる。</p>
+<h4>モジュールとの違い</h4>
+<p>ヘッダーユニットはインポートしたときの効果を<code>#include</code>と近くするために、普通のモジュールとは異なる性質をもつ。</p>
 <ul>
-<li>ヘッダーファイルをプリプロセスし、フェーズ4終了時点で定義されていたマクロをインポート宣言の直後で再定義する。</li>
-<li>ヘッダーファイルをフェーズ7までコンパイルし、その翻訳単位(ヘッダーユニット)をインポートする。<ul>
-<li>内部リンケージを持たない名前は暗黙的にエクスポートされる。</li>
-<li>ヘッダーユニットはモジュール宣言を持てない。ヘッダーユニット内の宣言はグローバルモジュールに属する。</li>
+<li>ヘッダーユニットはモジュール宣言を持てない。</li>
+<li>ヘッダーユニット内の宣言はすべてグローバルモジュールに属し、暗黙的にエクスポートされる。</li>
+<li>ヘッダーユニットをインポートすると、ヘッダーユニット内のマクロが使えるようになる。</li>
 </ul>
-</li>
-</ul>
-<p>ヘッダーファイルが新たな翻訳単位としてコンパイルされる点が従来の <code>#include</code> と異なるので注意が必要である。</p>
-<p>ヘッダーファイルからヘッダーユニットを生成する手順を事前に行っておくことは禁止されていない。</p>
 <p><div class="codehilite"><pre><span class="c1">// <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1103r3.pdf" target="_blank">P1103R3</a>より引用</span>
 <span class="c1">// a.h</span>
 <span class="cp">#define X 123 </span><span class="c1">// #1</span>
@@ -551,12 +523,39 @@
 <span class="kt">int</span> <span class="n">c</span> <span class="o">=</span> <span class="n">Z</span><span class="p">;</span>    <span class="c1">// エラー: #5は#3を異なる値で再定義している</span>
 </pre></div>
 </p>
+<p>ヘッダーユニットは再エクスポートできるが、ヘッダーユニットを間接的にインポートした場合はマクロはインポートされない。</p>
+<p><div class="codehilite"><pre><span class="c1">// lib.h</span>
+<span class="kr">inline</span> <span class="kt">int</span> <span class="nf">f</span><span class="p">(){</span> <span class="k">return</span> <span class="n">NUM</span><span class="p">;</span> <span class="p">}</span>
+<span class="cp">#define NUM 1000</span>
+
+<span class="c1">// lib_mod.cpp</span>
+<span class="c1">// lib.h中の宣言をすべてエクスポートするモジュールlib</span>
+<span class="k">export</span> <span class="n">module</span> <span class="n">lib</span><span class="p">;</span>
+<span class="k">export</span> <span class="n">import</span> <span class="s">"lib.h"</span><span class="p">;</span>
+
+<span class="c1">// main.cpp</span>
+<span class="n">import</span> <span class="n">lib</span><span class="p">;</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+  <span class="mi">1</span> <span class="o">+</span> <span class="n">f</span><span class="p">();</span> <span class="c1">// OK</span>
+  <span class="mi">1</span> <span class="o">+</span> <span class="n">NUM</span><span class="p">;</span> <span class="c1">// エラー: マクロは再エクスポートしても引き継がれない</span>
+<span class="p">}</span>
+</pre></div>
+</p>
+<h4>includeとの違い</h4>
+<p>ヘッダーユニットをインポートすると以下のことが起こる。</p>
+<ul>
+<li>ヘッダーファイルを翻訳フェーズ7までコンパイルし、その翻訳単位(ヘッダーユニット)をインポートする。</li>
+<li>さらに、ヘッダーファイルの翻訳フェーズ4終了時点で定義されていたマクロがインポート宣言の直後で宣言される。この処理はプリプロセッサで行われる。</li>
+</ul>
+<p>ヘッダーファイルが新たな翻訳単位としてコンパイルされる点が従来の <code>#include</code> とは異なる。
+ヘッダーユニット内のマクロはインポートできるが、逆は起こらない。すなわち、<code>import</code>を書いた翻訳単位におけるプリプロセッサの状態がヘッダーユニット内に影響を与えることはない。</p>
 <h4>ヘッダーユニットが必要になった背景・経緯</h4>
 <p>単にヘッダーファイルをインクルードしたいだけであれば、グローバルモジュールフラグメント内で行えば問題は無い。</p>
 <p>しかし、処理系はヘッダーファイルをインポータブルヘッダーに指定することで、それらに対する <code>#include</code> を <code>import</code> に置き換え、
 コンパイルを速くすることができる。</p>
-<p>例えば、C++20では標準ライブラリは従来通りヘッダーファイルで提供されるが、C++ライブラリヘッダーはインポータブルヘッダーでもある。処理系はこれらをコンパイル済みモジュールとして提供するかもしれない。
-そのような処理系では、C++20としてコンパイルするだけで従来のコードでも恩恵を得ることができる。</p>
+<p>例えば、C++20では標準ライブラリは従来通りヘッダーファイルで提供されるが、C++ライブラリヘッダーはインポータブルヘッダーでもある。処理系はこれらをコンパイル済みモジュールとして提供するかもしれない(ヘッダーファイルからヘッダーユニットを生成する手順を事前に行っておくことは禁止されていない)。</p>
+<p>そのような処理系では、C++20としてコンパイルするだけで従来のコードでも恩恵を得ることができる。</p>
 <h2>ビルド</h2>
 <p>プログラムのビルドは規格の範囲外なので、ここでは一般論を述べる。</p>
 <p>モジュールをコンパイルすると、何らかの中間表現(コンパイル済みモジュール)が保存される。</p>
@@ -590,6 +589,7 @@
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1103r3.pdf" target="_blank">P1103R3 Merging Modules</a></li>
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1502r0.html" target="_blank">P1502R0
 Standard library header units for C++20</a></li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1703r0.html" target="_blank">P1703R0 Recognizing Header Unit Imports Requires Full Preprocessing</a></li>
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1766r0.html" target="_blank">P1766R0
 Mitigating minor modules maladies</a></li>
 </ul></div>
