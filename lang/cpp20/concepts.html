@@ -189,12 +189,12 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2019-08-15T09:04:47">
-        2019年08月15日 09時04分47秒
+      <span itemprop="datePublished" content="2019-08-28T06:41:02">
+        2019年08月28日 06時41分02秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">yoh</span>
+        <span itemprop="name">Akira Takahashi</span>
       </span>
       が更新
     </small></p>
@@ -801,6 +801,81 @@
 </ol>
 </li>
 <li>満たされない制約を持つ全ての関数は、オーバーロード解決の候補から除外される</li>
+</ul>
+<h2>autoに対する制約</h2>
+<ul>
+<li><a href="https://cpprefjp.github.io/lang/cpp14/generic_lambdas.html">ジェネリックラムダ</a>では<code>[](auto a, auto b) { … }</code>のようにパラメータの型として<code>auto</code>を使用することで関数テンプレートとして関数呼び出し演算子が定義され、それぞれの変数にテンプレートパラメータが割り振られていた</li>
+<li>コンセプトの導入にともない、この仕様を以下のように拡大する：<ul>
+<li>ラムダ式以外の通常の関数もまたパラメータ型<code>auto</code>とすることで関数テンプレートを定義できるようにする</li>
+<li>関数の戻り値型として使用する<code>auto</code>、変数定義の<code>auto</code>、パラメータ型の<code>auto</code>をコンセプトで制約できるようにする構文を追加する</li>
+</ul>
+</li>
+</ul>
+<h3>autoパラメータによる関数テンプレートの簡易定義</h3>
+<ul>
+<li>
+<p>パラメータ型を<code>auto</code>にすることにより、それぞれのパラメータにテンプレートパラメータが振り分けられる。
+  <br />
+<div class="codehilite"><pre><span class="k">auto</span> <span class="nf">f</span><span class="p">(</span><span class="k">auto</span> <span class="n">a</span><span class="p">,</span> <span class="k">auto</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span> <span class="p">}</span>
+
+<span class="c1">// 以下と同じ</span>
+<span class="c1">// template &lt;class T, class U&gt;</span>
+<span class="c1">// auto f(T a, T b) { return a + b; }</span>
+
+<span class="n">f</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>     <span class="c1">// パラメータaとbの型はint</span>
+<span class="n">f</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">);</span> <span class="c1">// パラメータaとbの型はdouble</span>
+</pre></div>
+</p>
+<ul>
+<li>これはコンセプトによる制約がされない、単純な関数テンプレートの定義である</li>
+</ul>
+</li>
+</ul>
+<h3>auto変数、autoパラメータ、auto戻り値に対する制約</h3>
+<ul>
+<li>
+<p>変数定義のauto、関数パラメータのauto、戻り値型のautoをそれぞれ制約できる。単純な使い方は以下のようになる：
+  <br />
+<div class="codehilite"><pre><span class="n">concept</span> <span class="n">C</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+
+<span class="c1">// 変数を制約する。制約を満たさない型が代入されようとしたらコンパイルエラー</span>
+<span class="n">C</span> <span class="k">auto</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+<span class="c1">// パラメータ型を制約する</span>
+<span class="c1">// (constは制約の前)</span>
+<span class="kt">void</span> <span class="nf">f</span><span class="p">(</span><span class="k">const</span> <span class="n">C</span> <span class="k">auto</span><span class="o">&amp;</span> <span class="n">a</span><span class="p">,</span> <span class="n">C</span> <span class="k">auto</span> <span class="n">b</span><span class="p">,</span> <span class="n">C</span> <span class="k">auto</span><span class="o">&amp;&amp;</span> <span class="n">c</span><span class="p">)</span> <span class="p">{}</span>
+<span class="c1">// 以下と同じ意味になる：</span>
+<span class="c1">// template &lt;class T, class U, class V&gt;</span>
+<span class="c1">// requires C&lt;T&gt; &amp;&amp; C&lt;U&gt; &amp;&amp; C&lt;V&gt;</span>
+<span class="c1">// void f(const T&amp; a, U b, V&amp;&amp; c) {}</span>
+
+<span class="c1">// 戻り値型を制約する (<a href="https://cpprefjp.github.io/lang/cpp14/decltype_auto.html">decltype(auto)</a>も同様)</span>
+<span class="n">C</span> <span class="k">auto</span> <span class="nf">g</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="mi">1</span><span class="p">;</span> <span class="p">}</span>
+
+<span class="c1">// 非型テンプレート引数を制約する</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="n">C</span> <span class="k">auto</span> <span class="n">N</span><span class="o">&gt;</span>
+<span class="k">struct</span> <span class="n">X</span> <span class="p">{};</span>
+
+<span class="k">struct</span> <span class="n">Y</span> <span class="p">{</span>
+  <span class="c1">// 型変換演算子の戻り値型を制約する</span>
+  <span class="k">operator</span> <span class="n">C</span> <span class="k">auto</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+</pre></div>
+</p>
+</li>
+<li>
+<p>テンプレート引数付きコンセプトを使用する場合、コンセプトの第1テンプレート引数として<code>auto</code>プレースホルダーで置き換わる型が自動的に渡される：
+  <br />
+<div class="codehilite"><pre><span class="c1">// <a href="https://cpprefjp.github.io/reference/concepts/CopyConstructible.html">std::CopyConstructible</a>&lt;decltype(x)&gt;を意味する</span>
+<span class="kt">void</span> <span class="nf">f</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/concepts/CopyConstructible.html">std::CopyConstructible</a></span> <span class="k">auto</span> <span class="n">x</span><span class="p">);</span>
+
+<span class="c1">// <span href="https://cpprefjp.github.io/reference/concepts/Constructible.md.nolink">std::Constructible</span>&lt;decltype(x), int&gt;を意味する</span>
+<span class="kt">void</span> <span class="nf">g</span><span class="p">(</span><span class="n"><span href="https://cpprefjp.github.io/reference/concepts/Constructible.md.nolink">std::Constructible</span></span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="k">auto</span> <span class="n">x</span><span class="p">);</span>
+</pre></div>
+</p>
+</li>
 </ul>
 <h2>備考</h2>
 <ul>
