@@ -189,8 +189,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2019-09-03T08:57:14">
-        2019年09月03日 08時57分14秒
+      <span itemprop="datePublished" content="2019-09-04T06:24:59">
+        2019年09月04日 06時24分59秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -218,7 +218,7 @@
 <p>C++20から導入される「コンセプト (concepts)」は、テンプレートパラメータを制約する機能である。この機能を使用することで、以下のような面でプログラミングのしやすさが向上する：</p>
 <ul>
 <li>コンパイルエラーのメッセージが読みやすくなる<ul>
-<li>テンプレートパラメータの型およびそのオブジェクトに対する許可されていない操作をしようとした場合に発生するエラーメッセージが、「テンプレートパラメータ<code>T</code>はコンセプト<code>X</code>の要件を満たしません」のようなわかりやすいものになることが期待できる</li>
+<li>テンプレートパラメータの型およびそのオブジェクトに対する許可されていない操作をしようとした場合に発生するエラーメッセージが、「テンプレートパラメータ<code>T</code>がコンセプト<code>X</code>の要件を満たしません」のようなわかりやすいものになることが期待できる</li>
 </ul>
 </li>
 <li>これまで自然言語で書いていた制約の仕様をプログラムで記述できる<ul>
@@ -230,6 +230,77 @@
 </ul>
 </li>
 </ul>
+<p>以下は、関数テンプレートのテンプレートパラメータ<code>T</code>に対して、<code>draw()</code>メンバ関数を持っていることを要求する制約の定義例である：</p>
+<p><div class="codehilite"><pre><span class="c1">// 描画可能コンセプト。</span>
+<span class="c1">// メンバ関数draw()を持つことを要求する</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="o">&gt;</span>
+<span class="n">concept</span> <span class="n">Drawable</span> <span class="o">=</span> <span class="n">requires</span> <span class="p">(</span><span class="n">T</span><span class="o">&amp;</span> <span class="n">x</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">x</span><span class="p">.</span><span class="n">draw</span><span class="p">();</span> <span class="c1">// 型Tに要求する操作をセミコロン区切りで列挙する。</span>
+            <span class="c1">// ここでは、メンバ関数draw()を呼び出せることを要求している。</span>
+<span class="p">};</span>
+
+<span class="c1">// テンプレートパラメータTをコンセプトDrawableで制約する。</span>
+<span class="c1">// Drawableの要件を満たさない型が渡された場合は制約エラーとなる</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="n">Drawable</span> <span class="n">T</span><span class="o">&gt;</span>
+<span class="kt">void</span> <span class="n">f</span><span class="p">(</span><span class="n">T</span><span class="o">&amp;</span> <span class="n">x</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">x</span><span class="p">.</span><span class="n">draw</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="k">struct</span> <span class="n">Circle</span> <span class="p">{</span>
+  <span class="kt">void</span> <span class="n">draw</span><span class="p">()</span> <span class="p">{}</span>
+<span class="p">};</span>
+
+<span class="k">struct</span> <span class="n">Box</span> <span class="p">{</span>
+  <span class="kt">void</span> <span class="n">draw</span><span class="p">()</span> <span class="p">{}</span>
+<span class="p">};</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">Circle</span> <span class="n">c</span><span class="p">;</span>
+  <span class="n">f</span><span class="p">(</span><span class="n">c</span><span class="p">);</span>      <span class="c1">// OK</span>
+
+  <span class="n">Box</span> <span class="n">b</span><span class="p">;</span>
+  <span class="n">f</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>      <span class="c1">// OK</span>
+
+<span class="c1">//int n = 0;</span>
+<span class="c1">//f(n);      // コンパイルエラー！</span>
+             <span class="c1">// 型intはDrawableコンセプトの要件を満たさず、</span>
+             <span class="c1">// draw()メンバ関数を持っていない</span>
+<span class="p">}</span>
+</pre></div>
+</p>
+<p><code>concept</code>キーワードを使用して、型に対する要求の集合であるコンセプトを定義する。コンセプトの定義では、型がどのような特性を持つのか (整数型なのか浮動小数点数型なのか、<code>==</code>で比較可能なのか<code>&lt;</code>で順序付けられているか) や、型に対してどのような操作ができるべきか (メンバ関数呼び出し、非メンバ関数呼び出し、ほかの型との演算、特定のメンバ型を持っているか) などを列挙する。</p>
+<p><div class="codehilite"><pre><span class="cp">#include <a href="https://cpprefjp.github.io/reference/type_traits.html">&lt;type_traits&gt;</a></span>
+<span class="cp">#include <a href="https://cpprefjp.github.io/reference/iterator.html">&lt;iterator&gt;</a></span>
+
+<span class="c1">// 型特性としてすでに用意されている定数式をラップしてコンセプトを定義できる</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="o">&gt;</span>
+<span class="n">concept</span> <span class="n">Integral</span> <span class="o">=</span> <span class="n"><a href="https://cpprefjp.github.io/reference/type_traits/is_integral.html">std::is_integral_v</a></span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">;</span>
+
+<span class="c1">// 2つ以上のテンプレートパラメータをとるコンセプトも定義できる</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">,</span> <span class="k">class</span> <span class="nc">U</span><span class="o">&gt;</span>
+<span class="n">concept</span> <span class="n">EqualityComparable</span> <span class="o">=</span> <span class="n">requires</span> <span class="p">(</span><span class="n">T</span> <span class="n">a</span><span class="p">,</span> <span class="n">U</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span>
+  <span class="p">{</span><span class="n">a</span> <span class="o">==</span> <span class="n">b</span><span class="p">}</span> <span class="o">-&gt;</span> <span class="kt">bool</span><span class="p">;</span> <span class="c1">// 式の戻り値型も要求できる</span>
+<span class="p">};</span>
+
+<span class="c1">// 戻り値型の要求には、直接の型だけでなくコンセプトも指定できる</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">,</span> <span class="k">class</span> <span class="nc">U</span><span class="o">&gt;</span>
+<span class="n">concept</span> <span class="n">Addable</span> <span class="o">=</span> <span class="n">requires</span> <span class="p">(</span><span class="n">T</span> <span class="n">a</span><span class="p">,</span> <span class="n">U</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// 加算の結果として、型Tと型Uの共通の型が返ること</span>
+  <span class="p">{</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">}</span> <span class="o">-&gt;</span> <span class="n"><span href="https://cpprefjp.github.io/reference/concepts/common_with.md.nolink">std::common_with</span></span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">U</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">// セミコロン区切りで複数の要求を列挙できる</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="o">&gt;</span>
+<span class="n">concept</span> <span class="n">SequenceContainer</span> <span class="o">=</span> <span class="n">requires</span> <span class="p">(</span><span class="n">T</span> <span class="n">c</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">typename</span> <span class="n">T</span><span class="o">::</span><span class="n">size_type</span><span class="p">;</span> <span class="c1">// 型Tがメンバ型としてsize_typeを持っていること</span>
+  <span class="p">{</span><span class="n">c</span><span class="p">.</span><span class="n">size</span><span class="p">()}</span> <span class="o">-&gt;</span> <span class="k">typename</span> <span class="n">T</span><span class="o">::</span><span class="n">size_type</span><span class="p">;</span>
+  <span class="p">{</span><span class="n"><a href="https://cpprefjp.github.io/reference/iterator/size.html">std::size</a></span><span class="p">(</span><span class="n">c</span><span class="p">)}</span> <span class="o">-&gt;</span> <span class="k">typename</span> <span class="n">T</span><span class="o">::</span><span class="n">size_type</span><span class="p">;</span> <span class="c1">// 非メンバ関数の呼び出しも要求できる</span>
+
+  <span class="k">typename</span> <span class="n">T</span><span class="o">::</span><span class="n">value_type</span><span class="p">;</span>
+  <span class="n">c</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">declval</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">::</span><span class="n">value_type</span><span class="o">&gt;</span><span class="p">());</span>
+<span class="p">};</span>
+</pre></div>
+</p>
 <p>(執筆中)</p>
 <h2>仕様</h2>
 <h3>コンセプト定義</h3>
