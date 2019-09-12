@@ -189,8 +189,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2019-09-12T03:44:39">
-        2019年09月12日 03時44分39秒
+      <span itemprop="datePublished" content="2019-09-12T05:09:23">
+        2019年09月12日 05時09分23秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -369,7 +369,8 @@
 <p><code>class</code> / <code>typename</code>キーワードの代わりにコンセプトを指定する方法は、これまでに紹介した。</p>
 <p>もう少し詳細な仕様を紹介すると、この構文の場合、コンセプトの第1テンプレート引数がテンプレートパラメータで置き換えられる。<code>template &lt;std::integral T&gt;</code>の場合、<code>std::integral&lt;T&gt;</code>のようにテンプレートパラメータ<code>T</code>を<code>std::integral</code>コンセプトに自動的に指定される。</p>
 <p>この方法では、複数のテンプレートパラメータをとるコンセプトを使用する場合に注意する必要がある。たとえば任意の引数型から型<code>T</code>を構築できることを要求する<code><span href="https://cpprefjp.github.io/reference/concepts/constructible_from.md.nolink">std::constructible_from</span></code>コンセプトの場合、<code>template &lt;std::constructible_from&lt;int&gt; T&gt;</code>のように指定すると、<code>std::constructible_from&lt;T, int&gt;</code>を意味し、「型<code>T</code>が<code>int</code>から構築できること」を要求する制約となる。</p>
-<p><div class="codehilite"><pre><span class="cp">#include <a href="https://cpprefjp.github.io/reference/cassert.html">&lt;cassert&gt;</a></span>
+<p><div class="codehilite"><pre><span class="cp">#include <a href="https://cpprefjp.github.io/reference/concepts.html">&lt;concepts&gt;</a></span>
+<span class="cp">#include <a href="https://cpprefjp.github.io/reference/cassert.html">&lt;cassert&gt;</a></span>
 <span class="cp">#include <a href="https://cpprefjp.github.io/reference/vector.html">&lt;vector&gt;</a></span>
 
 <span class="k">template</span> <span class="o">&lt;</span><span class="n"><span href="https://cpprefjp.github.io/reference/concepts/constructible_from.md.nolink">std::constructible_from</span></span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">T</span><span class="o">&gt;</span>
@@ -382,11 +383,108 @@
   <span class="n"><a href="https://cpprefjp.github.io/reference/vector/vector.html">std::vector</a></span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">b</span> <span class="o">=</span> <span class="n">make_from_int</span><span class="o">&lt;</span><span class="n"><a href="https://cpprefjp.github.io/reference/vector/vector.html">std::vector</a></span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
 
   <span class="n"><a href="https://cpprefjp.github.io/reference/cassert/assert.html">assert</a></span><span class="p">(</span><span class="n">a</span> <span class="o">==</span> <span class="mi">3</span><span class="p">);</span>
-  <span class="n"><a href="https://cpprefjp.github.io/reference/cassert/assert.html">assert</a></span><span class="p">(</span><span class="n">b</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">==</span> <span class="mi">3</span><span class="p">);</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/cassert/assert.html">assert</a></span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/vector/vector/size.html">b.size()</a></span> <span class="o">==</span> <span class="mi">3</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
 </p>
 <h4>requires節を使用して制約する</h4>
+<p><code>requires</code>節を使用することで、以下のような制約ができる：</p>
+<ul>
+<li>ひとつのテンプレートパラメータを複数のコンセプトで制約 (AND / OR条件)</li>
+<li>クラステンプレートでメンバ関数ごとにクラステンプレートパラメータを制約</li>
+</ul>
+<p><code>requires</code>節は基本的に、テンプレートパラメータ宣言のあとに記述する。これは、関数テンプレート、クラステンプレート、エイリアステンプレート、変数テンプレートなど、どれでも共通である。また、<code>requires</code>では、ひとつのテンプレートパラメータに対して複数の制約を指定することができる。<code>&amp;&amp;</code>演算子によるAND条件、<code>||</code>演算子によるOR条件によって複数の制約を指定する。</p>
+<p><div class="codehilite"><pre><span class="cp">#include <a href="https://cpprefjp.github.io/reference/concepts.html">&lt;concepts&gt;</a></span>
+<span class="cp">#include <a href="https://cpprefjp.github.io/reference/cassert.html">&lt;cassert&gt;</a></span>
+<span class="cp">#include <a href="https://cpprefjp.github.io/reference/vector.html">&lt;vector&gt;</a></span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="o">&gt;</span>
+<span class="n">requires</span> <span class="n"><span href="https://cpprefjp.github.io/reference/concepts/constructible_from.md.nolink">std::constructible_from</span></span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;</span> <span class="o">&amp;&amp;</span> <span class="n"><span href="https://cpprefjp.github.io/reference/concepts/move_constructible.md.nolink">std::move_constructible</span></span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span>
+<span class="n">T</span> <span class="n">make_from_int</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="n">T</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">a</span> <span class="o">=</span> <span class="n">make_from_int</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/vector/vector.html">std::vector</a></span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">b</span> <span class="o">=</span> <span class="n">make_from_int</span><span class="o">&lt;</span><span class="n"><a href="https://cpprefjp.github.io/reference/vector/vector.html">std::vector</a></span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
+
+  <span class="n"><a href="https://cpprefjp.github.io/reference/cassert/assert.html">assert</a></span><span class="p">(</span><span class="n">a</span> <span class="o">==</span> <span class="mi">3</span><span class="p">);</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/cassert/assert.html">assert</a></span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/vector/vector/size.html">b.size()</a></span> <span class="o">==</span> <span class="mi">3</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</p>
+<p>また、requires節は、クラステンプレートのテンプレートパラメータを、メンバ関数ごとに制約するためにも使用できる。簡易的な<code><a href="https://cpprefjp.github.io/reference/vector/vector.html">std::vector</a></code>の<code>push_back()</code>メンバ関数を実装してみよう。</p>
+<p><div class="codehilite"><pre><span class="cp">#include <a href="https://cpprefjp.github.io/reference/concepts.html">&lt;concepts&gt;</a></span>
+<span class="cp">#include <a href="https://cpprefjp.github.io/reference/iostream.html">&lt;iostream&gt;</a></span>
+<span class="cp">#include <a href="https://cpprefjp.github.io/reference/vector.html">&lt;vector&gt;</a></span>
+<span class="cp">#include <a href="https://cpprefjp.github.io/reference/algorithm.html">&lt;algorithm&gt;</a></span>
+<span class="cp">#include <a href="https://cpprefjp.github.io/reference/memory.html">&lt;memory&gt;</a></span>
+<span class="cp">#include <a href="https://cpprefjp.github.io/reference/stdexcept.html">&lt;stdexcept&gt;</a></span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="o">&gt;</span>
+<span class="k">class</span> <span class="nc">MyVector</span> <span class="p">{</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/memory/allocator.html">std::allocator</a></span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">alloc_</span><span class="p">;</span>
+  <span class="n">T</span><span class="o">*</span> <span class="n">data_</span> <span class="o">=</span> <span class="n">nullptr</span><span class="p">;</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/cstddef/size_t.html">std::size_t</a></span> <span class="n">capacity_</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/cstddef/size_t.html">std::size_t</a></span> <span class="n">size_</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="nl">public:</span>
+  <span class="c1">// 簡易実装のため、事前にメモリ領域を確保して再確保はしない。</span>
+  <span class="c1">// (<a href="https://cpprefjp.github.io/reference/vector/vector.html">std::vector</a>のコンストラクタとは効果が違う)</span>
+  <span class="k">explicit</span> <span class="nf">MyVector</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/cstddef/size_t.html">std::size_t</a></span> <span class="n">n</span><span class="p">)</span>
+    <span class="o">:</span> <span class="n">data_</span><span class="p">{</span><span class="n"><a href="https://cpprefjp.github.io/reference/memory/allocator/allocate.html">alloc_.allocate</a></span><span class="p">(</span><span class="n">n</span><span class="p">)},</span>
+      <span class="n">capacity_</span><span class="p">{</span><span class="n">n</span><span class="p">},</span>
+      <span class="n">size_</span><span class="p">{</span><span class="mi">0</span><span class="p">}</span>
+  <span class="p">{}</span>
+
+  <span class="o">~</span><span class="n">MyVector</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n"><a href="https://cpprefjp.github.io/reference/memory/destroy_n.html">std::destroy_n</a></span><span class="p">(</span><span class="n">data_</span><span class="p">,</span> <span class="n">size_</span><span class="p">);</span>
+    <span class="n"><a href="https://cpprefjp.github.io/reference/memory/allocator/deallocate.html">alloc_.deallocate</a></span><span class="p">(</span><span class="n">data_</span><span class="p">,</span> <span class="n">size_</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="c1">// コピー版のpush_back</span>
+  <span class="kt">void</span> <span class="nf">push_back</span><span class="p">(</span><span class="k">const</span> <span class="n">T</span><span class="o">&amp;</span> <span class="n">x</span><span class="p">)</span> <span class="n">requires</span> <span class="n"><span href="https://cpprefjp.github.io/reference/concepts/copy_constructible.md.nolink">std::copy_constructible</span></span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span>
+  <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">size_</span> <span class="o">&gt;=</span> <span class="n">capacity_</span><span class="p">)</span>
+      <span class="k">throw</span> <span class="n"><a href="https://cpprefjp.github.io/reference/stdexcept.html">std::runtime_error</a></span><span class="p">(</span><span class="s">"over capacity"</span><span class="p">);</span>
+
+    <span class="k">new</span> <span class="p">(</span><span class="n">data_</span> <span class="o">+</span> <span class="n">size_</span><span class="p">)</span> <span class="n">T</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+    <span class="n">size_</span> <span class="o">=</span> <span class="n">size_</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="c1">// ムーブ版のpush_back</span>
+  <span class="kt">void</span> <span class="n">push_back</span><span class="p">(</span><span class="n">T</span><span class="o">&amp;&amp;</span> <span class="n">x</span><span class="p">)</span> <span class="n">requires</span> <span class="n"><span href="https://cpprefjp.github.io/reference/concepts/move_constructible.md.nolink">std::move_constructible</span></span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span>
+  <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">size_</span> <span class="o">&gt;=</span> <span class="n">capacity_</span><span class="p">)</span>
+      <span class="k">throw</span> <span class="n"><a href="https://cpprefjp.github.io/reference/stdexcept.html">std::runtime_error</a></span><span class="p">(</span><span class="s">"over capacity"</span><span class="p">);</span>
+
+    <span class="k">new</span> <span class="p">(</span><span class="n">data_</span> <span class="o">+</span> <span class="n">size_</span><span class="p">)</span> <span class="n">T</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/utility/move.html">std::move</a></span><span class="p">(</span><span class="n">x</span><span class="p">));</span>
+    <span class="n">size_</span> <span class="o">=</span> <span class="n">size_</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="kt">void</span> <span class="n">print</span><span class="p">()</span>
+  <span class="p">{</span>
+    <span class="n"><a href="https://cpprefjp.github.io/reference/algorithm/for_each_n.html">std::for_each_n</a></span><span class="p">(</span><span class="n">data_</span><span class="p">,</span> <span class="n">size_</span><span class="p">,</span> <span class="p">[](</span><span class="k">const</span> <span class="n">T</span><span class="o">&amp;</span> <span class="n">x</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n"><a href="https://cpprefjp.github.io/reference/iostream/cout.html">std::cout</a></span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n"><a href="https://cpprefjp.github.io/reference/ostream/endl.html">std::endl</a></span><span class="p">;</span>
+    <span class="p">});</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/string/basic_string.html">std::string</a></span> <span class="n">a</span> <span class="o">=</span> <span class="s">"Hello"</span><span class="p">;</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/string/basic_string.html">std::string</a></span> <span class="n">b</span> <span class="o">=</span> <span class="s">"World"</span><span class="p">;</span>
+
+  <span class="n">MyVector</span><span class="o">&lt;</span><span class="n"><a href="https://cpprefjp.github.io/reference/string/basic_string.html">std::string</a></span><span class="o">&gt;</span> <span class="n">v</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+  <span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
+  <span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/utility/move.html">std::move</a></span><span class="p">(</span><span class="n">b</span><span class="p">));</span>
+
+  <span class="n">v</span><span class="p">.</span><span class="n">print</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</p>
+<p>出力：</p>
+<p><pre><code>Hello
+World
+</code></pre></p>
 <h4>関数テンプレートの簡略構文を使用する</h4>
 <p>(執筆中)</p>
 <h2>仕様</h2>
