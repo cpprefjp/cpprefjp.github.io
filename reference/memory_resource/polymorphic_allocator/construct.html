@@ -201,12 +201,12 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2019-04-30T05:19:00">
-        2019年04月30日 05時19分00秒
+      <span itemprop="datePublished" content="2019-10-17T07:14:43">
+        2019年10月17日 07時14分43秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">Akira Takahashi</span>
+        <span itemprop="name">onihusube</span>
       </span>
       が更新
     </small></p>
@@ -295,10 +295,11 @@
 <p>これらのアロケータを利用する型及び多くのアロケータを必要としない型を構築する際、ユーザーから見た区別や追加の操作をする必要がないようにするために（あくまでライブラリ内部で解決するために）「アロケータを使用する構築」という仕組みが導入されている。<br />
 そしてこれにより<code>polymorphic_allocator</code>は、コンテナ等で利用されたときに必要ならばその内部要素型まで自然に伝搬する。ユーザーは意識してコンテナからアロケータを取得し要素型のコンストラクタに引き渡すようなコードを一切書く必要がなくなる。</p>
 <p>本関数の<code>std::pair</code>関連のオーバーロードは、<code>std::pair</code>が「アロケータを使用する構築」に対応したコンストラクタを持たないことから用意されている（コンストラクタの数が多くなるという理由で削除された経緯があるとのこと）。</p>
-<h2>要件</h2>
+<h2>適格要件</h2>
 <ul>
-<li>(1) : <code><a href="https://cpprefjp.github.io/reference/memory_resource/polymorphic_allocator/resource.html">resource()</a></code>により取得した<code>memory_resource</code>と<code>args...</code>をコンストラクタ引数とした「アロケータを使用する構築」が可能であること。<br />
-アロケータを受け取るコンストラクタを持たない型については、（<code>args..</code>が適切ならば）この要件を常に満たしている。</li>
+<li>(1) : <code>*this</code>と<code>args...</code>をコンストラクタ引数とした「アロケータを使用する構築」が可能であること。<br />
+アロケータを受け取るコンストラクタを持たない型については、（<code>args..</code>が適切ならば）この要件を常に満たしている。<br />
+C++17までは、この関数は<code>T</code>が<code>std::pair</code>の特殊化でない場合に限りオーバーロード解決に参加する。</li>
 </ul>
 <h2>引数</h2>
 <ul>
@@ -335,8 +336,8 @@
 <p>(1) : <code>T</code>のコンストラクタによって（「アロケータを使用する構築」によって）以下のいずれかと等価  </p>
 <ul>
 <li>アロケータを受け取らない場合 :  <code>p = new(p) T(std::forward&lt;Args&gt;(args)...)</code>  </li>
-<li>アロケータを引数の先頭で受け取る場合 :  <code>p = new(p) T(allocator_­arg, this-&gt;resource(), std::forward&lt;Args&gt;(args)...)</code>  </li>
-<li>アロケータを引数の末尾で受け取る場合 :  <code>p = new(p) T(std::forward&lt;Args&gt;(args)..., this-&gt;resource())</code></li>
+<li>アロケータを引数の先頭で受け取る場合 :  <code>p = new(p) T(allocator_­arg, *this, std::forward&lt;Args&gt;(args)...)</code>  </li>
+<li>アロケータを引数の末尾で受け取る場合 :  <code>p = new(p) T(std::forward&lt;Args&gt;(args)..., *this)</code></li>
 </ul>
 </li>
 <li>
@@ -345,8 +346,8 @@
 <code>xprime</code>は<code>T1</code>について（「アロケータを使用する構築」によって）以下のように定義する（<code>yprime</code>は<code>T2</code>について同様に定義する）  </p>
 <ul>
 <li><code>T1</code>のコンストラクタがアロケータを受け取らない場合、<code>xprime</code>は<code>x</code>  </li>
-<li><code>T1</code>のコンストラクタがアロケータを引数の先頭で受け取る場合、<code>xprime</code>は<code><a href="https://cpprefjp.github.io/reference/tuple/tuple_cat.html">std::tuple_cat</a>(<a href="https://cpprefjp.github.io/reference/tuple/make_tuple.html">std::make_tuple</a>(allocator_­arg, this-&gt;resource()), x)</code>  </li>
-<li><code>T1</code>のコンストラクタがアロケータを引数の末尾で受け取る場合、<code>xprime</code>は<code><a href="https://cpprefjp.github.io/reference/tuple/tuple_cat.html">std::tuple_cat</a>(x, <a href="https://cpprefjp.github.io/reference/tuple/make_tuple.html">std::make_tuple</a>(this-&gt;resource()))</code></li>
+<li><code>T1</code>のコンストラクタがアロケータを引数の先頭で受け取る場合、<code>xprime</code>は<code><a href="https://cpprefjp.github.io/reference/tuple/tuple_cat.html">std::tuple_cat</a>(<a href="https://cpprefjp.github.io/reference/tuple/make_tuple.html">std::make_tuple</a>(allocator_­arg, *this), x)</code>  </li>
+<li><code>T1</code>のコンストラクタがアロケータを引数の末尾で受け取る場合、<code>xprime</code>は<code><a href="https://cpprefjp.github.io/reference/tuple/tuple_cat.html">std::tuple_cat</a>(x, <a href="https://cpprefjp.github.io/reference/tuple/make_tuple.html">std::make_tuple</a>(*this))</code></li>
 </ul>
 </li>
 <li>
@@ -557,6 +558,8 @@ true
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0220r1.html" target="_blank">P0220R1 Adopt Library Fundamentals V1 TS Components for C++17 (R1)</a></li>
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0337r0.html" target="_blank">P0337r0 | Delete operator= for polymorphic_allocator</a></li>
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4562.html#memory.resource.synop" target="_blank">Working Draft, C++ Extensions for Library Fundamentals, Version 2</a></li>
+<li><a href="https://wg21.cmeerw.net/lwg/issue2969" target="_blank">LWG Issue 2969. <code>polymorphic_allocator::construct()</code> shouldn't pass resource()</a></li>
+<li><a href="https://wg21.cmeerw.net/lwg/issue2975" target="_blank">LWG Issue 2975. Missing case for pair construction in scoped and polymorphic allocators</a></li>
 </ul></div>
 
       </div>
