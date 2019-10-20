@@ -15,11 +15,11 @@
         <meta property="og:url" content="https://cpprefjp.github.io//reference/memory_resource/polymorphic_allocator/construct.html" />
         <meta property="og:site_name" content="cpprefjp - C++日本語リファレンス" />
         <meta property="og:type" content="article" />
-        <meta property="og:description" content="指定された`p`のメモリ領域に`T`のオブジェクトを構築する。" />
+        <meta property="og:description" content="`p` で指定された領域に、`*this` と指定された引数で [uses-allocator 構築](/reference/memory/uses_allocator.md)を行う。  " />
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:title" content="polymorphic_allocator::construct - cpprefjp C++日本語リファレンス" />
         <meta name="twitter:url" content="https://cpprefjp.github.io//reference/memory_resource/polymorphic_allocator/construct.html" />
-        <meta name="twitter:description" content="指定された`p`のメモリ領域に`T`のオブジェクトを構築する。" />
+        <meta name="twitter:description" content="`p` で指定された領域に、`*this` と指定された引数で [uses-allocator 構築](/reference/memory/uses_allocator.md)を行う。  " />
 
         
   <link rel="alternate" type="application/atom+xml" title="Atom" href="https://cpprefjp.github.io/rss.xml" />
@@ -69,7 +69,7 @@
 
     </head>
     <body>
-<header data-kunai-mdinfo="{&#34;sources&#34;: [{&#34;source&#34;: &#34;#include &lt;iostream&gt;\n#include &lt;memory_resource&gt;\n\nint main()\n{\n  std::pmr::polymorphic_allocator&lt;int&gt; alloc{};\n\n  //\u30e1\u30e2\u30ea\u306e\u78ba\u4fdd\n  int* array = alloc.allocate(4);\n\n  //\u8981\u7d20\u3092\u69cb\u7bc9\n  for (int i = 0; i &lt; 4; ++i) {\n    alloc.construct(array + i, i);\n  }\n\n  for (int i = 0; i &lt; 4; ++i) {\n    std::cout &lt;&lt; array[i] &lt;&lt; std::endl;\n  }\n\n  //\u8981\u7d20\u3092\u7834\u68c4\n  for (int i = 0; i &lt; 4; ++i) {\n    alloc.destroy(array + i);\n  }\n\n  //\u30e1\u30e2\u30ea\u306e\u89e3\u653e\n  alloc.deallocate(array, 4);\n}\n&#34;, &#34;id&#34;: &#34;15c857b0f08a6f1d15801e735e7cd78e891400c2&#34;}, {&#34;source&#34;: &#34;#include &lt;iostream&gt;\n#include &lt;memory_resource&gt;\n\nint main()\n{\n  //int\u3068polymorphic_allocator\u3092\u7528\u3044\u308bstring\u306epair\n  using pair = std::pair&lt;int, std::pmr::string&gt;;\n\n  //memory_resource\u3068\u3057\u3066monotonic_buffer_resource\u3092\u4f7f\u7528\n  auto mr = std::pmr::monotonic_buffer_resource{};\n  std::pmr::polymorphic_allocator&lt;pair&gt; alloc{&amp;mr};\n\n  std::cout &lt;&lt; std::boolalpha;\n  std::cout &lt;&lt; \&#34;(2)\&#34; &lt;&lt; std::endl;\n\n  //(2)\n  {\n    pair* p = alloc.allocate(1);\n\n    alloc.construct(p, std::piecewise_construct\n        , std::make_tuple(128)         //int\u3092128\u3067\u521d\u671f\u5316\n        , std::make_tuple(\&#34;string\&#34;, 3) //string(\&#34;string\&#34;, 3)\u3067\u521d\u671f\u5316\uff08\u6700\u521d\u306e3\u6587\u5b57\u3092\u4fdd\u6301\u3059\u308b\uff09\n    );\n\n    std::cout &lt;&lt; p-&gt;first &lt;&lt; std::endl;\n    std::cout &lt;&lt; p-&gt;second &lt;&lt; std::endl;\n    //\u30a2\u30ed\u30b1\u30fc\u30bf\u304c\u4f1d\u642c\u3057\u3066\u3044\u308b\n    std::cout &lt;&lt; (p-&gt;second.get_allocator() == alloc) &lt;&lt; std::endl;\n  }\n\n  std::cout &lt;&lt; \&#34;\\n(3)\&#34; &lt;&lt; std::endl;\n\n  //(3)\n  {\n    pair* p = alloc.allocate(1);\n\n    alloc.construct(p);  //\u4e21\u8981\u7d20\u3092\u30c7\u30d5\u30a9\u30eb\u30c8\u69cb\u7bc9\n\n    std::cout &lt;&lt; p-&gt;first &lt;&lt; std::endl;\n    std::cout &lt;&lt; p-&gt;second &lt;&lt; std::endl;\n    //\u30a2\u30ed\u30b1\u30fc\u30bf\u304c\u4f1d\u642c\u3057\u3066\u3044\u308b\n    std::cout &lt;&lt; (p-&gt;second.get_allocator() == alloc) &lt;&lt; std::endl;\n  }\n\n  std::cout &lt;&lt; \&#34;\\n(4)\&#34; &lt;&lt; std::endl;\n\n  //(4)\n  {\n    pair* p = alloc.allocate(1);\n\n    alloc.construct(p, 128, \&#34;string\&#34;);  //\u4e21\u8981\u7d20\u3092\u3053\u308c\u3089\u306e\u5024\u304b\u3089\u30e0\u30fc\u30d6\u69cb\u7bc9\n\n    std::cout &lt;&lt; p-&gt;first &lt;&lt; std::endl;\n    std::cout &lt;&lt; p-&gt;second &lt;&lt; std::endl;\n    //\u30a2\u30ed\u30b1\u30fc\u30bf\u304c\u4f1d\u642c\u3057\u3066\u3044\u308b\n    std::cout &lt;&lt; (p-&gt;second.get_allocator() == alloc) &lt;&lt; std::endl;\n  }\n\n  std::cout &lt;&lt; \&#34;\\n(5)\&#34; &lt;&lt; std::endl;\n\n  //(5)\n  {\n    pair* p = alloc.allocate(1);\n\n    const auto v = std::make_pair(128, \&#34;copy\&#34;);\n    alloc.construct(p, v);  //\u4e21\u8981\u7d20\u3092\u5909\u63db\u53ef\u80fd\u306apair\u304b\u3089\u30b3\u30d4\u30fc\u69cb\u7bc9\n\n    std::cout &lt;&lt; p-&gt;first &lt;&lt; std::endl;\n    std::cout &lt;&lt; p-&gt;second &lt;&lt; std::endl;\n    //\u30a2\u30ed\u30b1\u30fc\u30bf\u304c\u4f1d\u642c\u3057\u3066\u3044\u308b\n    std::cout &lt;&lt; (p-&gt;second.get_allocator() == alloc) &lt;&lt; std::endl;\n  }\n\n  std::cout &lt;&lt; \&#34;\\n(6)\&#34; &lt;&lt; std::endl;\n\n  //(6)\n  {\n    pair* p = alloc.allocate(1);\n\n    alloc.construct(p, std::make_pair(128, \&#34;move\&#34;));  //\u4e21\u8981\u7d20\u3092\u5909\u63db\u53ef\u80fd\u306apair\u304b\u3089\u30e0\u30fc\u30d6\u69cb\u7bc9\n\n    std::cout &lt;&lt; p-&gt;first &lt;&lt; std::endl;\n    std::cout &lt;&lt; p-&gt;second &lt;&lt; std::endl;\n    //\u30a2\u30ed\u30b1\u30fc\u30bf\u304c\u4f1d\u642c\u3057\u3066\u3044\u308b\n    std::cout &lt;&lt; (p-&gt;second.get_allocator() == alloc) &lt;&lt; std::endl;\n  }\n}\n&#34;, &#34;id&#34;: &#34;b70b71a6c8278725d8cda344404d74921d372467&#34;}], &#34;meta&#34;: {&#34;cpp&#34;: [&#34;cpp17&#34;], &#34;header&#34;: [&#34;memory_resource&#34;], &#34;namespace&#34;: [&#34;std::pmr&#34;], &#34;class&#34;: [&#34;polymorphic_allocator&#34;], &#34;id-type&#34;: [&#34;function&#34;]}, &#34;page_id&#34;: [&#34;reference&#34;, &#34;memory_resource&#34;, &#34;polymorphic_allocator&#34;, &#34;construct&#34;]}">
+<header data-kunai-mdinfo="{&#34;sources&#34;: [{&#34;source&#34;: &#34;#include &lt;iostream&gt;\n#include &lt;memory_resource&gt;\n\nint main()\n{\n  std::pmr::polymorphic_allocator&lt;int&gt; alloc{};\n\n  //\u30e1\u30e2\u30ea\u306e\u78ba\u4fdd\n  int* array = alloc.allocate(4);\n\n  //\u8981\u7d20\u3092\u69cb\u7bc9\n  for (int i = 0; i &lt; 4; ++i) {\n    alloc.construct(array + i, i);\n  }\n\n  for (int i = 0; i &lt; 4; ++i) {\n    std::cout &lt;&lt; array[i] &lt;&lt; std::endl;\n  }\n\n  //\u8981\u7d20\u3092\u7834\u68c4\n  for (int i = 0; i &lt; 4; ++i) {\n    alloc.destroy(array + i);\n  }\n\n  //\u30e1\u30e2\u30ea\u306e\u89e3\u653e\n  alloc.deallocate(array, 4);\n}\n&#34;, &#34;id&#34;: &#34;15c857b0f08a6f1d15801e735e7cd78e891400c2&#34;}, {&#34;source&#34;: &#34;#include &lt;iostream&gt;\n#include &lt;memory_resource&gt;\n#include &lt;string&gt;\n#include &lt;tuple&gt;\n#include &lt;utility&gt;\n\nint main()\n{\n  //int\u3068polymorphic_allocator\u3092\u7528\u3044\u308bstring\u306epair\n  using pair = std::pair&lt;int, std::pmr::string&gt;;\n\n  //memory_resource\u3068\u3057\u3066monotonic_buffer_resource\u3092\u4f7f\u7528\n  auto mr = std::pmr::monotonic_buffer_resource{};\n  std::pmr::polymorphic_allocator&lt;pair&gt; alloc{&amp;mr};\n\n  std::cout &lt;&lt; std::boolalpha;\n  std::cout &lt;&lt; \&#34;(2)\&#34; &lt;&lt; std::endl;\n\n  //(2)\n  {\n    pair* p = alloc.allocate(1);\n\n    alloc.construct(p, std::piecewise_construct\n        , std::make_tuple(128)         //int\u3092128\u3067\u521d\u671f\u5316\n        , std::make_tuple(\&#34;string\&#34;, 3) //string(\&#34;string\&#34;, 3)\u3067\u521d\u671f\u5316\uff08\u6700\u521d\u306e3\u6587\u5b57\u3092\u4fdd\u6301\u3059\u308b\uff09\n    );\n\n    std::cout &lt;&lt; p-&gt;first &lt;&lt; std::endl;\n    std::cout &lt;&lt; p-&gt;second &lt;&lt; std::endl;\n    //\u30a2\u30ed\u30b1\u30fc\u30bf\u304c\u4f1d\u642c\u3057\u3066\u3044\u308b\n    std::cout &lt;&lt; (p-&gt;second.get_allocator() == alloc) &lt;&lt; std::endl;\n  }\n\n  std::cout &lt;&lt; \&#34;\\n(3)\&#34; &lt;&lt; std::endl;\n\n  //(3)\n  {\n    pair* p = alloc.allocate(1);\n\n    alloc.construct(p);  //\u4e21\u8981\u7d20\u3092\u30c7\u30d5\u30a9\u30eb\u30c8\u69cb\u7bc9\n\n    std::cout &lt;&lt; p-&gt;first &lt;&lt; std::endl;\n    std::cout &lt;&lt; p-&gt;second &lt;&lt; std::endl;\n    //\u30a2\u30ed\u30b1\u30fc\u30bf\u304c\u4f1d\u642c\u3057\u3066\u3044\u308b\n    std::cout &lt;&lt; (p-&gt;second.get_allocator() == alloc) &lt;&lt; std::endl;\n  }\n\n  std::cout &lt;&lt; \&#34;\\n(4)\&#34; &lt;&lt; std::endl;\n\n  //(4)\n  {\n    pair* p = alloc.allocate(1);\n\n    alloc.construct(p, 128, \&#34;string\&#34;);  //\u4e21\u8981\u7d20\u3092\u3053\u308c\u3089\u306e\u5024\u304b\u3089\u30e0\u30fc\u30d6\u69cb\u7bc9\n\n    std::cout &lt;&lt; p-&gt;first &lt;&lt; std::endl;\n    std::cout &lt;&lt; p-&gt;second &lt;&lt; std::endl;\n    //\u30a2\u30ed\u30b1\u30fc\u30bf\u304c\u4f1d\u642c\u3057\u3066\u3044\u308b\n    std::cout &lt;&lt; (p-&gt;second.get_allocator() == alloc) &lt;&lt; std::endl;\n  }\n\n  std::cout &lt;&lt; \&#34;\\n(5)\&#34; &lt;&lt; std::endl;\n\n  //(5)\n  {\n    pair* p = alloc.allocate(1);\n\n    const auto v = std::make_pair(128, \&#34;copy\&#34;);\n    alloc.construct(p, v);  //\u4e21\u8981\u7d20\u3092\u5909\u63db\u53ef\u80fd\u306apair\u304b\u3089\u30b3\u30d4\u30fc\u69cb\u7bc9\n\n    std::cout &lt;&lt; p-&gt;first &lt;&lt; std::endl;\n    std::cout &lt;&lt; p-&gt;second &lt;&lt; std::endl;\n    //\u30a2\u30ed\u30b1\u30fc\u30bf\u304c\u4f1d\u642c\u3057\u3066\u3044\u308b\n    std::cout &lt;&lt; (p-&gt;second.get_allocator() == alloc) &lt;&lt; std::endl;\n  }\n\n  std::cout &lt;&lt; \&#34;\\n(6)\&#34; &lt;&lt; std::endl;\n\n  //(6)\n  {\n    pair* p = alloc.allocate(1);\n\n    alloc.construct(p, std::make_pair(128, \&#34;move\&#34;));  //\u4e21\u8981\u7d20\u3092\u5909\u63db\u53ef\u80fd\u306apair\u304b\u3089\u30e0\u30fc\u30d6\u69cb\u7bc9\n\n    std::cout &lt;&lt; p-&gt;first &lt;&lt; std::endl;\n    std::cout &lt;&lt; p-&gt;second &lt;&lt; std::endl;\n    //\u30a2\u30ed\u30b1\u30fc\u30bf\u304c\u4f1d\u642c\u3057\u3066\u3044\u308b\n    std::cout &lt;&lt; (p-&gt;second.get_allocator() == alloc) &lt;&lt; std::endl;\n  }\n}\n&#34;, &#34;id&#34;: &#34;139760bf2ae11afae2d8d10cc949080d3b89d21b&#34;}, {&#34;source&#34;: &#34;#include &lt;iostream&gt;\n#include &lt;string&gt;\n#include &lt;utility&gt;\n#include &lt;memory_resource&gt;\n\nint main()\n{\n  using pair = std::pair&lt;std::pair&lt;int, std::pmr::string&gt;, std::pmr::string&gt;;\n\n  auto mr = std::pmr::monotonic_buffer_resource{};\n  std::pmr::polymorphic_allocator&lt;pair&gt; alloc{&amp;mr};\n\n  std::cout &lt;&lt; std::boolalpha;\n\n  pair* p = alloc.allocate(1);\n\n  alloc.construct(p);\n\n  std::cout &lt;&lt; (p-&gt;first.second.get_allocator() == alloc) &lt;&lt; &#39;\\n&#39;;\n  std::cout &lt;&lt; (p-&gt;second.get_allocator() == alloc) &lt;&lt; &#39;\\n&#39;;\n\n  alloc.destroy(p);\n\n  alloc.deallocate(p, 1);\n}\n&#34;, &#34;id&#34;: &#34;1431e23f9ac18851df2b6164c48dc3d43fdee1b8&#34;}], &#34;meta&#34;: {&#34;cpp&#34;: [&#34;cpp17&#34;], &#34;header&#34;: [&#34;memory_resource&#34;], &#34;namespace&#34;: [&#34;std::pmr&#34;], &#34;class&#34;: [&#34;polymorphic_allocator&#34;], &#34;id-type&#34;: [&#34;function&#34;]}, &#34;page_id&#34;: [&#34;reference&#34;, &#34;memory_resource&#34;, &#34;polymorphic_allocator&#34;, &#34;construct&#34;]}">
   <nav class="navbar navbar-default" role="navigation">
     <div class="container-fluid">
       <div class="navbar-header">
@@ -201,12 +201,12 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2019-10-17T07:14:43">
-        2019年10月17日 07時14分43秒
+      <span itemprop="datePublished" content="2019-10-20T15:16:25">
+        2019年10月20日 15時16分25秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">onihusube</span>
+        <span itemprop="name">Mitsuru Kariya</span>
       </span>
       が更新
     </small></p>
@@ -230,157 +230,142 @@
 <span class="kt">void</span> <span class="n">construct</span><span class="p">(</span><span class="n">T</span><span class="o">*</span> <span class="n">p</span><span class="p">,</span> <span class="n">Args</span><span class="o">&amp;&amp;</span><span class="p">...</span> <span class="n">args</span><span class="p">);</span>                   <span class="c1">//(1)</span>
 
 <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T1</span><span class="p">,</span> <span class="k">class</span> <span class="nc">T2</span><span class="p">,</span> <span class="n">class</span><span class="p">...</span> <span class="n">Args1</span><span class="p">,</span> <span class="n">class</span><span class="p">...</span> <span class="n">Args2</span><span class="o">&gt;</span>
-<span class="kt">void</span> <span class="n">construct</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/utility/pair.html">pair</a></span><span class="o">&lt;</span><span class="n">T1</span><span class="p">,</span><span class="n">T2</span><span class="o">&gt;*</span> <span class="n">p</span><span class="p">,</span> <span class="n"><a href="https://cpprefjp.github.io/reference/utility/piecewise_construct_t.html">piecewise_construct_t</a></span><span class="p">,</span>
-               <span class="n"><a href="https://cpprefjp.github.io/reference/tuple/tuple.html">tuple</a></span><span class="o">&lt;</span><span class="n">Args1</span><span class="p">...</span><span class="o">&gt;</span> <span class="n">x</span><span class="p">,</span> <span class="n"><a href="https://cpprefjp.github.io/reference/tuple/tuple.html">tuple</a></span><span class="o">&lt;</span><span class="n">Args2</span><span class="p">...</span><span class="o">&gt;</span> <span class="n">y</span><span class="p">);</span>   <span class="c1">//(2)</span>
+<span class="kt">void</span> <span class="n">construct</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/utility/pair.html">pair</a></span><span class="o">&lt;</span><span class="n">T1</span><span class="p">,</span> <span class="n">T2</span><span class="o">&gt;*</span> <span class="n">p</span><span class="p">,</span> <span class="n"><a href="https://cpprefjp.github.io/reference/utility/piecewise_construct_t.html">piecewise_construct_t</a></span><span class="p">,</span>
+               <span class="n"><a href="https://cpprefjp.github.io/reference/tuple/tuple.html">tuple</a></span><span class="o">&lt;</span><span class="n">Args1</span><span class="p">...</span><span class="o">&gt;</span> <span class="n">x</span><span class="p">,</span> <span class="n"><a href="https://cpprefjp.github.io/reference/tuple/tuple.html">tuple</a></span><span class="o">&lt;</span><span class="n">Args2</span><span class="p">...</span><span class="o">&gt;</span> <span class="n">y</span><span class="p">);</span>   <span class="c1">//(2) C++17 まで</span>
 
 <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T1</span><span class="p">,</span> <span class="k">class</span> <span class="nc">T2</span><span class="o">&gt;</span>
-<span class="kt">void</span> <span class="n">construct</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/utility/pair.html">pair</a></span><span class="o">&lt;</span><span class="n">T1</span><span class="p">,</span><span class="n">T2</span><span class="o">&gt;*</span> <span class="n">p</span><span class="p">);</span>                         <span class="c1">//(3)</span>
+<span class="kt">void</span> <span class="n">construct</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/utility/pair.html">pair</a></span><span class="o">&lt;</span><span class="n">T1</span><span class="p">,</span> <span class="n">T2</span><span class="o">&gt;*</span> <span class="n">p</span><span class="p">);</span>                        <span class="c1">//(3) C++17 まで</span>
 
 <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T1</span><span class="p">,</span> <span class="k">class</span> <span class="nc">T2</span><span class="p">,</span> <span class="k">class</span> <span class="nc">U</span><span class="p">,</span> <span class="k">class</span> <span class="nc">V</span><span class="o">&gt;</span>
-<span class="kt">void</span> <span class="n">construct</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/utility/pair.html">pair</a></span><span class="o">&lt;</span><span class="n">T1</span><span class="p">,</span><span class="n">T2</span><span class="o">&gt;*</span> <span class="n">p</span><span class="p">,</span> <span class="n">U</span><span class="o">&amp;&amp;</span> <span class="n">x</span><span class="p">,</span> <span class="n">V</span><span class="o">&amp;&amp;</span> <span class="n">y</span><span class="p">);</span>           <span class="c1">//(4)</span>
+<span class="kt">void</span> <span class="n">construct</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/utility/pair.html">pair</a></span><span class="o">&lt;</span><span class="n">T1</span><span class="p">,</span> <span class="n">T2</span><span class="o">&gt;*</span> <span class="n">p</span><span class="p">,</span> <span class="n">U</span><span class="o">&amp;&amp;</span> <span class="n">x</span><span class="p">,</span> <span class="n">V</span><span class="o">&amp;&amp;</span> <span class="n">y</span><span class="p">);</span>          <span class="c1">//(4) C++17 まで</span>
 
 <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T1</span><span class="p">,</span> <span class="k">class</span> <span class="nc">T2</span><span class="p">,</span> <span class="k">class</span> <span class="nc">U</span><span class="p">,</span> <span class="k">class</span> <span class="nc">V</span><span class="o">&gt;</span>
-<span class="kt">void</span> <span class="n">construct</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/utility/pair.html">pair</a></span><span class="o">&lt;</span><span class="n">T1</span><span class="p">,</span><span class="n">T2</span><span class="o">&gt;*</span> <span class="n">p</span><span class="p">,</span> <span class="k">const</span> <span class="n"><a href="https://cpprefjp.github.io/reference/utility/pair.html">pair</a></span><span class="o">&lt;</span><span class="n">U</span><span class="p">,</span> <span class="n">V</span><span class="o">&gt;&amp;</span> <span class="n">pr</span><span class="p">);</span>   <span class="c1">//(5)</span>
+<span class="kt">void</span> <span class="n">construct</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/utility/pair.html">pair</a></span><span class="o">&lt;</span><span class="n">T1</span><span class="p">,</span> <span class="n">T2</span><span class="o">&gt;*</span> <span class="n">p</span><span class="p">,</span> <span class="k">const</span> <span class="n"><a href="https://cpprefjp.github.io/reference/utility/pair.html">pair</a></span><span class="o">&lt;</span><span class="n">U</span><span class="p">,</span> <span class="n">V</span><span class="o">&gt;&amp;</span> <span class="n">pr</span><span class="p">);</span>  <span class="c1">//(5) C++17 まで</span>
 
 <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T1</span><span class="p">,</span> <span class="k">class</span> <span class="nc">T2</span><span class="p">,</span> <span class="k">class</span> <span class="nc">U</span><span class="p">,</span> <span class="k">class</span> <span class="nc">V</span><span class="o">&gt;</span>
-<span class="kt">void</span> <span class="n">construct</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/utility/pair.html">pair</a></span><span class="o">&lt;</span><span class="n">T1</span><span class="p">,</span><span class="n">T2</span><span class="o">&gt;*</span> <span class="n">p</span><span class="p">,</span> <span class="n"><a href="https://cpprefjp.github.io/reference/utility/pair.html">pair</a></span><span class="o">&lt;</span><span class="n">U</span><span class="p">,</span> <span class="n">V</span><span class="o">&gt;&amp;&amp;</span> <span class="n">pr</span><span class="p">);</span>        <span class="c1">//(6)</span>
+<span class="kt">void</span> <span class="n">construct</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/utility/pair.html">pair</a></span><span class="o">&lt;</span><span class="n">T1</span><span class="p">,</span> <span class="n">T2</span><span class="o">&gt;*</span> <span class="n">p</span><span class="p">,</span> <span class="n"><a href="https://cpprefjp.github.io/reference/utility/pair.html">pair</a></span><span class="o">&lt;</span><span class="n">U</span><span class="p">,</span> <span class="n">V</span><span class="o">&gt;&amp;&amp;</span> <span class="n">pr</span><span class="p">);</span>       <span class="c1">//(6) C++17 まで</span>
 </pre></div>
 </p>
 <h2>概要</h2>
-<p>指定された<code>p</code>のメモリ領域に<code>T</code>のオブジェクトを構築する。</p>
-<ul>
-<li>
-<p>(1) : 「アロケータを使用する構築」により<code>p</code>のメモリ領域に<code>args...</code>をコンストラクタ引数として、<code>T</code>のオブジェクトを構築する</p>
-</li>
-<li>
-<p>(2) : <code>p</code>のメモリ領域に<code>std::pair&lt;T1, T2&gt;</code>のオブジェクトを、<code>x, y</code>内の要素を<code>T1, T2</code>それぞれのコンストラクタ引数として、<code>T1, T2</code>それぞれが「アロケータを使用する構築」により構築されるように、直接構築（<code><a href="https://cpprefjp.github.io/reference/utility/pair/op_constructor.html">piecewise construct</a></code>）する</p>
-</li>
-<li>
-<p>(3) : <code>p</code>のメモリ領域に<code>std::pair&lt;T1, T2&gt;</code>のオブジェクトを、<code>T1, T2</code>それぞれが引数無しの「アロケータを使用する構築」により構築されるように、直接構築（<code><a href="https://cpprefjp.github.io/reference/utility/pair/op_constructor.html">piecewise construct</a></code>）する</p>
-</li>
-<li>
-<p>(4) : <code>p</code>のメモリ領域に<code>std::pair&lt;T1, T2&gt;</code>のオブジェクトを、<code>T1, T2</code>のコンストラクタ引数としてそれぞれ<code>x, y</code>を<code><a href="https://cpprefjp.github.io/reference/utility/forward.html">forward</a></code>して「アロケータを使用する構築」により構築されるように、直接構築（<code><a href="https://cpprefjp.github.io/reference/utility/pair/op_constructor.html">piecewise construct</a></code>）する</p>
-</li>
-<li>
-<p>(5) : <code>p</code>のメモリ領域に<code>std::pair&lt;T1, T2&gt;</code>のオブジェクトを、<code>T1, T2</code>のコンストラクタ引数としてそれぞれ<code>pr.first, pr.second</code>をコピーして「アロケータを使用する構築」により構築されるように、直接構築（<code><a href="https://cpprefjp.github.io/reference/utility/pair/op_constructor.html">piecewise construct</a></code>）する</p>
-</li>
-<li>
-<p>(6) : <code>p</code>のメモリ領域に<code>std::pair&lt;T1, T2&gt;</code>のオブジェクトを、<code>T1, T2</code>のコンストラクタ引数としてそれぞれ<code>pr.first, pr.second</code>を<code><a href="https://cpprefjp.github.io/reference/utility/forward.html">forward</a></code>して「アロケータを使用する構築」により構築されるように、直接構築（<code><a href="https://cpprefjp.github.io/reference/utility/pair/op_constructor.html">piecewise construct</a></code>）する</p>
-</li>
-</ul>
-<h3>アロケータを使用する構築（Uses-allocator construction）</h3>
-<p>アロケータを使用する構築とは、型<code>T</code>のオブジェクト<code>obj</code>を構築する際に引数とアロケータを<code>T</code>のコンストラクタに適切に引き渡すための仕組みである。</p>
-<p>アロケータのオブジェクトを<code>alloc</code>、型を<code>Alloc</code>とし、引数列を<code>v1, v2, ..., vN</code>、その型を<code>V1, V2, ..., VN</code>とすると</p>
-<ul>
-<li>
-<p><code>T</code>がアロケータを利用しない場合（<code><a href="https://cpprefjp.github.io/reference/memory/uses_allocator.html">std::uses_allocator_v</a>&lt;T, Alloc&gt; == false</code>かつ、<code><a href="https://cpprefjp.github.io/reference/type_traits/is_constructible.html">std::is_constructible_v</a>&lt;T, V1, V2, ..., VN&gt; == true</code>ならば）<br />
-<code>obj(v1, v2, ..., vN);</code>の形でコンストラクタを呼び出す。</p>
-</li>
-<li>
-<p><code>T</code>がアロケータを利用し、アロケータをコンストラクタ引数の先頭で受け取る場合（<code><a href="https://cpprefjp.github.io/reference/memory/uses_allocator.html">std::uses_allocator_v</a>&lt;T, Alloc&gt; == true</code>かつ、<code><a href="https://cpprefjp.github.io/reference/type_traits/is_constructible.html">std::is_constructible_v</a>&lt;T, <a href="https://cpprefjp.github.io/reference/memory/allocator_arg_t.html">allocator_­arg_­t</a>, Alloc, V1, V2, ..., VN&gt; == true</code>ならば）<br />
-<code>obj(allocator_­arg, alloc, v1, v2, ..., vN);</code>の形でコンストラクタを呼び出す。</p>
-</li>
-<li>
-<p><code>T</code>がアロケータを利用し、アロケータをコンストラクタ引数の末尾で受け取る場合（<code><a href="https://cpprefjp.github.io/reference/memory/uses_allocator.html">std::uses_allocator_v</a>&lt;T, Alloc&gt; == true</code>かつ、<code><a href="https://cpprefjp.github.io/reference/type_traits/is_constructible.html">std::is_constructible_v</a>&lt;T, V1, V2, ..., VN, Alloc&gt; == true</code>ならば）<br />
-<code>obj(v1, v2, ..., vN, alloc);</code>の形でコンストラクタを呼び出す。</p>
-</li>
-<li>
-<p>それ以外の場合、要求された構築はill-formedである。</p>
-</li>
-</ul>
-<p>すなわち、構築したい型がアロケータを利用するならば引数とアロケータを適切な順序でコンストラクタに与えて呼び出し、利用しないならば通常のコンストラクタ呼び出しを行う仕組みである。</p>
-<p>例えば、<code>std::vector&lt;std::string&gt;</code>のようにコンテナも要素型もアロケータを利用する場合に要素（<code>std::string</code>）とコンテナ（<code>std::vector</code>）でアロケータを共有させることを考える。この場合にコンテナに要素を追加するとき、コンテナ（<code>std::vector</code>）に設定されているアロケータを要素（<code>std::string</code>）のコンストラクタに引き渡す必要がある。</p>
-<p>標準ライブラリ内でアロケータを利用するほとんどの型は、コンストラクタ引数列の末尾でアロケータオブジェクトを受け取る（上記<code>std::string</code>や<code>std::vector</code>等のコンテナ）。<br />
-しかし、一部の型ではコンストラクタ引数列の末尾で受け取るようにすると他のコンストラクタとあいまいになってしまうため、<code>std::allocator_­arg</code>と合わせてコンストラクタ引数列の先頭で受け取るようにしている。そのような型には<code>std::tuple</code>や<code>std::promise</code>、<code>std::packaged_task</code>がある。</p>
-<p>これらのアロケータを利用する型及び多くのアロケータを必要としない型を構築する際、ユーザーから見た区別や追加の操作をする必要がないようにするために（あくまでライブラリ内部で解決するために）「アロケータを使用する構築」という仕組みが導入されている。<br />
-そしてこれにより<code>polymorphic_allocator</code>は、コンテナ等で利用されたときに必要ならばその内部要素型まで自然に伝搬する。ユーザーは意識してコンテナからアロケータを取得し要素型のコンストラクタに引き渡すようなコードを一切書く必要がなくなる。</p>
-<p>本関数の<code>std::pair</code>関連のオーバーロードは、<code>std::pair</code>が「アロケータを使用する構築」に対応したコンストラクタを持たないことから用意されている（コンストラクタの数が多くなるという理由で削除された経緯があるとのこと）。</p>
+<p><code>p</code> で指定された領域に、<code>*this</code> と指定された引数で <a href="https://cpprefjp.github.io/reference/memory/uses_allocator.html">uses-allocator 構築</a>を行う。<br />
+また、<code>*p</code> が <code><a href="https://cpprefjp.github.io/reference/utility/pair.html">pair</a></code> だった場合は、それぞれの要素に対して <code>*this</code> と指定された引数で <a href="https://cpprefjp.github.io/reference/memory/uses_allocator.html">uses-allocator 構築</a>を行う。</p>
 <h2>適格要件</h2>
 <ul>
-<li>(1) : <code>*this</code>と<code>args...</code>をコンストラクタ引数とした「アロケータを使用する構築」が可能であること。<br />
-アロケータを受け取るコンストラクタを持たない型については、（<code>args..</code>が適切ならば）この要件を常に満たしている。<br />
-C++17までは、この関数は<code>T</code>が<code>std::pair</code>の特殊化でない場合に限りオーバーロード解決に参加する。</li>
+<li>(1) : <code>*this</code> と <code>args...</code> をコンストラクタ引数とした <a href="https://cpprefjp.github.io/reference/memory/uses_allocator.html">uses-allocator 構築</a>が可能であること。<br />
+アロケータを受け取るコンストラクタを持たない型については、（<code>args..</code> が適切ならば）この要件を常に満たしている。<br />
+C++17までは、この関数は <code>T</code> が <code><a href="https://cpprefjp.github.io/reference/utility/pair.html">pair</a></code> の特殊化でない場合に限りオーバーロード解決に参加する。</li>
 </ul>
 <h2>引数</h2>
 <ul>
 <li>
-<p>全て : <code>p</code> -- <code>T</code>もしくは<code>std::pair&lt;T1, T2&gt;</code>のオブジェクトを構築するメモリ領域へのポインタ</p>
+<p>全て : <code>p</code> -- <code>T</code> もしくは <code><a href="https://cpprefjp.github.io/reference/utility/pair.html">pair</a>&lt;T1, T2&gt;</code> のオブジェクトを構築するメモリ領域へのポインタ</p>
 </li>
 <li>
-<p>(1) : <code>args</code> -- <code>T</code>のコンストラクタに渡す引数列</p>
+<p>(1) : <code>args</code> -- <code>T</code> のコンストラクタに渡す引数列</p>
 </li>
 <li>
-<p>(2) :  </p>
+<p>(2) :</p>
 <ul>
-<li><code>x</code> -- <code>T1</code>のコンストラクタに渡す引数を持つ<code>std::tuple</code>オブジェクト </li>
-<li><code>y</code> -- <code>T2</code>のコンストラクタに渡す引数を持つ<code>std::tuple</code>オブジェクト</li>
+<li><code>x</code> -- <code>T1</code> のコンストラクタに渡す引数を持つ <code><a href="https://cpprefjp.github.io/reference/tuple/tuple.html">tuple</a></code> オブジェクト</li>
+<li><code>y</code> -- <code>T2</code> のコンストラクタに渡す引数を持つ <code><a href="https://cpprefjp.github.io/reference/tuple/tuple.html">tuple</a></code> オブジェクト</li>
 </ul>
 </li>
 <li>
-<p>(4) :  </p>
+<p>(4) :</p>
 <ul>
-<li><code>x</code> -- <code>T1</code>のコンストラクタに渡す引数</li>
-<li><code>y</code> -- <code>T2</code>のコンストラクタに渡す引数</li>
+<li><code>x</code> -- <code>T1</code> のコンストラクタに渡す引数</li>
+<li><code>y</code> -- <code>T2</code> のコンストラクタに渡す引数</li>
 </ul>
 </li>
 <li>
-<p>(5) : <code>pr</code> -- <code>T1, T2</code>のコンストラクタにそれぞれコピーして渡す引数<code>U, V</code>のオブジェクトを持つ<code>std::pair&lt;U, V&gt;</code>オブジェクト</p>
+<p>(5) : <code>pr</code> -- <code>T1, T2</code> のコンストラクタにそれぞれコピーして渡す引数 <code>U, V</code> のオブジェクトを持つ <code><a href="https://cpprefjp.github.io/reference/utility/pair.html">pair</a>&lt;U, V&gt;</code>オブジェクト</p>
 </li>
 <li>
-<p>(6) : <code>pr</code> -- <code>T1, T2</code>のコンストラクタにそれぞれ<code><a href="https://cpprefjp.github.io/reference/utility/forward.html">forward</a></code>して渡す引数<code>U, V</code>のオブジェクトを持つ<code>std::pair&lt;U, V&gt;</code>オブジェクト</p>
+<p>(6) : <code>pr</code> -- <code>T1, T2</code> のコンストラクタにそれぞれ <code><a href="https://cpprefjp.github.io/reference/utility/forward.html">forward</a></code> して渡す引数 <code>U, V</code> のオブジェクトを持つ <code><a href="https://cpprefjp.github.io/reference/utility/pair.html">pair</a>&lt;U, V&gt;</code> オブジェクト</p>
 </li>
 </ul>
 <h2>効果</h2>
 <ul>
 <li>
-<p>(1) : <code>T</code>のコンストラクタによって（「アロケータを使用する構築」によって）以下のいずれかと等価  </p>
+<p>(1) :</p>
 <ul>
-<li>アロケータを受け取らない場合 :  <code>p = new(p) T(std::forward&lt;Args&gt;(args)...)</code>  </li>
-<li>アロケータを引数の先頭で受け取る場合 :  <code>p = new(p) T(allocator_­arg, *this, std::forward&lt;Args&gt;(args)...)</code>  </li>
-<li>アロケータを引数の末尾で受け取る場合 :  <code>p = new(p) T(std::forward&lt;Args&gt;(args)..., *this)</code></li>
+<li>C++17 まで : 以下のいずれかの動作を行う。<ul>
+<li><code><a href="https://cpprefjp.github.io/reference/memory/uses_allocator.html">uses_allocator_v</a>&lt;T, polymorphic_allocator&gt; == false</code> かつ <code><a href="https://cpprefjp.github.io/reference/type_traits/is_constructible.html">is_constructible_v</a>&lt;T, Args...&gt; == true</code> の場合<br />
+<code>::new(static_cast&lt;void*&gt;(p)) T(<a href="https://cpprefjp.github.io/reference/utility/forward.html">forward</a>&lt;Args&gt;(args)...)</code> を呼び出す。</li>
+<li><code><a href="https://cpprefjp.github.io/reference/memory/uses_allocator.html">uses_allocator_v</a>&lt;T, polymorphic_allocator&gt; == true</code> かつ <code><a href="https://cpprefjp.github.io/reference/type_traits/is_constructible.html">is_constructible_v</a>&lt;T, <a href="https://cpprefjp.github.io/reference/memory/allocator_arg_t.html">allocator_arg_t</a>, polymorphic_allocator, Args...&gt; == true</code> の場合<br />
+<code>::new(static_cast&lt;void*&gt;(p)) T(<a href="https://cpprefjp.github.io/reference/memory/allocator_arg_t.html">allocator_arg</a>, *this, <a href="https://cpprefjp.github.io/reference/utility/forward.html">forward</a>&lt;Args&gt;(args)...)</code> を呼び出す。</li>
+<li><code><a href="https://cpprefjp.github.io/reference/memory/uses_allocator.html">uses_allocator_v</a>&lt;T, polymorphic_allocator&gt; == true</code> かつ <code><a href="https://cpprefjp.github.io/reference/type_traits/is_constructible.html">is_constructible_v</a>&lt;T, Args..., polymorphic_allocator&gt; == true</code> の場合<br />
+<code>::new(static_cast&lt;void*&gt;(p)) T(<a href="https://cpprefjp.github.io/reference/utility/forward.html">forward</a>&lt;Args&gt;(args)..., *this)</code></li>
+<li>それ以外の場合、プログラムは不適格となる。</li>
 </ul>
 </li>
 <li>
-<p>(2) : 以下と等価<br />
-<code>p = new(p) std::pair&lt;T1, T2&gt;(piecewise_construct_t, xprime, yprime)</code><br />
-<code>xprime</code>は<code>T1</code>について（「アロケータを使用する構築」によって）以下のように定義する（<code>yprime</code>は<code>T2</code>について同様に定義する）  </p>
-<ul>
-<li><code>T1</code>のコンストラクタがアロケータを受け取らない場合、<code>xprime</code>は<code>x</code>  </li>
-<li><code>T1</code>のコンストラクタがアロケータを引数の先頭で受け取る場合、<code>xprime</code>は<code><a href="https://cpprefjp.github.io/reference/tuple/tuple_cat.html">std::tuple_cat</a>(<a href="https://cpprefjp.github.io/reference/tuple/make_tuple.html">std::make_tuple</a>(allocator_­arg, *this), x)</code>  </li>
-<li><code>T1</code>のコンストラクタがアロケータを引数の末尾で受け取る場合、<code>xprime</code>は<code><a href="https://cpprefjp.github.io/reference/tuple/tuple_cat.html">std::tuple_cat</a>(x, <a href="https://cpprefjp.github.io/reference/tuple/make_tuple.html">std::make_tuple</a>(*this))</code></li>
+<p>C++20 から : 以下と等価の動作を行う。</p>
+<p><div class="codehilite"><pre><span class="n"><a href="https://cpprefjp.github.io/reference/memory/uninitialized_construct_using_allocator.html">uninitialized_construct_using_allocator</a></span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="o">*</span><span class="k">this</span><span class="p">,</span> <span class="n"><a href="https://cpprefjp.github.io/reference/utility/forward.html">forward</a></span><span class="o">&lt;</span><span class="n">Args</span><span class="o">&gt;</span><span class="p">(</span><span class="n">args</span><span class="p">)...)</span>
+</pre></div>
+</p>
+</li>
 </ul>
 </li>
 <li>
-<p>(3) : <code>this-&gt;construct(p, std::piecewise_construct, std::tuple&lt;&gt;(), std::tuple&lt;&gt;());</code>と等価、すなわち(2)に移譲</p>
+<p>(2) : 以下と等価
+  <br />
+<div class="codehilite"><pre><span class="o">::</span><span class="k">new</span><span class="p">(</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">p</span><span class="p">))</span> <span class="n"><a href="https://cpprefjp.github.io/reference/utility/pair.html">pair</a></span><span class="o">&lt;</span><span class="n">T1</span><span class="p">,</span> <span class="n">T2</span><span class="o">&gt;</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/utility/piecewise_construct_t.html">piecewise_construct</a></span><span class="p">,</span> <span class="n">xprime</span><span class="p">,</span> <span class="n">yprime</span><span class="p">)</span>
+</pre></div>
+</p>
+<p>ここで、<code>xprime</code> は以下のルールに従って <code>x</code> から構築される <code><a href="https://cpprefjp.github.io/reference/tuple/tuple.html">tuple</a></code> とする。（<code>yprime</code> も <code>y</code> から同様に構築されるものとする）</p>
+<ul>
+<li><code><a href="https://cpprefjp.github.io/reference/memory/uses_allocator.html">uses_allocator_v</a>&lt;T1, polymorphic_allocator&gt; == false</code> かつ <code><a href="https://cpprefjp.github.io/reference/type_traits/is_constructible.html">is_constructible_v</a>&lt;T1, Args1...&gt; == true</code> の場合<br />
+<code>x</code> を <code>xprime</code> とする。</li>
+<li><code><a href="https://cpprefjp.github.io/reference/memory/uses_allocator.html">uses_allocator_v</a>&lt;T1, polymorphic_allocator&gt; == true</code> かつ <code><a href="https://cpprefjp.github.io/reference/type_traits/is_constructible.html">is_constructible_v</a>&lt;T1, <a href="https://cpprefjp.github.io/reference/memory/allocator_arg_t.html">allocator_arg_t</a>, polymorphic_allocator, Args1...&gt; == true</code> の場合<br />
+<code><a href="https://cpprefjp.github.io/reference/tuple/tuple_cat.html">tuple_cat</a>(<a href="https://cpprefjp.github.io/reference/tuple/make_tuple.html">make_tuple</a>(<a href="https://cpprefjp.github.io/reference/memory/allocator_arg_t.html">allocator_arg</a>, *this), <a href="https://cpprefjp.github.io/reference/utility/move.html">move</a>(x))</code> を <code>xprime</code> とする。</li>
+<li><code><a href="https://cpprefjp.github.io/reference/memory/uses_allocator.html">uses_allocator_v</a>&lt;T1, polymorphic_allocator&gt; == true</code> かつ <code><a href="https://cpprefjp.github.io/reference/type_traits/is_constructible.html">is_constructible_v</a>&lt;T1, Args1..., polymorphic_allocator&gt; == true</code> の場合<br />
+<code><a href="https://cpprefjp.github.io/reference/tuple/tuple_cat.html">tuple_cat</a>(<a href="https://cpprefjp.github.io/reference/utility/move.html">move</a>(x), <a href="https://cpprefjp.github.io/reference/tuple/make_tuple.html">make_tuple</a>(*this))</code> を <code>xprime</code> とする。</li>
+<li>それ以外の場合、プログラムは不適格となる。</li>
+</ul>
 </li>
 <li>
-<p>(4) : 以下と等価、すなわち(2)に移譲</p>
+<p>(3) : 以下と等価、すなわち(2)に移譲
+  <br />
+<div class="codehilite"><pre><span class="n">construct</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n"><a href="https://cpprefjp.github.io/reference/utility/piecewise_construct_t.html">piecewise_construct</a></span><span class="p">,</span> <span class="n"><a href="https://cpprefjp.github.io/reference/tuple/tuple.html">tuple</a></span><span class="o">&lt;&gt;</span><span class="p">(),</span> <span class="n"><a href="https://cpprefjp.github.io/reference/tuple/tuple.html">tuple</a></span><span class="o">&lt;&gt;</span><span class="p">());</span>
+</pre></div>
+</p>
+</li>
+<li>
+<p>(4) : 以下と等価、すなわち(2)に移譲
+  <br />
+<div class="codehilite"><pre><span class="n">construct</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n"><a href="https://cpprefjp.github.io/reference/utility/piecewise_construct_t.html">piecewise_construct</a></span><span class="p">,</span>
+          <span class="n"><a href="https://cpprefjp.github.io/reference/tuple/forward_as_tuple.html">forward_as_tuple</a></span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/utility/forward.html">forward</a></span><span class="o">&lt;</span><span class="n">U</span><span class="o">&gt;</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span>
+          <span class="n"><a href="https://cpprefjp.github.io/reference/tuple/forward_as_tuple.html">forward_as_tuple</a></span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/utility/forward.html">forward</a></span><span class="o">&lt;</span><span class="n">V</span><span class="o">&gt;</span><span class="p">(</span><span class="n">y</span><span class="p">)));</span>
+</pre></div>
+</p>
+</li>
+<li>
+<p>(5) : 以下と等価、すなわち(2)に移譲
+  <br />
+<div class="codehilite"><pre><span class="n">construct</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n"><a href="https://cpprefjp.github.io/reference/utility/piecewise_construct_t.html">piecewise_construct</a></span><span class="p">,</span>
+          <span class="n"><a href="https://cpprefjp.github.io/reference/tuple/forward_as_tuple.html">forward_as_tuple</a></span><span class="p">(</span><span class="n">pr</span><span class="p">.</span><span class="n">first</span><span class="p">),</span>
+          <span class="n"><a href="https://cpprefjp.github.io/reference/tuple/forward_as_tuple.html">forward_as_tuple</a></span><span class="p">(</span><span class="n">pr</span><span class="p">.</span><span class="n">second</span><span class="p">));</span>
+</pre></div>
+</p>
+</li>
+<li>
+<p>(6) : 以下と等価、すなわち(2)に移譲
+  <br />
+<div class="codehilite"><pre><span class="n">construct</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n"><a href="https://cpprefjp.github.io/reference/utility/piecewise_construct_t.html">piecewise_construct</a></span><span class="p">,</span>
+          <span class="n"><a href="https://cpprefjp.github.io/reference/tuple/forward_as_tuple.html">forward_as_tuple</a></span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/utility/forward.html">forward</a></span><span class="o">&lt;</span><span class="n">U</span><span class="o">&gt;</span><span class="p">(</span><span class="n">pr</span><span class="p">.</span><span class="n">first</span><span class="p">)),</span>
+          <span class="n"><a href="https://cpprefjp.github.io/reference/tuple/forward_as_tuple.html">forward_as_tuple</a></span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/utility/forward.html">forward</a></span><span class="o">&lt;</span><span class="n">V</span><span class="o">&gt;</span><span class="p">(</span><span class="n">pr</span><span class="p">.</span><span class="n">second</span><span class="p">)));</span>
+</pre></div>
+</p>
 </li>
 </ul>
-<p><div class="codehilite"><pre><span class="k">this</span><span class="o">-&gt;</span><span class="n">construct</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">piecewise_construct</span><span class="p">,</span>
-                <span class="n">std</span><span class="o">::</span><span class="n">forward_as_tuple</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">U</span><span class="o">&gt;</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span>
-                <span class="n">std</span><span class="o">::</span><span class="n">forward_as_tuple</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">V</span><span class="o">&gt;</span><span class="p">(</span><span class="n">y</span><span class="p">)));</span>
-</pre></div>
-</p>
-<ul>
-<li>(5) : 以下と等価、すなわち(2)に移譲</li>
-</ul>
-<p><div class="codehilite"><pre><span class="k">this</span><span class="o">-&gt;</span><span class="n">construct</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">piecewise_construct</span><span class="p">,</span>
-                <span class="n">std</span><span class="o">::</span><span class="n">forward_as_tuple</span><span class="p">(</span><span class="n">pr</span><span class="p">.</span><span class="n">first</span><span class="p">),</span>
-                <span class="n">std</span><span class="o">::</span><span class="n">forward_as_tuple</span><span class="p">(</span><span class="n">pr</span><span class="p">.</span><span class="n">second</span><span class="p">));</span>
-</pre></div>
-</p>
-<ul>
-<li>(6) : 以下と等価、すなわち(2)に移譲</li>
-</ul>
-<p><div class="codehilite"><pre><span class="k">this</span><span class="o">-&gt;</span><span class="n">construct</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">piecewise_construct</span><span class="p">,</span>
-                <span class="n">std</span><span class="o">::</span><span class="n">forward_as_tuple</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">U</span><span class="o">&gt;</span><span class="p">(</span><span class="n">pr</span><span class="p">.</span><span class="n">first</span><span class="p">)),</span>
-                <span class="n">std</span><span class="o">::</span><span class="n">forward_as_tuple</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">V</span><span class="o">&gt;</span><span class="p">(</span><span class="n">pr</span><span class="p">.</span><span class="n">second</span><span class="p">)));</span>
-</pre></div>
-</p>
 <h2>例外</h2>
 <ul>
 <li>(1) : <code>T</code>のコンストラクタが例外を投げないならば、この関数も例外を投げない。</li>
+</ul>
+<h2>備考</h2>
+<ul>
+<li>C++20 における変更は、一見新規導入されたユーティリティ関数（<code><a href="https://cpprefjp.github.io/reference/memory/uses_allocator_construction_args.html">uses_allocator_construction_args</a></code>）を使用して定義を簡略化しただけのように思えるが、実はこの変更によりネストした <code><a href="https://cpprefjp.github.io/reference/utility/pair.html">pair</a></code>  に対しても <a href="https://cpprefjp.github.io/reference/memory/uses_allocator.html">uses-allocator 構築</a>がサポートされるように改善されている。</li>
 </ul>
 <h2>(1)の例</h2>
 <p><div class="yata" id="15c857b0f08a6f1d15801e735e7cd78e891400c2"><div class="codehilite"><pre><span class="cp">#include <a href="https://cpprefjp.github.io/reference/iostream.html">&lt;iostream&gt;</a></span>
@@ -419,16 +404,19 @@ C++17までは、この関数は<code>T</code>が<code>std::pair</code>の特殊
 3
 </code></pre></p>
 <h2><code>pair</code>関連のオーバーロードの例</h2>
-<p><div class="yata" id="b70b71a6c8278725d8cda344404d74921d372467"><div class="codehilite"><pre><span class="cp">#include <a href="https://cpprefjp.github.io/reference/iostream.html">&lt;iostream&gt;</a></span>
+<p><div class="yata" id="139760bf2ae11afae2d8d10cc949080d3b89d21b"><div class="codehilite"><pre><span class="cp">#include <a href="https://cpprefjp.github.io/reference/iostream.html">&lt;iostream&gt;</a></span>
 <span class="cp">#include <a href="https://cpprefjp.github.io/reference/memory_resource.html">&lt;memory_resource&gt;</a></span>
+<span class="cp">#include <a href="https://cpprefjp.github.io/reference/string.html">&lt;string&gt;</a></span>
+<span class="cp">#include <a href="https://cpprefjp.github.io/reference/tuple.html">&lt;tuple&gt;</a></span>
+<span class="cp">#include <a href="https://cpprefjp.github.io/reference/utility.html">&lt;utility&gt;</a></span>
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
 <span class="p">{</span>
   <span class="c1">//intとpolymorphic_allocatorを用いるstringのpair</span>
-  <span class="k">using</span> <span class="n">pair</span> <span class="o">=</span> <span class="n"><a href="https://cpprefjp.github.io/reference/utility/pair.html">std::pair</a></span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">pmr</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="p">;</span>
+  <span class="k">using</span> <span class="n">pair</span> <span class="o">=</span> <span class="n"><a href="https://cpprefjp.github.io/reference/utility/pair.html">std::pair</a></span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="n"><a href="https://cpprefjp.github.io/reference/string/basic_string.html">std::pmr::string</a></span><span class="o">&gt;</span><span class="p">;</span>
 
   <span class="c1">//memory_resourceとしてmonotonic_buffer_resourceを使用</span>
-  <span class="k">auto</span> <span class="n">mr</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">pmr</span><span class="o">::</span><span class="n">monotonic_buffer_resource</span><span class="p">{};</span>
+  <span class="k">auto</span> <span class="n">mr</span> <span class="o">=</span> <span class="n"><a href="https://cpprefjp.github.io/reference/memory_resource/monotonic_buffer_resource.html">std::pmr::monotonic_buffer_resource</a></span><span class="p">{};</span>
   <span class="n">std</span><span class="o">::</span><span class="n">pmr</span><span class="o">::</span><span class="n">polymorphic_allocator</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&gt;</span> <span class="n">alloc</span><span class="p">{</span><span class="o">&amp;</span><span class="n">mr</span><span class="p">};</span>
 
   <span class="n"><a href="https://cpprefjp.github.io/reference/iostream/cout.html">std::cout</a></span> <span class="o">&lt;&lt;</span> <span class="n"><a href="https://cpprefjp.github.io/reference/ios/boolalpha.html">std::boolalpha</a></span><span class="p">;</span>
@@ -438,9 +426,9 @@ C++17までは、この関数は<code>T</code>が<code>std::pair</code>の特殊
   <span class="p">{</span>
     <span class="n">pair</span><span class="o">*</span> <span class="n">p</span> <span class="o">=</span> <span class="n">alloc</span><span class="p">.</span><span class="n"><a href="https://cpprefjp.github.io/reference/memory_resource/polymorphic_allocator/allocate.html">allocate</a></span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
 
-    <span class="n">alloc</span><span class="p">.</span><span class="n"><span style="color:#ff0000">construct</span></span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">piecewise_construct</span>
-        <span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">make_tuple</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span>         <span class="c1">//intを128で初期化</span>
-        <span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">make_tuple</span><span class="p">(</span><span class="s">"string"</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="c1">//string("string", 3)で初期化（最初の3文字を保持する）</span>
+    <span class="n">alloc</span><span class="p">.</span><span class="n"><span style="color:#ff0000">construct</span></span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n"><a href="https://cpprefjp.github.io/reference/utility/piecewise_construct_t.html">std::piecewise_construct</a></span>
+        <span class="p">,</span> <span class="n"><a href="https://cpprefjp.github.io/reference/tuple/make_tuple.html">std::make_tuple</a></span><span class="p">(</span><span class="mi">128</span><span class="p">)</span>         <span class="c1">//intを128で初期化</span>
+        <span class="p">,</span> <span class="n"><a href="https://cpprefjp.github.io/reference/tuple/make_tuple.html">std::make_tuple</a></span><span class="p">(</span><span class="s">"string"</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="c1">//string("string", 3)で初期化（最初の3文字を保持する）</span>
     <span class="p">);</span>
 
     <span class="n"><a href="https://cpprefjp.github.io/reference/iostream/cout.html">std::cout</a></span> <span class="o">&lt;&lt;</span> <span class="n">p</span><span class="o">-&gt;</span><span class="n">first</span> <span class="o">&lt;&lt;</span> <span class="n"><a href="https://cpprefjp.github.io/reference/ostream/endl.html">std::endl</a></span><span class="p">;</span>
@@ -534,6 +522,42 @@ true
 move
 true
 </code></pre></p>
+<h2>ネストした <code>pair</code> の例</h2>
+<p><div class="yata" id="1431e23f9ac18851df2b6164c48dc3d43fdee1b8"><div class="codehilite"><pre><span class="cp">#include <a href="https://cpprefjp.github.io/reference/iostream.html">&lt;iostream&gt;</a></span>
+<span class="cp">#include <a href="https://cpprefjp.github.io/reference/string.html">&lt;string&gt;</a></span>
+<span class="cp">#include <a href="https://cpprefjp.github.io/reference/utility.html">&lt;utility&gt;</a></span>
+<span class="cp">#include <a href="https://cpprefjp.github.io/reference/memory_resource.html">&lt;memory_resource&gt;</a></span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="k">using</span> <span class="n">pair</span> <span class="o">=</span> <span class="n"><a href="https://cpprefjp.github.io/reference/utility/pair.html">std::pair</a></span><span class="o">&lt;</span><span class="n"><a href="https://cpprefjp.github.io/reference/utility/pair.html">std::pair</a></span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="n"><a href="https://cpprefjp.github.io/reference/string/basic_string.html">std::pmr::string</a></span><span class="o">&gt;</span><span class="p">,</span> <span class="n"><a href="https://cpprefjp.github.io/reference/string/basic_string.html">std::pmr::string</a></span><span class="o">&gt;</span><span class="p">;</span>
+
+  <span class="k">auto</span> <span class="n">mr</span> <span class="o">=</span> <span class="n"><a href="https://cpprefjp.github.io/reference/memory_resource/monotonic_buffer_resource.html">std::pmr::monotonic_buffer_resource</a></span><span class="p">{};</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">pmr</span><span class="o">::</span><span class="n">polymorphic_allocator</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&gt;</span> <span class="n">alloc</span><span class="p">{</span><span class="o">&amp;</span><span class="n">mr</span><span class="p">};</span>
+
+  <span class="n"><a href="https://cpprefjp.github.io/reference/iostream/cout.html">std::cout</a></span> <span class="o">&lt;&lt;</span> <span class="n"><a href="https://cpprefjp.github.io/reference/ios/boolalpha.html">std::boolalpha</a></span><span class="p">;</span>
+
+  <span class="n">pair</span><span class="o">*</span> <span class="n">p</span> <span class="o">=</span> <span class="n">alloc</span><span class="p">.</span><span class="n"><a href="https://cpprefjp.github.io/reference/memory_resource/polymorphic_allocator/allocate.html">allocate</a></span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+
+  <span class="n">alloc</span><span class="p">.</span><span class="n"><span style="color:#ff0000">construct</span></span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+
+  <span class="n"><a href="https://cpprefjp.github.io/reference/iostream/cout.html">std::cout</a></span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">first</span><span class="p">.</span><span class="n">second</span><span class="p">.</span><span class="n">get_allocator</span><span class="p">()</span> <span class="o">==</span> <span class="n">alloc</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="sc">'\n'</span><span class="p">;</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/iostream/cout.html">std::cout</a></span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">second</span><span class="p">.</span><span class="n">get_allocator</span><span class="p">()</span> <span class="o">==</span> <span class="n">alloc</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="sc">'\n'</span><span class="p">;</span>
+
+  <span class="n">alloc</span><span class="p">.</span><span class="n"><a href="https://cpprefjp.github.io/reference/memory_resource/polymorphic_allocator/destroy.html">destroy</a></span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+
+  <span class="n">alloc</span><span class="p">.</span><span class="n"><a href="https://cpprefjp.github.io/reference/memory_resource/polymorphic_allocator/deallocate.html">deallocate</a></span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div></p>
+<h3>C++17 における出力</h3>
+<p><pre><code>false
+true
+</code></pre></p>
+<h3>C++20 における出力</h3>
+<p><pre><code>true
+true
+</code></pre></p>
 <h2>バージョン</h2>
 <h3>言語</h3>
 <ul>
@@ -544,7 +568,7 @@ true
 <li><a href="https://cpprefjp.github.io/implementation.html#clang">Clang</a>: ??</li>
 <li><a href="https://cpprefjp.github.io/implementation.html#gcc">GCC</a>: 9.1</li>
 <li><a href="https://cpprefjp.github.io/implementation.html#visual_cpp">Visual C++</a>: 2017 update 6<ul>
-<li>2017, 2019共に(1)以外のオーバーロードを提供していない（ただし、(1)が全てを兼ねるC++20の実装がなされている）</li>
+<li>2017, 2019共に(1)以外のオーバーロードを提供していないが、<code><a href="https://cpprefjp.github.io/reference/utility/pair.html">pair</a></code> の各要素に対する <a href="https://cpprefjp.github.io/reference/memory/uses_allocator.html">uses-allocator 構築</a>をサポートしている。（ただし、C++20 モードでもネストした <code><a href="https://cpprefjp.github.io/reference/utility/pair.html">pair</a></code> はサポートされていない）</li>
 </ul>
 </li>
 </ul>
