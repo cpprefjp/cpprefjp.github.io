@@ -189,8 +189,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2019-10-02T05:38:35">
-        2019年10月02日 05時38分35秒
+      <span itemprop="datePublished" content="2019-10-31T05:57:13">
+        2019年10月31日 05時57分13秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -251,7 +251,7 @@
 </div></p>
 <p>この様に、あるクラスに対して三方比較演算子<code>&lt;=&gt;</code>を定義しておくことで最大6つの関係演算子を導出し使用することができる。<br />
 そして、そのような<code>&lt;=&gt;</code>は<code>default</code>実装で十分ならば実装を省略できる。</p>
-<p>この様な三方比較の事を一貫比較（Consistent comparison）と言い、この演算子は三方比較演算子（Three-way comparison operator）と呼ぶ。また、演算子の見た目から宇宙船演算子と呼ばれることもある。</p>
+<p>この様な三方比較の事を一貫比較（Consistent comparison）と言い、この演算子は三方比較演算子（Three-way comparison operator）と呼ぶ。また、演算子の見た目から宇宙船演算子（Spaceship operator）と呼ばれることもある。</p>
 <p>この様に、三方比較演算子を用いれば比較演算子の定義が非常に容易になるため<code><a href="https://cpprefjp.github.io/reference/utility/rel_ops.html">std::rel_ops</a></code>はその役割をほとんど失い、非推奨となった。</p>
 <h2>仕様</h2>
 <h3>三方比較</h3>
@@ -350,6 +350,67 @@ ordering -&gt; equalityに変換できてもequality -&gt; orderingに変換で�
 ただし、<code>&lt;=&gt;</code>をdefault宣言した場合は同じアクセス指定で<code>==</code>が暗黙的にdefault宣言され利用可能になる。また、明示的にdefaultで宣言することもできる。<br />
 そのようなdefaultの<code>==</code>の戻り値型は<code>bool</code>であり、<code>!=</code>の導出に使用される<code>==</code>も戻り値型は<code>bool</code>でなければならない。</p>
 <p>このため、異種型間比較や特殊な比較を実装するために<code>&lt;=&gt;</code>を独自に定義する場合、6×2個の関係演算子全てを導出するためには<code>==</code>も独自に定義しなければならない。</p>
+<p><div class="codehilite"><pre><span class="c1">//&lt;=&gt;を独自実装し、==の定義をしていない型</span>
+<span class="k">struct</span> <span class="n">not_eq_comparable</span> <span class="p">{</span>
+  <span class="kt">char</span> <span class="n">str</span><span class="p">[</span><span class="mi">5</span><span class="p">];</span>
+
+  <span class="n">std</span><span class="o">::</span><span class="n">strong_ordering</span> <span class="k">operator</span><span class="o">&lt;=&gt;</span><span class="p">(</span><span class="k">const</span> <span class="n">not_eq_comparable</span><span class="o">&amp;</span> <span class="n">that</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
+    <span class="c1">//大文字小文字を等値として扱って比較</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/cstddef/size_t.html">std::size_t</a></span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="k">sizeof</span><span class="p">(</span><span class="k">this</span><span class="o">-&gt;</span><span class="n">str</span><span class="p">);</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kt">char</span> <span class="n">l1</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">tolower</span><span class="p">(</span><span class="k">this</span><span class="o">-&gt;</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+      <span class="kt">char</span> <span class="n">l2</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">tolower</span><span class="p">(</span><span class="n">that</span><span class="p">.</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+      <span class="k">if</span> <span class="p">(</span><span class="n">l1</span> <span class="o">!=</span> <span class="n">l2</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">l1</span> <span class="o">&lt;=&gt;</span> <span class="n">l2</span><span class="p">;</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">strong_ordering</span><span class="o">::</span><span class="n">equal</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="p">{</span>
+  <span class="n">not_eq_comparable</span> <span class="n">str1</span> <span class="o">=</span> <span class="p">{</span><span class="s">"test"</span><span class="p">},</span> <span class="n">str2</span> <span class="o">=</span> <span class="p">{</span><span class="s">"TEST"</span><span class="p">};</span>
+
+  <span class="c1">//&lt;=&gt;がデフォルトでは無いので==は定義されていない</span>
+  <span class="kt">bool</span> <span class="n">eq1</span> <span class="o">=</span> <span class="n">str1</span> <span class="o">==</span> <span class="n">str2</span><span class="p">;</span>         <span class="c1">//error</span>
+  <span class="kt">bool</span> <span class="n">eq2</span> <span class="o">=</span> <span class="p">(</span><span class="n">str1</span> <span class="o">&lt;=&gt;</span> <span class="n">str2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">//ok</span>
+  <span class="kt">bool</span> <span class="n">ne1</span> <span class="o">=</span> <span class="n">str1</span> <span class="o">!=</span> <span class="n">str2</span><span class="p">;</span>         <span class="c1">//error</span>
+  <span class="kt">bool</span> <span class="n">ne2</span> <span class="o">=</span> <span class="p">(</span><span class="n">str1</span> <span class="o">&lt;=&gt;</span> <span class="n">str2</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">//ok</span>
+<span class="p">}</span>
+
+<span class="c1">//&lt;=&gt;と==両方実装をした型</span>
+<span class="k">struct</span> <span class="n">eq_comparable</span> <span class="p">{</span>
+  <span class="kt">char</span> <span class="n">str</span><span class="p">[</span><span class="mi">5</span><span class="p">];</span>
+
+  <span class="k">auto</span> <span class="k">operator</span><span class="o">&lt;=&gt;</span><span class="p">(</span><span class="k">const</span> <span class="n">eq_comparable</span><span class="o">&amp;</span> <span class="n">that</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
+    <span class="c1">//大文字小文字を等値として扱って比較</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/cstddef/size_t.html">std::size_t</a></span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="k">sizeof</span><span class="p">(</span><span class="k">this</span><span class="o">-&gt;</span><span class="n">str</span><span class="p">);</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">tolower</span><span class="p">(</span><span class="k">this</span><span class="o">-&gt;</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">!=</span> <span class="n">std</span><span class="o">::</span><span class="n">tolower</span><span class="p">(</span><span class="n">that</span><span class="p">.</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">this</span><span class="o">-&gt;</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;=&gt;</span> <span class="n">that</span><span class="p">.</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">strong_ordering</span><span class="o">::</span><span class="n">equal</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="kt">bool</span> <span class="k">operator</span><span class="o">==</span><span class="p">(</span><span class="k">const</span> <span class="n">eq_comparable</span><span class="o">&amp;</span> <span class="n">that</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
+    <span class="c1">//大文字小文字を等値として扱って比較</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/cstddef/size_t.html">std::size_t</a></span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="k">sizeof</span><span class="p">(</span><span class="k">this</span><span class="o">-&gt;</span><span class="n">str</span><span class="p">);</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">tolower</span><span class="p">(</span><span class="k">this</span><span class="o">-&gt;</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">!=</span> <span class="n">std</span><span class="o">::</span><span class="n">tolower</span><span class="p">(</span><span class="n">that</span><span class="p">.</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span> <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="p">{</span>
+  <span class="n">eq_comparable</span> <span class="n">str1</span> <span class="o">=</span> <span class="p">{</span><span class="s">"test"</span><span class="p">},</span> <span class="n">str2</span> <span class="o">=</span> <span class="p">{</span><span class="s">"TEST"</span><span class="p">};</span>
+
+  <span class="c1">//==を定義してあるので同値比較演算子を使用可能</span>
+  <span class="kt">bool</span> <span class="n">eq1</span> <span class="o">=</span> <span class="n">str1</span> <span class="o">==</span> <span class="n">str2</span><span class="p">;</span>         <span class="c1">//ok</span>
+  <span class="kt">bool</span> <span class="n">eq2</span> <span class="o">=</span> <span class="p">(</span><span class="n">str1</span> <span class="o">&lt;=&gt;</span> <span class="n">str2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">//ok</span>
+  <span class="kt">bool</span> <span class="n">ne1</span> <span class="o">=</span> <span class="n">str1</span> <span class="o">!=</span> <span class="n">str2</span><span class="p">;</span>         <span class="c1">//ok</span>
+  <span class="kt">bool</span> <span class="n">ne2</span> <span class="o">=</span> <span class="p">(</span><span class="n">str1</span> <span class="o">&lt;=&gt;</span> <span class="n">str2</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">//ok</span>
+<span class="p">}</span>
+</pre></div>
+</p>
 <p>このような仕様になっているのは、<code>&lt;=&gt;</code>を用いた同値比較において発生しうるオーバーヘッドを回避するためである（詳細は後述の「検討された他の選択肢」を参照）。</p>
 <p>なお、<code>&lt;=&gt;</code>がdelete宣言されている場合でも<code>==</code>は暗黙的にdefault宣言されている。</p>
 <p><div class="codehilite"><pre><span class="k">struct</span> <span class="n">C</span> <span class="p">{</span>
