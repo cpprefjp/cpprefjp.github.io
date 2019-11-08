@@ -189,8 +189,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2019-11-07T06:44:11">
-        2019年11月07日 06時44分11秒
+      <span itemprop="datePublished" content="2019-11-08T15:53:31">
+        2019年11月08日 15時53分31秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -414,7 +414,8 @@ ordering -&gt; equalityに変換できてもequality -&gt; orderingに変換で�
 </pre></div>
 </p>
 <p>このような仕様になっているのは、<code>&lt;=&gt;</code>を用いた同値比較において発生しうるオーバーヘッドを回避するためである（詳細は後述の「検討された他の選択肢」を参照）。</p>
-<p>なお、<code>&lt;=&gt;</code>がdelete宣言されている場合でも<code>==</code>は暗黙的にdefault宣言されている。</p>
+<p>なお、<code>&lt;=&gt;</code>がdelete宣言されている場合でも<code>==</code>は暗黙的にdefault宣言されている。<br />
+また、<code>&lt;=&gt;</code>を宣言せずに<code>==</code>だけをdefault指定で宣言することもでき、その場合でも<code>== !=</code>の2つの同値比較が可能である。</p>
 <p><div class="codehilite"><pre><span class="k">struct</span> <span class="n">C</span> <span class="p">{</span>
   <span class="k">auto</span> <span class="k">operator</span><span class="o">&lt;=&gt;</span><span class="p">(</span><span class="k">const</span> <span class="n">C</span><span class="o">&amp;</span><span class="p">)</span> <span class="o">=</span> <span class="k">delete</span><span class="p">;</span>
 <span class="p">};</span>
@@ -428,7 +429,39 @@ ordering -&gt; equalityに変換できてもequality -&gt; orderingに変換で�
 <span class="p">}</span>
 </pre></div>
 </p>
-<p>また、<code>&lt;=&gt;</code>を宣言せずに<code>==</code>だけをdefault指定で宣言することもでき、その場合でも<code>== !=</code>の2つの同値比較が可能である。</p>
+<p>ただし、<code>default</code>な<code>&lt;=&gt;</code>を宣言したうえで異種型間比較のために<code>==</code>を定義してしまうと、暗黙に宣言されていた<code>default</code>の<code>==</code>は宣言されなくなってしまうので注意が必要である。</p>
+<p><div class="codehilite"><pre><span class="k">enum</span> <span class="k">class</span> <span class="nc">category</span> <span class="p">{</span>
+  <span class="n">A</span><span class="p">.</span>
+  <span class="n">B</span><span class="p">,</span>
+  <span class="n">C</span>
+<span class="p">};</span>
+
+<span class="k">struct</span> <span class="n">enum_wrap</span> <span class="p">{</span>
+  <span class="n">category</span> <span class="n">cat</span><span class="p">{};</span>
+
+  <span class="k">auto</span> <span class="k">operator</span><span class="o">&lt;=&gt;</span><span class="p">(</span><span class="k">const</span> <span class="n">enum_wrap</span><span class="o">&amp;</span><span class="p">)</span> <span class="k">const</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+
+  <span class="c1">//この宣言が必要</span>
+  <span class="c1">//bool operator==(const enum_wrap&amp;) const = default;</span>
+
+  <span class="k">auto</span> <span class="k">operator</span><span class="o">&lt;=&gt;</span><span class="p">(</span><span class="k">const</span> <span class="n">category</span> <span class="n">other_cat</span><span class="p">)</span> <span class="k">const</span> <span class="n">noexcept</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">cat</span> <span class="o">&lt;=&gt;</span> <span class="n">other_cat</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="kt">bool</span> <span class="k">operator</span><span class="o">==</span><span class="p">(</span><span class="k">const</span> <span class="n">category</span> <span class="n">other_cat</span><span class="p">)</span> <span class="k">const</span> <span class="n">noexcept</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">cat</span> <span class="o">==</span> <span class="n">other_cat</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="n">enum_wrap</span> <span class="n">a</span> <span class="o">=</span> <span class="p">{</span><span class="n">category</span><span class="o">::</span><span class="n">A</span><span class="p">};</span>
+<span class="n">enum_wrap</span> <span class="n">b</span> <span class="o">=</span> <span class="p">{</span><span class="n">category</span><span class="o">::</span><span class="n">B</span><span class="p">};</span>
+
+<span class="k">auto</span> <span class="n">comp1</span> <span class="n">a</span> <span class="o">&lt;=&gt;</span> <span class="n">b</span><span class="p">;</span>           <span class="c1">//ok</span>
+<span class="k">auto</span> <span class="n">comp2</span> <span class="n">a</span> <span class="o">&lt;=&gt;</span> <span class="n">category</span><span class="o">::</span><span class="n">C</span><span class="p">;</span> <span class="c1">//ok</span>
+<span class="kt">bool</span> <span class="n">eq1</span> <span class="o">=</span> <span class="n">a</span> <span class="o">==</span> <span class="n">b</span><span class="p">;</span>            <span class="c1">//ng</span>
+<span class="kt">bool</span> <span class="n">eq2</span> <span class="o">=</span> <span class="n">a</span> <span class="o">==</span> <span class="n">category</span><span class="o">::</span><span class="n">C</span><span class="p">;</span>  <span class="c1">//ok</span>
+</pre></div>
+</p>
 <h3>演算子の導出とオーバーロード候補</h3>
 <p><code>&lt;=&gt;</code>及び<code>==</code>から導出される演算子は暗黙的に宣言され実装されているわけではなく、それらの演算子を呼び出した際のオーバーロード候補に、<code>&lt;=&gt; ==</code>を利用して生成した候補を入れることによって導出される。<br />
 このために、導出された比較演算子のアドレスを取ることは出来ない。</p>
