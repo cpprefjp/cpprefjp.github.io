@@ -201,8 +201,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2019-11-12T18:22:53">
-        2019年11月12日 18時22分53秒
+      <span itemprop="datePublished" content="2019-11-14T20:16:13">
+        2019年11月14日 20時16分13秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -243,14 +243,51 @@
 </ul>
 <p>その他の方法で呼び出されたときは、未規定の有効な値を返す。</p>
 <h2>戻り値</h2>
+<p>この関数を呼び出した側のソースコード上の位置を表す<code><a href="https://cpprefjp.github.io/reference/source_location/source_location.html">source_location</a></code>オブジェクト。</p>
 <h2>事後条件</h2>
 <p><code><a href="https://cpprefjp.github.io/reference/source_location/source_location/file_name.html">file_name</a>()</code>、<code><a href="https://cpprefjp.github.io/reference/source_location/source_location/function_name.html">function_name</a>()</code>の値は有効なヌル終端バイト文字列(NTBS)である。</p>
 <h2>例外</h2>
 <p>投げない。</p>
 <h2>備考</h2>
 <ul>
-<li>波カッコまたは<code>=</code>による非静的データメンバ初期化の中で<code>current()</code>を使う場合、<code>current()</code>の値は初期値が宣言された場所ではなく、その初期化をするに至ったコンストラクタ呼び出しやアグリゲートを指す。</li>
+<li>波カッコまたは<code>=</code>による非静的データメンバ初期化の中で<code>current()</code>を使う場合、<code>current()</code>の値は初期値が宣言された場所ではなく、その初期化をするに至ったコンストラクタやアグリゲートを指す。</li>
 <li>引数のデフォルト値に<code>current()</code>を使う場合、<code>current()</code>の値はデフォルト値が宣言された場所ではなく、その関数の呼び出し側を表す。</li>
+</ul>
+<p><div class="codehilite"><pre><span class="k">struct</span> <span class="n">Type</span> <span class="p">{</span>
+  <span class="n">source_location</span> <span class="n">loc_</span> <span class="o">=</span> <span class="n">source_location</span><span class="o">::</span><span class="n">current</span><span class="p">();</span> <span class="c1">// (1)</span>
+
+  <span class="n">Type</span><span class="p">(</span><span class="n">source_location</span> <span class="n">loc</span> <span class="o">=</span> <span class="n">source_location</span><span class="o">::</span><span class="n">current</span><span class="p">())</span> <span class="c1">// (2)</span>
+    <span class="o">:</span> <span class="n">loc_</span><span class="p">(</span><span class="n">loc</span><span class="p">)</span>
+  <span class="p">{</span>
+  <span class="p">}</span>
+
+  <span class="n">Type</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="c1">// (3)</span>
+  <span class="p">{</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+</pre></div>
+</p>
+<ul>
+<li>(1): 非静的データメンバの初期化に<code>current()</code>を使う</li>
+<li>(2): 引数<code>loc</code>はデフォルトで呼び出し側の位置を表す。<code>loc_</code>の値はコンストラクタを呼び出した側の位置になる</li>
+<li>(3): このコンストラクタには<code>loc_</code>の初期化子がないので、(1)で初期化され、<code>loc_</code>の値は(3)のコンストラクタの位置になる</li>
+</ul>
+<p><div class="codehilite"><pre><span class="kt">void</span> <span class="nf">func</span><span class="p">(</span><span class="n">source_location</span> <span class="n">a</span> <span class="o">=</span> <span class="n">source_location</span><span class="o">::</span><span class="n">current</span><span class="p">())</span> <span class="p">{</span>
+  <span class="n">source_location</span> <span class="n">b</span> <span class="o">=</span> <span class="n">source_location</span><span class="o">::</span><span class="n">current</span><span class="p">();</span> <span class="c1">// (1)</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">f</span><span class="p">();</span> <span class="c1">// (2)</span>
+
+  <span class="n">source_location</span> <span class="n">c</span> <span class="o">=</span> <span class="n">source_location</span><span class="o">::</span><span class="n">current</span><span class="p">();</span>
+  <span class="n">f</span><span class="p">(</span><span class="n">c</span><span class="p">);</span> <span class="c1">// (3)</span>
+<span class="p">}</span>
+</pre></div>
+</p>
+<ul>
+<li>(1): ローカル変数; <code>b</code>の値は(1)の行を表す</li>
+<li>(2): デフォルト引数を渡す; <code>func</code>の引数<code>a</code>の値は(2)の行を指す</li>
+<li>(3): 明示的に引数を渡す; <code>func</code>の引数<code>a</code>の値は<code>c</code>と同じ</li>
 </ul>
 <h2>例</h2>
 <p><div class="yata" id="dabfbeed0159dabc724f5074ddbaa061d8204ac8"><div class="codehilite"><pre><span class="cp">#include <a href="https://cpprefjp.github.io/reference/iostream.html">&lt;iostream&gt;</a></span>
