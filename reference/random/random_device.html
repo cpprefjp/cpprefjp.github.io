@@ -189,12 +189,12 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2019-11-26T08:07:39">
-        2019年11月26日 08時07分39秒
+      <span itemprop="datePublished" content="2019-12-19T19:38:03">
+        2019年12月19日 19時38分03秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">Akira Takahashi</span>
+        <span itemprop="name">yumetodo</span>
       </span>
       が更新
     </small></p>
@@ -221,7 +221,7 @@
 </p>
 <h2>概要</h2>
 <p><code>random_device</code>クラスは、非決定論的な乱数生成エンジンである。予測不能な乱数を生成することから、擬似乱数生成エンジンのシード初期化や、暗号化といった用途に使用できる。</p>
-<p><code>random_device</code>の実装は処理系定義だが、Windows環境では<code><a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa379942.aspx" target="_blank">CryptGenRandom()</a></code>関数のラッパーとして、UNIX系環境では<code><a href="https://linuxjm.osdn.jp/html/LDP_man-pages/man4/random.4.html" target="_blank">/dev/random</a></code>や<code><a href="https://linuxjm.osdn.jp/html/LDP_man-pages/man4/random.4.html" target="_blank">/dev/urandom</a></code>から値を読み取る形で定義される場合がある。
+<p><code>random_device</code>の実装は処理系定義だが、Windows環境では<code><a href="https://docs.microsoft.com/ja-jp/windows/win32/api/wincrypt/nf-wincrypt-cryptgenrandom" target="_blank">CryptGenRandom()</a></code>関数のラッパーとして、UNIX系環境では<code><a href="https://linuxjm.osdn.jp/html/LDP_man-pages/man4/random.4.html" target="_blank">/dev/random</a></code>や<code><a href="https://linuxjm.osdn.jp/html/LDP_man-pages/man4/random.4.html" target="_blank">/dev/urandom</a></code>から値を読み取る形で定義される場合がある。
 実装の制限によって予測不能な乱数生成器を定義できない場合、このクラスは<strong>擬似乱数生成器で定義される可能性がある</strong>ため、特にクロスプラットフォームなコードを書く場合は注意すること。</p>
 <p>予測不能な乱数はソフトウェアでは実装できないため、これらはハードウェアのノイズやマウスの動きといった環境ノイズをエントロピープールとして乱数を生成する。
 非決定論的な乱数生成器のパフォーマンスは擬似乱数生成器よりも悪く、特にエントロピープールが枯渇すると著しく悪化する。
@@ -439,56 +439,57 @@
 </li>
 <li>Windows<ul>
 <li><code><a href="https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/rand-s" target="_blank">rand_s</a></code> (<code>CryptGenRandom</code> のラッパー)</li>
-<li><code><a href="https://msdn.microsoft.com/en-us/library/aa387694.aspx" target="_blank">RtlGenRandom</a></code> 関数 (替わりに <code>CryptGenRandom</code> を使用することを推奨)</li>
-<li><code><a href="https://msdn.microsoft.com/en-us/library/aa379942.aspx" target="_blank">CryptGenRandom</a></code> 関数</li>
+<li><code><a href="https://docs.microsoft.com/ja-jp/windows/win32/api/ntsecapi/nf-ntsecapi-rtlgenrandom" target="_blank">RtlGenRandom</a></code> 関数 (替わりに <code>CryptGenRandom</code> を使用することを推奨)</li>
+<li><code><a href="https://docs.microsoft.com/ja-jp/windows/win32/api/wincrypt/nf-wincrypt-cryptgenrandom" target="_blank">CryptGenRandom</a></code> 関数(Windows XP/Windows Server 2003以降。非推奨)</li>
+<li><code><a href="https://docs.microsoft.com/ja-jp/windows/win32/api/bcrypt/nf-bcrypt-bcryptgenrandom" target="_blank">BCryptGenRandom</a></code> 関数(Windows Vista/Windows Server 2008以降)</li>
 </ul>
 </li>
 </ul>
 <h5>Workaround</h5>
-<p>ワークアラウンドとして次のコードが利用できる。<code>rand_s</code>ではなく<code>CryptGenRandom</code>を用いているのは、<code>rand_s</code>を利用するには<code>Windows.h</code>をincludeする前に<code>_CRT_RAND_S</code>のdefineが必要でworkaroundには向かないため。</p>
+<p>ワークアラウンドとして次のコードが利用できる。<code>rand_s</code>ではなく<code>CryptGenRandom</code>を用いているのは、<code>rand_s</code>を利用するには<code>Windows.h</code>をincludeする前に<code>_CRT_RAND_S</code>のdefineが必要でworkaroundには向かないため。また<code>BCryptGenRandom</code>を用いていないのは、対象としている環境では<code>CryptGenRandom</code>は利用可能であり、<code>BCryptGenRandom</code>より使える環境が広いためである。</p>
 <p><div class="codehilite"><pre><span class="c1">//! @file random_device.hpp</span>
 <span class="cp">#pragma once</span>
 
 <span class="cp">#include <a href="https://cpprefjp.github.io/reference/random.html">&lt;random&gt;</a></span>
 
-<span class="cp">#if defined(__MINGW32__) &amp;&amp; defined(__GNUC__) &amp;&amp; !defined(__clang__)</span>
+<span class="cp">#if defined(__MINGW32__) &amp;&amp; defined(__GNUC__) &amp;&amp; !defined(__clang__) &amp;&amp; (__GNUC__ &lt; 9 || (__GNUC__ == 9 &amp;&amp; __GNUC_MINOR__ &lt;2))</span>
 
 <span class="cp">#include <a href="https://cpprefjp.github.io/reference/system_error.html">&lt;system_error&gt;</a></span>
 <span class="cp">#include <a href="https://cpprefjp.github.io/reference/limits.html">&lt;limits&gt;</a></span>
 <span class="cp">#include <a href="https://cpprefjp.github.io/reference/string.html">&lt;string&gt;</a></span>
 <span class="cp">#include &lt;Windows.h&gt;</span>
-<span class="cp">#include <a href="https://msdn.microsoft.com/en-us/library/ms867086.aspx" target="_blank">&lt;wincrypt.h&gt;</a></span>
+<span class="cp">#include <a href="https://docs.microsoft.com/en-us/previous-versions/ms867086(v=msdn.10)" target="_blank">&lt;wincrypt.h&gt;</a></span>
 
 <span class="k">namespace</span> <span class="n">workaround_mingw_gcc</span> <span class="p">{</span>
 <span class="k">class</span> <span class="nc">random_device</span> <span class="p">{</span>
 <span class="nl">private:</span>
   <span class="k">class</span> <span class="nc">crypt_context</span> <span class="p">{</span>
   <span class="nl">private:</span>
-    <span class="n"><a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa382471%28v=vs.85%29.aspx" target="_blank">HCRYPTPROV</a></span> <span class="n">prov_</span><span class="p">;</span>
+    <span class="n"><a href="https://docs.microsoft.com/ja-jp/windows/win32/seccrypto/hcryptprov" target="_blank">HCRYPTPROV</a></span> <span class="n">prov_</span><span class="p">;</span>
   <span class="nl">public:</span>
-    <span class="n">crypt_context</span><span class="p">(</span><span class="n"><a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa383751(v=vs.85).aspx#DWORD" target="_blank">DWORD</a></span> <span class="n">prov_type</span><span class="p">,</span> <span class="n"><a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa383751(v=vs.85).aspx#LPCTSTR" target="_blank">LPCTSTR</a></span> <span class="n">container</span> <span class="o">=</span> <span class="n">nullptr</span><span class="p">,</span> <span class="n"><a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa383751(v=vs.85).aspx#LPCTSTR" target="_blank">LPCTSTR</a></span> <span class="n">provider</span> <span class="o">=</span> <span class="n">nullptr</span><span class="p">,</span> <span class="n"><a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa383751(v=vs.85).aspx#DWORD" target="_blank">DWORD</a></span> <span class="n">flags</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-      <span class="k">const</span> <span class="k">auto</span> <span class="n">success</span> <span class="o">=</span> <span class="o">::</span><span class="n"><a href="https://msdn.microsoft.com/en-us/library/aa379886.aspx" target="_blank">CryptAcquireContext</a></span><span class="p">(</span><span class="o">&amp;</span><span class="k">this</span><span class="o">-&gt;</span><span class="n">prov_</span><span class="p">,</span> <span class="n">container</span><span class="p">,</span> <span class="n">provider</span><span class="p">,</span> <span class="n">prov_type</span><span class="p">,</span> <span class="n">flags</span><span class="p">);</span>
+    <span class="n">crypt_context</span><span class="p">(</span><span class="n"><a href="https://docs.microsoft.com/ja-jp/windows/win32/winprog/windows-data-types#DWORD" target="_blank">DWORD</a></span> <span class="n">prov_type</span><span class="p">,</span> <span class="n"><a href="https://docs.microsoft.com/ja-jp/windows/win32/winprog/windows-data-types#LPCTSTR" target="_blank">LPCTSTR</a></span> <span class="n">container</span> <span class="o">=</span> <span class="n">nullptr</span><span class="p">,</span> <span class="n"><a href="https://docs.microsoft.com/ja-jp/windows/win32/winprog/windows-data-types#LPCTSTR" target="_blank">LPCTSTR</a></span> <span class="n">provider</span> <span class="o">=</span> <span class="n">nullptr</span><span class="p">,</span> <span class="n"><a href="https://docs.microsoft.com/ja-jp/windows/win32/winprog/windows-data-types#DWORD" target="_blank">DWORD</a></span> <span class="n">flags</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">const</span> <span class="k">auto</span> <span class="n">success</span> <span class="o">=</span> <span class="o">::</span><span class="n"><a href="https://docs.microsoft.com/ja-jp/windows/win32/api/wincrypt/nf-wincrypt-cryptacquirecontexta" target="_blank">CryptAcquireContext</a></span><span class="p">(</span><span class="o">&amp;</span><span class="k">this</span><span class="o">-&gt;</span><span class="n">prov_</span><span class="p">,</span> <span class="n">container</span><span class="p">,</span> <span class="n">provider</span><span class="p">,</span> <span class="n">prov_type</span><span class="p">,</span> <span class="n">flags</span><span class="p">);</span>
       <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">success</span><span class="p">)</span> <span class="p">{</span>
         <span class="k">throw</span> <span class="n"><a href="https://cpprefjp.github.io/reference/system_error/system_error.html">std::system_error</a></span><span class="p">(</span>
-          <span class="n"><a href="https://cpprefjp.github.io/reference/system_error/error_code.html">std::error_code</a></span><span class="p">(</span><span class="o">::</span><span class="n"><a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms679360(v=vs.85).aspx" target="_blank">GetLastError</a></span><span class="p">(),</span> <span class="n"><a href="https://cpprefjp.github.io/reference/system_error/system_category.html">std::system_category</a></span><span class="p">()),</span>
-          <span class="s">"<a href="https://msdn.microsoft.com/en-us/library/aa379886.aspx" target="_blank">CryptAcquireContext</a>:("</span> <span class="o">+</span> <span class="n"><a href="https://cpprefjp.github.io/reference/string/to_string.html">std::to_string</a></span><span class="p">(</span><span class="n">success</span><span class="p">)</span> <span class="o">+</span> <span class="sc">')'</span>
+          <span class="n"><a href="https://cpprefjp.github.io/reference/system_error/error_code.html">std::error_code</a></span><span class="p">(</span><span class="o">::</span><span class="n"><a href="https://docs.microsoft.com/ja-jp/windows/win32/api/errhandlingapi/nf-errhandlingapi-getlasterror" target="_blank">GetLastError</a></span><span class="p">(),</span> <span class="n"><a href="https://cpprefjp.github.io/reference/system_error/system_category.html">std::system_category</a></span><span class="p">()),</span>
+          <span class="s">"<a href="https://docs.microsoft.com/ja-jp/windows/win32/api/wincrypt/nf-wincrypt-cryptacquirecontexta" target="_blank">CryptAcquireContext</a>:("</span> <span class="o">+</span> <span class="n"><a href="https://cpprefjp.github.io/reference/string/to_string.html">std::to_string</a></span><span class="p">(</span><span class="n">success</span><span class="p">)</span> <span class="o">+</span> <span class="sc">')'</span>
         <span class="p">);</span>
       <span class="p">}</span>
     <span class="p">}</span>
     <span class="n">crypt_context</span><span class="p">(</span><span class="k">const</span> <span class="n">crypt_context</span><span class="o">&amp;</span><span class="p">)</span> <span class="o">=</span> <span class="k">delete</span><span class="p">;</span>
     <span class="kt">void</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">crypt_context</span><span class="o">&amp;</span><span class="p">)</span> <span class="o">=</span> <span class="k">delete</span><span class="p">;</span>
     <span class="o">~</span><span class="n">crypt_context</span><span class="p">()</span> <span class="n">noexcept</span> <span class="p">{</span>
-      <span class="o">::</span><span class="n"><a href="https://msdn.microsoft.com/en-us/library/aa380268.aspx" target="_blank">CryptReleaseContext</a></span><span class="p">(</span><span class="k">this</span><span class="o">-&gt;</span><span class="n">prov_</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+      <span class="o">::</span><span class="n"><a href="https://docs.microsoft.com/ja-jp/windows/win32/api/wincrypt/nf-wincrypt-cryptreleasecontext" target="_blank">CryptReleaseContext</a></span><span class="p">(</span><span class="k">this</span><span class="o">-&gt;</span><span class="n">prov_</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
     <span class="p">}</span>
-    <span class="c1">//<a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa382471%28v=vs.85%29.aspx" target="_blank">HCRYPTPROV</a>&amp; get() noexcept { return this-&gt;prov_; }</span>
-    <span class="k">const</span> <span class="n"><a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa382471%28v=vs.85%29.aspx" target="_blank">HCRYPTPROV</a></span><span class="o">&amp;</span> <span class="n">get</span><span class="p">()</span> <span class="k">const</span> <span class="n">noexcept</span> <span class="p">{</span> <span class="k">return</span> <span class="k">this</span><span class="o">-&gt;</span><span class="n">prov_</span><span class="p">;</span> <span class="p">}</span>
+    <span class="c1">//<a href="https://docs.microsoft.com/ja-jp/windows/win32/seccrypto/hcryptprov" target="_blank">HCRYPTPROV</a>&amp; get() noexcept { return this-&gt;prov_; }</span>
+    <span class="k">const</span> <span class="n"><a href="https://docs.microsoft.com/ja-jp/windows/win32/seccrypto/hcryptprov" target="_blank">HCRYPTPROV</a></span><span class="o">&amp;</span> <span class="n">get</span><span class="p">()</span> <span class="k">const</span> <span class="n">noexcept</span> <span class="p">{</span> <span class="k">return</span> <span class="k">this</span><span class="o">-&gt;</span><span class="n">prov_</span><span class="p">;</span> <span class="p">}</span>
   <span class="p">};</span>
   <span class="n">crypt_context</span> <span class="n">prov_</span><span class="p">;</span>
 
 <span class="nl">public:</span>
   <span class="k">using</span> <span class="n">result_type</span> <span class="o">=</span> <span class="kt">unsigned</span> <span class="kt">int</span><span class="p">;</span>
   <span class="k">explicit</span> <span class="nf">random_device</span><span class="p">(</span><span class="k">const</span> <span class="n"><a href="https://cpprefjp.github.io/reference/string/basic_string.html">std::string</a></span><span class="o">&amp;</span> <span class="cm">/*token*/</span> <span class="o">=</span> <span class="s">"workaround_mingw_gcc "</span><span class="p">)</span>
-  <span class="o">:</span> <span class="n">prov_</span><span class="p">(</span><span class="n"><a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa387448(v=vs.85).aspx" target="_blank">PROV_RSA_FULL</a></span><span class="p">)</span>
+  <span class="o">:</span> <span class="n">prov_</span><span class="p">(</span><span class="n"><a href="https://docs.microsoft.com/ja-jp/windows/win32/seccrypto/prov-rsa-full" target="_blank">PROV_RSA_FULL</a></span><span class="p">)</span>
   <span class="p">{}</span>
   <span class="n">random_device</span><span class="p">(</span><span class="k">const</span> <span class="n">random_device</span><span class="o">&amp;</span><span class="p">)</span> <span class="o">=</span> <span class="k">delete</span><span class="p">;</span>
   <span class="kt">void</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">random_device</span><span class="o">&amp;</span><span class="p">)</span> <span class="o">=</span> <span class="k">delete</span><span class="p">;</span>
@@ -496,11 +497,11 @@
   <span class="kt">double</span> <span class="n">entropy</span><span class="p">()</span> <span class="k">const</span> <span class="n">noexcept</span> <span class="p">{</span> <span class="k">return</span> <span class="mf">0.0</span><span class="p">;</span> <span class="p">}</span>
   <span class="n">result_type</span> <span class="k">operator</span><span class="p">()()</span> <span class="p">{</span>
     <span class="n">result_type</span> <span class="n">re</span><span class="p">;</span>
-    <span class="k">const</span> <span class="k">auto</span> <span class="n">success</span> <span class="o">=</span> <span class="o">::</span><span class="n"><a href="https://msdn.microsoft.com/en-us/library/aa379942.aspx" target="_blank">CryptGenRandom</a></span><span class="p">(</span><span class="k">this</span><span class="o">-&gt;</span><span class="n">prov_</span><span class="p">.</span><span class="n">get</span><span class="p">(),</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">re</span><span class="p">),</span> <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n"><a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa383751(v=vs.85).aspx#BYTE" target="_blank">BYTE</a></span><span class="o">*&gt;</span><span class="p">(</span><span class="o">&amp;</span><span class="n">re</span><span class="p">));</span>
+    <span class="k">const</span> <span class="k">auto</span> <span class="n">success</span> <span class="o">=</span> <span class="o">::</span><span class="n"><a href="https://docs.microsoft.com/ja-jp/windows/win32/api/wincrypt/nf-wincrypt-cryptgenrandom" target="_blank">CryptGenRandom</a></span><span class="p">(</span><span class="k">this</span><span class="o">-&gt;</span><span class="n">prov_</span><span class="p">.</span><span class="n">get</span><span class="p">(),</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">re</span><span class="p">),</span> <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n"><a href="https://docs.microsoft.com/ja-jp/windows/win32/winprog/windows-data-types#BYTE" target="_blank">BYTE</a></span><span class="o">*&gt;</span><span class="p">(</span><span class="o">&amp;</span><span class="n">re</span><span class="p">));</span>
     <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">success</span><span class="p">)</span> <span class="p">{</span>
       <span class="k">throw</span> <span class="n"><a href="https://cpprefjp.github.io/reference/system_error/system_error.html">std::system_error</a></span><span class="p">(</span>
-        <span class="n"><a href="https://cpprefjp.github.io/reference/system_error/error_code.html">std::error_code</a></span><span class="p">(</span><span class="o">::</span><span class="n"><a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms679360(v=vs.85).aspx" target="_blank">GetLastError</a></span><span class="p">(),</span> <span class="n"><a href="https://cpprefjp.github.io/reference/system_error/system_category.html">std::system_category</a></span><span class="p">()),</span>
-        <span class="s">"<a href="https://msdn.microsoft.com/en-us/library/aa379942.aspx" target="_blank">CryptGenRandom</a>:("</span> <span class="o">+</span> <span class="n"><a href="https://cpprefjp.github.io/reference/string/to_string.html">std::to_string</a></span><span class="p">(</span><span class="n">success</span><span class="p">)</span> <span class="o">+</span> <span class="sc">')'</span>
+        <span class="n"><a href="https://cpprefjp.github.io/reference/system_error/error_code.html">std::error_code</a></span><span class="p">(</span><span class="o">::</span><span class="n"><a href="https://docs.microsoft.com/ja-jp/windows/win32/api/errhandlingapi/nf-errhandlingapi-getlasterror" target="_blank">GetLastError</a></span><span class="p">(),</span> <span class="n"><a href="https://cpprefjp.github.io/reference/system_error/system_category.html">std::system_category</a></span><span class="p">()),</span>
+        <span class="s">"<a href="https://docs.microsoft.com/ja-jp/windows/win32/api/wincrypt/nf-wincrypt-cryptgenrandom" target="_blank">CryptGenRandom</a>:("</span> <span class="o">+</span> <span class="n"><a href="https://cpprefjp.github.io/reference/string/to_string.html">std::to_string</a></span><span class="p">(</span><span class="n">success</span><span class="p">)</span> <span class="o">+</span> <span class="sc">')'</span>
       <span class="p">);</span>
     <span class="p">}</span>
     <span class="k">return</span> <span class="n">re</span><span class="p">;</span>
@@ -562,7 +563,7 @@
 <li>Microdoft Visual Studio 2017: <a href="https://docs.microsoft.com/en-us/cpp/standard-library/random-device-class" target="_blank">random_device Class</a></li>
 <li><a href="https://ja.wikipedia.org/wiki//dev/random" target="_blank">/dev/random - Wikipedia</a></li>
 <li><a href="https://linuxjm.osdn.jp/html/LDP_man-pages/man4/random.4.html" target="_blank">Man page of RANDOM</a></li>
-<li><a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa379942.aspx" target="_blank">CryptGenRandom function - MSDN</a></li>
+<li><a href="https://docs.microsoft.com/ja-jp/windows/win32/api/wincrypt/nf-wincrypt-cryptgenrandom" target="_blank">CryptGenRandom function (wincrypt.h) - Win32 apps | Microsoft Docs</a></li>
 <li><a href="http://vaporoid.hateblo.jp/entry/2014/07/25/154852" target="_blank">random_deviceの実装（再訪） - 煙人計画</a></li>
 <li><a href="https://lwn.net/Articles/685371/" target="_blank">Replacing <code>/dev/urandom</code> May 4, 2016 - Security</a></li>
 <li><a href="http://qiita.com/nanashi/items/f94b78398a6c79d939e1" target="_blank">gccをwindowsで使うならstd::random_deviceを使ってはいけない - Qiita</a></li>
