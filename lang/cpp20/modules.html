@@ -189,8 +189,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2019-11-18T08:49:51">
-        2019年11月18日 08時49分51秒
+      <span itemprop="datePublished" content="2019-12-27T00:58:15">
+        2019年12月27日 00時58分15秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -292,6 +292,7 @@
 <li>宣言をエクスポートすることはできない。</li>
 <li>モジュールインターフェースユニットを持つことはできない。</li>
 </ul>
+<p>グローバルモジュールとは、要するに従来通りの、モジュールではないコードのことである。C++20では、<code>main</code>関数はグローバルモジュールに属していなければならない。</p>
 <h3>エクスポート</h3>
 <p>宣言の前に<code>export</code>キーワードを付加することでその宣言をエクスポートできる。</p>
 <p>エクスポート宣言はモジュールインターフェースユニット内の名前空間スコープで行える。ただし、以下の場所では不可。</p>
@@ -467,27 +468,22 @@
 モジュールを定義する場合はヘッダーファイルは使わないから、実質的な影響はない。</p>
 <h2>後方互換性のための機能</h2>
 <h3>グローバルモジュールフラグメント</h3>
-<p>モジュール宣言の前にグローバルモジュールの実装を書くことができる。これをグローバルモジュールフラグメントという。</p>
-<p>グローバルモジュールフラグメントにはプリプロセッサディレクティブのみ記述できる。
-翻訳フェーズ4以前の段階でプリプロセッサディレクティブ以外の記述がある場合は、エラーとなる。</p>
-<p>この機能は、モジュールのインターフェースへ影響を与えずにインクルードをするために用意された。</p>
+<p>モジュール内ではODRの例外が働かないため、複数のモジュールが<code>#include</code>で同じ宣言を取り込んだ場合、ODR違反となってしまう。
+このため、モジュール内では基本的に<code>#include</code>を使用することはできない。</p>
+<p>しかし、それでは従来のライブラリが利用できないため、モジュール宣言の前にグローバルモジュールの実装を書けるようになっている。これをグローバルモジュールフラグメントという。</p>
 <p><div class="codehilite"><pre><span class="n">module</span><span class="p">;</span>             <span class="c1">// グローバルモジュールフラグメントの宣言</span>
 
-<span class="cp">#include "lib.h"    </span><span class="c1">// "lib.h"中の宣言はモジュールfooに含まれない。</span>
+<span class="cp">#include "lib.h"    </span><span class="c1">// "lib.h"中の宣言はグローバルモジュールに属する(ODRの例外が有効)。</span>
 
-<span class="k">export</span> <span class="n">module</span> <span class="n">foo</span><span class="p">;</span>
+<span class="k">export</span> <span class="n">module</span> <span class="n">foo</span><span class="p">;</span>  <span class="c1">// モジュールの宣言(この上の行までがグローバルモジュールフラグメント)</span>
 
-<span class="cp">#include "lib.h"    </span><span class="c1">// "lib.h"中の宣言がモジュールfooに含まれてしまう(モジュールリンケージを持ってしまう)。</span>
-
-<span class="kt">void</span> <span class="nf">f</span><span class="p">()</span> <span class="p">{</span>
-  <span class="n"><a href="https://cpprefjp.github.io/reference/iostream/cout.html">std::cout</a></span> <span class="o">&lt;&lt;</span> <span class="s">"foo"</span> <span class="o">&lt;&lt;</span> <span class="n"><a href="https://cpprefjp.github.io/reference/ostream/endl.html">std::endl</a></span><span class="p">;</span>
-<span class="p">}</span>
+<span class="cp">#include "lib.h"    </span><span class="c1">// "lib.h"中の宣言がモジュールfooに含まれてしまう(ODRの例外なし = ODR違反の可能性大)。</span>
 </pre></div>
 </p>
-<p>名前のあるモジュールに属する定義に対してはODRの例外が適用されないため、
-グローバルモジュールフラグメント以外でインクルードすると、ODR違反になりやすいので注意が必要である。</p>
+<p>モジュールユニットでの<code>#include</code>はグローバルモジュールフラグメントで行うべきである。</p>
+<p>グローバルモジュールフラグメントにはプリプロセッサディレクティブのみ記述できる。
+翻訳フェーズ4(=プリプロセッサ実行時)以前の段階でそれ以外の記述がある場合は、エラーとなる。</p>
 <p>グローバルモジュールフラグメント内の宣言は、後続のモジュールに属する宣言から参照されていない場合は、<strong>破棄</strong>(discard)される。</p>
-<p>C++標準ライブラリのヘッダーをモジュールユニット内でインクルードする場合、グローバルモジュールフラグメント内でインクルードするべきである。</p>
 <h3>ヘッダーユニット</h3>
 <p>一部のヘッダーファイルは、モジュールとしてインポートすることができる。この機能およびヘッダーファイルから生成される翻訳単位をヘッダーユニットという。</p>
 <p><div class="codehilite"><pre><span class="n">import</span> <span class="o">&lt;</span><span class="n">foo</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span><span class="p">;</span> <span class="c1">// foo.hをヘッダーユニットとしてインポート</span>
