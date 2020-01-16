@@ -69,7 +69,7 @@
 
     </head>
     <body>
-<header data-kunai-mdinfo="{&#34;sources&#34;: [{&#34;source&#34;: &#34;#include &lt;iostream&gt;\n#include &lt;type_traits&gt;\n\nint main()\n{\n}\n&#34;, &#34;id&#34;: &#34;3bc70a2284e9769394156154c57606b4fe926a37&#34;}], &#34;meta&#34;: {&#34;cpp&#34;: [&#34;cpp20&#34;], &#34;header&#34;: [&#34;type_traits&#34;], &#34;namespace&#34;: [&#34;std&#34;], &#34;id-type&#34;: [&#34;class template&#34;]}, &#34;page_id&#34;: [&#34;reference&#34;, &#34;type_traits&#34;, &#34;common_reference&#34;]}">
+<header data-kunai-mdinfo="{&#34;sources&#34;: [{&#34;source&#34;: &#34;#include &lt;string&gt;\n#include &lt;vector&gt;\n#include &lt;type_traits&gt;\n\nint main()\n{\n  static_assert(std::same_as&lt;std::common_reference_t&lt;std::size_t&amp;, int&amp;&gt;, std::size_t&gt;);\n  static_assert(std::same_as&lt;std::common_reference_t&lt;const std::size_t&amp;, int&amp;&gt;, std::size_t&gt;);\n  static_assert(std::same_as&lt;std::common_reference_t&lt;long double&amp;, double&amp;&gt;, long double&gt;);\n  static_assert(std::same_as&lt;std::common_reference_t&lt;long double&amp;, const double&amp;&gt;, long double&gt;);\n  static_assert(std::same_as&lt;std::common_reference_t&lt;std::string&amp;, std::string_view&amp;&gt;, std::string_view&gt;);\n  static_assert(std::same_as&lt;std::common_reference_t&lt;const std::vector&lt;int&gt;, std::vector&lt;int&gt;&amp;&gt;, const std::vector&lt;int&gt;&gt;);\n}\n&#34;, &#34;id&#34;: &#34;1403628dfa426aee855ad5409cd1811dd0a8cd3a&#34;}], &#34;meta&#34;: {&#34;cpp&#34;: [&#34;cpp20&#34;], &#34;header&#34;: [&#34;type_traits&#34;], &#34;namespace&#34;: [&#34;std&#34;], &#34;id-type&#34;: [&#34;class template&#34;]}, &#34;page_id&#34;: [&#34;reference&#34;, &#34;type_traits&#34;, &#34;common_reference&#34;]}">
   <nav class="navbar navbar-default" role="navigation">
     <div class="container-fluid">
       <div class="navbar-header">
@@ -189,8 +189,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2020-01-10T08:37:46">
-        2020年01月10日 08時37分46秒
+      <span itemprop="datePublished" content="2020-01-16T04:35:05">
+        2020年01月16日 04時35分05秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -230,7 +230,6 @@
 <h2>要件</h2>
 <p><code>Types...</code>の全ての型は完全型であるか、<code>const/volatile</code>修飾された(あるいはされていない)<code>void</code>でなければならない。</p>
 <h2>効果</h2>
-<p>（執筆中）</p>
 <p><code>Types...</code>に含まれる全ての型を参照可能な参照型を、メンバ型<code>type</code>として定義する。ただし、<code>type</code>は必ずしも参照型であるとは限らない。</p>
 <p>より詳細には、次のように決定される。</p>
 <p><code>N = sizeof...(Types)</code>として</p>
@@ -245,7 +244,7 @@
 <p><code>N == 2</code> : <code>Types...</code>の１、2番目の型を<code>T1, T2</code>とすると</p>
 <ul>
 <li><code>T1, T2</code>は共に参照型であり、<code>COMMON-REF(T1, T2)</code>が有効ならば、<code>type = COMMON-REF(T1, T2);</code></li>
-<li><code>basic_common_reference&lt;remove_cvref_t&lt;T1&gt;, remove_cvref_t&lt;T2&gt;,XREF(T1), XREF(T2)&gt;::type</code>が有効ならば、メンバ型<code>type</code>はその型</li>
+<li><code>basic_common_reference&lt;remove_cvref_t&lt;T1&gt;, remove_cvref_t&lt;T2&gt;, XREF(T1), XREF(T2)&gt;::type</code>が有効ならば、メンバ型<code>type</code>はその型</li>
 <li><code>COND-RES(T1, T2)</code>が有効ならば、<code>type = COND-RES(T1, T2);</code></li>
 <li><code>common_type_t&lt;T1, T2&gt;</code>が有効ならば、<code>type = common_type_t&lt;T1, T2&gt;;</code></li>
 <li>そうでなければ、メンバ型<code>type</code>は定義されない。</li>
@@ -257,13 +256,52 @@
 </ul>
 </li>
 </ul>
+<p><code>COMMON-REF</code>や<code>XREF</code>はそれぞれ次のように定義される型を表す説明専用のものである</p>
+<ul>
+<li><code>XREF(A)</code><ul>
+<li>参照ではなくCV修飾もされていない型<code>U</code>を引数に取り、<code>A</code>の参照・CV修飾をそのまま<code>U</code>にコピーした型を示すエイリアステンプレート<code>T&lt;U&gt;</code></li>
+<li>このような<code>T&lt;U&gt;</code>は、<code>basic_common_reference</code>の要件指定で使用される</li>
+</ul>
+</li>
+<li><code>COND-RES(X, Y)</code><ul>
+<li><code>decltype(false ? declval&lt;X(&amp;)()&gt;()() : declval&lt;Y(&amp;)()&gt;()())</code></li>
+</ul>
+</li>
+<li><code>COPYCV(FROM, TO)</code><ul>
+<li>型<code>FROM</code>の最上位のCV修飾をそのまま<code>TO</code>へコピーした型を示すエイリアス</li>
+</ul>
+</li>
+<li><code>COMMON-REF(A, B)</code><ul>
+<li><code>X = remove_reference_t&lt;A&gt;, Y = remove_reference_t&lt;B&gt;</code>として、以下のように定義される<ol>
+<li><code>A, B</code>が共に左辺値参照型の場合、<code>COND-RES(COPYCV(X, Y) &amp;, COPYCV(​Y, X) &amp;)</code>が有効であり参照型ならばその型</li>
+<li><code>A, B</code>が共に右辺値参照型の場合、<code>C = remove_reference_t&lt;COMMON-REF(X, Y)&gt;&amp;&amp;</code>（1に移譲）が有効であり、<code>is_convertible_v&lt;A, C&gt; &amp;&amp; is_convertible_v&lt;B, C&gt; == true</code>ならば、型<code>C</code></li>
+<li><code>A</code>が右辺値参照型で<code>B</code>が左辺値参照型の場合、<code>D = COMMON-REF(const X&amp;, Y&amp;)</code>（1に移譲）が有効であり、<code>is_convertible_v&lt;A, D&gt; == true</code>ならば、型<code>D</code></li>
+<li><code>B</code>が右辺値参照型で<code>A</code>が左辺値参照型の場合、<code>COMMON-REF(B, A)</code>として3に移譲</li>
+<li>それ以外の場合及び、上位のいずれかによる結果として不適格な型が生成された場合は、<code>COMMON-REF(A, B)</code>は不適格</li>
+</ol>
+</li>
+</ul>
+</li>
+</ul>
+<h2>備考</h2>
+<p>本メタ関数<code>common_reference</code>は、より一般的なイテレータの<code>value_type</code>と<code>reference</code>との間の関係性を定義するために導入された。</p>
+<p>ポインタ型やC++17までの標準ライブラリにおける普通のイテレータ型では、その<code>value_type</code>と<code>reference</code>の間には自明な関係性があり、どちらの型も<code>const value_type&amp;</code>へ変換することができる（ことが期待される）。</p>
+<p>しかし、C++20から追加される<code>range</code>ライブラリの元となった<code>range-v3</code>ライブラリにおける<code>zip_view</code>（C++20には導入されていない）のプロクシイテレータのように、特殊なイテレータではそのような関係性が必ずしも成り立つとは限らない。</p>
+<p>このような関係性を持つ型があるとジェネリックなアルゴリズムをより簡易に書くことができるようになるなどメリットがあるため、そのような型を求めるために<code>common_reference</code>が導入された。</p>
+<p>他にも、2つの型の間で定義されるコンセプトにおいて、その2つの型の間で上記のような関係性が自然に要求される場合に、<code><span href="https://cpprefjp.github.io/reference/concepts/common_reference_with.md.nolink">common_reference_with</span></code>コンセプトを通じて利用される。</p>
 <h2>例</h2>
-<p>（執筆中）</p>
-<p><div class="yata" id="3bc70a2284e9769394156154c57606b4fe926a37"><div class="codehilite"><pre><span class="cp">#include <a href="https://cpprefjp.github.io/reference/iostream.html">&lt;iostream&gt;</a></span>
+<p><div class="yata" id="1403628dfa426aee855ad5409cd1811dd0a8cd3a"><div class="codehilite"><pre><span class="cp">#include <a href="https://cpprefjp.github.io/reference/string.html">&lt;string&gt;</a></span>
+<span class="cp">#include <a href="https://cpprefjp.github.io/reference/vector.html">&lt;vector&gt;</a></span>
 <span class="cp">#include <a href="https://cpprefjp.github.io/reference/type_traits.html">&lt;type_traits&gt;</a></span>
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
 <span class="p">{</span>
+  <span class="n">static_assert</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/concepts/same_as.html">std::same_as</a></span><span class="o">&lt;</span><span class="n"><span style="color:#ff0000">std::common_reference_t</span></span><span class="o">&lt;</span><span class="n"><a href="https://cpprefjp.github.io/reference/cstddef/size_t.html">std::size_t</a></span><span class="o">&amp;</span><span class="p">,</span> <span class="kt">int</span><span class="o">&amp;&gt;</span><span class="p">,</span> <span class="n"><a href="https://cpprefjp.github.io/reference/cstddef/size_t.html">std::size_t</a></span><span class="o">&gt;</span><span class="p">);</span>
+  <span class="n">static_assert</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/concepts/same_as.html">std::same_as</a></span><span class="o">&lt;</span><span class="n"><span style="color:#ff0000">std::common_reference_t</span></span><span class="o">&lt;</span><span class="k">const</span> <span class="n"><a href="https://cpprefjp.github.io/reference/cstddef/size_t.html">std::size_t</a></span><span class="o">&amp;</span><span class="p">,</span> <span class="kt">int</span><span class="o">&amp;&gt;</span><span class="p">,</span> <span class="n"><a href="https://cpprefjp.github.io/reference/cstddef/size_t.html">std::size_t</a></span><span class="o">&gt;</span><span class="p">);</span>
+  <span class="n">static_assert</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/concepts/same_as.html">std::same_as</a></span><span class="o">&lt;</span><span class="n"><span style="color:#ff0000">std::common_reference_t</span></span><span class="o">&lt;</span><span class="kt">long</span> <span class="kt">double</span><span class="o">&amp;</span><span class="p">,</span> <span class="kt">double</span><span class="o">&amp;&gt;</span><span class="p">,</span> <span class="kt">long</span> <span class="kt">double</span><span class="o">&gt;</span><span class="p">);</span>
+  <span class="n">static_assert</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/concepts/same_as.html">std::same_as</a></span><span class="o">&lt;</span><span class="n"><span style="color:#ff0000">std::common_reference_t</span></span><span class="o">&lt;</span><span class="kt">long</span> <span class="kt">double</span><span class="o">&amp;</span><span class="p">,</span> <span class="k">const</span> <span class="kt">double</span><span class="o">&amp;&gt;</span><span class="p">,</span> <span class="kt">long</span> <span class="kt">double</span><span class="o">&gt;</span><span class="p">);</span>
+  <span class="n">static_assert</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/concepts/same_as.html">std::same_as</a></span><span class="o">&lt;</span><span class="n"><span style="color:#ff0000">std::common_reference_t</span></span><span class="o">&lt;</span><span class="n"><a href="https://cpprefjp.github.io/reference/string/basic_string.html">std::string</a></span><span class="o">&amp;</span><span class="p">,</span> <span class="n"><a href="https://cpprefjp.github.io/reference/string_view/basic_string_view.html">std::string_view</a></span><span class="o">&amp;&gt;</span><span class="p">,</span> <span class="n"><a href="https://cpprefjp.github.io/reference/string_view/basic_string_view.html">std::string_view</a></span><span class="o">&gt;</span><span class="p">);</span>
+  <span class="n">static_assert</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/concepts/same_as.html">std::same_as</a></span><span class="o">&lt;</span><span class="n"><span style="color:#ff0000">std::common_reference_t</span></span><span class="o">&lt;</span><span class="k">const</span> <span class="n"><a href="https://cpprefjp.github.io/reference/vector/vector.html">std::vector</a></span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="n"><a href="https://cpprefjp.github.io/reference/vector/vector.html">std::vector</a></span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;&gt;</span><span class="p">,</span> <span class="k">const</span> <span class="n"><a href="https://cpprefjp.github.io/reference/vector/vector.html">std::vector</a></span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
 </div></p>
@@ -288,6 +326,7 @@
 <h2>参照</h2>
 <ul>
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0898r3.pdf" target="_blank">P0898R3 Standard Library Concepts</a></li>
+<li><a href="https://stackoverflow.com/questions/59011331/what-is-the-purpose-of-c20-stdcommon-reference" target="_blank">What is the purpose of C++20 std::common_reference? - stackoverflow</a></li>
 </ul></div>
 
       </div>
