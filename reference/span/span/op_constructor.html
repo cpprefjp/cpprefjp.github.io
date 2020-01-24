@@ -69,7 +69,7 @@
 
     </head>
     <body>
-<header data-kunai-mdinfo="{&#34;sources&#34;: [{&#34;source&#34;: &#34;#include &lt;cassert&gt;\n#include &lt;span&gt;\n#include &lt;vector&gt;\n#include &lt;array&gt;\n#include &lt;string&gt;\n\nint main()\n{\n  std::vector&lt;int&gt; v = {1, 2, 3, 4, 5};\n\n  // (1) \u30c7\u30d5\u30a9\u30eb\u30c8\u30b3\u30f3\u30b9\u30c8\u30e9\u30af\u30bf\n  {\n    // \u9577\u30550\u306e\u53c2\u7167\u7bc4\u56f2\u3092\u3082\u3064span\u30aa\u30d6\u30b8\u30a7\u30af\u30c8\n    std::span&lt;int, 0&gt; s1;\n    assert(s1.empty());\n\n    // \u52d5\u7684\u306a\u8981\u7d20\u6570\u3092\u3082\u3064span\u30aa\u30d6\u30b8\u30a7\u30af\u30c8\n    std::span&lt;int&gt; s2;\n    assert(s2.empty());\n\n    // \u4ee5\u4e0b\u306f\u30b3\u30f3\u30d1\u30a4\u30eb\u30a8\u30e9\u30fc\u306b\u306a\u308b\u3002\n    // \u9577\u30551\u4ee5\u4e0a\u306espan\u306f\u3001\u53c2\u7167\u7bc4\u56f2\u3092\u8a2d\u5b9a\u3057\u306a\u3051\u308c\u3070\u306a\u3089\u306a\u3044\n    // std::span&lt;int, 1&gt; s3{};\n  }\n\n  // (2) \u30a4\u30c6\u30ec\u30fc\u30bf\u3068\u8981\u7d20\u6570\u306e\u7d44\u3092\u6307\u5b9a\n  {\n    // v\u306e\u5148\u982d3\u8981\u7d20\u3092\u53c2\u7167\u3059\u308b\u3002\n    std::span&lt;int&gt; s{v.begin(), 3};\n    assert(s.size() == 3);\n    assert(s[0] == 1);\n    assert(s[1] == 2);\n    assert(s[2] == 3);\n  }\n\n  // (3) \u7bc4\u56f2\u3092\u6307\u5b9a\n  {\n    std::span&lt;int&gt; s{v.begin(), v.begin() + 3};\n    assert(s.size() == 3);\n    assert(s[0] == 1);\n    assert(s[1] == 2);\n    assert(s[2] == 3);\n  }\n\n  // (4) \u7d44\u307f\u8fbc\u307f\u914d\u5217\u3078\u306e\u53c2\u7167\u3092\u6307\u5b9a\n  {\n    int ar[] = {1, 2, 3, 4, 5};\n    std::span&lt;int&gt; s{ar};\n    assert(s.size() == 5);\n    assert(s.data() == ar); // \u5143\u306e\u914d\u5217\u3092\u30b3\u30d4\u30fc\u305b\u305a\u3001\u53c2\u7167\u3057\u3066\u3044\u308b\n  }\n\n  // (5) std::array\u30aa\u30d6\u30b8\u30a7\u30af\u30c8\u3078\u306e\u53c2\u7167\u3092\u6307\u5b9a\n  {\n    std::array ar = {1, 2, 3, 4, 5};\n    std::span&lt;int&gt; s{ar};\n    assert(s.size() == ar.size());\n    assert(s.data() == ar.data());\n  }\n\n  // (6) const std::array\u30aa\u30d6\u30b8\u30a7\u30af\u30c8\u3078\u306e\u53c2\u7167\u3092\u6307\u5b9a\n  {\n    std::array ar = {1, 2, 3, 4, 5};\n    const auto&amp; car = ar;\n    std::span&lt;const int&gt; s{car};\n\n    assert(s.size() == car.size());\n    assert(s.data() == car.data());\n  }\n\n  // (7) \u30e1\u30e2\u30ea\u306e\u9023\u7d9a\u6027\u3092\u3082\u3064\u578b\u3092\u53c2\u7167\u3055\u305b\u308b\n  {\n    std::span&lt;int&gt; s1{v};\n    assert(s1.size() == v.size());\n    assert(s1.data() == v.data());\n\n    // std::string_view\u306e\u4ee3\u308f\u308a\n    std::string str = \&#34;Hello\&#34;;\n    std::span&lt;char&gt; s2{str};\n    assert(s2.size() == str.size());\n    assert(s2.data() == str.data());\n  }\n\n  // (8) \u30b3\u30d4\u30fc\u30b3\u30f3\u30b9\u30c8\u30e9\u30af\u30bf\n  {\n    std::span&lt;int&gt; s1{v};\n    std::span&lt;int&gt; s2 = s1;\n\n    // \u30b3\u30d4\u30fc\u5143\u3068\u30b3\u30d4\u30fc\u5148\u304c\u540c\u3058\u7bc4\u56f2\u3092\u53c2\u7167\u3059\u308b\n    assert(s1.data() == v.data());\n    assert(s2.data() == v.data());\n  }\n\n  // (9) \u5909\u63db\u30b3\u30f3\u30b9\u30c8\u30e9\u30af\u30bf\n  {\n    int ar[] = {1, 2, 3};\n\n    std::span&lt;int, 3&gt; s1{ar};\n    std::span&lt;int&gt; s2 = s1;\n    std::span&lt;int&gt; s3 = s2.first(2);\n    std::span&lt;const int&gt; s4 = s3;\n\n    assert(s4.size() == 2);\n    assert(s4.data() == ar);\n  }\n}\n&#34;, &#34;id&#34;: &#34;f276ce07f7d25e264ac7ea1c42b474ca9b98adea&#34;}], &#34;meta&#34;: {&#34;cpp&#34;: [&#34;cpp20&#34;], &#34;header&#34;: [&#34;span&#34;], &#34;namespace&#34;: [&#34;std&#34;], &#34;class&#34;: [&#34;span&#34;], &#34;id-type&#34;: [&#34;function&#34;]}, &#34;page_id&#34;: [&#34;reference&#34;, &#34;span&#34;, &#34;span&#34;, &#34;op_constructor&#34;]}">
+<header data-kunai-mdinfo="{&#34;sources&#34;: [{&#34;source&#34;: &#34;#include &lt;cassert&gt;\n#include &lt;span&gt;\n#include &lt;vector&gt;\n#include &lt;array&gt;\n#include &lt;string&gt;\n\nint main()\n{\n  std::vector&lt;int&gt; v = {1, 2, 3, 4, 5};\n\n  // (1) \u30c7\u30d5\u30a9\u30eb\u30c8\u30b3\u30f3\u30b9\u30c8\u30e9\u30af\u30bf\n  {\n    // \u9577\u30550\u306e\u53c2\u7167\u7bc4\u56f2\u3092\u3082\u3064span\u30aa\u30d6\u30b8\u30a7\u30af\u30c8\n    std::span&lt;int, 0&gt; s1;\n    assert(s1.empty());\n\n    // \u52d5\u7684\u306a\u8981\u7d20\u6570\u3092\u3082\u3064span\u30aa\u30d6\u30b8\u30a7\u30af\u30c8\n    std::span&lt;int&gt; s2;\n    assert(s2.empty());\n\n    // \u4ee5\u4e0b\u306f\u30b3\u30f3\u30d1\u30a4\u30eb\u30a8\u30e9\u30fc\u306b\u306a\u308b\u3002\n    // \u9577\u30551\u4ee5\u4e0a\u306espan\u306f\u3001\u53c2\u7167\u7bc4\u56f2\u3092\u8a2d\u5b9a\u3057\u306a\u3051\u308c\u3070\u306a\u3089\u306a\u3044\n    // std::span&lt;int, 1&gt; s3{};\n  }\n\n  // (2) \u30a4\u30c6\u30ec\u30fc\u30bf\u3068\u8981\u7d20\u6570\u306e\u7d44\u3092\u6307\u5b9a\n  {\n    // v\u306e\u5148\u982d3\u8981\u7d20\u3092\u53c2\u7167\u3059\u308b\u3002\n    std::span&lt;int&gt; s{v.begin(), 3};\n    assert(s.size() == 3);\n    assert(s[0] == 1);\n    assert(s[1] == 2);\n    assert(s[2] == 3);\n  }\n\n  // (3) \u7bc4\u56f2\u3092\u6307\u5b9a\n  {\n    std::span&lt;int&gt; s{v.begin(), v.begin() + 3};\n    assert(s.size() == 3);\n    assert(s[0] == 1);\n    assert(s[1] == 2);\n    assert(s[2] == 3);\n  }\n\n  // (4) \u7d44\u307f\u8fbc\u307f\u914d\u5217\u3078\u306e\u53c2\u7167\u3092\u6307\u5b9a\n  {\n    int ar[] = {1, 2, 3, 4, 5};\n    std::span&lt;int&gt; s{ar};\n    assert(s.size() == 5);\n    assert(s.data() == ar); // \u5143\u306e\u914d\u5217\u3092\u30b3\u30d4\u30fc\u305b\u305a\u3001\u53c2\u7167\u3057\u3066\u3044\u308b\n  }\n\n  // (5) std::array\u30aa\u30d6\u30b8\u30a7\u30af\u30c8\u3078\u306e\u53c2\u7167\u3092\u6307\u5b9a\n  {\n    std::array ar = {1, 2, 3, 4, 5};\n    std::span&lt;int&gt; s{ar};\n    assert(s.size() == ar.size());\n    assert(s.data() == ar.data());\n  }\n\n  // (6) const std::array\u30aa\u30d6\u30b8\u30a7\u30af\u30c8\u3078\u306e\u53c2\u7167\u3092\u6307\u5b9a\n  {\n    std::array ar = {1, 2, 3, 4, 5};\n    const auto&amp; car = ar;\n    std::span&lt;const int&gt; s{car};\n\n    assert(s.size() == car.size());\n    assert(s.data() == car.data());\n  }\n\n  // (7) \u30e1\u30e2\u30ea\u306e\u9023\u7d9a\u6027\u3092\u3082\u3064\u30a4\u30c6\u30ec\u30fc\u30bf\u3092\u3082\u3064\u30aa\u30d6\u30b8\u30a7\u30af\u30c8\u306e\u8981\u7d20\u5168\u4f53\u3092\u53c2\u7167\u3055\u305b\u308b\n  {\n    std::span&lt;int&gt; s1{v};\n    assert(s1.size() == v.size());\n    assert(s1.data() == v.data());\n\n    // std::string_view\u306e\u4ee3\u308f\u308a\n    std::string str = \&#34;Hello\&#34;;\n    std::span&lt;char&gt; s2{str};\n    assert(s2.size() == str.size());\n    assert(s2.data() == str.data());\n  }\n\n  // (8) \u30b3\u30d4\u30fc\u30b3\u30f3\u30b9\u30c8\u30e9\u30af\u30bf\n  {\n    std::span&lt;int&gt; s1{v};\n    std::span&lt;int&gt; s2 = s1;\n\n    // \u30b3\u30d4\u30fc\u5143\u3068\u30b3\u30d4\u30fc\u5148\u304c\u540c\u3058\u7bc4\u56f2\u3092\u53c2\u7167\u3059\u308b\n    assert(s1.data() == v.data());\n    assert(s2.data() == v.data());\n  }\n\n  // (9) \u5909\u63db\u30b3\u30f3\u30b9\u30c8\u30e9\u30af\u30bf\n  {\n    int ar[] = {1, 2, 3};\n\n    std::span&lt;int, 3&gt; s1{ar};\n    std::span&lt;int&gt; s2 = s1;\n    std::span&lt;int&gt; s3 = s2.first(2);\n    std::span&lt;const int&gt; s4 = s3;\n\n    assert(s4.size() == 2);\n    assert(s4.data() == ar);\n  }\n}\n&#34;, &#34;id&#34;: &#34;3e7974f36e36096d6ef9a62836cff436b207522c&#34;}], &#34;meta&#34;: {&#34;cpp&#34;: [&#34;cpp20&#34;], &#34;header&#34;: [&#34;span&#34;], &#34;namespace&#34;: [&#34;std&#34;], &#34;class&#34;: [&#34;span&#34;], &#34;id-type&#34;: [&#34;function&#34;]}, &#34;page_id&#34;: [&#34;reference&#34;, &#34;span&#34;, &#34;span&#34;, &#34;op_constructor&#34;]}">
   <nav class="navbar navbar-default" role="navigation">
     <div class="container-fluid">
       <div class="navbar-header">
@@ -201,8 +201,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2020-01-24T17:25:07">
-        2020年01月24日 17時25分07秒
+      <span itemprop="datePublished" content="2020-01-24T17:36:49">
+        2020年01月24日 17時36分49秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -261,7 +261,7 @@
 <li>(4) : 指定された組み込み配列の全体を参照する<code>span</code>オブジェクトを構築する</li>
 <li>(5) : 指定された非<code>const</code>左辺値参照の<code><a href="https://cpprefjp.github.io/reference/array/array.html">std::array</a></code>の全体を参照する<code>span</code>オブジェクトを構築する</li>
 <li>(6) : 指定された<code>const</code>左辺値参照の<code><a href="https://cpprefjp.github.io/reference/array/array.html">std::array</a></code>の全体を参照する<code>span</code>オブジェクトを構築する</li>
-<li>(7) : 指定された、メモリ連続性をもつ型の全体を参照する<code>span</code>オブジェクトを構築する</li>
+<li>(7) : 指定された、メモリ連続性をもつイテレータを持つオブジェクトの要素全体を参照する<code>span</code>オブジェクトを構築する</li>
 <li>(8) : コピーコンストラクタ。<code>other</code>と同じ範囲を参照する<code>span</code>オブジェクトを構築する</li>
 <li>(9) : テンプレートパラメータの異なる<code>span</code>オブジェクトを変換する。以下のような変換ができる：<ul>
 <li>静的な要素数をもつ<code>span</code>から動的な要素数をもつ<code>span</code>への変換。</li>
@@ -281,19 +281,19 @@
 </ul>
 </li>
 <li>(2) :<ul>
-<li>型 <code>U</code> を <code>std::remove_­reference_­t&lt;std::iter_­reference_­t&lt;It&gt;&gt;</code>とするとき<ul>
+<li>型 <code>U</code> を <code>std::remove_reference_t&lt;std::iter_reference_t&lt;It&gt;&gt;</code>とするとき<ul>
 <li>型 <code>It</code> はコンセプト <code>std::contiguous_iterator</code> を満たしていること</li>
-<li><code>std::is_­convertible_­v&lt;U(*)[], element_­type(*)[]&gt;</code> が <code>true</code> であること。(その意図は、イテレータ参照型から <code>element_­type</code> への <code>qualification conversions</code>のみを許可することである。)</li>
+<li><code>std::is_convertible_v&lt;U(*)[], element_type(*)[]&gt;</code> が <code>true</code> であること。(その意図は、イテレータ参照型から <code>element_type</code> への <code>qualification conversions</code>のみを許可することである。)</li>
 </ul>
 </li>
 </ul>
 </li>
 <li>(3) :<ul>
-<li>型 <code>U</code> を <code>std::remove_­reference_­t&lt;std::iter_­reference_­t&lt;It&gt;&gt;</code>とするとき<ul>
+<li>型 <code>U</code> を <code>std::remove_reference_t&lt;std::iter_reference_t&lt;It&gt;&gt;</code>とするとき<ul>
 <li>型 <code>It</code> はコンセプト <code>std::contiguous_iterator</code> を満たしていること</li>
-<li><code>std::is_­convertible_­v&lt;U(*)[], element_­type(*)[]&gt;</code> が <code>true</code> であること。(その意図は、イテレータ参照型から <code>element_­type</code> への <code>qualification conversions</code>のみを許可することである。)</li>
-<li>型 <code>End</code> はコンセプト <code>std::sized_­sentinel_­for&lt;It&gt;</code> を満たしていること</li>
-<li><code>std::is_­convertible_­v&lt;End, size_­t&gt;</code> が <code>false</code>であること</li>
+<li><code>std::is_convertible_v&lt;U(*)[], element_type(*)[]&gt;</code> が <code>true</code> であること。(その意図は、イテレータ参照型から <code>element_type</code> への <code>qualification conversions</code>のみを許可することである。)</li>
+<li>型 <code>End</code> はコンセプト <code>std::sized_sentinel_for&lt;It&gt;</code> を満たしていること</li>
+<li><code>std::is_convertible_v&lt;End, size_t&gt;</code> が <code>false</code>であること</li>
 </ul>
 </li>
 </ul>
@@ -304,14 +304,14 @@
 </ul>
 </li>
 <li>(7) :<ul>
-<li>型 <code>U</code> を <code>std::remove_­reference_­t&lt;std::iter_­reference_­t&lt;R&gt;&gt;</code>とするとき<ul>
+<li>型 <code>U</code> を <code>std::remove_reference_t&lt;std::iter_reference_t&lt;R&gt;&gt;</code>とするとき<ul>
 <li><code>extent == <a href="https://cpprefjp.github.io/reference/span/dynamic_extent.html">dynamic_extent</a></code>が<code>true</code>であること</li>
-<li>型 <code>R</code> はコンセプト <code>std::ranges​::​contiguous_­range</code> 及び <code>std::ranges​::​sized_­range</code> を満たしていること</li>
-<li>型 <code>R</code> がコンセプト <code>std::ranges::safe_­range</code> を満たすか、<code>std::is_­const_­v&lt;element_­type&gt;</code> が<code>true</code>であること</li>
-<li><code>std::remove_­cvref_­t&lt;R&gt;</code>が<code>std::span</code>の特殊化ではないこと</li>
-<li><code>std::remove_­cvref_­t&lt;R&gt;</code>が<code>std::array</code>の特殊化ではないこと</li>
-<li><code>std::is_­array_­v&lt;std::remove_­cvref_­t&lt;R&gt;&gt;</code> が <code>false</code> であること</li>
-<li><code>std::is_­convertible_­v&lt;U(*)[], element_­type(*)[]&gt;</code> が <code>true</code> であること。(その意図は、イテレータ参照型から <code>element_­type</code> への <code>qualification conversions</code>のみを許可することである。)</li>
+<li>型 <code>R</code> はコンセプト <code>std::ranges::contiguous_range</code> 及び <code>std::ranges::sized_range</code> を満たしていること</li>
+<li>型 <code>R</code> がコンセプト <code>std::ranges::safe_range</code> を満たすか、<code>std::is_const_v&lt;element_type&gt;</code> が<code>true</code>であること</li>
+<li><code>std::remove_cvref_t&lt;R&gt;</code>が<code>std::span</code>の特殊化ではないこと</li>
+<li><code>std::remove_cvref_t&lt;R&gt;</code>が<code>std::array</code>の特殊化ではないこと</li>
+<li><code>std::is_array_v&lt;std::remove_cvref_t&lt;R&gt;&gt;</code> が <code>false</code> であること</li>
+<li><code>std::is_convertible_v&lt;U(*)[], element_type(*)[]&gt;</code> が <code>true</code> であること。(その意図は、イテレータ参照型から <code>element_type</code> への <code>qualification conversions</code>のみを許可することである。)</li>
 </ul>
 </li>
 </ul>
@@ -334,12 +334,12 @@
 <li><code>[first, last)</code>が妥当な範囲であること</li>
 <li>メンバ定数<code>extent</code>が<code><a href="https://cpprefjp.github.io/reference/span/dynamic_extent.html">dyanmic_extent</a></code>と等値ではない場合、<code>last - first</code>と<code>extent</code>が等値であること</li>
 <li>型 <code>It</code> はコンセプト <code>std::contiguous_iterator</code> のモデルであること</li>
-<li>型 <code>End</code> はコンセプト <code>std::sized_­sentinel_­for&lt;It&gt;</code> のモデルであること</li>
+<li>型 <code>End</code> はコンセプト <code>std::sized_sentinel_for&lt;It&gt;</code> のモデルであること</li>
 </ul>
 </li>
 <li>(7) :<ul>
-<li>型 <code>R</code> はコンセプト <code>std::ranges​::​contiguous_­range</code> 及び <code>std::ranges​::​sized_­range</code> のモデルであること</li>
-<li><code>std::is_­const_­v&lt;element_­type&gt;</code> が <code>false</code>であるとき、型 <code>R</code> は <code>std::ranges​::​safe_­range</code> のモデルであること</li>
+<li>型 <code>R</code> はコンセプト <code>std::ranges::contiguous_range</code> 及び <code>std::ranges::sized_range</code> のモデルであること</li>
+<li><code>std::is_const_v&lt;element_type&gt;</code> が <code>false</code>であるとき、型 <code>R</code> は <code>std::ranges::safe_range</code> のモデルであること</li>
 </ul>
 </li>
 </ul>
@@ -368,7 +368,7 @@
 <li>(1)-(9) : 定数時間</li>
 </ul>
 <h2>例</h2>
-<p><div class="yata" id="f276ce07f7d25e264ac7ea1c42b474ca9b98adea"><div class="codehilite"><pre><span class="cp">#include <a href="https://cpprefjp.github.io/reference/cassert.html">&lt;cassert&gt;</a></span>
+<p><div class="yata" id="3e7974f36e36096d6ef9a62836cff436b207522c"><div class="codehilite"><pre><span class="cp">#include <a href="https://cpprefjp.github.io/reference/cassert.html">&lt;cassert&gt;</a></span>
 <span class="cp">#include <a href="https://cpprefjp.github.io/reference/span.html">&lt;span&gt;</a></span>
 <span class="cp">#include <a href="https://cpprefjp.github.io/reference/vector.html">&lt;vector&gt;</a></span>
 <span class="cp">#include <a href="https://cpprefjp.github.io/reference/array.html">&lt;array&gt;</a></span>
@@ -438,7 +438,7 @@
     <span class="n"><a href="https://cpprefjp.github.io/reference/cassert/assert.html">assert</a></span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/span/span/data.html">s.data()</a></span> <span class="o">==</span> <span class="n"><a href="https://cpprefjp.github.io/reference/array/array/data.html">car.data()</a></span><span class="p">);</span>
   <span class="p">}</span>
 
-  <span class="c1">// (7) メモリの連続性をもつ型を参照させる</span>
+  <span class="c1">// (7) メモリの連続性をもつイテレータをもつオブジェクトの要素全体を参照させる</span>
   <span class="p">{</span>
     <span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">s1</span><span class="p">{</span><span class="n">v</span><span class="p">};</span>
     <span class="n"><a href="https://cpprefjp.github.io/reference/cassert/assert.html">assert</a></span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/span/span/size.html">s1.size()</a></span> <span class="o">==</span> <span class="n"><a href="https://cpprefjp.github.io/reference/vector/vector/size.html">v.size()</a></span><span class="p">);</span>
