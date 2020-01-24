@@ -69,7 +69,7 @@
 
     </head>
     <body>
-<header data-kunai-mdinfo="{&#34;sources&#34;: [{&#34;source&#34;: &#34;#include &lt;cassert&gt;\n#include &lt;span&gt;\n#include &lt;vector&gt;\n#include &lt;array&gt;\n#include &lt;string&gt;\n\nint main()\n{\n  std::vector&lt;int&gt; v = {1, 2, 3, 4, 5};\n\n  // (1) \u30c7\u30d5\u30a9\u30eb\u30c8\u30b3\u30f3\u30b9\u30c8\u30e9\u30af\u30bf\n  {\n    // \u9577\u30550\u306e\u53c2\u7167\u7bc4\u56f2\u3092\u3082\u3064span\u30aa\u30d6\u30b8\u30a7\u30af\u30c8\n    std::span&lt;int, 0&gt; s1;\n    assert(s1.empty());\n\n    // \u52d5\u7684\u306a\u8981\u7d20\u6570\u3092\u3082\u3064span\u30aa\u30d6\u30b8\u30a7\u30af\u30c8\n    std::span&lt;int&gt; s2;\n    assert(s2.empty());\n\n    // \u4ee5\u4e0b\u306f\u30b3\u30f3\u30d1\u30a4\u30eb\u30a8\u30e9\u30fc\u306b\u306a\u308b\u3002\n    // \u9577\u30551\u4ee5\u4e0a\u306espan\u306f\u3001\u53c2\u7167\u7bc4\u56f2\u3092\u8a2d\u5b9a\u3057\u306a\u3051\u308c\u3070\u306a\u3089\u306a\u3044\n    //std::span&lt;int, 1&gt; s3{};\n  }\n\n  // (2) \u30dd\u30a4\u30f3\u30bf\u3068\u8981\u7d20\u6570\u306e\u7d44\u3092\u6307\u5b9a\n  {\n    // v\u306e\u5148\u982d3\u8981\u7d20\u3092\u53c2\u7167\u3059\u308b\u3002\n    // {v.begin(), 3}\u3068\u66f8\u3044\u3066\u306f\u306a\u3089\u306a\u3044\n    std::span&lt;int&gt; s{v.data(), 3};\n    assert(s.size() == 3);\n    assert(s[0] == 1);\n    assert(s[1] == 2);\n    assert(s[2] == 3);\n  }\n\n  // (3) \u30dd\u30a4\u30f3\u30bf\u7bc4\u56f2\u3092\u6307\u5b9a\n  {\n    // v\u306e\u5148\u982d3\u8981\u7d20\u3092\u53c2\u7167\u3059\u308b\u3002\n    // {v.begin(), v.begin() + 3}\u3068\u66f8\u3044\u3066\u306f\u306a\u3089\u306a\u3044\n    std::span&lt;int&gt; s{v.data(), v.data() + 3};\n    assert(s.size() == 3);\n    assert(s[0] == 1);\n    assert(s[1] == 2);\n    assert(s[2] == 3);\n  }\n\n  // (4) \u7d44\u307f\u8fbc\u307f\u914d\u5217\u3078\u306e\u53c2\u7167\u3092\u6307\u5b9a\n  {\n    int ar[] = {1, 2, 3, 4, 5};\n    std::span&lt;int&gt; s{ar};\n    assert(s.size() == 5);\n    assert(s.data() == ar); // \u5143\u306e\u914d\u5217\u3092\u30b3\u30d4\u30fc\u305b\u305a\u3001\u53c2\u7167\u3057\u3066\u3044\u308b\n  }\n\n  // (5) std::array\u30aa\u30d6\u30b8\u30a7\u30af\u30c8\u3078\u306e\u53c2\u7167\u3092\u6307\u5b9a\n  {\n    std::array ar = {1, 2, 3, 4, 5};\n    std::span&lt;int&gt; s{ar};\n    assert(s.size() == ar.size());\n    assert(s.data() == ar.data());\n  }\n\n  // (6) const std::array\u30aa\u30d6\u30b8\u30a7\u30af\u30c8\u3078\u306e\u53c2\u7167\u3092\u6307\u5b9a\n  {\n    std::array ar = {1, 2, 3, 4, 5};\n    const auto&amp; car = ar;\n    std::span&lt;const int&gt; s{car};\n\n    assert(s.size() == car.size());\n    assert(s.data() == car.data());\n  }\n\n  // (7) \u30e1\u30e2\u30ea\u306e\u9023\u7d9a\u6027\u3092\u3082\u3064\u30b3\u30f3\u30c6\u30ca\u3092\u53c2\u7167\u3055\u305b\u308b\n  {\n    std::span&lt;int&gt; s1{v};\n    assert(s1.size() == v.size());\n    assert(s1.data() == v.data());\n\n    // std::string_view\u306e\u4ee3\u308f\u308a\n    std::string str = \&#34;Hello\&#34;;\n    std::span&lt;char&gt; s2{str};\n    assert(s2.size() == str.size());\n    assert(s2.data() == str.data());\n  }\n\n  // (8) \u30e1\u30e2\u30ea\u306e\u9023\u7d9a\u6027\u3092\u3082\u3064const\u30b3\u30f3\u30c6\u30ca\u3092\u53c2\u7167\u3055\u305b\u308b\n  {\n    const auto&amp; cv = v;\n    std::span&lt;const int&gt; s{cv};\n    assert(s.size() == cv.size());\n    assert(s.data() == cv.data());\n  }\n\n  // (9) \u30b3\u30d4\u30fc\u30b3\u30f3\u30b9\u30c8\u30e9\u30af\u30bf\n  {\n    std::span&lt;int&gt; s1{v};\n    std::span&lt;int&gt; s2 = s1;\n\n    // \u30b3\u30d4\u30fc\u5143\u3068\u30b3\u30d4\u30fc\u5148\u304c\u540c\u3058\u7bc4\u56f2\u3092\u53c2\u7167\u3059\u308b\n    assert(s1.data() == v.data());\n    assert(s2.data() == v.data());\n  }\n\n  // (10) \u30e0\u30fc\u30d6\u30b3\u30f3\u30b9\u30c8\u30e9\u30af\u30bf\u3002\u30b3\u30d4\u30fc\u3068\u540c\u3058\n  {\n    std::span&lt;int&gt; s1{v};\n    std::span&lt;int&gt; s2 = std::move(s1);\n\n    // \u30e0\u30fc\u30d6\u5143\u3068\u30e0\u30fc\u30d6\u5148\u304c\u540c\u3058\u7bc4\u56f2\u3092\u53c2\u7167\u3059\u308b\n    assert(s1.data() == v.data());\n    assert(s2.data() == v.data());\n  }\n\n  // (11) \u5909\u63db\u30b3\u30f3\u30b9\u30c8\u30e9\u30af\u30bf\n  {\n    int ar[] = {1, 2, 3};\n\n    std::span&lt;int, 3&gt; s1{ar};\n    std::span&lt;int&gt; s2 = s1;\n    std::span&lt;int&gt; s3 = s2.first(2);\n    std::span&lt;const int&gt; s4 = s3;\n\n    assert(s4.size() == 2);\n    assert(s4.data() == ar);\n  }\n}\n&#34;, &#34;id&#34;: &#34;e02673db2f5dfe978fe0a7eca123f4702d052e34&#34;}], &#34;meta&#34;: {&#34;cpp&#34;: [&#34;cpp20&#34;], &#34;header&#34;: [&#34;span&#34;], &#34;namespace&#34;: [&#34;std&#34;], &#34;class&#34;: [&#34;span&#34;], &#34;id-type&#34;: [&#34;function&#34;]}, &#34;page_id&#34;: [&#34;reference&#34;, &#34;span&#34;, &#34;span&#34;, &#34;op_constructor&#34;]}">
+<header data-kunai-mdinfo="{&#34;sources&#34;: [{&#34;source&#34;: &#34;#include &lt;cassert&gt;\n#include &lt;span&gt;\n#include &lt;vector&gt;\n#include &lt;array&gt;\n#include &lt;string&gt;\n\nint main()\n{\n  std::vector&lt;int&gt; v = {1, 2, 3, 4, 5};\n\n  // (1) \u30c7\u30d5\u30a9\u30eb\u30c8\u30b3\u30f3\u30b9\u30c8\u30e9\u30af\u30bf\n  {\n    // \u9577\u30550\u306e\u53c2\u7167\u7bc4\u56f2\u3092\u3082\u3064span\u30aa\u30d6\u30b8\u30a7\u30af\u30c8\n    std::span&lt;int, 0&gt; s1;\n    assert(s1.empty());\n\n    // \u52d5\u7684\u306a\u8981\u7d20\u6570\u3092\u3082\u3064span\u30aa\u30d6\u30b8\u30a7\u30af\u30c8\n    std::span&lt;int&gt; s2;\n    assert(s2.empty());\n\n    // \u4ee5\u4e0b\u306f\u30b3\u30f3\u30d1\u30a4\u30eb\u30a8\u30e9\u30fc\u306b\u306a\u308b\u3002\n    // \u9577\u30551\u4ee5\u4e0a\u306espan\u306f\u3001\u53c2\u7167\u7bc4\u56f2\u3092\u8a2d\u5b9a\u3057\u306a\u3051\u308c\u3070\u306a\u3089\u306a\u3044\n    // std::span&lt;int, 1&gt; s3{};\n  }\n\n  // (2) \u30a4\u30c6\u30ec\u30fc\u30bf\u3068\u8981\u7d20\u6570\u306e\u7d44\u3092\u6307\u5b9a\n  {\n    // v\u306e\u5148\u982d3\u8981\u7d20\u3092\u53c2\u7167\u3059\u308b\u3002\n    std::span&lt;int&gt; s{v.begin(), 3};\n    assert(s.size() == 3);\n    assert(s[0] == 1);\n    assert(s[1] == 2);\n    assert(s[2] == 3);\n  }\n\n  // (3) \u7bc4\u56f2\u3092\u6307\u5b9a\n  {\n    std::span&lt;int&gt; s{v.begin(), v.begin() + 3};\n    assert(s.size() == 3);\n    assert(s[0] == 1);\n    assert(s[1] == 2);\n    assert(s[2] == 3);\n  }\n\n  // (4) \u7d44\u307f\u8fbc\u307f\u914d\u5217\u3078\u306e\u53c2\u7167\u3092\u6307\u5b9a\n  {\n    int ar[] = {1, 2, 3, 4, 5};\n    std::span&lt;int&gt; s{ar};\n    assert(s.size() == 5);\n    assert(s.data() == ar); // \u5143\u306e\u914d\u5217\u3092\u30b3\u30d4\u30fc\u305b\u305a\u3001\u53c2\u7167\u3057\u3066\u3044\u308b\n  }\n\n  // (5) std::array\u30aa\u30d6\u30b8\u30a7\u30af\u30c8\u3078\u306e\u53c2\u7167\u3092\u6307\u5b9a\n  {\n    std::array ar = {1, 2, 3, 4, 5};\n    std::span&lt;int&gt; s{ar};\n    assert(s.size() == ar.size());\n    assert(s.data() == ar.data());\n  }\n\n  // (6) const std::array\u30aa\u30d6\u30b8\u30a7\u30af\u30c8\u3078\u306e\u53c2\u7167\u3092\u6307\u5b9a\n  {\n    std::array ar = {1, 2, 3, 4, 5};\n    const auto&amp; car = ar;\n    std::span&lt;const int&gt; s{car};\n\n    assert(s.size() == car.size());\n    assert(s.data() == car.data());\n  }\n\n  // (7) \u30e1\u30e2\u30ea\u306e\u9023\u7d9a\u6027\u3092\u3082\u3064\u578b\u3092\u53c2\u7167\u3055\u305b\u308b\n  {\n    std::span&lt;int&gt; s1{v};\n    assert(s1.size() == v.size());\n    assert(s1.data() == v.data());\n\n    // std::string_view\u306e\u4ee3\u308f\u308a\n    std::string str = \&#34;Hello\&#34;;\n    std::span&lt;char&gt; s2{str};\n    assert(s2.size() == str.size());\n    assert(s2.data() == str.data());\n  }\n\n  // (8) \u30b3\u30d4\u30fc\u30b3\u30f3\u30b9\u30c8\u30e9\u30af\u30bf\n  {\n    std::span&lt;int&gt; s1{v};\n    std::span&lt;int&gt; s2 = s1;\n\n    // \u30b3\u30d4\u30fc\u5143\u3068\u30b3\u30d4\u30fc\u5148\u304c\u540c\u3058\u7bc4\u56f2\u3092\u53c2\u7167\u3059\u308b\n    assert(s1.data() == v.data());\n    assert(s2.data() == v.data());\n  }\n\n  // (9) \u5909\u63db\u30b3\u30f3\u30b9\u30c8\u30e9\u30af\u30bf\n  {\n    int ar[] = {1, 2, 3};\n\n    std::span&lt;int, 3&gt; s1{ar};\n    std::span&lt;int&gt; s2 = s1;\n    std::span&lt;int&gt; s3 = s2.first(2);\n    std::span&lt;const int&gt; s4 = s3;\n\n    assert(s4.size() == 2);\n    assert(s4.data() == ar);\n  }\n}\n&#34;, &#34;id&#34;: &#34;f276ce07f7d25e264ac7ea1c42b474ca9b98adea&#34;}], &#34;meta&#34;: {&#34;cpp&#34;: [&#34;cpp20&#34;], &#34;header&#34;: [&#34;span&#34;], &#34;namespace&#34;: [&#34;std&#34;], &#34;class&#34;: [&#34;span&#34;], &#34;id-type&#34;: [&#34;function&#34;]}, &#34;page_id&#34;: [&#34;reference&#34;, &#34;span&#34;, &#34;span&#34;, &#34;op_constructor&#34;]}">
   <nav class="navbar navbar-default" role="navigation">
     <div class="container-fluid">
       <div class="navbar-header">
@@ -201,12 +201,12 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2019-12-18T15:10:50">
-        2019年12月18日 15時10分50秒
+      <span itemprop="datePublished" content="2020-01-24T17:25:07">
+        2020年01月24日 17時25分07秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">Akira Takahashi</span>
+        <span itemprop="name">alphya</span>
       </span>
       が更新
     </small></p>
@@ -227,8 +227,12 @@
         
   <div class="identifier-type">function</div><div class="header">&lt;span&gt;</div><h1 itemprop="name"><span class="namespace" title="namespace std">std::</span><span class="class" title="class span">span::</span><span class="token">コンストラクタ</span><span class="cpp cpp20" title="C++20で追加">(C++20)</span></h1>
 <div itemprop="articleBody"><p><div class="codehilite"><pre><span class="n">constexpr</span> <span class="n">span</span><span class="p">()</span> <span class="n">noexcept</span><span class="p">;</span>                                             <span class="c1">// (1)</span>
-<span class="n">constexpr</span> <span class="nf">span</span><span class="p">(</span><span class="n">pointer</span> <span class="n">ptr</span><span class="p">,</span> <span class="n">size_type</span> <span class="n">count</span><span class="p">);</span>                          <span class="c1">// (2)</span>
-<span class="n">constexpr</span> <span class="nf">span</span><span class="p">(</span><span class="n">pointer</span> <span class="n">first</span><span class="p">,</span> <span class="n">pointer</span> <span class="n">last</span><span class="p">);</span>                           <span class="c1">// (3)</span>
+
+<span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">It</span><span class="o">&gt;</span>
+<span class="n">constexpr</span> <span class="n">span</span><span class="p">(</span><span class="n">It</span> <span class="n">first</span><span class="p">,</span> <span class="n">size_type</span> <span class="n">count</span><span class="p">);</span>                             <span class="c1">// (2)</span>
+
+<span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">It</span><span class="p">,</span> <span class="k">class</span> <span class="nc">End</span><span class="o">&gt;</span>
+<span class="n">constexpr</span> <span class="n">span</span><span class="p">(</span><span class="n">It</span> <span class="n">first</span><span class="p">,</span> <span class="n">End</span> <span class="n">last</span><span class="p">);</span>                                    <span class="c1">// (3)</span>
 
 <span class="k">template</span> <span class="o">&lt;</span><span class="n"><a href="https://cpprefjp.github.io/reference/cstddef/size_t.html">size_t</a></span> <span class="n">N</span><span class="o">&gt;</span>
 <span class="n">constexpr</span> <span class="n">span</span><span class="p">(</span><span class="n">element_type</span> <span class="p">(</span><span class="o">&amp;</span><span class="n">arr</span><span class="p">)[</span><span class="n">N</span><span class="p">])</span> <span class="n">noexcept</span><span class="p">;</span>                       <span class="c1">// (4)</span>
@@ -239,33 +243,27 @@
 <span class="k">template</span> <span class="o">&lt;</span><span class="n"><a href="https://cpprefjp.github.io/reference/cstddef/size_t.html">size_t</a></span> <span class="n">N</span><span class="o">&gt;</span>
 <span class="n">constexpr</span> <span class="n">span</span><span class="p">(</span><span class="k">const</span> <span class="n"><a href="https://cpprefjp.github.io/reference/array/array.html">array</a></span><span class="o">&lt;</span><span class="n">value_type</span><span class="p">,</span> <span class="n">N</span><span class="o">&gt;&amp;</span> <span class="n">arr</span><span class="p">)</span> <span class="n">noexcept</span><span class="p">;</span>              <span class="c1">// (6)</span>
 
-<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Container</span><span class="o">&gt;</span>
-<span class="n">constexpr</span> <span class="n">span</span><span class="p">(</span><span class="n">Container</span><span class="o">&amp;</span> <span class="n">cont</span><span class="p">);</span>                                       <span class="c1">// (7)</span>
+<span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">R</span><span class="o">&gt;</span>
+<span class="n">constexpr</span> <span class="n">span</span><span class="p">(</span><span class="n">R</span><span class="o">&amp;&amp;</span> <span class="n">r</span><span class="p">);</span>                                                 <span class="c1">// (7)</span>
 
-<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Container</span><span class="o">&gt;</span>
-<span class="n">constexpr</span> <span class="n">span</span><span class="p">(</span><span class="k">const</span> <span class="n">Container</span><span class="o">&amp;</span> <span class="n">cont</span><span class="p">);</span>                                 <span class="c1">// (8)</span>
-
-<span class="n">constexpr</span> <span class="n">span</span><span class="p">(</span><span class="k">const</span> <span class="n">span</span><span class="o">&amp;</span> <span class="n">other</span><span class="p">)</span> <span class="n">noexcept</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>                  <span class="c1">// (9)</span>
-<span class="n">constexpr</span> <span class="n">span</span><span class="p">(</span><span class="k">const</span> <span class="n">span</span><span class="o">&amp;&amp;</span> <span class="n">other</span><span class="p">)</span> <span class="n">noexcept</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>                 <span class="c1">// (10)</span>
+<span class="n">constexpr</span> <span class="n">span</span><span class="p">(</span><span class="k">const</span> <span class="n">span</span><span class="o">&amp;</span> <span class="n">other</span><span class="p">)</span> <span class="n">noexcept</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>                  <span class="c1">// (8)</span>
 
 <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">OtherElementType</span><span class="p">,</span> <span class="n"><a href="https://cpprefjp.github.io/reference/cstddef/size_t.html">size_t</a></span> <span class="n">OtherExtent</span><span class="o">&gt;</span>
-<span class="n">constexpr</span> <span class="n">span</span><span class="p">(</span><span class="k">const</span> <span class="n">span</span><span class="o">&lt;</span><span class="n">OtherElementType</span><span class="p">,</span> <span class="n">OtherExtent</span><span class="o">&gt;&amp;</span> <span class="n">s</span><span class="p">)</span> <span class="n">noexcept</span><span class="p">;</span> <span class="c1">// (11)</span>
+<span class="n">constexpr</span> <span class="n">span</span><span class="p">(</span><span class="k">const</span> <span class="n">span</span><span class="o">&lt;</span><span class="n">OtherElementType</span><span class="p">,</span> <span class="n">OtherExtent</span><span class="o">&gt;&amp;</span> <span class="n">s</span><span class="p">)</span> <span class="n">noexcept</span><span class="p">;</span> <span class="c1">// (9)</span>
 </pre></div>
 </p>
 <h2>概要</h2>
 <p><code>span</code>オブジェクトを構築する。</p>
 <ul>
 <li>(1) : デフォルトコンストラクタ。空の<code>span</code>オブジェクトを構築する</li>
-<li>(2) : 参照範囲として先頭要素を指すポインタと、そこからの要素数を指定して、それらの要素を参照する<code>span</code>オブジェクトを構築する</li>
-<li>(3) : 参照範囲として先頭要素を指すポインタと、末尾要素の次を指すポインタを指定して、それらの要素を参照する<code>span</code>オブジェクトを構築する</li>
+<li>(2) : 参照範囲として先頭要素を指すイテレータと、そこからの要素数を指定して、それらの要素を参照する<code>span</code>オブジェクトを構築する</li>
+<li>(3) : 参照範囲として先頭要素を指すイテレータと、末尾要素の次を指すイテレータを指定して、それらの要素を参照する<code>span</code>オブジェクトを構築する</li>
 <li>(4) : 指定された組み込み配列の全体を参照する<code>span</code>オブジェクトを構築する</li>
 <li>(5) : 指定された非<code>const</code>左辺値参照の<code><a href="https://cpprefjp.github.io/reference/array/array.html">std::array</a></code>の全体を参照する<code>span</code>オブジェクトを構築する</li>
 <li>(6) : 指定された<code>const</code>左辺値参照の<code><a href="https://cpprefjp.github.io/reference/array/array.html">std::array</a></code>の全体を参照する<code>span</code>オブジェクトを構築する</li>
-<li>(7) : 指定された、非<code>const</code>左辺値参照のメモリ連続性をもつコンテナの全体を参照する<code>span</code>オブジェクトを構築する</li>
-<li>(8) : 指定された、<code>const</code>左辺値参照のメモリ連続性をもつコンテナの全体を参照する<code>span</code>オブジェクトを構築する</li>
-<li>(9) : コピーコンストラクタ。<code>other</code>と同じ範囲を参照する<code>span</code>オブジェクトを構築する</li>
-<li>(10) : ムーブコンストラクタ。<code>other</code>と同じ範囲を参照する<code>span</code>オブジェクトを構築する。コピーコンストラクタと同じ</li>
-<li>(11) : テンプレートパラメータの異なる<code>span</code>オブジェクトを変換する。以下のような変換ができる：<ul>
+<li>(7) : 指定された、メモリ連続性をもつ型の全体を参照する<code>span</code>オブジェクトを構築する</li>
+<li>(8) : コピーコンストラクタ。<code>other</code>と同じ範囲を参照する<code>span</code>オブジェクトを構築する</li>
+<li>(9) : テンプレートパラメータの異なる<code>span</code>オブジェクトを変換する。以下のような変換ができる：<ul>
 <li>静的な要素数をもつ<code>span</code>から動的な要素数をもつ<code>span</code>への変換。</li>
 <li>動的な要素数をもつ<code>span</code>同士の変換</li>
 <li><code>span&lt;T&gt;</code>から<code>span&lt;const T&gt;</code>への変換</li>
@@ -282,21 +280,43 @@
 </li>
 </ul>
 </li>
+<li>(2) :<ul>
+<li>型 <code>U</code> を <code>std::remove_­reference_­t&lt;std::iter_­reference_­t&lt;It&gt;&gt;</code>とするとき<ul>
+<li>型 <code>It</code> はコンセプト <code>std::contiguous_iterator</code> を満たしていること</li>
+<li><code>std::is_­convertible_­v&lt;U(*)[], element_­type(*)[]&gt;</code> が <code>true</code> であること。(その意図は、イテレータ参照型から <code>element_­type</code> への <code>qualification conversions</code>のみを許可することである。)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>(3) :<ul>
+<li>型 <code>U</code> を <code>std::remove_­reference_­t&lt;std::iter_­reference_­t&lt;It&gt;&gt;</code>とするとき<ul>
+<li>型 <code>It</code> はコンセプト <code>std::contiguous_iterator</code> を満たしていること</li>
+<li><code>std::is_­convertible_­v&lt;U(*)[], element_­type(*)[]&gt;</code> が <code>true</code> であること。(その意図は、イテレータ参照型から <code>element_­type</code> への <code>qualification conversions</code>のみを許可することである。)</li>
+<li>型 <code>End</code> はコンセプト <code>std::sized_­sentinel_­for&lt;It&gt;</code> を満たしていること</li>
+<li><code>std::is_­convertible_­v&lt;End, size_­t&gt;</code> が <code>false</code>であること</li>
+</ul>
+</li>
+</ul>
+</li>
 <li>(4), (5), (6) :<ul>
 <li><code>extent == <a href="https://cpprefjp.github.io/reference/span/dynamic_extent.html">dynamic_extent</a> || N == extent</code>が<code>true</code>であること</li>
 <li><code><a href="https://cpprefjp.github.io/reference/type_traits/remove_pointer.html">remove_pointer_t</a>&lt;decltype(<a href="https://cpprefjp.github.io/reference/iterator/data.html">data</a>(arr)))&gt;(*)[]</code>型が<code>ElementType(*)[]</code>型に変換可能であること</li>
 </ul>
 </li>
-<li>(7), (8) :<ul>
+<li>(7) :<ul>
+<li>型 <code>U</code> を <code>std::remove_­reference_­t&lt;std::iter_­reference_­t&lt;R&gt;&gt;</code>とするとき<ul>
 <li><code>extent == <a href="https://cpprefjp.github.io/reference/span/dynamic_extent.html">dynamic_extent</a></code>が<code>true</code>であること</li>
-<li><code>Container</code>が<code>span</code>型ではないこと</li>
-<li><code>Container</code>が<code><a href="https://cpprefjp.github.io/reference/array/array.html">array</a></code>型ではないこと</li>
-<li><code><a href="https://cpprefjp.github.io/reference/type_traits/is_array.html">is_array_v</a>&lt;Container&gt;</code>が<code>false</code>であること (<code>Container</code>が組み込み配列型ではないこと)</li>
-<li>式<code><a href="https://cpprefjp.github.io/reference/iterator/data.html">data</a>(cont)</code>と式<code><a href="https://cpprefjp.github.io/reference/iterator/size.html">size</a>(size)</code>が妥当であること (メモリの連続性をもつコンテナであること)</li>
-<li><code><a href="https://cpprefjp.github.io/reference/type_traits/remove_pointer.html">remove_pointer_t</a>&lt;decltype(<a href="https://cpprefjp.github.io/reference/iterator/data.html">data</a>(arr)))&gt;(*)[]</code>型が<code>ElementType(*)[]</code>型に変換可能であること</li>
+<li>型 <code>R</code> はコンセプト <code>std::ranges​::​contiguous_­range</code> 及び <code>std::ranges​::​sized_­range</code> を満たしていること</li>
+<li>型 <code>R</code> がコンセプト <code>std::ranges::safe_­range</code> を満たすか、<code>std::is_­const_­v&lt;element_­type&gt;</code> が<code>true</code>であること</li>
+<li><code>std::remove_­cvref_­t&lt;R&gt;</code>が<code>std::span</code>の特殊化ではないこと</li>
+<li><code>std::remove_­cvref_­t&lt;R&gt;</code>が<code>std::array</code>の特殊化ではないこと</li>
+<li><code>std::is_­array_­v&lt;std::remove_­cvref_­t&lt;R&gt;&gt;</code> が <code>false</code> であること</li>
+<li><code>std::is_­convertible_­v&lt;U(*)[], element_­type(*)[]&gt;</code> が <code>true</code> であること。(その意図は、イテレータ参照型から <code>element_­type</code> への <code>qualification conversions</code>のみを許可することである。)</li>
 </ul>
 </li>
-<li>(11) :<ul>
+</ul>
+</li>
+<li>(9) :<ul>
 <li><code>Extent == <a href="https://cpprefjp.github.io/reference/span/dynamic_extent.html">dynamic_extent</a> || Extent == OtherExtent</code>が<code>true</code>であること (受け取り側が<code><a href="https://cpprefjp.github.io/reference/span/dynamic_extent.html">dynamic_extent</a></code>を持っていれば任意の<code>Extent</code>から変換できる)</li>
 <li><code>OtherElementType(*)[]</code>型が<code>ElementType(*)[]</code>型に変換可能であること</li>
 </ul>
@@ -305,70 +325,50 @@
 <h2>事前条件</h2>
 <ul>
 <li>(2) :<ul>
-<li><code>[ptr, ptr + count)</code>が妥当な範囲であること</li>
+<li><code>[first, first + count)</code>が妥当な範囲であること</li>
+<li>型 <code>It</code> はコンセプト <code>std::contiguous_iterator</code> のモデルであること</li>
 <li>メンバ定数<code>extent</code>が<code><a href="https://cpprefjp.github.io/reference/span/dynamic_extent.html">dyanmic_extent</a></code>と等値ではない場合、<code>count</code>と<code>extent</code>が等値であること</li>
 </ul>
 </li>
 <li>(3) :<ul>
 <li><code>[first, last)</code>が妥当な範囲であること</li>
 <li>メンバ定数<code>extent</code>が<code><a href="https://cpprefjp.github.io/reference/span/dynamic_extent.html">dyanmic_extent</a></code>と等値ではない場合、<code>last - first</code>と<code>extent</code>が等値であること</li>
+<li>型 <code>It</code> はコンセプト <code>std::contiguous_iterator</code> のモデルであること</li>
+<li>型 <code>End</code> はコンセプト <code>std::sized_­sentinel_­for&lt;It&gt;</code> のモデルであること</li>
 </ul>
 </li>
-<li>(7), (8) :<ul>
-<li><code>[<a href="https://cpprefjp.github.io/reference/iterator/data.html">data</a>(cont), <a href="https://cpprefjp.github.io/reference/iterator/data.html">data</a>(cont) + <a href="https://cpprefjp.github.io/reference/iterator/size.html">size</a>(cont))</code>が妥当な範囲であること</li>
+<li>(7) :<ul>
+<li>型 <code>R</code> はコンセプト <code>std::ranges​::​contiguous_­range</code> 及び <code>std::ranges​::​sized_­range</code> のモデルであること</li>
+<li><code>std::is_­const_­v&lt;element_­type&gt;</code> が <code>false</code>であるとき、型 <code>R</code> は <code>std::ranges​::​safe_­range</code> のモデルであること</li>
 </ul>
 </li>
 </ul>
 <h2>効果</h2>
 <ul>
-<li>(2) : 範囲<code>[ptr, ptr + count)</code>を参照する<code>span</code>オブジェクトを構築する</li>
+<li>(2) : 範囲<code>[first, first + count)</code>を参照する<code>span</code>オブジェクトを構築する</li>
 <li>(3) : 範囲<code>[first, last)</code>を参照する<code>span</code>オブジェクトを構築する</li>
 <li>(4), (5), (6) : 範囲<code>[<a href="https://cpprefjp.github.io/reference/iterator/data.html">data</a>(arr), <a href="https://cpprefjp.github.io/reference/iterator/data.html">data</a>(arr) + N)</code>を参照する<code>span</code>オブジェクトを構築する</li>
-<li>(7), (8) : 範囲<code>[<a href="https://cpprefjp.github.io/reference/iterator/data.html">data</a>(cont), <a href="https://cpprefjp.github.io/reference/iterator/data.html">data</a>(cont) + <a href="https://cpprefjp.github.io/reference/iterator/size.html">size</a>(cont))</code>を参照する<code>span</code>オブジェクトを構築する</li>
-<li>(11) : 範囲<code>[s.<a href="https://cpprefjp.github.io/reference/span/span/data.html">data()</a>, s.<a href="https://cpprefjp.github.io/reference/span/span/data.html">data()</a> + s.<a href="https://cpprefjp.github.io/reference/span/span/size.html">size()</a>)</code>を参照する<code>span</code>オブジェクトを構築する</li>
+<li>(7) : 範囲<code>[std::ranges::data(r), std::ranges::data(r) + std::ranges::size(r))</code>を参照する<code>span</code>オブジェクトを構築する</li>
+<li>(9) : 範囲<code>[s.<a href="https://cpprefjp.github.io/reference/span/span/data.html">data()</a>, s.<a href="https://cpprefjp.github.io/reference/span/span/data.html">data()</a> + s.<a href="https://cpprefjp.github.io/reference/span/span/size.html">size()</a>)</code>を参照する<code>span</code>オブジェクトを構築する</li>
 </ul>
 <h2>事後条件</h2>
 <ul>
 <li>(1) : <code><a href="https://cpprefjp.github.io/reference/span/span/size.html">size()</a> == 0 &amp;&amp; <a href="https://cpprefjp.github.io/reference/span/span/data.html">data()</a> == nullptr</code></li>
-<li>(2) : <code><a href="https://cpprefjp.github.io/reference/span/span/size.html">size()</a> == count &amp;&amp; <a href="https://cpprefjp.github.io/reference/span/span/data.html">data()</a> == ptr</code></li>
-<li>(3) : <code><a href="https://cpprefjp.github.io/reference/span/span/size.html">size()</a> == (last - first) &amp;&amp; <a href="https://cpprefjp.github.io/reference/span/span/data.html">data()</a> == first</code></li>
 <li>(4), (5), (6) : <code><a href="https://cpprefjp.github.io/reference/span/span/size.html">size()</a> == N &amp;&amp; <a href="https://cpprefjp.github.io/reference/span/span/data.html">data()</a> == <a href="https://cpprefjp.github.io/reference/iterator/data.html">data</a>(arr)</code></li>
-<li>(7), (8) : <code><a href="https://cpprefjp.github.io/reference/span/span/size.html">size()</a> == <a href="https://cpprefjp.github.io/reference/iterator/size.html">size</a>(cont) &amp;&amp; <a href="https://cpprefjp.github.io/reference/span/span/data.html">data()</a> == <a href="https://cpprefjp.github.io/reference/iterator/data.html">data</a>(cont)</code></li>
-<li>(11) : <code><a href="https://cpprefjp.github.io/reference/span/span/size.html">size()</a> == s.<a href="https://cpprefjp.github.io/reference/span/span/size.html">size()</a> &amp;&amp; <a href="https://cpprefjp.github.io/reference/span/span/data.html">data()</a> == s.<a href="https://cpprefjp.github.io/reference/span/span/data.html">data()</a></code></li>
+<li>(8) : <code><a href="https://cpprefjp.github.io/reference/span/span/size.html">size()</a> == <a href="https://cpprefjp.github.io/reference/iterator/size.html">size</a>(cont) &amp;&amp; <a href="https://cpprefjp.github.io/reference/span/span/data.html">data()</a> == <a href="https://cpprefjp.github.io/reference/iterator/data.html">data</a>(cont)</code></li>
+<li>(9) : <code><a href="https://cpprefjp.github.io/reference/span/span/size.html">size()</a> == s.<a href="https://cpprefjp.github.io/reference/span/span/size.html">size()</a> &amp;&amp; <a href="https://cpprefjp.github.io/reference/span/span/data.html">data()</a> == s.<a href="https://cpprefjp.github.io/reference/span/span/data.html">data()</a></code></li>
 </ul>
 <h2>例外</h2>
 <ul>
 <li>(1), (2), (3), (4), (5), (6) : 投げない</li>
-<li>(7), (8) : コンテナ型によっては、<code><a href="https://cpprefjp.github.io/reference/iterator/data.html">data</a>(cont)</code>と<code><a href="https://cpprefjp.github.io/reference/iterator/size.html">size</a>(cont)</code>の呼び出しがなんらかの例外を送出する可能性がある</li>
+<li>(7) : コンテナ型によっては、<code>std::ranges::data(r)</code>と<code>std::ranges::size(r)</code>の呼び出しがなんらかの例外を送出する可能性がある</li>
 </ul>
 <h2>計算量</h2>
 <ul>
-<li>(1)-(11) : 定数時間</li>
-</ul>
-<h2>備考</h2>
-<ul>
-<li>(2) : イテレータと要素数の組ではなく、ポインタと要素数の組であることに注意<ul>
-<li>例として、<code><a href="https://cpprefjp.github.io/reference/vector/vector.html">std::vector</a></code>や<code><a href="https://cpprefjp.github.io/reference/array/array.html">std::array</a></code>のイテレータが環境・状況によってはポインタとして定義されるかもしれないため、イテレータを指定しても動作する可能性はある。しかし、それでは他の環境では動作しない可能性が高いため、イテレータではなくポインタを指定すること</li>
-</ul>
-</li>
-<li>
-<p>(2) : 第2引数の要素数は、(3)とのオーバーロードをあいまいにしないために、<code><a href="https://cpprefjp.github.io/reference/cstddef/size_t.html">std::size_t</a></code>型にキャストして渡したほうがよい</p>
-<ul>
-<li>例として、整数リテラル<code>0</code>はヌルポインタとみなされるため、(2)と(3)があいまいになる。
-
-<div class="codehilite"><pre><span class="n"><a href="https://cpprefjp.github.io/reference/vector/vector.html">std::vector</a></span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">v</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">};</span>
-<span class="c1">//std::span&lt;int, 3&gt; s1{<a href="https://cpprefjp.github.io/reference/vector/vector/data.html">v.data()</a>, 0};  // コンパイルエラー : (2)と(3)があいまい</span>
-<span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="mi">3</span><span class="o">&gt;</span> <span class="n">s2</span><span class="p">{</span><span class="n"><a href="https://cpprefjp.github.io/reference/vector/vector/data.html">v.data()</a></span><span class="p">,</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="n"><a href="https://cpprefjp.github.io/reference/cstddef/size_t.html">std::size_t</a></span><span class="o">&gt;</span><span class="p">(</span><span class="mi">0</span><span class="p">)};</span> <span class="c1">// OK</span>
-</pre></div>
-</li>
-</ul>
-</li>
-<li>
-<p>(3) : イテレータ範囲ではなく、ポインタ範囲であることに注意。(2)と同様に、イテレータを指定してはならない</p>
-</li>
+<li>(1)-(9) : 定数時間</li>
 </ul>
 <h2>例</h2>
-<p><div class="yata" id="e02673db2f5dfe978fe0a7eca123f4702d052e34"><div class="codehilite"><pre><span class="cp">#include <a href="https://cpprefjp.github.io/reference/cassert.html">&lt;cassert&gt;</a></span>
+<p><div class="yata" id="f276ce07f7d25e264ac7ea1c42b474ca9b98adea"><div class="codehilite"><pre><span class="cp">#include <a href="https://cpprefjp.github.io/reference/cassert.html">&lt;cassert&gt;</a></span>
 <span class="cp">#include <a href="https://cpprefjp.github.io/reference/span.html">&lt;span&gt;</a></span>
 <span class="cp">#include <a href="https://cpprefjp.github.io/reference/vector.html">&lt;vector&gt;</a></span>
 <span class="cp">#include <a href="https://cpprefjp.github.io/reference/array.html">&lt;array&gt;</a></span>
@@ -390,25 +390,22 @@
 
     <span class="c1">// 以下はコンパイルエラーになる。</span>
     <span class="c1">// 長さ1以上のspanは、参照範囲を設定しなければならない</span>
-    <span class="c1">//std::span&lt;int, 1&gt; s3{};</span>
+    <span class="c1">// std::span&lt;int, 1&gt; s3{};</span>
   <span class="p">}</span>
 
-  <span class="c1">// (2) ポインタと要素数の組を指定</span>
+  <span class="c1">// (2) イテレータと要素数の組を指定</span>
   <span class="p">{</span>
     <span class="c1">// vの先頭3要素を参照する。</span>
-    <span class="c1">// {<a href="https://cpprefjp.github.io/reference/vector/vector/begin.html">v.begin()</a>, 3}と書いてはならない</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">s</span><span class="p">{</span><span class="n"><a href="https://cpprefjp.github.io/reference/vector/vector/data.html">v.data()</a></span><span class="p">,</span> <span class="mi">3</span><span class="p">};</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">s</span><span class="p">{</span><span class="n"><a href="https://cpprefjp.github.io/reference/vector/vector/begin.html">v.begin()</a></span><span class="p">,</span> <span class="mi">3</span><span class="p">};</span>
     <span class="n"><a href="https://cpprefjp.github.io/reference/cassert/assert.html">assert</a></span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/span/span/size.html">s.size()</a></span> <span class="o">==</span> <span class="mi">3</span><span class="p">);</span>
     <span class="n"><a href="https://cpprefjp.github.io/reference/cassert/assert.html">assert</a></span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">);</span>
     <span class="n"><a href="https://cpprefjp.github.io/reference/cassert/assert.html">assert</a></span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">);</span>
     <span class="n"><a href="https://cpprefjp.github.io/reference/cassert/assert.html">assert</a></span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">);</span>
   <span class="p">}</span>
 
-  <span class="c1">// (3) ポインタ範囲を指定</span>
+  <span class="c1">// (3) 範囲を指定</span>
   <span class="p">{</span>
-    <span class="c1">// vの先頭3要素を参照する。</span>
-    <span class="c1">// {<a href="https://cpprefjp.github.io/reference/vector/vector/begin.html">v.begin()</a>, <a href="https://cpprefjp.github.io/reference/vector/vector/begin.html">v.begin()</a> + 3}と書いてはならない</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">s</span><span class="p">{</span><span class="n"><a href="https://cpprefjp.github.io/reference/vector/vector/data.html">v.data()</a></span><span class="p">,</span> <span class="n"><a href="https://cpprefjp.github.io/reference/vector/vector/data.html">v.data()</a></span> <span class="o">+</span> <span class="mi">3</span><span class="p">};</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">s</span><span class="p">{</span><span class="n"><a href="https://cpprefjp.github.io/reference/vector/vector/begin.html">v.begin()</a></span><span class="p">,</span> <span class="n"><a href="https://cpprefjp.github.io/reference/vector/vector/begin.html">v.begin()</a></span> <span class="o">+</span> <span class="mi">3</span><span class="p">};</span>
     <span class="n"><a href="https://cpprefjp.github.io/reference/cassert/assert.html">assert</a></span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/span/span/size.html">s.size()</a></span> <span class="o">==</span> <span class="mi">3</span><span class="p">);</span>
     <span class="n"><a href="https://cpprefjp.github.io/reference/cassert/assert.html">assert</a></span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">);</span>
     <span class="n"><a href="https://cpprefjp.github.io/reference/cassert/assert.html">assert</a></span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">);</span>
@@ -441,7 +438,7 @@
     <span class="n"><a href="https://cpprefjp.github.io/reference/cassert/assert.html">assert</a></span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/span/span/data.html">s.data()</a></span> <span class="o">==</span> <span class="n"><a href="https://cpprefjp.github.io/reference/array/array/data.html">car.data()</a></span><span class="p">);</span>
   <span class="p">}</span>
 
-  <span class="c1">// (7) メモリの連続性をもつコンテナを参照させる</span>
+  <span class="c1">// (7) メモリの連続性をもつ型を参照させる</span>
   <span class="p">{</span>
     <span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">s1</span><span class="p">{</span><span class="n">v</span><span class="p">};</span>
     <span class="n"><a href="https://cpprefjp.github.io/reference/cassert/assert.html">assert</a></span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/span/span/size.html">s1.size()</a></span> <span class="o">==</span> <span class="n"><a href="https://cpprefjp.github.io/reference/vector/vector/size.html">v.size()</a></span><span class="p">);</span>
@@ -454,15 +451,7 @@
     <span class="n"><a href="https://cpprefjp.github.io/reference/cassert/assert.html">assert</a></span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/span/span/data.html">s2.data()</a></span> <span class="o">==</span> <span class="n"><a href="https://cpprefjp.github.io/reference/string/basic_string/data.html">str.data()</a></span><span class="p">);</span>
   <span class="p">}</span>
 
-  <span class="c1">// (8) メモリの連続性をもつconstコンテナを参照させる</span>
-  <span class="p">{</span>
-    <span class="k">const</span> <span class="k">auto</span><span class="o">&amp;</span> <span class="n">cv</span> <span class="o">=</span> <span class="n">v</span><span class="p">;</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="k">const</span> <span class="kt">int</span><span class="o">&gt;</span> <span class="n">s</span><span class="p">{</span><span class="n">cv</span><span class="p">};</span>
-    <span class="n"><a href="https://cpprefjp.github.io/reference/cassert/assert.html">assert</a></span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/span/span/size.html">s.size()</a></span> <span class="o">==</span> <span class="n"><a href="https://cpprefjp.github.io/reference/vector/vector/size.html">cv.size()</a></span><span class="p">);</span>
-    <span class="n"><a href="https://cpprefjp.github.io/reference/cassert/assert.html">assert</a></span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/span/span/data.html">s.data()</a></span> <span class="o">==</span> <span class="n"><a href="https://cpprefjp.github.io/reference/vector/vector/data.html">cv.data()</a></span><span class="p">);</span>
-  <span class="p">}</span>
-
-  <span class="c1">// (9) コピーコンストラクタ</span>
+  <span class="c1">// (8) コピーコンストラクタ</span>
   <span class="p">{</span>
     <span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">s1</span><span class="p">{</span><span class="n">v</span><span class="p">};</span>
     <span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">s2</span> <span class="o">=</span> <span class="n">s1</span><span class="p">;</span>
@@ -472,17 +461,7 @@
     <span class="n"><a href="https://cpprefjp.github.io/reference/cassert/assert.html">assert</a></span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/span/span/data.html">s2.data()</a></span> <span class="o">==</span> <span class="n"><a href="https://cpprefjp.github.io/reference/vector/vector/data.html">v.data()</a></span><span class="p">);</span>
   <span class="p">}</span>
 
-  <span class="c1">// (10) ムーブコンストラクタ。コピーと同じ</span>
-  <span class="p">{</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">s1</span><span class="p">{</span><span class="n">v</span><span class="p">};</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">s2</span> <span class="o">=</span> <span class="n"><a href="https://cpprefjp.github.io/reference/utility/move.html">std::move</a></span><span class="p">(</span><span class="n">s1</span><span class="p">);</span>
-
-    <span class="c1">// ムーブ元とムーブ先が同じ範囲を参照する</span>
-    <span class="n"><a href="https://cpprefjp.github.io/reference/cassert/assert.html">assert</a></span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/span/span/data.html">s1.data()</a></span> <span class="o">==</span> <span class="n"><a href="https://cpprefjp.github.io/reference/vector/vector/data.html">v.data()</a></span><span class="p">);</span>
-    <span class="n"><a href="https://cpprefjp.github.io/reference/cassert/assert.html">assert</a></span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/span/span/data.html">s2.data()</a></span> <span class="o">==</span> <span class="n"><a href="https://cpprefjp.github.io/reference/vector/vector/data.html">v.data()</a></span><span class="p">);</span>
-  <span class="p">}</span>
-
-  <span class="c1">// (11) 変換コンストラクタ</span>
+  <span class="c1">// (9) 変換コンストラクタ</span>
   <span class="p">{</span>
     <span class="kt">int</span> <span class="n">ar</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">};</span>
 
@@ -506,8 +485,8 @@
 </ul>
 <h3>処理系</h3>
 <ul>
-<li><a href="https://cpprefjp.github.io/implementation.html#clang">Clang</a>: 9.0</li>
-<li><a href="https://cpprefjp.github.io/implementation.html#gcc">GCC</a>: ??</li>
+<li><a href="https://cpprefjp.github.io/implementation.html#clang">Clang</a>: (10.0.0 現在、実装は P1394R4 以前の不完全なものである)</li>
+<li><a href="https://cpprefjp.github.io/implementation.html#gcc">GCC</a>: 10.0.1</li>
 <li><a href="https://cpprefjp.github.io/implementation.html#visual_cpp">Visual C++</a>: ??</li>
 </ul>
 <h2>参照</h2>
@@ -515,6 +494,7 @@
 <li><a href="https://wg21.cmeerw.net/lwg/issue3101" target="_blank">LWG Issue 3101. <code>span</code>'s Container constructors need another constraint</a></li>
 <li><a href="https://cplusplus.github.io/LWG/issue3198" target="_blank">LWG Issue 3198. Bad constraint on <code>std::span::span()</code></a></li>
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1872r0.pdf" target="_blank">P1872R0 <code>span</code> should have <code>size_type</code>, not <code>index_type</code></a></li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1394r4.pdf" target="_blank">P1394R4 Range constructor forstd::span</a></li>
 </ul></div>
 
       </div>
