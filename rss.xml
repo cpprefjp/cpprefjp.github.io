@@ -2,9 +2,71 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2020-03-24T14:34:01.927439</updated>
-  <id>a8bb2d89-8833-44ce-96ae-4a68729aef3a</id>
+  <updated>2020-03-25T01:28:26.015545</updated>
+  <id>79f8f5a7-f51e-49ef-b012-28a1685b337e</id>
 
+  
+    <entry>
+      <title>async -- async : typoと文言修正</title>
+      <link href="https://cpprefjp.github.io/reference/future/async.html"/>
+      <id>027a063f7526446f13928c0875cb64dba7759023:reference/future/async.md</id>
+      <updated>2020-03-25T10:25:08+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/future/async.md b/reference/future/async.md
+index a68752c6a..50f3d223f 100644
+--- a/reference/future/async.md
++++ b/reference/future/async.md
+@@ -25,6 +25,7 @@ namespace std {
+   [[nodiscard]] future&amp;lt;invoke_result_t&amp;lt;decay_t&amp;lt;F&amp;gt;, decay_t&amp;lt;Args&amp;gt;...&amp;gt;&amp;gt;
+     async(F&amp;amp;&amp;amp; f, Args&amp;amp;&amp;amp;... args);                // (1) C++20
+ 
++
+   template &amp;lt;class F, class... Args&amp;gt;
+   future&amp;lt;typename result_of&amp;lt;F(Args...)&amp;gt;::type&amp;gt;
+     async(launch policy, F&amp;amp;&amp;amp; f, Args&amp;amp;&amp;amp;... args); // (2) C++11
+@@ -70,11 +71,11 @@ namespace std {
+ 
+ 各実行ポリシーの振る舞いは以下のようになる：
+ 
+-- `policy &amp;amp; launch::async`が`0`じゃない場合、新たなスレッドで関数オブジェクト`f`に`args...`を渡して実行する
++- `policy &amp;amp; launch::async`が`0`でない場合、新たなスレッドで関数オブジェクト`f`に`args...`を渡して実行する
+     - ( [`INVOKE`](/reference/concepts/Invoke.md)`(DECAY_COPY(std::`[`forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f)), DECAY_COPY(std::`[`forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args))...)` )
+     - 関数オブジェクト`f`の戻り値が、この関数の戻り値である[`future`](future.md)オブジェクトとの共有状態に書き込まれる。
+     - 関数オブジェクト`f`の内部で例外が投げられた場合は、共有状態に投げられた例外が設定される。
+-- `policy &amp;amp; launch::deferred`が`0`じゃない場合、関数オブジェクト`f`をその場では実行せず、遅延状態にする
++- `policy &amp;amp; launch::deferred`が`0`でない場合、関数オブジェクト`f`をその場では実行せず、遅延状態にする
+     - (`DECAY_COPY(std::`[`forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f))`と`DECAY_COPY(std::`[`forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args))...`を[`future`](future.md)オブジェクトとの共有状態に格納する)。
+     - この関数の戻り値である[`future`](future.md)オブジェクトの[`get()`](future/get.md)もしくは[`wait()`](future/wait.md)が呼び出されるタイミングで、関数オブジェクト`f`に`args...`を渡して実行する。
+ - 有効な実行ポリシーが指定されていない場合(整数値を`launch`型にキャストするような状況)、その動作は未定義(C++14)。
+@@ -92,7 +93,7 @@ namespace std {
+ 
+ ### 戻り値
+ 
+-[`launch::async`](launch.md)を指定してこの関数を呼び出した場合のみ、戻り値の`future`オブジェクトはそのデストラクタにおいて、指定された関数の終了を待機する。
++[`launch::async`](launch.md)を指定してこの関数を呼び出した場合のみ、戻り値の`future`オブジェクトはそのデストラクタにおいて、指定された関数の終了を待機する（おそらく、[`wait()`](future/wait.md)を呼ぶ）。
+ 
+ すなわち、[`launch::async`](launch.md)を指定した場合には戻り値を何かしらの形で受けておかないとこの関数は同期的に実行されているかのように振舞う。また、戻り値を何かしらの形で受けた場合でもそのスコープを抜ける際に指定された関数の終了を待機する。この挙動はクラスのメンバ変数に保存する等、外部スコープに持ち出したとしても変わらない。
+ 
+@@ -118,10 +119,10 @@ std::async(std::launch::async, []{ g(); }); //g()の呼び出しは必ずf()の
+ MSVCにおける`launch::async`指定した際のこの関数の実装は、Windowsの提供するスレッドプールのスレッドを用いて処理を実行するため、新しいスレッドを起動せず、処理スレッドは終了されない。
+ 
+ このため、スレッドローカルストレージを利用している場合、あるスレッドにおける同じ処理の1回目の呼び出しではスレッドローカルストレージ内のオブジェクトは破棄されず、2回目以降の呼び出しではスレッドローカルストレージ内オブジェクトの初期化処理は実行されない。  
+-また、どのスレッドが呼ばれるかはおそらくランダムであるため、違うスレッドローカルストレージにある同じ名前のオブジェクトを利用していることになり可能性もある。  
++また、どのスレッドが呼ばれるかはおそらくランダムであるため、違うスレッドローカルストレージにある同じ名前のオブジェクトを利用していることになる可能性もある。  
+ Windows環境においてMSVC実装の本関数とスレッドローカルストレージを合わせて利用する場合は注意が必要である。
+ 
+-なおC++標準規格ではC++11以降一貫して、`launch::async`を指定して本関数を呼び出した場合は新しいスレッドを起動する、という様に記述されているため、MSVCのこの実装は規格違反となる。
++なおC++標準規格ではC++11以降一貫して、「`launch::async`を指定して本関数を呼び出した場合は新しいスレッドを起動する」という様に記述されているため、MSVCのこの実装は規格違反となる。
+ 
+ 
+ ## 例
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>append -- 一部の項目が消えていたのを修正</title>
@@ -1247,61 +1309,6 @@ index 7caf43f0a..8c15b3498 100644
       <author>
         <name>onihusube</name>
         <email>mona-@live.jp</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>splice -- list::splice : 文言修正とサンプル追加</title>
-      <link href="https://cpprefjp.github.io/reference/list/list/splice.html"/>
-      <id>79cbb0a52b09e28bed9973a0555cb56fa6d315de:reference/list/list/splice.md</id>
-      <updated>2020-03-20T23:52:41+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/list/list/splice.md b/reference/list/list/splice.md
-index ee6ba9d8c..24eb8eb62 100644
---- a/reference/list/list/splice.md
-+++ b/reference/list/list/splice.md
-@@ -30,9 +30,9 @@ void splice(const_iterator position, list&amp;amp;&amp;amp; x,
- ## 概要
- 他の`list`オブジェクトから、要素を移動する。
- 
--- (1), (2) : `position`の次の要素の前に、`x`の全ての要素を移動する。  
--- (3), (4) : `position`の次の要素の前に、`x`の要素のうち`i`の指す要素を移動する。  
--- (5), (6) : `position`の次の要素の前に、`x`の要素のうち`[first, last)`の範囲を移動する。  
-+- (1), (2) : `position`の指す要素の前に、`x`の全ての要素を移動する。  
-+- (3), (4) : `position`の指す要素の前に、`x`の要素のうち`i`の指す要素を移動する。  
-+- (5), (6) : `position`の指す要素の前に、`x`の要素のうち`[first, last)`の範囲を移動する。  
- 
- 
- ## 要件
-@@ -109,6 +109,15 @@ int main()
- 
-     xs.splice(xs.begin(), std::move(ys), ys.begin(), std::next(ys.begin(), 2));
- 
-+    print(xs);
-+  }
-+  // ysの全ての要素をxsの末尾に移動する
-+  {
-+    std::list&amp;lt;int&amp;gt; xs = {1, 2, 3};
-+    std::list&amp;lt;int&amp;gt; ys = {4, 5, 6};
-+
-+    xs.splice(xs.end(), std::move(ys));
-+
-     print(xs);
-   }
- }
-@@ -122,6 +131,7 @@ int main()
- 1 2 3 4 5 6 
- 1 4 5 6 
- 1 2 4 5 6 
-+1 2 3 4 5 6 
- ```
- 
- ## 参照
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
       </author>
     </entry>
   
