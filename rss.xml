@@ -2,9 +2,251 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2020-03-25T07:45:51.229460</updated>
-  <id>10a2b6df-d393-412c-b3f8-d3cc73879d8a</id>
+  <updated>2020-03-25T08:14:01.406708</updated>
+  <id>9d616f6e-6558-4f05-81cb-44ca997d50fe</id>
 
+  
+    <entry>
+      <title>aligned_storage -- aligned_storage, aligned_union : C++23での非推奨化に対応</title>
+      <link href="https://cpprefjp.github.io/reference/type_traits/aligned_storage.html"/>
+      <id>335b2476d07cb9b89a8bfaabc538147aafba953d:reference/type_traits/aligned_storage.md</id>
+      <updated>2020-03-25T17:10:17+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/type_traits/aligned_storage.md b/reference/type_traits/aligned_storage.md
+index 550a7c960..d3e5b24b5 100644
+--- a/reference/type_traits/aligned_storage.md
++++ b/reference/type_traits/aligned_storage.md
+@@ -3,6 +3,7 @@
+ * std[meta namespace]
+ * class template[meta id-type]
+ * cpp11[meta cpp]
++* cpp23deprecated[meta cpp]
+ 
+ ```cpp
+ namespace std {
+@@ -10,15 +11,18 @@ namespace std {
+             std::size_t Align = default-alignment&amp;gt;
+   struct aligned_storage {
+     using type = …;
+-  };
++  };                                                                   // (1) C++11
+ 
+   template &amp;lt;std::size_t Len,
+             std::size_t Align = default-alignment&amp;gt;
+-  using aligned_storage_t = typename aligned_storage&amp;lt;Len,Align&amp;gt;::type; // C++14
++  using aligned_storage_t = typename aligned_storage&amp;lt;Len,Align&amp;gt;::type; // (2) C++14
+ }
+ ```
+ * default-alignment[italic]
+ 
++この機能はC++23で非推奨となった。代わりに`alignas(T)` [`std::byte`](/reference/cstddef/byte.md)`[sizeof(T)];`を使用することを推奨する。
++
++
+ ## 概要
+ アライメント調整された領域を作る。
+ 
+@@ -34,6 +38,39 @@ namespace std {
+ `Align`のデフォルト値は、`Len`よりも大きくない、最も厳格なアライメント要件を持つ、C++の何らかのオブジェクト型のアラインメント値。
+ 
+ 
++## 非推奨の詳細 (C++23)
++この機能は、いくつかの点で高いレベルの有害になりえる：
++
++- この機能を呼び出すことで未定義動作を引き起こす (この型はストレージを提供するわけではない)
++- 保証が正しくない (標準では、型が少なくとも要求された以上の大きさであることのみを要件としているだけで、上限サイズを要求できない)
++- APIが多くの理由で間違っている。そのためにこのAPIを使うために繰り返し同じ事前作業が必要になる。API設計が間違っている理由は以下：
++    - `::type`の値にアクセスするために`reinterpret_cast`が必要となってしまう。これによって`constexpr`で使用できず、未定義動作を引き起こせてしまう
++    - C++14で導入された`aligned_storage_t`ではなく誤って`aligned_storage`を使用してしまい、その違いに気づきにくい (`aligned_storage`は`::type`を指定しなければならない)
++    - 少なくともNバイト以上という指定はできるが、実際のサイズ (上限サイズ) を指定できないため、必要以上のメモリが使用される可能性がある
++
++これらの問題は[`aligned_union`](aligned_union.md)も同様だが、とくに`aligned_storage`では以下のような問題がある：
++
++- テンプレートパラメータとして型をとらず、サイズをとってしまっている
++    - この機能は非常に稀な状況を除いて、`Align`パラメータは`Len`パラメータに対して決まった指定の仕方をする。第1テンプレート引数として`sizeof(T)`を指定するのであれば、第2テンプレート引数には`alignof(T)`を指定しなければならない。`typename aligned_storage&amp;lt;sizeof(T), alignof(T)&amp;gt;::type`
++- 第2テンプレートパラメータにデフォルト引数が設定されている
++    - このテンプレートパラメータは本来必要ないだけでなく、デフォルト引数が付けられてしまっている。コンパイラが`aligned_storage_t&amp;lt;sizeof(T)&amp;gt;`という使い方をやめさせる方法はない。第2テンプレートパラメータは実装定義のデフォルト値をもつが、`T`に対して十分な場合とそうでない場合がある。そのため、暗黙に不正確になることを許可してしまっている
++
++Facebookの`folly::aligned_storage_for_t`はこれらの問題を解決している。
++
++この機能を以下のように置き換えることを推奨する：
++
++```diff
++template &amp;lt;typename T&amp;gt;
++class MyContainer {
++  // [...]
++private:
++- std::aligned_storage_t&amp;lt;sizeof(T), alignof(T)&amp;gt; t_buff;
+++ alignas(T) std::byte t_buff[sizeof(T)];
++  // [...]
++};
++```
++
++
+ ## 例
+ ### スタック領域を使用するコンテナ実装の例 (C++11)
+ ```cpp example
+@@ -168,4 +205,6 @@ int main()
+ ## 参照
+ - [N3546 TransformationTraits Redux](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3546.pdf)
+ - [N3655 TransformationTraits Redux, v2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3655.pdf)
+-
++    - C++14で`aligned_storage_t`が定義された
++- [P1413R2 Deprecate `std::aligned_storage` and `std::aligned_union`](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1413r2.pdf)
++    - C++23でこの機能が非推奨となった
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>aligned_union -- aligned_storage, aligned_union : C++23での非推奨化に対応</title>
+      <link href="https://cpprefjp.github.io/reference/type_traits/aligned_union.html"/>
+      <id>335b2476d07cb9b89a8bfaabc538147aafba953d:reference/type_traits/aligned_union.md</id>
+      <updated>2020-03-25T17:10:17+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/type_traits/aligned_union.md b/reference/type_traits/aligned_union.md
+index c8f94ee03..17110c845 100644
+--- a/reference/type_traits/aligned_union.md
++++ b/reference/type_traits/aligned_union.md
+@@ -3,6 +3,7 @@
+ * std[meta namespace]
+ * class template[meta id-type]
+ * cpp11[meta cpp]
++* cpp23deprecated[meta cpp]
+ 
+ ```cpp
+ namespace std {
+@@ -11,13 +12,16 @@ namespace std {
+   struct aligned_union {
+     using type = …;
+     static constexpr std::size_t alignment_value = …;
+-  };
++  };                                                                  // (1) C++11
+ 
+   template &amp;lt;std::size_t Len, class... Types&amp;gt;
+-  using aligned_union_t = typename aligned_union&amp;lt;Len,Types...&amp;gt;::type; // C++14
++  using aligned_union_t = typename aligned_union&amp;lt;Len,Types...&amp;gt;::type; // (2) C++14
+ }
+ ```
+ 
++この機能はC++23で非推奨となった。代わりに`alignas(Ts...)` [`std::byte`](/reference/cstddef/byte.md)`[`[`std::max`](/reference/algorithm/max.md)`({sizeof(Ts)...})];`を使用することを推奨する。
++
++
+ ## 概要
+ アライメント調整された共用体領域を作る。
+ 
+@@ -32,6 +36,26 @@ namespace std {
+ 
+ また、`Types...`全ての厳格なアライメント値を、[`std::size_t`](/reference/cstddef/size_t.md)型の静的メンバ定数`alignment_value`として定義する。
+ 
++
++## 非推奨の詳細 (C++23)
++この機能は、いくつかの点で高いレベルの有害になりえる：
++
++- この機能を呼び出すことで未定義動作を引き起こす (この型はストレージを提供するわけではない)
++- 保証が正しくない (標準では、型が少なくとも要求された以上の大きさであることのみを要件としているだけで、上限サイズを要求できない)
++- APIが多くの理由で間違っている。そのためにこのAPIを使うために繰り返し同じ事前作業が必要になる。API設計が間違っている理由は以下：
++    - `::type`の値にアクセスするために`reinterpret_cast`が必要となってしまう。これによって`constexpr`で使用できず、未定義動作を引き起こせてしまう
++    - C++14で導入された`aligned_union_t`ではなく誤って`aligned_union`を使用してしまい、その違いに気づきにくい (`aligned_union`は`::type`を指定しなければならない)
++    - 少なくともNバイト以上という指定はできるが、実際のサイズ (上限サイズ) を指定できないため、必要以上のメモリが使用される可能性がある
++
++これらの問題は[`aligned_storage`](aligned_storage.md)も同様である。`aligned_union`固有の問題はそれほどひどくないが、それでも望ましくない以下のような問題がある：
++
++- 第1テンプレートパラメータが無意味
++    - この機能は、可変個のすべての型のサイズとアライメントを推論し、それらの最大値を実際のストレージとして使用する。先頭のテンプレートパラメータはストレージの最小サイズである。すべての型がそれより小さい場合でも、ストレージは第1テンプレートパラメータより小さくならない
++    - 最小サイズを必要とすることはめずらしいことであり、ほとんどの場合は`aligned_union_t&amp;lt;0、Ts...&amp;gt;`のように使用する。この引数`0`は機能に精通していなければ理解しにくい
++- サイズとアライメントの推論が[`aligned_storage`](aligned_storage.md)と一貫していない
++    - 一貫した仕様であるならば、`aligned_union_t&amp;lt;0、T&amp;gt;`のような型をひとつだけ指定する用途につながるが、現在の仕様は何を意図していたのか不明である
++
++
+ ## 例
+ ```cpp example
+ #include &amp;lt;iostream&amp;gt;
+@@ -83,4 +107,7 @@ hello
+ - [N1877 Adding Alignment Support to the C++ Programming Language](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1877.pdf)
+ - [N3546 TransformationTraits Redux](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3546.pdf)
+ - [N3655 TransformationTraits Redux, v2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3655.pdf)
++    - C++14で`aligned_union_t`が定義された
+ - [LWG Issue 2979. `aligned_union` should require complete object types](https://wg21.cmeerw.net/lwg/issue2979)
++- [P1413R2 Deprecate `std::aligned_storage` and `std::aligned_union`](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1413r2.pdf)
++    - C++23でこの機能が非推奨となった
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>C++23 -- C++23 : いくつかの導入が決まった変更を追加 #742</title>
+      <link href="https://cpprefjp.github.io/lang/cpp23.html"/>
+      <id>0b34bbd122fbcc61640d3df7360fdacaa9049f01:lang/cpp23.md</id>
+      <updated>2020-03-25T17:09:26+09:00</updated>
+      
+        <content type="html">&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;token&#34;&gt;C++23&lt;/span&gt;&lt;/h1&gt;
+&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;h2&gt;概要&lt;/h2&gt;
+&lt;p&gt;C++23とは、2023年中に改訂される予定の、C++バージョンの通称である。&lt;/p&gt;
+&lt;h2&gt;言語機能&lt;/h2&gt;
+&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;言語機能&lt;/th&gt;
+&lt;th&gt;説明&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/contract-based_programming.html&#34;&gt;契約に基づくプログラミング&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;事前条件、事後条件、表明を宣言する新たな属性構文を追加&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2&gt;ライブラリ更新の概要&lt;/h2&gt;
+&lt;h3&gt;新ライブラリ&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;契約違反のハンドリングをするためのライブラリとして&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/contract.html&#34;&gt;&amp;lt;contract&amp;gt;&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;スマートポインタ&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory.html&#34;&gt;&amp;lt;memory&amp;gt;&lt;/a&gt;&lt;/code&gt;に&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/owner_hash.md.nolink&#34;&gt;std::owner_hash&lt;/a&gt;&lt;/code&gt;と&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/owner_equal.md.nolink&#34;&gt;std::owner_equal&lt;/a&gt;&lt;/code&gt;が定義され、非順序連想コンテナのキーとして&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/weak_ptr.html&#34;&gt;std::weak_ptr&lt;/a&gt;&lt;/code&gt;を使用できるようになった&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;型特性&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits.html&#34;&gt;&amp;lt;type_traits&amp;gt;&lt;/a&gt;&lt;/code&gt;に、第1テンプレート引数についている型修飾を第2テンプレート引数の型に付加する型特性として、以下を追加：&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/copy_const.md.nolink&#34;&gt;std::copy_const&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/copy_volatile.md.nolink&#34;&gt;std::copy_volatile&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/copy_cv.md.nolink&#34;&gt;std::copy_cv&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/copy_reference.md.nolink&#34;&gt;std::copy_reference&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/copy_extent.md.nolink&#34;&gt;std::copy_extent&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/copy_all_extents.md.nolink&#34;&gt;std::copy_all_extents&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/copy_pointer.md.nolink&#34;&gt;std::copy_pointer&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/copy_all_pointers.md.nolink&#34;&gt;std::copy_all_pointers&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/copy_cvref.md.nolink&#34;&gt;std::copy_cvref&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits.html&#34;&gt;&amp;lt;type_traits&amp;gt;&lt;/a&gt;&lt;/code&gt;に、第1テンプレート引数についている型修飾を外す型特性として、以下を追加：&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/remove_all_pointers.md.nolink&#34;&gt;std::remove_all_pointers&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;機能の非推奨化&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/aligned_storage.html&#34;&gt;std::algined_storage&lt;/a&gt;&lt;/code&gt;と&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/aligned_union.html&#34;&gt;std::aligned_union&lt;/a&gt;&lt;/code&gt;を非推奨化。これらの機能は未定義動作を引き起こし、間違った保証が行われ、よくないAPI設計が行われていたため、非推奨となる。&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/aligned_storage.html&#34;&gt;std::algined_storage&lt;/a&gt;&lt;/code&gt;の代わりに&lt;code&gt;alignas(T) &lt;a href=&#34;https://cpprefjp.github.io/reference/cstddef/byte.html&#34;&gt;std::byte&lt;/a&gt;[sizeof(T)];&lt;/code&gt;を使用することを推奨する&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/aligned_union.html&#34;&gt;std::aligned_union&lt;/a&gt;&lt;/code&gt;の代わりに&lt;code&gt;alignas(Ts...) &lt;a href=&#34;https://cpprefjp.github.io/reference/cstddef/byte.html&#34;&gt;std::byte&lt;/a&gt;[&lt;a href=&#34;https://cpprefjp.github.io/reference/algorithm/max.html&#34;&gt;std::max&lt;/a&gt;({sizeof(Ts)...})];&lt;/code&gt;を使用することを推奨する&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;&lt;/div&gt;</content>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>copyable -- copyable : 表記の一貫性の改善</title>
@@ -848,97 +1090,6 @@ index 8def5a9a9..eb903f601 100644
       <author>
         <name>Akira Takahashi</name>
         <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>concepts -- &lt;concepts&gt; : 微修正</title>
-      <link href="https://cpprefjp.github.io/reference/concepts.html"/>
-      <id>88a27d81c78973d515045cb23794734647a97593:reference/concepts.md</id>
-      <updated>2020-03-25T15:02:47+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/concepts.md b/reference/concepts.md
-index 57c279b5a..e08ab7905 100644
---- a/reference/concepts.md
-+++ b/reference/concepts.md
-@@ -6,7 +6,9 @@
- 
- `&amp;lt;concepts&amp;gt;`ヘッダでは基礎的なコンセプトの実装を提供する。これらのコンセプトは標準ライブラリでも使用される。
- 
--## 等しさの保持（*equality preservation*）
-+## 暗黙の意味論的な制約
-+
-+### 等しさの保持（*equality preservation*）
- 
- ある式への等しい入力によって等しい出力が得られる時、その式は __等しさを保持__ している。この入力とは具体的な値ではなくその式の入力となり得る引数（オペランド）の集合であり、出力とはその式の結果およびその式によって変更された全ての引数（オペランド）のこと。
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>async -- async : typoと文言修正</title>
-      <link href="https://cpprefjp.github.io/reference/future/async.html"/>
-      <id>027a063f7526446f13928c0875cb64dba7759023:reference/future/async.md</id>
-      <updated>2020-03-25T10:25:08+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/future/async.md b/reference/future/async.md
-index a68752c6a..50f3d223f 100644
---- a/reference/future/async.md
-+++ b/reference/future/async.md
-@@ -25,6 +25,7 @@ namespace std {
-   [[nodiscard]] future&amp;lt;invoke_result_t&amp;lt;decay_t&amp;lt;F&amp;gt;, decay_t&amp;lt;Args&amp;gt;...&amp;gt;&amp;gt;
-     async(F&amp;amp;&amp;amp; f, Args&amp;amp;&amp;amp;... args);                // (1) C++20
- 
-+
-   template &amp;lt;class F, class... Args&amp;gt;
-   future&amp;lt;typename result_of&amp;lt;F(Args...)&amp;gt;::type&amp;gt;
-     async(launch policy, F&amp;amp;&amp;amp; f, Args&amp;amp;&amp;amp;... args); // (2) C++11
-@@ -70,11 +71,11 @@ namespace std {
- 
- 各実行ポリシーの振る舞いは以下のようになる：
- 
--- `policy &amp;amp; launch::async`が`0`じゃない場合、新たなスレッドで関数オブジェクト`f`に`args...`を渡して実行する
-+- `policy &amp;amp; launch::async`が`0`でない場合、新たなスレッドで関数オブジェクト`f`に`args...`を渡して実行する
-     - ( [`INVOKE`](/reference/concepts/Invoke.md)`(DECAY_COPY(std::`[`forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f)), DECAY_COPY(std::`[`forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args))...)` )
-     - 関数オブジェクト`f`の戻り値が、この関数の戻り値である[`future`](future.md)オブジェクトとの共有状態に書き込まれる。
-     - 関数オブジェクト`f`の内部で例外が投げられた場合は、共有状態に投げられた例外が設定される。
--- `policy &amp;amp; launch::deferred`が`0`じゃない場合、関数オブジェクト`f`をその場では実行せず、遅延状態にする
-+- `policy &amp;amp; launch::deferred`が`0`でない場合、関数オブジェクト`f`をその場では実行せず、遅延状態にする
-     - (`DECAY_COPY(std::`[`forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f))`と`DECAY_COPY(std::`[`forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args))...`を[`future`](future.md)オブジェクトとの共有状態に格納する)。
-     - この関数の戻り値である[`future`](future.md)オブジェクトの[`get()`](future/get.md)もしくは[`wait()`](future/wait.md)が呼び出されるタイミングで、関数オブジェクト`f`に`args...`を渡して実行する。
- - 有効な実行ポリシーが指定されていない場合(整数値を`launch`型にキャストするような状況)、その動作は未定義(C++14)。
-@@ -92,7 +93,7 @@ namespace std {
- 
- ### 戻り値
- 
--[`launch::async`](launch.md)を指定してこの関数を呼び出した場合のみ、戻り値の`future`オブジェクトはそのデストラクタにおいて、指定された関数の終了を待機する。
-+[`launch::async`](launch.md)を指定してこの関数を呼び出した場合のみ、戻り値の`future`オブジェクトはそのデストラクタにおいて、指定された関数の終了を待機する（おそらく、[`wait()`](future/wait.md)を呼ぶ）。
- 
- すなわち、[`launch::async`](launch.md)を指定した場合には戻り値を何かしらの形で受けておかないとこの関数は同期的に実行されているかのように振舞う。また、戻り値を何かしらの形で受けた場合でもそのスコープを抜ける際に指定された関数の終了を待機する。この挙動はクラスのメンバ変数に保存する等、外部スコープに持ち出したとしても変わらない。
- 
-@@ -118,10 +119,10 @@ std::async(std::launch::async, []{ g(); }); //g()の呼び出しは必ずf()の
- MSVCにおける`launch::async`指定した際のこの関数の実装は、Windowsの提供するスレッドプールのスレッドを用いて処理を実行するため、新しいスレッドを起動せず、処理スレッドは終了されない。
- 
- このため、スレッドローカルストレージを利用している場合、あるスレッドにおける同じ処理の1回目の呼び出しではスレッドローカルストレージ内のオブジェクトは破棄されず、2回目以降の呼び出しではスレッドローカルストレージ内オブジェクトの初期化処理は実行されない。  
--また、どのスレッドが呼ばれるかはおそらくランダムであるため、違うスレッドローカルストレージにある同じ名前のオブジェクトを利用していることになり可能性もある。  
-+また、どのスレッドが呼ばれるかはおそらくランダムであるため、違うスレッドローカルストレージにある同じ名前のオブジェクトを利用していることになる可能性もある。  
- Windows環境においてMSVC実装の本関数とスレッドローカルストレージを合わせて利用する場合は注意が必要である。
- 
--なおC++標準規格ではC++11以降一貫して、`launch::async`を指定して本関数を呼び出した場合は新しいスレッドを起動する、という様に記述されているため、MSVCのこの実装は規格違反となる。
-+なおC++標準規格ではC++11以降一貫して、「`launch::async`を指定して本関数を呼び出した場合は新しいスレッドを起動する」という様に記述されているため、MSVCのこの実装は規格違反となる。
- 
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
       </author>
     </entry>
   
