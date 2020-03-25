@@ -2,9 +2,75 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2020-03-25T08:30:13.667272</updated>
-  <id>38c9bb66-78ac-48bc-a2bb-a1c484651c39</id>
+  <updated>2020-03-25T08:38:49.109002</updated>
+  <id>bd3fe2d4-14d7-4a95-8ded-4fea7b996894</id>
 
+  
+    <entry>
+      <title>aligned_storage -- aligned_union : 置き換えの推奨例を追加</title>
+      <link href="https://cpprefjp.github.io/reference/type_traits/aligned_storage.html"/>
+      <id>0576b953706004e21793bdf098a68a9c0ca487c3:reference/type_traits/aligned_storage.md</id>
+      <updated>2020-03-25T17:35:06+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/type_traits/aligned_storage.md b/reference/type_traits/aligned_storage.md
+index d3e5b24b5..8a8ed6135 100644
+--- a/reference/type_traits/aligned_storage.md
++++ b/reference/type_traits/aligned_storage.md
+@@ -69,6 +69,7 @@ private:
+   // [...]
+ };
+ ```
++* std::byte[link /reference/cstddef/byte.md]
+ 
+ 
+ ## 例
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>aligned_union -- aligned_union : 置き換えの推奨例を追加</title>
+      <link href="https://cpprefjp.github.io/reference/type_traits/aligned_union.html"/>
+      <id>0576b953706004e21793bdf098a68a9c0ca487c3:reference/type_traits/aligned_union.md</id>
+      <updated>2020-03-25T17:35:06+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/type_traits/aligned_union.md b/reference/type_traits/aligned_union.md
+index 17110c845..59f375ee6 100644
+--- a/reference/type_traits/aligned_union.md
++++ b/reference/type_traits/aligned_union.md
+@@ -55,6 +55,21 @@ namespace std {
+ - サイズとアライメントの推論が[`aligned_storage`](aligned_storage.md)と一貫していない
+     - 一貫した仕様であるならば、`aligned_union_t&amp;lt;0、T&amp;gt;`のような型をひとつだけ指定する用途につながるが、現在の仕様は何を意図していたのか不明である
+ 
++この機能を以下のように置き換えることを推奨する：
++
++```diff
++template &amp;lt;typename... Ts&amp;gt;
++class MyContainer {
++  // [...]
++private:
++- std::aligned_union_t&amp;lt;0, Ts...&amp;gt; t_buff;
+++ alignas(Ts...) std::byte t_buff[std::max({sizeof(Ts)...})];
++  // [...]
++};
++```
++* std::byte[link /reference/cstddef/byte.md]
++* std::max[link /reference/algorithm/max.md]
++
+ 
+ ## 例
+ ```cpp example
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>C++23 -- C++23 : s/定義/追加/</title>
@@ -340,178 +406,6 @@ index 674594a70..2d6aa4e4a 100644
  }
  ```
  * assignable_from[link /reference/concepts/assignable_from.md]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>concepts -- &lt;concepts&gt;関連の追加文書やIssueの対応</title>
-      <link href="https://cpprefjp.github.io/reference/concepts.html"/>
-      <id>6764512d3955dbaa3a1d009af10f8d7f48415019:reference/concepts.md</id>
-      <updated>2020-03-25T16:25:39+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/concepts.md b/reference/concepts.md
-index e08ab7905..9c0cb8245 100644
---- a/reference/concepts.md
-+++ b/reference/concepts.md
-@@ -10,7 +10,7 @@
- 
- ### 等しさの保持（*equality preservation*）
- 
--ある式への等しい入力によって等しい出力が得られる時、その式は __等しさを保持__ している。この入力とは具体的な値ではなくその式の入力となり得る引数（オペランド）の集合であり、出力とはその式の結果およびその式によって変更された全ての引数（オペランド）のこと。
-+ある式への等しい入力によって等しい出力が得られる時、その式は __等しさを保持__ している。入力とはその式に与えられた全ての引数（オペランド）であり、出力とはその式の結果およびその式によって変更された全ての引数のこと。
- 
- また、必ずしも入力の個別の値が全てその式にとって有効である必要はない。例えば、整数に対する`a / b`という式は等しさを保持するが、`b = 0`の時この式は有効ではない。しかし、このことは式`a / b`が等しさを保持することを妨げない。  
- 式への入力のうちこのような有効ではない値を除いたものをその式の __定義域（*domain*）__ と呼ぶ。
-@@ -38,6 +38,8 @@ concept C2 = requires(const T a) {
- };
- ```
- 
-+これによって各制約式では、型パラメータがCV修飾されない非配列のオブジェクト型であると仮定することで、それぞれの引数の値カテゴリとCV修飾を確定することができる。
-+
- ### 暗黙的な式のバリエーション（*implicit expression variations*）
- 
- `requires`式において定数左辺値としてローカルパラメータを宣言する場合、それぞれの制約式にはそのパラメータを受け取る位置に非定数左辺値や（定数）右辺値を受け入れる暗黙的な式のバリエーションが要求される。ただし、このような暗黙的な式のバリエーション（のいずれか）が異なる意味論を持ち、明示的に記述される場合を除く。
-@@ -166,3 +168,5 @@ concept C =
- - [C++標準コンセプトの名前付けガイドライン - yohhoyの日記](https://yohhoy.hatenadiary.jp/entry/20190826/p1)
- - [P0898R3 Standard Library Concepts](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0898r3.pdf)
- - [P1754R1 Rename concepts to standard_case for C++20, while we still can](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1754r1.pdf)
-+- [P2101R0 “Models” subsumes “satisfies” (Wording for US298 and US300)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2101r0.html)
-+- [P2102R0 Make “implicit expression variations” more explicit (Wording for US185)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2102r0.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>boolean -- &lt;concepts&gt;関連の追加文書やIssueの対応</title>
-      <link href="https://cpprefjp.github.io/reference/concepts/boolean.html"/>
-      <id>6764512d3955dbaa3a1d009af10f8d7f48415019:reference/concepts/boolean.md</id>
-      <updated>2020-03-25T16:25:39+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/concepts/boolean.md b/reference/concepts/boolean.md
-index 4c6f00cf1..09809a0fc 100644
---- a/reference/concepts/boolean.md
-+++ b/reference/concepts/boolean.md
-@@ -121,3 +121,5 @@ std::optional&amp;lt;int&amp;gt; is not boolean
- 
- - [P0898R3 Standard Library Concepts](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0898r3.pdf)
- - [P1754R1 Rename concepts to standard_case for C++20, while we still can](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1754r1.pdf)
-+- [LWG Issue 3208. Boolean&amp;#39;s expression requirements are ordered inconsistently](https://wg21.cmeerw.net/lwg/issue3208)
-+- [P1964R2 Wording for `boolean-testable`](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1964r2.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>common_reference_with -- &lt;concepts&gt;関連の追加文書やIssueの対応</title>
-      <link href="https://cpprefjp.github.io/reference/concepts/common_reference_with.html"/>
-      <id>6764512d3955dbaa3a1d009af10f8d7f48415019:reference/concepts/common_reference_with.md</id>
-      <updated>2020-03-25T16:25:39+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/concepts/common_reference_with.md b/reference/concepts/common_reference_with.md
-index 320e09a72..54445f7f4 100644
---- a/reference/concepts/common_reference_with.md
-+++ b/reference/concepts/common_reference_with.md
-@@ -97,3 +97,4 @@ T, U share a common reference type
- 
- - [P0898R3 Standard Library Concepts](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0898r3.pdf)
- - [P1754R1 Rename concepts to standard_case for C++20, while we still can](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1754r1.pdf)
-+- [LWG Issue 3154. `Common` and `CommonReference` have a common defect](https://wg21.cmeerw.net/lwg/issue3154)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>common_with -- &lt;concepts&gt;関連の追加文書やIssueの対応</title>
-      <link href="https://cpprefjp.github.io/reference/concepts/common_with.html"/>
-      <id>6764512d3955dbaa3a1d009af10f8d7f48415019:reference/concepts/common_with.md</id>
-      <updated>2020-03-25T16:25:39+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/concepts/common_with.md b/reference/concepts/common_with.md
-index ae7bdd4e6..7c24628cf 100644
---- a/reference/concepts/common_with.md
-+++ b/reference/concepts/common_with.md
-@@ -102,3 +102,5 @@ T, U share a common type
- 
- - [P0898R3 Standard Library Concepts](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0898r3.pdf)
- - [P1754R1 Rename concepts to standard_case for C++20, while we still can](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1754r1.pdf)
-+- [LWG Issue 3153. `Common` and `common_type` have too little in common](https://wg21.cmeerw.net/lwg/issue3153)
-+- [LWG Issue 3154. `Common` and `CommonReference` have a common defect](https://wg21.cmeerw.net/lwg/issue3154)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>copyable -- &lt;concepts&gt;関連の追加文書やIssueの対応</title>
-      <link href="https://cpprefjp.github.io/reference/concepts/copyable.html"/>
-      <id>6764512d3955dbaa3a1d009af10f8d7f48415019:reference/concepts/copyable.md</id>
-      <updated>2020-03-25T16:25:39+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/concepts/copyable.md b/reference/concepts/copyable.md
-index 862b7cd61..674594a70 100644
---- a/reference/concepts/copyable.md
-+++ b/reference/concepts/copyable.md
-@@ -7,9 +7,8 @@
- ```cpp
- namespace std {
-   template&amp;lt;class T&amp;gt;
--  concept copyable = copy_constructible&amp;lt;T&amp;gt; &amp;amp;&amp;amp;
--                     movable&amp;lt;T&amp;gt; &amp;amp;&amp;amp;
--                     assignable_from&amp;lt;T&amp;amp;, const T&amp;amp;&amp;gt;;
-+  concept copyable = copy_constructible&amp;lt;T&amp;gt; &amp;amp;&amp;amp; movable&amp;lt;T&amp;gt; &amp;amp;&amp;amp;
-+                     assignable_from&amp;lt;T&amp;amp;, T&amp;amp;&amp;gt; &amp;amp;&amp;amp; assignable_from&amp;lt;T&amp;amp;, const T&amp;amp;&amp;gt; &amp;amp;&amp;amp; assignable_from&amp;lt;T&amp;amp;, const T&amp;gt;;
- }
- ```
- * assignable_from[link /reference/concepts/assignable_from.md]
-@@ -101,3 +100,4 @@ not_copyable2 is not copyable
- 
- - [P0898R3 Standard Library Concepts](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0898r3.pdf)
- - [P1754R1 Rename concepts to standard_case for C++20, while we still can](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1754r1.pdf)
-+- [P2102R0 Make “implicit expression variations” more explicit (Wording for US185)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2102r0.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>relation -- &lt;concepts&gt;関連の追加文書やIssueの対応</title>
-      <link href="https://cpprefjp.github.io/reference/concepts/relation.html"/>
-      <id>6764512d3955dbaa3a1d009af10f8d7f48415019:reference/concepts/relation.md</id>
-      <updated>2020-03-25T16:25:39+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/concepts/relation.md b/reference/concepts/relation.md
-index 8def5a9a9..eb903f601 100644
---- a/reference/concepts/relation.md
-+++ b/reference/concepts/relation.md
-@@ -107,4 +107,5 @@ not_relation_s1s2 is not relation between S1 and S2
- 
- - [P0898R3 Standard Library Concepts](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0898r3.pdf)
- - [P1754R1 Rename concepts to standard_case for C++20, while we still can](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1754r1.pdf)
-+- [P1248R1 Remove `CommonReference` requirement from `StrictWeakOrdering` (a.k.a Fixing Relations)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1248r1.html)
- - [二項関係 - wikipedia](https://ja.wikipedia.org/wiki/二項関係)
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
