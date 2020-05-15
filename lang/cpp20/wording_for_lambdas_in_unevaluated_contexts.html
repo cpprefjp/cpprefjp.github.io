@@ -189,8 +189,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2020-05-14T09:12:06">
-        2020年05月14日 09時12分06秒
+      <span itemprop="datePublished" content="2020-05-15T03:41:29">
+        2020年05月15日 03時41分29秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -246,7 +246,6 @@
 </code></pre></div>
 </p>
 <h2>仕様</h2>
-<p>(執筆中)</p>
 <ol>
 <li>ラムダ式によって生成されるクロージャの型はリンケージを持たない<ul>
 <li><code>typedef/using</code>によってリンケージを持つ名前を付ける事もできない</li>
@@ -257,9 +256,80 @@
 <li>異なる翻訳単位の定義を参照するため、あるいは同一翻訳単位での再宣言において、そのシグネチャにラムダ式が含まれる場合、それら2つ（以上）の宣言は同一のものとはみなされない</li>
 </ul>
 </li>
+<li>エイリアステンプレートに現れているラムダ式は、その特殊化毎に固有のクロージャ型を持つ</li>
+<li>関数テンプレートの宣言に含まれるラムダ式の本体内でコンパイルエラーが起きた場合、SFINAEしない</li>
+<li>非型テンプレートパラメータにラムダ式が現れている場合でも、そのクロージャ型は宣言毎に固有の型を持つ</li>
+<li>未評価の文脈であっても、ラムダ式の本体内で使用されている変数は暗黙的にキャプチャされる<ul>
+<li>未評価の文脈で現れているラムダ式の本体内は未評価の文脈ではない</li>
+</ul>
+</li>
+<li>関数の本体の外側で、その関数の引数をキャプチャする事はできない</li>
+<li><code>concpet</code>の定義内及び<code>requires</code>節の内部に現れているラムダ式本体のエラーはコンパイルエラーとなる</li>
 </ol>
+<p><div class="codehilite"><pre><span></span><code><span class="c1">// 1 クロージャ型にリンケージを付加できない</span>
+<span class="k">typedef</span> <span class="nf">decltype</span><span class="p">([]{})</span> <span class="n">C</span><span class="p">;</span>
+<span class="k">using</span> <span class="n">C</span> <span class="o">=</span> <span class="k">decltype</span><span class="p">([]{});</span>
+
+<span class="c1">// 2. この2つのf()は異なる宣言、呼び出そうとするとオーバーロード解決できずコンパイルエラー</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="kt">int</span> <span class="n">N</span><span class="o">&gt;</span>
+<span class="kt">void</span> <span class="n">f</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="p">(</span><span class="o">*</span><span class="n">s</span><span class="p">)[([]{</span> <span class="k">return</span> <span class="n">N</span><span class="p">;</span> <span class="p">})()])</span> <span class="p">{</span> <span class="p">}</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="kt">int</span> <span class="n">N</span><span class="o">&gt;</span>
+<span class="kt">void</span> <span class="n">f</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="p">(</span><span class="o">*</span><span class="n">s</span><span class="p">)[([]{</span> <span class="k">return</span> <span class="n">N</span><span class="p">;</span> <span class="p">})()])</span> <span class="p">{</span> <span class="p">}</span>
+
+<span class="c1">// 3. 例えば、A&lt;int&gt;とA&lt;char&gt; は異なるクロージャ型を示す</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="o">&gt;</span>
+<span class="k">using</span> <span class="n">A</span> <span class="o">=</span> <span class="k">decltype</span><span class="p">([]</span> <span class="p">{</span> <span class="p">});</span>
+
+<span class="c1">// 4. 次の2つのようなケースはコンパイルエラーとなる</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="o">&gt;</span>
+<span class="k">auto</span> <span class="n">f</span><span class="p">(</span><span class="n">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">decltype</span><span class="p">([]()</span> <span class="p">{</span> <span class="n">T</span><span class="o">::</span><span class="n">invalid</span><span class="p">;</span> <span class="p">}</span> <span class="p">());</span>
+<span class="kt">void</span> <span class="nf">f</span><span class="p">(...);</span>
+<span class="n">f</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span> <span class="c1">// error!</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">,</span> <span class="n"><a href="https://cpprefjp.github.io/reference/cstddef/size_t.html">std::size_t</a></span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">([]()</span> <span class="p">{</span> <span class="n">T</span><span class="o">::</span><span class="n">invalid</span><span class="p">;</span> <span class="p">})</span><span class="o">&gt;</span>
+<span class="kt">void</span> <span class="n">g</span><span class="p">(</span><span class="n">T</span><span class="p">);</span>
+<span class="kt">void</span> <span class="nf">g</span><span class="p">(...);</span>
+<span class="n">g</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span> <span class="c1">// error!</span>
+
+<span class="c1">// 5. 未定義動作</span>
+<span class="c1">/// foo.h</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">auto</span><span class="o">&gt;</span> <span class="k">struct</span> <span class="n">foo</span> <span class="p">{</span> <span class="p">};</span>
+<span class="k">extern</span> <span class="n">foo</span><span class="o">&lt;+</span><span class="p">[]()</span> <span class="p">{}</span><span class="o">&gt;</span> <span class="n">x</span><span class="p">;</span>
+<span class="kr">inline</span> <span class="n">foo</span><span class="o">&lt;+</span><span class="p">[]()</span> <span class="p">{}</span><span class="o">&gt;</span> <span class="n">y</span><span class="p">;</span>
+
+<span class="c1">/// tu1.cpp</span>
+<span class="cp">#include</span> <span class="cpf">"foo.h"</span><span class="cp"></span>
+
+<span class="c1">/// tu2.cpp</span>
+<span class="cp">#include</span> <span class="cpf">"foo.h"</span><span class="cp"></span>
+
+<span class="c1">// 6. ラムダ式の内部は評価されない文脈ではないので、暗黙キャプチャは評価される</span>
+<span class="kt">void</span> <span class="nf">f</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">auto</span> <span class="n">lambda</span> <span class="o">=</span> <span class="p">[</span><span class="o">=</span><span class="p">]{</span> <span class="k">return</span> <span class="n">i</span><span class="p">;</span> <span class="p">};</span> <span class="c1">// ok</span>
+  <span class="k">static_assert</span><span class="p">(</span><span class="mi">1</span> <span class="o">&lt;</span> <span class="k">sizeof</span><span class="p">([</span><span class="o">=</span><span class="p">]{</span> <span class="k">return</span> <span class="n">i</span><span class="p">;</span> <span class="p">}));</span> <span class="c1">// ok</span>
+<span class="p">}</span>
+
+<span class="c1">// 7. 関数の本体内でのみ、その引数をキャプチャできる</span>
+<span class="k">auto</span> <span class="nf">f</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">decltype</span><span class="p">([</span><span class="o">=</span><span class="p">](</span><span class="k">auto</span> <span class="n">g</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="n">g</span><span class="p">(</span><span class="n">i</span><span class="p">);</span> <span class="p">})</span>
+<span class="p">{</span> <span class="p">}</span>
+
+<span class="c1">// 8. ラムダ式の本体内のエラーはハードエラー</span>
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
+<span class="n">concept</span> <span class="n">C</span> <span class="o">=</span> <span class="n">requires</span> <span class="p">{</span>
+  <span class="p">[]()</span> <span class="p">{</span> <span class="k">typename</span> <span class="n">T</span><span class="o">::</span><span class="n">invalid</span> <span class="n">foo</span><span class="p">;</span> <span class="p">};</span>
+<span class="p">};</span>
+
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
+<span class="kt">void</span> <span class="n">f</span><span class="p">()</span> <span class="n">requires</span> <span class="n">requires</span> <span class="p">{</span>
+  <span class="p">[]()</span> <span class="p">{</span> <span class="k">typename</span> <span class="n">T</span><span class="o">::</span><span class="n">invalid</span> <span class="n">foo</span><span class="p">;</span> <span class="p">};</span>
+<span class="p">};</span>
+
+<span class="n">C</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">;</span> <span class="c1">// error!</span>
+<span class="n">f</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>   <span class="c1">// error!</span>
+</code></pre></div>
+</p>
 <h2>例</h2>
-<p>(執筆中)</p>
+<p>「<span href="https://cpprefjp.github.io/lang/cpp20/default_constructible_and_assignable_stateless_lambdas.md.nolink">状態を持たないラムダ式を、デフォルト構築可能、代入可能とする</span>」のサンプルコードを参照。</p>
 <h2>この機能が必要になった背景・経緯</h2>
 <p>C++17までは、ラムダ式をSFINAEの文脈で用いて擬似的なコンセプトのような振る舞いをさせないために評価されない文脈においてラムダ式を書く事が禁止されていた（この制限は、ラムダ式がそれぞれ一意の型を持つため、それらを識別するためのマングリング方法を実装する負担をコンパイラ実装者に負わせないようにするために課されている）。</p>
 <p>しかし、それだけでは不十分で非型テンプレートパラメータを巧妙に用いた迂回方法があったため、C++14に対する欠陥報告（<a href="https://wg21.cmeerw.net/cwg/issue1607" target="_blank">CWG Issue 1607</a>）としてラムダ式がエンティティ（主にテンプレート）のシグネチャに現れるのが禁止された。</p>
