@@ -2,9 +2,72 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2020-05-18T10:56:23.776471</updated>
-  <id>2c1948bc-1429-4ea0-a757-f6e1feb67b8c</id>
+  <updated>2020-05-18T11:37:45.886703</updated>
+  <id>fe39915f-b70c-428d-a4f1-8c190a6f6da3</id>
 
+  
+    <entry>
+      <title>lcm -- lcm : オーバーフローの例が説明不足だったので、説明例を追加</title>
+      <link href="https://cpprefjp.github.io/reference/numeric/lcm.html"/>
+      <id>8bc82fcaa611e576f085d190d399713903dc785e:reference/numeric/lcm.md</id>
+      <updated>2020-05-18T20:33:33+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/numeric/lcm.md b/reference/numeric/lcm.md
+index a4d3a10da..41e8738b0 100644
+--- a/reference/numeric/lcm.md
++++ b/reference/numeric/lcm.md
+@@ -57,17 +57,25 @@ int main() {
+   assert(std::lcm(std::lcm(3, 4), 6) == 12);
+ 
+   std::vector&amp;lt;int&amp;gt; v = {3, 4, 6};
+-  int r = std::accumulate(v.begin() + 1, v.end(), v.front(), [](int m, int n) {
++  int r = std::accumulate(v.begin(), v.end(), 1, [](int m, int n) {
+     return std::lcm(m, n);
+   });
+   assert(r == 12);
+ 
+-  // オーバーフローする例
+-  auto m = std::numeric_limits&amp;lt;std::uint32_t&amp;gt;::max();
+-  auto n = m - 1;
+-  std::cout &amp;lt;&amp;lt; &amp;#34;lcm(&amp;#34; &amp;lt;&amp;lt; m &amp;lt;&amp;lt; &amp;#34;, &amp;#34; &amp;lt;&amp;lt; n &amp;lt;&amp;lt; &amp;#34;)      &amp;#34; &amp;lt;&amp;lt; std::lcm(m, n) &amp;lt;&amp;lt; std::endl;
+-  auto g = std::gcd(m, n);  // 1
+-  std::cout &amp;lt;&amp;lt; &amp;#34;true lcm(&amp;#34; &amp;lt;&amp;lt; m &amp;lt;&amp;lt; &amp;#34;, &amp;#34; &amp;lt;&amp;lt; n &amp;lt;&amp;lt; &amp;#34;) &amp;#34; &amp;lt;&amp;lt; std::fabs(m) * std::fabs(n / g) &amp;lt;&amp;lt; std::endl;
++  // 以下、オーバーフローしやすい例
++  uint16_t m = 20000;
++  uint16_t n = 40000;
++
++  // 標準std::lcm()の動作は実装定義
++  std::cout &amp;lt;&amp;lt; &amp;#34;std::lcm(&amp;#34; &amp;lt;&amp;lt; m &amp;lt;&amp;lt; &amp;#34;, &amp;#34; &amp;lt;&amp;lt; n &amp;lt;&amp;lt; &amp;#34;)     &amp;#34; &amp;lt;&amp;lt; std::lcm(m, n) &amp;lt;&amp;lt; std::endl;
++
++  // 公式通りのオーバーフローしやすい最小公倍数の実装
++  volatile uint16_t t = m * n; // 最適化回避のための変数
++  std::cout &amp;lt;&amp;lt; &amp;#34;formal lcm(&amp;#34; &amp;lt;&amp;lt; m &amp;lt;&amp;lt; &amp;#34;, &amp;#34; &amp;lt;&amp;lt; n &amp;lt;&amp;lt; &amp;#34;)   &amp;#34; &amp;lt;&amp;lt; (t / std::gcd(m, n)) &amp;lt;&amp;lt; std::endl;
++
++  // オーバーフローしにくいよう公式を改良した実装
++  auto g = std::gcd(m, n);
++  std::cout &amp;lt;&amp;lt; &amp;#34;improved lcm(&amp;#34; &amp;lt;&amp;lt; m &amp;lt;&amp;lt; &amp;#34;, &amp;#34; &amp;lt;&amp;lt; n &amp;lt;&amp;lt; &amp;#34;) &amp;#34; &amp;lt;&amp;lt; m * (n / g) &amp;lt;&amp;lt; std::endl;
+ }
+ ```
+ * std::lcm[color ff0000]
+@@ -79,8 +87,9 @@ int main() {
+ 
+ ### 出力例
+ ```
+-lcm(4294967295, 4294967294)      2
+-true lcm(4294967295, 4294967294) 1.84467e+19
++std::lcm(20000, 40000)     40000
++formal lcm(20000, 40000)   0
++improved lcm(20000, 40000) 40000
+ ```
+ 
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>gcd -- gcd, lcm : サンプルコードに単純なケース、3つ以上のケースを追加</title>
@@ -910,53 +973,6 @@ index 3399bf046..1429ec81f 100644
  
  ## 参照
  - [P0315R0 Wording for lambdas in unevaluated contexts](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0315r0.pdf)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>状態を持たないラムダ式を、デフォルト構築可能、代入可能とする -- 状態を持たないラムダ式を、デフォルト構築可能、代入可能とする : サンプルコード修正</title>
-      <link href="https://cpprefjp.github.io/lang/cpp20/default_constructible_and_assignable_stateless_lambdas.html"/>
-      <id>a1090443556be3746ebb0787728f83d2d1dad4e5:lang/cpp20/default_constructible_and_assignable_stateless_lambdas.md</id>
-      <updated>2020-05-17T00:07:32+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/default_constructible_and_assignable_stateless_lambdas.md b/lang/cpp20/default_constructible_and_assignable_stateless_lambdas.md
-index 6e6c0382c..402a55087 100644
---- a/lang/cpp20/default_constructible_and_assignable_stateless_lambdas.md
-+++ b/lang/cpp20/default_constructible_and_assignable_stateless_lambdas.md
-@@ -75,20 +75,7 @@ struct closure {
- int main()
- {
-   std::set&amp;lt;int, decltype([](auto lhs, auto rhs){ return lhs &amp;gt; rhs;})&amp;gt; set{};
--  set.emplace(1);
--  set.emplace(2);
--  set.emplace(4);
--  set.emplace(3);
--  set.emplace(0);
--  set.emplace(10);
--  set.emplace(9);
--  set.emplace(7);
--  set.emplace(5);
--  set.emplace(6);
--  set.emplace(8);
--  set.emplace(1);
--  set.emplace(5);
--  set.emplace(10);
-+  set.insert({1, 2, 4, 3, 0, 10, 9, 7, 5, 6, 8, 1, 5, 10});
-   
-   for (auto n : set) {
-     std::cout &amp;lt;&amp;lt; n &amp;lt;&amp;lt; &amp;#34;\n&amp;#34;;
-@@ -169,4 +156,4 @@ C++20では同時に[評価されない文脈にラムダ式を書くことが
- - [評価されない文脈でのラムダ式](./wording_for_lambdas_in_unevaluated_contexts.md)
- 
- ## 参照
--- [P0624R2 Default constructible and assignable stateless lambdas](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0624r2.pdf)
-\ No newline at end of file
-+- [P0624R2 Default constructible and assignable stateless lambdas](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0624r2.pdf)
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
