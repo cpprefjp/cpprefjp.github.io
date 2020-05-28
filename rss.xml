@@ -2,9 +2,139 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2020-05-28T05:41:33.768556</updated>
-  <id>35030ec7-10b0-4ace-93c0-856ec33f159a</id>
+  <updated>2020-05-28T07:45:48.363393</updated>
+  <id>6cbda4f8-faf7-48c5-a0b2-a127aa36adc7</id>
 
+  
+    <entry>
+      <title>gps_time -- gps_time : 文字列フォーマットの仕様と例を追加</title>
+      <link href="https://cpprefjp.github.io/reference/chrono/gps_time.html"/>
+      <id>d64683a8e5d0505c3b6ec54e2850477e53b59ea4:reference/chrono/gps_time.md</id>
+      <updated>2020-05-28T16:41:42+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/gps_time.md b/reference/chrono/gps_time.md
+index c502bb9f3..f8567360d 100644
+--- a/reference/chrono/gps_time.md
++++ b/reference/chrono/gps_time.md
+@@ -24,6 +24,11 @@ namespace std::chrono {
+                 std::basic_string&amp;lt;charT, traits, Alloc&amp;gt;* abbrev = nullptr,
+                 minutes* offset = nullptr);            // (4) C++20
+ }
++
++namespace std {
++  template &amp;lt;class Duration, class charT&amp;gt;
++  struct formatter&amp;lt;chrono::gps_time&amp;lt;Duration&amp;gt;, charT&amp;gt;; // (5) C++20
++}
+ ```
+ * time_point[link time_point.md]
+ * gps_clock[link gps_clock.md]
+@@ -35,6 +40,7 @@ GPS時間の一点を指す[`time_point`](time_point.md)に対する別名。
+ - (2) : 秒単位でGPS時間の一点を指す[`time_point`](time_point.md)に対する別名
+ - (3) : 時間点に含まれる日付と時間を出力ストリームに出力する
+ - (4) : フォーマット指定して入力ストリームから日付・時間を時間点オブジェクトに入力する
++- (5) : `gps_time`型に対する[`std::formatter`](/reference/format/formatter.md)クラステンプレートの特殊化
+ 
+ 
+ ## 効果
+@@ -57,6 +63,20 @@ GPS時間の一点を指す[`time_point`](time_point.md)に対する別名。
+ 
+ ## 備考
+ - (1) : このバージョンは、関数テンプレートで任意の時間間隔単位の`time_point`を受け取るために使用できる。`gps_clock::time_point`がもつ時間間隔の単位は未規定 (実装定義) であるため、特定の単位に決めることができないため、時間間隔の型のみをパラメータ化して関数テンプレートで受け取ると便利である
++- (5) :
++    - `%Z` (タイムゾーンの省略名) が指定された場合、`STATICALLY-WIDEN&amp;lt;charT&amp;gt;(&amp;#34;GPS&amp;#34;)`で置き換えられる
++    - `%z`もしくはその改良コマンドが指定された場合、`0`[`min`](duration/op_min.md)が使用される
++    - この日付と時間のフォーマットは、`gps_time&amp;lt;Duration&amp;gt;`型変数`tp`を以下のように変換した[`sys_time`](sys_time.md)をフォーマットした場合と等価：
++        ```cpp
++        sys_time&amp;lt;Duration&amp;gt;{tp.time_since_epoch()} + (sys_days{1980y/January/Sunday[1]} - sys_days{1970y/January/1})
++        ```
++        * sys_time[link sys_time.md]
++        * tp.time_since_epoch()[link time_point/time_since_epoch.md]
++        * sys_days[link sys_days.md]
++        * 1980y[link year/op_y.md]
++        * 1970y[link year/op_y.md]
++        * January[link month_constants.md]
++        * Sunday[link weekday_constants.md]
+ 
+ 
+ ## 例
+@@ -73,14 +93,14 @@ int main()
+   chrono::gps_clock::time_point tp = chrono::gps_clock::now();
+ 
+   // 秒単位の時間点 (日付と時間が出力される)
+-  chrono::gps_seconds sec_p = chrono::time_point_cast&amp;lt;chrono::seconds&amp;gt;(tp);
++  chrono::gps_seconds sec_p = chrono::floor&amp;lt;chrono::seconds&amp;gt;(tp);
+   std::cout &amp;lt;&amp;lt; sec_p &amp;lt;&amp;lt; std::endl;
+ }
+ ```
+ * chrono::gps_seconds[color ff0000]
+ * chrono::gps_clock[link gps_clock.md]
+ * now()[link gps_clock/now.md]
+-* chrono::time_point_cast[link time_point_cast.md]
++* chrono::floor[link time_point/floor.md]
+ 
+ #### 出力例
+ ```
+@@ -137,6 +157,53 @@ int main()
+ GPS
+ ```
+ 
++### 文字列フォーマットの例
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;chrono&amp;gt;
++#include &amp;lt;format&amp;gt;
++
++namespace chrono = std::chrono;
++
++int main()
++{
++  chrono::gps_clock::time_point now = chrono::gps_clock::now();
++  chrono::gps_seconds now_sec = chrono::floor&amp;lt;chrono::seconds&amp;gt;(tp);
++
++  // デフォルトフォーマット
++  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;1 : {}&amp;#34;, now_sec) &amp;lt;&amp;lt; std::endl;
++
++  // 「年月日 時分秒」のフォーマット
++  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;2 : {:%Y年%m月%d日 %H時%M分%S秒}&amp;#34;, now_sec) &amp;lt;&amp;lt; std::endl;
++
++  // 日付を / (スラッシュ) 区切り、時間を : (コロン) 区切り、タイムゾーンの省略名付き
++  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;3 : {0:%Y/%m/%d %H:%M:%S %Z}&amp;#34;, now_sec) &amp;lt;&amp;lt; std::endl;
++
++  // 日付だけ出力
++  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;4 : %Y年%m月%d日&amp;#34;, now_sec) &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;5 : %F&amp;#34;, now_sec) &amp;lt;&amp;lt; std::endl;
++
++  // 時間だけ出力
++  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;6 : %H時%M分%S秒&amp;#34;, now_sec) &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;7 : %T&amp;#34;, now_sec) &amp;lt;&amp;lt; std::endl;
++}
++```
++* chrono::gps_clock[link gps_clock.md]
++* now()[link gps_clock/now.md]
++* chrono::floor[link time_point/floor.md]
++* std::format[link format.md]
++
++#### 出力例
++```
++1 : 2019-12-20 10:05:05 GPS
++2 : 2019年12月20日 10時05分05秒
++3 : 2019/12/20 10:05:05 GPS
++4 : 2019年12月20日
++5 : 2019-12-20
++6 : 10時05分05秒
++7 : 10:05:05
++```
++
+ ## バージョン
+ ### 言語
+ - C++20
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>uniform_random_bit_generator -- uniform_random_bit_generator : コード修飾修正</title>
@@ -207,58 +337,6 @@ index 59a93ba59..9ab9e36e7 100644
  
    ~MyVector()
    {
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>cos -- sin/cos : 利便性のためpiへのリンクを追加</title>
-      <link href="https://cpprefjp.github.io/reference/cmath/cos.html"/>
-      <id>04d8a120529412c64874774dd1ccade776cdc5a2:reference/cmath/cos.md</id>
-      <updated>2020-05-27T22:32:17+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/cmath/cos.md b/reference/cmath/cos.md
-index a68a98214..2f8306873 100644
---- a/reference/cmath/cos.md
-+++ b/reference/cmath/cos.md
-@@ -105,3 +105,7 @@ int main()
- 以下のマクローリン級数を適当な次数で打ち切ることで近似的に求めることができる。
- 
- $$ \cos x = \sum_{n = 0}^{\infty} \frac{(-1)^n}{(2n)!} x^{2n} \quad \mathrm{for~all} \; x $$
-+
-+
-+## 関連項目
-+- [`std::numbers::pi`](/reference/numbers/pi.md)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>sin -- sin/cos : 利便性のためpiへのリンクを追加</title>
-      <link href="https://cpprefjp.github.io/reference/cmath/sin.html"/>
-      <id>04d8a120529412c64874774dd1ccade776cdc5a2:reference/cmath/sin.md</id>
-      <updated>2020-05-27T22:32:17+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/cmath/sin.md b/reference/cmath/sin.md
-index 86bc99357..e26f6e35b 100644
---- a/reference/cmath/sin.md
-+++ b/reference/cmath/sin.md
-@@ -105,3 +105,7 @@ int main()
- 以下のマクローリン級数を適当な次数で打ち切ることで近似的に求めることができる。
- 
- $$ \sin x = \sum_{n = 0}^{\infty} \frac{(-1)^n}{(2n + 1)!} x^{2n + 1} \quad \mathrm{for~all} \; x $$
-+
-+
-+## 関連項目
-+- [`std::numbers::pi`](/reference/numbers/pi.md)
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
