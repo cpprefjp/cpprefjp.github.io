@@ -2,9 +2,214 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2020-05-29T02:55:52.245597</updated>
-  <id>d6956d09-ef94-4b2a-9e17-7c74ed71e403</id>
+  <updated>2020-05-29T03:14:12.885247</updated>
+  <id>ce8bf11b-5ceb-46b6-b897-8b7d3367a967</id>
 
+  
+    <entry>
+      <title>sys_time -- sys_time, utc_time : 文字列フォーマットの仕様と例を追加</title>
+      <link href="https://cpprefjp.github.io/reference/chrono/sys_time.html"/>
+      <id>5a2b9f005142ba0cac9a16b3644b3606d203d852:reference/chrono/sys_time.md</id>
+      <updated>2020-05-29T12:10:31+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/sys_time.md b/reference/chrono/sys_time.md
+index d89846e6b..e2dba9043 100644
+--- a/reference/chrono/sys_time.md
++++ b/reference/chrono/sys_time.md
+@@ -30,6 +30,11 @@ namespace std::chrono {
+                 std::basic_string&amp;lt;charT, traits, Alloc&amp;gt;* abbrev = nullptr,
+                 minutes* offset = nullptr);            // (6) C++20
+ }
++
++namespace std {
++  template &amp;lt;class Duration, class charT&amp;gt;
++  struct formatter&amp;lt;chrono::sys_time&amp;lt;Duration&amp;gt;, charT&amp;gt;; // (7) C++20
++}
+ ```
+ * time_point[link time_point.md]
+ * system_clock[link system_clock.md]
+@@ -43,6 +48,7 @@ namespace std::chrono {
+ - (4) : 時間点に含まれる日付と時間を出力ストリームに出力する
+ - (5) : 時間点に含まれる日付を出力ストリームに出力する
+ - (6) : フォーマット指定して入力ストリームから日付・時間を時間点オブジェクトに入力する
++- (7) : `utc_time`型に対する[`std::formatter`](/reference/format/formatter.md)クラステンプレートの特殊化
+ 
+ 
+ ## テンプレートパラメータ制約
+@@ -84,6 +90,9 @@ namespace std::chrono {
+ - (1) : このバージョンは、関数テンプレートで任意の時間間隔単位の`time_point`を受け取るために使用できる。`system_clock::time_point`がもつ時間間隔の単位は未規定 (実装定義) であり、特定の単位に決めることができないため、時間間隔の型のみをパラメータ化して関数テンプレートで受け取ると便利である
+ - [`year`](year.md)クラスの制限により、年の値としては`[-32767, 32767]`の範囲までしか入出力できないことに注意 (その範囲外は未規定の値となる)
+ - (4), (5) : 出力ストリームの演算子は、ローカルのタイムゾーンへの変換を行わない。そのため、システム時間をそのまま出力すると、デフォルトではUTCタイムゾーンの日時が出力される。日本のタイムゾーンで出力したい場合は、[`zoned_time`](zoned_time.md)クラスを介して出力するか、9時間を加算して出力すること
++- (7) :
++    - `%Z` (タイムゾーンの省略名) が指定された場合、`STATICALLY-WIDEN&amp;lt;charT&amp;gt;(&amp;#34;UTC&amp;#34;)`で置き換えられる
++    - `%z`もしくはその改良コマンドが指定された場合、`0`[`min`](duration/op_min.md)が使用される
+ 
+ 
+ ## 例
+@@ -198,6 +207,53 @@ UTC
+ 540
+ ```
+ 
++### 文字列フォーマットの例
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;chrono&amp;gt;
++#include &amp;lt;format&amp;gt;
++
++namespace chrono = std::chrono;
++
++int main()
++{
++  chrono::system_clock::time_point now = chrono::system_clock::now();
++  chrono::sys_seconds now_sec = chrono::floor&amp;lt;chrono::seconds&amp;gt;(tp);
++
++  // デフォルトフォーマット
++  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;1 : {}&amp;#34;, now_sec) &amp;lt;&amp;lt; std::endl;
++
++  // 「年月日 時分秒」のフォーマット
++  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;2 : {:%Y年%m月%d日 %H時%M分%S秒}&amp;#34;, now_sec) &amp;lt;&amp;lt; std::endl;
++
++  // 日付を / (スラッシュ) 区切り、時間を : (コロン) 区切り、タイムゾーンの省略名付き
++  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;3 : {0:%Y/%m/%d %H:%M:%S %Z}&amp;#34;, now_sec) &amp;lt;&amp;lt; std::endl;
++
++  // 日付だけ出力
++  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;4 : %Y年%m月%d日&amp;#34;, now_sec) &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;5 : %F&amp;#34;, now_sec) &amp;lt;&amp;lt; std::endl;
++
++  // 時間だけ出力
++  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;6 : %H時%M分%S秒&amp;#34;, now_sec) &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;7 : %T&amp;#34;, now_sec) &amp;lt;&amp;lt; std::endl;
++}
++```
++* chrono::system_clock[link system_clock.md]
++* now()[link system_clock/now.md]
++* chrono::floor[link time_point/floor.md]
++* std::format[link format.md]
++
++#### 出力例
++```
++1 : 2019-12-20 10:05:05 UTC
++2 : 2019年12月20日 10時05分05秒
++3 : 2019/12/20 10:05:05 UTC
++4 : 2019年12月20日
++5 : 2019-12-20
++6 : 10時05分05秒
++7 : 10:05:05
++```
++
+ ## バージョン
+ ### 言語
+ - C++20
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>utc_time -- sys_time, utc_time : 文字列フォーマットの仕様と例を追加</title>
+      <link href="https://cpprefjp.github.io/reference/chrono/utc_time.html"/>
+      <id>5a2b9f005142ba0cac9a16b3644b3606d203d852:reference/chrono/utc_time.md</id>
+      <updated>2020-05-29T12:10:31+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/utc_time.md b/reference/chrono/utc_time.md
+index dcb86ddb2..d6c17ae7e 100644
+--- a/reference/chrono/utc_time.md
++++ b/reference/chrono/utc_time.md
+@@ -24,6 +24,11 @@ namespace std::chrono {
+                 std::basic_string&amp;lt;charT, traits, Alloc&amp;gt;* abbrev = nullptr,
+                 minutes* offset = nullptr);            // (4) C++20
+ }
++
++namespace std {
++  template &amp;lt;class Duration, class charT&amp;gt;
++  struct formatter&amp;lt;chrono::utc_time&amp;lt;Duration&amp;gt;, charT&amp;gt;; // (5) C++20
++}
+ ```
+ * time_point[link time_point.md]
+ * utc_clock[link utc_clock.md]
+@@ -35,6 +40,7 @@ UTC時間の一点を指す[`time_point`](time_point.md)に対する別名。
+ - (2) : 秒単位でUTC時間の一点を指す[`time_point`](time_point.md)に対する別名
+ - (3) : 時間点に含まれる日付と時間を出力ストリームに出力する
+ - (4) : フォーマット指定して入力ストリームから日付・時間を時間点オブジェクトに入力する
++- (5) : `utc_time`型に対する[`std::formatter`](/reference/format/formatter.md)クラステンプレートの特殊化
+ 
+ 
+ ## 効果
+@@ -57,6 +63,10 @@ UTC時間の一点を指す[`time_point`](time_point.md)に対する別名。
+ 
+ ## 備考
+ - (1) : このバージョンは、関数テンプレートで任意の時間間隔単位の`time_point`を受け取るために使用できる。`utc_clock::time_point`がもつ時間間隔の単位は未規定 (実装定義) であるため、特定の単位に決めることができないため、時間間隔の型のみをパラメータ化して関数テンプレートで受け取ると便利である
++- (5) :
++    - `%Z` (タイムゾーンの省略名) が指定された場合、`STATICALLY-WIDEN&amp;lt;charT&amp;gt;(&amp;#34;UTC&amp;#34;)`で置き換えられる
++    - `%z`もしくはその改良コマンドが指定された場合、`0`[`min`](duration/op_min.md)が使用される
++    - 引数がうるう秒が挿入された時間を表す場合、秒フィールドは`STATICALLY-WIDEN&amp;lt;charT&amp;gt;(&amp;#34;60&amp;#34;)`でフォーマットされる
+ 
+ 
+ ## 例
+@@ -140,6 +150,53 @@ UTC
+ 540
+ ```
+ 
++### 文字列フォーマットの例
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;chrono&amp;gt;
++#include &amp;lt;format&amp;gt;
++
++namespace chrono = std::chrono;
++
++int main()
++{
++  chrono::utc_clock::time_point now = chrono::utc_clock::now();
++  chrono::utc_seconds now_sec = chrono::floor&amp;lt;chrono::seconds&amp;gt;(tp);
++
++  // デフォルトフォーマット
++  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;1 : {}&amp;#34;, now_sec) &amp;lt;&amp;lt; std::endl;
++
++  // 「年月日 時分秒」のフォーマット
++  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;2 : {:%Y年%m月%d日 %H時%M分%S秒}&amp;#34;, now_sec) &amp;lt;&amp;lt; std::endl;
++
++  // 日付を / (スラッシュ) 区切り、時間を : (コロン) 区切り、タイムゾーンの省略名付き
++  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;3 : {0:%Y/%m/%d %H:%M:%S %Z}&amp;#34;, now_sec) &amp;lt;&amp;lt; std::endl;
++
++  // 日付だけ出力
++  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;4 : %Y年%m月%d日&amp;#34;, now_sec) &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;5 : %F&amp;#34;, now_sec) &amp;lt;&amp;lt; std::endl;
++
++  // 時間だけ出力
++  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;6 : %H時%M分%S秒&amp;#34;, now_sec) &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;7 : %T&amp;#34;, now_sec) &amp;lt;&amp;lt; std::endl;
++}
++```
++* chrono::utc_clock[link utc_clock.md]
++* now()[link utc_clock/now.md]
++* chrono::floor[link time_point/floor.md]
++* std::format[link format.md]
++
++#### 出力例
++```
++1 : 2019-12-20 10:05:05 UTC
++2 : 2019年12月20日 10時05分05秒
++3 : 2019/12/20 10:05:05 UTC
++4 : 2019年12月20日
++5 : 2019-12-20
++6 : 10時05分05秒
++7 : 10:05:05
++```
++
+ ## バージョン
+ ### 言語
+ - C++20
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>tai_time -- tai_time : 文字列フォーマットの仕様と例を追加</title>
@@ -299,38 +504,6 @@ index 1fad92140..31ce03450 100644
       <author>
         <name>onihusube</name>
         <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>file_time -- file_time : リンクを直すのを忘れていた</title>
-      <link href="https://cpprefjp.github.io/reference/chrono/file_time.html"/>
-      <id>11cb4fade5b1641a5c315b0d85701cff80b261c4:reference/chrono/file_time.md</id>
-      <updated>2020-05-28T13:15:31+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/file_time.md b/reference/chrono/file_time.md
-index ff56d4ed7..a57bd8758 100644
---- a/reference/chrono/file_time.md
-+++ b/reference/chrono/file_time.md
-@@ -187,11 +187,9 @@ int main()
-   std::cout &amp;lt;&amp;lt; std::format(&amp;#34;7 : %T&amp;#34;, tp) &amp;lt;&amp;lt; std::endl;
- }
- ```
--* chrono::system_clock[link system_clock.md]
--* now()[link system_clock/now.md]
--* chrono::zoned_seconds[link zoned_time.md]
-+* fs::file_time_type[link /reference/filesystem/file_time_type.md]
-+* fs::last_write_time[link /reference/filesystem/last_write_time.md]
- * std::format[link format.md]
--* std::locale[link /reference/locale/locale.md]
- 
- #### 出力例
- ```
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
       </author>
     </entry>
   
