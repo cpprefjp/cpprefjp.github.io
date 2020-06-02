@@ -2,9 +2,270 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2020-06-01T15:46:28.858638</updated>
-  <id>4e3c7842-1d89-4a3c-90c6-004f3c69a7a2</id>
+  <updated>2020-06-02T04:26:09.407257</updated>
+  <id>01c18765-5fd2-40ca-8969-9cb4b12d4315</id>
 
+  
+    <entry>
+      <title>sys_info -- sys_info : formatterを追加</title>
+      <link href="https://cpprefjp.github.io/reference/chrono/sys_info.html"/>
+      <id>2a64d964fc82fae96899d7718cddebfbf39f7b56:reference/chrono/sys_info.md</id>
+      <updated>2020-06-02T13:21:37+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/sys_info.md b/reference/chrono/sys_info.md
+index 82d82c7e0..b0b20493a 100644
+--- a/reference/chrono/sys_info.md
++++ b/reference/chrono/sys_info.md
+@@ -12,11 +12,7 @@ namespace std::chrono {
+     seconds offset;
+     minutes save;
+     string abbrev;
+-  };                    // (1) C++20
+-
+-  template &amp;lt;class charT, class traits&amp;gt;
+-  std::basic_ostream&amp;lt;charT, traits&amp;gt;&amp;amp;
+-    operator&amp;lt;&amp;lt;(std::basic_ostream&amp;lt;charT, traits&amp;gt;&amp;amp; os, const sys_info&amp;amp; si); // (2)
++  };
+ }
+ ```
+ * sys_seconds[link sys_time.md]
+@@ -27,9 +23,8 @@ namespace std::chrono {
+ 
+ このクラスの情報は、[`sys_time`](sys_time.md)から[`local_time`](local_time.md)に変換する際に使用される。
+ 
+-- (1) : システム時間に関するタイムゾーン情報のクラス
+-- (2) : 出力ストリームへの出力
+ 
++## メンバ変数
+ 
+ | 変数 | 説明 |
+ |------|------|
+@@ -39,12 +34,11 @@ namespace std::chrono {
+ | `abbrev` | 関連する[`time_zone`](time_zone.md)および[`time_point`](time_point.md)に使用される現在の「略称 (abbreviation)」を意味する。略称はタイムゾーンごとに一意に定まるわけではないため、略称からタイムゾーンおよびUTCタイムゾーンからのオフセット時間を確実にマッピングすることはできない |
+ 
+ 
+-## 効果
+-- (2) : `si`を未規定のフォーマットで`os`に出力する
+-
++## 文字列フォーマット
+ 
+-## 戻り値
+-- (2) : `return os;`
++| 名前 | 説明 | 対応バージョン |
++|------|------|----------------|
++| [`formatter`](sys_info/formatter.md) | [`std::formatter`](/reference/format/formatter.md)クラスの特殊化 | C++20 |
+ 
+ 
+ ## 例
+@@ -63,9 +57,6 @@ int main()
+   chrono::sys_info si = tz-&amp;gt;get_info(now);
+   std::cout &amp;lt;&amp;lt; chrono::floor&amp;lt;chrono::hours&amp;gt;(si.offset).count() &amp;lt;&amp;lt; &amp;#34; hours&amp;#34; &amp;lt;&amp;lt; std::endl; // UTCタイムゾーンからの差分時間
+   std::cout &amp;lt;&amp;lt; si.abbrev &amp;lt;&amp;lt; std::endl; // タイムゾーンの略称
+-
+-  std::cout &amp;lt;&amp;lt; std::endl;
+-  std::cout &amp;lt;&amp;lt; si &amp;lt;&amp;lt; std::endl; // タイムゾーン情報全体を出力
+ }
+ ```
+ * chrono::sys_info[color ff0000]
+@@ -77,12 +68,12 @@ int main()
+ * chrono::floor[link time_point/floor.md]
+ * count()[link /reference/chrono/duration/count.md]
+ 
+-### 出力例
++### 出力
+ ```
++9 hours
++JST
+ ```
+ 
+-(未検証)
+-
+ ## バージョン
+ ### 言語
+ - C++20
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>formatter -- sys_info : formatterを追加</title>
+      <link href="https://cpprefjp.github.io/reference/chrono/sys_info/formatter.html"/>
+      <id>2a64d964fc82fae96899d7718cddebfbf39f7b56:reference/chrono/sys_info/formatter.md</id>
+      <updated>2020-06-02T13:21:37+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/sys_info/formatter.md b/reference/chrono/sys_info/formatter.md
+new file mode 100644
+index 000000000..d20423f0f
+--- /dev/null
++++ b/reference/chrono/sys_info/formatter.md
+@@ -0,0 +1,70 @@
++# formatter
++* chrono[meta header]
++* std[meta namespace]
++* class[meta id-type]
++* cpp20[meta cpp]
++
++```cpp
++namespace std {
++  template &amp;lt;class charT&amp;gt;
++  struct formatter&amp;lt;chrono::sys_info, charT&amp;gt;;
++}
++```
++
++## 概要
++`sys_info`クラスに対する[`std::formatter`](/reference/format/formatter.md)クラステンプレートの特殊化。
++
++フォーマット指定子としては、以下を使用できる：
++
++| フォーマット指定子 | 説明 |
++|--------------------|------|
++| `%z`  | ISO 8601フォーマットでのUTCからのオフセット (日本だと`&amp;#34;+0900&amp;#34;`) |
++| `%Ez` | オフセットの時と分の間にコロン (:) が挿入される (日本だと`&amp;#34;+09:00&amp;#34;`) |
++| `%0z` | `%Ez`と等価 |
++| `%Z`  | タイムゾーンの略称 (日本だと`&amp;#34;JST&amp;#34;`) |
++
++
++## 例
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;chrono&amp;gt;
++
++namespace chrono = std::chrono;
++
++int main()
++{
++  auto now = chrono::system_clock::now();
++
++  // 日本のタイムゾーン
++  const chrono::time_zone* tz = chrono::locate_zone(&amp;#34;Asia/Tokyo&amp;#34;);
++  chrono::sys_info si = tz-&amp;gt;get_info(now);
++
++  // デフォルトフォーマットはoperator&amp;lt;&amp;lt;と同じ (フォーマット未規定)
++  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;{}&amp;#34;, si) &amp;lt;&amp;lt; std::endl;
++
++  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;{:%z}&amp;#34;, si) &amp;lt;&amp;lt; std::endl; // オフセット時間
++  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;{:%Z}&amp;#34;, si) &amp;lt;&amp;lt; std::endl; // タイムゾーンの略称
++}
++```
++* chrono::system_clock[link /reference/chrono/system_clock.md]
++* now()[link /reference/chrono/system_clock/now.md]
++* chrono::time_zone[link /reference/chrono/time_zone.md]
++* chrono::locate_zone[link /reference/chrono/locate_zone.md]
++* std::format[link /reference/chrono/format.md]
++
++### 出力例
++```
++(未検証の行)
+++0900
++JST
++```
++
++## バージョン
++### 言語
++- C++20
++
++### 処理系
++- [Clang](/implementation.md#clang): (9.0時点で実装なし)
++- [GCC](/implementation.md#gcc): (9.2時点で実装なし)
++- [Visual C++](/implementation.md#visual_cpp): (2019 Update 3時点で実装なし)
++
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator&lt;&lt; -- sys_info : formatterを追加</title>
+      <link href="https://cpprefjp.github.io/reference/chrono/sys_info/op_ostream.html"/>
+      <id>2a64d964fc82fae96899d7718cddebfbf39f7b56:reference/chrono/sys_info/op_ostream.md</id>
+      <updated>2020-06-02T13:21:37+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/sys_info/op_ostream.md b/reference/chrono/sys_info/op_ostream.md
+new file mode 100644
+index 000000000..95eb23dca
+--- /dev/null
++++ b/reference/chrono/sys_info/op_ostream.md
+@@ -0,0 +1,66 @@
++# operator&amp;lt;&amp;lt;
++* chrono[meta header]
++* std::chrono[meta namespace]
++* function[meta id-type]
++* cpp20[meta cpp]
++
++```cpp
++namespace std::chrono {
++  template &amp;lt;class charT, class traits&amp;gt;
++  std::basic_ostream&amp;lt;charT, traits&amp;gt;&amp;amp;
++    operator&amp;lt;&amp;lt;(std::basic_ostream&amp;lt;charT, traits&amp;gt;&amp;amp; os, const sys_info&amp;amp; si); // (1) C++20
++}
++```
++
++## 概要
++`sys_info`オブジェクトを出力ストリームに出力する。
++
++
++## 効果
++`si`を未規定のフォーマットで`os`に出力する
++
++
++## 戻り値
++```cpp
++return os;
++```
++
++
++## 例
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;chrono&amp;gt;
++
++namespace chrono = std::chrono;
++
++int main()
++{
++  auto now = chrono::system_clock::now();
++
++  // 日本のタイムゾーン
++  const chrono::time_zone* tz = chrono::locate_zone(&amp;#34;Asia/Tokyo&amp;#34;);
++  chrono::sys_info si = tz-&amp;gt;get_info(now);
++
++  std::cout &amp;lt;&amp;lt; si &amp;lt;&amp;lt; std::endl; // タイムゾーン情報全体を出力
++}
++```
++* chrono::time_zone[link /reference/chrono/time_zone.md]
++* tz-&amp;gt;get_info[link /reference/chrono/time_zone/get_info.md]
++* chrono::locate_zone[link /reference/chrono/locate_zone.md]
++* chrono::system_clock[link /reference/chrono/system_clock.md]
++* now()[link /reference/chrono/system_clock/now.md]
++
++### 出力例
++```
++```
++
++(未検証)
++
++## バージョン
++### 言語
++- C++20
++
++### 処理系
++- [Clang](/implementation.md#clang): (9.0時点で実装なし)
++- [GCC](/implementation.md#gcc): (9.2時点で実装なし)
++- [Visual C++](/implementation.md#visual_cpp): (2019 Update 3時点で実装なし)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>insert_after -- forward_list::insert_after : 計算量について追記</title>
@@ -249,131 +510,6 @@ index 7b0925dbf..d0bcf9c33 100644
  seconds : 03
  minutes : 03
  24-hours : 15
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>weekday -- weekday : formatterを追加</title>
-      <link href="https://cpprefjp.github.io/reference/chrono/weekday.html"/>
-      <id>4129a698f778e92e73a66f25003ef9801091c08c:reference/chrono/weekday.md</id>
-      <updated>2020-06-01T21:27:42+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/weekday.md b/reference/chrono/weekday.md
-index 1efa73146..aa1a891e0 100644
---- a/reference/chrono/weekday.md
-+++ b/reference/chrono/weekday.md
-@@ -86,6 +86,13 @@ namespace std::chrono {
- | [`from_stream`](weekday/from_stream.md) | フォーマット指定して入力ストリームから入力する | C++20 |
- 
- 
-+## 文字列フォーマット
-+
-+| 名前 | 説明 | 対応バージョン |
-+|------|------|----------------|
-+| [`formatter`](weekday/formatter.md) | [`std::formatter`](/reference/format/formatter.md)クラスの特殊化 | C++20 |
-+
-+
- ## 例
- ```cpp example
- #include &amp;lt;cassert&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>formatter -- weekday : formatterを追加</title>
-      <link href="https://cpprefjp.github.io/reference/chrono/weekday/formatter.html"/>
-      <id>4129a698f778e92e73a66f25003ef9801091c08c:reference/chrono/weekday/formatter.md</id>
-      <updated>2020-06-01T21:27:42+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/weekday/formatter.md b/reference/chrono/weekday/formatter.md
-new file mode 100644
-index 000000000..118bab48e
---- /dev/null
-+++ b/reference/chrono/weekday/formatter.md
-@@ -0,0 +1,73 @@
-+# formatter
-+* chrono[meta header]
-+* std[meta namespace]
-+* class[meta id-type]
-+* cpp20[meta cpp]
-+
-+```cpp
-+namespace std {
-+  template &amp;lt;class charT&amp;gt;
-+  struct formatter&amp;lt;chrono::weekday, charT&amp;gt;;
-+}
-+```
-+
-+## 概要
-+`weekday`クラスに対する[`std::formatter`](/reference/format/formatter.md)クラステンプレートの特殊化。
-+
-+フォーマット指定子としては、以下を使用できる：
-+
-+| フォーマット指定子 | 説明 |
-+|--------------------|------|
-+| `%a` | ロケール依存の曜日の省略名 |
-+| `%A` | ロケール依存の曜日の完全名 |
-+| `%u` | 10進数での月曜を1とするISO曜日番号 (1-7) |
-+| `%0u` | ロケール依存の`%u`の異なる表現 |
-+| `%w` | 10進数での日曜を0とするISO曜日番号 (0-6) |
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;chrono&amp;gt;
-+#include &amp;lt;format&amp;gt;
-+
-+namespace chrono = std::chrono;
-+
-+int main()
-+{
-+  // デフォルトフォーマットはoperator&amp;lt;&amp;lt;と同じ
-+  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;{}&amp;#34;, chrono::Sunday) &amp;lt;&amp;lt; std::endl;
-+
-+  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;{:%a}&amp;#34;, chrono::Sunday) &amp;lt;&amp;lt; std::endl; // 省略名
-+  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;{:%A}&amp;#34;, chrono::Sunday) &amp;lt;&amp;lt; std::endl; // 完全名
-+
-+  // ロケール依存の出力
-+  std::cout &amp;lt;&amp;lt; std::format(std::locale(&amp;#34;ja_JP.UTF-8&amp;#34;), &amp;#34;{:%a}&amp;#34;, chrono::Sunday) &amp;lt;&amp;lt; std::endl;
-+  std::cout &amp;lt;&amp;lt; std::format(std::locale(&amp;#34;ja_JP.UTF-8&amp;#34;), &amp;#34;{:%A}&amp;#34;, chrono::Sunday) &amp;lt;&amp;lt; std::endl;
-+}
-+```
-+* std::format[link /reference/chrono/format.md]
-+* chrono::Sunday[link /reference/chrono/weekday_constants.md]
-+* std::locale[link /reference/locale/locale.md]
-+
-+### 出力
-+```
-+Sun
-+Sun
-+Sunday
-+日
-+日曜日
-+```
-+
-+## バージョン
-+### 言語
-+- C++20
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): (9.0時点で実装なし)
-+- [GCC](/implementation.md#gcc): (9.2時点で実装なし)
-+- [Visual C++](/implementation.md#visual_cpp): (2019 Update 3時点で実装なし)
-+
-+
-+## 関連項目
-+- [chronoの`std::format()`](/reference/chrono/format.md) (フォーマットの詳細)
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
