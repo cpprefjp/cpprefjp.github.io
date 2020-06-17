@@ -2,9 +2,67 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2020-06-17T03:26:02.440696</updated>
-  <id>b427106f-59e5-4b81-90b8-ce32f9d61d67</id>
+  <updated>2020-06-17T05:18:09.517057</updated>
+  <id>c7397e28-772e-4502-8241-bd28fe0725cd</id>
 
+  
+    <entry>
+      <title>一貫比較 -- C++20一貫比較 : P2085R0対応</title>
+      <link href="https://cpprefjp.github.io/lang/cpp20/consistent_comparison.html"/>
+      <id>918dd2bf794db3662e01818e3878f96cbbb3cc6b:lang/cpp20/consistent_comparison.md</id>
+      <updated>2020-06-17T14:13:56+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/consistent_comparison.md b/lang/cpp20/consistent_comparison.md
+index d291c10ce..b5ec41b3a 100644
+--- a/lang/cpp20/consistent_comparison.md
++++ b/lang/cpp20/consistent_comparison.md
+@@ -298,16 +298,28 @@ bool eq2 = a == category::C;  //ok
+ 
+ ```cpp
+ struct C {
+-  //有効な&amp;lt;=&amp;gt;のdefault宣言（3つのうちいずれか）
++  //有効な&amp;lt;=&amp;gt;のdefault宣言例
+   auto operator&amp;lt;=&amp;gt;(const C&amp;amp;) const = default;
+   friend auto operator&amp;lt;=&amp;gt;(const C&amp;amp;, const C&amp;amp;) = default;
+   friend auto operator&amp;lt;=&amp;gt;(C, C) = default;
+ 
+-  //有効な==のdefault宣言（3つのうちいずれか）
++  //有効な==のdefault宣言例
+   bool operator==(const C&amp;amp;) const = default;
+   friend bool operator==(const C&amp;amp;, const C&amp;amp;) = default;
+   friend bool operator==(C, C) = default;
++
++  //クラス外で定義することもできる
++  auto operator&amp;lt;=&amp;gt;(const C&amp;amp;) const;
++  bool operator== (const C&amp;amp;) const;
++  friend auto operator&amp;lt;=&amp;gt;(const C&amp;amp;, const C&amp;amp;);
++  friend bool operator== (const C&amp;amp;, const C&amp;amp;);
+ };
++
++//クラス外定義は別の翻訳単位にあってもok
++auto C::operator&amp;lt;=&amp;gt;(const C&amp;amp;) const = default;
++bool C::operator== (const C&amp;amp;) const = default;
++inline auto operator&amp;lt;=&amp;gt;(const C&amp;amp;, const C&amp;amp;) = default;
++inline bool operator== (const C&amp;amp;, const C&amp;amp;) = default;
+ ```
+ 
+ `&amp;lt;=&amp;gt;`をdefault宣言した場合、対応する`==`が暗黙的にdefault宣言される。そのアクセス指定は同一であり、`friend`であるかも`&amp;lt;=&amp;gt;`に従う。  
+@@ -783,6 +795,8 @@ struct has_vector {
+         - 不要になった`_equality`な比較カテゴリ型の削除
+     10. [P1946R0 Allow defaulting comparisons by value](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1946r0.html)
+         - `&amp;lt;=&amp;gt; ==`の`friend`な`default`宣言の調整
++    11. [P2085R0 Consistent defaulted comparisons](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2085r0.html)
++        - `&amp;lt;=&amp;gt; ==`の`default`宣言をクラス外でも行えるようにする
+ - 以前に検討されていた提案文書
+     - [N3950 Defaulted comparison operators](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n3950.html)
+     - [N4114 Defaulted comparison operators](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4114.htm)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>indirectly_writable -- indirectly_writable : リンク修正</title>
@@ -1680,51 +1738,6 @@ index 537818fe0..4f35a45bf 100644
       <author>
         <name>yumetodo</name>
         <email>yume-wikijp@live.jp</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>barrier -- 縦を揃えた方が分かりやすそうだったので</title>
-      <link href="https://cpprefjp.github.io/reference/barrier/barrier.html"/>
-      <id>f352f1762299eab8fa183e653742f9443d4efde7:reference/barrier/barrier.md</id>
-      <updated>2020-06-16T18:19:59+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/barrier/barrier.md b/reference/barrier/barrier.md
-index 20c3ace1a..708dcb662 100644
---- a/reference/barrier/barrier.md
-+++ b/reference/barrier/barrier.md
-@@ -115,7 +115,7 @@ int main()
-   for (int phase = 1; phase &amp;lt;= NPHASES; phase++) {
-     { // メインスレッドのフェーズタスクを実行
-       std::lock_guard lk{cout_mtx};
--      std::cout &amp;lt;&amp;lt; &amp;#34;Main &amp;#34; &amp;lt;&amp;lt; phase &amp;lt;&amp;lt; std::endl;
-+      std::cout &amp;lt;&amp;lt; &amp;#34;Main     &amp;#34; &amp;lt;&amp;lt; phase &amp;lt;&amp;lt; std::endl;
-     }
- 
-     // 合流ポイント: 全ワーカスレッドと同期
-@@ -129,14 +129,14 @@ int main()
- ### 出力例
- ```
- Worker#1 1
--Main 1
-+Main     1
- Worker#2 1
--Main 2
-+Main     2
- Worker#2 2
- Worker#1 2
- Worker#1 3
- Worker#2 3
--Main 3
-+Main     3
- ```
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>melpon</name>
-        <email>shigemasa7watanabe+github@gmail.com</email>
       </author>
     </entry>
   
