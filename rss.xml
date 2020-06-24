@@ -2,9 +2,145 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2020-06-24T15:23:32.540902</updated>
-  <id>dbf0f070-b04a-4fe1-a645-d055b578b9aa</id>
+  <updated>2020-06-24T16:18:46.628488</updated>
+  <id>387db219-cd55-43b1-b3b3-b15ca5f802a4</id>
 
+  
+    <entry>
+      <title>noop_coroutine -- noop_coroutine: サンプルコード追加</title>
+      <link href="https://cpprefjp.github.io/reference/coroutine/noop_coroutine.html"/>
+      <id>860a4d36cd6ab37a14ec03f523f55e8f4cd63d3e:reference/coroutine/noop_coroutine.md</id>
+      <updated>2020-06-25T01:14:08+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/coroutine/noop_coroutine.md b/reference/coroutine/noop_coroutine.md
+index 56f4b6ba8..61c30d9b3 100644
+--- a/reference/coroutine/noop_coroutine.md
++++ b/reference/coroutine/noop_coroutine.md
+@@ -28,6 +28,117 @@ noop_coroutine_handle noop_coroutine() noexcept;
+ （両者は等しいかもしれないし、等しくないかもしれない。）
+ 
+ 
++## 例
++```cpp example
++#include &amp;lt;coroutine&amp;gt;
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;utility&amp;gt;
++
++struct task {
++  struct promise_type {
++    std::coroutine_handle&amp;lt;&amp;gt; next_;
++    auto get_return_object() { return task{*this}; }
++    auto initial_suspend() { return std::suspend_always{}; }
++    auto final_suspend() { return std::suspend_always{}; }
++    auto yield_value(bool cont)
++    {
++      struct awaiter {
++        std::coroutine_handle&amp;lt;&amp;gt; next_;
++        bool await_ready() { return false; }
++        auto await_suspend(std::coroutine_handle&amp;lt;&amp;gt;) { return next_; }
++        void await_resume() {}
++      };
++      // 継続条件condを満たす場合は次コルーチンnext_に制御を移し、
++      // そうでない場合は再開元に制御を戻すAwaiterオブジェクトを返す。
++      return awaiter{cont ? next_ : std::noop_coroutine()};
++    }
++    void return_void() {}
++    void unhandled_exception() { std::terminate(); }
++  };
++
++  using coro_handle = std::coroutine_handle&amp;lt;promise_type&amp;gt;;
++
++  ~task()
++  {
++    if (coro_)
++      coro_.destroy();
++  }
++
++  task(task const&amp;amp;) = delete;
++  task(task&amp;amp;&amp;amp; rhs)
++    : coro_(std::exchange(rhs.coro_, nullptr)) {}
++
++  void set_next(task&amp;amp; t)
++  {
++    coro_.promise().next_ = t.coro_;
++  }
++
++  void start()
++  {
++    if (!coro_.done())
++      coro_.resume();
++  }
++
++private:
++  explicit task(promise_type&amp;amp; p)
++    : coro_(coro_handle::from_promise(p)) {}
++
++  coro_handle coro_;
++};
++
++task coro(int id)
++{
++  int n = id * 10;
++  for (;;) {
++    std::cout &amp;lt;&amp;lt; &amp;#34;coro#&amp;#34; &amp;lt;&amp;lt; id &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; n &amp;lt;&amp;lt; std::endl;
++    // 継続条件(0 &amp;lt; n)を満たす間はco_yield式により
++    // 自コルーチンを中断して次のコルーチンを再開する。
++    co_yield (0 &amp;lt; n);
++    n /= 2;
++  }
++}
++
++int main()
++{
++  // コルーチン3個の巡回グラフ(c1→c2→c3→c1...)を構成する
++  auto c1 = coro(1);
++  auto c2 = coro(2);
++  auto c3 = coro(3);
++  c1.set_next(c2);
++  c2.set_next(c3);
++  c3.set_next(c1);
++
++  // コルーチン動作を開始
++  c1.start();
++}
++```
++* std::noop_coroutine()[color ff0000]
++* std::suspend_always[link suspend_always.md]
++* std::coroutine_handle[link coroutine_handle.md.nolink]
++* resume()[link coroutine_handle/resume.md.nolink]
++* done()[link coroutine_handle/done.md.nolink]
++* from_promise[link coroutine_handle/from_promise.md.nolink]
++* promise()[link coroutine_handle/promise.md.nolink]
++* std::exchange[link /reference/utility/exchange.md]
++
++### 出力
++```
++coro#1 10
++coro#2 20
++coro#3 30
++coro#1 5
++coro#2 10
++coro#3 15
++coro#1 2
++coro#2 5
++coro#3 7
++coro#1 1
++coro#2 2
++coro#3 3
++coro#1 0
++```
++
++
+ ## バージョン
+ ### 言語
+ - C++20
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>コルーチン -- cpp20/coroutine: coroutine_traits, noop_coroutine</title>
@@ -621,41 +757,6 @@ index 9f7f0edf0..4a7987932 100644
       <author>
         <name>Akira Takahashi</name>
         <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>コルーチン -- cpp20/coroutines: サンプルコードの例外ハンドリングを修正</title>
-      <link href="https://cpprefjp.github.io/lang/cpp20/coroutines.html"/>
-      <id>9c766fd87cf10f5a77e5e423e82960571bcd1bc9:lang/cpp20/coroutines.md</id>
-      <updated>2020-06-24T17:10:35+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/coroutines.md b/lang/cpp20/coroutines.md
-index 2a48640de..9b2e49288 100644
---- a/lang/cpp20/coroutines.md
-+++ b/lang/cpp20/coroutines.md
-@@ -387,7 +387,7 @@ struct generator {
-       return std::suspend_always{};
-     }
-     void return_void() {}
--    void unhandled_exception() { throw; }
-+    void unhandled_exception() { std::terminate(); }
-   };
-   // ジェネレータに関連付けられるコルーチンハンドル型
-   using coro_handle = std::coroutine_handle&amp;lt;promise_type&amp;gt;;
-@@ -480,6 +480,7 @@ int main()
- ```
- * co_yield[color ff0000]
- * std::exchange[link /reference/utility/exchange.md]
-+* std::terminate()[link /reference/exception/terminate.md]
- * std::coroutine_handle[link /reference/coroutine/coroutine_handle.md.nolink]
- * std::suspend_always[link /reference/coroutine/suspend_always.md]
- * resume()[link /reference/coroutine/coroutine_handle/resume.md.nolink]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
       </author>
     </entry>
   
