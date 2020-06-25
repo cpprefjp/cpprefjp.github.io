@@ -3,23 +3,23 @@
     <head>
         <meta charset="UTF-8">
 
-        <title>suspend_never - cpprefjp C++日本語リファレンス</title>
+        <title>coroutine_handle - cpprefjp C++日本語リファレンス</title>
 
         <meta name="viewport" content="width=device-width,initial-scale=1">
         <meta name="keywords" content="
-  C++,標準ライブラリ,リファレンス,ドキュメント,STL,std,coroutine,std,class,cpp20
+  C++,標準ライブラリ,リファレンス,ドキュメント,STL,std,coroutine,std,class template,cpp20
 ">
-        <meta name="title" content="suspend_never - cpprefjp C++日本語リファレンス" />
-        <meta itemprop="name" content="suspend_never - cpprefjp C++日本語リファレンス" />
-        <meta property="og:title" content="suspend_never - cpprefjp C++日本語リファレンス" />
-        <meta property="og:url" content="https://cpprefjp.github.io//reference/coroutine/suspend_never.html" />
+        <meta name="title" content="coroutine_handle - cpprefjp C++日本語リファレンス" />
+        <meta itemprop="name" content="coroutine_handle - cpprefjp C++日本語リファレンス" />
+        <meta property="og:title" content="coroutine_handle - cpprefjp C++日本語リファレンス" />
+        <meta property="og:url" content="https://cpprefjp.github.io//reference/coroutine/coroutine_handle.html" />
         <meta property="og:site_name" content="cpprefjp - C++日本語リファレンス" />
         <meta property="og:type" content="article" />
-        <meta property="og:description" content="コルーチンを中断させない、トリビアルAwaitable型。" />
+        <meta property="og:description" content="コルーチンに対応するコルーチンハンドル。" />
         <meta name="twitter:card" content="summary" />
-        <meta name="twitter:title" content="suspend_never - cpprefjp C++日本語リファレンス" />
-        <meta name="twitter:url" content="https://cpprefjp.github.io//reference/coroutine/suspend_never.html" />
-        <meta name="twitter:description" content="コルーチンを中断させない、トリビアルAwaitable型。" />
+        <meta name="twitter:title" content="coroutine_handle - cpprefjp C++日本語リファレンス" />
+        <meta name="twitter:url" content="https://cpprefjp.github.io//reference/coroutine/coroutine_handle.html" />
+        <meta name="twitter:description" content="コルーチンに対応するコルーチンハンドル。" />
 
         
   <link rel="alternate" type="application/atom+xml" title="Atom" href="https://cpprefjp.github.io/rss.xml" />
@@ -69,7 +69,7 @@
 
     </head>
     <body>
-<header data-kunai-mdinfo="{&#34;meta&#34;: {&#34;header&#34;: [&#34;coroutine&#34;], &#34;namespace&#34;: [&#34;std&#34;], &#34;id-type&#34;: [&#34;class&#34;], &#34;cpp&#34;: [&#34;cpp20&#34;]}, &#34;sources&#34;: [{&#34;id&#34;: &#34;7b60ae72022b453973c69c96ee2fe6ff19c59b8f&#34;, &#34;source&#34;: &#34;#include &lt;coroutine&gt;\n#include &lt;iostream&gt;\n#include &lt;utility&gt;\n\nstruct task {\n  struct promise_type {\n    int value_;\n    auto get_return_object() { return task{*this}; }\n    auto initial_suspend()\n    {\n      return std::suspend_never{};\n    }\n    auto final_suspend()\n    {\n      return std::suspend_always{};\n    }\n    void return_value(int x) { value_ = x; }\n    void unhandled_exception() { std::terminate(); }\n  };\n\n  using coro_handle = std::coroutine_handle&lt;promise_type&gt;;\n\n  ~task()\n  {\n    if (coro_)\n      coro_.destroy();\n  }\n\n  task(task const&amp;) = delete;\n  task(task&amp;&amp; rhs)\n    : coro_(std::exchange(rhs.coro_, nullptr)) {}\n\n  int get()\n  {\n    if (!coro_.done()) {\n      coro_.resume();\n    }\n    return coro_.promise().value_;\n  }\n\nprivate:\n  explicit task(promise_type&amp; p)\n    : coro_(coro_handle::from_promise(p)) {}\n\n  coro_handle coro_;\n};\n\ntask f()\n{\n  std::cout &lt;&lt; \&#34;coroutine\&#34; &lt;&lt; std::endl;\n  co_return 42;\n}\n\nint main()\n{\n  auto c = f();\n  std::cout &lt;&lt; \&#34;main\&#34; &lt;&lt; std::endl;\n  int r = c.get();\n  std::cout &lt;&lt; \&#34;result=\&#34; &lt;&lt; r &lt;&lt; std::endl;\n}\n&#34;}], &#34;page_id&#34;: [&#34;reference&#34;, &#34;coroutine&#34;, &#34;suspend_never&#34;]}">
+<header data-kunai-mdinfo="{&#34;meta&#34;: {&#34;header&#34;: [&#34;coroutine&#34;], &#34;namespace&#34;: [&#34;std&#34;], &#34;id-type&#34;: [&#34;class template&#34;], &#34;cpp&#34;: [&#34;cpp20&#34;]}, &#34;sources&#34;: [{&#34;id&#34;: &#34;7e31c13d50d6a9aa2682d0c45a695e4e681309e3&#34;, &#34;source&#34;: &#34;#include &lt;coroutine&gt;\n#include &lt;iostream&gt;\n#include &lt;utility&gt;\n\nstruct task {\n  struct promise_type {\n    int value_;\n    auto get_return_object() { return task{*this}; }\n    auto initial_suspend() { return std::suspend_never{}; }\n    auto final_suspend() { return std::suspend_always{}; }\n    void return_value(int x) { value_ = x; }\n    void unhandled_exception() { std::terminate(); }\n  };\n\n  ~task()\n  {\n    if (coro_)\n      coro_.destroy();\n  }\n\n  task(task const&amp;) = delete;\n  task(task&amp;&amp; rhs)\n    : coro_(std::exchange(rhs.coro_, nullptr)) {}\n\n  int get()\n  {\n    if (!coro_.done()) {\n      coro_.resume();\n    }\n    return coro_.promise().value_;\n  }\n\nprivate:\n  explicit task(promise_type&amp; p)\n    : coro_(std::coroutine_handle&lt;promise_type&gt;::from_promise(p)) {}\n\n  std::coroutine_handle&lt;promise_type&gt; coro_;\n};\n\ntask f()\n{\n  std::cout &lt;&lt; \&#34;coroutine\&#34; &lt;&lt; std::endl;\n  co_return 42;\n}\n\nint main()\n{\n  auto c = f();\n  std::cout &lt;&lt; \&#34;main\&#34; &lt;&lt; std::endl;\n  int r = c.get();\n  std::cout &lt;&lt; \&#34;result=\&#34; &lt;&lt; r &lt;&lt; std::endl;\n}\n&#34;}], &#34;page_id&#34;: [&#34;reference&#34;, &#34;coroutine&#34;, &#34;coroutine_handle&#34;]}">
   <nav class="navbar navbar-default" role="navigation">
     <div class="container-fluid">
       <div class="navbar-header">
@@ -172,7 +172,7 @@
         <span>
           
             
-              <span itemprop="name">suspend_never</span>
+              <span itemprop="name">coroutine_handle</span>
             
           
         </span>
@@ -201,10 +201,10 @@
   
 
         <p class="text-right">
-          <a class="history" target="_blank" href="https://github.com/cpprefjp/site/commits/master/reference/coroutine/suspend_never.md">
+          <a class="history" target="_blank" href="https://github.com/cpprefjp/site/commits/master/reference/coroutine/coroutine_handle.md">
             <span class="fa fa-fw fa-clock-o fa-flip-horizontal"></span>履歴
           </a>
-          <a class="edit" target="_blank" href="https://github.com/cpprefjp/site/edit/master/reference/coroutine/suspend_never.md">
+          <a class="edit" target="_blank" href="https://github.com/cpprefjp/site/edit/master/reference/coroutine/coroutine_handle.md">
             <span class="fa fa-fw fa-pencil"></span>編集
           </a>
         </p>
@@ -213,19 +213,23 @@
     <div class="row">
       <div class="col-sm-12 content-body">
         
-  <div class="identifier-type">class</div><div class="header">&lt;coroutine&gt;</div><h1 itemprop="name"><span class="namespace" title="namespace std">std::</span><span class="token">suspend_never</span><span class="cpp cpp20" title="C++20で追加">(C++20)</span></h1>
+  <div class="identifier-type">class template</div><div class="header">&lt;coroutine&gt;</div><h1 itemprop="name"><span class="namespace" title="namespace std">std::</span><span class="token">coroutine_handle</span><span class="cpp cpp20" title="C++20で追加">(C++20)</span></h1>
 <div itemprop="articleBody"><p><div class="codehilite"><pre><span></span><code><span class="k">namespace</span> <span class="n">std</span> <span class="p">{</span>
-  <span class="k">struct</span> <span class="n">suspend_never</span> <span class="p">{</span>
-    <span class="k">constexpr</span> <span class="kt">bool</span> <span class="n">await_ready</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span> <span class="p">{</span> <span class="k">return</span> <span class="nb">true</span><span class="p">;</span> <span class="p">}</span>
-    <span class="k">constexpr</span> <span class="kt">void</span> <span class="n">await_suspend</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/coroutine/coroutine_handle.html">coroutine_handle&lt;&gt;</a></span><span class="p">)</span> <span class="k">const</span> <span class="k">noexcept</span> <span class="p">{}</span>
-    <span class="k">constexpr</span> <span class="kt">void</span> <span class="n">await_resume</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span> <span class="p">{}</span>
-  <span class="p">};</span>
+  <span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">Promise</span> <span class="o">=</span> <span class="kt">void</span><span class="o">&gt;</span>
+  <span class="k">struct</span> <span class="n">coroutine_handle</span><span class="p">;</span>
+
+  <span class="k">constexpr</span> <span class="kt">bool</span> <span class="k">operator</span><span class="o">==</span><span class="p">(</span><span class="n">coroutine_handle</span><span class="o">&lt;&gt;</span> <span class="n">x</span><span class="p">,</span> <span class="n">coroutine_handle</span><span class="o">&lt;&gt;</span> <span class="n">y</span><span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+  <span class="k">constexpr</span> <span class="n"><a href="https://cpprefjp.github.io/reference/compare/strong_ordering.html">strong_ordering</a></span> <span class="k">operator</span><span class="o">&lt;=&gt;</span><span class="p">(</span><span class="n">coroutine_handle</span><span class="o">&lt;&gt;</span> <span class="n">x</span><span class="p">,</span> <span class="n">coroutine_handle</span><span class="o">&lt;&gt;</span> <span class="n">y</span><span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+
+  <span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="o">&gt;</span> <span class="k">struct</span> <span class="n"><a href="https://cpprefjp.github.io/reference/functional/hash.html">hash</a></span><span class="p">;</span>
+  <span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">P</span><span class="o">&gt;</span> <span class="k">struct</span> <span class="n"><a href="https://cpprefjp.github.io/reference/functional/hash.html">hash</a></span><span class="o">&lt;</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="n">P</span><span class="o">&gt;&gt;</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div>
 </p>
 <h2>概要</h2>
-<p>コルーチンを中断させない、トリビアルAwaitable型。</p>
+<p>コルーチンに対応するコルーチンハンドル。</p>
 <h2>メンバ関数</h2>
+<h3>構築・リセット</h3>
 <table border="1" bordercolor="#888" style="border-collapse:collapse">
 <thead>
 <tr>
@@ -236,24 +240,195 @@
 </thead>
 <tbody>
 <tr>
-<td><code>await_ready</code></td>
-<td>コルーチンを常に中断しない</td>
+<td><code><span href="https://cpprefjp.github.io/reference/coroutine/coroutine_handle/op_constructor.md.nolink">(constructor)</span></code></td>
+<td>コンストラクタ</td>
 <td>C++20</td>
 </tr>
 <tr>
-<td><code>await_suspend</code></td>
-<td>コルーチン中断時に何もしない</td>
-<td>C++20</td>
-</tr>
-<tr>
-<td><code>await_resume</code></td>
-<td>コルーチン再開時に何もしない</td>
+<td><code><span href="https://cpprefjp.github.io/reference/coroutine/coroutine_handle/op_assign.md.nolink">operator=</span></code></td>
+<td>代入演算子</td>
 <td>C++20</td>
 </tr>
 </tbody>
 </table>
+<h3>エクスポート</h3>
+<table border="1" bordercolor="#888" style="border-collapse:collapse">
+<thead>
+<tr>
+<th>名前</th>
+<th>説明</th>
+<th>対応バージョン</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code><span href="https://cpprefjp.github.io/reference/coroutine/coroutine_handle/address.md.nolink">address</span></code></td>
+<td>コルーチンハンドルに対応するアドレス値</td>
+<td>C++20</td>
+</tr>
+</tbody>
+</table>
+<h3>観測</h3>
+<table border="1" bordercolor="#888" style="border-collapse:collapse">
+<thead>
+<tr>
+<th>名前</th>
+<th>説明</th>
+<th>対応バージョン</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code><span href="https://cpprefjp.github.io/reference/coroutine/coroutine_handle/op_bool.md.nolink">operator bool</span></code></td>
+<td>有効なコルーチンかを確認</td>
+<td>C++20</td>
+</tr>
+<tr>
+<td><code><span href="https://cpprefjp.github.io/reference/coroutine/coroutine_handle/done.md.nolink">done</span></code></td>
+<td>最終サスペンドポイントで中断状態にあるか確認</td>
+<td>C++20</td>
+</tr>
+</tbody>
+</table>
+<h3>再開</h3>
+<table border="1" bordercolor="#888" style="border-collapse:collapse">
+<thead>
+<tr>
+<th>名前</th>
+<th>説明</th>
+<th>対応バージョン</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code><span href="https://cpprefjp.github.io/reference/coroutine/coroutine_handle/resume.md.nolink">operator()</span></code></td>
+<td>中断状態にあるコルーチンを再開</td>
+<td>C++20</td>
+</tr>
+<tr>
+<td><code><span href="https://cpprefjp.github.io/reference/coroutine/coroutine_handle/resume.md.nolink">resume</span></code></td>
+<td>中断状態にあるコルーチンを再開</td>
+<td>C++20</td>
+</tr>
+<tr>
+<td><code><span href="https://cpprefjp.github.io/reference/coroutine/coroutine_handle/destroy.md.nolink">destroy</span></code></td>
+<td>中断状態にあるコルーチンを破棄</td>
+<td>C++20</td>
+</tr>
+</tbody>
+</table>
+<h3>Promiseアクセス</h3>
+<table border="1" bordercolor="#888" style="border-collapse:collapse">
+<thead>
+<tr>
+<th>名前</th>
+<th>説明</th>
+<th>対応バージョン</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code><span href="https://cpprefjp.github.io/reference/coroutine/coroutine_handle/promise.md.nolink">promise</span></code></td>
+<td>Promiseオブジェクトの参照</td>
+<td>C++20</td>
+</tr>
+</tbody>
+</table>
+<h2>静的メンバ関数</h2>
+<table border="1" bordercolor="#888" style="border-collapse:collapse">
+<thead>
+<tr>
+<th>名前</th>
+<th>説明</th>
+<th>対応バージョン</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code><span href="https://cpprefjp.github.io/reference/coroutine/coroutine_handle/from_promise.md.nolink">from_promise</span></code></td>
+<td>Promiseオブジェクトから対応するコルーチンハンドルへ変換</td>
+<td>C++20</td>
+</tr>
+<tr>
+<td><code><span href="https://cpprefjp.github.io/reference/coroutine/coroutine_handle/from_address.md.nolink">from_address</span></code></td>
+<td>アドレス値から対応するコルーチンハンドルへ変換</td>
+<td>C++20</td>
+</tr>
+</tbody>
+</table>
+<h2>非メンバ関数</h2>
+<h3>ハッシュサポート</h3>
+<table border="1" bordercolor="#888" style="border-collapse:collapse">
+<thead>
+<tr>
+<th>名前</th>
+<th>説明</th>
+<th>対応バージョン</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>template&lt;class T&gt; struct hash</code></td>
+<td>先行宣言(class template)</td>
+<td>C++20</td>
+</tr>
+<tr>
+<td><code>template&lt;class P&gt; struct hash&lt;coroutine_handle&lt;P&gt;&gt;</code></td>
+<td><code>hash</code>の<code>coroutine_handle&lt;P&gt;</code>に対する特殊化</td>
+<td>C++20</td>
+</tr>
+</tbody>
+</table>
+<h3>比較演算子</h3>
+<table border="1" bordercolor="#888" style="border-collapse:collapse">
+<thead>
+<tr>
+<th>名前</th>
+<th>説明</th>
+<th>対応バージョン</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bool operator==(coroutine_handle&lt;&gt;, coroutine_handle&lt;&gt;);</code></td>
+<td>等値比較</td>
+<td>C++20</td>
+</tr>
+<tr>
+<td><code>bool operator!=(coroutine_handle&lt;&gt;, coroutine_handle&lt;&gt;);</code></td>
+<td>非等値比較 (<code>==</code>により使用可能)</td>
+<td>C++20</td>
+</tr>
+<tr>
+<td><code>strong_ordering operator&lt;=&gt;(coroutine_handle&lt;&gt;, coroutine_handle&lt;&gt;);</code></td>
+<td>三方比較</td>
+<td>C++20</td>
+</tr>
+<tr>
+<td><code>bool operator&lt;(coroutine_handle&lt;&gt;, coroutine_handle&lt;&gt;);</code></td>
+<td>左辺が右辺より小さいかを判定する (<code>&lt;=&gt;</code>により使用可能)</td>
+<td>C++20</td>
+</tr>
+<tr>
+<td><code>bool operator&lt;=(coroutine_handle&lt;&gt;, coroutine_handle&lt;&gt;);</code></td>
+<td>左辺が右辺以下を判定する (<code>&lt;=&gt;</code>により使用可能)</td>
+<td>C++20</td>
+</tr>
+<tr>
+<td><code>bool operator&gt;(coroutine_handle&lt;&gt;, coroutine_handle&lt;&gt;);</code></td>
+<td>左辺が右辺より大きいかを判定する (<code>&lt;=&gt;</code>により使用可能)</td>
+<td>C++20</td>
+</tr>
+<tr>
+<td><code>bool operator&gt;=(coroutine_handle&lt;&gt;, coroutine_handle&lt;&gt;);</code></td>
+<td>左辺が右辺以上かを判定する (<code>&lt;=&gt;</code>により使用可能)</td>
+<td>C++20</td>
+</tr>
+</tbody>
+</table>
+<p><code>coroutine_handle</code>同士の比較は、<code><span href="https://cpprefjp.github.io/reference/coroutine/coroutine_handle/address.md.nolink">address</span></code>が返すアドレス値を用いて比較演算が行われる。</p>
 <h2>例</h2>
-<p><div class="yata" id="7b60ae72022b453973c69c96ee2fe6ff19c59b8f"><div class="codehilite"><pre><span></span><code><span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/coroutine.html">&lt;coroutine&gt;</a></span><span class="cp"></span>
+<p><div class="yata" id="7e31c13d50d6a9aa2682d0c45a695e4e681309e3"><div class="codehilite"><pre><span></span><code><span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/coroutine.html">&lt;coroutine&gt;</a></span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/iostream.html">&lt;iostream&gt;</a></span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/utility.html">&lt;utility&gt;</a></span><span class="cp"></span>
 
@@ -261,19 +436,11 @@
   <span class="k">struct</span> <span class="n">promise_type</span> <span class="p">{</span>
     <span class="kt">int</span> <span class="n">value_</span><span class="p">;</span>
     <span class="k">auto</span> <span class="nf">get_return_object</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="n">task</span><span class="p">{</span><span class="o">*</span><span class="k">this</span><span class="p">};</span> <span class="p">}</span>
-    <span class="k">auto</span> <span class="nf">initial_suspend</span><span class="p">()</span>
-    <span class="p">{</span>
-      <span class="k">return</span> <span class="n"><span style="color:#ff0000">std::suspend_never</span></span><span class="p">{};</span>
-    <span class="p">}</span>
-    <span class="k">auto</span> <span class="nf">final_suspend</span><span class="p">()</span>
-    <span class="p">{</span>
-      <span class="k">return</span> <span class="n"><a href="https://cpprefjp.github.io/reference/coroutine/suspend_always.html">std::suspend_always</a></span><span class="p">{};</span>
-    <span class="p">}</span>
+    <span class="k">auto</span> <span class="nf">initial_suspend</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="n"><a href="https://cpprefjp.github.io/reference/coroutine/suspend_never.html">std::suspend_never</a></span><span class="p">{};</span> <span class="p">}</span>
+    <span class="k">auto</span> <span class="nf">final_suspend</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="n"><a href="https://cpprefjp.github.io/reference/coroutine/suspend_always.html">std::suspend_always</a></span><span class="p">{};</span> <span class="p">}</span>
     <span class="kt">void</span> <span class="nf">return_value</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">)</span> <span class="p">{</span> <span class="n">value_</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span> <span class="p">}</span>
     <span class="kt">void</span> <span class="nf">unhandled_exception</span><span class="p">()</span> <span class="p">{</span> <span class="n">std</span><span class="o">::</span><span class="n">terminate</span><span class="p">();</span> <span class="p">}</span>
   <span class="p">};</span>
-
-  <span class="k">using</span> <span class="n">coro_handle</span> <span class="o">=</span> <span class="n"><a href="https://cpprefjp.github.io/reference/coroutine/coroutine_handle.html">std::coroutine_handle</a></span><span class="o">&lt;</span><span class="n">promise_type</span><span class="o">&gt;</span><span class="p">;</span>
 
   <span class="o">~</span><span class="n">task</span><span class="p">()</span>
   <span class="p">{</span>
@@ -295,9 +462,9 @@
 
 <span class="k">private</span><span class="o">:</span>
   <span class="k">explicit</span> <span class="n">task</span><span class="p">(</span><span class="n">promise_type</span><span class="o">&amp;</span> <span class="n">p</span><span class="p">)</span>
-    <span class="o">:</span> <span class="n">coro_</span><span class="p">(</span><span class="n">coro_handle</span><span class="o">::</span><span class="n"><span href="https://cpprefjp.github.io/reference/coroutine/coroutine_handle/from_promise.md.nolink">from_promise</span></span><span class="p">(</span><span class="n">p</span><span class="p">))</span> <span class="p">{}</span>
+    <span class="o">:</span> <span class="n">coro_</span><span class="p">(</span><span class="n"><span style="color:#ff0000">std::coroutine_handle&lt;promise_type&gt;</span></span><span class="o">::</span><span class="n"><span href="https://cpprefjp.github.io/reference/coroutine/coroutine_handle/from_promise.md.nolink">from_promise</span></span><span class="p">(</span><span class="n">p</span><span class="p">))</span> <span class="p">{}</span>
 
-  <span class="n">coro_handle</span> <span class="n">coro_</span><span class="p">;</span>
+  <span class="n"><span style="color:#ff0000">std::coroutine_handle&lt;promise_type&gt;</span></span> <span class="n">coro_</span><span class="p">;</span>
 <span class="p">};</span>
 
 <span class="n">task</span> <span class="nf">f</span><span class="p">()</span>
@@ -334,7 +501,6 @@ result=42
 <h2>関連項目</h2>
 <ul>
 <li><a href="https://cpprefjp.github.io/lang/cpp20/coroutines.html">C++20 コルーチン</a></li>
-<li><code><a href="https://cpprefjp.github.io/reference/coroutine/suspend_always.html">suspend_always</a></code></li>
 </ul></div>
 
       </div>
