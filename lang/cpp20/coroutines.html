@@ -189,8 +189,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2020-06-29T08:32:52">
-        2020年06月29日 08時32分52秒
+      <span itemprop="datePublished" content="2020-06-29T10:02:49">
+        2020年06月29日 10時02分49秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -251,27 +251,67 @@
 コルーチン実行の基本動作は、それぞれ下記ように説明される：</p>
 <ul>
 <li>呼出し: 通常の関数と同様に、括弧(<code>()</code>)を用いた関数呼び出し構文を用いる。コルーチンに対応するユーザ定義Promiseオブジェクトが自動的に生成されるため、そこからコルーチンハンドルを取得する。</li>
-<li>中断: コルーチン本体にて<code>co_yield</code>式または<code>co_await</code>式を記述する。中断されたコルーチンから呼出し元へは、コルーチンハンドルを内包するコルーチン戻り値型オブジェクトを返す。</li>
+<li>中断: コルーチン本体にて<code>co_yield</code>式または<code>co_await</code>式を記述する。中断されたコルーチンから呼出元へは、コルーチンハンドルを内包するコルーチン戻り値型オブジェクトを返す。</li>
 <li>再開: コルーチン中断により返された戻り値型オブジェクトを介して、コルーチンハンドルの再開関数<code><a href="https://cpprefjp.github.io/reference/coroutine/coroutine_handle/resume.html">resume</a></code>を呼び出す。</li>
 <li>復帰: コルーチン本体にて<code>co_return</code>文を記述、またはコルーチン本体終端まで到達する。全てのローカル変数とPromiseオブジェクトは破棄される。</li>
 </ul>
-<p>この４種類の基本動作に対して、次にようなカスタマイズポイントが提供される（<em>Promise</em> や <em>Awaiter</em> はコルーチンライブラリが提供するユーザ定義型とする）：</p>
+<p>この4種類の基本動作に対して、次のカスタマイズポイントが提供される。括弧内はコルーチンライブラリが実装すべきカスタマイズポイント名：</p>
 <ul>
-<li>
-<p>コルーチン呼出し直後の動作: 初期サスペンドポイント(<em>Promise</em><code>::initial_suspend</code>)にて、コルーチン本体の開始前に中断して戻り値型オブジェクトを返すか、そのままコルーチン本体を実行継続するかを制御する。</p>
-</li>
-<li>
-<p>コルーチン復帰直前の動作: 最終サスペンドポイント(<em>Promise</em><code>::final_suspend</code>)にて、コルーチンを最後に中断して戻り値型オブジェクトを返すか、そのままコルーチンに関するリソースを破棄するかを制御する。前者を選択した場合、リソースリークを防ぐためコルーチンハンドルの破棄関数<code><a href="https://cpprefjp.github.io/reference/coroutine/coroutine_handle/destroy.html">destroy</a></code>呼出しが必要となる。</p>
-</li>
-<li>値を伴うコルーチン中断: <code>co_yield</code>式により、コルーチンを中断すると同時に呼出し元へ値を返す(<em>Promise</em><code>::yield_value</code>)。</li>
-<li>値を伴うコルーチン復帰: <code>co_return</code>文により、呼出し元へ値を返す(<em>Promise</em><code>::return_value</code>)。</li>
-<li>コルーチン中断／再開制御: <code>co_await</code>式により、コルーチン中断の条件や動作を詳細に制御する(<em>Promise</em><code>::await_transform</code>, <code>operator co_await</code>)。<ul>
-<li>コルーチン中断の条件: <code>co_await</code>式に対して、コルーチンを中断するか否かを判断する(<em>Awaiter</em><code>::await_ready</code>)。</li>
-<li>コルーチン中断直前の動作: <code>co_await</code>式に対して、コルーチンを中断する直前の動作を制御する(<em>Awaiter</em><code>::await_suspend</code>)。</li>
-<li>コルーチン再開直後の動作: <code>co_await</code>式に対して、コルーチンが再開された直後の動作を制御する(<em>Awaiter</em><code>::await_resume</code>)。</li>
+<li>コルーチン呼出し直後の動作: 初期サスペンドポイント(<code>initial_suspend</code>)にて、コルーチン本体の開始前に中断して戻り値型オブジェクトを返すか、そのままコルーチン本体を実行継続するかを制御する。</li>
+<li>コルーチン復帰直前の動作: 最終サスペンドポイント(<code>final_suspend</code>)にて、コルーチンを最後に中断して戻り値型オブジェクトを返すか、そのままコルーチンに関するリソースを破棄するかを制御する。前者を選択した場合、リソースリークを防ぐためコルーチンハンドルの破棄関数<code><a href="https://cpprefjp.github.io/reference/coroutine/coroutine_handle/destroy.html">destroy</a></code>呼出しが必要となる。</li>
+<li>値を伴うコルーチン中断: <code>co_yield</code>式により、コルーチンを中断すると同時に呼出元へ値を返す(<code>yield_value</code>)。</li>
+<li>値を伴うコルーチン復帰: <code>co_return</code>文により、呼出元へ値を返す(<code>return_value</code>)。</li>
+<li>コルーチン中断／再開制御: <code>co_await</code>式により、コルーチン中断と再開に関する振る舞いを詳細に制御する(<code>await_transform</code>, <code>operator co_await</code>)。<ul>
+<li>コルーチン中断の条件: <code>co_await</code>式に対して、コルーチンを中断するか否かを判断する(<code>await_ready</code>)。</li>
+<li>コルーチン中断直前の動作: <code>co_await</code>式に対して、コルーチンを中断する直前の動作を制御する(<code>await_suspend</code>)。</li>
+<li>コルーチン再開直後の動作: <code>co_await</code>式に対して、コルーチンが再開された直後の動作を制御する(<code>await_resume</code>)。</li>
 </ul>
 </li>
 </ul>
+<p>プログラマが記述するコルーチンは、コンパイル時にソースコード変換が行われると解釈できる。
+（従来のC++仕様範囲ではコルーチン動作を正確に表現できないため、下記はあくまでも疑似的なコードとなる）：</p>
+<p><div class="codehilite"><pre><span></span><code><span class="c1">// プログラマが記述するコルーチン</span>
+<span class="n">generator</span> <span class="nf">iota</span><span class="p">(</span><span class="kt">int</span> <span class="n">end</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="n">end</span><span class="p">;</span> <span class="o">++</span><span class="n">n</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n"><span style="color:#ff0000">co_yield</span></span> <span class="n">n</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// C++コンパイラにより展開されたコード</span>
+<span class="n">generator</span> <span class="nf">iota</span><span class="p">(</span><span class="kt">int</span> <span class="n">end</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="c1">// コルーチンに対応するPromiseオブジェクトを初期化</span>
+  <span class="n">generator</span><span class="o">::</span><span class="n">promise_type</span> <span class="n">promise</span><span class="p">;</span>
+
+  <span class="c1">// 戻り値型オブジェクトの初期化</span>
+  <span class="n">generator</span> <span class="n">result</span> <span class="o">=</span> <span class="n">promise</span><span class="p">.</span><span class="n">get_return_object</span><span class="p">();</span>
+  <span class="c1">// コルーチンハンドルをget_return_object内で取得し、resultメンバで保持する。</span>
+  <span class="c1">// 生成したresultオブジェクトは、初回のコルーチン中断時に呼出元へ返される。</span>
+
+  <span class="c1">// 本例では全て <span style="color:#ff0000">co_await</span> <a href="https://cpprefjp.github.io/reference/coroutine/suspend_always.html">std::suspend_always{}</a> 相当のため、</span>
+  <span class="c1">// 以降の<span style="color:#ff0000">co_await</span>式(★箇所)においてコルーチンは中断／再開される。</span>
+
+  <span class="c1">// 初期サスペンドポイント</span>
+  <span class="n"><span style="color:#ff0000">co_await</span></span> <span class="n">promise</span><span class="p">.</span><span class="n">initial_suspend</span><span class="p">();</span> <span class="c1">//★</span>
+
+  <span class="c1">// コルーチン本体部</span>
+  <span class="p">{</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="n">end</span><span class="p">;</span> <span class="o">++</span><span class="n">n</span><span class="p">)</span> <span class="p">{</span>
+      <span class="c1">// <span style="color:#ff0000">co_yield</span>式は下記<span style="color:#ff0000">co_await</span>式に展開される</span>
+      <span class="n"><span style="color:#ff0000">co_await</span></span> <span class="n">promise</span><span class="p">.</span><span class="n">yield_value</span><span class="p">(</span><span class="n">n</span><span class="p">);</span> <span class="c1">//★</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+  <span class="n">promise</span><span class="p">.</span><span class="n">return_void</span><span class="p">();</span>
+
+  <span class="c1">// 最終サスペンドポイント</span>
+  <span class="n"><span style="color:#ff0000">co_await</span></span> <span class="n">promise</span><span class="p">.</span><span class="n">final_suspend</span><span class="p">();</span> <span class="c1">//★</span>
+
+  <span class="c1">// 本例では最終サスペンドポイントでコルーチンを中断するため、ここには制御が到達しない。</span>
+  <span class="c1">// 呼出側で戻り値オブジェクトを破棄すると、デストラクタ経由で本コルーチンは破棄される。</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
 <h2>仕様</h2>
 <h3>コルーチン定義</h3>
 <p>C++におけるコルーチンは、関数の一種として定義される。</p>
@@ -482,8 +522,8 @@ Await式は、静的記憶域もしくは<a href="https://cpprefjp.github.io/lan
   <span class="n"><span style="color:#ff0000">co_await</span></span> <span class="nf">h</span><span class="p">();</span>
 <span class="p">}</span>
 
-<span class="k">auto</span> <span class="n">f</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="n"><span style="color:#ff0000">co_await</span></span> <span class="n">h</span><span class="p">());</span> <span class="c1">// エラー: await式は関数中断ポイントの外</span>
-<span class="kt">int</span> <span class="n">a</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span> <span class="n"><span style="color:#ff0000">co_await</span></span> <span class="n">h</span><span class="p">()</span> <span class="p">};</span>   <span class="c1">// エラー: await式は関数中断ポイントの外</span>
+<span class="k">auto</span> <span class="n">f</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="n"><span style="color:#ff0000">co_await</span></span> <span class="n">h</span><span class="p">());</span> <span class="c1">// エラー: await式は関数中断コンテキストの外</span>
+<span class="kt">int</span> <span class="n">a</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span> <span class="n"><span style="color:#ff0000">co_await</span></span> <span class="n">h</span><span class="p">()</span> <span class="p">};</span>   <span class="c1">// エラー: await式は関数中断コンテキストの外</span>
 </code></pre></div>
 </p>
 <h3>Yield式</h3>
