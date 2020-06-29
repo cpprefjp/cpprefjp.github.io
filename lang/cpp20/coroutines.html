@@ -189,8 +189,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2020-06-29T06:56:18">
-        2020年06月29日 06時56分18秒
+      <span itemprop="datePublished" content="2020-06-29T08:32:52">
+        2020年06月29日 08時32分52秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -245,6 +245,32 @@
 <li>コルーチン毎の <strong>動的メモリ確保</strong>: コルーチン実引数の保持や進行状況を管理するため、動的メモリ確保が行われる可能性がある。ただし一定の条件を満たす場合には、<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0981r0.html" target="_blank">C++コンパイラ最適化により動的メモリ確保は省略される</a>と期待できる。</li>
 <li><strong>非対称(Asymmetric)・対称(Symmetric)コルーチン</strong>: 中断処理によりコルーチン再開元へ制御を戻す非対称コルーチンのほか、明示的に別コルーチンの再開に制御を移す対称コルーチンをサポートする。待機動作をカスタマイズするAwaiterオブジェクト<code>await_suspend</code>にて制御する。</li>
 <li><strong><a href="https://cpprefjp.github.io/reference/thread/thread.html">スレッド(thread)</a>との直交</strong>: あるスレッド上で実行されるコルーチンを中断し、その後に別スレッドから同コルーチンを再開させることもできる。ただし<a href="https://cpprefjp.github.io/lang/cpp11/thread_local_storage.html">スレッドローカルストレージ</a>と組合せには注意が必要。</li>
+</ul>
+<h3>動作概略</h3>
+<p>C++コルーチン動作理解の助けとなるよう、ここでは細部を省略した説明を行う。
+コルーチン実行の基本動作は、それぞれ下記ように説明される：</p>
+<ul>
+<li>呼出し: 通常の関数と同様に、括弧(<code>()</code>)を用いた関数呼び出し構文を用いる。コルーチンに対応するユーザ定義Promiseオブジェクトが自動的に生成されるため、そこからコルーチンハンドルを取得する。</li>
+<li>中断: コルーチン本体にて<code>co_yield</code>式または<code>co_await</code>式を記述する。中断されたコルーチンから呼出し元へは、コルーチンハンドルを内包するコルーチン戻り値型オブジェクトを返す。</li>
+<li>再開: コルーチン中断により返された戻り値型オブジェクトを介して、コルーチンハンドルの再開関数<code><a href="https://cpprefjp.github.io/reference/coroutine/coroutine_handle/resume.html">resume</a></code>を呼び出す。</li>
+<li>復帰: コルーチン本体にて<code>co_return</code>文を記述、またはコルーチン本体終端まで到達する。全てのローカル変数とPromiseオブジェクトは破棄される。</li>
+</ul>
+<p>この４種類の基本動作に対して、次にようなカスタマイズポイントが提供される（<em>Promise</em> や <em>Awaiter</em> はコルーチンライブラリが提供するユーザ定義型とする）：</p>
+<ul>
+<li>
+<p>コルーチン呼出し直後の動作: 初期サスペンドポイント(<em>Promise</em><code>::initial_suspend</code>)にて、コルーチン本体の開始前に中断して戻り値型オブジェクトを返すか、そのままコルーチン本体を実行継続するかを制御する。</p>
+</li>
+<li>
+<p>コルーチン復帰直前の動作: 最終サスペンドポイント(<em>Promise</em><code>::final_suspend</code>)にて、コルーチンを最後に中断して戻り値型オブジェクトを返すか、そのままコルーチンに関するリソースを破棄するかを制御する。前者を選択した場合、リソースリークを防ぐためコルーチンハンドルの破棄関数<code><a href="https://cpprefjp.github.io/reference/coroutine/coroutine_handle/destroy.html">destroy</a></code>呼出しが必要となる。</p>
+</li>
+<li>値を伴うコルーチン中断: <code>co_yield</code>式により、コルーチンを中断すると同時に呼出し元へ値を返す(<em>Promise</em><code>::yield_value</code>)。</li>
+<li>値を伴うコルーチン復帰: <code>co_return</code>文により、呼出し元へ値を返す(<em>Promise</em><code>::return_value</code>)。</li>
+<li>コルーチン中断／再開制御: <code>co_await</code>式により、コルーチン中断の条件や動作を詳細に制御する(<em>Promise</em><code>::await_transform</code>, <code>operator co_await</code>)。<ul>
+<li>コルーチン中断の条件: <code>co_await</code>式に対して、コルーチンを中断するか否かを判断する(<em>Awaiter</em><code>::await_ready</code>)。</li>
+<li>コルーチン中断直前の動作: <code>co_await</code>式に対して、コルーチンを中断する直前の動作を制御する(<em>Awaiter</em><code>::await_suspend</code>)。</li>
+<li>コルーチン再開直後の動作: <code>co_await</code>式に対して、コルーチンが再開された直後の動作を制御する(<em>Awaiter</em><code>::await_resume</code>)。</li>
+</ul>
+</li>
 </ul>
 <h2>仕様</h2>
 <h3>コルーチン定義</h3>
