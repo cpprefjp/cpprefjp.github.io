@@ -2,9 +2,150 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2020-07-31T09:40:37.747227</updated>
-  <id>3c36cef9-cbc9-46c2-8b6b-196b34504912</id>
+  <updated>2020-07-31T14:02:14.543239</updated>
+  <id>2b1fa5e4-8bab-4cf9-83a0-f8db0c008c24</id>
 
+  
+    <entry>
+      <title>一貫比較 -- 一貫比較 : p2002r1の内容追記 #786</title>
+      <link href="https://cpprefjp.github.io/lang/cpp20/consistent_comparison.html"/>
+      <id>78ba670f2005a7a220d2819d454c89fd01d8b2ac:lang/cpp20/consistent_comparison.md</id>
+      <updated>2020-07-31T22:57:34+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/consistent_comparison.md b/lang/cpp20/consistent_comparison.md
+index 51bb41858..2cafc0d75 100644
+--- a/lang/cpp20/consistent_comparison.md
++++ b/lang/cpp20/consistent_comparison.md
+@@ -117,10 +117,9 @@ bool is_equal = comp == 0.0;
+ 
+ 比較に参加するすべての型の`&amp;lt;=&amp;gt;`による比較カテゴリ型をそれぞれ`Ti (0 &amp;lt;= i &amp;lt; N)`として、共通比較カテゴリ型`U`は以下のように決定される。
+ 
+-1. `Ti`の中に一つでも比較カテゴリ型でない型がある場合、`U = void`
+-2. `Ti`の中に1つでも`partial_ordering`がある場合、`U = partial_ordering`
+-3. `Ti`の中に1つでも`weak_ordering`がある場合、`U = weak_ordering`
+-4. それ以外の場合、`U = strong_ordering`（`N == 0`の場合）
++1. `Ti`の中に1つでも`partial_ordering`がある場合、`U = partial_ordering`
++2. `Ti`の中に1つでも`weak_ordering`がある場合、`U = weak_ordering`
++3. それ以外の場合、`U = strong_ordering`（`N == 0`の場合）
+ 
+ この共通比較カテゴリ型を求めるのは場合によっては困難なので、それを求めるために`&amp;lt;compare&amp;gt;`ヘッダにて[`common_comparison_category&amp;lt;Ts...&amp;gt;`](/reference/compare/common_comparison_category.md)というメタ関数が提供される。
+ 
+@@ -332,7 +331,7 @@ inline bool operator== (const C&amp;amp;, const C&amp;amp;) = default;
+ 
+ 上記のように`&amp;lt;=&amp;gt;`が`default`宣言されていて`==`メンバ/`friend`関数が一つも宣言されていない場合、その`&amp;lt;=&amp;gt;`に対応する`==`の`default`宣言が暗黙的に行われる。
+ 
+-そのような暗黙宣言は対応する`&amp;lt;=&amp;gt;`の直後で、対応する`&amp;lt;=&amp;gt;`の宣言の戻り値型を`bool`、名前を`operator==`に置き換えた形で宣言される。すなわち、対応する`&amp;lt;=&amp;gt;`に指定されているあらゆるプロパティを全て継承する。ただし、結果的な例外指定だけは異なる可能性がある。
++そのような暗黙宣言は対応する`&amp;lt;=&amp;gt;`の直後で、対応する`&amp;lt;=&amp;gt;`の宣言の戻り値型を`bool`、名前を`operator==`に置き換えたように宣言される。すなわち、対応する`&amp;lt;=&amp;gt;`に指定されているあらゆるプロパティを全て継承する。ただし、結果的な例外指定だけは異なる可能性がある。
+ 
+ `&amp;lt;=&amp;gt;`の`default`宣言に伴う暗黙の`==`宣言の例。
+ 
+@@ -340,11 +339,11 @@ inline bool operator== (const C&amp;amp;, const C&amp;amp;) = default;
+ template&amp;lt;typename T&amp;gt;
+ struct X {
+   friend constexpr std::partial_ordering operator&amp;lt;=&amp;gt;(X, X) requires (sizeof(T) != 1) = default;
+-  //暗黙宣言は次のようになる
++  //対応する==の暗黙宣言は次のようになる
+   //friend constexpr bool operator==(X, X) requires (sizeof(T) != 1) = default;
+ 
+   [[nodiscard]] virtual std::strong_ordering operator&amp;lt;=&amp;gt;(const X&amp;amp;) const = default;
+-  //暗黙宣言は次のようになる
++  //対応する==の暗黙宣言は次のようになる
+   //[[nodiscard]] virtual bool operator==(const X&amp;amp;) const = default;
+ };
+ ```
+@@ -399,7 +398,18 @@ public:
+ };
+ ```
+ 
+-この時、使用可能な`&amp;lt;=&amp;gt; ==`演算子が見つからない場合、およびメンバに参照型を持つか1つ以上のメンバ変数を持つ匿名共用体を含む、もしくはその型が1つ以上のメンバ変数を持つ共用体である場合は宣言された全ての比較演算子の`default`宣言は暗黙的に`delete`される（下記のその他演算子の`default`宣言も含む）。
++ただし、次のいずれかに該当する場合には`&amp;lt;=&amp;gt; ==`の`default`宣言は暗黙的に`delete`される
++
++- `&amp;lt;=&amp;gt;`は`delete`される
++    - 使用可能な`&amp;lt;=&amp;gt;`演算子が見つからないペアがある
++    - `&amp;lt;=&amp;gt;`による比較が比較カテゴリ型を返さないペアがある
++- `==`は`delete`される
++    - 使用可能な`==`演算子が見つからないペアがある
++    - `==`による比較が`bool`に変換可能な型を返さないペアがある
++- 両方とも`delete`される
++    - 参照型メンバを持つ
++    - 1つ以上のメンバ変数を持つ匿名共用体をメンバに含む
++    - その型が1つ以上のメンバ変数を持つ共用体である
+ 
+ #### default実装における&amp;lt;=&amp;gt;の合成
+ 
+@@ -434,18 +444,17 @@ auto comp = n1 &amp;lt;=&amp;gt; n2;  //ok
+ bool eq   = n1 ==  n2;  //ok
+ ```
+ 
+-指定された戻り値型を`R`、比較しようとしている`T`の値を`a, b`として、それらの満たす条件によって以下のように`&amp;lt;=&amp;gt;`は合成される。
++`&amp;lt;=&amp;gt;`の`default`宣言に指定された戻り値型を`R`、比較しようとしている対応するメンバの値を`a, b`として、それらの満たす条件によって以下のように`&amp;lt;=&amp;gt;`は合成される。
+ 
+ |条件|合成された`&amp;lt;=&amp;gt;`の式|
+ |:-------------|:-------------|
+-|`a &amp;lt;=&amp;gt; b`のオーバーロード解決で使用可能な`&amp;lt;=&amp;gt;`が見つかる|`static_cast&amp;lt;R&amp;gt;(a &amp;lt;=&amp;gt; b);`|
+-|`R`は`std::strong_ordering`|`a == b ? std::strong_ordering::equal :`&amp;lt;br/&amp;gt;`a &amp;lt; b  ? std::strong_ordering::less :`&amp;lt;br/&amp;gt;`std::strong_ordering::greater;`|
+-|`R`は`std::weak_ordering`|`a == b ? std::weak_ordering::equivalent :`&amp;lt;br/&amp;gt;`a &amp;lt; b  ? std::weak_ordering::less :`&amp;lt;br/&amp;gt;`std::weak_ordering::greater;`|
+-|`R`は`std::partial_ordering`|`a == b ? std::partial_ordering::equivalent :`&amp;lt;br/&amp;gt;`a &amp;lt; b  ? std::partial_ordering::less :`&amp;lt;br/&amp;gt;`b &amp;lt; a  ? std::partial_ordering::greater;`&amp;lt;br/&amp;gt;`std::partial_ordering::unordered`|
++|`a &amp;lt;=&amp;gt; b`が使用可能|`static_cast&amp;lt;R&amp;gt;(a &amp;lt;=&amp;gt; b);`|
++|`R`は`std::strong_ordering`であり、`a == b, a &amp;lt; b`がいずれも使用可能|`a == b ? std::strong_ordering::equal :`&amp;lt;br/&amp;gt;`a &amp;lt; b  ? std::strong_ordering::less :`&amp;lt;br/&amp;gt;`std::strong_ordering::greater;`|
++|`R`は`std::weak_ordering`であり、`a == b, a &amp;lt; b`がいずれも使用可能|`a == b ? std::weak_ordering::equivalent :`&amp;lt;br/&amp;gt;`a &amp;lt; b  ? std::weak_ordering::less :`&amp;lt;br/&amp;gt;`std::weak_ordering::greater;`|
++|`R`は`std::partial_ordering`であり、`a == b, a &amp;lt; b`がいずれも使用可能|`a == b ? std::partial_ordering::equivalent :`&amp;lt;br/&amp;gt;`a &amp;lt; b  ? std::partial_ordering::less :`&amp;lt;br/&amp;gt;`b &amp;lt; a  ? std::partial_ordering::greater;`&amp;lt;br/&amp;gt;`std::partial_ordering::unordered`|
+ |どれにも当てはまらない|定義されない|
+ 
+-戻り値型に`auto`を指定した際は、共通比較カテゴリ型を`R`として1つ目（1番上）のように`&amp;lt;=&amp;gt;`が合成されている。  
+-また、1つ目の条件により合成される際は`a &amp;lt;=&amp;gt; b`の戻り値型が`R`に変換できない場合はコンパイルエラーとなる。
++この合成された式を用いて`&amp;lt;=&amp;gt;`の`default`実装を行う時、合成された式が定義されない（上記条件に当てはまらない）ペアがある場合はその`&amp;lt;=&amp;gt;`の`default`宣言は暗黙的に`delete`される。
+ 
+ 先ほどの`newer`に対して明示的に書くと以下のようになる。
+ ```cpp
+@@ -469,26 +478,33 @@ struct newer {
+ };
+ ```
+ 
+-この合成において使用される`&amp;lt; ==`演算子の戻り値型の妥当性はチェックされない。仮に`bool`ではなかったとしても、合成された式においてコンパイルエラーが発生しなければ`&amp;lt;=&amp;gt;`の合成はつつがなく行われる。  
+-また、合成された`&amp;lt;=&amp;gt;`が定義されない（上記条件のいずれも当てはまらない）場合はdefault指定の`&amp;lt;=&amp;gt;`は暗黙にdeleteされる。
++この合成において使用される`&amp;lt; ==`演算子の戻り値型の妥当性はチェックされない。仮に`bool`ではなかったとしても、合成された式においてコンパイルエラーが発生しなければ`&amp;lt;=&amp;gt;`の合成はつつがなく行われる。逆に言うと、合成された式がコンパイルエラーを起こす場合はハードエラーとなる。
+ 
+ #### その他の比較演算子のdefault宣言
+-`&amp;lt;=&amp;gt; ==`だけでなく、残りの比較演算子もdefault指定で宣言することができる。その有効な宣言は`&amp;lt;=&amp;gt; ==`に従う。
+ 
++`&amp;lt;=&amp;gt; ==`だけでなく、残りの比較演算子もdefault指定で宣言することができる。その有効な宣言は`==`に従う。  
+ そのようなdefault実装はオーバーロード解決時に生成される式と同様の式を使って`&amp;lt;=&amp;gt; ==`から実装される。
+ 
+-`&amp;lt;=&amp;gt; ==`演算子が使用可能ではない場合や`&amp;lt;=&amp;gt;`の戻り値型が対象の演算子を生成できない場合、`==`の戻り値型が`bool`ではない場合はそのdefault宣言は暗黙的に`delete`される（オーバーロード候補生成時はコンパイルエラーとなる場合でも単にdeleteされる）。
++ただし次のいずれかの場合、演算子`@`の`default`宣言は暗黙的に`delete`される（オーバーロード候補生成時はコンパイルエラーとなる場合でも単に`delete`される）。
++
++- `x @ y`のオーバーロード解決の結果、使用可能な候補が見つからない
++    - `@`の生成に使用する`&amp;lt;=&amp;gt; ==`演算子が使用可能ではない
++    - `@`の生成に使用する`&amp;lt;=&amp;gt;`の戻り値型が比較カテゴリ型ではない
++    - `@`（`!=`）の生成に使用する`==`の戻り値型が`bool`ではない
++- `x @ y`のオーバーロード解決の結果、生成された式ではない演算子が見つかった
++    - `operator@`がすでに定義されている
+ 
+ ```cpp
+ struct C {
+-
++  // 戻り値型のおかしい&amp;lt;=&amp;gt;
+   bool operator&amp;lt;=&amp;gt;(const C&amp;amp;) const { return true; }
++  // 正常な==
++  bool operator==(const C&amp;amp;) const = default;
+ 
+   bool operator&amp;lt;(const C&amp;amp;) const = default;  //ok、暗黙的にdeleteされる
+ 
+-  bool operator!=(const C&amp;amp;) const = default;  //ok、使用可能
++  bool operator!=(const C&amp;amp;) const = default;  //ok、使用可能（ただし、==が明示的に宣言されている必要がある）
+ };
+-
+ ```
+ 
+ これは、比較演算子のアドレスを取りたいときに使用する。
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>mona-@live.jp</email>
+      </author>
+    </entry>
   
     <entry>
       <title>一貫比較 -- 一貫比較 : p2002r1の内容追記（途中） #786</title>
@@ -1564,33 +1705,6 @@ index 29079e510..eaac54322 100644
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>型の文脈でtypenameの省略を許可 -- リンク修正</title>
-      <link href="https://cpprefjp.github.io/lang/cpp20/down_with_typename.html"/>
-      <id>579509cae415696e4c0903e44c5c665abe06a432:lang/cpp20/down_with_typename.md</id>
-      <updated>2020-07-24T17:52:59+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/down_with_typename.md b/lang/cpp20/down_with_typename.md
-index 05985e67a..4f956646e 100644
---- a/lang/cpp20/down_with_typename.md
-+++ b/lang/cpp20/down_with_typename.md
-@@ -21,7 +21,7 @@
-     * メンバ宣言
-     * メンバ宣言の中の引数宣言(デフォルト引数に現れる場合を除く)
-     * 識別子が修飾名である関数または関数テンプレートの引数宣言(デフォルト引数に現れる場合を除く)
--    * [ラムダ式](/lang/cpp11/lambda_expressions.md)または[requires式](consepts.md)の引数宣言(デフォルト引数に現れる場合を除く)
-+    * [ラムダ式](/lang/cpp11/lambda_expressions.md)または[requires式](./concepts.md)の引数宣言(デフォルト引数に現れる場合を除く)
-     * 非型テンプレートパラメーターの宣言
- 
- ```cpp
-&lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
         <name>onihusube</name>
