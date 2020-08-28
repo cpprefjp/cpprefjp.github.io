@@ -201,12 +201,12 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2020-03-30T04:36:00">
-        2020年03月30日 04時36分00秒
+      <span itemprop="datePublished" content="2020-08-28T04:18:29">
+        2020年08月28日 04時18分29秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">Akira Takahashi</span>
+        <span itemprop="name">yoh</span>
       </span>
       が更新
     </small></p>
@@ -234,6 +234,12 @@
 <span class="kt">bool</span> <span class="n">wait_until</span><span class="p">(</span><span class="n">Lock</span><span class="o">&amp;</span> <span class="n">lock</span><span class="p">,</span>
                 <span class="k">const</span> <span class="n">chrono</span><span class="o">::</span><span class="n"><a href="https://cpprefjp.github.io/reference/chrono/time_point.html">time_point</a></span><span class="o">&lt;</span><span class="n">Clock</span><span class="p">,</span> <span class="n">Duration</span><span class="o">&gt;&amp;</span> <span class="n">abs_time</span><span class="p">,</span>
                 <span class="n">Predicate</span> <span class="n">pred</span><span class="p">);</span>                                           <span class="c1">// (2)</span>
+
+<span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">Lock</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Clock</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Duration</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Predicate</span><span class="o">&gt;</span>
+<span class="kt">bool</span> <span class="n">wait_until</span><span class="p">(</span><span class="n">Lock</span><span class="o">&amp;</span> <span class="n">lock</span><span class="p">,</span>
+                <span class="n"><a href="https://cpprefjp.github.io/reference/stop_token/stop_token.html">stop_token</a></span> <span class="n">stoken</span><span class="p">,</span>
+                <span class="k">const</span> <span class="n">chrono</span><span class="o">::</span><span class="n"><a href="https://cpprefjp.github.io/reference/chrono/time_point.html">time_point</a></span><span class="o">&lt;</span><span class="n">Clock</span><span class="p">,</span> <span class="n">Duration</span><span class="o">&gt;&amp;</span> <span class="n">abs_time</span><span class="p">,</span>
+                <span class="n">Predicate</span> <span class="n">pred</span><span class="p">);</span>                                           <span class="c1">// (3) C++20 から</span>
 </code></pre></div>
 </p>
 <h2>概要</h2>
@@ -268,17 +274,42 @@
 <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
 </code></pre></div>
 </p>
+<ul>
+<li>(3) : 以下と等価の処理を行う</li>
+</ul>
+<p><div class="codehilite"><pre><span></span><code><span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">stoken</span><span class="p">.</span><span class="n"><a href="https://cpprefjp.github.io/reference/stop_token/stop_source/stop_requested.html">stop_requested()</a></span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">pred</span><span class="p">())</span>
+    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">cv</span><span class="p">.</span><span class="n">wait_until</span><span class="p">(</span><span class="n">lock</span><span class="p">,</span> <span class="n">abs_time</span><span class="p">)</span> <span class="o">==</span> <span class="n"><a href="https://cpprefjp.github.io/reference/condition_variable/cv_status.html">cv_status::timeout</a></span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pred</span><span class="p">();</span>
+<span class="p">}</span>
+<span class="k">return</span> <span class="n">pred</span><span class="p">();</span>
+</code></pre></div>
+</p>
 <h2>戻り値</h2>
 <ul>
 <li>(1) : <code>abs_time</code>で指定された絶対時間内に起床されない場合、タイムアウトとなり<code><a href="https://cpprefjp.github.io/reference/condition_variable/cv_status.html">cv_status::timeout</a></code>が返る。そうでない場合は<code><a href="https://cpprefjp.github.io/reference/condition_variable/cv_status.html">cv_status::no_timeout</a></code>が返る。</li>
-<li>(2) : 戻り値：<code>pred()</code>の結果が返る</li>
+<li>(2) : <code>pred()</code>の結果が返る。</li>
+<li>(3) : 停止要求が行われた場合は<code>true</code>が返る。そうでない場合は<code>pred()</code>の結果が返る。</li>
 </ul>
 <h2>事後条件</h2>
 <p><code>lock</code>が参照しているミューテックスオブジェクトが、この関数を呼び出したスレッドでロック取得されていること</p>
 <h2>例外</h2>
 <ul>
-<li>C++11 : この関数は、<code>lock.<a href="https://cpprefjp.github.io/reference/mutex/unique_lock/lock.html">lock()</a></code>および<code>lock.<a href="https://cpprefjp.github.io/reference/mutex/unique_lock/unlock.html">unlock()</a></code>によって送出されうる、あらゆる例外が送出される可能性がある。</li>
+<li>(1) :<ul>
+<li>C++11まで : この関数は、<code>lock.<a href="https://cpprefjp.github.io/reference/mutex/unique_lock/lock.html">lock()</a></code>および<code>lock.<a href="https://cpprefjp.github.io/reference/mutex/unique_lock/unlock.html">unlock()</a></code>によって送出されうる、あらゆる例外が送出される可能性がある。</li>
 <li>C++14 : 時計クラス、<code><a href="https://cpprefjp.github.io/reference/chrono/time_point.html">time_point</a></code>クラス、<code><a href="https://cpprefjp.github.io/reference/chrono/duration.html">duration</a></code>クラスの構築が例外を送出する場合、この関数はそれらの例外を送出する。</li>
+</ul>
+</li>
+<li>(2) :<ul>
+<li>C++11まで : この関数は、<code>lock.<a href="https://cpprefjp.github.io/reference/mutex/unique_lock/lock.html">lock()</a></code>および<code>lock.<a href="https://cpprefjp.github.io/reference/mutex/unique_lock/unlock.html">unlock()</a></code>によって送出されうる、あらゆる例外が送出される可能性がある。</li>
+<li>C++14 : 時計クラス、<code><a href="https://cpprefjp.github.io/reference/chrono/time_point.html">time_point</a></code>クラス、<code><a href="https://cpprefjp.github.io/reference/chrono/duration.html">duration</a></code>クラスの構築が例外を送出する場合、この関数はそれらの例外を送出する。または<code>pred()</code>により送出された例外。</li>
+</ul>
+</li>
+<li>(3) :<ul>
+<li>時計クラス、<code><a href="https://cpprefjp.github.io/reference/chrono/time_point.html">time_point</a></code>クラス、<code><a href="https://cpprefjp.github.io/reference/chrono/duration.html">duration</a></code>クラスの構築が例外を送出する場合、この関数はそれらの例外を送出する。または<code>pred()</code>により送出された例外。</li>
+</ul>
+</li>
 </ul>
 <h2>備考</h2>
 <ul>
@@ -395,6 +426,7 @@ process data
 <li>GCC 10から<code>steady_clock</code>がサポートされた</li>
 </ul>
 </li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0660r10.pdf" target="_blank">P0660R10 Stop Token and Joining Thread, Rev 10</a></li>
 </ul></div>
 
       </div>
