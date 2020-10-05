@@ -2,9 +2,77 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2020-10-05T14:34:37.848226</updated>
-  <id>e1c2fbd9-2915-4c4c-9dfe-974e2de075b0</id>
+  <updated>2020-10-05T14:39:04.924309</updated>
+  <id>86032574-4137-42d1-88c4-33cc880de742</id>
 
+  
+    <entry>
+      <title>is_constant_evaluated -- is_constant_evaluated.md: 最適化などの影響を受けないものであることを明示</title>
+      <link href="https://cpprefjp.github.io/reference/type_traits/is_constant_evaluated.html"/>
+      <id>719664d66832cb1674c283967486cca5cf2d9f92:reference/type_traits/is_constant_evaluated.md</id>
+      <updated>2020-10-03T17:13:30+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/type_traits/is_constant_evaluated.md b/reference/type_traits/is_constant_evaluated.md
+index d20ca8178..06a9ea098 100644
+--- a/reference/type_traits/is_constant_evaluated.md
++++ b/reference/type_traits/is_constant_evaluated.md
+@@ -11,17 +11,15 @@ namespace std {
+ ```
+ 
+ ## 概要
+-呼び出された時、その呼び出しがコンパイル時に行われているかを判定する。
++呼び出された時、その呼び出しが定数式評価の中で行われているかを判定する。
+ 
+ この関数は、コンパイル時と実行時で実装を切り替える用途に使用できる。
+ 
+ 
+ ## 戻り値
+-コンパイル時に評価された場合は`true`、そうでなければ`false`を返す。
++本関数は以下の文脈内で評価された場合に`true`を返す。
+ 
+-より詳細には、本関数は以下の文脈内で評価された場合に常に`true`を返す。
+-
+-- 定数式
++- 文法上の定数式（配列型の要素数、`case`ラベルの値、など）
+ - `constexpr if`の条件式
+ - `consteval`関数の呼び出し内
+ - コンセプトの定義式
+@@ -33,7 +31,11 @@ namespace std {
+     - 定数初期化される参照型変数の初期化式
+ - 定数初期化される変数の初期化式
+ 
+-特に、`constexpr if`の条件式および`static_assert`の条件式に書かれている場合は必ず`true`に評価される。
++上記の文脈の外では、コンパイラの最適化（定数畳み込み）によって容易にコンパイル時評価できる
++式や`constexpr`関数の呼び出し中の評価であっても`false`となる。
++
++`constexpr if`の条件式および`static_assert`の条件式に書かれている場合は必ず`true`となるので注意が必要である。
++
+ 
+ ## 備考
+ 
+@@ -107,6 +109,7 @@ int main()
+   std::cout &amp;lt;&amp;lt; std::setprecision(16);
+   std::cout &amp;lt;&amp;lt; sin_static &amp;lt;&amp;lt; std::endl;
+   std::cout &amp;lt;&amp;lt; sin_dynamic &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; my_sin(std::numbers::pi/3.0) &amp;lt;&amp;lt; std::endl; //実行時計算
+ }
+ ```
+ * is_constant_evaluated[color ff0000]
+@@ -117,6 +120,7 @@ int main()
+ ```
+ 0.8660254037844385
+ 0.8660254037844386
++0.8660254037844386
+ ```
+ 
+ ## バージョン
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Kazutoshi SATODA</name>
+        <email>k_satoda@f2.dion.ne.jp</email>
+      </author>
+    </entry>
   
     <entry>
       <title>非静的メンバ変数の初期化 -- 非静的メンバ変数の初期化の関連項目にインライン変数を追加</title>
@@ -756,86 +824,6 @@ index f4ab8a200..491fc6215 100644
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>アライメント指定されたデータの動的メモリ確保 -- C++17 定義済みマクロ : __STDCPP_DEFAULT_NEW_ALIGNMENT__を追加</title>
-      <link href="https://cpprefjp.github.io/lang/cpp17/dynamic_memory_allocation_for_over-aligned_data.html"/>
-      <id>eae5a85357a2ee546c923123c06d7c6e0011b168:lang/cpp17/dynamic_memory_allocation_for_over-aligned_data.md</id>
-      <updated>2020-09-30T16:46:49+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp17/dynamic_memory_allocation_for_over-aligned_data.md b/lang/cpp17/dynamic_memory_allocation_for_over-aligned_data.md
-index cfee8f255..9be63837d 100644
---- a/lang/cpp17/dynamic_memory_allocation_for_over-aligned_data.md
-+++ b/lang/cpp17/dynamic_memory_allocation_for_over-aligned_data.md
-@@ -33,7 +33,7 @@ void* operator new(std::size_t size, std::align_val_t alignment);
- ```
- * std::align_val_t[link /reference/new/align_val_t.md]
- 
--動的確保時になされるアライメントのデフォルト値は`__STDCPP_DEFAULT_NEW_ALIGNMENT__`で定義されている。これを超えるアライメント要求を持つクラスに対する[`new`](/reference/new/op_new.md)呼び出しは、[`align_val_t`](/reference/new/align_val_t.md)が渡された場合のもので解決される。また、対応するユーザー定義[`new`](/reference/new/op_new.md)が存在する場合、互換性のため呼び出しはそちらで解決される。もしユーザー定義`new`に`align_val_t`を取るものと取らないものがある場合、取るものが優先される。`delete`も同様である。
-+動的確保時になされるアライメントのデフォルト値は[`__STDCPP_DEFAULT_NEW_ALIGNMENT__`](predefined_macros.md)で定義されている。これを超えるアライメント要求を持つクラスに対する[`new`](/reference/new/op_new.md)呼び出しは、[`align_val_t`](/reference/new/align_val_t.md)が渡された場合のもので解決される。また、対応するユーザー定義[`new`](/reference/new/op_new.md)が存在する場合、互換性のため呼び出しはそちらで解決される。もしユーザー定義`new`に`align_val_t`を取るものと取らないものがある場合、取るものが優先される。`delete`も同様である。
- 
- `new T`の呼び出しが[`align_val_t`](/reference/new/align_val_t.md)を取る[`new`](/reference/new/op_new.md)で解決される場合、`align_val_t`の値は`alignof(T)`の結果になる。
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>更新された定義済みマクロ -- C++17 定義済みマクロ : __STDCPP_DEFAULT_NEW_ALIGNMENT__を追加</title>
-      <link href="https://cpprefjp.github.io/lang/cpp17/predefined_macros.html"/>
-      <id>eae5a85357a2ee546c923123c06d7c6e0011b168:lang/cpp17/predefined_macros.md</id>
-      <updated>2020-09-30T16:46:49+09:00</updated>
-      
-        <content type="html">&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;token&#34;&gt;更新された定義済みマクロ&lt;/span&gt;&lt;span class=&#34;cpp cpp17&#34; title=&#34;C++17で追加&#34;&gt;(C++17)&lt;/span&gt;&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;h2&gt;概要&lt;/h2&gt;
-&lt;p&gt;定義済みマクロの値が、以下のように更新された：&lt;/p&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;マクロ名&lt;/th&gt;
-&lt;th&gt;値&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;__cplusplus&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;201703L&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;C++のバージョン値を表す&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;p&gt;新規マクロは以下：&lt;/p&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;マクロ名&lt;/th&gt;
-&lt;th&gt;値&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;__STDCPP_DEFAULT_NEW_ALIGNMENT__&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;実装定義&lt;/td&gt;
-&lt;td&gt;動的メモリ確保時のデフォルトのアライメント値&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;関連項目&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp17/dynamic_memory_allocation_for_over-aligned_data.html&#34;&gt;C++17 アライメント指定されたデータの動的メモリ確保&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/div&gt;</content>
       
       <author>
         <name>Akira Takahashi</name>
