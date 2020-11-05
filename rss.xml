@@ -2,176 +2,15 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2020-11-05T06:32:16.810889</updated>
-  <id>ffc34ad9-c274-4bff-a68e-2c119909dbb7</id>
+  <updated>2020-11-05T06:44:53.150968</updated>
+  <id>7057aba5-f35a-4d60-ac67-0d35814fe3ed</id>
 
   
     <entry>
-      <title>digits10 -- numeric_limits::digits10 : 出力が間違っていた</title>
-      <link href="https://cpprefjp.github.io/reference/limits/numeric_limits/digits10.html"/>
-      <id>297a72fd86f495d5273e6066c8dc8d9a0958bff9:reference/limits/numeric_limits/digits10.md</id>
-      <updated>2020-11-05T15:27:39+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/limits/numeric_limits/digits10.md b/reference/limits/numeric_limits/digits10.md
-index 93195139d..5d57c87ff 100644
---- a/reference/limits/numeric_limits/digits10.md
-+++ b/reference/limits/numeric_limits/digits10.md
-@@ -48,8 +48,8 @@ int main()
- ### 出力例
- ```
- 6
--9
- 15
-+9
- ```
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>exchange -- exchange : 不要になったコード修飾を削除</title>
-      <link href="https://cpprefjp.github.io/reference/utility/exchange.html"/>
-      <id>e1ed8106b95f6b50639a226c73043a8c55f4d020:reference/utility/exchange.md</id>
-      <updated>2020-11-05T15:10:03+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/utility/exchange.md b/reference/utility/exchange.md
-index 5d457920e..23e6c4cc9 100644
---- a/reference/utility/exchange.md
-+++ b/reference/utility/exchange.md
-@@ -175,8 +175,6 @@ int main()
- ```
- * std::exchange[color ff0000]
- * std::move[link move.md]
--* reset()[link /reference/memory/unique_ptr/reset.md]
--* get()[link /reference/memory/unique_ptr/get.md]
- 
- 
- #### 出力例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>exchange -- exchange : unique_ptrはexchangeしたら破棄されるのでresetの例はいらなかった</title>
-      <link href="https://cpprefjp.github.io/reference/utility/exchange.html"/>
-      <id>b35481cc80f6a44eb797255f2ca21cbcb9155878:reference/utility/exchange.md</id>
-      <updated>2020-11-05T15:04:22+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/utility/exchange.md b/reference/utility/exchange.md
-index b53236449..5d457920e 100644
---- a/reference/utility/exchange.md
-+++ b/reference/utility/exchange.md
-@@ -124,14 +124,12 @@ int main()
- #include &amp;lt;iostream&amp;gt;
- #include &amp;lt;string&amp;gt;
- #include &amp;lt;utility&amp;gt;
--#include &amp;lt;memory&amp;gt;
- 
- struct A {};
- 
- struct X {
-   std::string str;
-   int* p = nullptr;
--  std::unique_ptr&amp;lt;A&amp;gt; a;
- 
-   X() = default;
- 
-@@ -139,8 +137,7 @@ struct X {
-   // ムーブ構築しただけでは、標準範囲のオブジェクトは「有効だが未規定の状態」になる
-   X(X&amp;amp;&amp;amp; other)
-     : str(std::exchange(other.str, {})),
--      p(std::exchange(other.p, nullptr)),
--      a(std::exchange(other.a, {}))
-+      p(std::exchange(other.p, nullptr))
-   {}
-   // 以下と等価:
-   // str{std::move(other.str)};
-@@ -149,27 +146,10 @@ struct X {
-   // p = other.p;
-   // other.p = nullptr;
- 
-+  // ムーブ代入も同様
-   X&amp;amp; operator=(X&amp;amp;&amp;amp; other) {
-     str = std::exchange(other.str, {});
-     p = std::exchange(other.p, nullptr);
--
--    // 破棄処理をともなう例
--    if (std::unique_ptr&amp;lt;A&amp;gt; old = std::exchange(a, std::exchange(other.a, {}))) {
--      old.reset();
--    }
--    // ほかの書き方1 : わかりにくい
--    // std::swap(a, other.a);
--    // if (other.a) {
--    //   other.a.reset();
--    // }
--    //
--    // ほかの書き方2 : 意図はわかりやすくなった例
--    // std::unique_ptr&amp;lt;A&amp;gt; old = a;
--    // a = std::move(other.a);
--    // if (old) {
--    //   old.reset();
--    // }
--
-     return *this;
-   }
- };
-@@ -181,17 +161,16 @@ int main()
-   X a;
-   a.str = &amp;#34;Hello&amp;#34;;
-   a.p = &amp;amp;value;
--  a.a = std::make_unique&amp;lt;A&amp;gt;();
- 
-   X b = std::move(a);
- 
-   // ムーブされたaが空になり、bとcへとデータが移動していくことを確認
--  std::cout &amp;lt;&amp;lt; a.str &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; a.p &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; a.a.get() &amp;lt;&amp;lt; std::endl;
--  std::cout &amp;lt;&amp;lt; b.str &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; b.p &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; b.a.get() &amp;lt;&amp;lt; std::endl;
-+  std::cout &amp;lt;&amp;lt; a.str &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; a.p &amp;lt;&amp;lt; std::endl;
-+  std::cout &amp;lt;&amp;lt; b.str &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; b.p &amp;lt;&amp;lt; std::endl;
- 
-   X c;
-   c = std::move(b);
--  std::cout &amp;lt;&amp;lt; c.str &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; c.p &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; c.a.get() &amp;lt;&amp;lt; std::endl;
-+  std::cout &amp;lt;&amp;lt; c.str &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; c.p &amp;lt;&amp;lt; std::endl;
- }
- ```
- * std::exchange[color ff0000]
-@@ -202,9 +181,9 @@ int main()
- 
- #### 出力例
- ```
-- (nil) (nil)
--Hello 0x7ffdeb8e04bc 0x19be9c0
--Hello 0x7ffdeb8e04bc 0x19be9c0
-+ (nil)
-+Hello 0x7ffc560ca4cc
-+Hello 0x7ffc560ca4cc
- ```
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>hh_mm_ss -- hh_mm_ss : メンバ、非メンバを追加 #630</title>
+      <title>hh_mm_ss -- Merge branch &#39;master&#39; of https://github.com/cpprefjp/site</title>
       <link href="https://cpprefjp.github.io/reference/chrono/hh_mm_ss.html"/>
-      <id>624318bded9295ffa5b209ea41fbaa8714c02bdc:reference/chrono/hh_mm_ss.md</id>
-      <updated>2020-11-05T14:58:39+09:00</updated>
+      <id>5dcafcbaec3603bd4c1df3e9aa4968c80d7c2d38:reference/chrono/hh_mm_ss.md</id>
+      <updated>2020-11-05T15:40:01+09:00</updated>
       
         <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/hh_mm_ss.md b/reference/chrono/hh_mm_ss.md
 index b1fa9105c..a5edf92d0 100644
@@ -235,16 +74,16 @@ index b1fa9105c..a5edf92d0 100644
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
       </author>
     </entry>
   
     <entry>
-      <title>formatter -- hh_mm_ss : メンバ、非メンバを追加 #630</title>
+      <title>formatter -- Merge branch &#39;master&#39; of https://github.com/cpprefjp/site</title>
       <link href="https://cpprefjp.github.io/reference/chrono/hh_mm_ss/formatter.html"/>
-      <id>624318bded9295ffa5b209ea41fbaa8714c02bdc:reference/chrono/hh_mm_ss/formatter.md</id>
-      <updated>2020-11-05T14:58:39+09:00</updated>
+      <id>5dcafcbaec3603bd4c1df3e9aa4968c80d7c2d38:reference/chrono/hh_mm_ss/formatter.md</id>
+      <updated>2020-11-05T15:40:01+09:00</updated>
       
         <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/hh_mm_ss/formatter.md b/reference/chrono/hh_mm_ss/formatter.md
 new file mode 100644
@@ -341,16 +180,16 @@ index 000000000..f28beb60d
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
       </author>
     </entry>
   
     <entry>
-      <title>hours -- hh_mm_ss : メンバ、非メンバを追加 #630</title>
+      <title>hours -- Merge branch &#39;master&#39; of https://github.com/cpprefjp/site</title>
       <link href="https://cpprefjp.github.io/reference/chrono/hh_mm_ss/hours.html"/>
-      <id>624318bded9295ffa5b209ea41fbaa8714c02bdc:reference/chrono/hh_mm_ss/hours.md</id>
-      <updated>2020-11-05T14:58:39+09:00</updated>
+      <id>5dcafcbaec3603bd4c1df3e9aa4968c80d7c2d38:reference/chrono/hh_mm_ss/hours.md</id>
+      <updated>2020-11-05T15:40:01+09:00</updated>
       
         <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/hh_mm_ss/hours.md b/reference/chrono/hh_mm_ss/hours.md
 new file mode 100644
@@ -410,16 +249,16 @@ index 000000000..82ca38d72
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
       </author>
     </entry>
   
     <entry>
-      <title>is_negative -- hh_mm_ss : メンバ、非メンバを追加 #630</title>
+      <title>is_negative -- Merge branch &#39;master&#39; of https://github.com/cpprefjp/site</title>
       <link href="https://cpprefjp.github.io/reference/chrono/hh_mm_ss/is_negative.html"/>
-      <id>624318bded9295ffa5b209ea41fbaa8714c02bdc:reference/chrono/hh_mm_ss/is_negative.md</id>
-      <updated>2020-11-05T14:58:39+09:00</updated>
+      <id>5dcafcbaec3603bd4c1df3e9aa4968c80d7c2d38:reference/chrono/hh_mm_ss/is_negative.md</id>
+      <updated>2020-11-05T15:40:01+09:00</updated>
       
         <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/hh_mm_ss/is_negative.md b/reference/chrono/hh_mm_ss/is_negative.md
 new file mode 100644
@@ -479,16 +318,16 @@ index 000000000..7ce718e4d
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
       </author>
     </entry>
   
     <entry>
-      <title>minutes -- hh_mm_ss : メンバ、非メンバを追加 #630</title>
+      <title>minutes -- Merge branch &#39;master&#39; of https://github.com/cpprefjp/site</title>
       <link href="https://cpprefjp.github.io/reference/chrono/hh_mm_ss/minutes.html"/>
-      <id>624318bded9295ffa5b209ea41fbaa8714c02bdc:reference/chrono/hh_mm_ss/minutes.md</id>
-      <updated>2020-11-05T14:58:39+09:00</updated>
+      <id>5dcafcbaec3603bd4c1df3e9aa4968c80d7c2d38:reference/chrono/hh_mm_ss/minutes.md</id>
+      <updated>2020-11-05T15:40:01+09:00</updated>
       
         <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/hh_mm_ss/minutes.md b/reference/chrono/hh_mm_ss/minutes.md
 new file mode 100644
@@ -548,16 +387,16 @@ index 000000000..7ec946f79
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
       </author>
     </entry>
   
     <entry>
-      <title>コンストラクタ -- hh_mm_ss : メンバ、非メンバを追加 #630</title>
+      <title>コンストラクタ -- Merge branch &#39;master&#39; of https://github.com/cpprefjp/site</title>
       <link href="https://cpprefjp.github.io/reference/chrono/hh_mm_ss/op_constructor.html"/>
-      <id>624318bded9295ffa5b209ea41fbaa8714c02bdc:reference/chrono/hh_mm_ss/op_constructor.md</id>
-      <updated>2020-11-05T14:58:39+09:00</updated>
+      <id>5dcafcbaec3603bd4c1df3e9aa4968c80d7c2d38:reference/chrono/hh_mm_ss/op_constructor.md</id>
+      <updated>2020-11-05T15:40:01+09:00</updated>
       
         <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/hh_mm_ss/op_constructor.md b/reference/chrono/hh_mm_ss/op_constructor.md
 new file mode 100644
@@ -669,16 +508,16 @@ index 000000000..dcade40df
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
       </author>
     </entry>
   
     <entry>
-      <title>operator&lt;&lt; -- hh_mm_ss : メンバ、非メンバを追加 #630</title>
+      <title>operator&lt;&lt; -- Merge branch &#39;master&#39; of https://github.com/cpprefjp/site</title>
       <link href="https://cpprefjp.github.io/reference/chrono/hh_mm_ss/op_ostream.html"/>
-      <id>624318bded9295ffa5b209ea41fbaa8714c02bdc:reference/chrono/hh_mm_ss/op_ostream.md</id>
-      <updated>2020-11-05T14:58:39+09:00</updated>
+      <id>5dcafcbaec3603bd4c1df3e9aa4968c80d7c2d38:reference/chrono/hh_mm_ss/op_ostream.md</id>
+      <updated>2020-11-05T15:40:01+09:00</updated>
       
         <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/hh_mm_ss/op_ostream.md b/reference/chrono/hh_mm_ss/op_ostream.md
 new file mode 100644
@@ -763,16 +602,16 @@ index 000000000..ead77b83f
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
       </author>
     </entry>
   
     <entry>
-      <title>operator precision -- hh_mm_ss : メンバ、非メンバを追加 #630</title>
+      <title>operator precision -- Merge branch &#39;master&#39; of https://github.com/cpprefjp/site</title>
       <link href="https://cpprefjp.github.io/reference/chrono/hh_mm_ss/op_precision.html"/>
-      <id>624318bded9295ffa5b209ea41fbaa8714c02bdc:reference/chrono/hh_mm_ss/op_precision.md</id>
-      <updated>2020-11-05T14:58:39+09:00</updated>
+      <id>5dcafcbaec3603bd4c1df3e9aa4968c80d7c2d38:reference/chrono/hh_mm_ss/op_precision.md</id>
+      <updated>2020-11-05T15:40:01+09:00</updated>
       
         <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/hh_mm_ss/op_precision.md b/reference/chrono/hh_mm_ss/op_precision.md
 new file mode 100644
@@ -842,16 +681,16 @@ index 000000000..a33390b3c
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
       </author>
     </entry>
   
     <entry>
-      <title>seconds -- hh_mm_ss : メンバ、非メンバを追加 #630</title>
+      <title>seconds -- Merge branch &#39;master&#39; of https://github.com/cpprefjp/site</title>
       <link href="https://cpprefjp.github.io/reference/chrono/hh_mm_ss/seconds.html"/>
-      <id>624318bded9295ffa5b209ea41fbaa8714c02bdc:reference/chrono/hh_mm_ss/seconds.md</id>
-      <updated>2020-11-05T14:58:39+09:00</updated>
+      <id>5dcafcbaec3603bd4c1df3e9aa4968c80d7c2d38:reference/chrono/hh_mm_ss/seconds.md</id>
+      <updated>2020-11-05T15:40:01+09:00</updated>
       
         <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/hh_mm_ss/seconds.md b/reference/chrono/hh_mm_ss/seconds.md
 new file mode 100644
@@ -911,16 +750,16 @@ index 000000000..76eab8c9f
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
       </author>
     </entry>
   
     <entry>
-      <title>subseconds -- hh_mm_ss : メンバ、非メンバを追加 #630</title>
+      <title>subseconds -- Merge branch &#39;master&#39; of https://github.com/cpprefjp/site</title>
       <link href="https://cpprefjp.github.io/reference/chrono/hh_mm_ss/subseconds.html"/>
-      <id>624318bded9295ffa5b209ea41fbaa8714c02bdc:reference/chrono/hh_mm_ss/subseconds.md</id>
-      <updated>2020-11-05T14:58:39+09:00</updated>
+      <id>5dcafcbaec3603bd4c1df3e9aa4968c80d7c2d38:reference/chrono/hh_mm_ss/subseconds.md</id>
+      <updated>2020-11-05T15:40:01+09:00</updated>
       
         <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/hh_mm_ss/subseconds.md b/reference/chrono/hh_mm_ss/subseconds.md
 new file mode 100644
@@ -981,16 +820,16 @@ index 000000000..1f7900b07
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
       </author>
     </entry>
   
     <entry>
-      <title>to_duration -- hh_mm_ss : メンバ、非メンバを追加 #630</title>
+      <title>to_duration -- Merge branch &#39;master&#39; of https://github.com/cpprefjp/site</title>
       <link href="https://cpprefjp.github.io/reference/chrono/hh_mm_ss/to_duration.html"/>
-      <id>624318bded9295ffa5b209ea41fbaa8714c02bdc:reference/chrono/hh_mm_ss/to_duration.md</id>
-      <updated>2020-11-05T14:58:39+09:00</updated>
+      <id>5dcafcbaec3603bd4c1df3e9aa4968c80d7c2d38:reference/chrono/hh_mm_ss/to_duration.md</id>
+      <updated>2020-11-05T15:40:01+09:00</updated>
       
         <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/hh_mm_ss/to_duration.md b/reference/chrono/hh_mm_ss/to_duration.md
 new file mode 100644
@@ -1058,16 +897,16 @@ index 000000000..4cf4d4356
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
       </author>
     </entry>
   
     <entry>
-      <title>is_am -- hh_mm_ss : メンバ、非メンバを追加 #630</title>
+      <title>is_am -- Merge branch &#39;master&#39; of https://github.com/cpprefjp/site</title>
       <link href="https://cpprefjp.github.io/reference/chrono/is_am.html"/>
-      <id>624318bded9295ffa5b209ea41fbaa8714c02bdc:reference/chrono/is_am.md</id>
-      <updated>2020-11-05T14:58:39+09:00</updated>
+      <id>5dcafcbaec3603bd4c1df3e9aa4968c80d7c2d38:reference/chrono/is_am.md</id>
+      <updated>2020-11-05T15:40:01+09:00</updated>
       
         <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/is_am.md b/reference/chrono/is_am.md
 index 63ae3302b..9ca1203d9 100644
@@ -1085,16 +924,16 @@ index 63ae3302b..9ca1203d9 100644
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
       </author>
     </entry>
   
     <entry>
-      <title>is_pm -- hh_mm_ss : メンバ、非メンバを追加 #630</title>
+      <title>is_pm -- Merge branch &#39;master&#39; of https://github.com/cpprefjp/site</title>
       <link href="https://cpprefjp.github.io/reference/chrono/is_pm.html"/>
-      <id>624318bded9295ffa5b209ea41fbaa8714c02bdc:reference/chrono/is_pm.md</id>
-      <updated>2020-11-05T14:58:39+09:00</updated>
+      <id>5dcafcbaec3603bd4c1df3e9aa4968c80d7c2d38:reference/chrono/is_pm.md</id>
+      <updated>2020-11-05T15:40:01+09:00</updated>
       
         <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/is_pm.md b/reference/chrono/is_pm.md
 index 6f0755715..961cfce41 100644
@@ -1112,16 +951,153 @@ index 6f0755715..961cfce41 100644
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
       </author>
     </entry>
   
     <entry>
-      <title>iterator -- &lt;iterator&gt; : 並べ替えと項目名の変更 #712</title>
+      <title>digits10 -- Merge branch &#39;master&#39; of https://github.com/cpprefjp/site</title>
+      <link href="https://cpprefjp.github.io/reference/limits/numeric_limits/digits10.html"/>
+      <id>5dcafcbaec3603bd4c1df3e9aa4968c80d7c2d38:reference/limits/numeric_limits/digits10.md</id>
+      <updated>2020-11-05T15:40:01+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/limits/numeric_limits/digits10.md b/reference/limits/numeric_limits/digits10.md
+index 93195139d..5d57c87ff 100644
+--- a/reference/limits/numeric_limits/digits10.md
++++ b/reference/limits/numeric_limits/digits10.md
+@@ -48,8 +48,8 @@ int main()
+ ### 出力例
+ ```
+ 6
+-9
+ 15
++9
+ ```
+ 
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>exchange -- Merge branch &#39;master&#39; of https://github.com/cpprefjp/site</title>
+      <link href="https://cpprefjp.github.io/reference/utility/exchange.html"/>
+      <id>5dcafcbaec3603bd4c1df3e9aa4968c80d7c2d38:reference/utility/exchange.md</id>
+      <updated>2020-11-05T15:40:01+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/utility/exchange.md b/reference/utility/exchange.md
+index b53236449..23e6c4cc9 100644
+--- a/reference/utility/exchange.md
++++ b/reference/utility/exchange.md
+@@ -124,14 +124,12 @@ int main()
+ #include &amp;lt;iostream&amp;gt;
+ #include &amp;lt;string&amp;gt;
+ #include &amp;lt;utility&amp;gt;
+-#include &amp;lt;memory&amp;gt;
+ 
+ struct A {};
+ 
+ struct X {
+   std::string str;
+   int* p = nullptr;
+-  std::unique_ptr&amp;lt;A&amp;gt; a;
+ 
+   X() = default;
+ 
+@@ -139,8 +137,7 @@ struct X {
+   // ムーブ構築しただけでは、標準範囲のオブジェクトは「有効だが未規定の状態」になる
+   X(X&amp;amp;&amp;amp; other)
+     : str(std::exchange(other.str, {})),
+-      p(std::exchange(other.p, nullptr)),
+-      a(std::exchange(other.a, {}))
++      p(std::exchange(other.p, nullptr))
+   {}
+   // 以下と等価:
+   // str{std::move(other.str)};
+@@ -149,27 +146,10 @@ struct X {
+   // p = other.p;
+   // other.p = nullptr;
+ 
++  // ムーブ代入も同様
+   X&amp;amp; operator=(X&amp;amp;&amp;amp; other) {
+     str = std::exchange(other.str, {});
+     p = std::exchange(other.p, nullptr);
+-
+-    // 破棄処理をともなう例
+-    if (std::unique_ptr&amp;lt;A&amp;gt; old = std::exchange(a, std::exchange(other.a, {}))) {
+-      old.reset();
+-    }
+-    // ほかの書き方1 : わかりにくい
+-    // std::swap(a, other.a);
+-    // if (other.a) {
+-    //   other.a.reset();
+-    // }
+-    //
+-    // ほかの書き方2 : 意図はわかりやすくなった例
+-    // std::unique_ptr&amp;lt;A&amp;gt; old = a;
+-    // a = std::move(other.a);
+-    // if (old) {
+-    //   old.reset();
+-    // }
+-
+     return *this;
+   }
+ };
+@@ -181,30 +161,27 @@ int main()
+   X a;
+   a.str = &amp;#34;Hello&amp;#34;;
+   a.p = &amp;amp;value;
+-  a.a = std::make_unique&amp;lt;A&amp;gt;();
+ 
+   X b = std::move(a);
+ 
+   // ムーブされたaが空になり、bとcへとデータが移動していくことを確認
+-  std::cout &amp;lt;&amp;lt; a.str &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; a.p &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; a.a.get() &amp;lt;&amp;lt; std::endl;
+-  std::cout &amp;lt;&amp;lt; b.str &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; b.p &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; b.a.get() &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; a.str &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; a.p &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; b.str &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; b.p &amp;lt;&amp;lt; std::endl;
+ 
+   X c;
+   c = std::move(b);
+-  std::cout &amp;lt;&amp;lt; c.str &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; c.p &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; c.a.get() &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; c.str &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; c.p &amp;lt;&amp;lt; std::endl;
+ }
+ ```
+ * std::exchange[color ff0000]
+ * std::move[link move.md]
+-* reset()[link /reference/memory/unique_ptr/reset.md]
+-* get()[link /reference/memory/unique_ptr/get.md]
+ 
+ 
+ #### 出力例
+ ```
+- (nil) (nil)
+-Hello 0x7ffdeb8e04bc 0x19be9c0
+-Hello 0x7ffdeb8e04bc 0x19be9c0
++ (nil)
++Hello 0x7ffc560ca4cc
++Hello 0x7ffc560ca4cc
+ ```
+ 
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>iterator -- ranges::advance追加 #712</title>
       <link href="https://cpprefjp.github.io/reference/iterator.html"/>
-      <id>da5e5033582eaf21c1a98fc595dc717d88c9ea91:reference/iterator.md</id>
-      <updated>2020-11-05T12:52:16+09:00</updated>
+      <id>acb019bf01675a4b6590c5dc6dc74bd8ea5ce902:reference/iterator.md</id>
+      <updated>2020-11-05T15:39:47+09:00</updated>
       
         <content type="html">&lt;div class=&#34;header&#34;&gt;&amp;lt;iterator&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;token&#34;&gt;iterator&lt;/span&gt;&lt;/h1&gt;
 &lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;&lt;code&gt;&amp;lt;iterator&amp;gt;&lt;/code&gt;ヘッダでは、イテレータに関する機能群を提供する。
@@ -1452,22 +1428,22 @@ index 6f0755715..961cfce41 100644
 &lt;td&gt;C++11&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/iterator/range_advance.md.nolink&#34;&gt;ranges::advance&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/iterator/ranges_advance.html&#34;&gt;ranges::advance&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;イテレータを進める(function template)&lt;/td&gt;
 &lt;td&gt;C++20&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/iterator/range_distance.md.nolink&#34;&gt;ranges::distance&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/iterator/ranges_distance.md.nolink&#34;&gt;ranges::distance&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;イテレータ間の距離を求める(function template)&lt;/td&gt;
 &lt;td&gt;C++20&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/iterator/range_next.md.nolink&#34;&gt;ranges::next&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/iterator/ranges_next.md.nolink&#34;&gt;ranges::next&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;前方に進めたイテレータを返す(function template)&lt;/td&gt;
 &lt;td&gt;C++20&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/iterator/range_prev.md.nolink&#34;&gt;ranges::prev&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/iterator/ranges_prev.md.nolink&#34;&gt;ranges::prev&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;後方に進めたイテレータを返す(function template)&lt;/td&gt;
 &lt;td&gt;C++20&lt;/td&gt;
 &lt;/tr&gt;
@@ -1791,6 +1767,322 @@ index 6f0755715..961cfce41 100644
       <author>
         <name>onihusube</name>
         <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>ranges::advance -- ranges::advance追加 #712</title>
+      <link href="https://cpprefjp.github.io/reference/iterator/ranges_advance.html"/>
+      <id>acb019bf01675a4b6590c5dc6dc74bd8ea5ce902:reference/iterator/ranges_advance.md</id>
+      <updated>2020-11-05T15:39:47+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/ranges_advance.md b/reference/iterator/ranges_advance.md
+new file mode 100644
+index 000000000..29be5cd75
+--- /dev/null
++++ b/reference/iterator/ranges_advance.md
+@@ -0,0 +1,134 @@
++# ranges::advance
++* iterator[meta header]
++* std[meta namespace]
++* function template[meta id-type]
++* cpp20[meta cpp]
++
++```cpp
++namespace std::ranges {
++
++  template&amp;lt;input_or_output_iterator I&amp;gt;
++  constexpr void advance(I&amp;amp; i, iter_difference_t&amp;lt;I&amp;gt; n);     // (1)
++
++  template&amp;lt;input_or_output_iterator I, sentinel_for&amp;lt;I&amp;gt; S&amp;gt;
++  constexpr void advance(I&amp;amp; i, S bound);                    // (2)
++
++  template&amp;lt;input_or_output_iterator I, sentinel_for&amp;lt;I&amp;gt; S&amp;gt;
++  constexpr iter_difference_t&amp;lt;I&amp;gt; advance(I&amp;amp; i, iter_difference_t&amp;lt;I&amp;gt; n, S bound);  // (3)
++}
++```
++* input_or_output_iterator[link /reference/iterator/input_or_output_iterator.md]
++* iter_difference_t[link /reference/iterator/iter_difference_t.md]
++* sentinel_for[link /reference/iterator/sentinel_for.md]
++
++## 概要
++
++イテレータを`n`回あるいは指定された位置まで進める。
++
++[`ranges::next()`](ranges_next.md.nolink)、[`ranges::prev()`](ranges_prev.md.nolink)と違い、引数として渡されたイテレータへの参照を書き換える。
++
++## 引数
++
++- `i` -- 進める対象のイテレータ
++- `n` -- 進める距離
++- `bound` -- 進行の目的地となる位置を示すイテレータ（あるいは番兵）
++
++## 事前条件
++
++- (1) : `I`が[`bidirectional_iterator`](iterator/bidirectional_iterator.md)のモデルとならない場合、`n`は負数ではない
++- (2) : `[i, bound)`は有効な範囲である
++- (3) : 次のいずれか
++    - `n &amp;gt;  0` : `[i, bound)`は有効な範囲である
++    - `n == 0` : `[i, bound)`もしくは`[bound, i)`は有効な範囲である
++    - `n &amp;lt;  0` : `[bound, i)`は有効な範囲であり、`I`は[`bidirectional_iterator`](iterator/bidirectional_iterator.md)のモデルであり、`I, S`は[`same_as`](/reference/concepts/same_as.md)`&amp;lt;I, S&amp;gt;`のモデルとなる。
++
++## 効果
++
++- (1) : 次のいずれかによって、イテレータへの参照`i`を`n`回進める(`n`が負数の場合は逆方向に進める)。
++    - `I`が[`random_access_iterator`](iterator/random_access_iterator.md)のモデルとなる : `i += n`
++    - `n`が正数 : `i`を`n`回インクリメントする
++    - `n`が負数 : `i`を`-n`回デクリメントする
++- (2) : 次のいずれかによって、イテレータへの参照`i`を`bound`まで進める。
++    - `I, S`が[`assignable_from`](/reference/concepts/assignable_from.md)`&amp;lt;I&amp;amp;, S&amp;gt;`のモデルとなる : `i = std::move(bound)`
++    - `S, I`が[`sized_sentinel_for`](iterator/sized_sentinel_for.md)`&amp;lt;S, I&amp;gt;`のモデルとなる : `ranges::advance(i, bound - i)`（(1)に委譲）
++    - それ以外の場合 : `bool(i != bound) == true`である間、`i`をインクリメントする
++- (3) : 次のいずれかによって、イテレータへの参照`i`を`bound`を超えないように`n`回進める(`n`が負数の場合は逆方向に進める)。
++    - `S, I`が[`sized_sentinel_for`](iterator/sized_sentinel_for.md)`&amp;lt;S, I&amp;gt;`のモデルとなり
++        - `|n| &amp;gt;= |bound - i|` : `ranges::advance(i, bound)`（(2)に委譲）
++        - `|n| &amp;lt;  |bound - i|` : `ranges::advance(i, n)`（(1)に委譲）
++    - それ以外の場合で
++        - `n`が正数 : `bool(i != bound) == true`である間、`i`を最大`n`回インクリメントする
++        - `n`が負数 : `bool(i != bound) == true`である間、`i`を最大`-n`回インクリメントする
++
++## 戻り値
++
++- (1)(2) : なし
++- (3) : 指定した距離`n`と実際に進めた距離との差（進めなかった距離）を返す
++    - `i`の処理終了時と開始時の位置の差を`M`として、`n - M`を返す
++
++## 例
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;iterator&amp;gt;
++#include &amp;lt;vector&amp;gt;
++
++int main() {
++  std::vector&amp;lt;int&amp;gt; vec = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
++  
++  auto it = std::begin(vec);
++  
++  // (1)、2つ進める
++  std::ranges::advance(it, 2);
++  
++  std::cout &amp;lt;&amp;lt; *it &amp;lt;&amp;lt; std::endl;
++  
++  auto bound = std::next(vec.begin(), 5); // 6の位置
++  
++  // (2)、boundまで進める
++  std::ranges::advance(it, bound);
++  
++  std::cout &amp;lt;&amp;lt; *it &amp;lt;&amp;lt; std::endl;
++  
++  auto bound2 = std::next(bound, 2); // 8の位置
++  
++  // (3)、boundまでの間で、4つ進める
++  auto d = std::ranges::advance(it, 4, bound2);
++  
++  std::cout &amp;lt;&amp;lt; *it &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; &amp;#34;diff : &amp;#34; &amp;lt;&amp;lt; d &amp;lt;&amp;lt; std::endl;
++}
++```
++* std::ranges::advance[color ff0000]
++* std::begin[link /reference/iterator/begin.md]
++* std::next[link /reference/iterator/next.md]
++
++### 出力
++```
++3
++6
++8
++diff : 2
++```
++
++## バージョン
++### 言語
++- C++20
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): 10.1
++- [Visual C++](/implementation.md#visual_cpp): 2019 Update 5
++
++## 関連項目
++
++| 名前                | 説明                              |
++|---------------------|-----------------------------------|
++| [`next()`](next.md) | `n`回前方に進めたイテレータを返す |
++| [`prev()`](prev.md) | `n`回後方に進めたイテレータを返す |
++| [`rangs::next()`](rangs::next.md.nolink) | `n`回前方に進めたイテレータを返す |
++| [`rangs::prev()`](rangs::prev.md.nolink) | `n`回後方に進めたイテレータを返す |
++
++
++## 参照
++
++- [P0896R4 The One Ranges Proposal (was Merging the Ranges TS)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0896r4.pdf)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>digits10 -- numeric_limits::digits10 : 出力が間違っていた</title>
+      <link href="https://cpprefjp.github.io/reference/limits/numeric_limits/digits10.html"/>
+      <id>297a72fd86f495d5273e6066c8dc8d9a0958bff9:reference/limits/numeric_limits/digits10.md</id>
+      <updated>2020-11-05T15:27:39+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/limits/numeric_limits/digits10.md b/reference/limits/numeric_limits/digits10.md
+index 93195139d..5d57c87ff 100644
+--- a/reference/limits/numeric_limits/digits10.md
++++ b/reference/limits/numeric_limits/digits10.md
+@@ -48,8 +48,8 @@ int main()
+ ### 出力例
+ ```
+ 6
+-9
+ 15
++9
+ ```
+ 
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>exchange -- exchange : 不要になったコード修飾を削除</title>
+      <link href="https://cpprefjp.github.io/reference/utility/exchange.html"/>
+      <id>e1ed8106b95f6b50639a226c73043a8c55f4d020:reference/utility/exchange.md</id>
+      <updated>2020-11-05T15:10:03+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/utility/exchange.md b/reference/utility/exchange.md
+index 5d457920e..23e6c4cc9 100644
+--- a/reference/utility/exchange.md
++++ b/reference/utility/exchange.md
+@@ -175,8 +175,6 @@ int main()
+ ```
+ * std::exchange[color ff0000]
+ * std::move[link move.md]
+-* reset()[link /reference/memory/unique_ptr/reset.md]
+-* get()[link /reference/memory/unique_ptr/get.md]
+ 
+ 
+ #### 出力例
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>exchange -- exchange : unique_ptrはexchangeしたら破棄されるのでresetの例はいらなかった</title>
+      <link href="https://cpprefjp.github.io/reference/utility/exchange.html"/>
+      <id>b35481cc80f6a44eb797255f2ca21cbcb9155878:reference/utility/exchange.md</id>
+      <updated>2020-11-05T15:04:22+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/utility/exchange.md b/reference/utility/exchange.md
+index b53236449..5d457920e 100644
+--- a/reference/utility/exchange.md
++++ b/reference/utility/exchange.md
+@@ -124,14 +124,12 @@ int main()
+ #include &amp;lt;iostream&amp;gt;
+ #include &amp;lt;string&amp;gt;
+ #include &amp;lt;utility&amp;gt;
+-#include &amp;lt;memory&amp;gt;
+ 
+ struct A {};
+ 
+ struct X {
+   std::string str;
+   int* p = nullptr;
+-  std::unique_ptr&amp;lt;A&amp;gt; a;
+ 
+   X() = default;
+ 
+@@ -139,8 +137,7 @@ struct X {
+   // ムーブ構築しただけでは、標準範囲のオブジェクトは「有効だが未規定の状態」になる
+   X(X&amp;amp;&amp;amp; other)
+     : str(std::exchange(other.str, {})),
+-      p(std::exchange(other.p, nullptr)),
+-      a(std::exchange(other.a, {}))
++      p(std::exchange(other.p, nullptr))
+   {}
+   // 以下と等価:
+   // str{std::move(other.str)};
+@@ -149,27 +146,10 @@ struct X {
+   // p = other.p;
+   // other.p = nullptr;
+ 
++  // ムーブ代入も同様
+   X&amp;amp; operator=(X&amp;amp;&amp;amp; other) {
+     str = std::exchange(other.str, {});
+     p = std::exchange(other.p, nullptr);
+-
+-    // 破棄処理をともなう例
+-    if (std::unique_ptr&amp;lt;A&amp;gt; old = std::exchange(a, std::exchange(other.a, {}))) {
+-      old.reset();
+-    }
+-    // ほかの書き方1 : わかりにくい
+-    // std::swap(a, other.a);
+-    // if (other.a) {
+-    //   other.a.reset();
+-    // }
+-    //
+-    // ほかの書き方2 : 意図はわかりやすくなった例
+-    // std::unique_ptr&amp;lt;A&amp;gt; old = a;
+-    // a = std::move(other.a);
+-    // if (old) {
+-    //   old.reset();
+-    // }
+-
+     return *this;
+   }
+ };
+@@ -181,17 +161,16 @@ int main()
+   X a;
+   a.str = &amp;#34;Hello&amp;#34;;
+   a.p = &amp;amp;value;
+-  a.a = std::make_unique&amp;lt;A&amp;gt;();
+ 
+   X b = std::move(a);
+ 
+   // ムーブされたaが空になり、bとcへとデータが移動していくことを確認
+-  std::cout &amp;lt;&amp;lt; a.str &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; a.p &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; a.a.get() &amp;lt;&amp;lt; std::endl;
+-  std::cout &amp;lt;&amp;lt; b.str &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; b.p &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; b.a.get() &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; a.str &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; a.p &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; b.str &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; b.p &amp;lt;&amp;lt; std::endl;
+ 
+   X c;
+   c = std::move(b);
+-  std::cout &amp;lt;&amp;lt; c.str &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; c.p &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; c.a.get() &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; c.str &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; c.p &amp;lt;&amp;lt; std::endl;
+ }
+ ```
+ * std::exchange[color ff0000]
+@@ -202,9 +181,9 @@ int main()
+ 
+ #### 出力例
+ ```
+- (nil) (nil)
+-Hello 0x7ffdeb8e04bc 0x19be9c0
+-Hello 0x7ffdeb8e04bc 0x19be9c0
++ (nil)
++Hello 0x7ffc560ca4cc
++Hello 0x7ffc560ca4cc
+ ```
+ 
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
       </author>
     </entry>
   
