@@ -2,9 +2,240 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2020-11-11T05:07:54.268968</updated>
-  <id>17427af6-c5f3-4cf0-9362-dba94d8210e0</id>
+  <updated>2020-11-11T07:02:42.194643</updated>
+  <id>f828b307-04fd-45b3-972b-8eacd864beba</id>
 
+  
+    <entry>
+      <title>basic_string_view -- basic_string_view : Rangeコンストラクタに対応</title>
+      <link href="https://cpprefjp.github.io/reference/string_view/basic_string_view.html"/>
+      <id>b6c6ae7e15b7eb523501bb6dbbfd19d376a29a8c:reference/string_view/basic_string_view.md</id>
+      <updated>2020-11-11T15:58:35+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string_view/basic_string_view.md b/reference/string_view/basic_string_view.md
+index 8e70e22c7..5107b74bd 100644
+--- a/reference/string_view/basic_string_view.md
++++ b/reference/string_view/basic_string_view.md
+@@ -135,6 +135,7 @@ string_view hello = sv.substr(0, 5); // 先頭5文字を抽出する
+ 
+ 
+ ## 非メンバ関数
++### 比較演算
+ 
+ | 名前 | 説明 | 対応バージョン |
+ |------|------|----------------|
+@@ -144,7 +145,19 @@ string_view hello = sv.substr(0, 5); // 先頭5文字を抽出する
+ | [`operator&amp;lt;=`](basic_string_view/op_less_equal.md)    | 左辺が右辺以下かの判定を行う       | C++17 |
+ | [`operator&amp;gt;`](basic_string_view/op_greater.md)        | 左辺が右辺より大きいかの判定を行う | C++17 |
+ | [`operator&amp;gt;=`](basic_string_view/op_greater_equal.md) | 左辺が右辺以上かの判定を行う       | C++17 |
+-| [`operator&amp;lt;&amp;lt;`](basic_string_view/op_ostream.md)       | ストリームへの出力                 | C++17 |
++
++### 入出力
++
++| 名前 | 説明 | 対応バージョン |
++|------|------|----------------|
++| [`operator&amp;lt;&amp;lt;`](basic_string_view/op_ostream.md) | ストリームへの出力 | C++17 |
++
++
++### 推論ガイド
++
++| 名前 | 説明 | 対応バージョン |
++|------|------|----------------|
++| [`(op_deduction_guide)`](basic_string_view/op_deduction_guide.md) | クラステンプレートの推論補助 | C++20 |
+ 
+ 
+ ### リテラル
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- basic_string_view : Rangeコンストラクタに対応</title>
+      <link href="https://cpprefjp.github.io/reference/string_view/basic_string_view/op_constructor.html"/>
+      <id>b6c6ae7e15b7eb523501bb6dbbfd19d376a29a8c:reference/string_view/basic_string_view/op_constructor.md</id>
+      <updated>2020-11-11T15:58:35+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string_view/basic_string_view/op_constructor.md b/reference/string_view/basic_string_view/op_constructor.md
+index 185b992c5..2847ad67a 100644
+--- a/reference/string_view/basic_string_view/op_constructor.md
++++ b/reference/string_view/basic_string_view/op_constructor.md
+@@ -11,6 +11,9 @@ constexpr basic_string_view(
+             const basic_string_view&amp;amp;) noexcept = default;     // (2)
+ constexpr basic_string_view(const CharT* str);                // (3)
+ constexpr basic_string_view(const CharT* str, size_type len); // (4)
++
++template &amp;lt;class It, class End&amp;gt;
++constexpr basic_string_view(It first, End last);               // (5)
+ ```
+ 
+ ## 概要
+@@ -18,11 +21,24 @@ constexpr basic_string_view(const CharT* str, size_type len); // (4)
+ - (2) : コピーコンストラクタ。コピー元と同じ文字列を参照する
+ - (3) : 文字配列を受けとって、その文字配列の全体(ただしヌル文字列を含む場合はそこまで)を参照する
+ - (4) : 文字配列と長さを受けとって、文字配列`str`の先頭`len`文字を参照する
++- (5) : 文字のイテレータ範囲`[first, last)`を参照する
++
++
++## テンプレートパラメータ制約
++- (5) :
++    - `It`は[`contiguous_iterator`](/reference/iterator/contiguous_iterator.md)の要件を満たすこと
++    - `End`は[`sized_sentinel_for`](/reference/iterator/sized_sentinel_for.md)`&amp;lt;It&amp;gt;`の要件を満たすこと
++    - [`is_same_v`](/reference/type_traits/is_same.md)`&amp;lt;`[`iter_value_t`](/reference/iterator/iter_value_t.md)`&amp;lt;It&amp;gt;, charT&amp;gt;`が`true`であること
++    - [`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;End, size_type&amp;gt;`が`false`であること
+ 
+ 
+-## 要件
++## 事前条件
+ - (3) : 範囲`[str, str + Traits::`[`length`](/reference/string/char_traits/length.md)`(str))`が妥当であること (アクセス可能であること)
+ - (4) : 範囲`[str, str + len)`が妥当であること
++- (5) :
++    - 範囲`[first, last)`が妥当であること
++    - `It`が[`contiguous_iterator`](/reference/iterator/contiguous_iterator.md)のモデルであること
++    - `End`が[`sized_sentinel_for`](/reference/iterator/sized_sentinel_for.md)`&amp;lt;It&amp;gt;`のモデルであること
+ 
+ 
+ ## 効果
+@@ -31,6 +47,7 @@ constexpr basic_string_view(const CharT* str, size_type len); // (4)
+ - (1) : `data_ = nullptr;`および`size_ = 0;`とする
+ - (3) : `data_ = str;`および`size_ = Traits::`[`length`](/reference/string/char_traits/length.md)`(str);`とする
+ - (4) : `data_ = str;`および`size_ = len;`とする
++- (5) : `data_ =` [`to_address`](/reference/memory/to_address.md)`(first);`および`size_ = last - first;`とする
+ 
+ 
+ ## 計算量
+@@ -88,13 +105,26 @@ int main()
+     std::string_view sv{&amp;#34;Hello World&amp;#34;, 5};
+     std::cout &amp;lt;&amp;lt; &amp;#34;(4) : &amp;#34; &amp;lt;&amp;lt; sv &amp;lt;&amp;lt; std::endl;
+   }
++
++  // (5)
++  // 文字のイテレータ範囲を受け取って参照するコンストラクタ
++  {
++    std::string s = &amp;#34;Hello World&amp;#34;;
++    std::string_view sv{s.begin(), s.begin() + 5};
++    std::cout &amp;lt;&amp;lt; &amp;#34;(5) : &amp;#34; &amp;lt;&amp;lt; sv &amp;lt;&amp;lt; std::endl;
++  }
+ }
+ ```
+ * sv.data()[link data.md]
+ * sv.size()[link size.md]
++* s.begin()[link /reference/string/basic_string/begin.md]
+ 
+ ### 出力
+ ```
++(2) : Hello World
++(3) : Hello World
++(4) : Hello
++(5) : Hello
+ ```
+ 
+ ## バージョン
+@@ -102,10 +132,11 @@ int main()
+ - C++17
+ 
+ ### 処理系
+-- [Clang](/implementation.md#clang): 4.0
+-- [GCC](/implementation.md#gcc): 7.1
++- [Clang](/implementation.md#clang): 4.0 (5以外)
++- [GCC](/implementation.md#gcc): 7.1 (5以外), 10.1
+ - [ICC](/implementation.md#icc): ??
+ - [Visual C++](/implementation.md#visual_cpp): ??
+ 
+ ## 参照
+ - [ISO/IEC JTC1 SC22 WG21 N3762](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3762.html#avoid-strlen)
++- [P1391R4 Range constructor for `std::string_view`](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1391r4.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>推論補助 -- basic_string_view : Rangeコンストラクタに対応</title>
+      <link href="https://cpprefjp.github.io/reference/string_view/basic_string_view/op_deduction_guide.html"/>
+      <id>b6c6ae7e15b7eb523501bb6dbbfd19d376a29a8c:reference/string_view/basic_string_view/op_deduction_guide.md</id>
+      <updated>2020-11-11T15:58:35+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string_view/basic_string_view/op_deduction_guide.md b/reference/string_view/basic_string_view/op_deduction_guide.md
+new file mode 100644
+index 000000000..c9cf98813
+--- /dev/null
++++ b/reference/string_view/basic_string_view/op_deduction_guide.md
+@@ -0,0 +1,61 @@
++# 推論補助
++* string_view[meta header]
++* std[meta namespace]
++* basic_string_view[meta class]
++* cpp20[meta cpp]
++
++```cpp
++namespace std {
++  template &amp;lt;class It, class End&amp;gt;
++  basic_string_view(It, End) -&amp;gt; basic_string_view&amp;lt;iter_value_t&amp;lt;It&amp;gt;&amp;gt;; // (1) C++20
++}
++```
++* iter_value_t[link /reference/iterator/iter_value_t.md]
++
++## 概要
++`std::basic_string_view`クラステンプレートの型推論補助。イテレータ範囲から推論する。
++
++
++## テンプレートパラメータ制約
++- (1) :
++    - `It`は[`contiguous_iterator`](/reference/iterator/contiguous_iterator.md)の要件を満たすこと
++    - `End`は[`sized_sentinel_for`](/reference/iterator/sized_sentinel_for.md)`&amp;lt;It&amp;gt;`の要件を満たすこと
++
++
++## 例
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;string_view&amp;gt;
++
++int main()
++{
++  std::string s = &amp;#34;Hello&amp;#34;;
++  std::basic_string_view sv{s.begin(), s.end()};
++  std::cout &amp;lt;&amp;lt; sv &amp;lt;&amp;lt; std::endl;
++}
++```
++* s.begin()[link /reference/string/basic_string/begin.md]
++* s.end()[link /reference/string/basic_string/end.md]
++
++### 出力
++```
++Hello
++```
++
++
++## バージョン
++### 言語
++- C++20
++
++### 処理系
++- [Clang](/implementation.md#clang):
++- [GCC](/implementation.md#gcc): 10.1
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 関連項目
++- [C++17 クラステンプレートのテンプレート引数推論](/lang/cpp17/type_deduction_for_class_templates.md)
++
++
++## 参照
++- [P1391R4 Range constructor for `std::string_view`](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1391r4.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>erase (非メンバ関数) -- C++20 コンテナの非メンバ関数erase/erase_if : 戻り値改善の仕様変更を適用</title>
@@ -1623,372 +1854,6 @@ index f6580be5c..56327e2a7 100644
  
  ## 例
  ```cpp example
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>move_iterator -- reverse_iterator : C++20対応 #712</title>
-      <link href="https://cpprefjp.github.io/reference/iterator/move_iterator.html"/>
-      <id>712aa954da8a3f62e3b3e390881f7b41723a12fb:reference/iterator/move_iterator.md</id>
-      <updated>2020-11-11T10:36:12+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/move_iterator.md b/reference/iterator/move_iterator.md
-index 53b595753..dc17f305e 100644
---- a/reference/iterator/move_iterator.md
-+++ b/reference/iterator/move_iterator.md
-@@ -74,6 +74,7 @@ namespace std {
- | [`operator&amp;lt;=`](move_iterator/op_less_equal.md)    | 左辺が右辺以下かの判定を行う | C++11 |
- | [`operator&amp;gt;`](move_iterator/op_greater.md)        | 左辺が右辺より大きいかの判定を行う | C++11 |
- | [`operator&amp;gt;=`](move_iterator/op_greater_equal.md) | 左辺が右辺以上かの判定を行う | C++11 |
-+| [`operator&amp;lt;=&amp;gt;`](move_iterator/op_compare_3way.md.nolink)           | 三方比較を行う | C++20 |
- | [`operator-`](move_iterator/op_minus.md)          | 2つの`move_iterator`の差を求める | C++11 |
- | [`operator+`](move_iterator/op_plus.md)           | イテレータを進める | C++11 |
- | [`make_move_iterator`](make_move_iterator.md)     | `move_iterator`のヘルパ関数 | C++11 |
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>reverse_iterator -- reverse_iterator : C++20対応 #712</title>
-      <link href="https://cpprefjp.github.io/reference/iterator/reverse_iterator.html"/>
-      <id>712aa954da8a3f62e3b3e390881f7b41723a12fb:reference/iterator/reverse_iterator.md</id>
-      <updated>2020-11-11T10:36:12+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/reverse_iterator.md b/reference/iterator/reverse_iterator.md
-index 77d6a3492..9eda3697d 100644
---- a/reference/iterator/reverse_iterator.md
-+++ b/reference/iterator/reverse_iterator.md
-@@ -12,10 +12,18 @@ namespace std {
-                       typename iterator_traits&amp;lt;Iterator&amp;gt;::difference_type,
-                       typename iterator_traits&amp;lt;Iterator&amp;gt;::pointer,
-                       typename iterator_traits&amp;lt;Iterator&amp;gt;::reference&amp;gt;;
-+
-+  // 距離を求められないイテレータペアについて、sized_sentinel_forを無効化する（C++20）
-+  template&amp;lt;class Iterator1, class Iterator2&amp;gt;
-+    requires (!sized_sentinel_for&amp;lt;Iterator1, Iterator2&amp;gt;)
-+  inline constexpr bool disable_sized_sentinel_for&amp;lt;reverse_iterator&amp;lt;Iterator1&amp;gt;,
-+                                                   reverse_iterator&amp;lt;Iterator2&amp;gt;&amp;gt; = true;
- }
- ```
- * iterator[link /reference/iterator/iterator.md]
- * iterator_traits[link /reference/iterator/iterator_traits.md]
-+* sized_sentinel_for[link /reference/iterator/sized_sentinel_for.md]
-+* disable_sized_sentinel_for[link /reference/iterator/disable_sized_sentinel_for.md]
- 
- ## 概要
- `reverse_iterator`は、イテレータを、逆方向に進むイテレータとしてラップするイテレータアダプタである。
-@@ -24,7 +32,9 @@ namespace std {
- 
- 
- ## 要件
--テンプレートパラメータ`Iterator`は、双方向イテレータの要件を満たすこと。ランダムアクセスイテレータであることを必要とする横断操作を使用する場合は、ランダムアクセスイテレータの要件を満たすこと。
-+
-+- C++17まで : テンプレートパラメータ`Iterator`は、双方向イテレータの要件を満たすこと。ランダムアクセスイテレータであることを必要とする横断操作を使用する場合は、ランダムアクセスイテレータの要件を満たすこと。
-+- C++20 : テンプレートパラメータ`Iterator`は、[`bidirectional_iterator`](/reference/iterator/bidirectional_iterator.md)のモデルとなること。ランダムアクセスイテレータであることを必要とする横断操作を使用する場合は、[`random_access_iterator`](/reference/iterator/random_access_iterator.md)のモデルとなること。
- 
- 
- ## メンバ関数
-@@ -55,6 +65,8 @@ namespace std {
- 
- ## メンバ型
- 
-+### C++17まで
-+
- | 名前 | 説明 | 対応バージョン |
- |-----------------------------------------|----------------------------------------|-------|
- | `iterator_type` | `Iterator` | |
-@@ -64,6 +76,17 @@ namespace std {
- | `iterator_category` | [`iterator_traits`](/reference/iterator/iterator_traits.md)`&amp;lt;Iterator&amp;gt;::iterator_category` | |
- | `reference` | [`iterator_traits`](/reference/iterator/iterator_traits.md)`&amp;lt;Iterator&amp;gt;::reference` | |
- 
-+### C++20
-+
-+| 名前 | 説明 | 対応バージョン |
-+|------------------------------------------------------|-------------|-------|
-+| `iterator_type` | `Iterator` | |
-+| `difference_type` | [`iter_difference_t`](/reference/iterator/iter_difference_t.md)`&amp;lt;Iterator&amp;gt;` | C++20 |
-+| `pointer` | `Iterator` | |
-+| `value_type` | [`iter_value_t`](/reference/iterator/iter_value_t.md)`&amp;lt;Iterator&amp;gt;` | C++20 |
-+| `iterator_category` | [`iterator_traits`](/reference/iterator/iterator_traits.md)`&amp;lt;Iterator&amp;gt;::iterator_category` &amp;lt;br/&amp;gt; ただし、[`contiguous_iterator_tag`](/reference/iterator/iterator_tag.md)となるときは`random_access_iterator_tag` | C++20 |
-+| `iterator_concept` | [`bidirectional_iterator_tag`](/reference/iterator/iterator_tag.md) &amp;lt;br/&amp;gt; ただし、`Iterator`が[`random_access_iterator`](/reference/iterator/random_access_iterator.md)のモデルとなる場合は[`random_access_iterator_tag`](/reference/iterator/iterator_tag.md)  | C++20 |
-+| `reference` | [`iter_reference_t`](/reference/iterator/iter_reference_t.md)`&amp;lt;Iterator&amp;gt;`  | C++20 |
- 
- ## 非メンバ関数
- 
-@@ -75,8 +98,11 @@ namespace std {
- | [`operator&amp;lt;=`](reverse_iterator/op_less_equal.md) | 左辺が右辺以下かの判定を行う | |
- | [`operator&amp;gt;`](reverse_iterator/op_greater.md) | 左辺が右辺より大きいかの判定を行う | |
- | [`operator&amp;gt;=`](reverse_iterator/op_greater_equal.md) | 左辺が右辺以上かの判定を行う | |
-+| [`operator&amp;lt;=&amp;gt;`](reverse_iterator/op_compare_3way.md.nolink)           | 三方比較を行う | C++20 |
- | [`operator-`](reverse_iterator/op_minus.md) | 2つの`reverse_iterator`の差を求める | |
- | [`operator+`](reverse_iterator/op_plus.md) | イテレータを進める | |
-+| [`iter_move`](reverse_iterator/iter_move.md.nolink)     | イテレータの要素の移動 | C++20 |
-+| [`iter_swap`](reverse_iterator/iter_swap.md.nolink)     | イテレータの要素の交換 | C++20 |
- 
- ### ヘルパ関数
- 
-@@ -118,4 +144,4 @@ int main()
- 
- ### 参照
- 
--
-+- [P0896R4 The One Ranges Proposal (was Merging the Ranges TS)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0896r4.pdf)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator-&gt; -- reverse_iterator : C++20対応 #712</title>
-      <link href="https://cpprefjp.github.io/reference/iterator/reverse_iterator/op_arrow.html"/>
-      <id>712aa954da8a3f62e3b3e390881f7b41723a12fb:reference/iterator/reverse_iterator/op_arrow.md</id>
-      <updated>2020-11-11T10:36:12+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/reverse_iterator/op_arrow.md b/reference/iterator/reverse_iterator/op_arrow.md
-index 3c50bba62..f6580be5c 100644
---- a/reference/iterator/reverse_iterator/op_arrow.md
-+++ b/reference/iterator/reverse_iterator/op_arrow.md
-@@ -7,7 +7,11 @@
- ```cpp
- pointer operator-&amp;gt;() const;           // C++03
- constexpr pointer operator-&amp;gt;() const; // C++17
-+constexpr pointer operator-&amp;gt;() const  // C++20
-+  requires (is_pointer_v&amp;lt;Iterator&amp;gt; ||
-+            requires (const Iterator i) { i.operator-&amp;gt;(); });
- ```
-+* is_pointer_v[link /reference/type_traits/is_pointer.md]
- 
- ## 概要
- イテレータを通してオブジェクトにアクセスする
-@@ -16,6 +20,9 @@ constexpr pointer operator-&amp;gt;() const; // C++17
- ## 戻り値
- - C++03 : `&amp;amp;(operator*())`
- - C++14 : [`addressof`](/reference/memory/addressof.md)`(operator*())`
-+- C++20 : 次のいずれか
-+    - `Iterator`がポインタ型である場合 : `return `[` prev`](/reference/iterator/prev.md)`(current);`
-+    - それ以外の場合 : `return `[` prev`](/reference/iterator/prev.md)`(current).operator-&amp;gt;();`
- 
- ## 例
- ```cpp example
-@@ -52,3 +59,4 @@ int main()
- ## 参照
- - [LWG Issue 2188. Reverse iterator does not fully support targets that overload `operator&amp;amp;`](http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#2188)
- - [P0031R0 A Proposal to Add Constexpr Modifiers to `reverse_iterator`, `move_iterator`, `array` and Range Access](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0031r0.html)
-+- [P0896R4 The One Ranges Proposal (was Merging the Ranges TS)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0896r4.pdf)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator== -- reverse_iterator : C++20対応 #712</title>
-      <link href="https://cpprefjp.github.io/reference/iterator/reverse_iterator/op_equal.html"/>
-      <id>712aa954da8a3f62e3b3e390881f7b41723a12fb:reference/iterator/reverse_iterator/op_equal.md</id>
-      <updated>2020-11-11T10:36:12+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/reverse_iterator/op_equal.md b/reference/iterator/reverse_iterator/op_equal.md
-index a65789fc9..031c5d97e 100644
---- a/reference/iterator/reverse_iterator/op_equal.md
-+++ b/reference/iterator/reverse_iterator/op_equal.md
-@@ -18,6 +18,10 @@ namespace std {
- ## 概要
- 2つの`reverse_iterator`オブジェクトが同じ要素を指しているかを判定する。
- 
-+## テンプレートパラメータ制約
-+
-+`x.current == y.current`が有効であり、戻り値が`bool`に変換可能であること。
-+
- 
- ## 戻り値
- `x.current == y.current`
-@@ -54,3 +58,4 @@ equal
- 
- ## 参照
- - [P0031R0 A Proposal to Add Constexpr Modifiers to `reverse_iterator`, `move_iterator`, `array` and Range Access](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0031r0.html)
-+- [P0896R4 The One Ranges Proposal (was Merging the Ranges TS)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0896r4.pdf)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator&gt; -- reverse_iterator : C++20対応 #712</title>
-      <link href="https://cpprefjp.github.io/reference/iterator/reverse_iterator/op_greater.html"/>
-      <id>712aa954da8a3f62e3b3e390881f7b41723a12fb:reference/iterator/reverse_iterator/op_greater.md</id>
-      <updated>2020-11-11T10:36:12+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/reverse_iterator/op_greater.md b/reference/iterator/reverse_iterator/op_greater.md
-index 58c897f62..a749d5bca 100644
---- a/reference/iterator/reverse_iterator/op_greater.md
-+++ b/reference/iterator/reverse_iterator/op_greater.md
-@@ -18,6 +18,10 @@ namespace std {
- ## 概要
- 2つのr`everse_iterator`オブジェクトにおいて、左辺が右辺より大きいかを判定する。
- 
-+## テンプレートパラメータ制約
-+
-+`x.current &amp;lt; y.current`が有効であり、戻り値が`bool`に変換可能であること。
-+
- 
- ## 戻り値
- `x.current &amp;lt; y.current`
-@@ -54,3 +58,4 @@ greater
- 
- ## 参照
- - [P0031R0 A Proposal to Add Constexpr Modifiers to `reverse_iterator`, `move_iterator`, `array` and Range Access](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0031r0.html)
-+- [P0896R4 The One Ranges Proposal (was Merging the Ranges TS)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0896r4.pdf)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator&gt;= -- reverse_iterator : C++20対応 #712</title>
-      <link href="https://cpprefjp.github.io/reference/iterator/reverse_iterator/op_greater_equal.html"/>
-      <id>712aa954da8a3f62e3b3e390881f7b41723a12fb:reference/iterator/reverse_iterator/op_greater_equal.md</id>
-      <updated>2020-11-11T10:36:12+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/reverse_iterator/op_greater_equal.md b/reference/iterator/reverse_iterator/op_greater_equal.md
-index 0161c18c1..bc72cb3dd 100644
---- a/reference/iterator/reverse_iterator/op_greater_equal.md
-+++ b/reference/iterator/reverse_iterator/op_greater_equal.md
-@@ -18,6 +18,10 @@ namespace std {
- ## 概要
- 2つの`reverse_iterator`オブジェクトにおいて、左辺が右辺以上かを判定する。
- 
-+## テンプレートパラメータ制約
-+
-+`x.current &amp;lt;= y.current`が有効であり、戻り値が`bool`に変換可能であること。
-+
- 
- ## 戻り値
- `x.current &amp;lt;= y.current`
-@@ -53,3 +57,4 @@ greater
- 
- ## 参照
- - [P0031R0 A Proposal to Add Constexpr Modifiers to `reverse_iterator`, `move_iterator`, `array` and Range Access](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0031r0.html)
-+- [P0896R4 The One Ranges Proposal (was Merging the Ranges TS)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0896r4.pdf)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator&lt; -- reverse_iterator : C++20対応 #712</title>
-      <link href="https://cpprefjp.github.io/reference/iterator/reverse_iterator/op_less.html"/>
-      <id>712aa954da8a3f62e3b3e390881f7b41723a12fb:reference/iterator/reverse_iterator/op_less.md</id>
-      <updated>2020-11-11T10:36:12+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/reverse_iterator/op_less.md b/reference/iterator/reverse_iterator/op_less.md
-index 78e7a0be8..856c39151 100644
---- a/reference/iterator/reverse_iterator/op_less.md
-+++ b/reference/iterator/reverse_iterator/op_less.md
-@@ -18,6 +18,9 @@ namespace std {
- ## 概要
- 2つの`reverse_iterator`オブジェクトにおいて、左辺が右辺より小さいかを判定する。
- 
-+## テンプレートパラメータ制約
-+
-+`x.current &amp;gt; y.current`が有効であり、戻り値が`bool`に変換可能であること。
- 
- 
- ## 戻り値
-@@ -55,3 +58,4 @@ less
- 
- ## 参照
- - [P0031R0 A Proposal to Add Constexpr Modifiers to `reverse_iterator`, `move_iterator`, `array` and Range Access](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0031r0.html)
-+- [P0896R4 The One Ranges Proposal (was Merging the Ranges TS)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0896r4.pdf)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator&lt;= -- reverse_iterator : C++20対応 #712</title>
-      <link href="https://cpprefjp.github.io/reference/iterator/reverse_iterator/op_less_equal.html"/>
-      <id>712aa954da8a3f62e3b3e390881f7b41723a12fb:reference/iterator/reverse_iterator/op_less_equal.md</id>
-      <updated>2020-11-11T10:36:12+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/reverse_iterator/op_less_equal.md b/reference/iterator/reverse_iterator/op_less_equal.md
-index 4504a8790..346f1f1f2 100644
---- a/reference/iterator/reverse_iterator/op_less_equal.md
-+++ b/reference/iterator/reverse_iterator/op_less_equal.md
-@@ -18,6 +18,10 @@ namespace std {
- ## 概要
- 2つの`reverse_iterator`オブジェクトにおいて、左辺が右辺以下かを判定する。
- 
-+## テンプレートパラメータ制約
-+
-+`x.current &amp;gt;= y.current`が有効であり、戻り値が`bool`に変換可能であること。
-+
- 
- ## 戻り値
- `x.current &amp;gt;= y.current`
-@@ -53,3 +57,4 @@ less
- 
- ## 参照
- - [P0031R0 A Proposal to Add Constexpr Modifiers to `reverse_iterator`, `move_iterator`, `array` and Range Access](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0031r0.html)
-+- [P0896R4 The One Ranges Proposal (was Merging the Ranges TS)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0896r4.pdf)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator!= -- reverse_iterator : C++20対応 #712</title>
-      <link href="https://cpprefjp.github.io/reference/iterator/reverse_iterator/op_not_equal.html"/>
-      <id>712aa954da8a3f62e3b3e390881f7b41723a12fb:reference/iterator/reverse_iterator/op_not_equal.md</id>
-      <updated>2020-11-11T10:36:12+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/reverse_iterator/op_not_equal.md b/reference/iterator/reverse_iterator/op_not_equal.md
-index 7aca62cfb..4285e7f8d 100644
---- a/reference/iterator/reverse_iterator/op_not_equal.md
-+++ b/reference/iterator/reverse_iterator/op_not_equal.md
-@@ -18,6 +18,9 @@ namespace std {
- ## 概要
- 2つの`reverse_iterator`オブジェクトが同じ要素を指していないかを判定する。
- 
-+## テンプレートパラメータ制約
-+
-+`x.current != y.current`が有効であり、戻り値が`bool`に変換可能であること。
- 
- ## 戻り値
- `x.current != y.current`
-@@ -53,3 +56,4 @@ not equal
- 
- ## 参照
- - [P0031R0 A Proposal to Add Constexpr Modifiers to `reverse_iterator`, `move_iterator`, `array` and Range Access](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0031r0.html)
-+- [P0896R4 The One Ranges Proposal (was Merging the Ranges TS)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0896r4.pdf)
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
