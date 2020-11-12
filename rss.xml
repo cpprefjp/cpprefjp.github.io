@@ -2,9 +2,86 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2020-11-12T16:32:16.844510</updated>
-  <id>92b65058-0f05-41f4-a4db-4caa30d83ff5</id>
+  <updated>2020-11-12T18:26:42.760323</updated>
+  <id>deee036a-b9a2-4bc8-b1c1-df7413f61ef6</id>
 
+  
+    <entry>
+      <title>モジュール -- Update modules.md</title>
+      <link href="https://cpprefjp.github.io/lang/cpp20/modules.html"/>
+      <id>5144cc92ba3802dd19dd7715c8a10018bafbd26c:lang/cpp20/modules.md</id>
+      <updated>2020-11-13T03:22:03+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/modules.md b/lang/cpp20/modules.md
+index 5872f6180..96e267a80 100644
+--- a/lang/cpp20/modules.md
++++ b/lang/cpp20/modules.md
+@@ -2,35 +2,40 @@
+ * cpp20[meta cpp]
+ 
+ ## 概要
+-C++20では、インクルードに代わる新たな仕組みとしてモジュールが導入された。
++C++20では、ヘッダーファイル・ソースファイルに代わる新たなファイル分割の仕組みとしてモジュールが導入された。
+ 
+-C++20では、プリプロセッサを用いずにプログラムを分割することができる：
++モジュールは翻訳単位の先頭でモジュール宣言を行うことにより宣言する。
+ 
+ ```cpp
+-// P1103R3より引用
++export module mylib;
++```
+ 
+-// a.cpp
+-export module A; // モジュールAのインターフェース
++モジュールの中では、関数や型などの宣言に `export` キーワードを付けて宣言をエクスポートできる。
+ 
+-int foo() { return 1; } // エクスポートしていない関数foo
+-export int bar();       // エクスポートしている関数bar
++```cpp
++export module mylib;
++
++namespace mylib {
++  export struct myfunc_result_t {
++    int x, y;
++  };
++  export myfunc_result_t myfunc() { /*...*/ };
++};
++```
+ 
+-// a-impl.cpp
+-module A; // モジュールAの実装
++モジュールを利用するには、インポート宣言を行う。これにより、インポートしたモジュールがエクスポートしている宣言が見えるようになる。
+ 
+-int bar() {
+-  return foo() + 1; // OK: fooはエクスポートしていないが、モジュールAの中では見える。
+-}
+-
+-// unrelated.cpp
+-import A;
++```cpp
++import mylib;
+ 
+ int main() {
+-  bar(); // OK: barはAからエクスポートされているので見える
+-  foo(); // エラー: fooはモジュールAの外では見えない
++  // これらの型や関数の宣言はこの翻訳単位には無いが、
++  // mylibでエクスポートしているので、使用することができる。
++  mylib::myfunc_result_t ret = mylib::myfunc();
+ }
+ ```
+-* P1103R3[link http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1103r3.pdf]
++
++モジュールは単一の翻訳単位で構成することも、複数の翻訳単位で構成することもできる。
+ 
+ C++20では標準ライブラリはモジュール化されないが、その中でC++ライブラリはヘッダーユニットとしてインポートできる。
+ 標準ライブラリのモジュール化はC++23以降に予定されている。
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>処理系 -- Visual C++ : C++20の機能を有効にする方法を記載</title>
@@ -950,42 +1027,6 @@ index e1768e7ba..d2253a126 100644
  - [LWG Issue 3144. `span` does not have a `const_pointer` typedef](https://wg21.cmeerw.net/lwg/issue3144)
  - [LWG Issue 3203. `span` element access invalidation](https://cplusplus.github.io/LWG/lwg-active.html#3203)
  - [P1872R0 `span` should have `size_type`, not `index_type`](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1872r0.pdf)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>コンストラクタ -- spanのコンストラクタ : 組み込み配列からは推論ガイド経由でしか推論できないよう修正</title>
-      <link href="https://cpprefjp.github.io/reference/span/span/op_constructor.html"/>
-      <id>cabfadea78d4a07b4983bae7c15308e434cb1239:reference/span/span/op_constructor.md</id>
-      <updated>2020-11-12T17:55:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/span/span/op_constructor.md b/reference/span/span/op_constructor.md
-index 12f400bd9..c039b356a 100644
---- a/reference/span/span/op_constructor.md
-+++ b/reference/span/span/op_constructor.md
-@@ -17,7 +17,8 @@ constexpr explicit(extent != dynamic_extent)
-   span(It first, End last);                                    // (3) C++20
- 
- template &amp;lt;size_t N&amp;gt;
--constexpr span(element_type (&amp;amp;arr)[N]) noexcept;               // (4) C++20
-+constexpr span(
-+  type_identity_t&amp;lt;element_type&amp;gt; (&amp;amp;arr)[N]) noexcept;           // (4) C++20
- 
- template &amp;lt;class T, size_t N&amp;gt;
- constexpr span(array&amp;lt;T, N&amp;gt;&amp;amp; arr) noexcept;                     // (5) C++20
-@@ -38,6 +39,7 @@ constexpr explicit(extent != dynamic_extent &amp;amp;&amp;amp; OtherExtent == dynamic_extent)
- * size_t[link /reference/cstddef/size_t.md]
- * array[link /reference/array/array.md]
- * dynamic_extent[link /reference/span/dynamic_extent.md]
-+* type_identity_t[link /reference/type_traits/type_identity.md]
- 
- ## 概要
- `span`オブジェクトを構築する。
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
