@@ -2,9 +2,598 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2020-11-25T05:40:43.939233</updated>
-  <id>128c4144-7d00-46d2-bd0c-4dbfbfd58fef</id>
+  <updated>2020-11-25T06:20:20.127115</updated>
+  <id>c3744b69-1b72-4484-9b74-6522d05e1e6f</id>
 
+  
+    <entry>
+      <title>parse -- addressof関係の対応</title>
+      <link href="https://cpprefjp.github.io/reference/chrono/parse.html"/>
+      <id>55e6851ea2c52af5d82cff05d9f1d3b3e16fcbf4:reference/chrono/parse.md</id>
+      <updated>2020-11-25T15:15:55+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/parse.md b/reference/chrono/parse.md
+index f2e563bb4..65c628be9 100644
+--- a/reference/chrono/parse.md
++++ b/reference/chrono/parse.md
+@@ -178,6 +178,7 @@ JST
+ 
+ 
+ ## 参照
++- [LWG Issue 3131. `addressof` all the things](https://wg21.cmeerw.net/lwg/issue3131)
+ - [LWG Issue 3218. Modifier for `%d` parse flag does not match POSIX and format specification](https://wg21.cmeerw.net/lwg/issue3218)
+ - [LWG Issue 3235. `parse` manipulator without abbreviation is not callable](https://wg21.cmeerw.net/lwg/issue3235)
+ - [LWG Issue 3245. Unnecessary restriction on `&amp;#39;%p&amp;#39;` parse specifier](https://wg21.cmeerw.net/lwg/issue3245)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>splice_after -- addressof関係の対応</title>
+      <link href="https://cpprefjp.github.io/reference/forward_list/forward_list/splice_after.html"/>
+      <id>55e6851ea2c52af5d82cff05d9f1d3b3e16fcbf4:reference/forward_list/forward_list/splice_after.md</id>
+      <updated>2020-11-25T15:15:55+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/forward_list/forward_list/splice_after.md b/reference/forward_list/forward_list/splice_after.md
+index 1f03b056e..712bd8cfd 100644
+--- a/reference/forward_list/forward_list/splice_after.md
++++ b/reference/forward_list/forward_list/splice_after.md
+@@ -31,6 +31,7 @@ void splice_after(const_iterator position, forward_list&amp;amp;&amp;amp; x,
+ - 第1パラメータ`position`が、[`before_begin()`](before_begin.md)もしくは`[`[`begin()`](begin.md)`,` [`end()`](end.md))の範囲の間接参照可能なイテレータであること。
+ - `i`, `first`, `last`が、`x`のイテレータであること。
+ - [`get_allocator()`](get_allocator.md) `== x.`[`get_allocator()`](get_allocator.md)であること。(C++14)
++- [`addressof`](/reference/memory/addressof.md)`(x) != this`であること
+ 
+ 
+ ## 効果
+@@ -135,4 +136,4 @@ int main()
+ - [LWG Issue 2045. `forward_list::merge` and `forward_list::splice_after` with unequal allocators](http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#2045)
+ - [LWG Issue 2222. Inconsistency in description of `forward_list::splice_after` single-element overload](http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#2222)
+ 	- (3)と(4)のオーバーロードについて、有効性が継続される対象が、`*i`となっていたが、`*++i`の間違いであったため、C++14で修正された。
+-
++- [LWG Issue 3017. `list` `splice` functions should use `addressof`](https://wg21.cmeerw.net/lwg/issue3017)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- addressof関係の対応</title>
+      <link href="https://cpprefjp.github.io/reference/fstream/basic_fstream/op_constructor.html"/>
+      <id>55e6851ea2c52af5d82cff05d9f1d3b3e16fcbf4:reference/fstream/basic_fstream/op_constructor.md</id>
+      <updated>2020-11-25T15:15:55+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/fstream/basic_fstream/op_constructor.md b/reference/fstream/basic_fstream/op_constructor.md
+index 9a52a997e..12bb50112 100644
+--- a/reference/fstream/basic_fstream/op_constructor.md
++++ b/reference/fstream/basic_fstream/op_constructor.md
+@@ -67,13 +67,17 @@ int main()
+ ```cpp
+ // (1)
+ template&amp;lt;class CharT, class Traits&amp;gt;
+-basic_fstream&amp;lt;CharT, Traits&amp;gt;::basic_fstream() : basic_iostream(&amp;amp;sb), sb() {
++basic_fstream&amp;lt;CharT, Traits&amp;gt;::basic_fstream()
++//: basic_iostream(&amp;amp;sb), sb() {           // C++98
++  : basic_iostream(addressof(sb)), sb() { // C++11
+   // 本体は空
+ }
+ 
+ // (2)
+ template&amp;lt;class CharT, class Traits&amp;gt;
+-basic_fstream&amp;lt;CharT, Traits&amp;gt;::basic_fstream(const char* s, ios_base::openmode mode) : basic_iostream(&amp;amp;sb), sb() {
++basic_fstream&amp;lt;CharT, Traits&amp;gt;::basic_fstream(const char* s, ios_base::openmode mode)
++//: basic_iostream(&amp;amp;sb), sb() {           // C++98
++  : basic_iostream(addressof(sb)), sb() { // C++11
+   if (rdbuf()-&amp;gt;open(s, mode) == nullptr) {
+     setstate(failbit);
+   }
+@@ -81,16 +85,20 @@ basic_fstream&amp;lt;CharT, Traits&amp;gt;::basic_fstream(const char* s, ios_base::openmode mo
+ 
+ // (3)
+ template&amp;lt;class CharT, class Traits&amp;gt;
+-basic_fstream&amp;lt;CharT, Traits&amp;gt;::basic_fstream(const string&amp;amp; s, ios_base::openmode mode) : basic_fstream(s.c_str(), mode) {
++basic_fstream&amp;lt;CharT, Traits&amp;gt;::basic_fstream(const string&amp;amp; s, ios_base::openmode mode)
++  : basic_fstream(s.c_str(), mode) {
+   // 本体は空
+ }
+ 
+ // (5)
+ template&amp;lt;class CharT, class Traits&amp;gt;
+-basic_fstream&amp;lt;CharT, Traits&amp;gt;::basic_fstream(basic_fstream&amp;amp;&amp;amp; rhs) : basic_iostream(move(rhs)), sb(move(rhs.sb)) {
+-  set_rdbuf(&amp;amp;sb);
++basic_fstream&amp;lt;CharT, Traits&amp;gt;::basic_fstream(basic_fstream&amp;amp;&amp;amp; rhs)
++  : basic_iostream(move(rhs)), sb(move(rhs.sb)) {
++  // set_rdbuf(&amp;amp;sb);        // C++98
++  set_rdbuf(addressof(sb)); // C++11
+ }
+ ```
++* addressof[link /reference/memory/addressof.md]
+ 
+ ## バージョン
+ ### 言語
+@@ -101,3 +109,4 @@ basic_fstream&amp;lt;CharT, Traits&amp;gt;::basic_fstream(basic_fstream&amp;amp;&amp;amp; rhs) : basic_iostrea
+ ## 参照
+ 
+ - [LGW issue 2676. Provide filesystem::path overloads for File-based streams](https://wg21.cmeerw.net/lwg/issue2676)
++- [LWG Issue 3130. §[input.output] needs many `addressof`](https://wg21.cmeerw.net/lwg/issue3130)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- addressof関係の対応</title>
+      <link href="https://cpprefjp.github.io/reference/fstream/basic_ifstream/op_constructor.html"/>
+      <id>55e6851ea2c52af5d82cff05d9f1d3b3e16fcbf4:reference/fstream/basic_ifstream/op_constructor.md</id>
+      <updated>2020-11-25T15:15:55+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/fstream/basic_ifstream/op_constructor.md b/reference/fstream/basic_ifstream/op_constructor.md
+index 112b8df6a..253cf9e49 100644
+--- a/reference/fstream/basic_ifstream/op_constructor.md
++++ b/reference/fstream/basic_ifstream/op_constructor.md
+@@ -67,13 +67,17 @@ int main()
+ ```cpp
+ // (1)
+ template&amp;lt;class CharT, class Traits&amp;gt;
+-basic_ifstream&amp;lt;CharT, Traits&amp;gt;::basic_ifstream() : basic_istream(&amp;amp;sb), sb() {
++basic_ifstream&amp;lt;CharT, Traits&amp;gt;::basic_ifstream()
++//: basic_istream(&amp;amp;sb), sb() {           // C++98
++  : basic_istream(addressof(sb)), sb() { // C++11
+   // 本体は空
+ }
+ 
+ // (2)
+ template&amp;lt;class CharT, class Traits&amp;gt;
+-basic_ifstream&amp;lt;CharT, Traits&amp;gt;::basic_ifstream(const char* s, ios_base::openmode mode) : basic_istream(&amp;amp;sb), sb() {
++basic_ifstream&amp;lt;CharT, Traits&amp;gt;::basic_ifstream(const char* s, ios_base::openmode mode)
++//: basic_istream(&amp;amp;sb), sb() {           // C++98
++  : basic_istream(addressof(sb)), sb() { // C++11
+   if (rdbuf()-&amp;gt;open(s, mode | ios_base::in) == nullptr) {
+     setstate(failbit);
+   }
+@@ -81,16 +85,20 @@ basic_ifstream&amp;lt;CharT, Traits&amp;gt;::basic_ifstream(const char* s, ios_base::openmode
+ 
+ // (3)
+ template&amp;lt;class CharT, class Traits&amp;gt;
+-basic_ifstream&amp;lt;CharT, Traits&amp;gt;::basic_ifstream(const string&amp;amp; s, ios_base::openmode mode) : basic_ifstream(s.c_str(), mode) {
++basic_ifstream&amp;lt;CharT, Traits&amp;gt;::basic_ifstream(const string&amp;amp; s, ios_base::openmode mode)
++  : basic_ifstream(s.c_str(), mode) {
+   // 本体は空
+ }
+ 
+ // (5)
+ template&amp;lt;class CharT, class Traits&amp;gt;
+-basic_ifstream&amp;lt;CharT, Traits&amp;gt;::basic_ifstream(basic_ifstream&amp;amp;&amp;amp; rhs) : basic_istream(move(rhs)), sb(move(rhs.sb)) {
+-  set_rdbuf(&amp;amp;sb);
++basic_ifstream&amp;lt;CharT, Traits&amp;gt;::basic_ifstream(basic_ifstream&amp;amp;&amp;amp; rhs)
++  : basic_istream(move(rhs)), sb(move(rhs.sb)) {
++  // set_rdbuf(&amp;amp;sb);        // C++98
++  set_rdbuf(addressof(sb)); // C++11
+ }
+ ```
++* addressof[link /reference/memory/addressof.md]
+ 
+ ## バージョン
+ ### 言語
+@@ -101,3 +109,4 @@ basic_ifstream&amp;lt;CharT, Traits&amp;gt;::basic_ifstream(basic_ifstream&amp;amp;&amp;amp; rhs) : basic_istr
+ ## 参照
+ 
+ - [LGW issue 2676. Provide filesystem::path overloads for File-based streams](https://wg21.cmeerw.net/lwg/issue2676)
++- [LWG Issue 3130. §[input.output] needs many `addressof`](https://wg21.cmeerw.net/lwg/issue3130)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- addressof関係の対応</title>
+      <link href="https://cpprefjp.github.io/reference/fstream/basic_ofstream/op_constructor.html"/>
+      <id>55e6851ea2c52af5d82cff05d9f1d3b3e16fcbf4:reference/fstream/basic_ofstream/op_constructor.md</id>
+      <updated>2020-11-25T15:15:55+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/fstream/basic_ofstream/op_constructor.md b/reference/fstream/basic_ofstream/op_constructor.md
+index ee067c14d..d25a91bfa 100644
+--- a/reference/fstream/basic_ofstream/op_constructor.md
++++ b/reference/fstream/basic_ofstream/op_constructor.md
+@@ -66,13 +66,17 @@ int main()
+ ```cpp
+ // (1)
+ template&amp;lt;class CharT, class Traits&amp;gt;
+-basic_ofstream&amp;lt;CharT, Traits&amp;gt;::basic_ofstream() : basic_istream(&amp;amp;sb), sb() {
++basic_ofstream&amp;lt;CharT, Traits&amp;gt;::basic_ofstream()
++//: basic_istream(&amp;amp;sb), sb() {           // C++98
++  : basic_istream(addressof(sb)), sb() { // C++11
+   // 本体は空
+ }
+ 
+ // (2)
+ template&amp;lt;class CharT, class Traits&amp;gt;
+-basic_ofstream&amp;lt;CharT, Traits&amp;gt;::basic_ofstream(const char* s, ios_base::openmode mode) : basic_istream(&amp;amp;sb), sb() {
++basic_ofstream&amp;lt;CharT, Traits&amp;gt;::basic_ofstream(const char* s, ios_base::openmode mode)
++//: basic_istream(&amp;amp;sb), sb() {           // C++98
++  : basic_istream(addressof(sb)), sb() { // C++11
+   if (rdbuf()-&amp;gt;open(s, mode | ios_base::out) == nullptr) {
+     setstate(failbit);
+   }
+@@ -80,16 +84,20 @@ basic_ofstream&amp;lt;CharT, Traits&amp;gt;::basic_ofstream(const char* s, ios_base::openmode
+ 
+ // (3)
+ template&amp;lt;class CharT, class Traits&amp;gt;
+-basic_ofstream&amp;lt;CharT, Traits&amp;gt;::basic_ofstream(const string&amp;amp; s, ios_base::openmode mode) : basic_ofstream(s.c_str(), mode) {
++basic_ofstream&amp;lt;CharT, Traits&amp;gt;::basic_ofstream(const string&amp;amp; s, ios_base::openmode mode)
++  : basic_ofstream(s.c_str(), mode) {
+   // 本体は空
+ }
+ 
+ // (5)
+ template&amp;lt;class CharT, class Traits&amp;gt;
+-basic_ofstream&amp;lt;CharT, Traits&amp;gt;::basic_ofstream(basic_ofstream&amp;amp;&amp;amp; rhs) : basic_istream(move(rhs)), sb(move(rhs.sb)) {
+-  set_rdbuf(&amp;amp;sb);
++basic_ofstream&amp;lt;CharT, Traits&amp;gt;::basic_ofstream(basic_ofstream&amp;amp;&amp;amp; rhs)
++  : basic_istream(move(rhs)), sb(move(rhs.sb)) {
++  // set_rdbuf(&amp;amp;sb);        // C++98
++  set_rdbuf(addressof(sb)); // C++11
+ }
+ ```
++* addressof[link /reference/memory/addressof.md]
+ 
+ ## バージョン
+ ### 言語
+@@ -100,3 +108,4 @@ basic_ofstream&amp;lt;CharT, Traits&amp;gt;::basic_ofstream(basic_ofstream&amp;amp;&amp;amp; rhs) : basic_istr
+ ## 参照
+ 
+ - [LGW issue 2676. Provide filesystem::path overloads for File-based streams](https://wg21.cmeerw.net/lwg/issue2676)
++- [LWG Issue 3130. §[input.output] needs many `addressof`](https://wg21.cmeerw.net/lwg/issue3130)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>copyfmt -- addressof関係の対応</title>
+      <link href="https://cpprefjp.github.io/reference/ios/basic_ios/copyfmt.html"/>
+      <id>55e6851ea2c52af5d82cff05d9f1d3b3e16fcbf4:reference/ios/basic_ios/copyfmt.md</id>
+      <updated>2020-11-25T15:15:55+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ios/basic_ios/copyfmt.md b/reference/ios/basic_ios/copyfmt.md
+index 97a122b73..a4dd8d4f1 100644
+--- a/reference/ios/basic_ios/copyfmt.md
++++ b/reference/ios/basic_ios/copyfmt.md
+@@ -14,8 +14,12 @@ basic_ios&amp;amp; copyfmt(const basic_ios&amp;amp; rhs);
+ 
+ 
+ ## 効果
+-もし `this == &amp;amp;rhs` であれば、何もしない。  
+-そうでなければ、以下のように引数 `rhs` のメンバオブジェクトを `*this` の対応するメンバオブジェクトに代入する。
++- `*this`と`rhs`が同じオブジェクトを指している場合、何もしない
++    - C++03 : `this == &amp;amp;rhs`
++    - C++11 : `this ==` [`addressof`](/reference/memory/addressof.md)`(rhs)`
++- そうでなければ、以下のように引数 `rhs` のメンバオブジェクトを `*this` の対応するメンバオブジェクトに代入する。
++
++以下、代入の詳細：
+ 
+ - [`register_callback`](../ios_base/register_callback.md) で登録されているすべてのコールバックの組 `(fn, index)` について、`(*fn)(`[`erase_event`](../ios_base/type-event.md)`, this, index)` の形式で呼び出す。
+ - 以下の例外を除いて、引数 `rhs` のメンバオブジェクトを `*this` の対応するメンバオブジェクトに代入する。
+@@ -72,7 +76,7 @@ int main()
+ ### 言語
+ - C++98
+ 
+-## 参照
++## 関連項目
+ - [`basic_ios`](../basic_ios.md)`::`[`rdstate`](rdstate.md)
+ - [`basic_ios`](../basic_ios.md)`::`[`rdbuf`](rdbuf.md)
+ - [`basic_ios`](../basic_ios.md)`::`[`exceptions`](exceptions.md)
+@@ -81,3 +85,7 @@ int main()
+ - [`ios_base`](../ios_base.md)`::`[`event`](../ios_base/type-event.md)
+ - [`ios_base`](../ios_base.md)`::`[`event_callback`](../ios_base/type-event_callback.md)
+ - [`ios_base`](../ios_base.md)`::`[`register_callback`](../ios_base/register_callback.md)
++
++
++## 参照
++- [LWG Issue 3130. §[input.output] needs many `addressof`](https://wg21.cmeerw.net/lwg/issue3130)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>splice -- addressof関係の対応</title>
+      <link href="https://cpprefjp.github.io/reference/list/list/splice.html"/>
+      <id>55e6851ea2c52af5d82cff05d9f1d3b3e16fcbf4:reference/list/list/splice.md</id>
+      <updated>2020-11-25T15:15:55+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/list/list/splice.md b/reference/list/list/splice.md
+index 24eb8eb62..23a7f3947 100644
+--- a/reference/list/list/splice.md
++++ b/reference/list/list/splice.md
+@@ -38,8 +38,9 @@ void splice(const_iterator position, list&amp;amp;&amp;amp; x,
+ ## 要件
+ - 第1パラメータ`position`が、`[`[`begin()`](begin.md)`,` [`end()`](end.md)`)`の範囲の間接参照可能なイテレータであること。
+ - `i`, `first`, `last`が、`x`のイテレータであること。
+-
+-- (1), (2) : `&amp;amp;x != this`であること
++- (1), (2) :
++    - C++03 : `&amp;amp;x != this`であること
++    - C++11 : [`addressof`](/reference/memory/addressof.md)`(x) != this`であること
+ - (5), (6) : `position`が`[first, last)`に含まれる場合、未定義動作。
+ 
+ 
+@@ -55,7 +56,7 @@ void splice(const_iterator position, list&amp;amp;&amp;amp; x,
+ - C++11から
+     - (1), (2) : 定数時間
+     - (3), (4) : 定数時間
+-    - (5), (6) : `&amp;amp;x == this`の場合、定数時間。そうでない場合、`[first, last)`の要素数に対して線形時間
++    - (5), (6) : [`addressof`](/reference/memory/addressof.md)`(x) == this`の場合、定数時間。そうでない場合、`[first, last)`の要素数に対して線形時間
+ 
+ 
+ ## 例外
+@@ -138,3 +139,5 @@ int main()
+ - [LWG Issue 250. splicing invalidates iterators](http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#250)
+ - [LWG Issue 1133. Does N2844 break current specification of `list::splice`?](http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#250)
+ - [N2350 Container insert/erase and iterator constness (Revision 1)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2350.pdf)
++- [LWG Issue 3017. `list` `splice` functions should use `addressof`](https://wg21.cmeerw.net/lwg/issue3017)
++- [LWG Issue 3087. One final `&amp;amp;x` in §[list.ops]](https://wg21.cmeerw.net/lwg/issue3087)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator-&gt; -- addressof関係の対応</title>
+      <link href="https://cpprefjp.github.io/reference/regex/regex_iterator/op_arrow.html"/>
+      <id>55e6851ea2c52af5d82cff05d9f1d3b3e16fcbf4:reference/regex/regex_iterator/op_arrow.md</id>
+      <updated>2020-11-25T15:15:55+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/regex/regex_iterator/op_arrow.md b/reference/regex/regex_iterator/op_arrow.md
+index ab4684be8..265f1fe18 100644
+--- a/reference/regex/regex_iterator/op_arrow.md
++++ b/reference/regex/regex_iterator/op_arrow.md
+@@ -18,7 +18,7 @@ const value_type* operator-&amp;gt;() const;
+ 
+ 
+ ## 戻り値
+-メンバ変数 `match` への `const` ポインタ `&amp;amp;match` を返す。（`match` は最後に[`regex_search`](../regex_search.md) を呼び出した際の値を保持している）
++メンバ変数 `match` への `const` ポインタ [`addressof`](/reference/memory/addressof.md)`(match)` を返す。（`match` は最後に[`regex_search`](../regex_search.md) を呼び出した際の値を保持している）
+ 
+ 
+ ## 備考
+@@ -75,3 +75,7 @@ prefix = &amp;#39;def&amp;#39;, str = &amp;#39;456&amp;#39;, suffix = &amp;#39;ghi&amp;#39;
+ | [`(constructor)`](op_constructor.md) | コンストラクタ | C++11          |
+ | [`operator++`](op_increment.md)      | インクリメント | C++11          |
+ | [`operator==`](op_equal.md)          | 等値比較       | C++11          |
++
++
++## 参照
++- [LWG Issue 3040. `basic_string_view::starts_with` Effects are incorrect](https://wg21.cmeerw.net/lwg/issue3040)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- addressof関係の対応</title>
+      <link href="https://cpprefjp.github.io/reference/regex/regex_iterator/op_constructor.html"/>
+      <id>55e6851ea2c52af5d82cff05d9f1d3b3e16fcbf4:reference/regex/regex_iterator/op_constructor.md</id>
+      <updated>2020-11-25T15:15:55+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/regex/regex_iterator/op_constructor.md b/reference/regex/regex_iterator/op_constructor.md
+index 04b92cba9..7f31b25ce 100644
+--- a/reference/regex/regex_iterator/op_constructor.md
++++ b/reference/regex/regex_iterator/op_constructor.md
+@@ -26,7 +26,7 @@ regex_iterator(const regex_iterator&amp;amp;);
+ 
+ ## 効果
+ - (1) デフォルトコンストラクタ。シーケンスの終端を示す特別なイテレータを構築する。
+-- (2) メンバ変数 `begin`、`end`、`pregex`、`flags` をそれぞれ `a`、`b`、`&amp;amp;re`、`m` で初期化して、[`regex_search`](../regex_search.md)`(begin, end, match, *pregex, flags)` を呼び出す。
++- (2) メンバ変数 `begin`、`end`、`pregex`、`flags` をそれぞれ `a`、`b`、[`addressof`](/reference/memory/addressof.md)`(re)`、`m` で初期化して、[`regex_search`](../regex_search.md)`(begin, end, match, *pregex, flags)` を呼び出す。
+     検索に成功しなかった場合（`false` が返された場合）、デフォルトコンストラクタで構築した場合と同様、直ちにシーケンスの終端を示す特別なイテレータとなる。
+ - (3) deleted コンストラクタであるため、使用するとコンパイルエラーとなる。
+ - (4) コピーコンストラクタ。
+@@ -88,3 +88,7 @@ match:11
+ - libstdc++ には 5.0.0 rev.218373 現在、(3) の形式のコンストラクタは存在しない。
+ - libc++ には、3.4 までは (3) の形式のコンストラクタは存在しない。
+ - libstdc++ では 5.0.0 rev.218373 現在、コピーコンストラクタで構築したオブジェクトの `match.`[`position`](../match_results/position.md)`(i)` が補正されずに誤っている。（補正については [`operator++`](op_increment.md) の「効果」を参照）
++
++
++## 参照
++- [LWG Issue 3040. `basic_string_view::starts_with` Effects are incorrect](https://wg21.cmeerw.net/lwg/issue3040)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>transform -- addressof関係の対応</title>
+      <link href="https://cpprefjp.github.io/reference/regex/regex_traits/transform.html"/>
+      <id>55e6851ea2c52af5d82cff05d9f1d3b3e16fcbf4:reference/regex/regex_traits/transform.md</id>
+      <updated>2020-11-25T15:15:55+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/regex/regex_traits/transform.md b/reference/regex/regex_traits/transform.md
+index 60fcfe8da..8e5c1b0dc 100644
+--- a/reference/regex/regex_traits/transform.md
++++ b/reference/regex/regex_traits/transform.md
+@@ -19,13 +19,13 @@ string_type transform(ForwardIterator first, ForwardIterator last) const;
+ ```cpp
+ string_type str(first, last);
+ return use_facet&amp;lt;collate&amp;lt;char_type&amp;gt;&amp;gt;(getloc())
+-         .transform(&amp;amp;*str.begin(), &amp;amp;*str.begin() + str.length());
++         .transform(str.data(), str.data() + str.length());
+ ```
+ * use_facet[link /reference/locale/use_facet.md.nolink]
+ * collate[link /reference/locale/collate.md]
+ * getloc()[link getloc.md]
+ * transform[link /reference/locale/collate/transform.md.nolink]
+-* str.begin()[link /reference/string/basic_string/begin.md]
++* str.data()[link /reference/string/basic_string/data.md]
+ * str.length()[link /reference/string/basic_string/length.md]
+ 
+ 
+@@ -77,3 +77,6 @@ int main()
+ - [ICC](/implementation.md#icc): ??
+ - [Visual C++](/implementation.md#visual_cpp): ??
+ 
++
++## 参照
++- [LWG Issue 3040. `basic_string_view::starts_with` Effects are incorrect](https://wg21.cmeerw.net/lwg/issue3040)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>c_str -- addressof関係の対応</title>
+      <link href="https://cpprefjp.github.io/reference/string/basic_string/c_str.html"/>
+      <id>55e6851ea2c52af5d82cff05d9f1d3b3e16fcbf4:reference/string/basic_string/c_str.md</id>
+      <updated>2020-11-25T15:15:55+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/basic_string/c_str.md b/reference/string/basic_string/c_str.md
+index df6d31654..af19d486c 100644
+--- a/reference/string/basic_string/c_str.md
++++ b/reference/string/basic_string/c_str.md
+@@ -41,7 +41,7 @@ C 言語で使用されている文字列表現である、NULL（つまり `cha
+ 	* C++11 から：対象オブジェクトに対する [`operator[]`](op_at.md)、[`at`](at.md)、[`front`](front.md)、[`back`](back.md)、[`begin`](begin.md)、[`rbegin`](rbegin.md)、[`end`](end.md)、[`rend`](rend.md) 以外の非コンストメンバ関数呼び出し、あるいは、[`basic_string`](/reference/string/basic_string.md) への非コンスト参照を引数に取る標準ライブラリ関数の、対象オブジェクトを渡しての呼び出し
+ 
+ - 本メンバが返すポインタは、長さが [`size`](size.md)`() + 1` の `charT` 型の配列を指す。この配列は、最初の [`size`](size.md)`()` 要素は対象オブジェクトの文字列と等しく、最後の要素は NULL 文字、すなわち `charT()` である。  
+-	なお、C++11 からは、本メンバ関数が返すポインタを `p` とすると、範囲 `[0,` [`size`](size.md)`()]` の全ての `i` について `p + i == &amp;amp;operator[](i)` を満たす。このことから、`*`[`end`](end.md)`() == charT()` を満たす。
++	なお、C++11 からは、本メンバ関数が返すポインタを `p` とすると、範囲 `[0,` [`size`](size.md)`()]` の全ての `i` について `p + i ==` [`addressof`](/reference/memory/addressof.md)`(operator[](i))` を満たす。このことから、`*`[`end`](end.md)`() == charT()` を満たす。
+ 
+ - 対象オブジェクト内に NULL 文字があった場合、C 言語の文字列表現では正しく扱うことができないので注意すること。
+ 
+@@ -79,3 +79,5 @@ Hello
+ | [`data`](data.md) | 文字配列表現を取得する |
+ 
+ 
++## 参照
++- [LWG Issue 3131. `addressof` all the things](https://wg21.cmeerw.net/lwg/issue3131)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>data -- addressof関係の対応</title>
+      <link href="https://cpprefjp.github.io/reference/string/basic_string/data.html"/>
+      <id>55e6851ea2c52af5d82cff05d9f1d3b3e16fcbf4:reference/string/basic_string/data.md</id>
+      <updated>2020-11-25T15:15:55+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/basic_string/data.md b/reference/string/basic_string/data.md
+index bdd5f8533..fa3858190 100644
+--- a/reference/string/basic_string/data.md
++++ b/reference/string/basic_string/data.md
+@@ -45,7 +45,7 @@ charT* data() noexcept;             // (2) C++17
+         - 本メンバ関数を呼び出しても、対象オブジェクトの要素への既存の参照、ポインタ、イテレータは無効にはならない。
+         - 本メンバ関数で返されたポインタは、対象オブジェクトに対する非constメンバ関数呼び出しにより無効になる可能性がある。
+         - 本メンバが返すポインタは、長さが [`size`](size.md)`() + 1` の `charT` 型の配列を指す。この配列は、最初の [`size`](size.md)`()` 要素は対象オブジェクトの文字列と等しく、最後の要素は NULL 文字、すなわち `charT()` である。  
+-            - 本メンバ関数が返すポインタを `p` とすると、範囲 `[0,` [`size`](size.md)`()]` の全ての `i` について `p + i == &amp;amp;operator[](i)` を満たす。このことから、`*`[`end`](end.md)`() == charT()` を満たす。
++            - 本メンバ関数が返すポインタを `p` とすると、範囲 `[0,` [`size`](size.md)`()]` の全ての `i` について `p + i ==` [`addressof`](/reference/memory/addressof.md)`(operator[](i))` を満たす。このことから、`*`[`end`](end.md)`() == charT()` を満たす。
+ - 対象オブジェクト内に NULL 文字があった場合、C 言語の文字列表現では正しく扱うことができないので注意すること。
+ - (2) :
+     - この関数を使用するユーザーは、`p +` [`size()`](size.md) (NULL終端) に格納されている値を変更してはならない
+@@ -81,3 +81,4 @@ Hello, world!
+ 
+ ## 参照
+ - [P0272R1 Give `std::string` a non-const `.data()` member function.](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0272r1.html)
++- [LWG Issue 3131. `addressof` all the things](https://wg21.cmeerw.net/lwg/issue3131)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- addressof関係の対応</title>
+      <link href="https://cpprefjp.github.io/reference/syncstream/basic_osyncstream/op_constructor.html"/>
+      <id>55e6851ea2c52af5d82cff05d9f1d3b3e16fcbf4:reference/syncstream/basic_osyncstream/op_constructor.md</id>
+      <updated>2020-11-25T15:15:55+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/syncstream/basic_osyncstream/op_constructor.md b/reference/syncstream/basic_osyncstream/op_constructor.md
+index 65a17ba24..1f5430d96 100644
+--- a/reference/syncstream/basic_osyncstream/op_constructor.md
++++ b/reference/syncstream/basic_osyncstream/op_constructor.md
+@@ -62,3 +62,4 @@ Hello, World!
+ 
+ ## 参照
+ - [P0053R7 C++ Synchronized Buffered Ostream](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0053r7.pdf)
++- [LWG Issue 3130. §[input.output] needs many `addressof`](https://wg21.cmeerw.net/lwg/issue3130)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>rdbuf -- addressof関係の対応</title>
+      <link href="https://cpprefjp.github.io/reference/syncstream/basic_osyncstream/rdbuf.html"/>
+      <id>55e6851ea2c52af5d82cff05d9f1d3b3e16fcbf4:reference/syncstream/basic_osyncstream/rdbuf.md</id>
+      <updated>2020-11-25T15:15:55+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/syncstream/basic_osyncstream/rdbuf.md b/reference/syncstream/basic_osyncstream/rdbuf.md
+index aa1bf1f4d..4b65410e7 100644
+--- a/reference/syncstream/basic_osyncstream/rdbuf.md
++++ b/reference/syncstream/basic_osyncstream/rdbuf.md
+@@ -31,10 +31,10 @@ int main()
+ {
+   std::osyncstream bout(std::cout);
+   bout1 &amp;lt;&amp;lt; &amp;#34;Hello, &amp;#34;;
+-  
++
+   auto syncbuf_ptr = bout.rdbuf();
+   syncbuf_ptr-&amp;gt;emit(); // 文字が転送される
+-  
++
+   bout &amp;lt;&amp;lt; &amp;#34;World!&amp;#34; &amp;lt;&amp;lt; &amp;#39;\n&amp;#39;;
+ }
+ ```
+@@ -60,3 +60,4 @@ Hello, World!
+ 
+ ## 参照
+ - [P0053R7 C++ Synchronized Buffered Ostream](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0053r7.pdf)
++- [LWG Issue 3130. §[input.output] needs many `addressof`](https://wg21.cmeerw.net/lwg/issue3130)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>bind_front -- bind_front : reference_wrapperをunwrapしない</title>
@@ -156,33 +745,6 @@ index 163037664..9e1c33afc 100644
 -- [P2117R0 C++ Standard Library Issues Resolved Directly In Prague](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2117r0.html)
 +- [LWG Issue 3225. `zoned_time` converting constructor shall not be `noexcept`](https://wg21.cmeerw.net/lwg/issue3225)
 +- [LWG Issue 3226. `zoned_time` constructor from `string_view` should accept `zoned_time&amp;lt;Duration2, TimeZonePtr2&amp;gt;`](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2117r0.html#3226)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>format -- chronoのformat : %yと%Yのロケール依存フォーマットに対応したissueを記載</title>
-      <link href="https://cpprefjp.github.io/reference/chrono/format.html"/>
-      <id>13bf6de1f8699f1e6865d22d7b0e94f2d5a1a87b:reference/chrono/format.md</id>
-      <updated>2020-11-24T18:47:58+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/format.md b/reference/chrono/format.md
-index 4b22dbff0..10c9f36a4 100644
---- a/reference/chrono/format.md
-+++ b/reference/chrono/format.md
-@@ -80,6 +80,7 @@ chronoライブラリではこれに加え、たとえばデフォルトでは
- 
- ## 参照
- - [P1361R2 Integration of chrono with text formatting](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1361r2.pdf)
--- [P2117R0 C++ Standard Library Issues Resolved Directly In Prague](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2117r0.html)
-+- [LWG Issue 3262. Formatting of negative durations is not specified](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2117r0.html#3262)
-+- [LWG Issue 3230. Format specifier `%y`/`%Y` is missing locale alternative versions](https://wg21.cmeerw.net/lwg/issue3230)
- - [LWG Issue 3262. Formatting of negative durations is not specified](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2117r0.html#3262)
- - [LWG Issue 3270. Parsing and formatting `%j` with `duration`s](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2117r0.html#3270)
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
