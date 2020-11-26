@@ -2,9 +2,352 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2020-11-26T01:35:38.602985</updated>
-  <id>31e10436-9634-4420-8942-1f4160cb3f2b</id>
+  <updated>2020-11-26T02:17:21.510902</updated>
+  <id>04354efe-f368-4446-b311-d651e2e6498d</id>
 
+  
+    <entry>
+      <title>common_iterator -- common_iterator : iter_move/swap追加 #712</title>
+      <link href="https://cpprefjp.github.io/reference/iterator/common_iterator.html"/>
+      <id>de5c16cd4a715476075f48a28eec9085131083b4:reference/iterator/common_iterator.md</id>
+      <updated>2020-11-26T11:13:08+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/common_iterator.md b/reference/iterator/common_iterator.md
+index ee5b89309..140b32bd3 100644
+--- a/reference/iterator/common_iterator.md
++++ b/reference/iterator/common_iterator.md
+@@ -66,8 +66,8 @@ namespace std {
+ | [`operator==`](common_iterator/op_equal.md)         | 等値比較 | C++20 |
+ | `operator!=`     | 非等値比較 (`==`により使用可能) | C++20 |
+ | [`operator-`](common_iterator/op_minus.md)          | 2つの`common_iterator`の差を求める | C++20 |
+-| [`iter_move`](common_iterator/iter_move.md.nolink)     | イテレータの要素の移動 | C++20 |
+-| [`iter_swap`](common_iterator/iter_swap.md.nolink)     | イテレータの要素の交換 | C++20 |
++| [`iter_move`](common_iterator/iter_move.md)     | イテレータの要素の移動 | C++20 |
++| [`iter_swap`](common_iterator/iter_swap.md)     | イテレータの要素の交換 | C++20 |
+ 
+ ## `iterator_traits`の型
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>iter_move -- common_iterator : iter_move/swap追加 #712</title>
+      <link href="https://cpprefjp.github.io/reference/iterator/common_iterator/iter_move.html"/>
+      <id>de5c16cd4a715476075f48a28eec9085131083b4:reference/iterator/common_iterator/iter_move.md</id>
+      <updated>2020-11-26T11:13:08+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/common_iterator/iter_move.md b/reference/iterator/common_iterator/iter_move.md
+new file mode 100644
+index 000000000..e69b9b462
+--- /dev/null
++++ b/reference/iterator/common_iterator/iter_move.md
+@@ -0,0 +1,96 @@
++# iter_move
++* iterator[meta header]
++* std[meta namespace]
++* common_iterator[meta class]
++* function[meta id-type]
++* cpp20[meta cpp]
++
++```cpp
++namespace std {
++  template&amp;lt;input_or_output_iterator I, sentinel_for&amp;lt;I&amp;gt; S&amp;gt;
++  class common_iterator {
++
++    friend iter_rvalue_reference_t&amp;lt;I&amp;gt; iter_move(const common_iterator&amp;amp; i)
++      noexcept(noexcept(ranges::iter_move(declval&amp;lt;const I&amp;amp;&amp;gt;())))
++        requires input_iterator&amp;lt;I&amp;gt;;
++  };
++}
++```
++* input_or_output_iterator[link /reference/iterator/input_or_output_iterator.md]
++* sentinel_for[link /reference/iterator/sentinel_for.md]
++* iter_rvalue_reference_t[link /reference/iterator/iter_rvalue_reference_t.md]
++* ranges::iter_move[link /reference/iterator/iter_move.md.nolink]
++* input_iterator[link /reference/iterator/input_iterator.md]
++
++## 概要
++
++`common_iterator`の指す要素をムーブする。
++
++## 事前条件
++
++[`holds_alternative`](/reference/variant/holds_alternative.md)`&amp;lt;I&amp;gt;(i.v_) == true`であること。
++
++## 効果
++
++以下と等価
++
++```cpp
++return ranges::iter_move(get&amp;lt;I&amp;gt;(i.v_));
++```
++* ranges::iter_move[link /reference/iterator/iter_move.md.nolink]
++
++## 備考
++
++この関数は`move_iterator`のクラス定義内で`friend`関数として定義される。そのため、メンバ関数としても非メンバ関数としても明示的に呼び出すことはできず、ADLによってのみ呼び出すことができる。  
++基本的には[`ranges::iter_move`](/reference/iterator/iter_move.md.nolink)カスタマイゼーションポイントオブジェクトを通して利用する。
++
++## 例
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;iterator&amp;gt;
++#include &amp;lt;ranges&amp;gt;
++#include &amp;lt;vector&amp;gt;
++
++int main() {
++  std::vector&amp;lt;int&amp;gt; vec = {1, 2, 3, 4, 5, 6, 7, 8, 9};
++
++  // common_iteratorを通すことでイテレータ型と番兵型を合わせる
++  using CI = std::common_iterator&amp;lt;std::counted_iterator&amp;lt;std::vector&amp;lt;int&amp;gt;::iterator&amp;gt;, std::default_sentinel_t&amp;gt;;
++
++  CI ci{std::counted_iterator{std::ranges::begin(vec), 5}};
++
++  // ADLによる呼び出し
++  int n1 = iter_move(ci);
++  std::cout &amp;lt;&amp;lt; n1 &amp;lt;&amp;lt; std::endl;
++  
++  ++ci;
++
++  // ranges::iter_move CPOによる呼び出し
++  int n2 = std::ranges::iter_move(ci);
++  std::cout &amp;lt;&amp;lt; n2 &amp;lt;&amp;lt; std::endl;
++}
++```
++* iter_move[color ff0000]
++* ranges::iter_move[link /reference/iterator/iter_move.md.nolink]
++
++### 出力
++```
++1
++2
++```
++
++## バージョン
++### 言語
++- C++20
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): 10.1
++- [Visual C++](/implementation.md#visual_cpp): 2019 Update 9
++
++## 関連項目
++
++- [`ranges::iter_move`](/reference/iterator/iter_move.md.nolink)
++
++## 参照
++- [P0896R4 The One Ranges Proposal (was Merging the Ranges TS)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0896r4.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>iter_swap -- common_iterator : iter_move/swap追加 #712</title>
+      <link href="https://cpprefjp.github.io/reference/iterator/common_iterator/iter_swap.html"/>
+      <id>de5c16cd4a715476075f48a28eec9085131083b4:reference/iterator/common_iterator/iter_swap.md</id>
+      <updated>2020-11-26T11:13:08+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/common_iterator/iter_swap.md b/reference/iterator/common_iterator/iter_swap.md
+new file mode 100644
+index 000000000..03a278d80
+--- /dev/null
++++ b/reference/iterator/common_iterator/iter_swap.md
+@@ -0,0 +1,105 @@
++# iter_swap
++* iterator[meta header]
++* std[meta namespace]
++* common_iterator[meta class]
++* function[meta id-type]
++* cpp20[meta cpp]
++
++```cpp
++namespace std {
++  template&amp;lt;input_or_output_iterator I, sentinel_for&amp;lt;I&amp;gt; S&amp;gt;
++  class common_iterator {
++
++    template&amp;lt;indirectly_swappable&amp;lt;I&amp;gt; I2, class S2&amp;gt;
++  friend void iter_swap(const common_iterator&amp;amp; x, const common_iterator&amp;lt;I2, S2&amp;gt;&amp;amp; y)
++    noexcept(noexcept(ranges::iter_swap(declval&amp;lt;const I&amp;amp;&amp;gt;(), declval&amp;lt;const I2&amp;amp;&amp;gt;())));
++  };
++}
++```
++* move_iterator[link /reference/iterator/move_iterator.md]
++* indirectly_swappable[link /reference/iterator/indirectly_swappable.md]
++* ranges::iter_move[link /reference/iterator/iter_move.md.nolink]
++
++## 概要
++
++2つの`common_iterator`の指す要素を交換する。
++
++## 事前条件
++
++[`holds_alternative`](/reference/variant/holds_alternative.md)`&amp;lt;I&amp;gt;(x.v_)`、[`holds_alternative`](/reference/variant/holds_alternative.md)`&amp;lt;I2&amp;gt;(y.v_)`はどちらも`true`であること。
++
++## 効果
++
++以下と等価
++
++```cpp
++return ranges::iter_swap(get&amp;lt;I&amp;gt;(x.v_), get&amp;lt;I2&amp;gt;(y.v_));
++```
++* ranges::iter_swap[link /reference/iterator/iter_swap.md.nolink]
++
++## 備考
++
++この関数は`common_iterator`のクラス定義内で`friend`関数として定義される。そのため、メンバ関数としても非メンバ関数としても明示的に呼び出すことはできず、ADLによってのみ呼び出すことができる。 
++基本的には[`ranges::iter_swap`](/reference/iterator/iter_swap.md.nolink)カスタマイゼーションポイントオブジェクトを通して利用する。
++
++## 例
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;iterator&amp;gt;
++#include &amp;lt;ranges&amp;gt;
++#include &amp;lt;vector&amp;gt;
++
++int main() {
++  std::vector&amp;lt;int&amp;gt; v1 = {1, 2, 3, 4, 5};
++  std::vector&amp;lt;int&amp;gt; v2 = {6, 7, 8, 9, 10};
++
++  // common_iteratorを通すことでイテレータ型と番兵型を合わせる
++  using CI = std::common_iterator&amp;lt;std::counted_iterator&amp;lt;std::vector&amp;lt;int&amp;gt;::iterator&amp;gt;, std::default_sentinel_t&amp;gt;;
++
++  CI ci1{std::counted_iterator{std::ranges::begin(v1), 2}};
++  CI ci2{std::counted_iterator{std::ranges::begin(v2), 2}};
++
++  // ADLによる呼び出し
++  iter_swap(ci1, ci2);
++
++  ++ci1;
++  ++ci2;
++
++  // ranges::iter_swap CPOによる呼び出し
++  std::ranges::iter_swap(ci1, ci2);
++
++  for (int n : v1) {
++    std::cout &amp;lt;&amp;lt; n &amp;lt;&amp;lt; &amp;#39; &amp;#39;;
++  }
++
++  std::cout &amp;lt;&amp;lt; &amp;#39;\n&amp;#39;;
++
++  for (int n : v2) {
++    std::cout &amp;lt;&amp;lt; n &amp;lt;&amp;lt; &amp;#39; &amp;#39;;
++  }
++}
++```
++* iter_swap[color ff0000]
++* ranges::iter_swap[link /reference/iterator/iter_swap.md.nolink]
++
++### 出力
++```
++6 7 3 4 5 
++1 2 8 9 10
++```
++
++## バージョン
++### 言語
++- C++20
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): 10.1
++- [Visual C++](/implementation.md#visual_cpp): 2019 Update 9
++
++## 関連項目
++
++- [`ranges::iter_swap`](/reference/iterator/iter_swap.md.nolink)
++
++## 参照
++- [P0896R4 The One Ranges Proposal (was Merging the Ranges TS)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0896r4.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator== -- common_iterator : iter_move/swap追加 #712</title>
+      <link href="https://cpprefjp.github.io/reference/iterator/common_iterator/op_equal.html"/>
+      <id>de5c16cd4a715476075f48a28eec9085131083b4:reference/iterator/common_iterator/op_equal.md</id>
+      <updated>2020-11-26T11:13:08+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/common_iterator/op_equal.md b/reference/iterator/common_iterator/op_equal.md
+index 3b44f3c51..786862293 100644
+--- a/reference/iterator/common_iterator/op_equal.md
++++ b/reference/iterator/common_iterator/op_equal.md
+@@ -29,7 +29,7 @@ namespace std {
+ 
+ ## 事前条件
+ 
+-`x.v_.`[`valueless_by_exception`](/reference/variant/variant/valueless_by_exception)`()`、`y.v_.`[`valueless_by_exception`](/reference/variant/variant/valueless_by_exception)`()`はどちらも`false`であること。
++`x.v_.`[`valueless_by_exception`](/reference/variant/variant/valueless_by_exception.md)`()`、`y.v_.`[`valueless_by_exception`](/reference/variant/variant/valueless_by_exception.md)`()`はどちらも`false`であること。
+ 
+ ## 戻り値
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator- -- common_iterator : iter_move/swap追加 #712</title>
+      <link href="https://cpprefjp.github.io/reference/iterator/common_iterator/op_minus.html"/>
+      <id>de5c16cd4a715476075f48a28eec9085131083b4:reference/iterator/common_iterator/op_minus.md</id>
+      <updated>2020-11-26T11:13:08+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/common_iterator/op_minus.md b/reference/iterator/common_iterator/op_minus.md
+index b7c5179d6..ac6ad56ad 100644
+--- a/reference/iterator/common_iterator/op_minus.md
++++ b/reference/iterator/common_iterator/op_minus.md
+@@ -17,6 +17,7 @@ namespace std {
+ }
+ ```
+ * input_or_output_iterator[link /reference/iterator/input_or_output_iterator.md]
++* sentinel_for[link /reference/iterator/sentinel_for.md]
+ * sized_sentinel_for[link /reference/iterator/sized_sentinel_for.md]
+ * iter_difference_t[link /reference/iterator/iter_difference_t.md]
+ 
+@@ -26,7 +27,7 @@ namespace std {
+ 
+ ## 事前条件
+ 
+-`x.v_.`[`valueless_by_exception`](/reference/variant/variant/valueless_by_exception)`()`、`y.v_.`[`valueless_by_exception`](/reference/variant/variant/valueless_by_exception)`()`はどちらも`false`であること。
++`x.v_.`[`valueless_by_exception`](/reference/variant/variant/valueless_by_exception.md)`()`、`y.v_.`[`valueless_by_exception`](/reference/variant/variant/valueless_by_exception.md)`()`はどちらも`false`であること。
+ 
+ ## 戻り値
+ 
+@@ -69,8 +70,8 @@ int main() {
+ ```
+ 1
+ -1
+--9
+-9
++-4
++4
+ ```
+ 
+ ## バージョン
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>common_iterator -- common_iterator : operator-追加 #712</title>
@@ -425,98 +768,6 @@ index cdce751a5..911712f70 100644
 +## 参照
 +- [P1960R0 NB Comment Changes Reviewed by SG1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1960r0.html)
 +    - 戻り値の型を`T`から`value_type`に変更
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>notify_all -- atomic_ref : notify_all, notify_one, operator=をconstメンバ関数にした</title>
-      <link href="https://cpprefjp.github.io/reference/atomic/atomic_ref/notify_all.html"/>
-      <id>dc35f117cdff4e63e0d727175cd440a4a808838e:reference/atomic/atomic_ref/notify_all.md</id>
-      <updated>2020-11-26T07:08:55+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/atomic/atomic_ref/notify_all.md b/reference/atomic/atomic_ref/notify_all.md
-index 15ec2288c..0579533ba 100644
---- a/reference/atomic/atomic_ref/notify_all.md
-+++ b/reference/atomic/atomic_ref/notify_all.md
-@@ -6,7 +6,7 @@
- * cpp20[meta cpp]
- 
- ```cpp
--void notify_all() noexcept;
-+void notify_all() const noexcept;
- ```
- 
- ## 概要
-@@ -81,3 +81,5 @@ int main()
- - [P0514R4 Efficient concurrent waiting for C++20](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0514r4.pdf)
- - [ogiroux/atomic_wait - Sample implementation of C++20 atomic_wait/notify](https://github.com/ogiroux/atomic_wait)
- - [P1643R1 Add wait/notify to `atomic_ref`](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1643r1.html)
-+- [P1960R0 NB Comment Changes Reviewed by SG1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1960r0.html)
-+    - 宣言に`const`を追加
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>notify_one -- atomic_ref : notify_all, notify_one, operator=をconstメンバ関数にした</title>
-      <link href="https://cpprefjp.github.io/reference/atomic/atomic_ref/notify_one.html"/>
-      <id>dc35f117cdff4e63e0d727175cd440a4a808838e:reference/atomic/atomic_ref/notify_one.md</id>
-      <updated>2020-11-26T07:08:55+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/atomic/atomic_ref/notify_one.md b/reference/atomic/atomic_ref/notify_one.md
-index ce2e299d9..a15e9e73c 100644
---- a/reference/atomic/atomic_ref/notify_one.md
-+++ b/reference/atomic/atomic_ref/notify_one.md
-@@ -6,7 +6,7 @@
- * cpp20[meta cpp]
- 
- ```cpp
--void notify_one() noexcept;
-+void notify_one() const noexcept;
- ```
- 
- ## 概要
-@@ -108,3 +108,5 @@ int main()
- - [P0514R4 Efficient concurrent waiting for C++20](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0514r4.pdf)
- - [ogiroux/atomic_wait - Sample implementation of C++20 atomic_wait/notify](https://github.com/ogiroux/atomic_wait)
- - [P1643R1 Add wait/notify to `atomic_ref`](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1643r1.html)
-+- [P1960R0 NB Comment Changes Reviewed by SG1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1960r0.html)
-+    - 宣言に`const`を追加
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator= -- atomic_ref : notify_all, notify_one, operator=をconstメンバ関数にした</title>
-      <link href="https://cpprefjp.github.io/reference/atomic/atomic_ref/op_assign.html"/>
-      <id>dc35f117cdff4e63e0d727175cd440a4a808838e:reference/atomic/atomic_ref/op_assign.md</id>
-      <updated>2020-11-26T07:08:55+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/atomic/atomic_ref/op_assign.md b/reference/atomic/atomic_ref/op_assign.md
-index ea540cf87..27e1a3256 100644
---- a/reference/atomic/atomic_ref/op_assign.md
-+++ b/reference/atomic/atomic_ref/op_assign.md
-@@ -64,3 +64,7 @@ int main()
- - [GCC](/implementation.md#gcc): 10.1
- - [Visual C++](/implementation.md#visual_cpp): ??
- 
-+
-+## 参照
-+- [P1960R0 NB Comment Changes Reviewed by SG1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1960r0.html)
-+    - 宣言に`const`を追加
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
