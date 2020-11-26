@@ -2,9 +2,142 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2020-11-25T22:52:51.101065</updated>
-  <id>ff2646cb-f5c7-4ab6-a7d2-57ff8eeed70b</id>
+  <updated>2020-11-26T01:35:38.602985</updated>
+  <id>31e10436-9634-4420-8942-1f4160cb3f2b</id>
 
+  
+    <entry>
+      <title>common_iterator -- common_iterator : operator-追加 #712</title>
+      <link href="https://cpprefjp.github.io/reference/iterator/common_iterator.html"/>
+      <id>3c2fb14d4145179cee775c3943a53c77b7495a20:reference/iterator/common_iterator.md</id>
+      <updated>2020-11-26T10:31:25+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/common_iterator.md b/reference/iterator/common_iterator.md
+index b16b6366a..ee5b89309 100644
+--- a/reference/iterator/common_iterator.md
++++ b/reference/iterator/common_iterator.md
+@@ -65,7 +65,7 @@ namespace std {
+ |------------------------------------------------------|-------------|-------|
+ | [`operator==`](common_iterator/op_equal.md)         | 等値比較 | C++20 |
+ | `operator!=`     | 非等値比較 (`==`により使用可能) | C++20 |
+-| [`operator-`](common_iterator/op_minus.md.nolink)          | 2つの`common_iterator`の差を求める | C++20 |
++| [`operator-`](common_iterator/op_minus.md)          | 2つの`common_iterator`の差を求める | C++20 |
+ | [`iter_move`](common_iterator/iter_move.md.nolink)     | イテレータの要素の移動 | C++20 |
+ | [`iter_swap`](common_iterator/iter_swap.md.nolink)     | イテレータの要素の交換 | C++20 |
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator- -- common_iterator : operator-追加 #712</title>
+      <link href="https://cpprefjp.github.io/reference/iterator/common_iterator/op_minus.html"/>
+      <id>3c2fb14d4145179cee775c3943a53c77b7495a20:reference/iterator/common_iterator/op_minus.md</id>
+      <updated>2020-11-26T10:31:25+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/common_iterator/op_minus.md b/reference/iterator/common_iterator/op_minus.md
+new file mode 100644
+index 000000000..b7c5179d6
+--- /dev/null
++++ b/reference/iterator/common_iterator/op_minus.md
+@@ -0,0 +1,86 @@
++# operator-
++* iterator[meta header]
++* std[meta namespace]
++* common_iterator[meta class]
++* function[meta id-type]
++* cpp20[meta cpp]
++
++```cpp
++namespace std {
++  template&amp;lt;input_or_output_iterator I, sentinel_for&amp;lt;I&amp;gt; S&amp;gt;
++  class common_iterator {
++
++    template&amp;lt;sized_sentinel_for&amp;lt;I&amp;gt; I2, sized_sentinel_for&amp;lt;I&amp;gt; S2&amp;gt;
++      requires sized_sentinel_for&amp;lt;S, I2&amp;gt;
++    friend iter_difference_t&amp;lt;I2&amp;gt; operator-(const common_iterator&amp;amp; x, const common_iterator&amp;lt;I2, S2&amp;gt;&amp;amp; y);
++  };
++}
++```
++* input_or_output_iterator[link /reference/iterator/input_or_output_iterator.md]
++* sized_sentinel_for[link /reference/iterator/sized_sentinel_for.md]
++* iter_difference_t[link /reference/iterator/iter_difference_t.md]
++
++## 概要
++
++2つの`common_iterator`間の距離を求める。
++
++## 事前条件
++
++`x.v_.`[`valueless_by_exception`](/reference/variant/variant/valueless_by_exception)`()`、`y.v_.`[`valueless_by_exception`](/reference/variant/variant/valueless_by_exception)`()`はどちらも`false`であること。
++
++## 戻り値
++
++`I, S`（`I2, S2`）の値のどちらかを[`variant&amp;lt;I, S&amp;gt;`](/reference/variant/variant.md)型のメンバ変数`_v`に保持しており、`i = x.v_.`[`index()`](/reference/variant/variant/index.md)、`j = y.v_.`[`index()`](/reference/variant/variant/index.md)として、次のどちらか。
++
++- `i, j`がどちらも`1`の場合 : `0`
++- それ以外の場合 : `get&amp;lt;i&amp;gt;(x.v_) - get&amp;lt;j&amp;gt;(y.v_)`
++
++## 例
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;iterator&amp;gt;
++#include &amp;lt;ranges&amp;gt;
++#include &amp;lt;vector&amp;gt;
++
++int main() {
++  std::vector&amp;lt;int&amp;gt; vec = {1, 2, 3, 4, 5, 6, 7, 8, 9};
++
++  // common_iteratorを通すことでイテレータ型と番兵型を合わせる
++  using CI = std::common_iterator&amp;lt;std::counted_iterator&amp;lt;std::vector&amp;lt;int&amp;gt;::iterator&amp;gt;, std::default_sentinel_t&amp;gt;;
++
++  CI ci{std::counted_iterator{std::ranges::begin(vec), 5}};
++  CI ce{std::default_sentinel};
++  auto ci2 = ci++;
++
++  // イテレータとイテレータ
++  std::cout &amp;lt;&amp;lt; (ci - ci2) &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; (ci2 - ci) &amp;lt;&amp;lt; std::endl;
++
++  // イテレータと番兵
++  std::cout &amp;lt;&amp;lt; (ci - ce) &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; (ce - ci) &amp;lt;&amp;lt; std::endl;
++}
++```
++* counted_iterator[link /reference/iterator/counted_iterator.md.nolink]
++* default_sentinel_t[link /reference/iterator/default_sentinel_t.md.nolink]
++* default_sentinel[link /reference/iterator/default_sentinel_t.md.nolink]
++
++### 出力
++```
++1
++-1
++-9
++9
++```
++
++## バージョン
++### 言語
++- C++20
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): 10.1
++- [Visual C++](/implementation.md#visual_cpp): 2019 Update 9
++
++## 参照
++- [P0896R4 The One Ranges Proposal (was Merging the Ranges TS)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0896r4.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>コンストラクタ -- filesystem_error : エラー理由文字列の事後条件を変更</title>
@@ -384,84 +517,6 @@ index ea540cf87..27e1a3256 100644
 +## 参照
 +- [P1960R0 NB Comment Changes Reviewed by SG1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1960r0.html)
 +    - 宣言に`const`を追加
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>notify_all -- atomic_ref : 間違ってvolatileオーバーロードを書いてしまっていたので削除</title>
-      <link href="https://cpprefjp.github.io/reference/atomic/atomic_ref/notify_all.html"/>
-      <id>c13bf21fef4ed5a2d3a07d596f064c14fc179bd0:reference/atomic/atomic_ref/notify_all.md</id>
-      <updated>2020-11-26T07:02:44+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/atomic/atomic_ref/notify_all.md b/reference/atomic/atomic_ref/notify_all.md
-index 4ef7409cf..15ec2288c 100644
---- a/reference/atomic/atomic_ref/notify_all.md
-+++ b/reference/atomic/atomic_ref/notify_all.md
-@@ -6,7 +6,6 @@
- * cpp20[meta cpp]
- 
- ```cpp
--void notify_all() volatile noexcept;
- void notify_all() noexcept;
- ```
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>notify_one -- atomic_ref : 間違ってvolatileオーバーロードを書いてしまっていたので削除</title>
-      <link href="https://cpprefjp.github.io/reference/atomic/atomic_ref/notify_one.html"/>
-      <id>c13bf21fef4ed5a2d3a07d596f064c14fc179bd0:reference/atomic/atomic_ref/notify_one.md</id>
-      <updated>2020-11-26T07:02:44+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/atomic/atomic_ref/notify_one.md b/reference/atomic/atomic_ref/notify_one.md
-index f972b5420..ce2e299d9 100644
---- a/reference/atomic/atomic_ref/notify_one.md
-+++ b/reference/atomic/atomic_ref/notify_one.md
-@@ -6,7 +6,6 @@
- * cpp20[meta cpp]
- 
- ```cpp
--void notify_one() volatile noexcept;
- void notify_one() noexcept;
- ```
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>wait -- atomic_ref : 間違ってvolatileオーバーロードを書いてしまっていたので削除</title>
-      <link href="https://cpprefjp.github.io/reference/atomic/atomic_ref/wait.html"/>
-      <id>c13bf21fef4ed5a2d3a07d596f064c14fc179bd0:reference/atomic/atomic_ref/wait.md</id>
-      <updated>2020-11-26T07:02:44+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/atomic/atomic_ref/wait.md b/reference/atomic/atomic_ref/wait.md
-index 7eb23a10f..71ffb0317 100644
---- a/reference/atomic/atomic_ref/wait.md
-+++ b/reference/atomic/atomic_ref/wait.md
-@@ -6,7 +6,6 @@
- * cpp20[meta cpp]
- 
- ```cpp
--void wait(T old, memory_order order = memory_order::seq_cst) const volatile noexcept;
- void wait(T old, memory_order order = memory_order::seq_cst) const noexcept;
- ```
- * memory_order[link /reference/atomic/memory_order.md]
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
