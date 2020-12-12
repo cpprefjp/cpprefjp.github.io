@@ -2,9 +2,195 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2020-12-12T14:39:22.053390</updated>
-  <id>898db1a4-270d-4233-9787-eaea4b4b77cc</id>
+  <updated>2020-12-12T18:32:43.966686</updated>
+  <id>d66768b0-5300-47ba-8cbb-0a69859627fe</id>
 
+  
+    <entry>
+      <title>iterator_traits -- iterator_traits : C++20対応 #712</title>
+      <link href="https://cpprefjp.github.io/reference/iterator/iterator_traits.html"/>
+      <id>2fe289596f70df97cc5eb016d2ce606dc9567d52:reference/iterator/iterator_traits.md</id>
+      <updated>2020-12-13T03:28:05+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/iterator_traits.md b/reference/iterator/iterator_traits.md
+index dccd88d42..f38d87064 100644
+--- a/reference/iterator/iterator_traits.md
++++ b/reference/iterator/iterator_traits.md
+@@ -14,7 +14,19 @@ namespace std {
+     using iterator_category = typename Iterator::iterator_category;
+   };
+ 
+-  // ポインタに対する特殊化
++  // ポインタに対する特殊化、C++20から
++  template&amp;lt;class T&amp;gt;
++    requires is_object_v&amp;lt;T&amp;gt;
++  struct iterator_traits&amp;lt;T*&amp;gt; {
++    using iterator_concept  = contiguous_iterator_tag;
++    using iterator_category = random_access_iterator_tag;
++    using value_type        = remove_cv_t&amp;lt;T&amp;gt;;
++    using difference_type   = ptrdiff_t;
++    using pointer           = T*;
++    using reference         = T&amp;amp;;
++  };
++
++  // ポインタに対する特殊化、C++17まで
+   template &amp;lt;class T&amp;gt;
+   struct iterator_traits&amp;lt;T*&amp;gt; {
+     using difference_type   = ptrdiff_t;
+@@ -40,6 +52,8 @@ namespace std {
+ * ptrdiff_t[link /reference/cstddef/ptrdiff_t.md]
+ * random_access_iterator_tag[link /reference/iterator/iterator_tag.md]
+ * remove_cv_t[link /reference/type_traits/remove_cv.md]
++* is_object_v[link /reference/type_traits/is_object.md]
++* contiguous_iterator_tag[link /reference/iterator/iterator_tag.md]
+ 
+ ## 概要
+ `iterator_traits`は、イテレータに関する型情報を取得するためのクラスである。
+@@ -55,6 +69,131 @@ namespace std {
+ | `reference`         | イテレータが指している参照型 |
+ | `iterator_category` | イテレータの分類を表す型(参照： [iterator tag](/reference/iterator/iterator_tag.md)) |
+ 
++## 定義
++
++任意のイテレータ型を`I`とする。
++
++### C++17
++
++- `iterator_traits&amp;lt;I&amp;gt;`の特殊化がある場合、それが使用される。
++- 特殊化されておらず、`I`が5つのメンバ型（`difference_type, value_type, pointer, reference, iterator_category`）を定義している場合、それを用いて上記にあるように定義される。
++- それ以外の場合、`iterator_traits&amp;lt;I&amp;gt;`は5つのメンバ型のいずれも定義しない。
++
++### C++20
++
++- `iterator_traits&amp;lt;I&amp;gt;`の特殊化がある場合、それが使用される。
++
++- 特殊化されておらず、`I`が4つのメンバ型（`difference_type, value_type, reference, iterator_category`）を定義している場合、それぞれのメンバ型は次のように定義される
++  ```cpp
++  using difference_type   = typename I::difference_type;
++  using value_type        = typename I::value_type;
++  using pointer           = void;
++  using reference         = typename I::reference;
++  using iterator_category = typename I::iterator_category;
++  ```
++
++    - この時、`I::pointer`も定義されているならば、`pointer`はそれを用いて定義される。
++- いずれかのメンバ型が定義されておらず、`I`が`cpp17-input-iterator`コンセプトを満たす場合、それぞれのメンバ型は次のように定義される
++  ```cpp
++  using difference_type   = typename incrementable_traits&amp;lt;I&amp;gt;::difference_type;
++  using value_type        = typename indirectly_readable_traits&amp;lt;I&amp;gt;::value_type;
++  using pointer           = /*see below*/;
++  using reference         = /*see below*/;
++  using iterator_category = /*see below*/;
++  ```
++  * indirectly_readable_traits[link /reference/iteratoindirectly_readable_traits.md]
++  * incrementable_traits[link /reference/iterator/incrementable_traits.md]
++  * iter_reference_t[link /reference/iterator/iter_reference_t.md]
++
++    - `pointer`は、上から順に次のいずれか
++      ```cpp
++      using pointer = I::pointer;
++      using pointer = decltype(declval&amp;lt;I&amp;amp;&amp;gt;().operator-&amp;gt;());
++      using pointer = void;
++      ```
++
++    - `reference`は、上から順に次のいずれか
++      ```cpp
++      using reference = typename I::reference;
++      using reference = iter_reference_t&amp;lt;I&amp;gt;;
++      ```
++
++    - `iterator_category`は、上から順に次のいずれか
++        - `I`が`cpp17-random-access-iterator`コンセプトを満たす場合、`random_access_iterator_tag`
++        - `I`が`cpp17-bidirectional-iterator`コンセプトを満たす場合、`bidirectional_iterator_tag`
++        - `I`が`cpp17-forward-iterator`コンセプトを満たす場合、`forward_iterator_tag`
++        - それ以外の場合、`input_iterator_tag`
++      
++
++- そうではなく、`I`が`cpp17-iterator`コンセプトを満たす場合、それぞれのメンバ型は次のように定義される
++  ```cpp
++  using difference_type   = typename incrementable_traits&amp;lt;I&amp;gt;::difference_type;
++  using value_type        = void;
++  using pointer           = void;
++  using reference         = void;
++  using iterator_category = output_iterator_tag;
++  ```
++
++    - この時、`incrementable_traits&amp;lt;I&amp;gt;::difference_type`が定義されない場合、`difference_type = void`
++
++- それ以外の場合、`iterator_traits&amp;lt;I&amp;gt;`は5つのメンバ型のいずれも定義しない。
++
++登場した`cpp17-input-iterator`等のコンセプトは全て次のように定義される説明専用のものである。
++
++```cpp
++template&amp;lt;class I&amp;gt;
++concept cpp17-iterator =
++  copyable&amp;lt;I&amp;gt; &amp;amp;&amp;amp; requires(I i) {
++    {   *i } -&amp;gt; can-reference;
++    {  ++i } -&amp;gt; same_as&amp;lt;I&amp;amp;&amp;gt;;
++    { *i++ } -&amp;gt; can-reference;
++  };
++
++template&amp;lt;class I&amp;gt;
++concept cpp17-input-iterator =
++  cpp17-iterator&amp;lt;I&amp;gt; &amp;amp;&amp;amp; equality_comparable&amp;lt;I&amp;gt; &amp;amp;&amp;amp; requires(I i) {
++    typename incrementable_traits&amp;lt;I&amp;gt;::difference_type;
++    typename indirectly_readable_traits&amp;lt;I&amp;gt;::value_type;
++    typename common_reference_t&amp;lt;iter_reference_t&amp;lt;I&amp;gt;&amp;amp;&amp;amp;,
++                                typename indirectly_readable_traits&amp;lt;I&amp;gt;::value_type&amp;amp;&amp;gt;;
++    typename common_reference_t&amp;lt;decltype(*i++)&amp;amp;&amp;amp;,
++                                typename indirectly_readable_traits&amp;lt;I&amp;gt;::value_type&amp;amp;&amp;gt;;
++    requires signed_integral&amp;lt;typename incrementable_traits&amp;lt;I&amp;gt;::difference_type&amp;gt;;
++  };
++
++template&amp;lt;class I&amp;gt;
++concept cpp17-forward-iterator =
++  cpp17-input-iterator&amp;lt;I&amp;gt; &amp;amp;&amp;amp; constructible_from&amp;lt;I&amp;gt; &amp;amp;&amp;amp;
++  is_lvalue_reference_v&amp;lt;iter_reference_t&amp;lt;I&amp;gt;&amp;gt; &amp;amp;&amp;amp;
++  same_as&amp;lt;remove_cvref_t&amp;lt;iter_reference_t&amp;lt;I&amp;gt;&amp;gt;,
++          typename indirectly_readable_traits&amp;lt;I&amp;gt;::value_type&amp;gt; &amp;amp;&amp;amp;
++  requires(I i) {
++    {  i++ } -&amp;gt; convertible_to&amp;lt;const I&amp;amp;&amp;gt;;
++    { *i++ } -&amp;gt; same_as&amp;lt;iter_reference_t&amp;lt;I&amp;gt;&amp;gt;;
++  };
++
++template&amp;lt;class I&amp;gt;
++concept cpp17-bidirectional-iterator =
++  cpp17-forward-iterator&amp;lt;I&amp;gt; &amp;amp;&amp;amp; requires(I i) {
++    {  --i } -&amp;gt; same_as&amp;lt;I&amp;amp;&amp;gt;;
++    {  i-- } -&amp;gt; convertible_to&amp;lt;const I&amp;amp;&amp;gt;;
++    { *i-- } -&amp;gt; same_as&amp;lt;iter_reference_t&amp;lt;I&amp;gt;&amp;gt;;
++  };
++
++template&amp;lt;class I&amp;gt;
++concept cpp17-random-access-iterator =
++  cpp17-bidirectional-iterator&amp;lt;I&amp;gt; &amp;amp;&amp;amp; totally_ordered&amp;lt;I&amp;gt; &amp;amp;&amp;amp;
++  requires(I i, typename incrementable_traits&amp;lt;I&amp;gt;::difference_type n) {
++    { i += n } -&amp;gt; same_as&amp;lt;I&amp;amp;&amp;gt;;
++    { i -= n } -&amp;gt; same_as&amp;lt;I&amp;amp;&amp;gt;;
++    { i +  n } -&amp;gt; same_as&amp;lt;I&amp;gt;;
++    { n +  i } -&amp;gt; same_as&amp;lt;I&amp;gt;;
++    { i -  n } -&amp;gt; same_as&amp;lt;I&amp;gt;;
++    { i -  i } -&amp;gt; same_as&amp;lt;decltype(n)&amp;gt;;
++    {  i[n]  } -&amp;gt; convertible_to&amp;lt;iter_reference_t&amp;lt;I&amp;gt;&amp;gt;;
++  };
++```
++
+ 
+ ## 例
+ ```cpp example
+@@ -107,3 +246,4 @@ int main()
+ ## 参照
+ - [LWG 2952. `iterator_traits` should work for pointers to cv `T`](https://wg21.cmeerw.net/lwg/issue2952)
+     - C++17から、`const T*`の部分特殊化が、`T*`の部分特殊化に統合され、`volatile`付きのポインタもこのクラスで扱えるようになった
++- [P0896R4 The One Ranges Proposal (was Merging the Ranges TS)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0896r4.pdf)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>mona-@live.jp</email>
+      </author>
+    </entry>
   
     <entry>
       <title>一貫比較 -- 表示調整</title>
@@ -137,42 +323,6 @@ index 72af05d8f..bd68d98fd 100644
  
  
  ## 戻り値
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>一貫比較 -- 一貫比較: C++20から配列同士の従来比較は非推奨</title>
-      <link href="https://cpprefjp.github.io/lang/cpp20/consistent_comparison.html"/>
-      <id>3e415a9b47f5d284a1e6970a59a186ff3396c571:lang/cpp20/consistent_comparison.md</id>
-      <updated>2020-12-11T18:34:28+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/consistent_comparison.md b/lang/cpp20/consistent_comparison.md
-index 0a15c7367..6b19f5e01 100644
---- a/lang/cpp20/consistent_comparison.md
-+++ b/lang/cpp20/consistent_comparison.md
-@@ -504,7 +504,7 @@ struct C {
- 
- #### 従来の比較演算子との差異及び修正
- 
--三方比較演算子による比較は従来の比較演算子の挙動とは異なるところがある（より安全な比較となっている）。  
-+三方比較演算子`&amp;lt;=&amp;gt;`による比較は、従来の比較演算子(`&amp;lt; &amp;gt; &amp;lt;= &amp;gt;= == !=`)の挙動とは異なるところがある（より安全な比較となっている）。
- それに伴って、いくつかの比較演算子の挙動が修正された（C++20では非推奨とされ、削除されてはいない）。
- 
- |比較するペア|C++17までの従来演算子での比較の可否|`&amp;lt;=&amp;gt;`での比較の可否|C++20からの従来演算子での比較の可否|
-@@ -512,7 +512,7 @@ struct C {
- |符号なし整数型と符号付整数型|〇|×&amp;lt;br/&amp;gt;ただし定数式で符号付きオペランドが正の値に評価されれば可能|〇（従来通り）|
- |列挙型と算術型|〇&amp;lt;br/&amp;gt;例えば、列挙型と浮動小数点型の比較が可能|△&amp;lt;br/&amp;gt;スコープ無し列挙型と整数型のみ可能|△&amp;lt;br/&amp;gt;列挙型と浮動小数点型間比較は不可&amp;lt;br/&amp;gt;それ以外は従来通り|
- |異なる列挙型間|〇|×|×|
--|配列同士|△&amp;lt;br/&amp;gt;先頭要素へのポインタの比較になる|×|×|
-+|配列同士|△&amp;lt;br/&amp;gt;先頭要素へのポインタの比較になる|×|△（従来通り；非推奨）|
- |ヌルポインタ定数とポインタ|△&amp;lt;br/&amp;gt;同値比較のみ可能|×|△（従来通り）|
- 
- ## C++17までの比較演算子実装の一例
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
