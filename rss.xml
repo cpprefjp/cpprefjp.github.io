@@ -2,9 +2,43 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2020-12-16T08:18:18.965574</updated>
-  <id>0b18de7c-367b-4e30-90cb-fc980038e4ca</id>
+  <updated>2020-12-16T10:58:15.355457</updated>
+  <id>9688575b-54a3-4cea-b7cf-c84092ea8b55</id>
 
+  
+    <entry>
+      <title>範囲for文がカスタマイゼーションポイントを見つけるルールを緩和 -- Update relaxing_the_range_for_loop_customization_point_finding_rules.md</title>
+      <link href="https://cpprefjp.github.io/lang/cpp20/relaxing_the_range_for_loop_customization_point_finding_rules.html"/>
+      <id>2fb7b802fb32017ceb6fdb36554d09110bf97725:lang/cpp20/relaxing_the_range_for_loop_customization_point_finding_rules.md</id>
+      <updated>2020-12-16T19:53:34+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/relaxing_the_range_for_loop_customization_point_finding_rules.md b/lang/cpp20/relaxing_the_range_for_loop_customization_point_finding_rules.md
+index 02117e856..4760fa6b3 100644
+--- a/lang/cpp20/relaxing_the_range_for_loop_customization_point_finding_rules.md
++++ b/lang/cpp20/relaxing_the_range_for_loop_customization_point_finding_rules.md
+@@ -2,13 +2,12 @@
+ * cpp20[meta cpp]
+ 
+ ## 概要
+-C++17までは、範囲for文に指定するシーケンスの型が`begin()`／`end()`メンバ関数のどちらかでも持っていればそれを使用し、どちらも持っていなければADLで非メンバ関数の`begin()`／`end()`を探索する仕様となっていた。
++C++17までは、範囲for文に指定するシーケンスの型が`begin`/`end`メンバのどちらかでも持っていれば`begin()`/`end()`メンバ関数を使用し、どちらも持っていなければADLで非メンバ関数の`begin()`/`end()`を探索する仕様となっていた。
+ 
+-C++20ではこのルールを緩和し、`begin()`/`end()`メンバ関数の両方があればそれを使用し、どちらかが不足していれば非メンバ関数の`begin()`/`end()`を探しにいくよう改定する。
++C++20ではこのルールを緩和し、`begin`/`end`メンバの両方があるときに限り`begin()`/`end()`メンバ関数を使用し、どちらかが不足していれば非メンバ関数の`begin()`/`end()`を探しにいくよう改定する。
+ 
+ これは、`begin`もしくは`end`という何らかのメンバ (関数、変数、型) が特殊な意味を持ち、そのメンバが範囲for文で使用することを意図していないような状況に対応するための改訂である。
+ 
+-
+ ## 例
+ ```cpp example
+ #include &amp;lt;sstream&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>コンパイラの実装状況 -- リンクミスを修正</title>
@@ -4567,92 +4601,6 @@ index a595765ea..bb0dfb59c 100644
  
  int main(){}
  ```
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>範囲for文 -- Merge pull request #828 from cpprefjp/range-based-for-patch</title>
-      <link href="https://cpprefjp.github.io/lang/cpp11/range_based_for.html"/>
-      <id>5245f060891676fea4162fda38a02dedd26e737d:lang/cpp11/range_based_for.md</id>
-      <updated>2020-12-16T15:49:38+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp11/range_based_for.md b/lang/cpp11/range_based_for.md
-index 29d52e3ca..87174efe6 100644
---- a/lang/cpp11/range_based_for.md
-+++ b/lang/cpp11/range_based_for.md
-@@ -62,8 +62,39 @@ for-range-initializerにはfor文が処理すべき範囲を表す値を書く
- 
- C++03のfor文と異なりセミコロンではなくコロンで区切ることに注意する。
- 
-+範囲for文に配列を範囲として渡したとき、以下のように展開される：
- 
--範囲for文に配列以外の型を範囲として渡したとき、以下のように展開される：
-+```cpp
-+{
-+  auto &amp;amp;&amp;amp; __range = range-init;
-+
-+  for (auto __begin = __range, __end = __range + __bound; __begin != __end; ++__begin) {
-+    for-range-declaration = *__begin;
-+
-+    statement
-+  }
-+}
-+```
-+
-+* ただし、`__bound`は配列の要素数である。要素数が不明な場合はill-formedである。
-+
-+範囲の型がクラスであって、メンバ`begin`**または**`end`が存在するとき、以下のように展開される：
-+
-+```cpp
-+{
-+  auto &amp;amp;&amp;amp; __range = range-init;
-+
-+  for (auto __begin = __range.begin(), __end = __range.end(); __begin != __end; ++__begin) {
-+    for-range-declaration = *__begin;
-+
-+    statement
-+  }
-+}
-+```
-+
-+* メンバ`begin`、`end`が片方しかない場合や、関数ではない場合でもこのように展開されるが、当然エラーとなる。この問題は[C++20で部分的に緩和される](/lang/cpp20/relaxing_the_range_for_loop_customization_point_finding_rules.md)。
-+
-+範囲の型が配列でもメンバ`begin`、`end`のいずれかを持つクラスでもないとき、以下のように展開される：
- 
- ```cpp
- {
-@@ -77,6 +108,8 @@ C++03のfor文と異なりセミコロンではなくコロンで区切ること
- }
- ```
- 
-+* 展開されたコード内の`begin()`と`end()`が正確に何を呼びだすかについては、引数依存の名前探索（argument-dependent name lookup; ADL）を参照のこと。
-+
- 従って概要で挙げた例は以下のように展開される：
- 
- ```cpp
-@@ -89,7 +122,7 @@ for (const auto&amp;amp; e : vec) {
- {
-   auto &amp;amp;&amp;amp; __range = vec;
- 
--  for (auto __begin = begin(__range), __end = end(__range); __begin != __end; ++__begin) {
-+  for (auto __begin = __range.begin(), __end = __range.end(); __begin != __end; ++__begin) {
-     const auto&amp;amp; e = *__begin;
- 
-     std::cout &amp;lt;&amp;lt; e &amp;lt;&amp;lt; std::endl;
-@@ -97,8 +130,6 @@ for (const auto&amp;amp; e : vec) {
- }
- ```
- 
--展開されたコード内の`begin()`と`end()`が正確に何を呼びだすかについては、引数依存の名前探索（argument-dependent name lookup; ADL）を参照のこと。
--
- 
- ## 例
- ```cpp example
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
