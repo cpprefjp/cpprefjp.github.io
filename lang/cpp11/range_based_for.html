@@ -189,12 +189,12 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2020-09-07T10:40:21">
-        2020年09月07日 10時40分21秒
+      <span itemprop="datePublished" content="2020-12-15T21:43:26">
+        2020年12月15日 21時43分26秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">yumetodo</span>
+        <span itemprop="name">Tetsuro Matsumura</span>
       </span>
       が更新
     </small></p>
@@ -274,7 +274,37 @@
 <p>語弊を恐れず言えば、メンバ関数に<code>begin()</code>および<code>end()</code>を持つクラスであれば、何でも範囲for文の範囲として指定できる。</p>
 <p>従って標準コンテナのみならず、ユーザ定義のクラスに対しても範囲for文を適用可能である。</p>
 <p>C++03のfor文と異なりセミコロンではなくコロンで区切ることに注意する。</p>
-<p>範囲for文に配列以外の型を範囲として渡したとき、以下のように展開される：</p>
+<p>範囲for文に配列を範囲として渡したとき、以下のように展開される：</p>
+<p><div class="codehilite"><pre><span></span><code><span class="p">{</span>
+  <span class="k">auto</span> <span class="o">&amp;&amp;</span> <span class="n">__range</span> <span class="o">=</span> <span class="n">range</span><span class="o">-</span><span class="n">init</span><span class="p">;</span>
+
+  <span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="n">__begin</span> <span class="o">=</span> <span class="n">__range</span><span class="p">,</span> <span class="n">__end</span> <span class="o">=</span> <span class="n">__range</span> <span class="o">+</span> <span class="n">__bound</span><span class="p">;</span> <span class="n">__begin</span> <span class="o">!=</span> <span class="n">__end</span><span class="p">;</span> <span class="o">++</span><span class="n">__begin</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">for</span><span class="o">-</span><span class="n">range</span><span class="o">-</span><span class="n">declaration</span> <span class="o">=</span> <span class="o">*</span><span class="n">__begin</span><span class="p">;</span>
+
+    <span class="n">statement</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<ul>
+<li>ただし、<code>__bound</code>は配列の要素数である。要素数が不明な場合はill-formedである。</li>
+</ul>
+<p>範囲の型がクラスであって、メンバ<code>begin</code><strong>または</strong><code>end</code>が存在するとき、以下のように展開される：</p>
+<p><div class="codehilite"><pre><span></span><code><span class="p">{</span>
+  <span class="k">auto</span> <span class="o">&amp;&amp;</span> <span class="n">__range</span> <span class="o">=</span> <span class="n">range</span><span class="o">-</span><span class="n">init</span><span class="p">;</span>
+
+  <span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="n">__begin</span> <span class="o">=</span> <span class="n">__range</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">__end</span> <span class="o">=</span> <span class="n">__range</span><span class="p">.</span><span class="n">end</span><span class="p">();</span> <span class="n">__begin</span> <span class="o">!=</span> <span class="n">__end</span><span class="p">;</span> <span class="o">++</span><span class="n">__begin</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">for</span><span class="o">-</span><span class="n">range</span><span class="o">-</span><span class="n">declaration</span> <span class="o">=</span> <span class="o">*</span><span class="n">__begin</span><span class="p">;</span>
+
+    <span class="n">statement</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<ul>
+<li>メンバ<code>begin</code>、<code>end</code>が片方しかない場合や、関数ではない場合でもこのように展開されるが、当然エラーとなる。この問題は<a href="https://cpprefjp.github.io/lang/cpp20/relaxing_the_range_for_loop_customization_point_finding_rules.html">C++20で部分的に緩和される</a>。</li>
+</ul>
+<p>範囲の型が配列でもメンバ<code>begin</code>、<code>end</code>のいずれかを持つクラスでもないとき、以下のように展開される：</p>
 <p><div class="codehilite"><pre><span></span><code><span class="p">{</span>
   <span class="k">auto</span> <span class="o">&amp;&amp;</span> <span class="n">__range</span> <span class="o">=</span> <span class="n">range</span><span class="o">-</span><span class="n">init</span><span class="p">;</span>
 
@@ -286,6 +316,9 @@
 <span class="p">}</span>
 </code></pre></div>
 </p>
+<ul>
+<li>展開されたコード内の<code>begin()</code>と<code>end()</code>が正確に何を呼びだすかについては、引数依存の名前探索（argument-dependent name lookup; ADL）を参照のこと。</li>
+</ul>
 <p>従って概要で挙げた例は以下のように展開される：</p>
 <p><div class="codehilite"><pre><span></span><code><span class="k">for</span> <span class="p">(</span><span class="k">const</span> <span class="k">auto</span><span class="o">&amp;</span> <span class="nl">e</span> <span class="p">:</span> <span class="n">vec</span><span class="p">)</span> <span class="p">{</span>
   <span class="n"><a href="https://cpprefjp.github.io/reference/iostream/cout.html">std::cout</a></span> <span class="o">&lt;&lt;</span> <span class="n">e</span> <span class="o">&lt;&lt;</span> <span class="n"><a href="https://cpprefjp.github.io/reference/ostream/endl.html">std::endl</a></span><span class="p">;</span>
@@ -295,7 +328,7 @@
 <p><div class="codehilite"><pre><span></span><code><span class="p">{</span>
   <span class="k">auto</span> <span class="o">&amp;&amp;</span> <span class="n">__range</span> <span class="o">=</span> <span class="n">vec</span><span class="p">;</span>
 
-  <span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="n">__begin</span> <span class="o">=</span> <span class="n">begin</span><span class="p">(</span><span class="n">__range</span><span class="p">),</span> <span class="n">__end</span> <span class="o">=</span> <span class="n">end</span><span class="p">(</span><span class="n">__range</span><span class="p">);</span> <span class="n">__begin</span> <span class="o">!=</span> <span class="n">__end</span><span class="p">;</span> <span class="o">++</span><span class="n">__begin</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="n">__begin</span> <span class="o">=</span> <span class="n">__range</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">__end</span> <span class="o">=</span> <span class="n">__range</span><span class="p">.</span><span class="n">end</span><span class="p">();</span> <span class="n">__begin</span> <span class="o">!=</span> <span class="n">__end</span><span class="p">;</span> <span class="o">++</span><span class="n">__begin</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">const</span> <span class="k">auto</span><span class="o">&amp;</span> <span class="n">e</span> <span class="o">=</span> <span class="o">*</span><span class="n">__begin</span><span class="p">;</span>
 
     <span class="n"><a href="https://cpprefjp.github.io/reference/iostream/cout.html">std::cout</a></span> <span class="o">&lt;&lt;</span> <span class="n">e</span> <span class="o">&lt;&lt;</span> <span class="n"><a href="https://cpprefjp.github.io/reference/ostream/endl.html">std::endl</a></span><span class="p">;</span>
@@ -303,7 +336,6 @@
 <span class="p">}</span>
 </code></pre></div>
 </p>
-<p>展開されたコード内の<code>begin()</code>と<code>end()</code>が正確に何を呼びだすかについては、引数依存の名前探索（argument-dependent name lookup; ADL）を参照のこと。</p>
 <h2>例</h2>
 <p><div class="yata" id="be94c3a749766da103bb8b93b0167d54eb632178"><div class="codehilite"><pre><span></span><code><span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/iostream.html">&lt;iostream&gt;</a></span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/vector.html">&lt;vector&gt;</a></span><span class="cp"></span>
