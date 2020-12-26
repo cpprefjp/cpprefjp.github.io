@@ -2,9 +2,164 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2020-12-25T14:45:29.474580</updated>
-  <id>d6589c70-6aef-4e1c-a2f5-ce9a59191087</id>
+  <updated>2020-12-26T13:23:47.581399</updated>
+  <id>4f51467a-8bb0-4861-9970-11f6b513becb</id>
 
+  
+    <entry>
+      <title>gcd -- gcd, lcm : 説明を整理</title>
+      <link href="https://cpprefjp.github.io/reference/numeric/gcd.html"/>
+      <id>ec9c1af5e32c144724e7a41116a704b63647b19f:reference/numeric/gcd.md</id>
+      <updated>2020-12-26T22:18:58+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/numeric/gcd.md b/reference/numeric/gcd.md
+index 5c979c673..88a5ace8d 100644
+--- a/reference/numeric/gcd.md
++++ b/reference/numeric/gcd.md
+@@ -17,16 +17,18 @@ namespace std {
+ 最大公約数 (greatest common divisor, gcd) を求める。
+ 
+ 
+-## 要件
+-- 型`M` および `N` が `bool` 以外の整数型であること  
+-  この要件を満たさない場合、プログラムは不適格となる
+-- `|m|` および `|n|` が [`common_type_t`](/reference/type_traits/common_type.md)`&amp;lt;M, N&amp;gt;` の値として表現できること  
+-  この要件を満たさない場合の動作は未定義
++## 適格要件
++- 型`M` および `N` が `bool` 以外の整数型であること
++
++
++## 事前条件
++- `|m|` および `|n|` が [`common_type_t`](/reference/type_traits/common_type.md)`&amp;lt;M, N&amp;gt;` の値として表現できること
++    - この条件により、`gcd(m, m) == |m|`が型`M`の表現可能な値であることが保証される
+ 
+ 
+ ## 戻り値
+-* `m` と `n` が共に 0 の場合 0 を返す
+-* それ以外の場合引数 `|m|` と `|n|` の最大公約数を返す
++- `m` と `n` が共に 0 の場合 0 を返す
++- それ以外の場合、引数 `|m|` と `|n|` の最大公約数を返す
+ 
+ 
+ ## 例外
+@@ -54,7 +56,7 @@ int main() {
+ ```
+ ```
+ 
+-### 負の最大公約数
++### 負の最大公約数が生成される状況の例
+ ```cpp example
+ #include &amp;lt;iostream&amp;gt;
+ #include &amp;lt;numeric&amp;gt;
+@@ -62,13 +64,16 @@ int main() {
+ #include &amp;lt;limits&amp;gt;
+ 
+ int main() {
+-  // 符号付き整数の場合、戻り値が負になることがある
++  // 符号付き整数の場合、戻り値が負になることがある。
++  // mとnの絶対値をとって符号なし整数として最大公約数を求めるが、
++  // 戻り値型は符号付き整数型であるため、変換時に符号付き整数の正の値として
++  // 表現できないと負の値になる
+   using T = std::int32_t;
+   constexpr auto m = std::numeric_limits&amp;lt;T&amp;gt;::min();
+-  const auto gs = std::gcd&amp;lt;T, T&amp;gt;(m, m);  // -m が int32_t で表せないと m &amp;lt; 0 になる
++  const auto gs = std::gcd&amp;lt;T, T&amp;gt;(m, m);  // |m| が int32_t で表せないと m &amp;lt; 0 になる
+   std::cout &amp;lt;&amp;lt; &amp;#34;gcd&amp;lt;int32_t, int32_t&amp;gt;(&amp;#34; &amp;lt;&amp;lt; m &amp;lt;&amp;lt; &amp;#34;, &amp;#34; &amp;lt;&amp;lt; m &amp;lt;&amp;lt; &amp;#34;)   &amp;#34; &amp;lt;&amp;lt; gs &amp;lt;&amp;lt; std::endl;
+ 
+-  // 符号なし整数にすれば戻り値は正になる
++  // 符号なし整数にすれば戻り値は常に正になる
+   using U = std::uint32_t;
+   const auto gu = std::gcd&amp;lt;U, U&amp;gt;(m, m);
+   std::cout &amp;lt;&amp;lt; &amp;#34;gcd&amp;lt;uint32_t, uint32_t&amp;gt;(&amp;#34; &amp;lt;&amp;lt; m &amp;lt;&amp;lt; &amp;#34;, &amp;#34; &amp;lt;&amp;lt; m &amp;lt;&amp;lt; &amp;#34;) &amp;#34; &amp;lt;&amp;lt; gu &amp;lt;&amp;lt; std::endl;
+@@ -136,12 +141,12 @@ int main() {
+ 
+ ### 備考
+ #### Clang (libc++)
+-- 要件 2 を満たすかどうかチェックしないが、戻り値を `constexpr` 指定するとオーバーフロー時にコンパイルエラーとなることがある。
+-- 要件 2 を満たさない場合、オーバーフローにより戻り値が負になることがある。
++- 事前条件を満たすかどうかチェックしないが、戻り値を `constexpr` 指定するとオーバーフロー時にコンパイルエラーとなることがある。
++- 事前条件を満たさない場合、オーバーフローにより戻り値が負になることがある。
+ 
+ #### GCC (libstdc++)
+-- 要件 2 を満たすかどうかチェックしないが、戻り値を `constexpr` 指定するとオーバーフロー時にコンパイルエラーとなることがある。
+-- 要件 2 を満たさない場合、オーバーフローにより戻り値が負になることがある。
++- 事前条件を満たすかどうかチェックしないが、戻り値を `constexpr` 指定するとオーバーフロー時にコンパイルエラーとなることがある。
++- 事前条件を満たさない場合、オーバーフローにより戻り値が負になることがある。
+ 
+ 
+ ## 参照
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>lcm -- gcd, lcm : 説明を整理</title>
+      <link href="https://cpprefjp.github.io/reference/numeric/lcm.html"/>
+      <id>ec9c1af5e32c144724e7a41116a704b63647b19f:reference/numeric/lcm.md</id>
+      <updated>2020-12-26T22:18:58+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/numeric/lcm.md b/reference/numeric/lcm.md
+index 9f016c24b..c49c3fd10 100644
+--- a/reference/numeric/lcm.md
++++ b/reference/numeric/lcm.md
+@@ -17,18 +17,18 @@ namespace std {
+ 最小公倍数 (least common multiple) を求める。
+ 
+ 
+-## 要件
+-- 型`M` および `N` が `bool` 以外の整数型であること  
+-  この要件を満たさない場合、プログラムは不適格となる
+-- `|m|` および `|n|` が [`common_type_t`](/reference/type_traits/common_type.md)`&amp;lt;M, N&amp;gt;` の値として表現できること  
+-  この要件を満たさない場合の動作は未定義
+-- `|m|` と `|n|` の最小公倍数が [`common_type_t`](/reference/type_traits/common_type.md)`&amp;lt;M, N&amp;gt;` の値として表現できること  
+-  この要件を満たさない場合の動作は未定義
++## 適格要件
++- 型`M` および `N` が `bool` 以外の整数型であること
++
++
++## 事前条件
++- `|m|` および `|n|` が [`common_type_t`](/reference/type_traits/common_type.md)`&amp;lt;M, N&amp;gt;` の値として表現できること
++- `|m|` と `|n|` の最小公倍数が [`common_type_t`](/reference/type_traits/common_type.md)`&amp;lt;M, N&amp;gt;` の値として表現できること
+ 
+ 
+ ## 戻り値
+-* `m` または `n` が 0 の場合 0 を返す
+-* それ以外の場合引数 `|m|` と `|n|` の最小公倍数を返す
++- `m` または `n` が 0 の場合 0 を返す
++- それ以外の場合引数 `|m|` と `|n|` の最小公倍数を返す
+ 
+ 
+ ## 例外
+@@ -146,14 +146,14 @@ int main() {
+ 
+ ### 備考
+ #### Clang (libc++)
+-- 要件 2 を満たすかどうかチェックしない。
+-- [`_LIBCPP_DEBUG`](http://releases.llvm.org/5.0.0/projects/libcxx/docs/DesignDocs/DebugMode.html#using-debug-mode) マクロが`0` 以上の場合、要件 3 を満たさなければ [`abort`](/reference/cstdlib/abort.md) する。
++- 事前条件を満たすかどうかチェックしない。
++- [`_LIBCPP_DEBUG`](http://releases.llvm.org/5.0.0/projects/libcxx/docs/DesignDocs/DebugMode.html#using-debug-mode) マクロが`0` 以上の場合、事前条件2を満たさなければ [`abort`](/reference/cstdlib/abort.md) する。
+     - ただしバージョン 4 系では [`&amp;lt;limits&amp;gt;`](/reference/limits.md) を `&amp;lt;numeric&amp;gt;` より先に include しなければならない。
+     - それ以外の場合（デフォルト）、オーバーフローにより戻り値が不正になることがある。
+ 
+ #### GCC (libstdc++)
+-- 要件 2, 3 を満たすかどうかチェックしない。
+-- 要件 3 を満たさない場合、オーバーフローにより戻り値が不正になることがある。
++- 事前条件を満たすかどうかチェックしない。
++- 事前条件2を満たさない場合、オーバーフローにより戻り値が不正になることがある。
+ 
+ 
+ ## 参照
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>Unicode標準への参照を更新 -- C++20 Unicode標準更新 : ページのフォーマットを雛形に合わせた</title>
@@ -4850,35 +5005,6 @@ index 000000000..d1a57ce80
 +
 +## 参照
 +- [P1008R1 Prohibit aggregates with user-declared constructors](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1008r1.pdf)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>char_traits -- char_traits : サンプルコードの出力を書いてなかった</title>
-      <link href="https://cpprefjp.github.io/reference/string/char_traits.html"/>
-      <id>2c1cae62006753d7c7b5ca2526c83ffb770b8a0f:reference/string/char_traits.md</id>
-      <updated>2020-12-24T22:14:57+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/char_traits.md b/reference/string/char_traits.md
-index 0aec892a9..e08f35e39 100644
---- a/reference/string/char_traits.md
-+++ b/reference/string/char_traits.md
-@@ -217,3 +217,10 @@ int main() {
- * std::weak_ordering[link /reference/compare/weak_ordering.md]
- * std::lexicographical_compare_three_way[link /reference/algorithm/lexicographical_compare_three_way.md]
- * std::find_if[link /reference/algorithm/find_if.md]
-+
-+
-+#### 出力
-+```
-+equal
-+```
-+
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
