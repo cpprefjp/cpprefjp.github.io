@@ -2,9 +2,134 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2021-02-05T07:52:57.988058</updated>
-  <id>827c9fb7-e9c9-47ad-9a2c-bfa75de04239</id>
+  <updated>2021-02-05T09:34:50.627008</updated>
+  <id>8627d787-fd37-4a58-a8fe-48c3ba6b1b23</id>
 
+  
+    <entry>
+      <title>allocator_traits -- allocator_traits : rebindの使用例を記載</title>
+      <link href="https://cpprefjp.github.io/reference/memory/allocator_traits.html"/>
+      <id>f3ca4bc4fea99c4e6aa2de17efc4b6f2fca61748:reference/memory/allocator_traits.md</id>
+      <updated>2021-02-05T18:29:19+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/allocator_traits.md b/reference/memory/allocator_traits.md
+index fe2bf2893..7f9e661e4 100644
+--- a/reference/memory/allocator_traits.md
++++ b/reference/memory/allocator_traits.md
+@@ -54,6 +54,7 @@ namespace std {
+ 
+ 
+ ## 例
++### 基本的な使い方
+ ```cpp example
+ #include &amp;lt;memory&amp;gt;
+ 
+@@ -104,10 +105,97 @@ int main()
+ * traits::destroy[link allocator_traits/destroy.md]
+ * traits::deallocate[link allocator_traits/deallocate.md]
+ 
+-### 出力
++#### 出力
+ ```
+ ```
+ 
++
++### rebind_allocの使用例
++```cpp
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;memory&amp;gt;
++
++template &amp;lt;class T&amp;gt;
++struct node {
++  T value;
++  node&amp;lt;T&amp;gt;* next;
++};
++
++// 単方向リンクリストの実装
++template &amp;lt;class T, class Alloc=std::allocator&amp;lt;T&amp;gt;&amp;gt;
++class my_forward_list {
++  // 実際にメモリ確保したいのはT型ではなくnode&amp;lt;T&amp;gt;型なので、
++  // allocator&amp;lt;T&amp;gt;をallocator&amp;lt;node&amp;lt;T&amp;gt;&amp;gt;に置き換える
++  using allocator_type = typename std::allocator_traits&amp;lt;
++    Alloc
++  &amp;gt;::template rebind_alloc&amp;lt;node&amp;lt;T&amp;gt;&amp;gt;;
++
++  using allocator_traits_type =
++    std::allocator_traits&amp;lt;allocator_type&amp;gt;;
++
++  node&amp;lt;T&amp;gt;* head_ = nullptr;
++  allocator_type alloc_;
++
++public:
++  ~my_forward_list() {
++    node&amp;lt;T&amp;gt;* p = head_;
++    while (p) {
++      node&amp;lt;T&amp;gt;* next = p-&amp;gt;next;
++
++      allocator_traits_type::destroy(alloc_, p);
++      allocator_traits_type::deallocate(alloc_, p, 1);
++
++      p = next;
++    }
++  }
++
++  void push_back(const T&amp;amp; x) {
++    node&amp;lt;T&amp;gt;* new_node = allocator_traits_type::allocate(alloc_, 1);
++    allocator_traits_type::construct(alloc_, new_node, node&amp;lt;T&amp;gt;{x, nullptr});
++
++    if (!head_) {
++      head_ = new_node;
++    }
++    else {
++      node&amp;lt;T&amp;gt;* last_node = head_;
++      while (true) {
++        if (!last_node-&amp;gt;next) {
++          last_node-&amp;gt;next = new_node;
++          break;
++        }
++        last_node = last_node-&amp;gt;next;
++      }
++    }
++  }
++
++  void print() {
++    for (auto* p = head_; p; p = p-&amp;gt;next) {
++      std::cout &amp;lt;&amp;lt; p-&amp;gt;value &amp;lt;&amp;lt; std::endl;
++    }
++  }
++};
++
++int main() {
++  my_forward_list&amp;lt;int&amp;gt; ls;
++  ls.push_back(3);
++  ls.push_back(1);
++  ls.push_back(4);
++  ls.print();
++}
++```
++* rebind_alloc[color ff0000]
++* allocator_traits_type::allocate[link allocator_traits/allocate.md]
++* allocator_traits_type::construct[link allocator_traits/construct.md]
++* allocator_traits_type::destroy[link allocator_traits/destroy.md]
++* allocator_traits_type::deallocate[link allocator_traits/deallocate.md]
++
++#### 出力
++```
++3
++1
++4
++```
++
+ ## バージョン
+ ### 言語
+ - C++11
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>is_compound -- is_compound: 規格書セクション番号を削除</title>
@@ -3566,400 +3691,6 @@ index d9865fe68..7663b85ff 100644
       <link href="https://cpprefjp.github.io/working_style.html"/>
       <id>f870e71a2b6fbb522161aa4a1a726c7240922113:working_style.md</id>
       <updated>2021-01-29T14:27:56+09:00</updated>
-      
-        <content type="html">&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;token&#34;&gt;スタイル&lt;/span&gt;&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;本サイトで作業を行う上でのスタイルです。&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;「である」調&lt;/li&gt;
-&lt;li&gt;句読点は「、」「。」&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;型修飾のスタイル：&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;A) const T &amp;amp;v&lt;/li&gt;
-&lt;li&gt;B) const T&amp;amp; v&lt;/li&gt;
-&lt;li&gt;C) const T &amp;amp; v&lt;/li&gt;
-&lt;li&gt;D) T const &amp;amp;v&lt;/li&gt;
-&lt;li&gt;E) T const&amp;amp; v&lt;/li&gt;
-&lt;li&gt;F) T const &amp;amp; v&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;本サイトでは、Bのスタイルで型修飾を行います。&lt;/p&gt;
-&lt;h2&gt;バージョンの表記&lt;/h2&gt;
-&lt;h3&gt;言語&lt;/h3&gt;
-&lt;p&gt;C++11以降対応については対応バージョンを明記します。バージョン表記が省略されている場合、C++03、C++98対応であることを表します。&lt;/p&gt;
-&lt;h4&gt;例&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;C++17&lt;/li&gt;
-&lt;li&gt;C++14&lt;/li&gt;
-&lt;li&gt;C++11&lt;/li&gt;
-&lt;li&gt;C++03&lt;/li&gt;
-&lt;li&gt;C++98&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;処理系&lt;/h3&gt;
-&lt;p&gt;開発環境の表記がない場合は、C++98対応のあらゆる環境で使用できるものとします。 
-処理系の記載は、作業者が確認できたものを記載します。&lt;/p&gt;
-&lt;h4&gt;例&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;Clang: 2.1, 2.8&lt;/li&gt;
-&lt;li&gt;GCC: 4.3.4, 4.4.3, 4.4.4, 4.5.2&lt;/li&gt;
-&lt;li&gt;IBM XL C/C++ Enterprise Edition, V11.1.0.0&lt;/li&gt;
-&lt;li&gt;Intel: 10.1, 11.0, 11.1, 12.0&lt;/li&gt;
-&lt;li&gt;PathScale: 3.2&lt;/li&gt;
-&lt;li&gt;QCC&lt;/li&gt;
-&lt;li&gt;Visual C++: 2003, 2008, 2010&lt;/li&gt;
-&lt;li&gt;pgCC: 11.2&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;それと、訳語表を随時更新していってください。&lt;/p&gt;
-&lt;h3&gt;訳語表&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;英語&lt;/th&gt;
-&lt;th&gt;日本語&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;abstract class&lt;/td&gt;
-&lt;td&gt;抽象クラス&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;aggregate&lt;/td&gt;
-&lt;td&gt;集成体&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;alignment&lt;/td&gt;
-&lt;td&gt;アライメント (表示位置ではなくメモリの文脈)&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;apply, application&lt;/td&gt;
-&lt;td&gt;適用&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;arithmetic type&lt;/td&gt;
-&lt;td&gt;算術型&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;associative container(s)&lt;/td&gt;
-&lt;td&gt;連想コンテナ&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;base class&lt;/td&gt;
-&lt;td&gt;基底クラス&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;bidirectional iterator&lt;/td&gt;
-&lt;td&gt;双方向イテレータ&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;bucket&lt;/td&gt;
-&lt;td&gt;バケット&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;complexity&lt;/td&gt;
-&lt;td&gt;計算量&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;compound type&lt;/td&gt;
-&lt;td&gt;複合型&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;const iterator&lt;/td&gt;
-&lt;td&gt;読み取り専用イテレータ&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;const reverse iterator&lt;/td&gt;
-&lt;td&gt;読み取り専用逆イテレータ&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;covariant&lt;/td&gt;
-&lt;td&gt;共変的&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;dereference&lt;/td&gt;
-&lt;td&gt;間接参照&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;dereferenceable&lt;/td&gt;
-&lt;td&gt;間接参照可能&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;derived class&lt;/td&gt;
-&lt;td&gt;派生クラス&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;direct base class&lt;/td&gt;
-&lt;td&gt;直接基底クラス&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;delegate&lt;/td&gt;
-&lt;td&gt;委譲&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;effects&lt;/td&gt;
-&lt;td&gt;効果&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;emplace&lt;/td&gt;
-&lt;td&gt;直接構築&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;empty&lt;/td&gt;
-&lt;td&gt;空&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;equal&lt;/td&gt;
-&lt;td&gt;等値&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;equivalence class&lt;/td&gt;
-&lt;td&gt;同値分類 (数学的文脈)&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;equivalence relation&lt;/td&gt;
-&lt;td&gt;同値関係 (数学的文脈)&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;equivalent&lt;/td&gt;
-&lt;td&gt;同値 (数学的文脈)、等価 (その他文脈)&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;forward iterator&lt;/td&gt;
-&lt;td&gt;前方向イテレータ&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;fundamental type&lt;/td&gt;
-&lt;td&gt;単純型&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;ill-formed&lt;/td&gt;
-&lt;td&gt;不適格&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;implementation-defined&lt;/td&gt;
-&lt;td&gt;処理系定義&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;indirect base class&lt;/td&gt;
-&lt;td&gt;間接基底クラス&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;inherited&lt;/td&gt;
-&lt;td&gt;継承&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;input iterator&lt;/td&gt;
-&lt;td&gt;入力イテレータ&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;iterator&lt;/td&gt;
-&lt;td&gt;イテレータ&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;literal type&lt;/td&gt;
-&lt;td&gt;リテラル型&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;load factor&lt;/td&gt;
-&lt;td&gt;負荷率&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;lvalue reference&lt;/td&gt;
-&lt;td&gt;左辺値参照&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;max load factor&lt;/td&gt;
-&lt;td&gt;最大負荷率&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;member&lt;/td&gt;
-&lt;td&gt;メンバ&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;move&lt;/td&gt;
-&lt;td&gt;(std::move 的な意味で)ムーブ&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;move assignment&lt;/td&gt;
-&lt;td&gt;ムーブ代入&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;move constructor&lt;/td&gt;
-&lt;td&gt;ムーブコンストラクタ&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;mutable iterator&lt;/td&gt;
-&lt;td&gt;可変イテレータ&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;non-virtual base class&lt;/td&gt;
-&lt;td&gt;非仮想基底クラス&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;note&lt;/td&gt;
-&lt;td&gt;注&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;output iterator&lt;/td&gt;
-&lt;td&gt;出力イテレータ&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;overload&lt;/td&gt;
-&lt;td&gt;オーバーロード&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;partial ordering&lt;/td&gt;
-&lt;td&gt;半順序&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;partition&lt;/td&gt;
-&lt;td&gt;区分化&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;pointer&lt;/td&gt;
-&lt;td&gt;ポインタ&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;polymorphic&lt;/td&gt;
-&lt;td&gt;多相的&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;power of N&lt;/td&gt;
-&lt;td&gt;Nの累乗&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;predicate&lt;/td&gt;
-&lt;td&gt;述語&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;propagation, propagate&lt;/td&gt;
-&lt;td&gt;伝播&lt;br /&gt; (伝搬は誤用が広まったものなので使わない)&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;pure virtual function&lt;/td&gt;
-&lt;td&gt;純粋仮想関数&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;random access iterator&lt;/td&gt;
-&lt;td&gt;ランダムアクセスイテレータ&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;range&lt;/td&gt;
-&lt;td&gt;範囲&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;remarks&lt;/td&gt;
-&lt;td&gt;備考&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;requires&lt;/td&gt;
-&lt;td&gt;要件&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;returns&lt;/td&gt;
-&lt;td&gt;戻り値&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;reverse iterator&lt;/td&gt;
-&lt;td&gt;逆イテレータ&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;rvalue reference&lt;/td&gt;
-&lt;td&gt;右辺値参照&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;sequence container(s)&lt;/td&gt;
-&lt;td&gt;シーケンスコンテナ&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;signed&lt;/td&gt;
-&lt;td&gt;符号付き&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;stop request&lt;/td&gt;
-&lt;td&gt;停止要求&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;stop state&lt;/td&gt;
-&lt;td&gt;停止状態&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;Spurious Failure&lt;/td&gt;
-&lt;td&gt;見かけ上の失敗&lt;br /&gt; &lt;a href=&#34;https://togetter.com/li/430770&#34; target=&#34;_blank&#34;&gt;https://togetter.com/li/430770&lt;/a&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;strict weak ordering&lt;/td&gt;
-&lt;td&gt;狭義の弱順序&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;strong ordering&lt;/td&gt;
-&lt;td&gt;全順序&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;structural type&lt;/td&gt;
-&lt;td&gt;構造的型&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;synchronization&lt;/td&gt;
-&lt;td&gt;同期&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;total ordering relationalship&lt;/td&gt;
-&lt;td&gt;全順序関係&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;trailing return type&lt;/td&gt;
-&lt;td&gt;後置戻り値型&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;trait&lt;/td&gt;
-&lt;td&gt;トレイト&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;trivial&lt;/td&gt;
-&lt;td&gt;トリビアル (逆は非トリビアル)&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;underlying type&lt;/td&gt;
-&lt;td&gt;基底型&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;unordered associative container(s)&lt;/td&gt;
-&lt;td&gt;非順序連想コンテナ&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;unspecified&lt;/td&gt;
-&lt;td&gt;未規定&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;virtual base class&lt;/td&gt;
-&lt;td&gt;仮想基底クラス&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;weak ordering&lt;/td&gt;
-&lt;td&gt;弱順序&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;well-formed&lt;/td&gt;
-&lt;td&gt;適格&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;eligible&lt;/td&gt;
-&lt;td&gt;資格のある&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>スタイル -- delegateの訳語を追加</title>
-      <link href="https://cpprefjp.github.io/working_style.html"/>
-      <id>85e22978180e822c7c00d8a72531dd7d77f70e46:working_style.md</id>
-      <updated>2021-01-29T11:38:41+09:00</updated>
       
         <content type="html">&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;token&#34;&gt;スタイル&lt;/span&gt;&lt;/h1&gt;
 &lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;本サイトで作業を行う上でのスタイルです。&lt;/p&gt;
