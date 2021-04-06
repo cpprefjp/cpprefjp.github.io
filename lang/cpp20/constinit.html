@@ -189,8 +189,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2021-04-05T07:21:08">
-        2021年04月05日 07時21分08秒
+      <span itemprop="datePublished" content="2021-04-06T07:49:03">
+        2021年04月06日 07時49分03秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -215,7 +215,7 @@
         
   <h1 itemprop="name"><span class="token">コンパイル時初期化を強制する<code>constinit</code>キーワードを追加</span><span class="cpp cpp20" title="C++20で追加">(C++20)</span></h1>
 <div itemprop="articleBody"><h2>概要</h2>
-<p>変数に対する<code>constinit</code>指定は、定数初期化（<em>constant initialization</em>）が可能な変数に対して、その初期化がコンパイル時に完了することを保証する。</p>
+<p>変数に対する<code>constinit</code>指定は、静的初期化（<em>static initialization</em>）が可能な変数に対して、その初期化がコンパイル時に完了することを保証する。</p>
 <p><div class="codehilite"><pre><span></span><code><span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/mutex.html">&lt;mutex&gt;</a></span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/memory.html">&lt;memory&gt;</a></span><span class="cp"></span>
 
@@ -238,9 +238,58 @@
 <span class="p">}</span>
 </code></pre></div>
 </p>
-<p>このように定数初期化ができない変数に対してはコンパイルエラーとなるため、静的/スレッドローカル変数のうち定数初期化が期待できるものに付加しておくことで、いつ初期化がされているのかが明確になる。</p>
+<p>別の言い方をすると、<code>constinit</code>は変数が動的初期化（<em>dynamic initialization</em>）されないことを保証する。</p>
+<p>動的初期化が必要となる変数に対してはコンパイルエラーとなるため、静的/スレッドローカル変数のうち静的初期化が期待できるものに付加しておくことで、いつ初期化がされているのかが明確になる。</p>
 <h2>仕様</h2>
-<p>(執筆中)</p>
+<p><code>constinit</code>は変数にのみ使用可能であり、構文的には変数に対する<code>constexpr</code>と同様に使用可能である。ただし、<code>constinit</code>と<code>constexpr</code>を併用することはできない。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="n">constinit</span> <span class="kt">int</span> <span class="nf">f</span><span class="p">();</span>    <span class="c1">// NG</span>
+<span class="n">constinit</span> <span class="kt">int</span> <span class="n">N</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>  <span class="c1">// OK</span>
+<span class="n">constinit</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">M</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>  <span class="c1">// NG</span>
+</code></pre></div>
+</p>
+<p>このように<code>constinit</code>指定された変数が静的初期化可能ではない場合、コンパイルエラーとなる。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="nf">g</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="s">"dynamic initialization"</span><span class="p">;</span> <span class="p">}</span>
+<span class="k">constexpr</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="nf">f</span><span class="p">(</span><span class="kt">bool</span> <span class="n">p</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="n">p</span> <span class="o">?</span> <span class="s">"constant initializer"</span> <span class="o">:</span> <span class="n">g</span><span class="p">();</span> <span class="p">}</span>
+
+<span class="n">constinit</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">c</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>  <span class="c1">// OK</span>
+<span class="n">constinit</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">d</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span> <span class="c1">// NG</span>
+</code></pre></div>
+</p>
+<p><code>constexpr</code>変数とは異なり、<code>constinit</code>変数は初期化がコンパイル時に完了している事だけを保証するため、実行時に暗黙に<code>const</code>とならない。実行時に<code>const</code>にしたい場合は明示的に指定する必要がある。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="n">constinit</span> <span class="kt">int</span> <span class="n">N</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+<span class="n">constinit</span> <span class="k">const</span> <span class="kt">int</span> <span class="n">M</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+
+<span class="kt">int</span> <span class="nf">main</span> <span class="p">()</span> <span class="p">{</span>
+  <span class="n">N</span> <span class="o">=</span> <span class="mi">30</span><span class="p">;</span> <span class="c1">// OK</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<p>ローカル変数や非静的メンバ変数は必ず実行時に初期化されるため、<code>constinit</code>が適用可能なのは静的記憶域期間およびスレッドローカル記憶域期間にある変数、すなわち名前空間スコープのグローバル変数、静的メンバ変数、スレッドローカル変数、およびローカルスコープの<code>static</code>変数である。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">struct</span> <span class="n">S</span> <span class="p">{</span>
+  <span class="n">constinit</span> <span class="n">n</span><span class="p">;</span>  <span class="c1">// NG</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">[</span>
+  <span class="n">constinit</span> <span class="kt">int</span> <span class="n">m</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span> <span class="c1">// NG</span>
+<span class="p">]</span>
+</code></pre></div>
+</p>
+<p><code>constinit</code>は変数の初期化がコンパイル時に完了することを保証する。したがって<code>constinit</code>の効果は初期化を伴う変数宣言に対してのみ適用される。しかし、（別の場所で<code>constinit</code>指定されている）変数の最初の初期化の時点で<code>constinit</code>指定されている宣言に到達可能とならない場合、診断されない。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="n">constinit</span> <span class="k">extern</span> <span class="kt">int</span> <span class="n">N</span><span class="p">;</span> <span class="c1">// NG、未定義動作、何も言われない</span>
+
+<span class="k">struct</span> <span class="n">S</span> <span class="p">{</span>
+  <span class="n">constinit</span> <span class="k">static</span> <span class="kt">int</span> <span class="n">M</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="kt">int</span> <span class="n">S</span><span class="o">::</span><span class="n">M</span> <span class="o">=</span> <span class="mi">12</span><span class="p">;</span>  <span class="c1">// NG、constinitはこちらに必要、おそらく警告が発せられる</span>
+</code></pre></div>
+</p>
+<h3>静的・スレッドローカル変数の初期化</h3>
+<p>静的、あるいはスレッドローカル変数（以降まとめて静的変数と呼ぶ）の初期化は次の手順によって行われる。</p>
+<p>静的初期化 [定数初期化（<em>constant initialization</em>） or ゼロ初期化（<em>zero initialization</em>）] → 動的初期化</p>
+<p>動的初期化は実行時に行われる初期化であり、静的初期化はコンパイル時に行われる初期化である。全ての静的変数はコンパイル完了時点で静的初期化されており、その中で動的初期化が必要となる変数だけが動的初期化される。</p>
+<p>定数初期化は静的変数に対して最初に試みられる初期化で、初期化式が定数式として実行可能である時に行われる。定数初期化できない残りの変数は全てゼロ初期化される。ゼロ初期化された変数のうち、初期化式を持つものについては実行時（プログラム開始時）に動的初期化される。</p>
+<p>定数初期化は非リテラル型のクラス型であっても、対応するコンストラクタが<code>constexpr</code>コンストラクタであり、そのコンストラクタを通して全てのメンバが定数式で初期化される場合に、クラス型のオブジェクトに対しても実行可能となる（下の例ではこのコンストラクタのことを定数初期化コンストラクタと呼んでいる）。</p>
+<p><code>constinit</code>は、動的初期化の必要がない変数について静的初期化によって初期化が完了している事を保証し、<code>constinit</code>変数が動的初期化される場合にコンパイルエラーとするものである。そして、特に定数初期化されている事を明確に保証するために使用する。</p>
 <h2>例</h2>
 <p><div class="codehilite"><pre><span></span><code><span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/mutex.html">&lt;mutex&gt;</a></span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/memory.html">&lt;memory&gt;</a></span><span class="cp"></span>
@@ -262,7 +311,7 @@
 <span class="n"><span style="color:#ff0000">constinit</span></span> <span class="n"><a href="https://cpprefjp.github.io/reference/memory/unique_ptr.html">std::unique_ptr</a></span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">p1</span><span class="p">;</span>  <span class="c1">// OK、定数初期化コンストラクタ呼び出し</span>
 
 <span class="n"><span style="color:#ff0000">constinit</span></span> <span class="k">extern</span> <span class="kt">int</span> <span class="n">def</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>  <span class="c1">// OK</span>
-<span class="n"><span style="color:#ff0000">constinit</span></span> <span class="k">extern</span> <span class="kt">int</span> <span class="n">ext</span><span class="p">;</span>       <span class="c1">// NG、おそらくエラーにはならないが未定義動作</span>
+<span class="n"><span style="color:#ff0000">constinit</span></span> <span class="k">extern</span> <span class="kt">int</span> <span class="n">ext</span><span class="p">;</span>       <span class="c1">// NG、未初期化、おそらくエラーにはならないが未定義動作</span>
 
 <span class="k">struct</span> <span class="n">C</span> <span class="p">{</span>
   <span class="k">constexpr</span> <span class="n">C</span><span class="p">()</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
@@ -283,14 +332,14 @@
   <span class="n"><span style="color:#ff0000">constinit</span></span> <span class="kt">int</span> <span class="n">m</span><span class="p">;</span>  <span class="c1">// NG、非静的メンバ変数</span>
 <span class="p">};</span>
 
-<span class="k">const</span> <span class="kt">int</span> <span class="n">S</span><span class="o">::</span><span class="n">x</span> <span class="o">=</span> <span class="mi">12</span><span class="p">;</span>            <span class="c1">// OK、<span style="color:#ff0000">constinit</span>変数なので定数初期化される</span>
+<span class="k">const</span> <span class="kt">int</span> <span class="n">S</span><span class="o">::</span><span class="n">x</span> <span class="o">=</span> <span class="mi">12</span><span class="p">;</span>            <span class="c1">// NG、<span style="color:#ff0000">constinit</span>が必要、おそらくエラーにはならないが未定義動作</span>
 <span class="n"><span style="color:#ff0000">constinit</span></span> <span class="k">const</span> <span class="kt">int</span> <span class="n">S</span><span class="o">::</span><span class="n">y</span> <span class="o">=</span> <span class="mi">34</span><span class="p">;</span>  <span class="c1">// OK、<span style="color:#ff0000">constinit</span>変数なので定数初期化される</span>
 <span class="n"><span style="color:#ff0000">constinit</span></span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">S</span><span class="o">::</span><span class="n">z</span><span class="p">;</span>   <span class="c1">// NG、インライン変数に対する多重定義</span>
                                 <span class="c1">// constexpr静的メンバ変数に対するクラス外定義はC++17以降非推奨</span>
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
   <span class="n"><span style="color:#ff0000">constinit</span></span> <span class="k">static</span> <span class="n"><a href="https://cpprefjp.github.io/reference/memory/unique_ptr.html">std::unique_ptr</a></span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">ptr</span> <span class="o">=</span> <span class="k">nullptr</span><span class="p">;</span>                <span class="c1">// OK、静的ローカル変数</span>
-  <span class="n"><span style="color:#ff0000">constinit</span></span> <span class="n"><a href="https://cpprefjp.github.io/lang/cpp11/thread_local_storage.html">thread_local</a></span> <span class="n"><a href="https://cpprefjp.github.io/reference/random/mt19937.html">std::mt19937</a></span> <span class="n">eNGine</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/random/random_device.html">std::random_device</a></span><span class="p">{}());</span> <span class="c1">// NG、定数式で初期化できない</span>
+  <span class="n"><span style="color:#ff0000">constinit</span></span> <span class="n"><a href="https://cpprefjp.github.io/lang/cpp11/thread_local_storage.html">thread_local</a></span> <span class="n"><a href="https://cpprefjp.github.io/reference/random/mt19937.html">std::mt19937</a></span> <span class="n">engine</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/random/random_device.html">std::random_device</a></span><span class="p">{}());</span> <span class="c1">// NG、定数式で初期化できない</span>
 
   <span class="n"><span style="color:#ff0000">constinit</span></span> <span class="kt">int</span> <span class="n">local</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>  <span class="c1">// NG、ローカル変数</span>
 <span class="p">}</span>
@@ -301,7 +350,9 @@
 <h2>検討されたほかの選択肢</h2>
 <p>(執筆中)</p>
 <h2>関連項目</h2>
-<p>(執筆中)</p>
+<ul>
+<li><a href="https://cpprefjp.github.io/lang/cpp11/constexpr.html">C++11 <code>constexpr</code></a></li>
+</ul>
 <h2>参照</h2>
 <ul>
 <li><a href="https://wg21.link/P1143" target="_blank">P1143R2 AddiNG the <code>constinit</code> keyword</a></li>
