@@ -189,8 +189,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2021-04-19T08:15:21">
-        2021年04月19日 08時15分21秒
+      <span itemprop="datePublished" content="2021-04-20T07:23:57">
+        2021年04月20日 07時23分57秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -306,7 +306,41 @@
 </p>
 <p>ただし、関数引数・戻り値型いずれにしても、ポインタ・参照への<code>volatile</code>修飾は明確な意味を持ち有用である（値ではなく、領域に<code>volatile</code>とマークしているため）。従って、非推奨とされるのは関数引数・戻り値型へのトップレベル<code>volatile</code>修飾のみであって、<code>volatile</code>ポインタ・参照型は依然として許可される。</p>
 <h3>構造化束縛宣言</h3>
-<p>（執筆中）</p>
+<p>構造化束縛宣言にも<code>volatile</code>修飾を行う事ができるが、ここでのCV修飾は右辺にある式の結果である暗黙のオブジェクトに対して作用している。</p>
+<p>右辺の式の結果が<code>std::tuple/std::pair</code>等の<code>tuple-like</code>な型のオブジェクトである場合、構造化束縛はまずその結果オブジェクトを<code>volatile</code>修飾して受けておき、その結果オブジェクトに対して<code>std::get</code>で要素の取得を行う。しかし、<code>std::get</code>には<code>volatile</code>オーバーロードが欠けており、コンパイルエラーを起こす。</p>
+<p>一方、構造化束縛の残りのケース（配列・構造体）の場合は<code>std::get</code>を用いないためこのような問題は起こらない。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">auto</span> <span class="nf">f</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">std</span><span class="o">::</span><span class="n">tuple</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="kt">int</span><span class="p">,</span> <span class="kt">double</span><span class="o">&gt;</span><span class="p">;</span>
+
+<span class="k">volatile</span> <span class="k">auto</span> <span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="p">();</span>  <span class="c1">// NG</span>
+<span class="c1">// ここでは以下の様な事が行われている</span>
+<span class="c1">// volatile auto tmp = f();</span>
+<span class="c1">// std::tuple_element_t&lt;0, decltype(tmp)&gt; a = std::get&lt;0&gt;(tmp);</span>
+
+<span class="kt">int</span> <span class="n">array</span><span class="p">[</span><span class="mi">3</span><span class="p">]{};</span>
+
+<span class="k">volatile</span> <span class="k">auto</span> <span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">array</span><span class="p">;</span> <span class="c1">// OK</span>
+<span class="c1">// ここでは以下の様な事が行われている</span>
+<span class="c1">// volatile int tmp[] = {array[0], array[1], array[2]};</span>
+<span class="c1">// volatile int a = tmp[0];</span>
+
+<span class="k">static_assert</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">is_volatile_v</span><span class="o">&lt;</span><span class="k">decltype</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">&gt;</span><span class="p">);</span> <span class="c1">// OK</span>
+</code></pre></div>
+</p>
+<p>このような非一貫性の他にも、構造化束縛の裏で行われている事が<code>volatile</code>には適さない。</p>
+<p>構造化束縛の<code>volatile</code>修飾はその右辺にある暗黙のオブジェクトに対して行われるが、その事は構文からは完全に隠蔽されている。右辺の式の結果オブジェクトも場合によってコピーされたり参照のまま利用されたりと、扱いが変化しうる。また、構造化束縛宣言に指定した変数名はコンパイラの扱いとしては変数名ではなく、右辺の暗黙のオブジェクト内の対応する要素にバインドされた名前でしかない。そのような名前に対する<code>volatile</code>の効果は不明瞭であり、右辺の式の直接の結果の型もその要素の型も<code>volatile</code>ではない場合には意味をなさない。</p>
+<p><code>volatile</code>においてはその領域へのアクセスが重要であり、1度のアクセスは正確に1度だけ行われる必要があり、その順序は前後してはならない。構造化束縛宣言はその裏側で多くの事が起こりそれは場合によって変化しうるが、そこでどのオブジェクトが<code>volatile</code>となりどのような順番でアクセスが発生するのかは非常に不透明である。</p>
+<p>従って、構造化束縛宣言の<code>volatile</code>修飾は非推奨とされる。</p>
+<p>構造化束縛した名前が<code>volatile</code>である必要がある場合は、分解対象の右辺の結果オブジェクトの各要素型をあらかじめ<code>volatile</code>修飾しておく事が推奨される。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">auto</span> <span class="nf">f</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">std</span><span class="o">::</span><span class="n">tuple</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="kt">int</span><span class="p">,</span> <span class="kt">double</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">array</span><span class="p">[</span><span class="mi">3</span><span class="p">]{};</span>
+
+<span class="k">volatile</span> <span class="k">auto</span> <span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="p">();</span>   <span class="c1">// NG（非推奨）</span>
+<span class="k">volatile</span> <span class="k">auto</span> <span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">array</span><span class="p">;</span> <span class="c1">// NG（非推奨）</span>
+
+<span class="k">auto</span> <span class="nf">g</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">std</span><span class="o">::</span><span class="n">tuple</span><span class="o">&lt;</span><span class="k">volatile</span> <span class="kt">int</span><span class="o">*</span><span class="p">,</span> <span class="k">volatile</span> <span class="kt">int</span><span class="o">*</span><span class="p">,</span> <span class="k">volatile</span> <span class="kt">double</span><span class="o">&amp;&gt;</span><span class="p">;</span>
+<span class="k">auto</span> <span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">g</span><span class="p">();</span>  <span class="c1">// OK</span>
+</code></pre></div>
+</p>
 <h2>ライブラリにおける非推奨化</h2>
 <p>（執筆中）</p>
 <h2>検討されたほかの選択肢</h2>
