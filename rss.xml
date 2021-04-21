@@ -2,9 +2,76 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2021-04-20T16:39:31.715403</updated>
-  <id>05adafb4-bfd4-4bd1-843a-a8c738467c76</id>
+  <updated>2021-04-21T07:40:46.849612</updated>
+  <id>7ca49232-814a-4de2-a9cb-7b7a0e38e96e</id>
 
+  
+    <entry>
+      <title>ほとんどの`volatile`を非推奨化 -- deprecating volatile : ライブラリパート追記</title>
+      <link href="https://cpprefjp.github.io/lang/cpp20/deprecating_volatile.html"/>
+      <id>13c375ccaf39884aaba9b3f5e2e4da493aa4be42:lang/cpp20/deprecating_volatile.md</id>
+      <updated>2021-04-21T16:35:44+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/deprecating_volatile.md b/lang/cpp20/deprecating_volatile.md
+index 68d695f10..02f4607da 100644
+--- a/lang/cpp20/deprecating_volatile.md
++++ b/lang/cpp20/deprecating_volatile.md
+@@ -190,7 +190,37 @@ auto&amp;amp;&amp;amp; [a, b, c] = f();  // OK、一時オブジェクト内各要素へのバ
+ ```
+ 
+ ## ライブラリにおける非推奨化
+-（執筆中）
++
++### クラステンプレートの`volatile`な特殊化
++
++標準ライブラリのクラステンプレートには、`volatile`な対象に対する特殊化が提供されているものがある。
++
++- [`numeric_limits`](/reference/limits/numeric_limits.md)
++- [`tuple_size`](/reference/tuple/tuple_size.md)
++- [`tuple_element`](/reference/tuple/tuple_element.md)
++- [`variant_size`](/reference/variant/variant_size.md)
++- [`variant_alternative`](/reference/variant/variant_alternative.md)
++- `atomic`関連
++
++このうち、`numeric_limits`に関しては有用性が明らかであるのでそのままにされ、`atomic`関連のものはあとで説明する。
++
++残ったのは`tuple`と`variant`に関連したものであるが、C++標準は`tuple`と`variant`にどのように実装するかを指定しておらず、これらの型の`volatile`オブジェクトへのアクセスがどのように振る舞うのかが不透明である。さらに、メンバ関数は特に`volatile`修飾されたものが用意されているわけではなく、標準ライブラリのそのほかのクラスも特に`volatile`を意識してはいない。
++
++`tuple`と`variant`そのものは`volatile`で使用されるために設計されておらず、これらのクラステンプレートの特殊化はCV修飾を網羅するために用意されているだけであるため、非推奨とされる。
++
++### `std::atomic`の`volatile`メンバ関数
++
++`volatile`なアクセスは不可分ではなく、順序保証がなく、各バイトに正確に一度だけアクセスされ、コンパイラの最適化の対象とならない。
++
++`atomic`なアクセスは不可分であり（原子性が保証され）、メモリモデルによってその順序が保証され、ループによって処理される可能性があり（各バイト一度だけのアクセスは保証されない）、コンパイラの最適化の対象となりえます。
++
++`volatile std::atomic&amp;lt;T&amp;gt;`はこれらの性質を組み合わせたものとなるはずだが、そうはなっていない。
++
++ロックフリーではない`std::atomic`が`volatile`修飾されている場合、そのアクセスの不可分性（原子性）が必ずしも保証されない。
++
++また、`volatile`かつ`atomic`な複合代入操作を正しく行う（不可分に、各バイトに正確に一度だけアクセスする）実装は限られているが、そのような実装詳細を指定することはC++標準の範囲内ではない。
++
++従って、`volatile std::atomic&amp;lt;T&amp;gt;`は必ずしも両方の性質を備えた実装になっておらず、それを保証する事が困難であるため、`std::atomic&amp;lt;T&amp;gt;::is_always_lock_free`が`true`となる特殊化を除いて`std::atomic`の`volatile`メンバ関数は非推奨とされる。
+ 
+ ## 検討されたほかの選択肢
+ 
+@@ -200,6 +230,9 @@ auto&amp;amp;&amp;amp; [a, b, c] = f();  // OK、一時オブジェクト内各要素へのバ
+ 
+ おそらく、間違っていたり意味がなかったとしても、`volatile`と比べて幅広く使用されているために非推奨とする事が忌避されたものと思われる。
+ 
++### メンバ関数の`volatile`修飾
++（執筆中）
++
+ ## 備考
+ 
+ 非推奨化で触れられてはいないが、`volatile`変数を並行処理の共有変数として使用することは常に間違っている。
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>ほとんどの`volatile`を非推奨化 -- 文面調整</title>
@@ -316,31 +383,6 @@ index 125917a89..4dadf76cf 100644
       <author>
         <name>onihusube</name>
         <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>chi_squared_distribution -- chi_squared_distribution : リンク切れしていたページをInetnet Archiveに差し替え #861</title>
-      <link href="https://cpprefjp.github.io/reference/random/chi_squared_distribution.html"/>
-      <id>7fe82a1dff12904cb2595fb06a291dbbe7c23f74:reference/random/chi_squared_distribution.md</id>
-      <updated>2021-04-19T13:52:05+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/random/chi_squared_distribution.md b/reference/random/chi_squared_distribution.md
-index 1dd54be81..becc6b169 100644
---- a/reference/random/chi_squared_distribution.md
-+++ b/reference/random/chi_squared_distribution.md
-@@ -125,5 +125,5 @@ int main()
- ### 参考
- - [カイ二乗分布 - Wikipedia](https://ja.wikipedia.org/wiki/%E3%82%AB%E3%82%A4%E4%BA%8C%E4%B9%97%E5%88%86%E5%B8%83)
- - [χ2（カイ２乗）分布](http://staff.aist.go.jp/t.ihara/chi2.html)
--- [カイ２乗分布とは](http://ogawas.cerp.u-toyama.ac.jp/e-stat/kai.html)
-+- [カイ２乗分布とは](https://web.archive.org/web/20161213042559/http://ogawas.cerp.u-toyama.ac.jp/e-stat/kai.html)
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
       </author>
     </entry>
   
