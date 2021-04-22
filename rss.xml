@@ -2,9 +2,136 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2021-04-22T06:04:58.342651</updated>
-  <id>65a588b6-7a63-40dc-86cf-c0c75472ea69</id>
+  <updated>2021-04-22T06:12:00.135205</updated>
+  <id>afa7ef5a-1583-4ce3-b81f-9ec60647dc91</id>
 
+  
+    <entry>
+      <title>ほとんどの`volatile`を非推奨化 -- deprecating volatile : 例を追記、完成</title>
+      <link href="https://cpprefjp.github.io/lang/cpp20/deprecating_volatile.html"/>
+      <id>52d8f5d46fee2a7bdd8d8d30fca37b9fb74820f5:lang/cpp20/deprecating_volatile.md</id>
+      <updated>2021-04-22T15:07:35+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/deprecating_volatile.md b/lang/cpp20/deprecating_volatile.md
+index 70bdae3a2..66537ae43 100644
+--- a/lang/cpp20/deprecating_volatile.md
++++ b/lang/cpp20/deprecating_volatile.md
+@@ -267,6 +267,108 @@ auto&amp;amp;&amp;amp; [a, b, c] = f();  // OK、一時オブジェクト内各要素へのバ
+ 
+ 非推奨化で触れられてはいないが、`volatile`変数を並行処理の共有変数として使用することは常に間違っている。
+ 
++## 不適切な使用の例
++
++提案文書より不適切と思われる`volatile`の用例をいくつか引用する。中には今回の非推奨化の対象となっていないものもある。
++
++```cpp
++struct foo {
++  int a : 4;
++  int b : 2;
++};
++volatile foo f;
++
++// どんな命令が生成され、fの領域の各バイトに何回アクセスするか不透明
++f.a = 3;
++```
++
++```cpp
++struct foo {
++  volatile int a : 4;
++  int b : 2;
++};
++foo f;
++
++// f.aの領域へのアクセスが発生するか不透明
++f.b = 1;
++```
++
++```cpp
++union foo {
++  char c;
++  int i;
++};
++volatile foo f;
++
++// sizeof(int) [byte]の領域へアクセスするか、sizeof(char) [byte]の領域へアクセスするのか、不透明
++f.c = 42;
++```
++
++```cpp
++volatile int i;
++
++// iの領域へ何回のアクセスが発生するか不透明
++// これはどちらも非推奨化
++i += 42;
++++i;
++```
++
++```cpp
++volatile int i, j, k;
++
++// iへの代入時にjの値を読み取るか不透明（非推奨化）
++i = j = k;
++```
++
++```cpp
++struct big { int arr[32]; };
++volatile _Atomic struct big ba;
++struct big b2;
++
++// 誰から見てもatomicになるとは限らない
++// ほとんどの環境で非推奨化
++ba = b2;
++```
++
++```cpp
++int what(volatile std::atomic&amp;lt;int&amp;gt; *atom) {
++  int expected = 42;
++
++  // この操作でatomの指す領域に何回アクセスが発生するのか不透明（場合によって変化する）
++  atom-&amp;gt;compare_exchange_strong(expected, 0xdead);
++    
++  return expected;
++}
++```
++
++```cpp
++// この関数を呼び出すとき、呼び出し側は何を気にすべきか不透明
++void what_does_the_caller_care(volatile int);
++```
++
++```cpp
++// 無意味（非推奨化）
++volatile int nonsense(void);
++```
++
++```cpp
++struct retme { int i, j; };
++
++// 無意味（非推奨化）
++volatile struct retme silly(void);
++```
++
++```cpp
++struct device {
++  unsigned reg;
++  device() : reg(0xc0ffee) {}
++  ~device() { reg = 0xdeadbeef; }
++};
++
++// 初期化（コンストラクタ内）、破棄（デストラクタ内）はともにvolatileではない
++volatile device dev;
++```
++
+ ## 参照
+ 
+ - [P1152R0 Deprecating `volatile`](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1152r0.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>コンパイラの実装状況 -- コンパイラ実装状況ページ：C++20 proposal numberを追加/ Clang対応バージョンの更新</title>
@@ -1605,92 +1732,6 @@ index 68d695f10..02f4607da 100644
  ## 備考
  
  非推奨化で触れられてはいないが、`volatile`変数を並行処理の共有変数として使用することは常に間違っている。
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>ほとんどの`volatile`を非推奨化 -- 文面調整</title>
-      <link href="https://cpprefjp.github.io/lang/cpp20/deprecating_volatile.html"/>
-      <id>e2cb1b6933c302c5f58cfe0882acf31910f0a524:lang/cpp20/deprecating_volatile.md</id>
-      <updated>2021-04-21T01:34:55+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/deprecating_volatile.md b/lang/cpp20/deprecating_volatile.md
-index 1554aef9f..68d695f10 100644
---- a/lang/cpp20/deprecating_volatile.md
-+++ b/lang/cpp20/deprecating_volatile.md
-@@ -9,7 +9,7 @@ C++20より、`volatile`の本来の役割に照らして不正確、あるい
- 
- ## `volatile`
- 
--`volatile`な変数（メモリ領域）への1度のアクセスは正確に1度だけ行われる必要があり、0回にも2回にもなってはならない。そして、`volatile`領域へのアクセスはその順序がコード上の順序と一致する必要がある。
-+`volatile`な変数（メモリ領域）への1度のアクセスは正確に1度だけ行われる必要があり、0回にも2回以上にもなってはならない。そして、`volatile`領域へのアクセスはその順序がコード上の順序と一致する必要がある。
- 
- `volatile`の効果（保証）は単純にはこれだけである。
- 
-@@ -100,7 +100,7 @@ v1 = n = v3;      // OK
- 
- また、呼出規約によっては一部の引数を配置するレジスタが`volatile`となる事があるが、呼出規約はC++コード上で意味を持たず、そのような呼び出し規約がマークされている関数は非`volatile`関数宣言と同様に扱われる。しかし、一部のレジスタが`volatile`である事はABIによって処理されている。
- 
--結局、関数引数の`volatile`修飾は有用ではないため非推奨とされる。関数の引数を`volatile`としたい場合、関数内で`volatile`ローカル変数に引数をコピーする事が推奨される。一部の実装では、そのようなコピーは省略され、オーバーヘッドとはならない。
-+このように、関数引数の`volatile`修飾は有用ではないため非推奨とされる。関数の引数を`volatile`としたい場合、関数内で`volatile`ローカル変数に引数をコピーする事が推奨される。一部の実装では、そのようなコピーは省略され、オーバーヘッドとはならない。
- 
- ```cpp
- void f1(volatile int n);   // NG（非推奨）
-@@ -113,7 +113,7 @@ void f6(int * volatile p); // NG（非推奨）
- 
- また、参照・ポインタではない関数戻り値型の`volatile`修飾は完全に意味を持たない。
- 
--例えば、ローカル`volatile`変数を返す場合、そのアクセスは関数リターン時に値をコピーするために一度実行されるが、コピーした後の値はもはや元の`volatile`領域とは別の場所にある。`volatile`において重要なのは特定領域へのアクセスであり、暗黙にそのようなコピーが走る事はほとんどの場合にプログラマの意図とは異なる。
-+例えば、ローカル`volatile`変数を返す場合、そのアクセスは関数リターン時に値をコピーするために一度実行されるが、コピーした後の値はもはや元の`volatile`領域とは別のスタック領域にある。`volatile`において重要なのは特定領域へのアクセスであり、暗黙にそのようなコピーが行われる事はほとんどの場合にプログラマの意図とは異なる。
- 
- ローカルの非`volatile`変数を`volatile`として返すことには意味がない。戻り値を`volatile`領域に配置したい場合、関数の呼び出し側で`volatile`変数に受ければよい。
- 
-@@ -159,13 +159,13 @@ volatile auto [a, b, c] = array; // OK
- static_assert(std::is_volatile_v&amp;lt;decltype(a)&amp;gt;); // OK
- ```
- 
--このような非一貫性の他にも、構造化束縛の裏で行われている事が`volatile`には適さない。
-+このような挙動の非一貫性を受け入れたとしても、構造化束縛の裏で行われている事が`volatile`には適していない。
- 
--構造化束縛の`volatile`修飾はその右辺にある暗黙のオブジェクトに対して行われるが、その事は構文からは完全に隠蔽されている。右辺の式の結果オブジェクトも場合によってコピーされたり参照のまま利用されたりと、扱いが変化しうる。また、構造化束縛宣言に指定した変数名はコンパイラの扱いとしては変数名ではなく、右辺の暗黙のオブジェクト内の対応する要素にバインドされた名前でしかない。そのような名前に対する`volatile`の効果は不明瞭であり、右辺の式の直接の結果の型もその要素の型も`volatile`ではない場合には意味をなさない。
-+構造化束縛の`volatile`修飾はその右辺にある暗黙のオブジェクトに対して行われるが、その事は構文からは完全に隠蔽されている。右辺の式の結果オブジェクトも場合によってコピーされたり参照のまま利用されたりと、扱いが変化しうる。また、構造化束縛宣言に指定した変数名はコンパイラの扱いとしては変数名ではなく、右辺の暗黙のオブジェクト内の対応する要素にバインドされた名前でしかない。そのような名前に対する`volatile`の効果は不明瞭であり、束縛先の要素の型が`volatile`ではない場合には意味をなさない。
- 
--`volatile`においてはその領域へのアクセスが重要であり、1度のアクセスは正確に1度だけ行われる必要があり、その順序は前後してはならない。構造化束縛宣言はその裏側で多くの事が起こりそれは場合によって変化しうるが、そこでどのオブジェクトが`volatile`となりどのような順番でアクセスが発生するのかは非常に不透明である。
-+`volatile`においてはその領域へのアクセスが重要であり、1度のアクセスは正確に1度だけ行われる必要があり、その順序は前後してはならない。構造化束縛宣言はその裏側で多くの事が行われており、それはCV・参照修飾と右辺の式の結果型によって様々に変化するが、そこでどのオブジェクトが`volatile`となりどのような順番でアクセスが発生するのかは非常に不明瞭である。
- 
--従って、構造化束縛宣言の`volatile`修飾は非推奨とされる。
-+従って、構造化束縛宣言の`volatile`修飾を正しく扱う事は非常に困難であるため、非推奨とされる。
- 
- 構造化束縛した名前が`volatile`である必要がある場合は、分解対象の右辺の結果オブジェクトの各要素型をあらかじめ`volatile`修飾しておく事が推奨される。
- 
-@@ -180,6 +180,15 @@ auto g() -&amp;gt; std::tuple&amp;lt;volatile int*, volatile int*, volatile double&amp;amp;&amp;gt;;
- auto [a, b, c] = g();  // OK
- ```
- 
-+この場合でも、各要素型のトップレベル`volatile`修飾は意味をなさない。
-+
-+```cpp
-+auto f() -&amp;gt; std::tuple&amp;lt;volatile int, volatile int, volatile double&amp;gt;;
-+
-+auto [a, b, c] = f();  // OK、要素ごとコピーされている、volatile修飾は無意味
-+auto&amp;amp;&amp;amp; [a, b, c] = f();  // OK、一時オブジェクト内各要素へのバインド、volatile修飾は無意味
-+```
-+
- ## ライブラリにおける非推奨化
- （執筆中）
- 
-@@ -205,4 +214,4 @@ auto [a, b, c] = g();  // OK
- - [P1152R2 Deprecating `volatile`](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1152r2)
- - [P1152R4 Deprecating `volatile`](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1152r4.html)
- - [P1831R0 Deprecating `volatile`: library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1831r0.html)
--- [P1831R0 Deprecating `volatile`: library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1831r1.html)
-\ No newline at end of file
-+- [P1831R0 Deprecating `volatile`: library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1831r1.html)
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>

@@ -189,8 +189,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2021-04-22T04:41:39">
-        2021年04月22日 04時41分39秒
+      <span itemprop="datePublished" content="2021-04-22T06:07:35">
+        2021年04月22日 06時07分35秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -397,6 +397,95 @@
 <p>結局、合意に至ることはできず、メンバ関数の<code>volatile</code>修飾は現状維持となった。</p>
 <h2>備考</h2>
 <p>非推奨化で触れられてはいないが、<code>volatile</code>変数を並行処理の共有変数として使用することは常に間違っている。</p>
+<h2>不適切な使用の例</h2>
+<p>提案文書より不適切と思われる<code>volatile</code>の用例をいくつか引用する。中には今回の非推奨化の対象となっていないものもある。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">struct</span> <span class="n">foo</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="nl">a</span> <span class="p">:</span> <span class="mi">4</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="nl">b</span> <span class="p">:</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="k">volatile</span> <span class="n">foo</span> <span class="n">f</span><span class="p">;</span>
+
+<span class="c1">// どんな命令が生成され、fの領域の各バイトに何回アクセスするか不透明</span>
+<span class="n">f</span><span class="p">.</span><span class="n">a</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+</code></pre></div>
+</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">struct</span> <span class="n">foo</span> <span class="p">{</span>
+  <span class="k">volatile</span> <span class="kt">int</span> <span class="nl">a</span> <span class="p">:</span> <span class="mi">4</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="nl">b</span> <span class="p">:</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="n">foo</span> <span class="n">f</span><span class="p">;</span>
+
+<span class="c1">// f.aの領域へのアクセスが発生するか不透明</span>
+<span class="n">f</span><span class="p">.</span><span class="n">b</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</code></pre></div>
+</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">union</span> <span class="n">foo</span> <span class="p">{</span>
+  <span class="kt">char</span> <span class="n">c</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="k">volatile</span> <span class="n">foo</span> <span class="n">f</span><span class="p">;</span>
+
+<span class="c1">// sizeof(int) [byte]の領域へアクセスするか、sizeof(char) [byte]の領域へアクセスするのか、不透明</span>
+<span class="n">f</span><span class="p">.</span><span class="n">c</span> <span class="o">=</span> <span class="mi">42</span><span class="p">;</span>
+</code></pre></div>
+</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">volatile</span> <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+
+<span class="c1">// iの領域へ何回のアクセスが発生するか不透明</span>
+<span class="c1">// これはどちらも非推奨化</span>
+<span class="n">i</span> <span class="o">+=</span> <span class="mi">42</span><span class="p">;</span>
+<span class="o">++</span><span class="n">i</span><span class="p">;</span>
+</code></pre></div>
+</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">volatile</span> <span class="kt">int</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">;</span>
+
+<span class="c1">// iへの代入時にjの値を読み取るか不透明（非推奨化）</span>
+<span class="n">i</span> <span class="o">=</span> <span class="n">j</span> <span class="o">=</span> <span class="n">k</span><span class="p">;</span>
+</code></pre></div>
+</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">struct</span> <span class="n">big</span> <span class="p">{</span> <span class="kt">int</span> <span class="n">arr</span><span class="p">[</span><span class="mi">32</span><span class="p">];</span> <span class="p">};</span>
+<span class="k">volatile</span> <span class="n">_Atomic</span> <span class="k">struct</span> <span class="n">big</span> <span class="n">ba</span><span class="p">;</span>
+<span class="k">struct</span> <span class="n">big</span> <span class="n">b2</span><span class="p">;</span>
+
+<span class="c1">// 誰から見てもatomicになるとは限らない</span>
+<span class="c1">// ほとんどの環境で非推奨化</span>
+<span class="n">ba</span> <span class="o">=</span> <span class="n">b2</span><span class="p">;</span>
+</code></pre></div>
+</p>
+<p><div class="codehilite"><pre><span></span><code><span class="kt">int</span> <span class="nf">what</span><span class="p">(</span><span class="k">volatile</span> <span class="n"><a href="https://cpprefjp.github.io/reference/atomic/atomic.html">std::atomic</a></span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="o">*</span><span class="n">atom</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">expected</span> <span class="o">=</span> <span class="mi">42</span><span class="p">;</span>
+
+  <span class="c1">// この操作でatomの指す領域に何回アクセスが発生するのか不透明（場合によって変化する）</span>
+  <span class="n">atom</span><span class="o">-&gt;</span><span class="n">compare_exchange_strong</span><span class="p">(</span><span class="n">expected</span><span class="p">,</span> <span class="mh">0xdead</span><span class="p">);</span>
+
+  <span class="k">return</span> <span class="n">expected</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<p><div class="codehilite"><pre><span></span><code><span class="c1">// この関数を呼び出すとき、呼び出し側は何を気にすべきか不透明</span>
+<span class="kt">void</span> <span class="nf">what_does_the_caller_care</span><span class="p">(</span><span class="k">volatile</span> <span class="kt">int</span><span class="p">);</span>
+</code></pre></div>
+</p>
+<p><div class="codehilite"><pre><span></span><code><span class="c1">// 無意味（非推奨化）</span>
+<span class="k">volatile</span> <span class="kt">int</span> <span class="nf">nonsense</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+</code></pre></div>
+</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">struct</span> <span class="n">retme</span> <span class="p">{</span> <span class="kt">int</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">;</span> <span class="p">};</span>
+
+<span class="c1">// 無意味（非推奨化）</span>
+<span class="k">volatile</span> <span class="k">struct</span> <span class="n">retme</span> <span class="nf">silly</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+</code></pre></div>
+</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">struct</span> <span class="n">device</span> <span class="p">{</span>
+  <span class="kt">unsigned</span> <span class="n">reg</span><span class="p">;</span>
+  <span class="n">device</span><span class="p">()</span> <span class="o">:</span> <span class="n">reg</span><span class="p">(</span><span class="mh">0xc0ffee</span><span class="p">)</span> <span class="p">{}</span>
+  <span class="o">~</span><span class="n">device</span><span class="p">()</span> <span class="p">{</span> <span class="n">reg</span> <span class="o">=</span> <span class="mh">0xdeadbeef</span><span class="p">;</span> <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="c1">// 初期化（コンストラクタ内）、破棄（デストラクタ内）はともにvolatileではない</span>
+<span class="k">volatile</span> <span class="n">device</span> <span class="n">dev</span><span class="p">;</span>
+</code></pre></div>
+</p>
 <h2>参照</h2>
 <ul>
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1152r0.html" target="_blank">P1152R0 Deprecating <code>volatile</code></a></li>
