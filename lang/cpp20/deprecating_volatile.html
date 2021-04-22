@@ -189,8 +189,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2021-04-21T07:52:33">
-        2021年04月21日 07時52分33秒
+      <span itemprop="datePublished" content="2021-04-22T04:41:39">
+        2021年04月22日 04時41分39秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -216,6 +216,17 @@
   <h1 itemprop="name"><span class="token">ほとんどの<code>volatile</code>を非推奨化</span><span class="cpp cpp20" title="C++20で追加">(C++20)</span></h1>
 <div itemprop="articleBody"><h2>概要</h2>
 <p>C++20より、<code>volatile</code>の本来の役割に照らして不正確、あるいは誤解を招く用法や無意味な用法について非推奨とされるようになる。</p>
+<p>非推奨となるのは次のもの</p>
+<ol>
+<li><code>volatile</code>値に対する複合代入演算子（算術型・ポインタ型のみ）</li>
+<li><code>volatile</code>値に対するインクリメント演算子（算術型・ポインタ型のみ）</li>
+<li>間に<code>volatile</code>値がある場合の連鎖した代入演算子（非クラス型のみ）</li>
+<li>関数引数のトップレベル<code>volatile</code>修飾</li>
+<li>関数戻り値型のトップレベル<code>volatile</code>修飾</li>
+<li>構造化束縛宣言の<code>volatile</code>修飾</li>
+<li><code>std::tuple, std::variant</code>関連のクラステンプレートの<code>volatile</code>特殊化</li>
+<li>ロックフリーではない<code>std::atomic</code>特殊化の<code>volatile</code>メンバ関数</li>
+</ol>
 <p>非推奨とされるだけで削除されてはいないが、おそらくコンパイラはそれらの用法について警告を発するようになる。そのような用法はバグの原因となり危険であるため可能な限り使用を避けるべきである。</p>
 <h2><code>volatile</code></h2>
 <p><code>volatile</code>な変数（メモリ領域）への1度のアクセスは正確に1度だけ行われる必要があり、0回にも2回以上にもなってはならない。そして、<code>volatile</code>領域へのアクセスはその順序がコード上の順序と一致する必要がある。</p>
@@ -364,21 +375,28 @@
 <p>従って、<code>tuple</code>と<code>variant</code>そのものは<code>volatile</code>で使用されるために設計されておらず、これら4つのクラステンプレートの<code>volatile</code>特殊化はCV修飾を網羅するために用意されているだけであるため、非推奨とされる。</p>
 <h3><code>std::atomic</code>の<code>volatile</code>メンバ関数</h3>
 <p><code>volatile</code>なアクセスは不可分ではなく、順序保証がなく、各バイトに正確に一度だけアクセスされ、コンパイラの最適化の対象とならない。</p>
-<p><code>atomic</code>なアクセスは不可分であり（原子性が保証され）、メモリモデルによってその順序が保証され、ループによって処理される可能性があり（各バイト一度だけのアクセスは保証されない）、コンパイラの最適化の対象となりえる。</p>
+<p><em>atomic</em>なアクセスは不可分であり（原子性が保証され）、メモリモデルによってその順序が保証され、ループによって処理される可能性があり（各バイト一度だけのアクセスは保証されない）、コンパイラの最適化の対象となりえる。</p>
 <p><code>volatile std::atomic&lt;T&gt;</code>はこれらの性質を組み合わせたものとなる事が期待されるが、そうなっていない。</p>
-<p>ロックフリーではない<code>std::atomic</code>が<code>volatile</code>修飾されている場合、そのアクセスの不可分性（原子性）が必ずしも保証されない。例えば、C++プログラム上では<code>mutex</code>などでロックして正しく<code>atomic</code>にアクセスされていたとしても、その領域にアクセスするプログラム外部の観測者にとってはそのアクセスは分割されて見えうる。</p>
-<p>また、<code>volatile</code>かつ<code>atomic</code>な複合代入操作を正しく行う（不可分に、各バイトに正確に一度だけアクセスする）実装は限られているが、そのような実装詳細を指定することはC++標準の範囲内ではない。</p>
+<p>ロックフリーではない<code>std::atomic</code>が<code>volatile</code>修飾されている場合、そのアクセスの不可分性（原子性）が必ずしも保証されない。例えば、C++プログラム上では<code>mutex</code>などでロックして正しく<em>atomic</em>にアクセスされていたとしても、その領域にアクセスするプログラム外部の観測者からはそのアクセスは分割されて見えうる。</p>
+<p>また、<code>volatile</code>かつ<em>atomic</em>な複合代入操作を正しく行う（不可分に、各バイトに正確に一度だけアクセスする）実装は限られているが、そのような実装詳細を指定することはC++標準の範囲内ではない。</p>
 <p>従って、<code>volatile std::atomic&lt;T&gt;</code>は必ずしも両方の性質を備えた実装になっておらず、それを保証する事が困難であるため、<code>std::atomic&lt;T&gt;::is_always_lock_free</code>が<code>true</code>となる特殊化を除いて<code>std::atomic</code>の<code>volatile</code>メンバ関数は非推奨とされる。</p>
 <h2>検討されたほかの選択肢</h2>
 <h3>関数引数・戻り値型への<code>const</code>修飾</h3>
 <p>関数引数・戻り値型への<code>volatile</code>修飾が非推奨とされたのとほぼ同様の理由によって、<code>const</code>修飾も非推奨とする事が提案されていたが、合意が取れなかったため非推奨とはならなかった。</p>
 <p>おそらく、間違っていたり意味がなかったとしても、<code>volatile</code>と比べて幅広く使用されているために非推奨とする事が忌避されたものと思われる。</p>
 <h3>メンバ関数の<code>volatile</code>修飾</h3>
-<p>（執筆中）</p>
+<p>メンバ関数の<code>volatile</code>修飾は通常使用されることはない。標準ライブラリにおいても、<code>const</code>メンバ関数は意図を持って用意される事がある一方で、<code>volatile</code>メンバ関数が用意されることはほとんどない。</p>
+<p>また、メンバ関数の<code>volatile</code>修飾はジェネリックプログラミングにおいてはCV修飾のパターン網羅のために追加の負担をかけるか、全く無視されるかのどちらかである。</p>
+<p>クラスは<code>const</code>な文脈でもそうでない文脈でも使用可能であり、<code>const</code>メンバ関数はそれぞれの場合に合わせてその振る舞いを変化させる事ができる。<code>volatile</code>の場合を考えてみると、これは当てはまらない。</p>
+<p>あるクラスが<code>volatile</code>な領域に配置されることもあればそうでない場合もある、という状況は考えづらく、そのような状況にあったとして、メンバ関数がどう有意義に異なるのかはさらに不明瞭である。</p>
+<p>さらに、コンストラクタやデストラクタは<code>const</code>も<code>voaltile</code>修飾もできないため、クラスのオブジェクトへの<code>volatile</code>性が有効になるのは派生先も含めてコンストラクタの呼び出しが完了した後からとなる（同様に、<code>volatile</code>性はデストラクタの呼び出し前までしか有効ではない）。</p>
+<p><code>volatile</code>においてはその領域へのアクセスが重要であり、1度のアクセスは正確に1度だけ行われる必要があり、その順序は前後してはならない。クラスのオブジェクトが<code>volatile</code>な領域に配置されるとき、<code>volatile</code>の保証なしで構築や破棄をすることは間違っている。クラスオブジェクトが<code>volatile</code>な領域に配置される場合は、そのメンバ変数を<code>volatile</code>修飾しておく事が望ましい。</p>
+<p>このように、メンバ関数の<code>volatile</code>修飾は無意味なものであり、使用されていないため、非推奨とする事が提案されていた。</p>
+<p>しかし、集成体のような単純なクラス型においては、クラスオブジェクトの<code>volatile</code>領域への配置とメンバ関数の<code>volatile</code>修飾は使用されている。これに対処するために当初の提案では、メンバ関数の<code>volatile</code>修飾はあるかないかどちらかとする、<code>struct volatile</code>を導入する、などの回避案を提案していた。</p>
+<p>また、<code>std::atomic</code>は意図を持って<code>volatile</code>修飾されたメンバ関数を提供しており、それは有用であるため、これを非推奨としてしまうかどうかも問題となった。</p>
+<p>結局、合意に至ることはできず、メンバ関数の<code>volatile</code>修飾は現状維持となった。</p>
 <h2>備考</h2>
 <p>非推奨化で触れられてはいないが、<code>volatile</code>変数を並行処理の共有変数として使用することは常に間違っている。</p>
-<h2>関連項目</h2>
-<p>（執筆中）</p>
 <h2>参照</h2>
 <ul>
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1152r0.html" target="_blank">P1152R0 Deprecating <code>volatile</code></a></li>
