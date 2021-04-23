@@ -2,9 +2,54 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2021-04-22T14:44:12.175830</updated>
-  <id>08ffc84c-ad61-4ca8-b4f8-de0d9d8a5665</id>
+  <updated>2021-04-23T08:19:16.795476</updated>
+  <id>c34b9a0b-9771-4e95-a318-50cf82a2ad0a</id>
 
+  
+    <entry>
+      <title>operator[] -- basic_string::operator[]: 説明を修正</title>
+      <link href="https://cpprefjp.github.io/reference/string/basic_string/op_at.html"/>
+      <id>157d79c53cf6f8c1c70d2e8cbc87bcb0bfcd2793:reference/string/basic_string/op_at.md</id>
+      <updated>2021-04-23T17:14:32+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/basic_string/op_at.md b/reference/string/basic_string/op_at.md
+index 758c1de41..677688a51 100644
+--- a/reference/string/basic_string/op_at.md
++++ b/reference/string/basic_string/op_at.md
+@@ -13,7 +13,7 @@ reference operator[](size_type pos) noexcept;             // (2) C++11
+ ```
+ 
+ ## 概要
+-`pos` 番目目の要素への参照を取得する。
++`pos` 番目の要素への参照を取得する。
+ 
+ 
+ ## 要件
+@@ -23,13 +23,14 @@ reference operator[](size_type pos) noexcept;             // (2) C++11
+ ## 戻り値
+ - C++03
+     - `pos &amp;lt;` [`size()`](size.md) の場合、`*(`[`begin()`](begin.md) `+ pos)` を返す。
+-    - `pos ==` [`size()`](size.md)の場合、`charT()` の値を持ったオブジェクトへの参照を返す。
++    - `pos ==` [`size()`](size.md) の場合、(1) は `charT()` の値を持ったオブジェクトへの参照を返す。
+     - それ以外の場合は、未定義動作。
+ 
+ - C++11以降
+     - `pos &amp;lt;` [`size()`](size.md) の場合、`*(`[`begin()`](begin.md) `+ pos)` を返す。
+-    - そうでない場合は、`charT()` の値を持ったオブジェクトへの参照を返す。
+-    - 後者の場合、参照を変更するべきではない。
++    - `pos ==` [`size()`](size.md) の場合、`charT()` の値を持ったオブジェクトへの参照を返す。
++    - それ以外の場合は、未定義動作。
++    - (2) において、`pos ==` [`size()`](size.md) の場合に返された参照を `charT()` 以外の値に書き換えた場合の動作は未定義。
+ 
+ 
+ ## 例外
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Ryo Suzuki</name>
+        <email>reputeless+github@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>ほとんどの`volatile`を非推奨化 -- Merge pull request #863 from cpprefjp/tweak-depr-volatile</title>
@@ -1479,133 +1524,6 @@ index 47ffda0ab..d4fe44da6 100644
       <author>
         <name>Akira Takahashi</name>
         <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>ほとんどの`volatile`を非推奨化 -- deprecating volatile : 例を追記、完成</title>
-      <link href="https://cpprefjp.github.io/lang/cpp20/deprecating_volatile.html"/>
-      <id>52d8f5d46fee2a7bdd8d8d30fca37b9fb74820f5:lang/cpp20/deprecating_volatile.md</id>
-      <updated>2021-04-22T15:07:35+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/deprecating_volatile.md b/lang/cpp20/deprecating_volatile.md
-index 70bdae3a2..66537ae43 100644
---- a/lang/cpp20/deprecating_volatile.md
-+++ b/lang/cpp20/deprecating_volatile.md
-@@ -267,6 +267,108 @@ auto&amp;amp;&amp;amp; [a, b, c] = f();  // OK、一時オブジェクト内各要素へのバ
- 
- 非推奨化で触れられてはいないが、`volatile`変数を並行処理の共有変数として使用することは常に間違っている。
- 
-+## 不適切な使用の例
-+
-+提案文書より不適切と思われる`volatile`の用例をいくつか引用する。中には今回の非推奨化の対象となっていないものもある。
-+
-+```cpp
-+struct foo {
-+  int a : 4;
-+  int b : 2;
-+};
-+volatile foo f;
-+
-+// どんな命令が生成され、fの領域の各バイトに何回アクセスするか不透明
-+f.a = 3;
-+```
-+
-+```cpp
-+struct foo {
-+  volatile int a : 4;
-+  int b : 2;
-+};
-+foo f;
-+
-+// f.aの領域へのアクセスが発生するか不透明
-+f.b = 1;
-+```
-+
-+```cpp
-+union foo {
-+  char c;
-+  int i;
-+};
-+volatile foo f;
-+
-+// sizeof(int) [byte]の領域へアクセスするか、sizeof(char) [byte]の領域へアクセスするのか、不透明
-+f.c = 42;
-+```
-+
-+```cpp
-+volatile int i;
-+
-+// iの領域へ何回のアクセスが発生するか不透明
-+// これはどちらも非推奨化
-+i += 42;
-+++i;
-+```
-+
-+```cpp
-+volatile int i, j, k;
-+
-+// iへの代入時にjの値を読み取るか不透明（非推奨化）
-+i = j = k;
-+```
-+
-+```cpp
-+struct big { int arr[32]; };
-+volatile _Atomic struct big ba;
-+struct big b2;
-+
-+// 誰から見てもatomicになるとは限らない
-+// ほとんどの環境で非推奨化
-+ba = b2;
-+```
-+
-+```cpp
-+int what(volatile std::atomic&amp;lt;int&amp;gt; *atom) {
-+  int expected = 42;
-+
-+  // この操作でatomの指す領域に何回アクセスが発生するのか不透明（場合によって変化する）
-+  atom-&amp;gt;compare_exchange_strong(expected, 0xdead);
-+    
-+  return expected;
-+}
-+```
-+
-+```cpp
-+// この関数を呼び出すとき、呼び出し側は何を気にすべきか不透明
-+void what_does_the_caller_care(volatile int);
-+```
-+
-+```cpp
-+// 無意味（非推奨化）
-+volatile int nonsense(void);
-+```
-+
-+```cpp
-+struct retme { int i, j; };
-+
-+// 無意味（非推奨化）
-+volatile struct retme silly(void);
-+```
-+
-+```cpp
-+struct device {
-+  unsigned reg;
-+  device() : reg(0xc0ffee) {}
-+  ~device() { reg = 0xdeadbeef; }
-+};
-+
-+// 初期化（コンストラクタ内）、破棄（デストラクタ内）はともにvolatileではない
-+volatile device dev;
-+```
-+
- ## 参照
- 
- - [P1152R0 Deprecating `volatile`](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1152r0.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
       </author>
     </entry>
   
