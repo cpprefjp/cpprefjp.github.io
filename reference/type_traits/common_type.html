@@ -189,12 +189,12 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2020-01-10T08:37:46">
-        2020年01月10日 08時37分46秒
+      <span itemprop="datePublished" content="2021-05-14T07:41:16">
+        2021年05月14日 07時41分16秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">onihusube</span>
+        <span itemprop="name">yoh</span>
       </span>
       が更新
     </small></p>
@@ -231,7 +231,7 @@
 <p><code>Types...</code>の全ての型は完全型であるか、<code>const/volatile</code>修飾された(あるいはされていない)<code>void</code>か、要素数不明の配列型でなければならない。</p>
 <h2>効果</h2>
 <p><code>common_type</code>は、<code>Types...</code>に含まれる全ての型が暗黙変換可能な型を、メンバ型<code>type</code>として定義する。</p>
-<p>より詳細には、次のように決定される。ただし、C++11では<code><a href="https://cpprefjp.github.io/reference/type_traits/decay.html">decay</a></code>を適用するプロセスが、C++14では下記<code>N == 2</code>の時のプロセスが、それぞれ行われない。</p>
+<p>より詳細には、次のように決定される。ただし、C++11では<code><a href="https://cpprefjp.github.io/reference/type_traits/decay.html">decay</a></code>を適用するプロセスが、C++14では下記<code>N == 2</code>の時のプロセスが、C++17では<code>N == 2</code>のとき<code>COND-RES</code>を適用するプロセスが、それぞれ行われない。</p>
 <p><code>N = sizeof...(Types)</code>として</p>
 <ul>
 <li>
@@ -240,11 +240,14 @@
 <li>
 <p><code>N == 1</code> : <code>Types...</code>内の唯一の型を<code>T</code>とすると、<code>type = common_type_t&lt;T, T&gt;;</code>のように<code>type</code>を定義。</p>
 </li>
-<li><code>N == 2</code> : <code>Types...</code>の１、2番目の型を<code>T1, T2</code>、<code>D1 = decay_t&lt;T1&gt;, D2 = decay_t&lt;T2&gt;</code>として<ul>
-<li><code>T1,T2</code>に対する<code>decay</code>の適用は、少なくとも片方が恒等写像とならない（<code>is_same_v&lt;T1, D1&gt; &amp;&amp; is_same_v&lt;T2, D2&gt; == false</code>となる）場合<br />
-<code>type = common_type_t&lt;D1, D2&gt;;</code>のように<code>type</code>を定義。</li>
-<li>そうではなく、ユーザ定義の特殊化もない場合、<code>type = decay_t&lt;decltype(false ? declval&lt;D1&gt;() : declval&lt;D2&gt;())&gt;;</code>のように<code>type</code>を定義。</li>
-<li>上記の様な型が定義できない場合、メンバ型<code>type</code>は定義されない。</li>
+<li><code>N == 2</code> : <code>Types...</code>の1, 2番目の型を<code>T1, T2</code>、<code>D1 = decay_t&lt;T1&gt;, D2 = decay_t&lt;T2&gt;</code>として<ul>
+<li><code>T1,T2</code>に対する<code>decay</code>適用が少なくとも片方が恒等写像とならない（<code>is_same_v&lt;T1, D1&gt; == false || is_same_v&lt;T2, D2&gt; == false</code>となる）場合、<code>type = common_type_t&lt;D1, D2&gt;;</code></li>
+<li><code>common_type&lt;T1, T2&gt;</code>に対するユーザ定義の特殊化が行われていれば、同特殊化を利用する。</li>
+</ul>
+</li>
+<li><code>C = decay_t&lt;decltype(false ? declval&lt;D1&gt;() : declval&lt;D2&gt;())&gt;</code>が有効な型ならば、<code>type = C;</code></li>
+<li><code>COND-RES(CREF(D1), CREF(D2))</code>が有効な型ならば、<code>type = decay_­t&lt;COND-RES(CREF(D1), CREF(D2))&gt;;</code><ul>
+<li>そうでなければ、メンバ型<code>type</code>は定義されない。</li>
 </ul>
 </li>
 <li><code>N &gt;= 3</code> : <code>Types...</code>の１、2番目の型を<code>T1, T2</code>、残りのパラメータパックを<code>P...</code>とすると、<code>type = common_type_t&lt;common_type_t&lt;T1, T2&gt;, P...&gt;;</code>のように<code>type</code>を定義。<ul>
@@ -258,6 +261,17 @@
 <li><code>T1, T2</code>はともに関数型でもなく</li>
 <li><code>T1, T2</code>はともに参照型でもなく</li>
 <li><code>T1, T2</code>はともにCV修飾もされていない</li>
+</ul>
+<p><code>COND-RES</code>や<code>CREF</code>はそれぞれ次のように定義される型を表す説明専用のものである。</p>
+<ul>
+<li><code>CREF(X)</code><ul>
+<li><code>add_­lvalue_­reference_­t&lt;const remove_­reference_­t&lt;A&gt;&gt;</code></li>
+</ul>
+</li>
+<li><code>COND-REF(X, Y)</code><ul>
+<li><code>decltype(false ? declval&lt;X(&amp;)()&gt;()() : declval&lt;Y(&amp;)()&gt;()())</code></li>
+</ul>
+</li>
 </ul>
 <h2>特殊化</h2>
 <p><code>common_type</code>は以下の条件を満たす場合に、2引数のもの（<code>common_type&lt;T1, T2&gt;</code>）に限ってユーザー定義の特殊化が許可されている。</p>
@@ -372,6 +386,10 @@
 </ul>
 </li>
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0435r1.pdf" target="_blank">P0453R1 Resolving LWG Issues re common_type</a></li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0898r3.pdf" target="_blank">P0898R3 Standard Library Concepts</a><ul>
+<li>C++20で<code>COND-RES</code>, <code>CREF</code>操作を利用するステップが追加された。</li>
+</ul>
+</li>
 </ul></div>
 
       </div>

@@ -2,9 +2,75 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2021-05-14T02:17:47.063942</updated>
-  <id>5778edca-a3b2-4050-8323-0d8e194c4315</id>
+  <updated>2021-05-14T07:47:32.438669</updated>
+  <id>483e826b-3fed-4d4a-abba-df1d6adebc52</id>
 
+  
+    <entry>
+      <title>common_type -- common_type: P0898R3反映(C++20)</title>
+      <link href="https://cpprefjp.github.io/reference/type_traits/common_type.html"/>
+      <id>8a573e3576591d254071659cfa996cb87bfec479:reference/type_traits/common_type.md</id>
+      <updated>2021-05-14T16:41:16+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/type_traits/common_type.md b/reference/type_traits/common_type.md
+index 6397eed10..bc84e9947 100644
+--- a/reference/type_traits/common_type.md
++++ b/reference/type_traits/common_type.md
+@@ -27,18 +27,19 @@ namespace std {
+ ## 効果
+ `common_type`は、`Types...`に含まれる全ての型が暗黙変換可能な型を、メンバ型`type`として定義する。
+ 
+-より詳細には、次のように決定される。ただし、C++11では[`decay`](/reference/type_traits/decay.md)を適用するプロセスが、C++14では下記`N == 2`の時のプロセスが、それぞれ行われない。
++より詳細には、次のように決定される。ただし、C++11では[`decay`](/reference/type_traits/decay.md)を適用するプロセスが、C++14では下記`N == 2`の時のプロセスが、C++17では`N == 2`のとき`COND-RES`を適用するプロセスが、それぞれ行われない。
+ 
+ `N = sizeof...(Types)`として
+ 
+ - `N == 0` : メンバ型`type`は定義されない。
+ 
+ - `N == 1` : `Types...`内の唯一の型を`T`とすると、`type = common_type_t&amp;lt;T, T&amp;gt;;`のように`type`を定義。
+-- `N == 2` : `Types...`の１、2番目の型を`T1, T2`、`D1 = decay_t&amp;lt;T1&amp;gt;, D2 = decay_t&amp;lt;T2&amp;gt;`として
+-	- `T1,T2`に対する`decay`の適用は、少なくとも片方が恒等写像とならない（`is_same_v&amp;lt;T1, D1&amp;gt; &amp;amp;&amp;amp; is_same_v&amp;lt;T2, D2&amp;gt; == false`となる）場合  
+-	`type = common_type_t&amp;lt;D1, D2&amp;gt;;`のように`type`を定義。
+-	- そうではなく、ユーザ定義の特殊化もない場合、`type = decay_t&amp;lt;decltype(false ? declval&amp;lt;D1&amp;gt;() : declval&amp;lt;D2&amp;gt;())&amp;gt;;`のように`type`を定義。
+-	- 上記の様な型が定義できない場合、メンバ型`type`は定義されない。
++- `N == 2` : `Types...`の1, 2番目の型を`T1, T2`、`D1 = decay_t&amp;lt;T1&amp;gt;, D2 = decay_t&amp;lt;T2&amp;gt;`として
++	- `T1,T2`に対する`decay`適用が少なくとも片方が恒等写像とならない（`is_same_v&amp;lt;T1, D1&amp;gt; == false || is_same_v&amp;lt;T2, D2&amp;gt; == false`となる）場合、`type = common_type_t&amp;lt;D1, D2&amp;gt;;`
++	- `common_type&amp;lt;T1, T2&amp;gt;`に対するユーザ定義の特殊化が行われていれば、同特殊化を利用する。
++  - `C = decay_t&amp;lt;decltype(false ? declval&amp;lt;D1&amp;gt;() : declval&amp;lt;D2&amp;gt;())&amp;gt;`が有効な型ならば、`type = C;`
++  - `COND-RES(CREF(D1), CREF(D2))`が有効な型ならば、`type = decay_­t&amp;lt;COND-RES(CREF(D1), CREF(D2))&amp;gt;;`
++	- そうでなければ、メンバ型`type`は定義されない。
+ - `N &amp;gt;= 3` : `Types...`の１、2番目の型を`T1, T2`、残りのパラメータパックを`P...`とすると、`type = common_type_t&amp;lt;common_type_t&amp;lt;T1, T2&amp;gt;, P...&amp;gt;;`のように`type`を定義。
+ 	- 先頭2つの型の共通型を求めて、その型と3番目の型の共通型を求めて、その型と4番目の...というように再帰的に`common_type`を適用していく。
+ 
+@@ -50,6 +51,15 @@ namespace std {
+ - `T1, T2`はともに参照型でもなく
+ - `T1, T2`はともにCV修飾もされていない
+ 
++
++`COND-RES`や`CREF`はそれぞれ次のように定義される型を表す説明専用のものである。
++
++- `CREF(X)`
++    - `add_­lvalue_­reference_­t&amp;lt;const remove_­reference_­t&amp;lt;A&amp;gt;&amp;gt;`
++- `COND-REF(X, Y)`
++    - `decltype(false ? declval&amp;lt;X(&amp;amp;)()&amp;gt;()() : declval&amp;lt;Y(&amp;amp;)()&amp;gt;()())`
++
++
+ ## 特殊化
+ `common_type`は以下の条件を満たす場合に、2引数のもの（`common_type&amp;lt;T1, T2&amp;gt;`）に限ってユーザー定義の特殊化が許可されている。
+ 
+@@ -168,3 +178,5 @@ struct common_type&amp;lt;T, U, V...&amp;gt; {
+ - [LWG Issue 2141. `common_type` trait produces reference types](http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#2141)
+     - C++11では、`common_type`の結果が参照型になる場合があった。C++14で`decay_t`を通すことにしたことにより、参照型が返されることがなくなった。
+ - [P0453R1 Resolving LWG Issues re common_type](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0435r1.pdf)
++- [P0898R3 Standard Library Concepts](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0898r3.pdf)
++    - C++20で`COND-RES`, `CREF`操作を利用するステップが追加された。
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>map -- map : pmrエイリアスのコピペミス修正</title>
@@ -4504,59 +4570,6 @@ index 000000000..47b24b3cf
       <author>
         <name>onihusube</name>
         <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>ラムダ式の初期化キャプチャでのパック展開を許可 -- cpp20/allow_pack_expansion_in_lambda_init_capture: P2095R0追記</title>
-      <link href="https://cpprefjp.github.io/lang/cpp20/allow_pack_expansion_in_lambda_init_capture.html"/>
-      <id>9e5bcacf264f433d51a3959057b7da6ba325dcee:lang/cpp20/allow_pack_expansion_in_lambda_init_capture.md</id>
-      <updated>2021-05-12T10:19:35+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/allow_pack_expansion_in_lambda_init_capture.md b/lang/cpp20/allow_pack_expansion_in_lambda_init_capture.md
-index 0a89edfb6..1efc4a164 100644
---- a/lang/cpp20/allow_pack_expansion_in_lambda_init_capture.md
-+++ b/lang/cpp20/allow_pack_expansion_in_lambda_init_capture.md
-@@ -56,16 +56,27 @@ auto g([[maybe_unused]] Args... args) {};
- 
- template &amp;lt;class... Args&amp;gt;
- auto f(Args... args) {
--  [...args=std::move(args)] { // 初期化キャプチャでのパック展開
-+  return [...args=std::move(args)] { // 初期化キャプチャでのパック展開
- 
-     g(args...); // ラムダ式内で、init-capture パック(args)を使う例
- 
-   };
- }
- 
-+template &amp;lt;class... Args&amp;gt;
-+void h(Args... args) {
-+  auto lm = [&amp;amp;...refs=args] { // 参照キャプチャ形式へのパック展開
-+    // refsの各要素はargsの各要素への参照となる
-+  };
-+
-+  lm();
-+} // argsの各要素は関数h終了にともなって生存期間終了するため、
-+  // refsの各要素(参照型)へアクセスできるのはここまで。
-+
- int main()
- {
--    f(1, 3.14, &amp;#34;Hello, World!&amp;#34;);
-+  f(1, 3.14, &amp;#34;Hello, World!&amp;#34;);
-+  h(1, 3.14, &amp;#34;Hello, World!&amp;#34;);
- }
- ```
- 
-@@ -126,3 +137,4 @@ auto f(Args... args) {
- ## 参照
- - [P0780R2 Allow pack expansion in lambda init-capture](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0780r2.html)
- - [CWG 1760: Access of member corresponding to init-capture](http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#1760)
-+- [P2095R0 Resolve lambda init-capture pack grammar (CWG2378)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2095r0.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
       </author>
     </entry>
   
