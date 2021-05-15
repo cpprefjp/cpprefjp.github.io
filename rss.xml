@@ -2,9 +2,35 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2021-05-15T14:43:49.775224</updated>
-  <id>9f87f105-cf1d-41e0-b026-f6dd7df0f8ad</id>
+  <updated>2021-05-15T15:07:43.631648</updated>
+  <id>1f13f6bc-1db3-4054-bb3d-207c5bbf4db0</id>
 
+  
+    <entry>
+      <title>operator= -- §処理系 内のダブっている箇所を消去</title>
+      <link href="https://cpprefjp.github.io/reference/unordered_map/unordered_map/op_assign.html"/>
+      <id>1694b472b8415f0d53364ce27823a17ca68a8f25:reference/unordered_map/unordered_map/op_assign.md</id>
+      <updated>2021-05-16T00:02:48+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/unordered_map/unordered_map/op_assign.md b/reference/unordered_map/unordered_map/op_assign.md
+index 01eb369e4..a037e044f 100644
+--- a/reference/unordered_map/unordered_map/op_assign.md
++++ b/reference/unordered_map/unordered_map/op_assign.md
+@@ -76,7 +76,6 @@ unordered_map&amp;amp; operator=(initializer_list&amp;lt;value_type&amp;gt; il); // (3)
+ - C++11
+ 
+ ### 処理系
+-- [Clang](/implementation.md#clang): -
+ - [Clang](/implementation.md#clang): 3.0, 3.1
+ - [GCC](/implementation.md#gcc): 4.4.7, 4.5.3, 4.6.3, 4.7.0
+ - [ICC](/implementation.md#icc): ?
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Kisaragi</name>
+        <email>48310258+KisaragiEffective@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>common_type -- common_type: fix indent</title>
@@ -158,66 +184,6 @@ index ea97bc459..ef886967a 100644
    }
  }
  ```
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>constexpr関数内で未評価のインラインアセンブリを許可することによる組み込み関数のconstexpr有効化 -- constexpr関数内のasmの許可 : サンプルコードの修正</title>
-      <link href="https://cpprefjp.github.io/lang/cpp20/enabling_constexpr_intrinsics_by_permitting_unevaluated_inline-assembly_in_constexpr_functions.html"/>
-      <id>544cce8d27e65b910d85726bf8bcb2de7c1adb2f:lang/cpp20/enabling_constexpr_intrinsics_by_permitting_unevaluated_inline-assembly_in_constexpr_functions.md</id>
-      <updated>2021-05-13T16:59:54+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/enabling_constexpr_intrinsics_by_permitting_unevaluated_inline-assembly_in_constexpr_functions.md b/lang/cpp20/enabling_constexpr_intrinsics_by_permitting_unevaluated_inline-assembly_in_constexpr_functions.md
-index 027f884a5..69f592443 100644
---- a/lang/cpp20/enabling_constexpr_intrinsics_by_permitting_unevaluated_inline-assembly_in_constexpr_functions.md
-+++ b/lang/cpp20/enabling_constexpr_intrinsics_by_permitting_unevaluated_inline-assembly_in_constexpr_functions.md
-@@ -38,16 +38,15 @@ constexpr double inner_product_2d(const double (&amp;amp;v1)[2], const double (&amp;amp;v2)[2])
-   if (std::is_constant_evaluated()) {
-     dp = v1[0]*v2[0] + v1[1]*v2[1];
-   } else {
--    constexpr int imm8 = 0b110001;
-     asm volatile (
--      &amp;#34;movlpd %%xmm0, %1;&amp;#34;
--      &amp;#34;movhpd %%xmm0, %2;&amp;#34;
--      &amp;#34;movlpd %%xmm1, %3;&amp;#34;
--      &amp;#34;movhpd %%xmm1, %4;&amp;#34;
--      &amp;#34;dppd %%xmm0, %%xmm1, %5;&amp;#34;
--      &amp;#34;movlpd %0, %%xmm0&amp;#34;
-+      &amp;#34;movlpd %1, %%xmm0\n&amp;#34;
-+      &amp;#34;movhpd %2, %%xmm0\n&amp;#34;
-+      &amp;#34;movlpd %3, %%xmm1\n&amp;#34;
-+      &amp;#34;movhpd %4, %%xmm1\n&amp;#34;
-+      &amp;#34;dppd $0b110001, %%xmm1, %%xmm0\n&amp;#34;
-+      &amp;#34;movlpd %%xmm0, %0\n&amp;#34;
-       : &amp;#34;=m&amp;#34;(dp)
--      : &amp;#34;m&amp;#34;(v1[0]), &amp;#34;m&amp;#34;(v1[1]), &amp;#34;m&amp;#34;(v2[0]), &amp;#34;m&amp;#34;(v2[1]), &amp;#34;N&amp;#34;(imm8)
-+      : &amp;#34;m&amp;#34;(v1[0]), &amp;#34;m&amp;#34;(v1[1]), &amp;#34;m&amp;#34;(v2[0]), &amp;#34;m&amp;#34;(v2[1])
-     );
-   }
- 
-@@ -75,9 +74,7 @@ int main() {
- * is_constant_evaluated[link /reference/type_traits/is_constant_evaluated.md]
- * sqrt2[link /reference/numbers/sqrt2.md]
- 
--### 出力例
--
--GCC 11.1 x86-64 `-masm=intel`オプションを設定して実行
-+### 出力例（GCC 11.1 x86-64）
- 
- ```
- 0
-@@ -102,4 +99,4 @@ GCC 11.1 x86-64 `-masm=intel`オプションを設定して実行
- 
- ## 参照
- 
--- [P1668R1 Enabling constexpr Intrinsics By Permitting Unevaluated inline-assembly in constexpr Functions](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1668r1.html)
-\ No newline at end of file
-+- [P1668R1 Enabling constexpr Intrinsics By Permitting Unevaluated inline-assembly in constexpr Functions](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1668r1.html)
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
