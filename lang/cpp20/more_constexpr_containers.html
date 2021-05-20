@@ -189,8 +189,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2021-05-19T07:10:27">
-        2021年05月19日 07時10分27秒
+      <span itemprop="datePublished" content="2021-05-20T07:56:33">
+        2021年05月20日 07時56分33秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -236,11 +236,41 @@
 <span class="k">static_assert</span><span class="p">(</span><span class="n">check_cpp_file</span><span class="p">(</span><span class="s">"main.cpp"</span><span class="p">));</span>  <span class="c1">// OK</span>
 </code></pre></div>
 </p>
+<p>これは主に以下の変更によって達成されている。</p>
+<ul>
+<li>デストラクタの<code>constexpr</code>対応</li>
+<li><code>new/delete</code>式の<code>constexpr</code>対応</li>
+<li><code>std::allocator/std::allocator_traits</code>の<code>constexpr</code>対応</li>
+</ul>
 <h2>仕様</h2>
-<p>(執筆中)</p>
 <h3><code>constexpr</code>デストラクタ</h3>
+<p>デストラクタに<code>constexpr</code>を付加し、デストラクタを定数式で実行する事が可能となる。これはユーザー定義のデストラクタでも同様。</p>
+<p>そのような<code>constexpr</code>デストラクタの本体、およびそのクラスの基底クラスと非静的メンバ変数の全てのデストラクタは定数式で実行可能でなくてはならない。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">struct</span> <span class="nl">C</span> <span class="p">:</span> <span class="n">base</span> <span class="p">{</span>
+
+  <span class="c1">// constexprデフォルトデストラクタ</span>
+  <span class="k">constexpr</span> <span class="o">~</span><span class="n">C</span><span class="p">()</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+
+  <span class="c1">// あるいは定義しても良い</span>
+  <span class="k">constexpr</span> <span class="o">~</span><span class="n">C</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// 何か定数式で可能な処理</span>
+    <span class="c1">// ...</span>
+  <span class="p">}</span>
+
+  <span class="c1">// 全ての基底クラスおよび非静的メンバ変数もまた定数式でデストラクト可能でなければならない</span>
+  <span class="kt">int</span> <span class="n">n</span><span class="p">;</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/string/basic_string.html">std::string</a></span> <span class="n">str</span><span class="p">;</span> 
+<span class="p">};</span>
+</code></pre></div>
+</p>
+<p><code>default</code>指定した時の振る舞いは、<code>constexpr</code>コンストラクタに<code>default</code>指定した時の振る舞いに準ずる。例えば、<code>default</code>デストラクタ（特に、トリビアルデストラクタ）はその処理が全て定数式で実行可能であるならば、暗黙的に<code>constexpr</code>である。</p>
+<p>これに伴って、クラス型のリテラル型は<code>constexpr</code>デストラクタを持つ事が追加で要求されるようになる。そして、クラス型の<code>constexpr</code>変数は、その型がリテラル型で初期化が定数式で可能であり、かつデストラクタが定数式で実行可能でなくてはならなくなる。</p>
+<p>C++17までは、クラス型のリテラル型はトリビアルデストラクタを要求されており、その<code>constexpr</code>オブジェクトは初期化が定数式で実行可能であることだけが要求されていた。そのため、C++17までのリテラル型はC++20においてもリテラル型であり、定数式での扱いは変わらない。</p>
+<p>なお、クラスが仮想基底クラスを持つ時、デストラクタもコンストラクタも<code>constexpr</code>指定することはできない。</p>
 <h3><code>new/delete</code>式</h3>
+<p>(執筆中)</p>
 <h3><code>std::allocator/std::allocator_traits</code></h3>
+<p>(執筆中)</p>
 <h2>この機能が必要になった背景・経緯</h2>
 <p><code>std::vector</code>をはじめとする可変サイズのコンテナは実行時に非常に有用であるため、同様に定数式においても有用である可能性があり、その必要性がC++コミュニティからも示されいていた（<a href="https://youtu.be/HMB9oXFobJc" target="_blank">C++Now 2017: Ben Deane &amp; Jason Turner "constexpr ALL the things!"</a>、<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0810r0.pdf" target="_blank">P0810R0 constexpr in Practice</a>など）。</p>
 <p>また、静的リフレクション機能の導入にあたっては、コンパイル時に使用可能な可変サイズコンテナおよび可変サイズの文字列型が必要となっていた。例えば、ある型のテンプレート引数をクエリするコードは次のようなものになる</p>
