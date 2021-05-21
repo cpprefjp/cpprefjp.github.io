@@ -189,8 +189,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2021-05-20T07:56:33">
-        2021年05月20日 07時56分33秒
+      <span itemprop="datePublished" content="2021-05-21T06:16:19">
+        2021年05月21日 06時16分19秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -268,7 +268,64 @@
 <p>C++17までは、クラス型のリテラル型はトリビアルデストラクタを要求されており、その<code>constexpr</code>オブジェクトは初期化が定数式で実行可能であることだけが要求されていた。そのため、C++17までのリテラル型はC++20においてもリテラル型であり、定数式での扱いは変わらない。</p>
 <p>なお、クラスが仮想基底クラスを持つ時、デストラクタもコンストラクタも<code>constexpr</code>指定することはできない。</p>
 <h3><code>new/delete</code>式</h3>
-<p>(執筆中)</p>
+<p>定数式では未定義動作を可能な限り検出しコンパイルエラーとしなければならない。<code>operator new/operator delete</code>や<code>malloc/free</code>はその実行に伴ってポインタの再解釈（<code>void*</code>への/からのキャスト）が必要となるが、ポインタの再解釈は検出しづらい未定義動作に繋がりうるため定数式では禁止されている。</p>
+<p>そのため、そのようなポインタの再解釈が発生しない動的メモリ確保機能である<code>new/delete</code>式がコンパイル時の動的メモリ確保・解放の方法として許可される。<code>new/delete</code>式は<code>operator new/operator delete</code>とは異なり、メモリの確保・解放とその領域のオブジェクト構築・破棄を一挙に行う言語機能である。</p>
+<p>ただし、コンパイル時に実行される<code>new</code>式はグローバルのオーバーロード可能な<code><a href="https://cpprefjp.github.io/reference/new/op_new.html">operator new</a></code>を呼び出すものでなくてはならない。そうではない<code>new</code>式の定数式における評価はコンパイルエラーとなる。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">struct</span> <span class="n">S</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+
+  <span class="k">constexpr</span> <span class="kt">void</span><span class="o">*</span> <span class="k">operator</span> <span class="nf">new</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/cstddef/size_t.html">std::size_t</a></span> <span class="n">n</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">::</span><span class="k">operator</span> <span class="k">new</span><span class="p">(</span><span class="n">n</span><span class="p">);</span> <span class="c1">// 定数式で実行可能ではない</span>
+  <span class="p">}</span>
+
+  <span class="k">constexpr</span> <span class="kt">void</span> <span class="k">operator</span> <span class="nf">delete</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">p</span><span class="p">)</span> <span class="k">noexcept</span> <span class="p">{</span>
+    <span class="o">::</span><span class="k">operator</span> <span class="k">delete</span><span class="p">(</span><span class="n">p</span><span class="p">);</span> <span class="c1">// 定数式で実行可能ではない</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="k">constexpr</span> <span class="kt">int</span> <span class="nf">f</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">S</span><span class="o">*</span> <span class="n">s</span> <span class="o">=</span> <span class="k">new</span> <span class="n">S</span><span class="p">{};</span> <span class="c1">// NG</span>
+
+  <span class="n">s</span><span class="o">-&gt;</span><span class="n">n</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">s</span><span class="o">-&gt;</span><span class="n">n</span><span class="p">;</span>
+
+  <span class="k">delete</span> <span class="n">s</span><span class="p">;</span> <span class="c1">// NG</span>
+
+  <span class="k">return</span> <span class="n">n</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<p>そして、コンパイル時に<code>new</code>式で確保されたメモリ領域は、コンパイル時に<code>delete</code>式によって解放されなければならない。その対応が取れていない<code>new/delete</code>式の呼び出しは、どちらもコンパイルエラーとなる。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">constexpr</span> <span class="kt">int</span> <span class="nf">f</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">int</span><span class="o">*</span> <span class="n">d</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="p">;</span>
+
+  <span class="o">*</span><span class="n">d</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="o">*</span><span class="n">d</span><span class="p">;</span>
+
+  <span class="c1">// 忘れる</span>
+  <span class="c1">//delete d;</span>
+
+  <span class="k">return</span> <span class="n">n</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span> <span class="p">()</span> <span class="p">{</span>
+  <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">f</span><span class="p">();</span>  <span class="c1">// NG、コンパイルエラー</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<p>したがって、C++20のコンパイル時動的メモリ確保の仕様では、コンパイル時に確保したメモリ領域を実行時へ持ち越すことはできない。</p>
+<p>実際には、これらの定数式中の<code>new</code>式の評価は常に省略されている。この省略はC++14より許可されている最適化の一環として行われ、スタック領域などのストレージを別途割り当てることで動的メモリ確保を避けるものである。対応する<code>delete</code>式の呼び出しも同様に省略され、定数式においてはメモリの確保と解放が一貫していることのマーカーとしての役割しか持たない。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">constexpr</span> <span class="kt">void</span> <span class="nf">f</span><span class="p">()</span> <span class="p">{</span>
+  <span class="c1">// このコードは定数式中で</span>
+  <span class="kt">int</span><span class="o">*</span> <span class="n">d</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="p">{</span><span class="mi">2</span><span class="p">};</span>
+  <span class="k">delete</span> <span class="n">d</span><span class="p">;</span>
+
+  <span class="c1">// 次のようなコードと等価になる</span>
+  <span class="kt">int</span> <span class="n">d</span><span class="p">{</span><span class="mi">2</span><span class="p">};</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<p>実際にはどこのストレージが提供されるかは規定されていない。ただ、定数式が実行される環境はC++コンパイラの内蔵する<code>constexpr</code>インタプリタ上であり、その環境のメモリ領域とはコンパイラ実行環境のヒープ領域が対応する。</p>
 <h3><code>std::allocator/std::allocator_traits</code></h3>
 <p>(執筆中)</p>
 <h2>この機能が必要になった背景・経緯</h2>
@@ -295,6 +352,7 @@
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0784r5.html" target="_blank">P0784R5 More constexpr containers</a></li>
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0784r6.html" target="_blank">P0784R6 More constexpr containers</a></li>
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0784r7.html" target="_blank">P0784R7 More constexpr containers</a></li>
+<li><a href="https://ezoeryou.github.io/cpp-intro/#動的メモリー確保" target="_blank">動的メモリー確保 - 江添亮の入門C++</a></li>
 </ul></div>
 
       </div>
