@@ -189,8 +189,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2021-05-23T17:59:15">
-        2021年05月23日 17時59分15秒
+      <span itemprop="datePublished" content="2021-05-23T18:36:27">
+        2021年05月23日 18時36分27秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -355,6 +355,20 @@
 <li>モジュールインターフェースユニットを持つことはできない。</li>
 </ul>
 <p>グローバルモジュールとは、要するに従来通りの、モジュールではないコードのことである。C++20では、<code>main</code>関数はグローバルモジュールに属していなければならない。</p>
+<h4>グローバルモジュールフラグメント</h4>
+<p>モジュール宣言の前にグローバルモジュールの実装を書ける。これをグローバルモジュールフラグメントという。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="n">module</span><span class="p">;</span>             <span class="c1">// グローバルモジュールフラグメントの宣言</span>
+
+<span class="cp">#include</span> <span class="cpf">"lib.h"</span><span class="cp"></span>
+
+<span class="k">export</span> <span class="n">module</span> <span class="n">foo</span><span class="p">;</span>  <span class="c1">// モジュールの宣言(この上の行までがグローバルモジュールフラグメント)</span>
+</code></pre></div>
+</p>
+<ul>
+<li>グローバルモジュールフラグメント内の宣言や定義は、後続のモジュールではなくグローバルモジュールに属する。</li>
+<li>グローバルモジュールフラグメントにはプリプロセッサディレクティブ以外を書くことはできない。</li>
+<li>グローバルモジュールフラグメント内の宣言は、後続のモジュールに属する宣言から参照されていない場合は、<strong>破棄</strong>(discard)される。</li>
+</ul>
 <h3>エクスポート</h3>
 <p>宣言の前に<code>export</code>キーワードを付加することでその宣言をエクスポートできる。</p>
 <p>エクスポート宣言はモジュールインターフェースユニット内の名前空間スコープで行える。ただし、以下の場所では不可。</p>
@@ -433,6 +447,7 @@
 名前が可視であるとき、かつそのときに限り、名前は名前探索の候補となる。</p>
 <p>マクロや<code>using namespace</code>はエクスポートできないので、インポートによって取り込まれることはない。
 ヘッダーファイル中での <code>using namespace</code> はしばしば避けられるが、モジュールでは問題なく使うことができる。</p>
+<p>モジュールユニットの中では、インポート宣言はモジュールユニットの本体(グローバルモジュールフラグメントではない部分)の先頭で行わなければならない。</p>
 <h4>再エクスポート</h4>
 <p>インポート宣言もエクスポートできる。これを再エクスポートという。</p>
 <p><div class="codehilite"><pre><span></span><code><span class="k">export</span> <span class="n">import</span> <span class="n">lib</span><span class="p">;</span> <span class="c1">// libの再エクスポート</span>
@@ -484,11 +499,8 @@
 <p>同じトークン列であれば再定義しても良いというODRの例外は、その定義が名前のあるモジュールに属する場合は適用されない。</p>
 <p>この例外はヘッダーファイルにクラス定義などを書いてインクルードした際にODR違反にならないための規定である。
 モジュールを定義する場合はヘッダーファイルは使わないから、実質的な影響はない。</p>
-<h2>後方互換性のための機能</h2>
-<h3>グローバルモジュールフラグメント</h3>
-<p>モジュール内ではODRの例外が働かないため、複数のモジュールが<code>#include</code>で同じ宣言を取り込んだ場合、ODR違反となってしまう。
-このため、モジュール内では基本的に<code>#include</code>を使用することはできない。</p>
-<p>しかし、それでは従来のライブラリが利用できないため、モジュール宣言の前にグローバルモジュールの実装を書けるようになっている。これをグローバルモジュールフラグメントという。</p>
+<p>複数のモジュールが<code>#include</code>で同じ宣言を取り込んだ場合はODR違反となってしまうので、基本的に名前のあるモジュールの本体で<code>#include</code>を使用してはならない。</p>
+<p>モジュールユニットの中で<code>#include</code>を使用したい場合、グローバルモジュールフラグメント内で行えば従来通りにODRの例外となる。</p>
 <p><div class="codehilite"><pre><span></span><code><span class="n">module</span><span class="p">;</span>             <span class="c1">// グローバルモジュールフラグメントの宣言</span>
 
 <span class="cp">#include</span> <span class="cpf">"lib.h"    // "lib.h"中の宣言はグローバルモジュールに属する(ODRの例外が有効)。</span><span class="cp"></span>
@@ -498,10 +510,6 @@
 <span class="cp">#include</span> <span class="cpf">"lib.h"    // "lib.h"中の宣言がモジュールfooに含まれてしまう(ODRの例外なし = ODR違反の可能性大)。</span><span class="cp"></span>
 </code></pre></div>
 </p>
-<p>モジュールユニットでの<code>#include</code>はグローバルモジュールフラグメントで行うべきである。</p>
-<p>グローバルモジュールフラグメントにはプリプロセッサディレクティブのみ記述できる。
-翻訳フェーズ4(=プリプロセッサ実行時)以前の段階でそれ以外の記述がある場合は、エラーとなる。</p>
-<p>グローバルモジュールフラグメント内の宣言は、後続のモジュールに属する宣言から参照されていない場合は、<strong>破棄</strong>(discard)される。</p>
 <h3>ヘッダーユニット</h3>
 <p>一部のヘッダーファイルは、モジュールとしてインポートすることができる。この機能およびヘッダーファイルから生成される翻訳単位をヘッダーユニットという。</p>
 <p><div class="codehilite"><pre><span></span><code><span class="n">import</span> <span class="o">&lt;</span><span class="n">foo</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span><span class="p">;</span> <span class="c1">// foo.hをヘッダーユニットとしてインポート</span>
