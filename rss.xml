@@ -2,9 +2,189 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2021-05-24T01:23:51.023219</updated>
-  <id>267ef4a4-1042-48ca-b7de-f62be1745d59</id>
+  <updated>2021-05-24T06:43:11.092173</updated>
+  <id>ca3abd9f-b4de-4a06-9109-fe9f61d51e5d</id>
 
+  
+    <entry>
+      <title>可変サイズをもつコンテナの`constexpr`化 -- constexpr allocator/allocator_traits追記 #688</title>
+      <link href="https://cpprefjp.github.io/lang/cpp20/more_constexpr_containers.html"/>
+      <id>f704c1642877fd4cf1ac483b9d97f5646ba713e7:lang/cpp20/more_constexpr_containers.md</id>
+      <updated>2021-05-24T15:37:38+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/more_constexpr_containers.md b/lang/cpp20/more_constexpr_containers.md
+index 7facfa381..b3fd1bf20 100644
+--- a/lang/cpp20/more_constexpr_containers.md
++++ b/lang/cpp20/more_constexpr_containers.md
+@@ -72,7 +72,24 @@ C++17までは、クラス型のリテラル型はトリビアルデストラク
+ 
+ そのため、そのようなポインタの再解釈が発生しない動的メモリ確保機能である`new/delete`式がコンパイル時の動的メモリ確保・解放の方法として許可される。`new/delete`式は`operator new/operator delete`とは異なり、メモリの確保・解放とその領域のオブジェクト構築・破棄を一挙に行う言語機能である。
+ 
+-ただし、コンパイル時に実行される`new`式はグローバルのオーバーロード可能な[`operator new`](/reference/new/op_new.md)を呼び出すものでなくてはならない。そうではない`new`式の定数式における評価はコンパイルエラーとなる。
++```cpp
++constexpr int f() {
++  // 確保と構築
++  int* p = new int;
++
++  *p = 20;
++  int n = *p;
++
++  // 破棄と解放
++  delete p;
++
++  return n;
++}
++```
++
++当然ながら、`new/delete`式によって動的メモリ確保しようとする型はリテラル型であり、呼び出されるコンストラクタとデストラクタは共に定数式で実行可能でなければならない。
++
++また、コンパイル時に実行される`new`式はグローバルのオーバーロード可能な[`operator new`](/reference/new/op_new.md)を呼び出すものでなくてはならない。そうではない`new`式の定数式における評価はコンパイルエラーとなる。
+ 
+ ```cpp
+ struct S {
+@@ -99,13 +116,13 @@ constexpr int f() {
+ 
+ ```cpp
+ constexpr int f() {
+-  int* d = new int;
++  int* p = new int;
+ 
+-  *d = 20;
+-  int n = *d;
++  *p = 20;
++  int n = *p;
+ 
+   // 忘れる
+-  //delete d;
++  //delete p;
+ 
+   return n;
+ }
+@@ -130,11 +147,103 @@ constexpr void f() {
+ }
+ ```
+ 
+-実際にはどこのストレージが提供されるかは規定されていない。ただ、定数式が実行される環境はC++コンパイラの内蔵する`constexpr`インタプリタ上であり、その環境のメモリ領域とはコンパイラ実行環境のヒープ領域が対応する。
++実際にはどこのストレージが提供されるかは規定されていない。
+ 
+ ### `std::allocator/std::allocator_traits`
+-(執筆中)
+ 
++標準ライブラリのコンテナ等は`new/delete`式を直接利用するわけではなく、`std::allocator_traits`を介して`std::allocator`を使用してメモリ確保・解放とオブジェクト構築・破棄を行う。`std::allocator/std::allocator_traits`も見かけ上はポインタの再解釈を必要とせずにそれを行うため、`std::allocator/std::allocator_traits`によるメモリ確保周りの機能もまた、コンパイル時の動的メモリ確保・解放の方法として許可される。
++
++`std::allocator/std::allocator_traits`では`new/delete`式とは異なり、メモリの確保・解放（[`allocate`](/reference/memory/allocator/allocate.md)/[`deallocate`](/reference/memory/allocator/deallocate.md)）とその領域へのオブジェクト構築・破棄（[`construct`](/reference/memory/allocator_traits/construct.md)/[`destroy`](/memory/allocator_traits/destroy.md)）の操作が複合していない。オブジェクト構築・破棄においては*placement new*と*pseudo-destructor call*が必要となるが、*placement new*はポインタの再解釈が必要となることから許可されず、そのために不必要であるので*pseudo-destructor call*も許可されない。
++
++代わりに、*placement new*を行うライブラリ機能である[`construct_at`](/reference/memory/construct.md.nolink)を追加し、*pseudo-destructor call*を行う[`destroy_at`](/reference/memory/destroy_at.md)と共に`constexpr`を付加し定数式で使用可能とする。これによって、ポインタ再解釈を回避しつつ*placement new*と*pseudo-destructor call*が定数式で使用可能となる。
++
++そして、`std::allocator_traits`の`construct`と`destroy`は`construct_at/destroy_at`を呼び出して処理を行うように変更される。なお、これによって実行時の振る舞いが変化することはない。
++
++```cpp
++constexpr int f() {
++  std::allocator&amp;lt;int&amp;gt; alloc{};
++
++  // 確保と構築
++  int* p = alloc.allocate(1);
++  p = std::construct_at(p);
++
++  *p = 20;
++  int n = *p;
++
++  // 破棄と解放
++  std::destroy_at(p);
++  alloc.deallocate();
++
++  return n;
++}
++```
++
++当然ながら、`std::allocator`によって動的メモリ確保しようとする型はリテラル型であり、`construct_at/destroy_at`によって呼び出されるコンストラクタとデストラクタは共に定数式で実行可能でなければならない。
++
++また、`std::allocator&amp;lt;T&amp;gt;::allocate`が呼び出される場合は必ずその領域は`std::allocator&amp;lt;T&amp;gt;::deallocate`によって解放されていなければならず、`deallocate`と`construct_at`、`destroy_at`の引数の`T*`のポインタは`std::allocator&amp;lt;T&amp;gt;::allocate`によって確保された領域を指していなければならない。
++
++```cpp
++constexpr int f() {
++  std::allocator&amp;lt;int&amp;gt; alloc{};
++
++  // 確保と構築
++  int* p = alloc.allocate(1);
++  p = std::construct_at(p);
++
++  *p = 20;
++  int n = *p;
++
++  // 忘れる
++  //std::destroy_at(p);
++  //alloc.deallocate();
++
++  return n;
++}
++
++int main () {
++  constexpr int n = f();  // NG、コンパイルエラー
++}
++```
++
++すなわち、`new/delete`式と同様にコンパイル時に確保したメモリ領域を実行時へ持ち越すことはできない。
++
++この規則はまた、`std::allocator/std::allocator_traits`によって確保され`construct_at`によってオブジェクトが構築された領域を`delete`式で解放する事、またはその逆も許可されない事を示している。
++
++```cpp
++constexpr int f() {
++  std::allocator&amp;lt;int&amp;gt; alloc{};
++
++  // 確保と構築
++  int* p = alloc.allocate(1);
++  p = std::construct_at(p);
++
++  *p = 20;
++  int n = *p;
++
++  // 破棄と解放
++  delete p; // NG、コンパイルエラー
++
++  return n;
++}
++
++constexpr int g() {
++  std::allocator&amp;lt;int&amp;gt; alloc{};
++
++  // 確保と構築
++  int* p = new int;
++
++  *p = 20;
++  int n = *p;
++
++  // NG、コンパイルエラー
++  std::destroy_at(p);
++  alloc.deallocate();
++
++  return n;
++}
++```
++
++`destroy_at`には類似のファミリとして[`destroy_n`](/reference/memory/destroy_n.md)と、それらの`range`版があり（あるいは追加され）、`construct_at`も`range`版が同時に追加されるが、それらについても`construct_at/destroy_at`と同様の扱いが可能となる。
+ 
+ ## この機能が必要になった背景・経緯
+ 
+@@ -156,6 +265,11 @@ std::vector&amp;lt;std::metainfo&amp;gt; args = std::meta::get_template_args(reflexpr(T));
+ 
+ ## 関連項目
+ 
++- [`allocator`](/reference/memory/allocator.md)
++- [`allocator_traits`](/reference/memory/allocator_traits.md)
++- [`construct_at`](/reference/memory/construct.md.nolink)
++- [`destroy_at`](/reference/memory/destroy_at.md)
++- [`destroy_n`](/reference/memory/destroy_n.md)
+ - [`vector`](/reference/vector/vector.md)
+ - [`basic_string`](/reference/string/basic_string.md)
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>モジュール -- Update modules.md</title>
@@ -182,33 +362,6 @@ index aa8b95f6f..073b333ed 100644
       <author>
         <name>Tetsuro Matsumura</name>
         <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>cout -- chore(cout): use archive URL</title>
-      <link href="https://cpprefjp.github.io/reference/iostream/cout.html"/>
-      <id>2f81026abfb8140518f84a4d581e58cd01798c97:reference/iostream/cout.md</id>
-      <updated>2021-05-24T01:16:23+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iostream/cout.md b/reference/iostream/cout.md
-index 5d8b1e527..ed878e357 100644
---- a/reference/iostream/cout.md
-+++ b/reference/iostream/cout.md
-@@ -109,7 +109,7 @@ Windowsでは`wchar_t`型といえばUTF-16でエンコードされた文字を
- ## 参照
- 
- - [使用できるロケール文字列](../../article/platform/locales.md)
--- [標準出力に書き込む | 株式会社きじねこ](http://www.kijineko.co.jp/tech/cppsamples/stdout.html)
-+- [標準出力に書き込む | 株式会社きじねこ](https://web.archive.org/web/20191011112040/http://www.kijineko.co.jp/tech/cppsamples/stdout.html)
- - [c++で日本語の処理（ロケール周り） 7/8追記 - nullnull7の日記](http://nullnull.hatenablog.com/entry/20120629/1340935277)
- - [std::locale constructor modifies global locale via &amp;#34;setlocale()&amp;#34; | Microsoft Connect](http://web.archive.org/web/20100328154628/http://connect.microsoft.com:80/VisualStudio/feedback/details/492128/std-locale-constructor-modifies-global-locale-via-setlocale)
- - [ASCII.jp：Windows 10に“まとも”に使えるコンソール「WindowsTerminal」が登場する (2/2)](https://ascii.jp/elem/000/001/868/1868623/2/)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yumetodo</name>
-        <email>yume-wikijp@live.jp</email>
       </author>
     </entry>
   

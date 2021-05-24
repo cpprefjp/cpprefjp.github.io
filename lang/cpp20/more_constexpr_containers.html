@@ -189,8 +189,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2021-05-21T06:38:22">
-        2021年05月21日 06時38分22秒
+      <span itemprop="datePublished" content="2021-05-24T06:37:38">
+        2021年05月24日 06時37分38秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -270,7 +270,22 @@
 <h3><code>new/delete</code>式</h3>
 <p>定数式では未定義動作を可能な限り検出しコンパイルエラーとしなければならない。<code>operator new/operator delete</code>や<code>malloc/free</code>はその実行に伴ってポインタの再解釈（<code>void*</code>への/からのキャスト）が必要となるが、ポインタの再解釈は検出しづらい未定義動作に繋がりうるため定数式では禁止されている。</p>
 <p>そのため、そのようなポインタの再解釈が発生しない動的メモリ確保機能である<code>new/delete</code>式がコンパイル時の動的メモリ確保・解放の方法として許可される。<code>new/delete</code>式は<code>operator new/operator delete</code>とは異なり、メモリの確保・解放とその領域のオブジェクト構築・破棄を一挙に行う言語機能である。</p>
-<p>ただし、コンパイル時に実行される<code>new</code>式はグローバルのオーバーロード可能な<code><a href="https://cpprefjp.github.io/reference/new/op_new.html">operator new</a></code>を呼び出すものでなくてはならない。そうではない<code>new</code>式の定数式における評価はコンパイルエラーとなる。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">constexpr</span> <span class="kt">int</span> <span class="nf">f</span><span class="p">()</span> <span class="p">{</span>
+  <span class="c1">// 確保と構築</span>
+  <span class="kt">int</span><span class="o">*</span> <span class="n">p</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="p">;</span>
+
+  <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="o">*</span><span class="n">p</span><span class="p">;</span>
+
+  <span class="c1">// 破棄と解放</span>
+  <span class="k">delete</span> <span class="n">p</span><span class="p">;</span>
+
+  <span class="k">return</span> <span class="n">n</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<p>当然ながら、<code>new/delete</code>式によって動的メモリ確保しようとする型はリテラル型であり、呼び出されるコンストラクタとデストラクタは共に定数式で実行可能でなければならない。</p>
+<p>また、コンパイル時に実行される<code>new</code>式はグローバルのオーバーロード可能な<code><a href="https://cpprefjp.github.io/reference/new/op_new.html">operator new</a></code>を呼び出すものでなくてはならない。そうではない<code>new</code>式の定数式における評価はコンパイルエラーとなる。</p>
 <p><div class="codehilite"><pre><span></span><code><span class="k">struct</span> <span class="n">S</span> <span class="p">{</span>
   <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
 
@@ -293,13 +308,13 @@
 </p>
 <p>そして、コンパイル時に<code>new</code>式で確保されたメモリ領域は、コンパイル時に<code>delete</code>式によって解放されなければならない。その対応が取れていない<code>new/delete</code>式の呼び出しは、どちらもコンパイルエラーとなる。</p>
 <p><div class="codehilite"><pre><span></span><code><span class="k">constexpr</span> <span class="kt">int</span> <span class="nf">f</span><span class="p">()</span> <span class="p">{</span>
-  <span class="kt">int</span><span class="o">*</span> <span class="n">d</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="p">;</span>
+  <span class="kt">int</span><span class="o">*</span> <span class="n">p</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="p">;</span>
 
-  <span class="o">*</span><span class="n">d</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
-  <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="o">*</span><span class="n">d</span><span class="p">;</span>
+  <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="o">*</span><span class="n">p</span><span class="p">;</span>
 
   <span class="c1">// 忘れる</span>
-  <span class="c1">//delete d;</span>
+  <span class="c1">//delete p;</span>
 
   <span class="k">return</span> <span class="n">n</span><span class="p">;</span>
 <span class="p">}</span>
@@ -321,9 +336,90 @@
 <span class="p">}</span>
 </code></pre></div>
 </p>
-<p>実際にはどこのストレージが提供されるかは規定されていない。ただ、定数式が実行される環境はC++コンパイラの内蔵する<code>constexpr</code>インタプリタ上であり、その環境のメモリ領域とはコンパイラ実行環境のヒープ領域が対応する。</p>
+<p>実際にはどこのストレージが提供されるかは規定されていない。</p>
 <h3><code>std::allocator/std::allocator_traits</code></h3>
-<p>(執筆中)</p>
+<p>標準ライブラリのコンテナ等は<code>new/delete</code>式を直接利用するわけではなく、<code>std::allocator_traits</code>を介して<code>std::allocator</code>を使用してメモリ確保・解放とオブジェクト構築・破棄を行う。<code>std::allocator/std::allocator_traits</code>も見かけ上はポインタの再解釈を必要とせずにそれを行うため、<code>std::allocator/std::allocator_traits</code>によるメモリ確保周りの機能もまた、コンパイル時の動的メモリ確保・解放の方法として許可される。</p>
+<p><code>std::allocator/std::allocator_traits</code>では<code>new/delete</code>式とは異なり、メモリの確保・解放（<code><a href="https://cpprefjp.github.io/reference/memory/allocator/allocate.html">allocate</a></code>/<code><a href="https://cpprefjp.github.io/reference/memory/allocator/deallocate.html">deallocate</a></code>）とその領域へのオブジェクト構築・破棄（<code><a href="https://cpprefjp.github.io/reference/memory/allocator_traits/construct.html">construct</a></code>/<code><span href="https://cpprefjp.github.io/memory/allocator_traits/destroy.html">destroy</span></code>）の操作が複合していない。オブジェクト構築・破棄においては<em>placement new</em>と<em>pseudo-destructor call</em>が必要となるが、<em>placement new</em>はポインタの再解釈が必要となることから許可されず、そのために不必要であるので<em>pseudo-destructor call</em>も許可されない。</p>
+<p>代わりに、<em>placement new</em>を行うライブラリ機能である<code><span href="https://cpprefjp.github.io/reference/memory/construct.md.nolink">construct_at</span></code>を追加し、<em>pseudo-destructor call</em>を行う<code><a href="https://cpprefjp.github.io/reference/memory/destroy_at.html">destroy_at</a></code>と共に<code>constexpr</code>を付加し定数式で使用可能とする。これによって、ポインタ再解釈を回避しつつ<em>placement new</em>と<em>pseudo-destructor call</em>が定数式で使用可能となる。</p>
+<p>そして、<code>std::allocator_traits</code>の<code>construct</code>と<code>destroy</code>は<code>construct_at/destroy_at</code>を呼び出して処理を行うように変更される。なお、これによって実行時の振る舞いが変化することはない。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">constexpr</span> <span class="kt">int</span> <span class="nf">f</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/memory/allocator.html">std::allocator</a></span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">alloc</span><span class="p">{};</span>
+
+  <span class="c1">// 確保と構築</span>
+  <span class="kt">int</span><span class="o">*</span> <span class="n">p</span> <span class="o">=</span> <span class="n">alloc</span><span class="p">.</span><span class="n">allocate</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+  <span class="n">p</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">construct_at</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+
+  <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="o">*</span><span class="n">p</span><span class="p">;</span>
+
+  <span class="c1">// 破棄と解放</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">destroy_at</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+  <span class="n">alloc</span><span class="p">.</span><span class="n">deallocate</span><span class="p">();</span>
+
+  <span class="k">return</span> <span class="n">n</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<p>当然ながら、<code>std::allocator</code>によって動的メモリ確保しようとする型はリテラル型であり、<code>construct_at/destroy_at</code>によって呼び出されるコンストラクタとデストラクタは共に定数式で実行可能でなければならない。</p>
+<p>また、<code>std::allocator&lt;T&gt;::allocate</code>が呼び出される場合は必ずその領域は<code>std::allocator&lt;T&gt;::deallocate</code>によって解放されていなければならず、<code>deallocate</code>と<code>construct_at</code>、<code>destroy_at</code>の引数の<code>T*</code>のポインタは<code>std::allocator&lt;T&gt;::allocate</code>によって確保された領域を指していなければならない。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">constexpr</span> <span class="kt">int</span> <span class="nf">f</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/memory/allocator.html">std::allocator</a></span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">alloc</span><span class="p">{};</span>
+
+  <span class="c1">// 確保と構築</span>
+  <span class="kt">int</span><span class="o">*</span> <span class="n">p</span> <span class="o">=</span> <span class="n">alloc</span><span class="p">.</span><span class="n">allocate</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+  <span class="n">p</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">construct_at</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+
+  <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="o">*</span><span class="n">p</span><span class="p">;</span>
+
+  <span class="c1">// 忘れる</span>
+  <span class="c1">//std::destroy_at(p);</span>
+  <span class="c1">//alloc.deallocate();</span>
+
+  <span class="k">return</span> <span class="n">n</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span> <span class="p">()</span> <span class="p">{</span>
+  <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">f</span><span class="p">();</span>  <span class="c1">// NG、コンパイルエラー</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<p>すなわち、<code>new/delete</code>式と同様にコンパイル時に確保したメモリ領域を実行時へ持ち越すことはできない。</p>
+<p>この規則はまた、<code>std::allocator/std::allocator_traits</code>によって確保され<code>construct_at</code>によってオブジェクトが構築された領域を<code>delete</code>式で解放する事、またはその逆も許可されない事を示している。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">constexpr</span> <span class="kt">int</span> <span class="nf">f</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/memory/allocator.html">std::allocator</a></span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">alloc</span><span class="p">{};</span>
+
+  <span class="c1">// 確保と構築</span>
+  <span class="kt">int</span><span class="o">*</span> <span class="n">p</span> <span class="o">=</span> <span class="n">alloc</span><span class="p">.</span><span class="n">allocate</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+  <span class="n">p</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">construct_at</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+
+  <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="o">*</span><span class="n">p</span><span class="p">;</span>
+
+  <span class="c1">// 破棄と解放</span>
+  <span class="k">delete</span> <span class="n">p</span><span class="p">;</span> <span class="c1">// NG、コンパイルエラー</span>
+
+  <span class="k">return</span> <span class="n">n</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">constexpr</span> <span class="kt">int</span> <span class="nf">g</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/memory/allocator.html">std::allocator</a></span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">alloc</span><span class="p">{};</span>
+
+  <span class="c1">// 確保と構築</span>
+  <span class="kt">int</span><span class="o">*</span> <span class="n">p</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="p">;</span>
+
+  <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="o">*</span><span class="n">p</span><span class="p">;</span>
+
+  <span class="c1">// NG、コンパイルエラー</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">destroy_at</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+  <span class="n">alloc</span><span class="p">.</span><span class="n">deallocate</span><span class="p">();</span>
+
+  <span class="k">return</span> <span class="n">n</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<p><code>destroy_at</code>には類似のファミリとして<code><a href="https://cpprefjp.github.io/reference/memory/destroy_n.html">destroy_n</a></code>と、それらの<code>range</code>版があり（あるいは追加され）、<code>construct_at</code>も<code>range</code>版が同時に追加されるが、それらについても<code>construct_at/destroy_at</code>と同様の扱いが可能となる。</p>
 <h2>この機能が必要になった背景・経緯</h2>
 <p><code>std::vector</code>をはじめとする可変サイズのコンテナは実行時に非常に有用であるため、同様に定数式においても有用である可能性があり、その必要性がC++コミュニティからも示されいていた（<a href="https://youtu.be/HMB9oXFobJc" target="_blank">C++Now 2017: Ben Deane &amp; Jason Turner "constexpr ALL the things!"</a>、<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0810r0.pdf" target="_blank">P0810R0 constexpr in Practice</a>など）。</p>
 <p>また、静的リフレクション機能の導入にあたっては、コンパイル時に使用可能な可変サイズコンテナおよび可変サイズの文字列型が必要となっていた。例えば、ある型のテンプレート引数をクエリするコードは次のようなものになる</p>
@@ -337,6 +433,11 @@
 <p>(執筆中)</p>
 <h2>関連項目</h2>
 <ul>
+<li><code><a href="https://cpprefjp.github.io/reference/memory/allocator.html">allocator</a></code></li>
+<li><code><a href="https://cpprefjp.github.io/reference/memory/allocator_traits.html">allocator_traits</a></code></li>
+<li><code><span href="https://cpprefjp.github.io/reference/memory/construct.md.nolink">construct_at</span></code></li>
+<li><code><a href="https://cpprefjp.github.io/reference/memory/destroy_at.html">destroy_at</a></code></li>
+<li><code><a href="https://cpprefjp.github.io/reference/memory/destroy_n.html">destroy_n</a></code></li>
 <li><code><a href="https://cpprefjp.github.io/reference/vector/vector.html">vector</a></code></li>
 <li><code><a href="https://cpprefjp.github.io/reference/string/basic_string.html">basic_string</a></code></li>
 </ul>
