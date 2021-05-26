@@ -189,8 +189,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2021-05-24T06:41:06">
-        2021年05月24日 06時41分06秒
+      <span itemprop="datePublished" content="2021-05-26T06:15:07">
+        2021年05月26日 06時15分07秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -430,7 +430,58 @@
 <p>※ これは最終的なリフレクション仕様とは異なる可能性がある</p>
 <p>これらの流れを受けて、<code>std::vector</code>と<code>std::string</code>を定数式で使用可能とするために、その最大の障壁となっていたメモリの動的確保と解放周りの機能が定数式で使用可能となった。</p>
 <h2>検討されたほかの選択肢</h2>
-<p>(執筆中)</p>
+<p>当初検討されていた仕様では、コンパイル時に確保したメモリ領域を実行時に持ち越すことが可能だった。そのようなメモリ領域の確保と解放はクラス型の内部で閉じている必要はあったが、その条件を満たせば静的ストレージに昇格され実行時環境から参照できるようになる。</p>
+<p>しかし、当初のアプローチには2つの問題があった。</p>
+<p>実行時に持ち越されるメモリ領域を管理するクラスであってもそのデストラクタでその領域を解放している事が求められていたが、それはコンパイラによるテスト要件であり実行時に領域を持ち越そうとする時、実際にそのデストラクタがコンパイル時に呼ばれることはない。しかしその場合、静的ストレージに昇格される領域の内容はいつどの時点のものが保持されるのかが不透明となる。</p>
+<p>当初の仕様ではそれに対処するために、<code>std::mark_immutable_if_constexpr()</code>という関数を導入し、この関数に領域へのポインタを渡して呼び出すことでコンパイラへのマーカーとし、呼ばれた時点でのメモリ領域を実行時に持ち越すアプローチをとっていた。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
+<span class="k">struct</span> <span class="n">sample</span> <span class="p">{</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/memory/allocator.html">std::allocator</a></span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">m_alloc</span><span class="p">;</span>
+  <span class="n">T</span><span class="o">*</span> <span class="n">m_p</span><span class="p">;</span>
+  <span class="kt">size_t</span> <span class="n">m_size</span><span class="p">;</span>
+
+  <span class="c1">// 非トリビアルconstexprコンストラクタでメモリ領域を確保</span>
+  <span class="k">template</span><span class="o">&lt;</span><span class="kt">size_t</span> <span class="n">N</span><span class="o">&gt;</span>
+  <span class="k">constexpr</span> <span class="n">sample</span><span class="p">(</span><span class="n">T</span><span class="p">(</span><span class="o">&amp;</span><span class="n">p</span><span class="p">)[</span><span class="n">N</span><span class="p">])</span>
+    <span class="o">:</span> <span class="n">m_alloc</span><span class="p">{}</span>
+    <span class="p">,</span> <span class="n">m_p</span><span class="p">{</span><span class="n">m_alloc</span><span class="p">.</span><span class="n">allocate</span><span class="p">(</span><span class="n">N</span><span class="p">)}</span>
+    <span class="p">,</span> <span class="n">m_size</span><span class="p">{</span><span class="n">N</span><span class="p">}</span>
+  <span class="p">{</span>
+    <span class="k">for</span><span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">N</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">construct_at</span><span class="p">(</span><span class="n">m_p</span> <span class="o">+</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+    <span class="p">}</span>
+
+    <span class="c1">// 実行時に持ち越す領域をコンパイラに伝える</span>
+    <span class="c1">// ここ以降は確保した領域は不変</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">mark_immutable_if_constexpr</span><span class="p">(</span><span class="n">m_p</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="c1">// constexprデストラクタでメモリ領域を解放</span>
+  <span class="k">constexpr</span> <span class="o">~</span><span class="n">sample</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">for</span><span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">N</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">destroy_at</span><span class="p">(</span><span class="n">m_p</span> <span class="o">+</span> <span class="n">i</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="n">m_alloc</span><span class="p">.</span><span class="n">deallocate</span><span class="p">(</span><span class="n">m_p</span><span class="p">,</span> <span class="n">m_size</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">constexpr</span> <span class="n">sample</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&gt;</span> <span class="n">str</span><span class="p">{</span><span class="s">"Hello."</span><span class="p">};</span>
+<span class="c1">// 実行時、strは"Hello"を保持する静的配列を参照するようになる</span>
+</code></pre></div>
+</p>
+<p>2つ目の問題は、コンパイル時に確保された領域は実行時に<code>const</code>であり書き換えられてはならないが、クラス型の<code>const</code>伝播の問題から書き換えが可能となってしまっていたことである。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="c1">// 当初の仕様ではOK（unique_ptrがconstexpr対応した場合）</span>
+<span class="k">constexpr</span> <span class="n"><a href="https://cpprefjp.github.io/reference/memory/unique_ptr.html">std::unique_ptr</a></span><span class="o">&lt;</span><span class="n"><a href="https://cpprefjp.github.io/reference/memory/unique_ptr.html">std::unique_ptr</a></span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span> <span class="n">uui</span> 
+  <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n"><a href="https://cpprefjp.github.io/reference/memory/unique_ptr.html">std::unique_ptr</a></span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">());</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/memory/unique_ptr.html">std::unique_ptr</a></span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span> <span class="n">ui</span> <span class="o">=</span> <span class="o">*</span><span class="n">uui</span><span class="p">;</span> <span class="c1">// これができてしまう</span>
+  <span class="n">ui</span><span class="p">.</span><span class="n">reset</span><span class="p">();</span> <span class="c1">// 静的ストレージの領域をdeleteする？</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<p><code>std::unique_ptr</code>ではそれ自身の<code>const</code>性が内部のポインタの参照するオブジェクトまで伝播しないため、コンパイル時に確保されたメモリ領域を参照するような<code>std::unique_ptr</code>からは、可変な参照を取得できてしまう。上記例のように<code>std::unique_ptr</code>がネストしていれば、そのような領域を<code>delete</code>することもできてしまっていた。</p>
+<p><code>std::mark_immutable_if_constexpr()</code>によるアプローチを標準化委員会が嫌ったことと、2つ目の問題の解決が簡単ではなかった（時間がかかり得た）事から、コンパイル時に確保したメモリを実行時に持ち越すことについてはC++20への導入を見送ることとなった。</p>
 <h2>関連項目</h2>
 <ul>
 <li><code><a href="https://cpprefjp.github.io/reference/memory/allocator.html">allocator</a></code></li>
@@ -450,6 +501,7 @@
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0784r6.html" target="_blank">P0784R6 More constexpr containers</a></li>
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0784r7.html" target="_blank">P0784R7 More constexpr containers</a></li>
 <li><a href="https://ezoeryou.github.io/cpp-intro/#動的メモリー確保" target="_blank">動的メモリー確保 - 江添亮の入門C++</a></li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1974r0.pdf" target="_blank">P1974R0 Non-transient constexpr allocation using propconst</a></li>
 </ul></div>
 
       </div>
