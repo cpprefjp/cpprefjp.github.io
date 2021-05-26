@@ -189,8 +189,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2021-05-26T08:18:11">
-        2021年05月26日 08時18分11秒
+      <span itemprop="datePublished" content="2021-05-26T16:00:54">
+        2021年05月26日 16時00分54秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -325,18 +325,18 @@
 </code></pre></div>
 </p>
 <p>したがって、C++20のコンパイル時動的メモリ確保の仕様では、コンパイル時に確保したメモリ領域を実行時へ持ち越すことはできない。</p>
-<p>実際には、これらの定数式中の<code>new</code>式の評価は常に省略されている。この省略はC++14より許可されている最適化の一環として行われ、スタック領域などのストレージを別途割り当てることで動的メモリ確保を避けるものである。対応する<code>delete</code>式の呼び出しも同様に省略され、定数式においてはメモリの確保と解放が一貫していることのマーカーとしての役割しか持たない。</p>
+<p>実際には、これらの定数式中の<code>new</code>式において呼び出される<code>::operator new()</code>の評価は常に省略されている。この省略はC++14より許可されている最適化の一環として行われ、スタック領域などのストレージを別途あてがうことで動的メモリ確保を避けるものである。対応する<code>delete</code>式における<code>::operator delete()</code>の呼び出しも同様に省略され、定数式における<code>new/delete</code>式はメモリの確保と解放が一貫していることのマーカーとしての側面が強くなっている。</p>
 <p><div class="codehilite"><pre><span></span><code><span class="k">constexpr</span> <span class="kt">void</span> <span class="nf">f</span><span class="p">()</span> <span class="p">{</span>
   <span class="c1">// このコードは定数式中で</span>
   <span class="kt">int</span><span class="o">*</span> <span class="n">d</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="p">{</span><span class="mi">2</span><span class="p">};</span>
   <span class="k">delete</span> <span class="n">d</span><span class="p">;</span>
 
-  <span class="c1">// 次のようなコードと等価になる</span>
+  <span class="c1">// たとえば次のようなコードと等価になる</span>
   <span class="kt">int</span> <span class="n">d</span><span class="p">{</span><span class="mi">2</span><span class="p">};</span>
 <span class="p">}</span>
 </code></pre></div>
 </p>
-<p>実際にはどこのストレージが提供されるかは規定されていない。</p>
+<p>実際にはどこのストレージが提供されるかは実装定義である。</p>
 <h3><code>std::allocator/std::allocator_traits</code></h3>
 <p>標準ライブラリのコンテナ等は<code>new/delete</code>式を直接利用するわけではなく、<code>std::allocator_traits</code>を介して<code>std::allocator</code>を使用してメモリ確保・解放とオブジェクト構築・破棄を行う。<code>std::allocator/std::allocator_traits</code>も見かけ上はポインタの再解釈を必要とせずにそれを行うため、<code>std::allocator/std::allocator_traits</code>によるメモリ確保周りの機能もまた、コンパイル時の動的メモリ確保・解放の方法として許可される。</p>
 <p><code>std::allocator/std::allocator_traits</code>では<code>new/delete</code>式とは異なり、メモリの確保・解放（<code><a href="https://cpprefjp.github.io/reference/memory/allocator/allocate.html">allocate</a></code>/<code><a href="https://cpprefjp.github.io/reference/memory/allocator/deallocate.html">deallocate</a></code>）とその領域へのオブジェクト構築・破棄（<code><a href="https://cpprefjp.github.io/reference/memory/allocator_traits/construct.html">construct</a></code>/<code><a href="https://cpprefjp.github.io/reference/memory/allocator_traits/destroy.html">destroy</a></code>）の操作が複合していない。オブジェクト構築・破棄においては<em>placement new</em>と<em>pseudo-destructor call</em>が必要となるが、<em>placement new</em>はポインタの再解釈が必要となることから許可されず、そのために不必要であるので<em>pseudo-destructor call</em>も許可されない。</p>
@@ -420,6 +420,8 @@
 </code></pre></div>
 </p>
 <p><code>destroy_at</code>には類似のファミリとして<code><a href="https://cpprefjp.github.io/reference/memory/destroy_n.html">destroy_n</a></code>と、それらの<code>range</code>版があり（あるいは追加され）、<code>construct_at</code>も<code>range</code>版が同時に追加されるが、それらについても<code>construct_at/destroy_at</code>と同様の扱いが可能となる。</p>
+<p><code>std::allocator::allocate()</code>はグローバルの<code>::operator new()</code>を呼び出すが、この呼び出しは<code>new</code>式の時と同様に省略されており、<code>std::allocator::deallocate()</code>における<code>::operator delete()</code>の呼び出しも省略されている。この2つもまた<code>new/delete</code>式と同様に、メモリの確保と解放が一貫していることのマーカーとしての側面が強くなっている。</p>
+<p>結局、C++20のコンパイル時動的メモリ確保は定数式にヒープ領域を導入するものではなく、デフォルトの<code>::operator new</code>による動的メモリ確保を別の領域をあてがう形に置換することで行われている。</p>
 <h2>この機能が必要になった背景・経緯</h2>
 <p><code>std::vector</code>をはじめとする可変サイズのコンテナは実行時に非常に有用であるため、同様に定数式においても有用である可能性があり、その必要性がC++コミュニティからも示されいていた（<a href="https://youtu.be/HMB9oXFobJc" target="_blank">C++Now 2017: Ben Deane &amp; Jason Turner "constexpr ALL the things!"</a>、<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0810r0.pdf" target="_blank">P0810R0 constexpr in Practice</a>など）。</p>
 <p>また、静的リフレクション機能の導入にあたっては、コンパイル時に使用可能な可変サイズコンテナおよび可変サイズの文字列型が必要となっていた。例えば、ある型のテンプレート引数をクエリするコードは次のようなものになる</p>
@@ -501,6 +503,7 @@
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0784r6.html" target="_blank">P0784R6 More constexpr containers</a></li>
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0784r7.html" target="_blank">P0784R7 More constexpr containers</a></li>
 <li><a href="https://ezoeryou.github.io/cpp-intro/#動的メモリー確保" target="_blank">動的メモリー確保 - 江添亮の入門C++</a></li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3664.html" target="_blank">N3664 Clarifying Memory Allocation</a></li>
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1974r0.pdf" target="_blank">P1974R0 Non-transient constexpr allocation using propconst</a></li>
 </ul></div>
 
