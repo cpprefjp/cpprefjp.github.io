@@ -2,9 +2,103 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2021-05-26T16:05:39.065279</updated>
-  <id>9593964a-0688-4251-8b2d-e7b58f819ca3</id>
+  <updated>2021-05-27T09:18:52.125406</updated>
+  <id>3ef65a4c-03d4-4a47-b5c1-dfc380a500b7</id>
 
+  
+    <entry>
+      <title>厳密な式の評価順 -- expression_evaluation_order: 調整</title>
+      <link href="https://cpprefjp.github.io/lang/cpp17/expression_evaluation_order.html"/>
+      <id>8dbd27843b8385284a601eed184bf5e25e6f4d23:lang/cpp17/expression_evaluation_order.md</id>
+      <updated>2021-05-27T18:13:22+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp17/expression_evaluation_order.md b/lang/cpp17/expression_evaluation_order.md
+index 9be20dc13..ba082317b 100644
+--- a/lang/cpp17/expression_evaluation_order.md
++++ b/lang/cpp17/expression_evaluation_order.md
+@@ -4,18 +4,19 @@
+ ## 概要
+ 
+ C++14までは式の評価順序が未規定（unspecified）であったが、
+-C++17では次の式は全てa, bの順で評価されるように定義された。
++C++17では次の式は全て`a`, `b`の順で評価されるように定義された。
+ 
+-1. a.b
+-1. a-&amp;gt;b
+-1. a-&amp;gt;*b
+-1. a(b1, b2, b3)
+-1. b @= a
+-1. a[b]
+-1. a &amp;lt;&amp;lt; b
+-1. a &amp;gt;&amp;gt; b
++1. `a.b`
++1. `a-&amp;gt;b`
++1. `a-&amp;gt;*b`
++1. `a(b1, b2, b3)`
++1. `b @= a`
++1. `a[b]`
++1. `a &amp;lt;&amp;lt; b`
++1. `a &amp;gt;&amp;gt; b`
+ 
+-関数の引数リスト内の式（上記例で言えばb1, b2, b3）の評価順序は未規定である。
++関数の引数リスト内の式（上記例で言えば`b1`, `b2`, `b3`）の評価順序は未規定である。
++`@=`は代入演算子`=`や任意の複合代入演算子（`+=`, `-=`など）を表す。
+ 
+ 
+ ## 仕様
+@@ -36,7 +37,7 @@ C++17では式の評価順序が下記の通りに定められた。
+ 
+ 3番目の規則については、
+ 代入演算子`operator=`をオーバーロードした場合を考えるとわかりやすいと思う。
+-代入演算子は右から左の順、つまりa, bの順で評価される。
++代入演算子は右から左の順、つまり`a`, `b`の順で評価される。
+ 
+ ```cpp
+ struct Hoge {
+@@ -52,7 +53,7 @@ int main()
+ Hogeクラスの代入演算子をオーバーロードすると、
+ `b = a;`は`b.operator=(a);`となりメンバ関数呼び出しと等価になる。
+ このとき3番目の規則が存在しなかったとすると、メンバ関数呼び出しの規則が適用される。
+-メンバ関数呼び出しの評価順序は左から右の順、つまりb, aの順で評価され、
++メンバ関数呼び出しの評価順序は左から右の順、つまり`b`, `a`の順で評価され、
+ 代入式の評価順序と逆になってしまう。
+ 
+ ```cpp
+@@ -117,8 +118,8 @@ int main() {
+ ```
+ 
+ 下記のプログラムの動作を考える。
+-`std::cout`, f, g, hが互いに作用する
+-（例えばf, g, h内で`std::cout`に何か出力するなど）場合、
++`std::cout`, `f`, `g`, `h`が互いに作用する
++（例えば`f`, `g`, `h`内で`std::cout`に何か出力するなど）場合、
+ このプログラムの動作は不定であった。
+ 
+ シフト演算子は左結合なので`(((std::cout &amp;lt;&amp;lt; f) &amp;lt;&amp;lt; g) &amp;lt;&amp;lt; h)`の順に評価されそうだが、
+@@ -137,8 +138,8 @@ std::cout.operator&amp;lt;&amp;lt;(f()).operator&amp;lt;&amp;lt;(g()).operator&amp;lt;&amp;lt;(h());
+ 
+ このとき`operator&amp;lt;&amp;lt;(f()).operator&amp;lt;&amp;lt;(g())`のように、
+ メンバ関数呼び出しの連鎖が発生するが、この評価順は未規定であり、
+-右から左、すなわちg, fの順で評価されるかも知れないし、
+-左から右、すなわちf, gの順に評価されるかも知れない。
++右から左、すなわち`g`, `f`の順で評価されるかも知れないし、
++左から右、すなわち`f`, `g`の順に評価されるかも知れない。
+ 
+ 以上のように、シンプルな代入演算やメンバ関数の連鎖などC++で広く使われている手法でさえ、
+ 動作結果が不定となってしまう問題がある。
+@@ -157,4 +158,4 @@ C++の既存のプログラムを壊すこと無く、なおかつ、
+ 
+ ## 参照
+ - [P0145R3 Refining Expression Evaluation Order for Idiomatic C++](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0145r3.pdf)
+-- [Wording for Order of Evaluation of Function Arguments](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0400r0.html)
++- [P0400R0 Wording for Order of Evaluation of Function Arguments](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0400r0.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>可変サイズをもつコンテナの`constexpr`化 -- P0784R7 : operator newの省略について修正と追記</title>
@@ -138,99 +232,6 @@ index a57a4fb8a..fd5182681 100644
  
  ## 関連項目
  
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>可変サイズをもつコンテナの`constexpr`化 -- P0784R7 : 検討された他の選択肢追記 #688</title>
-      <link href="https://cpprefjp.github.io/lang/cpp20/more_constexpr_containers.html"/>
-      <id>a7a91d5b6953171ce207a3a35419a9d61efe2855:lang/cpp20/more_constexpr_containers.md</id>
-      <updated>2021-05-26T15:15:07+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/more_constexpr_containers.md b/lang/cpp20/more_constexpr_containers.md
-index 1cd12f507..a57a4fb8a 100644
---- a/lang/cpp20/more_constexpr_containers.md
-+++ b/lang/cpp20/more_constexpr_containers.md
-@@ -261,7 +261,67 @@ std::vector&amp;lt;std::metainfo&amp;gt; args = std::meta::get_template_args(reflexpr(T));
- これらの流れを受けて、`std::vector`と`std::string`を定数式で使用可能とするために、その最大の障壁となっていたメモリの動的確保と解放周りの機能が定数式で使用可能となった。
- 
- ## 検討されたほかの選択肢
--(執筆中)
-+
-+当初検討されていた仕様では、コンパイル時に確保したメモリ領域を実行時に持ち越すことが可能だった。そのようなメモリ領域の確保と解放はクラス型の内部で閉じている必要はあったが、その条件を満たせば静的ストレージに昇格され実行時環境から参照できるようになる。
-+
-+しかし、当初のアプローチには2つの問題があった。
-+
-+実行時に持ち越されるメモリ領域を管理するクラスであってもそのデストラクタでその領域を解放している事が求められていたが、それはコンパイラによるテスト要件であり実行時に領域を持ち越そうとする時、実際にそのデストラクタがコンパイル時に呼ばれることはない。しかしその場合、静的ストレージに昇格される領域の内容はいつどの時点のものが保持されるのかが不透明となる。
-+
-+当初の仕様ではそれに対処するために、`std::mark_immutable_if_constexpr()`という関数を導入し、この関数に領域へのポインタを渡して呼び出すことでコンパイラへのマーカーとし、呼ばれた時点でのメモリ領域を実行時に持ち越すアプローチをとっていた。
-+
-+```cpp
-+template&amp;lt;typename T&amp;gt;
-+struct sample {
-+  std::allocator&amp;lt;T&amp;gt; m_alloc;
-+  T* m_p;
-+  size_t m_size;
-+
-+  // 非トリビアルconstexprコンストラクタでメモリ領域を確保
-+  template&amp;lt;size_t N&amp;gt;
-+  constexpr sample(T(&amp;amp;p)[N])
-+    : m_alloc{}
-+    , m_p{m_alloc.allocate(N)}
-+    , m_size{N}
-+  {
-+    for(size_t i = 0; i &amp;lt; N; ++i) {
-+      std::construct_at(m_p + i, p[i]);
-+    }
-+
-+    // 実行時に持ち越す領域をコンパイラに伝える
-+    // ここ以降は確保した領域は不変
-+    std::mark_immutable_if_constexpr(m_p);
-+  }
-+
-+  // constexprデストラクタでメモリ領域を解放
-+  constexpr ~sample() {
-+    for(size_t i = 0; i &amp;lt; N; ++i) {
-+      std::destroy_at(m_p + i);
-+    }
-+    m_alloc.deallocate(m_p, m_size);
-+  }
-+}
-+
-+constexpr sample&amp;lt;char&amp;gt; str{&amp;#34;Hello.&amp;#34;};
-+// 実行時、strは&amp;#34;Hello&amp;#34;を保持する静的配列を参照するようになる
-+```
-+
-+2つ目の問題は、コンパイル時に確保された領域は実行時に`const`であり書き換えられてはならないが、クラス型の`const`伝播の問題から書き換えが可能となってしまっていたことである。
-+
-+```cpp
-+// 当初の仕様ではOK（unique_ptrがconstexpr対応した場合）
-+constexpr std::unique_ptr&amp;lt;std::unique_ptr&amp;lt;int&amp;gt;&amp;gt; uui 
-+  = std::make_unique&amp;lt;std::unique_ptr&amp;lt;int&amp;gt;&amp;gt;(std::make_unique&amp;lt;int&amp;gt;());
-+
-+int main() {
-+  std::unique_ptr&amp;lt;int&amp;gt;&amp;amp; ui = *uui; // これができてしまう
-+  ui.reset(); // 静的ストレージの領域をdeleteする？
-+}
-+```
-+
-+`std::unique_ptr`ではそれ自身の`const`性が内部のポインタの参照するオブジェクトまで伝播しないため、コンパイル時に確保されたメモリ領域を参照するような`std::unique_ptr`からは、可変な参照を取得できてしまう。上記例のように`std::unique_ptr`がネストしていれば、そのような領域を`delete`することもできてしまっていた。
-+
-+`std::mark_immutable_if_constexpr()`によるアプローチを標準化委員会が嫌ったことと、2つ目の問題の解決が簡単ではなかった（時間がかかり得た）事から、コンパイル時に確保したメモリを実行時に持ち越すことについてはC++20への導入を見送ることとなった。
- 
- ## 関連項目
- 
-@@ -281,4 +341,4 @@ std::vector&amp;lt;std::metainfo&amp;gt; args = std::meta::get_template_args(reflexpr(T));
- - [P0784R6 More constexpr containers](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0784r6.html)
- - [P0784R7 More constexpr containers](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0784r7.html)
- - [動的メモリー確保 - 江添亮の入門C++](https://ezoeryou.github.io/cpp-intro/#動的メモリー確保)
--
-+- [P1974R0 Non-transient constexpr allocation using propconst](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1974r0.pdf)
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
