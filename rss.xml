@@ -2,9 +2,404 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2021-06-02T14:53:50.237970</updated>
-  <id>b08aad30-df06-4659-946b-c7bf82a2284f</id>
+  <updated>2021-06-02T15:12:03.229451</updated>
+  <id>09370eab-2266-4092-a76b-733bf8629098</id>
 
+  
+    <entry>
+      <title>厳密な式の評価順 -- Merge pull request #873 from cpprefjp/refine-exp-eval-order</title>
+      <link href="https://cpprefjp.github.io/lang/cpp17/expression_evaluation_order.html"/>
+      <id>b9c72f2bed1c1b35cafa0ac155b26ee4752e6add:lang/cpp17/expression_evaluation_order.md</id>
+      <updated>2021-06-03T00:07:20+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp17/expression_evaluation_order.md b/lang/cpp17/expression_evaluation_order.md
+index ba082317b..0bdd87213 100644
+--- a/lang/cpp17/expression_evaluation_order.md
++++ b/lang/cpp17/expression_evaluation_order.md
+@@ -3,8 +3,9 @@
+ 
+ ## 概要
+ 
+-C++14までは式の評価順序が未規定（unspecified）であったが、
+-C++17では次の式は全て`a`, `b`の順で評価されるように定義された。
++C++14までは演算子オペランドにあたる部分式の評価順序は未規定（unspecified）であったが、
++C++17では下記リストの演算子に関しては`a`, `b`の順で評価されることが規定された。
++`@=`は代入演算子`=`や任意の複合代入演算子（`+=`, `-=`など）を表す。
+ 
+ 1. `a.b`
+ 1. `a-&amp;gt;b`
+@@ -15,67 +16,71 @@ C++17では次の式は全て`a`, `b`の順で評価されるように定義さ
+ 1. `a &amp;lt;&amp;lt; b`
+ 1. `a &amp;gt;&amp;gt; b`
+ 
+-関数の引数リスト内の式（上記例で言えば`b1`, `b2`, `b3`）の評価順序は未規定である。
+-`@=`は代入演算子`=`や任意の複合代入演算子（`+=`, `-=`など）を表す。
++関数呼び出し実引数リストの部分式（上記例では`b1`, `b2`, `b3`）間の評価順序は、不定順で序列化(indeterminately sequenced)される。
++つまり`b1`, `b2`, `b3`の順序とは限らず`b3`, `b2`, `b1`や`b2`, `b3`, `b1`などの順序で評価される可能性がある。
++その一方で、例えば`b1`, `b2`, `b3`の順に評価が開始する場合には、`b1`評価完了より前に`b2`や`b3`の評価が開始する（インターリーブ実行される）ことは決して無い。
++
++上記以外の演算子オペランド（例えば`x + y`の両項`x`, `y`）間の評価順序は、C++17でも従来どおり未規定(unspecified)のままである。
+ 
+ 
+ ## 仕様
+ 
+-C++17では式の評価順序が下記の通りに定められた。
++C++17では演算子オペランドにあたる部分式の評価順序が下記の通りに定められた。
+ 
+-- 左から右に評価される。
++1. 左から右に評価される。
+     - メンバへのポインタ演算子 (`.*`, `-&amp;gt;*`)
+     - 関数呼び出し演算子、および`T(...)`による初期化
+     - 添え字演算子
+     - シフト演算子
+-- 右から左に評価される。
++2. 右から左に評価される。
+     - 代入演算子
+     - 複合代入演算子（代入と演算を同時に行う`+=`, `-=`, `|=`などのこと）
+-- オーバーロードされた演算子の場合、同様の組み込み演算子の評価順序によって決定される。
+-    - オーバーロードされた演算子の実際の動作はメンバ関数呼び出しだが、わざとメンバ関数呼び出しの規則を適用しない。
+-- `new`式（メモリ確保を初期化子の評価順序の前に規定した）
++3. オーバーロードされた演算子の場合、言語組み込み演算子の評価順序に従う。
++    - オーバーロードされた演算子の実際の動作はメンバ関数呼び出しとなるが、関数呼び出しの順序規則を適用しない。
++    - ただし演算子オーバーロードをメンバ関数呼び出し形式で行った場合（例えば`x.operator=(y)`）は、関数呼び出しの評価順序（`x`, `y`）が適用される。
++4. `new`式：メモリ確保関数の呼び出しは初期化子の評価より前と規定する。
+ 
+ 3番目の規則については、
+-代入演算子`operator=`をオーバーロードした場合を考えるとわかりやすいと思う。
+-代入演算子は右から左の順、つまり`a`, `b`の順で評価される。
++代入演算子`operator=`をオーバーロードした場合を考えると理解しやすい。
++言語組み込み代入演算子`=`のオペランドは右から左の順、つまり`a()`, `b()`の順で評価される。
+ 
+ ```cpp
+-struct Hoge {
+-};
++int  a();
++int&amp;amp; b();
+ 
+ int main()
+ {
+-  Hoge a, b;
+-  b = a; // a, bの順で評価される
++  b() = a(); // 部分式a(), b()の順で評価される
+ }
+ ```
+ 
+-Hogeクラスの代入演算子をオーバーロードすると、
+-`b = a;`は`b.operator=(a);`となりメンバ関数呼び出しと等価になる。
+-このとき3番目の規則が存在しなかったとすると、メンバ関数呼び出しの規則が適用される。
+-メンバ関数呼び出しの評価順序は左から右の順、つまり`b`, `a`の順で評価され、
+-代入式の評価順序と逆になってしまう。
++`Hoge`クラスの代入演算子オーバーロードによって、
++式`b() = a()`は`b().operator=(a())`という関数呼び出しが行われる。
++このとき3番目の規則が存在しなかったとすると、1番目の関数呼び出しに関する規則が適用される。
++関数呼び出しの評価順序は左から右の順、つまり`b()`, `a()`の順で評価されるため、
++言語組み込み代入演算子オペランドの評価順序と逆になってしまう。
+ 
+ ```cpp
+ struct Hoge {
+-  Hoge&amp;amp; operator=(const Hoge&amp;amp; a) {
+-    return *this;
+-  };
++  // 代入演算子オーバーロード
++  Hoge&amp;amp; operator=(const Hoge&amp;amp;);
+ };
+ 
++Hoge  a();
++Hoge&amp;amp; b();
++
+ int main()
+ {
+-  Hoge a, b;
+-  // b.operator=(a); と等価
++  // 実際には b().operator=(a()); が呼び出されるため
+   // 仮に3番目の規則が存在しなかったら...
+-  b = a; // b, aの順で評価される（逆になってしまう！）
++  b() = a(); // b(), a()の順で評価される（逆になってしまう！）
+ }
+ ```
+ 
+ プログラムの見た目は全く同じ代入式にも関わらず、
+ 代入演算子オーバーロードの有無によって評価順序が逆になってしまう。
+ このような振る舞いはプログラマを混乱させるだけだろう。
+-3番目の規則は「演算子オーバーロードにわざとメンバ関数呼び出しの規則を当てはめない」ことで、
++3番目の規則は「演算子オーバーロードにわざと関数呼び出しの規則を当てはめない」ことで、
+ 演算子オーバーロードの有無に関わらず自然な動作を実現するための規則である。
+ 
+ 
+@@ -102,7 +107,7 @@ int main() {
+ 
+ ## この機能が必要になった背景・経緯
+ 
+-C++規格の策定以来、式の評価順序は厳密に定められていなかった。
++C++規格の策定以来、演算子オペランドの評価順序は厳密に定められていなかった。
+ 
+ 例に出てきたプログラムは非常に単純だが、
+ C++14やそれ以前のC++の規格では動作が不定であった。
+@@ -118,12 +123,12 @@ int main() {
+ ```
+ 
+ 下記のプログラムの動作を考える。
+-`std::cout`, `f`, `g`, `h`が互いに作用する
+-（例えば`f`, `g`, `h`内で`std::cout`に何か出力するなど）場合、
++`std::cout`, `f()`, `g()`, `h()`が互いに作用する
++（例えば`f()`, `g()`, `h()`内で`std::cout`に何か出力するなど）場合、
+ このプログラムの動作は不定であった。
+ 
+-シフト演算子は左結合なので`(((std::cout &amp;lt;&amp;lt; f) &amp;lt;&amp;lt; g) &amp;lt;&amp;lt; h)`の順に評価されそうだが、
+-残念ながらそうならない。
++シフト演算子は左結合なので`std::cout`, `f()`, `g()`, `h()`の順に評価されそうだが、
++演算子の結合と評価順には直接的な関係はなく、C++プログラマが期待する評価順は保証されなかった。
+ 
+ ```cpp
+ std::cout &amp;lt;&amp;lt; f() &amp;lt;&amp;lt; g() &amp;lt;&amp;lt; h();
+@@ -137,11 +142,11 @@ std::cout.operator&amp;lt;&amp;lt;(f()).operator&amp;lt;&amp;lt;(g()).operator&amp;lt;&amp;lt;(h());
+ ```
+ 
+ このとき`operator&amp;lt;&amp;lt;(f()).operator&amp;lt;&amp;lt;(g())`のように、
+-メンバ関数呼び出しの連鎖が発生するが、この評価順は未規定であり、
+-右から左、すなわち`g`, `f`の順で評価されるかも知れないし、
+-左から右、すなわち`f`, `g`の順に評価されるかも知れない。
++メンバ関数呼び出しの連鎖が発生するが、`f()`を含む部分式と`g()`の評価順は未規定とされていた。
++つまり右から左`g()`, `f()`の順で評価されるかも知れないし、
++左から右`f()`, `g()`の順に評価されるかも知れない。
+ 
+-以上のように、シンプルな代入演算やメンバ関数の連鎖などC++で広く使われている手法でさえ、
++以上のように、シンプルな代入演算やメンバ関数呼び出し連鎖などC++で広く使われている手法でさえ、
+ 動作結果が不定となってしまう問題がある。
+ この問題はプログラミング作法が悪いのではなく、
+ C++規格が現代のプログラミング作法に合わなくなっていることが原因である。
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>厳密な式の評価順 -- expression_evaluation_order: レビューコメント反映(#873)</title>
+      <link href="https://cpprefjp.github.io/lang/cpp17/expression_evaluation_order.html"/>
+      <id>0a23db24cc62ee7e4de012030608aea163e1ab02:lang/cpp17/expression_evaluation_order.md</id>
+      <updated>2021-06-02T10:21:50+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp17/expression_evaluation_order.md b/lang/cpp17/expression_evaluation_order.md
+index 2c7cfbcde..0bdd87213 100644
+--- a/lang/cpp17/expression_evaluation_order.md
++++ b/lang/cpp17/expression_evaluation_order.md
+@@ -17,7 +17,8 @@ C++17では下記リストの演算子に関しては`a`, `b`の順で評価さ
+ 1. `a &amp;gt;&amp;gt; b`
+ 
+ 関数呼び出し実引数リストの部分式（上記例では`b1`, `b2`, `b3`）間の評価順序は、不定順で序列化(indeterminately sequenced)される。
+-つまり`b1`評価完了より前に`b2`や`b3`評価が開始する（インターリーブ）ことは決して無いが、部分式の評価順は不定であり`b2`, `b3`, `b1`順なども許容される。
++つまり`b1`, `b2`, `b3`の順序とは限らず`b3`, `b2`, `b1`や`b2`, `b3`, `b1`などの順序で評価される可能性がある。
++その一方で、例えば`b1`, `b2`, `b3`の順に評価が開始する場合には、`b1`評価完了より前に`b2`や`b3`の評価が開始する（インターリーブ実行される）ことは決して無い。
+ 
+ 上記以外の演算子オペランド（例えば`x + y`の両項`x`, `y`）間の評価順序は、C++17でも従来どおり未規定(unspecified)のままである。
+ 
+@@ -26,18 +27,18 @@ C++17では下記リストの演算子に関しては`a`, `b`の順で評価さ
+ 
+ C++17では演算子オペランドにあたる部分式の評価順序が下記の通りに定められた。
+ 
+-- 左から右に評価される。
++1. 左から右に評価される。
+     - メンバへのポインタ演算子 (`.*`, `-&amp;gt;*`)
+     - 関数呼び出し演算子、および`T(...)`による初期化
+     - 添え字演算子
+     - シフト演算子
+-- 右から左に評価される。
++2. 右から左に評価される。
+     - 代入演算子
+     - 複合代入演算子（代入と演算を同時に行う`+=`, `-=`, `|=`などのこと）
+-- オーバーロードされた演算子の場合、言語組み込み演算子の評価順序に従う。
++3. オーバーロードされた演算子の場合、言語組み込み演算子の評価順序に従う。
+     - オーバーロードされた演算子の実際の動作はメンバ関数呼び出しとなるが、関数呼び出しの順序規則を適用しない。
+     - ただし演算子オーバーロードをメンバ関数呼び出し形式で行った場合（例えば`x.operator=(y)`）は、関数呼び出しの評価順序（`x`, `y`）が適用される。
+-- `new`式：メモリ確保関数の呼び出しは初期化子の評価より前と規定する。
++4. `new`式：メモリ確保関数の呼び出しは初期化子の評価より前と規定する。
+ 
+ 3番目の規則については、
+ 代入演算子`operator=`をオーバーロードした場合を考えると理解しやすい。
+@@ -54,7 +55,7 @@ int main()
+ ```
+ 
+ `Hoge`クラスの代入演算子オーバーロードによって、
+-式`b() = a()`は`b().operator=(a())`という関数呼び出しが粉われる。
++式`b() = a()`は`b().operator=(a())`という関数呼び出しが行われる。
+ このとき3番目の規則が存在しなかったとすると、1番目の関数呼び出しに関する規則が適用される。
+ 関数呼び出しの評価順序は左から右の順、つまり`b()`, `a()`の順で評価されるため、
+ 言語組み込み代入演算子オペランドの評価順序と逆になってしまう。
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>厳密な式の評価順 -- expression_evaluation_order: 評価順規定の対象を明確化</title>
+      <link href="https://cpprefjp.github.io/lang/cpp17/expression_evaluation_order.html"/>
+      <id>c1a52e349dcd8739b254e2f1f5005694ac5ebed5:lang/cpp17/expression_evaluation_order.md</id>
+      <updated>2021-06-01T09:50:56+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp17/expression_evaluation_order.md b/lang/cpp17/expression_evaluation_order.md
+index ba082317b..2c7cfbcde 100644
+--- a/lang/cpp17/expression_evaluation_order.md
++++ b/lang/cpp17/expression_evaluation_order.md
+@@ -3,8 +3,9 @@
+ 
+ ## 概要
+ 
+-C++14までは式の評価順序が未規定（unspecified）であったが、
+-C++17では次の式は全て`a`, `b`の順で評価されるように定義された。
++C++14までは演算子オペランドにあたる部分式の評価順序は未規定（unspecified）であったが、
++C++17では下記リストの演算子に関しては`a`, `b`の順で評価されることが規定された。
++`@=`は代入演算子`=`や任意の複合代入演算子（`+=`, `-=`など）を表す。
+ 
+ 1. `a.b`
+ 1. `a-&amp;gt;b`
+@@ -15,13 +16,15 @@ C++17では次の式は全て`a`, `b`の順で評価されるように定義さ
+ 1. `a &amp;lt;&amp;lt; b`
+ 1. `a &amp;gt;&amp;gt; b`
+ 
+-関数の引数リスト内の式（上記例で言えば`b1`, `b2`, `b3`）の評価順序は未規定である。
+-`@=`は代入演算子`=`や任意の複合代入演算子（`+=`, `-=`など）を表す。
++関数呼び出し実引数リストの部分式（上記例では`b1`, `b2`, `b3`）間の評価順序は、不定順で序列化(indeterminately sequenced)される。
++つまり`b1`評価完了より前に`b2`や`b3`評価が開始する（インターリーブ）ことは決して無いが、部分式の評価順は不定であり`b2`, `b3`, `b1`順なども許容される。
++
++上記以外の演算子オペランド（例えば`x + y`の両項`x`, `y`）間の評価順序は、C++17でも従来どおり未規定(unspecified)のままである。
+ 
+ 
+ ## 仕様
+ 
+-C++17では式の評価順序が下記の通りに定められた。
++C++17では演算子オペランドにあたる部分式の評価順序が下記の通りに定められた。
+ 
+ - 左から右に評価される。
+     - メンバへのポインタ演算子 (`.*`, `-&amp;gt;*`)
+@@ -31,51 +34,52 @@ C++17では式の評価順序が下記の通りに定められた。
+ - 右から左に評価される。
+     - 代入演算子
+     - 複合代入演算子（代入と演算を同時に行う`+=`, `-=`, `|=`などのこと）
+-- オーバーロードされた演算子の場合、同様の組み込み演算子の評価順序によって決定される。
+-    - オーバーロードされた演算子の実際の動作はメンバ関数呼び出しだが、わざとメンバ関数呼び出しの規則を適用しない。
+-- `new`式（メモリ確保を初期化子の評価順序の前に規定した）
++- オーバーロードされた演算子の場合、言語組み込み演算子の評価順序に従う。
++    - オーバーロードされた演算子の実際の動作はメンバ関数呼び出しとなるが、関数呼び出しの順序規則を適用しない。
++    - ただし演算子オーバーロードをメンバ関数呼び出し形式で行った場合（例えば`x.operator=(y)`）は、関数呼び出しの評価順序（`x`, `y`）が適用される。
++- `new`式：メモリ確保関数の呼び出しは初期化子の評価より前と規定する。
+ 
+ 3番目の規則については、
+-代入演算子`operator=`をオーバーロードした場合を考えるとわかりやすいと思う。
+-代入演算子は右から左の順、つまり`a`, `b`の順で評価される。
++代入演算子`operator=`をオーバーロードした場合を考えると理解しやすい。
++言語組み込み代入演算子`=`のオペランドは右から左の順、つまり`a()`, `b()`の順で評価される。
+ 
+ ```cpp
+-struct Hoge {
+-};
++int  a();
++int&amp;amp; b();
+ 
+ int main()
+ {
+-  Hoge a, b;
+-  b = a; // a, bの順で評価される
++  b() = a(); // 部分式a(), b()の順で評価される
+ }
+ ```
+ 
+-Hogeクラスの代入演算子をオーバーロードすると、
+-`b = a;`は`b.operator=(a);`となりメンバ関数呼び出しと等価になる。
+-このとき3番目の規則が存在しなかったとすると、メンバ関数呼び出しの規則が適用される。
+-メンバ関数呼び出しの評価順序は左から右の順、つまり`b`, `a`の順で評価され、
+-代入式の評価順序と逆になってしまう。
++`Hoge`クラスの代入演算子オーバーロードによって、
++式`b() = a()`は`b().operator=(a())`という関数呼び出しが粉われる。
++このとき3番目の規則が存在しなかったとすると、1番目の関数呼び出しに関する規則が適用される。
++関数呼び出しの評価順序は左から右の順、つまり`b()`, `a()`の順で評価されるため、
++言語組み込み代入演算子オペランドの評価順序と逆になってしまう。
+ 
+ ```cpp
+ struct Hoge {
+-  Hoge&amp;amp; operator=(const Hoge&amp;amp; a) {
+-    return *this;
+-  };
++  // 代入演算子オーバーロード
++  Hoge&amp;amp; operator=(const Hoge&amp;amp;);
+ };
+ 
++Hoge  a();
++Hoge&amp;amp; b();
++
+ int main()
+ {
+-  Hoge a, b;
+-  // b.operator=(a); と等価
++  // 実際には b().operator=(a()); が呼び出されるため
+   // 仮に3番目の規則が存在しなかったら...
+-  b = a; // b, aの順で評価される（逆になってしまう！）
++  b() = a(); // b(), a()の順で評価される（逆になってしまう！）
+ }
+ ```
+ 
+ プログラムの見た目は全く同じ代入式にも関わらず、
+ 代入演算子オーバーロードの有無によって評価順序が逆になってしまう。
+ このような振る舞いはプログラマを混乱させるだけだろう。
+-3番目の規則は「演算子オーバーロードにわざとメンバ関数呼び出しの規則を当てはめない」ことで、
++3番目の規則は「演算子オーバーロードにわざと関数呼び出しの規則を当てはめない」ことで、
+ 演算子オーバーロードの有無に関わらず自然な動作を実現するための規則である。
+ 
+ 
+@@ -102,7 +106,7 @@ int main() {
+ 
+ ## この機能が必要になった背景・経緯
+ 
+-C++規格の策定以来、式の評価順序は厳密に定められていなかった。
++C++規格の策定以来、演算子オペランドの評価順序は厳密に定められていなかった。
+ 
+ 例に出てきたプログラムは非常に単純だが、
+ C++14やそれ以前のC++の規格では動作が不定であった。
+@@ -118,12 +122,12 @@ int main() {
+ ```
+ 
+ 下記のプログラムの動作を考える。
+-`std::cout`, `f`, `g`, `h`が互いに作用する
+-（例えば`f`, `g`, `h`内で`std::cout`に何か出力するなど）場合、
++`std::cout`, `f()`, `g()`, `h()`が互いに作用する
++（例えば`f()`, `g()`, `h()`内で`std::cout`に何か出力するなど）場合、
+ このプログラムの動作は不定であった。
+ 
+-シフト演算子は左結合なので`(((std::cout &amp;lt;&amp;lt; f) &amp;lt;&amp;lt; g) &amp;lt;&amp;lt; h)`の順に評価されそうだが、
+-残念ながらそうならない。
++シフト演算子は左結合なので`std::cout`, `f()`, `g()`, `h()`の順に評価されそうだが、
++演算子の結合と評価順には直接的な関係はなく、C++プログラマが期待する評価順は保証されなかった。
+ 
+ ```cpp
+ std::cout &amp;lt;&amp;lt; f() &amp;lt;&amp;lt; g() &amp;lt;&amp;lt; h();
+@@ -137,11 +141,11 @@ std::cout.operator&amp;lt;&amp;lt;(f()).operator&amp;lt;&amp;lt;(g()).operator&amp;lt;&amp;lt;(h());
+ ```
+ 
+ このとき`operator&amp;lt;&amp;lt;(f()).operator&amp;lt;&amp;lt;(g())`のように、
+-メンバ関数呼び出しの連鎖が発生するが、この評価順は未規定であり、
+-右から左、すなわち`g`, `f`の順で評価されるかも知れないし、
+-左から右、すなわち`f`, `g`の順に評価されるかも知れない。
++メンバ関数呼び出しの連鎖が発生するが、`f()`を含む部分式と`g()`の評価順は未規定とされていた。
++つまり右から左`g()`, `f()`の順で評価されるかも知れないし、
++左から右`f()`, `g()`の順に評価されるかも知れない。
+ 
+-以上のように、シンプルな代入演算やメンバ関数の連鎖などC++で広く使われている手法でさえ、
++以上のように、シンプルな代入演算やメンバ関数呼び出し連鎖などC++で広く使われている手法でさえ、
+ 動作結果が不定となってしまう問題がある。
+ この問題はプログラミング作法が悪いのではなく、
+ C++規格が現代のプログラミング作法に合わなくなっていることが原因である。
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>コンパイラの実装状況 -- コンパイラ実装バージョンへのプロポーザルNo追記(C++14)</title>
@@ -1514,221 +1909,6 @@ index ec2dcbfc9..20632d4c6 100644
       <author>
         <name>Akira Takahashi</name>
         <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>find_last_not_of -- 対象を含む「より前」を「以前」に修正</title>
-      <link href="https://cpprefjp.github.io/reference/string/basic_string/find_last_not_of.html"/>
-      <id>9f4cacdca6b51520cba739ba99bb5113d127104a:reference/string/basic_string/find_last_not_of.md</id>
-      <updated>2021-05-30T21:22:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/basic_string/find_last_not_of.md b/reference/string/basic_string/find_last_not_of.md
-index 97c39b8d8..58bf19fbc 100644
---- a/reference/string/basic_string/find_last_not_of.md
-+++ b/reference/string/basic_string/find_last_not_of.md
-@@ -32,10 +32,10 @@ size_type find_last_not_of(const T&amp;amp; t, size_type pos = npos) const noexcept(see
- 
- 
- ## 効果
--- (1) `pos` より前で最後に `str` 内に存在しない文字の位置を返す。
--- (2) `pos` より前で最後に `s` 内に存在しない文字の位置を返す。`s` は長さ `n` の文字列へのポインタである。
-+- (1) `pos` 以前で最後に `str` 内に存在しない文字の位置を返す。
-+- (2) `pos` 以前で最後に `s` 内に存在しない文字の位置を返す。`s` は長さ `n` の文字列へのポインタである。
- - (3) (2) と同様だが、こちらは NULL 終端の文字列を扱う。
--- (4) `pos` より前で最後に `c` と一致しない文字の位置を返す。
-+- (4) `pos` 以前で最後に `c` と一致しない文字の位置を返す。
- - (5) `basic_string_view&amp;lt;charT, traits&amp;gt; sv = t;`として変数`sv`を作成し、`pos` より前で最後に `sv` 内に存在しない文字の位置を返す。
- 
- 
-@@ -71,13 +71,13 @@ int main()
-   const std::string s(&amp;#34;Hello, world. Welcome to C++ world.&amp;#34;);
-   const std::string str(&amp;#34;world&amp;#34;);
- 
--  // 1 つめの &amp;#34;world&amp;#34; の &amp;#34;d&amp;#34; より前で &amp;#34;world&amp;#34; を検索すると、最初の空白が見つかる
-+  // 1 つめの &amp;#34;world&amp;#34; の &amp;#34;d&amp;#34; 以前で &amp;#34;world&amp;#34; を検索すると、最初の空白が見つかる
-   std::cout &amp;lt;&amp;lt; s.find_last_not_of(str, 11) &amp;lt;&amp;lt; std::endl;
- 
-   // &amp;#34;Welcome to C++ world.&amp;#34; を検索すると、&amp;#34;,&amp;#34; が見つかる
-   std::cout &amp;lt;&amp;lt; s.find_last_not_of(&amp;#34;Welcome to C++ world.&amp;#34;) &amp;lt;&amp;lt; std::endl;
- 
--  // &amp;#34;C++&amp;#34; の 2 つめの &amp;#34;+&amp;#34; より前で &amp;#39;+&amp;#39; を検索すると &amp;#34;C&amp;#34; が見つかる
-+  // &amp;#34;C++&amp;#34; の 2 つめの &amp;#34;+&amp;#34; 以前で &amp;#39;+&amp;#39; を検索すると &amp;#34;C&amp;#34; が見つかる
-   std::cout &amp;lt;&amp;lt; s.find_last_not_of(&amp;#39;+&amp;#39;, 27) &amp;lt;&amp;lt; std::endl;
- }
- ```
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>pit-ray</name>
-        <email>pit-ray@outlook.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>find_last_of -- 対象を含む「より前」を「以前」に修正</title>
-      <link href="https://cpprefjp.github.io/reference/string/basic_string/find_last_of.html"/>
-      <id>9f4cacdca6b51520cba739ba99bb5113d127104a:reference/string/basic_string/find_last_of.md</id>
-      <updated>2021-05-30T21:22:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/basic_string/find_last_of.md b/reference/string/basic_string/find_last_of.md
-index 417a5ef65..7c520f9f1 100644
---- a/reference/string/basic_string/find_last_of.md
-+++ b/reference/string/basic_string/find_last_of.md
-@@ -32,10 +32,10 @@ size_type find_last_of(const T&amp;amp; t, size_type pos = npos) const noexcept(see belo
- 
- 
- ## 効果
--- (1) `pos` より前で最後に `str` 内に存在する文字の位置を返す。
--- (2) `pos` より前で最後に `s` 内に存在する文字の位置を返す。`s` は長さ `n` の文字列へのポインタである。
-+- (1) `pos` 以前で最後に `str` 内に存在する文字の位置を返す。
-+- (2) `pos` 以前で最後に `s` 内に存在する文字の位置を返す。`s` は長さ `n` の文字列へのポインタである。
- - (3) (2) と同様だが、こちらは NULL 終端の文字列を扱う。
--- (4) `pos` より前で最後に `c` と一致する文字の位置を返す。
-+- (4) `pos` 以前で最後に `c` と一致する文字の位置を返す。
- - (5) `basic_string_view&amp;lt;charT, traits&amp;gt; sv = t;`として変数`sv`を作成し、`pos` より前で最後に `sv` 内に存在する文字の位置を返す。
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>pit-ray</name>
-        <email>pit-ray@outlook.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>rfind -- 対象を含む「より前」を「以前」に修正</title>
-      <link href="https://cpprefjp.github.io/reference/string/basic_string/rfind.html"/>
-      <id>9f4cacdca6b51520cba739ba99bb5113d127104a:reference/string/basic_string/rfind.md</id>
-      <updated>2021-05-30T21:22:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/basic_string/rfind.md b/reference/string/basic_string/rfind.md
-index ec2dcbfc9..20632d4c6 100644
---- a/reference/string/basic_string/rfind.md
-+++ b/reference/string/basic_string/rfind.md
-@@ -31,10 +31,10 @@ size_type rfind(const T&amp;amp; t, size_type pos = npos) const noexcept(see below);   /
- 
- 
- ## 効果
--- (1) `pos` より前で最後に `str` と一致する位置を返す。
--- (2) `pos` より前で最後に `s` と一致する位置を返す。`s` は長さ `n` の文字列へのポインタである。
-+- (1) `pos` 以前で最後に `str` と一致する位置を返す。
-+- (2) `pos` 以前で最後に `s` と一致する位置を返す。`s` は長さ `n` の文字列へのポインタである。
- - (3) (2) と同様だが、こちらは NULL 終端の文字列を扱う。
--- (4) `pos` より前で最後に `c` と一致する位置を返す。
-+- (4) `pos` 以前で最後に `c` と一致する位置を返す。
- - (5) `basic_string_view&amp;lt;charT, traits&amp;gt; sv = t;`として変数`sv`を作成し、`pos` より前で最後に `sv` と一致する位置を返す。
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>pit-ray</name>
-        <email>pit-ray@outlook.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>モジュール -- Update modules.md</title>
-      <link href="https://cpprefjp.github.io/lang/cpp20/modules.html"/>
-      <id>db24ffc4e7f08f45499622556f0d15b8094e6e78:lang/cpp20/modules.md</id>
-      <updated>2021-05-30T07:35:11+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/modules.md b/lang/cpp20/modules.md
-index d8ef88ab0..31e2f140a 100644
---- a/lang/cpp20/modules.md
-+++ b/lang/cpp20/modules.md
-@@ -122,7 +122,7 @@ int baz() { return 30; }
- ```
- * P1103R3[link http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1103r3.pdf]
- 
--モジュール宣言はプリプロセッサで生成してはならない。これは、`#if`などによる切り替え、`#include`、`#define`による置換などによるものを含む。
-+モジュール宣言は1行で書く必要があり、プリプロセッサで生成してはならない。これは、`#if`などによる切り替え、`#include`、`#define`による置換などによるものを含む。後述のグローバルモジュールフラグメントを記述する場合を除き、モジュール宣言の前にトークンがあってはならない。
- 
- #### モジュール名の詳細
- 
-@@ -185,7 +185,7 @@ export module foo;  // モジュールの宣言(この上の行までがグロ
- * グローバルモジュールフラグメント内の宣言や定義は、後続のモジュールではなくグローバルモジュールに属する。
- * グローバルモジュールフラグメントにはプリプロセッサディレクティブ以外を書くことはできない。
- * グローバルモジュールフラグメント内の宣言は、後続のモジュールに属する宣言から参照されていない場合は、**破棄**(discard)される。
--* グローバルモジュールフラグメントの宣言はプリプロセッサで生成してはならない。
-+* グローバルモジュールフラグメントの宣言は1行で書く必要があり、プリプロセッサで生成してはならない。これは、`#if`などによる切り替え、`#include`、`#define`による置換などによるものを含む。グローバルモジュールフラグメントの前にトークンがあってはならない。
- 
- ### エクスポート
- 
-@@ -263,13 +263,13 @@ C++20では、新たにモジュールリンケージが追加された。
- 
- ### インポート
- 
--モジュールインポート宣言は次のようになる：
-+インポート宣言は次のようになる：
- 
- ```cpp
--import lib; // libのインポート
-+export(opt) import lib; // libのインポート
- ```
- 
--モジュールインポート宣言は、モジュールのインターフェースユニットをインポートする。
-+インポート宣言は、モジュールのインターフェースユニットをインポートする。
- 
- - モジュール本体の実装ユニットはプライマリーモジュールインターフェースユニットを暗黙的にインポートする。ソースファイルと同名のヘッダーファイルをインクルードすることは多いが、これを自動化したものである。
- 
-@@ -281,15 +281,13 @@ import lib; // libのインポート
- 
- モジュールユニットの中では、インポート宣言はモジュールユニットの本体(グローバルモジュールフラグメントではない部分)の先頭で行わなければならない。
- 
--#### 再エクスポート
-+インポート宣言は1行で書く必要があり、`import`キーワードや`export`キーワードをプリプロセッサで生成してはならない。また、モジュールユニット内では`#include`の結果としてインポート宣言を生成してはならない。
- 
--インポート宣言もエクスポートできる。これを再エクスポートという。
-+#### 再エクスポート
- 
--```cpp
--export import lib; // libの再エクスポート
--```
-+インポート宣言に`export`キーワードを付けることで、モジュールを再エクスポートできる。
- 
--モジュールをインポートすると、そのモジュールが再エクスポートしているモジュールも同時にインポートする。
-+モジュールをインポートすると、そのモジュールが再エクスポートしているモジュールも同時にインポートする。再エクスポートは、モジュールインターフェースでしかできない。
- 
- #### パーティションのインポート
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>モジュール -- Update modules.md</title>
-      <link href="https://cpprefjp.github.io/lang/cpp20/modules.html"/>
-      <id>bccc742918af99585238af4e0acbf5fc2ec376df:lang/cpp20/modules.md</id>
-      <updated>2021-05-30T06:58:50+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/modules.md b/lang/cpp20/modules.md
-index 89363b35c..d8ef88ab0 100644
---- a/lang/cpp20/modules.md
-+++ b/lang/cpp20/modules.md
-@@ -377,9 +377,9 @@ import &amp;lt;foo.h&amp;gt;; // foo.hをヘッダーユニットとしてインポート
- * C++ライブラリヘッダー([C++標準ライブラリヘッダー](/reference.md)のうち、[C言語標準ライブラリヘッダーに由来するもの](/reference.md#clib-facilities)(`&amp;lt;cstdio&amp;gt;`など)以外)
- * その他、処理系定義のヘッダー
- 
--ヘッダーユニットをインポートしてもその内容が展開されることはないが、`#include`とほぼ同じ効果が得られる(そのようなヘッダーファイルだけがインポータブルヘッダーに指定されるともいえる)。
-+ヘッダーユニットをインポートしてもその内容が展開されることはないが、マクロを取り込めるなど、`#include`とほぼ同じ効果が得られる。
- 
--プリプロセッサは、インポータブルヘッダーに対する`#include`ディレクティブを`import`宣言に置換できる。ただし、実際に行われるかは処理系定義である。
-+プリプロセッサは、非モジュールユニットに現れるインポータブルヘッダーに対する`#include`ディレクティブを`import`宣言に置換してもよいことになっている。モジュールユニットにおいては、明示的に`import`宣言をするほうがよい。
- 
- #### モジュールとの違い
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
       </author>
     </entry>
   

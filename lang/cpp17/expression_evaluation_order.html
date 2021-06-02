@@ -189,8 +189,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2021-05-27T09:13:22">
-        2021年05月27日 09時13分22秒
+      <span itemprop="datePublished" content="2021-06-02T01:21:50">
+        2021年06月02日 01時21分50秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -215,8 +215,9 @@
         
   <h1 itemprop="name"><span class="token">厳密な式の評価順</span><span class="cpp cpp17" title="C++17で追加">(C++17)</span></h1>
 <div itemprop="articleBody"><h2>概要</h2>
-<p>C++14までは式の評価順序が未規定（unspecified）であったが、
-C++17では次の式は全て<code>a</code>, <code>b</code>の順で評価されるように定義された。</p>
+<p>C++14までは演算子オペランドにあたる部分式の評価順序は未規定（unspecified）であったが、
+C++17では下記リストの演算子に関しては<code>a</code>, <code>b</code>の順で評価されることが規定された。
+<code>@=</code>は代入演算子<code>=</code>や任意の複合代入演算子（<code>+=</code>, <code>-=</code>など）を表す。</p>
 <ol>
 <li><code>a.b</code></li>
 <li><code>a-&gt;b</code></li>
@@ -227,11 +228,13 @@ C++17では次の式は全て<code>a</code>, <code>b</code>の順で評価され
 <li><code>a &lt;&lt; b</code></li>
 <li><code>a &gt;&gt; b</code></li>
 </ol>
-<p>関数の引数リスト内の式（上記例で言えば<code>b1</code>, <code>b2</code>, <code>b3</code>）の評価順序は未規定である。
-<code>@=</code>は代入演算子<code>=</code>や任意の複合代入演算子（<code>+=</code>, <code>-=</code>など）を表す。</p>
+<p>関数呼び出し実引数リストの部分式（上記例では<code>b1</code>, <code>b2</code>, <code>b3</code>）間の評価順序は、不定順で序列化(indeterminately sequenced)される。
+つまり<code>b1</code>, <code>b2</code>, <code>b3</code>の順序とは限らず<code>b3</code>, <code>b2</code>, <code>b1</code>や<code>b2</code>, <code>b3</code>, <code>b1</code>などの順序で評価される可能性がある。
+その一方で、例えば<code>b1</code>, <code>b2</code>, <code>b3</code>の順に評価が開始する場合には、<code>b1</code>評価完了より前に<code>b2</code>や<code>b3</code>の評価が開始する（インターリーブ実行される）ことは決して無い。</p>
+<p>上記以外の演算子オペランド（例えば<code>x + y</code>の両項<code>x</code>, <code>y</code>）間の評価順序は、C++17でも従来どおり未規定(unspecified)のままである。</p>
 <h2>仕様</h2>
-<p>C++17では式の評価順序が下記の通りに定められた。</p>
-<ul>
+<p>C++17では演算子オペランドにあたる部分式の評価順序が下記の通りに定められた。</p>
+<ol>
 <li>左から右に評価される。<ul>
 <li>メンバへのポインタ演算子 (<code>.*</code>, <code>-&gt;*</code>)</li>
 <li>関数呼び出し演算子、および<code>T(...)</code>による初期化</li>
@@ -244,49 +247,50 @@ C++17では次の式は全て<code>a</code>, <code>b</code>の順で評価され
 <li>複合代入演算子（代入と演算を同時に行う<code>+=</code>, <code>-=</code>, <code>|=</code>などのこと）</li>
 </ul>
 </li>
-<li>オーバーロードされた演算子の場合、同様の組み込み演算子の評価順序によって決定される。<ul>
-<li>オーバーロードされた演算子の実際の動作はメンバ関数呼び出しだが、わざとメンバ関数呼び出しの規則を適用しない。</li>
+<li>オーバーロードされた演算子の場合、言語組み込み演算子の評価順序に従う。<ul>
+<li>オーバーロードされた演算子の実際の動作はメンバ関数呼び出しとなるが、関数呼び出しの順序規則を適用しない。</li>
+<li>ただし演算子オーバーロードをメンバ関数呼び出し形式で行った場合（例えば<code>x.operator=(y)</code>）は、関数呼び出しの評価順序（<code>x</code>, <code>y</code>）が適用される。</li>
 </ul>
 </li>
-<li><code>new</code>式（メモリ確保を初期化子の評価順序の前に規定した）</li>
-</ul>
+<li><code>new</code>式：メモリ確保関数の呼び出しは初期化子の評価より前と規定する。</li>
+</ol>
 <p>3番目の規則については、
-代入演算子<code>operator=</code>をオーバーロードした場合を考えるとわかりやすいと思う。
-代入演算子は右から左の順、つまり<code>a</code>, <code>b</code>の順で評価される。</p>
-<p><div class="codehilite"><pre><span></span><code><span class="k">struct</span> <span class="n">Hoge</span> <span class="p">{</span>
-<span class="p">};</span>
+代入演算子<code>operator=</code>をオーバーロードした場合を考えると理解しやすい。
+言語組み込み代入演算子<code>=</code>のオペランドは右から左の順、つまり<code>a()</code>, <code>b()</code>の順で評価される。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="kt">int</span>  <span class="nf">a</span><span class="p">();</span>
+<span class="kt">int</span><span class="o">&amp;</span> <span class="n">b</span><span class="p">();</span>
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
 <span class="p">{</span>
-  <span class="n">Hoge</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">;</span>
-  <span class="n">b</span> <span class="o">=</span> <span class="n">a</span><span class="p">;</span> <span class="c1">// a, bの順で評価される</span>
+  <span class="n">b</span><span class="p">()</span> <span class="o">=</span> <span class="n">a</span><span class="p">();</span> <span class="c1">// 部分式a(), b()の順で評価される</span>
 <span class="p">}</span>
 </code></pre></div>
 </p>
-<p>Hogeクラスの代入演算子をオーバーロードすると、
-<code>b = a;</code>は<code>b.operator=(a);</code>となりメンバ関数呼び出しと等価になる。
-このとき3番目の規則が存在しなかったとすると、メンバ関数呼び出しの規則が適用される。
-メンバ関数呼び出しの評価順序は左から右の順、つまり<code>b</code>, <code>a</code>の順で評価され、
-代入式の評価順序と逆になってしまう。</p>
+<p><code>Hoge</code>クラスの代入演算子オーバーロードによって、
+式<code>b() = a()</code>は<code>b().operator=(a())</code>という関数呼び出しが行われる。
+このとき3番目の規則が存在しなかったとすると、1番目の関数呼び出しに関する規則が適用される。
+関数呼び出しの評価順序は左から右の順、つまり<code>b()</code>, <code>a()</code>の順で評価されるため、
+言語組み込み代入演算子オペランドの評価順序と逆になってしまう。</p>
 <p><div class="codehilite"><pre><span></span><code><span class="k">struct</span> <span class="n">Hoge</span> <span class="p">{</span>
-  <span class="n">Hoge</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">Hoge</span><span class="o">&amp;</span> <span class="n">a</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="o">*</span><span class="k">this</span><span class="p">;</span>
-  <span class="p">};</span>
+  <span class="c1">// 代入演算子オーバーロード</span>
+  <span class="n">Hoge</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">Hoge</span><span class="o">&amp;</span><span class="p">);</span>
 <span class="p">};</span>
+
+<span class="n">Hoge</span>  <span class="nf">a</span><span class="p">();</span>
+<span class="n">Hoge</span><span class="o">&amp;</span> <span class="n">b</span><span class="p">();</span>
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
 <span class="p">{</span>
-  <span class="n">Hoge</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">;</span>
-  <span class="c1">// b.operator=(a); と等価</span>
+  <span class="c1">// 実際には b().operator=(a()); が呼び出されるため</span>
   <span class="c1">// 仮に3番目の規則が存在しなかったら...</span>
-  <span class="n">b</span> <span class="o">=</span> <span class="n">a</span><span class="p">;</span> <span class="c1">// b, aの順で評価される（逆になってしまう！）</span>
+  <span class="n">b</span><span class="p">()</span> <span class="o">=</span> <span class="n">a</span><span class="p">();</span> <span class="c1">// b(), a()の順で評価される（逆になってしまう！）</span>
 <span class="p">}</span>
 </code></pre></div>
 </p>
 <p>プログラムの見た目は全く同じ代入式にも関わらず、
 代入演算子オーバーロードの有無によって評価順序が逆になってしまう。
 このような振る舞いはプログラマを混乱させるだけだろう。
-3番目の規則は「演算子オーバーロードにわざとメンバ関数呼び出しの規則を当てはめない」ことで、
+3番目の規則は「演算子オーバーロードにわざと関数呼び出しの規則を当てはめない」ことで、
 演算子オーバーロードの有無に関わらず自然な動作を実現するための規則である。</p>
 <h2>例</h2>
 <p><div class="yata" id="35e69b586ff7e53bc967b43a09dbcca0feb1982b"><div class="codehilite"><pre><span></span><code><span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/iostream.html">&lt;iostream&gt;</a></span><span class="cp"></span>
@@ -303,7 +307,7 @@ C++17では次の式は全て<code>a</code>, <code>b</code>の順で評価され
 <p><pre><code>0
 </code></pre></p>
 <h2>この機能が必要になった背景・経緯</h2>
-<p>C++規格の策定以来、式の評価順序は厳密に定められていなかった。</p>
+<p>C++規格の策定以来、演算子オペランドの評価順序は厳密に定められていなかった。</p>
 <p>例に出てきたプログラムは非常に単純だが、
 C++14やそれ以前のC++の規格では動作が不定であった。
 代入式の評価順序が規定されていなかったためである。</p>
@@ -316,11 +320,11 @@ C++14やそれ以前のC++の規格では動作が不定であった。
 </code></pre></div>
 </div></p>
 <p>下記のプログラムの動作を考える。
-<code>std::cout</code>, <code>f</code>, <code>g</code>, <code>h</code>が互いに作用する
-（例えば<code>f</code>, <code>g</code>, <code>h</code>内で<code>std::cout</code>に何か出力するなど）場合、
+<code>std::cout</code>, <code>f()</code>, <code>g()</code>, <code>h()</code>が互いに作用する
+（例えば<code>f()</code>, <code>g()</code>, <code>h()</code>内で<code>std::cout</code>に何か出力するなど）場合、
 このプログラムの動作は不定であった。</p>
-<p>シフト演算子は左結合なので<code>(((std::cout &lt;&lt; f) &lt;&lt; g) &lt;&lt; h)</code>の順に評価されそうだが、
-残念ながらそうならない。</p>
+<p>シフト演算子は左結合なので<code>std::cout</code>, <code>f()</code>, <code>g()</code>, <code>h()</code>の順に評価されそうだが、
+演算子の結合と評価順には直接的な関係はなく、C++プログラマが期待する評価順は保証されなかった。</p>
 <p><div class="codehilite"><pre><span></span><code><span class="n"><a href="https://cpprefjp.github.io/reference/iostream/cout.html">std::cout</a></span> <span class="o">&lt;&lt;</span> <span class="n">f</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">g</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">h</span><span class="p">();</span>
 </code></pre></div>
 </p>
@@ -330,10 +334,10 @@ C++14やそれ以前のC++の規格では動作が不定であった。
 </code></pre></div>
 </p>
 <p>このとき<code>operator&lt;&lt;(f()).operator&lt;&lt;(g())</code>のように、
-メンバ関数呼び出しの連鎖が発生するが、この評価順は未規定であり、
-右から左、すなわち<code>g</code>, <code>f</code>の順で評価されるかも知れないし、
-左から右、すなわち<code>f</code>, <code>g</code>の順に評価されるかも知れない。</p>
-<p>以上のように、シンプルな代入演算やメンバ関数の連鎖などC++で広く使われている手法でさえ、
+メンバ関数呼び出しの連鎖が発生するが、<code>f()</code>を含む部分式と<code>g()</code>の評価順は未規定とされていた。
+つまり右から左<code>g()</code>, <code>f()</code>の順で評価されるかも知れないし、
+左から右<code>f()</code>, <code>g()</code>の順に評価されるかも知れない。</p>
+<p>以上のように、シンプルな代入演算やメンバ関数呼び出し連鎖などC++で広く使われている手法でさえ、
 動作結果が不定となってしまう問題がある。
 この問題はプログラミング作法が悪いのではなく、
 C++規格が現代のプログラミング作法に合わなくなっていることが原因である。
