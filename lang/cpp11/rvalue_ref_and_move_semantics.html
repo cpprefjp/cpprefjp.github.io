@@ -189,8 +189,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2021-06-03T08:50:01">
-        2021年06月03日 08時50分01秒
+      <span itemprop="datePublished" content="2021-06-04T01:39:03">
+        2021年06月04日 01時39分03秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -440,26 +440,37 @@ C++11 以降では、代入式2の右辺は右辺値参照 <code>vector&lt;int&g
 </code></pre></div>
 </p>
 <h3>ユニヴァーサル参照</h3>
-<p>テンプレート変数や<code>auto</code>に<code>&amp;&amp;</code>をつけた場合には、通常の右辺値参照とは異なる動作をする。</p>
-<p><div class="codehilite"><pre><span></span><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
+<p>関数テンプレートの型パラメータ<code>T</code>や<a href="https://cpprefjp.github.io/lang/cpp11/auto.html">型推論プレースホルダ<code>auto</code></a>に参照修飾子<code>&amp;&amp;</code>をつけて宣言したものはユニヴァーサル参照と呼ばれ、通常の右辺値参照とは異なる動作をする。
+なお「ユニヴァーサル参照(Universal Reference)」は<a href="https://isocpp.org/blog/2012/11/universal-references-in-c11-scott-meyers" target="_blank">Scott Mayers氏による解説</a>由来の俗称であり、後にC++17仕様において「転送参照(Fowarding Reference)」という正式名称が与えられた。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="c1">// ユニヴァーサル参照</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
 <span class="kt">void</span> <span class="n">f</span><span class="p">(</span><span class="n">T</span><span class="o">&amp;&amp;</span> <span class="n">x</span><span class="p">)</span> <span class="p">{}</span>
 </code></pre></div>
 </p>
-<p>とした場合、<code>f()</code>に渡された実引数が左辺値の場合には左辺値参照となり、右辺値の場合は右辺値参照となる。<br />
+<p>関数テンプレート<code>f()</code>の型パラメータ<code>T</code>はユニヴァーサル参照であり、
+<code>f()</code>に渡された実引数が左辺値の場合には左辺値参照となり、右辺値の場合は右辺値参照となる。<br />
 これは、次で説明する完全転送に関わる。</p>
 <h3>完全転送（Perfect Forwarding）</h3>
-<p>ある関数内で引数を別の関数に渡したいことがある。<br />
-引数を右辺値参照した場合は別の関数に渡すときにも右辺値として渡すことが自然である。<br />
-一度右辺値参照すると、変数は左辺値であるのでもう一度ムーブする必要がある。<br />
-しかし、引数をユニヴァーサル参照で宣言した場合安易にムーブできない。<br />
-引数は右辺値参照の場合と左辺値参照の場合両方があり得るからである。<br />
-左辺値参照の場合はムーブせず、右辺値参照の場合はムーブして渡す機能が必要となる。<br />
-そのような機能として、<code><a href="https://cpprefjp.github.io/reference/utility/forward.html">std::forward()</a></code>関数が用意されている。  </p>
-<p><div class="codehilite"><pre><span></span><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
+<p>あるが関数が受け取ったパラメータを別の関数へそのまま渡したいとき、
+右辺値は右辺値として、左辺値は左辺値として別の関数へ転送したいことがある（完全転送）。<br />
+ユニヴァーサル参照を用いると、呼び出し元における右辺値／左辺値という情報が、受け取り側で右辺値参照／左辺値参照という型情報によって区別可能となる。<br />
+しかし右辺値を右辺値参照で受け取った場合、その引数をそのまま使うと左辺値になるため再び右辺値へ変換する必要が生じる。  </p>
+<p>つまり左辺値参照の場合は左辺値として、右辺値参照の場合は右辺値に変換して渡す機能が必要となる。<br />
+そのような機能として、<code><a href="https://cpprefjp.github.io/reference/utility/forward.html">std::forward()</a></code>関数が用意されている。<br />
+利用時には <code>std::forward&lt;T&gt;(a)</code> のように、テンプレートパラメータとしてユニヴァーサル参照宣言時の型パラメータ名を明示する必要がある。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/utility.html">&lt;utility&gt;</a></span><span class="cp"></span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span> <span class="kt">void</span> <span class="n">g</span><span class="p">(</span><span class="n">T</span><span class="p">);</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
 <span class="kt">void</span> <span class="n">f</span><span class="p">(</span><span class="n">T</span><span class="o">&amp;&amp;</span> <span class="n">a</span><span class="p">)</span>
 <span class="p">{</span>
-  <span class="c1">// 実引数が右辺値参照型の場合のみムーブされる</span>
+  <span class="c1">// 引数 a が左辺値参照の場合は 左辺値 に</span>
+  <span class="c1">// 右辺値参照の場合は 右辺値 に変換してから</span>
+  <span class="c1">// 別関数 g() の実引数として渡す。</span>
   <span class="n">g</span><span class="p">(</span> <span class="n"><a href="https://cpprefjp.github.io/reference/utility/forward.html">std::forward</a></span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="p">)</span> <span class="p">;</span>
+  <span class="c1">// 関数 g() は値型 T としてパラメータを取るため</span>
+  <span class="c1">// 左辺値ではコピーが、右辺値ではムーブが行われる。</span>
 <span class="p">}</span>
 </code></pre></div>
 </p>

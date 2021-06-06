@@ -2,9 +2,82 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2021-06-06T08:11:01.908647</updated>
-  <id>018bc061-0067-4bf1-941d-53699c7becb1</id>
+  <updated>2021-06-06T13:32:11.927041</updated>
+  <id>fbb9e56e-9696-40e2-af98-11f05923a752</id>
 
+  
+    <entry>
+      <title>右辺値参照・ムーブセマンティクス -- Merge pull request #874 from cpprefjp/fix-perfect-forwarding</title>
+      <link href="https://cpprefjp.github.io/lang/cpp11/rvalue_ref_and_move_semantics.html"/>
+      <id>21813e4a9a121fb6b7eeb8af0383be06fe89510e:lang/cpp11/rvalue_ref_and_move_semantics.md</id>
+      <updated>2021-06-06T22:27:25+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp11/rvalue_ref_and_move_semantics.md b/lang/cpp11/rvalue_ref_and_move_semantics.md
+index 63e2555cc..fa0bcb4d6 100644
+--- a/lang/cpp11/rvalue_ref_and_move_semantics.md
++++ b/lang/cpp11/rvalue_ref_and_move_semantics.md
+@@ -276,33 +276,44 @@ public:
+ 
+ 
+ ### ユニヴァーサル参照
+-テンプレート変数や`auto`に`&amp;amp;&amp;amp;`をつけた場合には、通常の右辺値参照とは異なる動作をする。
++関数テンプレートの型パラメータ`T`や[型推論プレースホルダ`auto`](auto.md)に参照修飾子`&amp;amp;&amp;amp;`をつけて宣言したものはユニヴァーサル参照と呼ばれ、通常の右辺値参照とは異なる動作をする。
++なお「ユニヴァーサル参照(Universal Reference)」は[Scott Mayers氏による解説](https://isocpp.org/blog/2012/11/universal-references-in-c11-scott-meyers)由来の俗称であり、後にC++17仕様において「転送参照(Fowarding Reference)」という正式名称が与えられた。
+ 
+ ```cpp
++// ユニヴァーサル参照
+ template &amp;lt;typename T&amp;gt;
+ void f(T&amp;amp;&amp;amp; x) {}
+ ```
+ 
+-とした場合、`f()`に渡された実引数が左辺値の場合には左辺値参照となり、右辺値の場合は右辺値参照となる。  
++関数テンプレート`f()`の型パラメータ`T`はユニヴァーサル参照であり、
++`f()`に渡された実引数が左辺値の場合には左辺値参照となり、右辺値の場合は右辺値参照となる。  
+ これは、次で説明する完全転送に関わる。
+ 
+ ### 完全転送（Perfect Forwarding）
+ 
+-ある関数内で引数を別の関数に渡したいことがある。  
+-引数を右辺値参照した場合は別の関数に渡すときにも右辺値として渡すことが自然である。  
+-一度右辺値参照すると、変数は左辺値であるのでもう一度ムーブする必要がある。  
+-しかし、引数をユニヴァーサル参照で宣言した場合安易にムーブできない。  
+-引数は右辺値参照の場合と左辺値参照の場合両方があり得るからである。  
+-左辺値参照の場合はムーブせず、右辺値参照の場合はムーブして渡す機能が必要となる。  
+-そのような機能として、[`std::forward()`](/reference/utility/forward.md)関数が用意されている。  
++あるが関数が受け取ったパラメータを別の関数へそのまま渡したいとき、
++右辺値は右辺値として、左辺値は左辺値として別の関数へ転送したいことがある（完全転送）。  
++ユニヴァーサル参照を用いると、呼び出し元における右辺値／左辺値という情報が、受け取り側で右辺値参照／左辺値参照という型情報によって区別可能となる。  
++しかし右辺値を右辺値参照で受け取った場合、その引数をそのまま使うと左辺値になるため再び右辺値へ変換する必要が生じる。  
+ 
++つまり左辺値参照の場合は左辺値として、右辺値参照の場合は右辺値に変換して渡す機能が必要となる。  
++そのような機能として、[`std::forward()`](/reference/utility/forward.md)関数が用意されている。  
++利用時には `std::forward&amp;lt;T&amp;gt;(a)` のように、テンプレートパラメータとしてユニヴァーサル参照宣言時の型パラメータ名を明示する必要がある。
+ 
+ ```cpp
++#include &amp;lt;utility&amp;gt;
++
++template &amp;lt;typename T&amp;gt; void g(T);
++
+ template &amp;lt;typename T&amp;gt;
+ void f(T&amp;amp;&amp;amp; a)
+ {
+-  // 実引数が右辺値参照型の場合のみムーブされる
++  // 引数 a が左辺値参照の場合は 左辺値 に
++  // 右辺値参照の場合は 右辺値 に変換してから
++  // 別関数 g() の実引数として渡す。
+   g( std::forward&amp;lt;T&amp;gt;(a) ) ;
++  // 関数 g() は値型 T としてパラメータを取るため
++  // 左辺値ではコピーが、右辺値ではムーブが行われる。
+ }
+ ```
+ * std::forward[link /reference/utility/forward.md]
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>Hidden Friends -- Hidden Friends : 定義を追加した</title>
@@ -75,6 +148,79 @@ index e89b6be0f..8d9a370fa 100644
       <author>
         <name>Tetsuro Matsumura</name>
         <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>右辺値参照・ムーブセマンティクス -- rvalue_ref_and_move_semantics: ユニヴァーサル参照,完全転送 説明修正</title>
+      <link href="https://cpprefjp.github.io/lang/cpp11/rvalue_ref_and_move_semantics.html"/>
+      <id>99dd4eb6e5e9441b7a5e9b8e4108eec6873718bc:lang/cpp11/rvalue_ref_and_move_semantics.md</id>
+      <updated>2021-06-04T10:39:03+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp11/rvalue_ref_and_move_semantics.md b/lang/cpp11/rvalue_ref_and_move_semantics.md
+index 63e2555cc..fa0bcb4d6 100644
+--- a/lang/cpp11/rvalue_ref_and_move_semantics.md
++++ b/lang/cpp11/rvalue_ref_and_move_semantics.md
+@@ -276,33 +276,44 @@ public:
+ 
+ 
+ ### ユニヴァーサル参照
+-テンプレート変数や`auto`に`&amp;amp;&amp;amp;`をつけた場合には、通常の右辺値参照とは異なる動作をする。
++関数テンプレートの型パラメータ`T`や[型推論プレースホルダ`auto`](auto.md)に参照修飾子`&amp;amp;&amp;amp;`をつけて宣言したものはユニヴァーサル参照と呼ばれ、通常の右辺値参照とは異なる動作をする。
++なお「ユニヴァーサル参照(Universal Reference)」は[Scott Mayers氏による解説](https://isocpp.org/blog/2012/11/universal-references-in-c11-scott-meyers)由来の俗称であり、後にC++17仕様において「転送参照(Fowarding Reference)」という正式名称が与えられた。
+ 
+ ```cpp
++// ユニヴァーサル参照
+ template &amp;lt;typename T&amp;gt;
+ void f(T&amp;amp;&amp;amp; x) {}
+ ```
+ 
+-とした場合、`f()`に渡された実引数が左辺値の場合には左辺値参照となり、右辺値の場合は右辺値参照となる。  
++関数テンプレート`f()`の型パラメータ`T`はユニヴァーサル参照であり、
++`f()`に渡された実引数が左辺値の場合には左辺値参照となり、右辺値の場合は右辺値参照となる。  
+ これは、次で説明する完全転送に関わる。
+ 
+ ### 完全転送（Perfect Forwarding）
+ 
+-ある関数内で引数を別の関数に渡したいことがある。  
+-引数を右辺値参照した場合は別の関数に渡すときにも右辺値として渡すことが自然である。  
+-一度右辺値参照すると、変数は左辺値であるのでもう一度ムーブする必要がある。  
+-しかし、引数をユニヴァーサル参照で宣言した場合安易にムーブできない。  
+-引数は右辺値参照の場合と左辺値参照の場合両方があり得るからである。  
+-左辺値参照の場合はムーブせず、右辺値参照の場合はムーブして渡す機能が必要となる。  
+-そのような機能として、[`std::forward()`](/reference/utility/forward.md)関数が用意されている。  
++あるが関数が受け取ったパラメータを別の関数へそのまま渡したいとき、
++右辺値は右辺値として、左辺値は左辺値として別の関数へ転送したいことがある（完全転送）。  
++ユニヴァーサル参照を用いると、呼び出し元における右辺値／左辺値という情報が、受け取り側で右辺値参照／左辺値参照という型情報によって区別可能となる。  
++しかし右辺値を右辺値参照で受け取った場合、その引数をそのまま使うと左辺値になるため再び右辺値へ変換する必要が生じる。  
+ 
++つまり左辺値参照の場合は左辺値として、右辺値参照の場合は右辺値に変換して渡す機能が必要となる。  
++そのような機能として、[`std::forward()`](/reference/utility/forward.md)関数が用意されている。  
++利用時には `std::forward&amp;lt;T&amp;gt;(a)` のように、テンプレートパラメータとしてユニヴァーサル参照宣言時の型パラメータ名を明示する必要がある。
+ 
+ ```cpp
++#include &amp;lt;utility&amp;gt;
++
++template &amp;lt;typename T&amp;gt; void g(T);
++
+ template &amp;lt;typename T&amp;gt;
+ void f(T&amp;amp;&amp;amp; a)
+ {
+-  // 実引数が右辺値参照型の場合のみムーブされる
++  // 引数 a が左辺値参照の場合は 左辺値 に
++  // 右辺値参照の場合は 右辺値 に変換してから
++  // 別関数 g() の実引数として渡す。
+   g( std::forward&amp;lt;T&amp;gt;(a) ) ;
++  // 関数 g() は値型 T としてパラメータを取るため
++  // 左辺値ではコピーが、右辺値ではムーブが行われる。
+ }
+ ```
+ * std::forward[link /reference/utility/forward.md]
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
       </author>
     </entry>
   
@@ -187,153 +333,6 @@ index 1787c7fc2..128345222 100644
       <author>
         <name>Akira Takahashi</name>
         <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>右辺値参照・ムーブセマンティクス -- rvalue_ref_and_move_semantics: ムーブ,所有権の移動 説明調整</title>
-      <link href="https://cpprefjp.github.io/lang/cpp11/rvalue_ref_and_move_semantics.html"/>
-      <id>c9ea8d681894a64aad8de30faf89573ff5ffe837:lang/cpp11/rvalue_ref_and_move_semantics.md</id>
-      <updated>2021-06-03T17:50:01+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp11/rvalue_ref_and_move_semantics.md b/lang/cpp11/rvalue_ref_and_move_semantics.md
-index dfc5bfe93..63e2555cc 100644
---- a/lang/cpp11/rvalue_ref_and_move_semantics.md
-+++ b/lang/cpp11/rvalue_ref_and_move_semantics.md
-@@ -96,17 +96,17 @@ int main()
- 
- ### ムーブ
- ムーブとはあるオブジェクトから他のオブジェクトにリソースを明け渡すということである。  
--コピーが遅い場合、より高速に値を別の変数に移すことができる。  
--リソースを明け渡した後のオブジェクトにはなにが入っているのか不明であり、値を参照した時の動作は対象オブジェクトの型に依存する。
-+値のコピーではコストが高くつく場合は、より高速に値を別の変数へ移すことができる。  
-+リソース明け渡し後のオブジェクトには何が入っているのか不明となり、値を参照した時の動作は対象オブジェクトの型に依存する。
- 後述する所有権の移動を除けば、一般にはムーブ後オブジェクトの状態は明確に規定されない事が多い。 
- 
- あるオブジェクトをムーブしたいときには、
--[`std::move()`](/reference/utility/move.md)関数を使うことができる。
-+[`std::move()`](/reference/utility/move.md)関数を利用する。
- ムーブされた変数は右辺値となり、それ以降使える保証はなくなる。  
--注意すべきことは[`std::move()`](/reference/utility/move.md)しただけでは  
--「このオブジェクトはこれ以降使わないので好きに書き換えていい」  
--ということを明示したにすぎないということである。  
--ムーブは実際に[`std::move()`](/reference/utility/move.md)した変数を、後述するムーブコンストラクタ・ムーブ代入演算子に渡した際に行われる。
-+注意すべきことは[`std::move()`](/reference/utility/move.md)関数の呼び出しは  
-+「このオブジェクトはこれ以降使わないので好きに書き換えて良い」  
-+という明示にすぎない。  
-+実際のムーブは変数を[`std::move()`](/reference/utility/move.md)関数に通し、後述するムーブコンストラクタ・ムーブ代入演算子に渡した際に行われる。
- 
- ```cpp example
- #include &amp;lt;string&amp;gt;
-@@ -118,16 +118,16 @@ int main()
-   // 何も起こらない
-   std::move(x);
- 
--  // 実際に y に x がムーブされる
-+  // 実際に x から y へ文字列がムーブされる
-   std::string y = std::move(x);
- }
- ```
- * std::move[link /reference/utility/move.md]
- 
- #### 所有権の移動
--クラスによってはコピーは禁止されているが、ムーブはできるということがある。  
-+クラスによってはコピーは禁止されるが、ムーブならば可能ということがある。  
- そういったクラスではムーブが所有権の移動を表す。  
--同じものが２つ存在してはいけないものが所有権の移動に対応しており、ムーブされた変数は無効値（例えばスマートポインタなら`nullptr`）であることが保証される。  
-+同じものが複数存在してはいけないという制約を持つクラスが所有権の移動に対応しており、ムーブ後の変数は無効値（例えばスマートポインタなら`nullptr`）となることが保証される。  
- 例を挙げると、[`std::unique_ptr`](/reference/memory/unique_ptr.md)がそれに当たる。
- [`std::unique_ptr`](/reference/memory/unique_ptr.md)はあるオブジェクトの唯一の所有権を持つことを表すスマートポインタである。
- 所有権は唯一であるので、コピーが禁止されている。
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>右辺値参照・ムーブセマンティクス -- rvalue_ref_and_move_semantics: 右辺値参照の説明改善</title>
-      <link href="https://cpprefjp.github.io/lang/cpp11/rvalue_ref_and_move_semantics.html"/>
-      <id>dd053e4719c9fe3ccaf4ce12d566ce802a8bd4bb:lang/cpp11/rvalue_ref_and_move_semantics.md</id>
-      <updated>2021-06-03T17:28:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp11/rvalue_ref_and_move_semantics.md b/lang/cpp11/rvalue_ref_and_move_semantics.md
-index 13a1d44c8..dfc5bfe93 100644
---- a/lang/cpp11/rvalue_ref_and_move_semantics.md
-+++ b/lang/cpp11/rvalue_ref_and_move_semantics.md
-@@ -34,10 +34,11 @@ int main()
- 
- ### 右辺値参照
- 
--右辺値参照は、右辺値を束縛する参照である。  
--C++11からは、`&amp;amp;` で宣言される参照型を左辺値参照と呼ぶのに対して、`&amp;amp;&amp;amp;` で宣言される参照型を右辺値参照と呼ぶ。  
--C++03までは、右辺値参照と左辺値参照を区別せず、右辺値はconst左辺値参照 (`const&amp;amp;`) に束縛するよう扱われていた。  
--そのため、右辺値のみに対して特別な処理を記述することができなかった。  
-+右辺値参照は、右辺値のみを束縛する参照である。  
-+C++11からは、型`T`に対して `T&amp;amp;` で宣言される参照型を左辺値参照と呼ぶのに対して、`T&amp;amp;&amp;amp;` で宣言される参照型を右辺値参照と呼ぶ。
-+
-+C++03までは、右辺値のみを扱う右辺値参照は存在せず、右辺値はconst左辺値参照 `const T&amp;amp;` に束縛するよう扱われていた。  
-+このconst左辺値参照では左辺値も束縛できるため、左辺値／右辺値の区別情報が失われてしまい、右辺値のみに対して特別な処理を記述することができなかった。  
- 
- ```cpp
- std::vector&amp;lt;int&amp;gt; v, vv;
-@@ -45,14 +46,14 @@ v = vv;                  // 代入式1
- v = std::vector&amp;lt;int&amp;gt;(100, 0); // 代入式2
- ```
- 
--上記コードはC++03では、代入式1,2とも右辺の型は `vector&amp;lt;int&amp;gt; const&amp;amp;` になる。  
-+上記コードはC++03では、代入式1,2ともに右辺は `vector&amp;lt;int&amp;gt; const&amp;amp;` 型に束縛される。  
- 代入処理の中では、右辺の値をコピーし、左辺の値と置き換えられる。  
- しかし代入式2の右辺は一時オブジェクトであり、直後に破棄されるため、一時オブジェクトをコピーすることは無駄といえる。  
--右辺値と左辺値が型として区別できるのであれば、右辺値の場合はコピーせず単に左辺と置き換えるといった処理が記述できる。  
--  
-+もし右辺値と左辺値を型を用いて区別できれば、右辺値の場合はコピーせず単に左辺と置き換えるといった処理が記述できる。  
-+
- 右辺値参照は、右辺値と左辺値を型として区別するために導入された。  
--C++11 以降では、代入式2の右辺の型は右辺値参照 `vector&amp;lt;int&amp;gt;&amp;amp;&amp;amp;` になり、左辺値参照とは区別して処理される。  
--また、こうした処理のことを「ムーブ」と呼ぶ。  
-+C++11 以降では、代入式2の右辺は右辺値参照 `vector&amp;lt;int&amp;gt;&amp;amp;&amp;amp;` に束縛されるため、代入演算子オーバーロードにより左辺値参照とは区別して処理される。  
-+また、代入式2で行われる処理のことを「ムーブ」と呼ぶ。  
- 
- 右辺値参照と左辺値参照の挙動をまとめると以下のようになる
- 
-@@ -61,17 +62,17 @@ int main()
- {
-   int x = 0;
- 
--  // lvalue reference
-+  // 左辺値参照
-   int&amp;amp; lvalue_ref_1 = x;              // OK
-   // int&amp;amp; lvalue_ref_2 = 0;           // Error 右辺値を左辺値参照で束縛している
- 
--  // rvalue reference
-+  // 右辺値参照
-   // int&amp;amp;&amp;amp; rvalue_ref_1 = x;          // Error 左辺値を右辺値参照で束縛している
-   int&amp;amp;&amp;amp; rvalue_ref_2 = 0;             // OK
- 
--  // const lvalue reference
-+  // const左辺値参照
-   const int&amp;amp; const_lvalue_ref_1 = x;    // OK
--  const int&amp;amp; const_lvalue_ref_2 = 0;    // OK constな左辺値参照は右辺値を束縛できる
-+  const int&amp;amp; const_lvalue_ref_2 = 0;    // OK const左辺値参照は右辺値を束縛できる
- }
- ```
- 
-@@ -90,7 +91,6 @@ int main()
-   // xは左辺値なので右辺値参照できない！
-   //int&amp;amp;&amp;amp; y = x; // Error!
- }
--
- ```
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
       </author>
     </entry>
   
