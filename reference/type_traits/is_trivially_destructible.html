@@ -189,8 +189,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2019-11-26T08:07:39">
-        2019年11月26日 08時07分39秒
+      <span itemprop="datePublished" content="2021-06-16T08:09:20">
+        2021年06月16日 08時09分20秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -232,6 +232,7 @@
 <p><code>is_trivially_destructible</code>は、<code>T</code>がトリビアルに破棄可能な型であるならば<code><a href="https://cpprefjp.github.io/reference/type_traits/true_type.html">true_type</a></code>から派生し、そうでなければ<code><a href="https://cpprefjp.github.io/reference/type_traits/false_type.html">false_type</a></code>から派生する。</p>
 <p>「トリビアルに破棄可能」とは、ユーザー定義されないデストラクタを持っているということを意味する。</p>
 <h2>例</h2>
+<h3>基本的な使用例</h3>
 <p><div class="yata" id="a36e6cd37a606338f5514443fd7954c7bc80fdd2"><div class="codehilite"><pre><span></span><code><span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/type_traits.html">&lt;type_traits&gt;</a></span><span class="cp"></span>
 
 <span class="k">struct</span> <span class="n">C1</span> <span class="p">{</span>
@@ -257,8 +258,70 @@
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{}</span>
 </code></pre></div>
 </div></p>
-<h3>出力</h3>
+<h4>出力</h4>
 <p><pre><code></code></pre></p>
+<h3>包含する型がデストラクタを呼び出す必要があるかないかで、デストラクタの定義を分ける (C++11)</h3>
+<p><div class="codehilite"><pre><span></span><code><span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/iostream.html">&lt;iostream&gt;</a></span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/string.html">&lt;string&gt;</a></span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/type_traits.html">&lt;type_traits&gt;</a></span><span class="cp"></span>
+
+<span class="k">class</span> <span class="nc">TrivialBase</span> <span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+  <span class="o">~</span><span class="n">TrivialBase</span><span class="p">()</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">class</span> <span class="nc">NonTrivialBase</span> <span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+  <span class="o">~</span><span class="n">NonTrivialBase</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n"><a href="https://cpprefjp.github.io/reference/iostream/cout.html">std::cout</a></span> <span class="o">&lt;&lt;</span> <span class="s">"destruct"</span> <span class="o">&lt;&lt;</span> <span class="n"><a href="https://cpprefjp.github.io/reference/ostream/endl.html">std::endl</a></span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="o">&gt;</span>
+<span class="k">class</span> <span class="nc">A</span> <span class="o">:</span> <span class="k">public</span> <span class="n"><a href="https://cpprefjp.github.io/reference/type_traits/conditional.html">std::conditional</a></span><span class="o">&lt;</span>
+            <span class="n">std</span><span class="o">::</span><span class="n">is_trivially_destructible</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">,</span>
+            <span class="n">TrivialBase</span><span class="p">,</span>
+            <span class="n">NonTrivialBase</span>
+          <span class="o">&gt;::</span><span class="n">type</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">x</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="n">A</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">a</span><span class="p">;</span>         <span class="c1">// trivially destructible</span>
+  <span class="n">A</span><span class="o">&lt;</span><span class="n"><a href="https://cpprefjp.github.io/reference/string/basic_string.html">std::string</a></span><span class="o">&gt;</span> <span class="n">b</span><span class="p">;</span> <span class="c1">// non trivially destructible</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<h4>出力</h4>
+<p><pre><code>destruct
+</code></pre></p>
+<h3>包含する型がデストラクタを呼び出す必要があるかないかで、デストラクタの定義を分ける (C++20)</h3>
+<p><div class="codehilite"><pre><span></span><code><span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/iostream.html">&lt;iostream&gt;</a></span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/string.html">&lt;string&gt;</a></span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/type_traits.html">&lt;type_traits&gt;</a></span><span class="cp"></span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="o">&gt;</span>
+<span class="k">class</span> <span class="nc">A</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">x</span><span class="p">;</span>
+<span class="k">public</span><span class="o">:</span>
+  <span class="o">~</span><span class="n">A</span><span class="p">()</span> <span class="n">requires</span><span class="p">(</span><span class="o">!</span><span class="n">std</span><span class="o">::</span><span class="n">is_trivially_destructible_v</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n"><a href="https://cpprefjp.github.io/reference/iostream/cout.html">std::cout</a></span> <span class="o">&lt;&lt;</span> <span class="s">"destruct"</span> <span class="o">&lt;&lt;</span> <span class="n"><a href="https://cpprefjp.github.io/reference/ostream/endl.html">std::endl</a></span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="o">~</span><span class="n">A</span><span class="p">()</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="n">A</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">a</span><span class="p">;</span>         <span class="c1">// trivially destructible</span>
+  <span class="n">A</span><span class="o">&lt;</span><span class="n"><a href="https://cpprefjp.github.io/reference/string/basic_string.html">std::string</a></span><span class="o">&gt;</span> <span class="n">b</span><span class="p">;</span> <span class="c1">// non trivially destructible</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<h4>出力</h4>
+<p><pre><code>destruct
+</code></pre></p>
 <h2>バージョン</h2>
 <h3>言語</h3>
 <ul>
@@ -270,6 +333,10 @@
 <li><a href="https://cpprefjp.github.io/implementation.html#gcc">GCC</a>: 4.8.2</li>
 <li><a href="https://cpprefjp.github.io/implementation.html#visual_cpp">Visual C++</a>: 2012, 2013, 2015</li>
 </ul>
+<h4>備考</h4>
+<ul>
+<li>Clang 12.0時点では、コンセプトによるデストラクタのオーバーロードはサポートされておらず、コンパイルエラーになるか、もしくはオーバーロードしたデストラクタが動作しない。<a href="https://bugs.llvm.org/show_bug.cgi?id=50570" target="_blank">Bug 50570 - Clang either crashes or choose wrong destructor when using multiple destructors using C++20 constraints</a></li>
+</ul>
 <h2>参照</h2>
 <ul>
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0006r0.html" target="_blank">P0006R0 Adopt Type Traits Variable Templates from Library Fundamentals TS for C++17</a></li>
@@ -277,6 +344,7 @@
 <li>デストラクタを呼び出す必要のない型の配列に対して、デストラクタを呼び出すループを省略する最適化の例</li>
 </ul>
 </li>
+<li><a href="https://www.sandordargo.com/blog/2021/06/16/multiple-destructors-with-cpp-concepts" target="_blank">Multiple destructors with C++ concepts - Sandor Dargo's Blog</a></li>
 </ul></div>
 
       </div>
