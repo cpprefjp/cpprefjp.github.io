@@ -2,9 +2,304 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2021-08-17T07:59:54.215861</updated>
-  <id>e253849a-4521-4df9-92e8-45f51717fc34</id>
+  <updated>2021-08-17T10:01:54.347867</updated>
+  <id>fff7d14c-4d59-4e41-9a3d-32967d1afdb5</id>
 
+  
+    <entry>
+      <title>コンストラクタ -- queue: C++23 P1245R4対応</title>
+      <link href="https://cpprefjp.github.io/reference/queue/queue/op_constructor.html"/>
+      <id>711615cfddc6dcb776d6a60bfdddc5257865b671:reference/queue/queue/op_constructor.md</id>
+      <updated>2021-08-17T18:56:37+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/queue/queue/op_constructor.md b/reference/queue/queue/op_constructor.md
+index f35c3b7d9..d454d958d 100644
+--- a/reference/queue/queue/op_constructor.md
++++ b/reference/queue/queue/op_constructor.md
+@@ -5,15 +5,29 @@
+ * function[meta id-type]
+ 
+ ```cpp
+-explicit queue(const Container&amp;amp; other = Container());
+-
+-// C++11から追加されたコンストラクタ
+-explicit queue(Container&amp;amp;&amp;amp; other = Container());
+-template &amp;lt;class Alloc&amp;gt; explicit queue(const Alloc&amp;amp; alloc);
+-template &amp;lt;class Alloc&amp;gt; queue(const Container&amp;amp; other, const Alloc&amp;amp; alloc);
+-template &amp;lt;class Alloc&amp;gt; queue(Container&amp;amp;&amp;amp; other, const Alloc&amp;amp; alloc);
+-template &amp;lt;class Alloc&amp;gt; queue(const queue&amp;amp; que, const Alloc&amp;amp; alloc);
+-template &amp;lt;class Alloc&amp;gt; queue(queue&amp;amp;&amp;amp; que, const Alloc&amp;amp; alloc);
++// C++03まで
++explicit queue(const Container&amp;amp; other = Container());  // (1),(2)
++
++// C++11以降 C++17まで
++explicit queue(const Container&amp;amp; other);           // (2)
++explicit queue(Container&amp;amp;&amp;amp; other = Container());  // (1),(3)
++
++// C++20以降
++queue: queue(Container()) {}             // (1)
++explicit queue(const Container&amp;amp; other);  // (2)
++explicit queue(Container&amp;amp;&amp;amp; other);       // (3)
++
++template&amp;lt;class InputIterator&amp;gt;
++queue(InputIterator first, InputIterator last);  // (4) C++23
++
++template &amp;lt;class Alloc&amp;gt; explicit queue(const Alloc&amp;amp; alloc);                // (5) C++11
++template &amp;lt;class Alloc&amp;gt; queue(const Container&amp;amp; other, const Alloc&amp;amp; alloc); // (6) C++11
++template &amp;lt;class Alloc&amp;gt; queue(Container&amp;amp;&amp;amp; other, const Alloc&amp;amp; alloc);      // (7) C++11
++template &amp;lt;class Alloc&amp;gt; queue(const queue&amp;amp; que, const Alloc&amp;amp; alloc);       // (8) C++11
++template &amp;lt;class Alloc&amp;gt; queue(queue&amp;amp;&amp;amp; que, const Alloc&amp;amp; alloc);            // (9) C++11
++
++template&amp;lt;class InputIterator, class Alloc&amp;gt;
++queue(InputIterator first, InputIterator last, const Alloc&amp;amp;);  // (10) C++23
+ ```
+ 
+ ## 概要
+@@ -26,6 +40,7 @@ template &amp;lt;class Alloc&amp;gt; queue(queue&amp;amp;&amp;amp; que, const Alloc&amp;amp; alloc);
+ `other`: 初期化に用いるコンテナオブジェクト
+ `alloc`: 内部のコンテナで使用するアロケータオブジェクト
+ `que`: コピー・ムーブ元の`queue`オブジェクト
++`first`, `last`: 初期化に用いるイテレータのペア
+ 
+ ## 計算量
+ 線形 O(n)。
+@@ -70,5 +85,7 @@ int main() {
+ ```
+ 
+ ## 参照
+-
+-
++- [P0935R0 Eradicating unnecessarily explicit default constructors from the standard library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0935r0.html)
++    - C++20でのデフォルトコンストラクタの分離
++- [P1245R4 Iterators pair constructors for stack and queue](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p1425r4.pdf)
++    - C++23でのイテレータペアへの対応
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>推論補助 -- queue: C++23 P1245R4対応</title>
+      <link href="https://cpprefjp.github.io/reference/queue/queue/op_deduction_guide.html"/>
+      <id>711615cfddc6dcb776d6a60bfdddc5257865b671:reference/queue/queue/op_deduction_guide.md</id>
+      <updated>2021-08-17T18:56:37+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/queue/queue/op_deduction_guide.md b/reference/queue/queue/op_deduction_guide.md
+index 8d04672d4..9e0326ee7 100644
+--- a/reference/queue/queue/op_deduction_guide.md
++++ b/reference/queue/queue/op_deduction_guide.md
+@@ -10,11 +10,21 @@ namespace std {
+   queue(Container)
+     -&amp;gt; queue&amp;lt;typename Container::value_type, Container&amp;gt;; // (1)
+ 
++  template&amp;lt;class InputIterator&amp;gt;
++  queue(InputIterator, InputIterator)
++    -&amp;gt; queue&amp;lt;&amp;lt;InputIterator&amp;gt;&amp;gt;;  // (2) C++23
++
+   template &amp;lt;class Container, class Allocator&amp;gt;
+   queue(Container, Allocator)
+-    -&amp;gt; queue&amp;lt;typename Container::value_type, Container&amp;gt;; // (2)
++    -&amp;gt; queue&amp;lt;typename Container::value_type, Container&amp;gt;; // (3)
++
++  template&amp;lt;class InputIterator, class Allocator&amp;gt;
++  queue(InputIterator, InputIterator, Allocator)
++    -&amp;gt; queue&amp;lt;iter-value-type&amp;lt;InputIterator&amp;gt;, deque&amp;lt;iter-value-type&amp;lt;InputIterator&amp;gt;,
++             Allocator&amp;gt;&amp;gt;;  // (4) C++23
+ }
+ ```
++* iter-value-type[italic]
+ 
+ ## 概要
+ `std::queue`クラステンプレートの型推論補助。元となるコンテナから推論する。
+@@ -71,4 +81,5 @@ int main()
+ 
+ ## 参照
+ - [P0433R2 Toward a resolution of US7 and US14: Integrating template deduction for class templates into the standard library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0433r2.html)
+-
++- [P1245R4 Iterators pair constructors for stack and queue](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p1425r4.pdf)
++    - C++23でのイテレータペアへの対応
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- stack: C++23 P1245R4対応</title>
+      <link href="https://cpprefjp.github.io/reference/stack/stack/op_constructor.html"/>
+      <id>8278072ff65bac42420fe85fcda763dd8eda9d53:reference/stack/stack/op_constructor.md</id>
+      <updated>2021-08-17T18:55:58+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/stack/stack/op_constructor.md b/reference/stack/stack/op_constructor.md
+index 1f799f034..50e71fb16 100644
+--- a/reference/stack/stack/op_constructor.md
++++ b/reference/stack/stack/op_constructor.md
+@@ -5,50 +5,63 @@
+ * function[meta id-type]
+ 
+ ```cpp
+-explicit stack(const Container&amp;amp; cont = Container());  // (1) C++03まで
+-explicit stack(Container&amp;amp;&amp;amp; cont = Container());       // (2) C++11
+-explicit stack(const Container&amp;amp; cont);                // (3) C++11
++// C++03まで
++explicit stack(const Container&amp;amp; cont = Container());  // (1),(2)
+ 
+-stack(const stack&amp;amp; st);                               // (4)
+-stack(stack&amp;amp;&amp;amp; st);                                    // (5) C++11
++// C++11以降 C++17まで
++explicit stack(const Container&amp;amp; cont);           // (2)
++explicit stack(Container&amp;amp;&amp;amp; cont = Container());  // (1),(3)
++
++// C++20以降
++stack() : stack(Container()) {}    // (1)
++explicit stack(const Container&amp;amp;);  // (2)
++explicit stack(Container&amp;amp;&amp;amp;);       // (3)
++
++template&amp;lt;class InputIterator&amp;gt;
++stack(InputIterator first, InputIterator last);  // (4) C++23
+ 
+ template &amp;lt;class Allocator&amp;gt;
+-explicit stack(const Allocator&amp;amp; alloc);               // (6) C++11
++explicit stack(const Allocator&amp;amp; alloc);               // (5) C++11
+ 
+ template &amp;lt;class Allocator&amp;gt;
+-stack(const Container&amp;amp; cont, const Allocator&amp;amp; alloc); // (7) C++11
++stack(const Container&amp;amp; cont, const Allocator&amp;amp; alloc); // (6) C++11
+ 
+ template &amp;lt;class Allocator&amp;gt;
+-stack(Container&amp;amp;&amp;amp; cont, const Allocator&amp;amp; alloc);      // (8) C++11
++stack(Container&amp;amp;&amp;amp; cont, const Allocator&amp;amp; alloc);      // (7) C++11
+ 
+ template &amp;lt;class Allocator&amp;gt;
+-stack(const stack&amp;amp; st, const Allocator&amp;amp; alloc);       // (9) C++11
++stack(const stack&amp;amp; st, const Allocator&amp;amp; alloc);       // (8) C++11
+ 
+ template &amp;lt;class Allocator&amp;gt;
+-stack(stack&amp;amp;&amp;amp; st, const Allocator&amp;amp; alloc);            // (10) C++11
++stack(stack&amp;amp;&amp;amp; st, const Allocator&amp;amp; alloc);            // (9) C++11
++
++template&amp;lt;class InputIterator, class Alloc&amp;gt;
++stack(InputIterator first, InputIterator last, const Alloc&amp;amp;);  // (10) C++23
+ ```
+ 
+ ## 概要
+-- (1) : デフォルトコンストラクタ。元となるコンテナのコピーを受け取る。
+-- (2) : デフォルトコンストラクタ。元となるコンテナの一時オブジェクトをムーブで受け取る。
+-- (3) : 元となるコンテナのコピーを受け取るコンストラクタ。
+-- (4) : コピーコンストラクタ。
+-- (5) : ムーブコンストラクタ。
+-- (6) : アロケータを受け取るコンストラクタ。
+-- (7) : 元となるコンテナのコピーとアロケータを受け取るコンストラクタ。
+-- (8) : 元となるコンテナの一時オブジェクトとアロケータを受け取るコンストラクタ。
+-- (9) : アロケータを受け取るコピーコンストラクタ。
+-- (10) : アロケータを受け取るムーブコンストラクタ。
++- (1) : デフォルトコンストラクタ。
++- (2) : 元となるコンテナのコピーを受け取るコンストラクタ。
++- (3) : 元となるコンテナの一時オブジェクトをムーブで受け取るコンストラクタ。
++- (4) : 元となるコンテナをイテレータペアで受け取るコンストラクタ。
++- (5) : アロケータを受け取るコンストラクタ。
++- (6) : 元となるコンテナのコピーとアロケータを受け取るコンストラクタ。
++- (7) : 元となるコンテナの一時オブジェクトとアロケータを受け取るコンストラクタ。
++- (8) : アロケータを受け取るコピーコンストラクタ。
++- (9) : アロケータを受け取るムーブコンストラクタ。
++- (10) : 元となるコンテナのイテレータペアとアロケータを受け取るコンストラクタ。
+ 
+ 
+ ## 効果
+-- (2) : メンバ変数`c`を[`std::move`](/reference/utility/move.md)`(cont)`で初期化する。
+-- (3) : メンバ変数`c`を`cont`のコピーで初期化する。
+-- (6) : メンバ変数`c`のメモリアロケートに`alloc`を使用する。
+-- (7) : メンバ変数`c`を`Container(cont, alloc)`で初期化する。
+-- (8) : メンバ変数`c`を`Container(`[`std::move`](/reference/utility/move.md)`(cont), alloc)`で初期化する。
+-- (9) : メンバ変数`c`を`Container(st.c, alloc)`で初期化する。
+-- (10) : メンバ変数`c`を`Container(`[`std::move`](/reference/utility/move.md)`(st.c), alloc)`で初期化する。
++- (2) : メンバ変数`c`を`cont`のコピーで初期化する。
++- (3) : メンバ変数`c`を[`std::move`](/reference/utility/move.md)`(cont)`で初期化する。
++- (4) : メンバ変数`c`を2つの引数`first`, `last`で初期化する。
++- (5) : メンバ変数`c`のメモリアロケートに`alloc`を使用する。
++- (6) : メンバ変数`c`を`Container(cont, alloc)`で初期化する。
++- (7) : メンバ変数`c`を`Container(`[`std::move`](/reference/utility/move.md)`(cont), alloc)`で初期化する。
++- (8) : メンバ変数`c`を`Container(st.c, alloc)`で初期化する。
++- (9) : メンバ変数`c`を`Container(`[`std::move`](/reference/utility/move.md)`(st.c), alloc)`で初期化する。
++- (10) : メンバ変数`c`を3つの引数`first`, `last`, `alloc`で初期化する。
+ 
+ 
+ ## 例
+@@ -88,9 +101,8 @@ int main()
+ 3 2 1 
+ ```
+ 
+-## 関連項目
+-
+-| 名前 | 説明 |
+-|-------------------------------------------------------------------------------------------|---------------------------------------------------------------|
+-| [`operator=`](op_assign.md) | 代入 |
+-
++## 参照
++- [P0935R0 Eradicating unnecessarily explicit default constructors from the standard library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0935r0.html)
++    - C++20でのデフォルトコンストラクタの分離
++- [P1245R4 Iterators pair constructors for stack and queue](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p1425r4.pdf)
++    - C++23でのイテレータペアへの対応
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>推論補助 -- stack: C++23 P1245R4対応</title>
+      <link href="https://cpprefjp.github.io/reference/stack/stack/op_deduction_guide.html"/>
+      <id>8278072ff65bac42420fe85fcda763dd8eda9d53:reference/stack/stack/op_deduction_guide.md</id>
+      <updated>2021-08-17T18:55:58+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/stack/stack/op_deduction_guide.md b/reference/stack/stack/op_deduction_guide.md
+index 5e3d77842..5daad1fe8 100644
+--- a/reference/stack/stack/op_deduction_guide.md
++++ b/reference/stack/stack/op_deduction_guide.md
+@@ -10,11 +10,21 @@ namespace std {
+   stack(Container)
+     -&amp;gt; stack&amp;lt;typename Container::value_type, Container&amp;gt;; // (1)
+ 
++  template&amp;lt;class InputIterator&amp;gt;
++  stack(InputIterator, InputIterator)
++    -&amp;gt; stack&amp;lt;iter-value-type&amp;lt;InputIterator&amp;gt;&amp;gt;;  // (2) C++23
++
+   template&amp;lt;class Container, class Allocator&amp;gt;
+   stack(Container, Allocator)
+-    -&amp;gt; stack&amp;lt;typename Container::value_type, Container&amp;gt;; // (2)
++    -&amp;gt; stack&amp;lt;typename Container::value_type, Container&amp;gt;; // (3)
++
++  template&amp;lt;class InputIterator, class Allocator&amp;gt;
++  stack(InputIterator, InputIterator, Allocator)
++    -&amp;gt; stack&amp;lt;iter-value-type&amp;lt;InputIterator&amp;gt;, deque&amp;lt;iter-value-type&amp;lt;InputIterator&amp;gt;,
++             Allocator&amp;gt;&amp;gt;;  // (4) C++23
+ }
+ ```
++* iter-value-type[italic]
+ 
+ ## 概要
+ `std::stack`クラステンプレートの型推論補助。元となるコンテナから推論する。
+@@ -71,4 +81,5 @@ int main()
+ 
+ ## 参照
+ - [P0433R2 Toward a resolution of US7 and US14: Integrating template deduction for class templates into the standard library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0433r2.html)
+-
++- [P1245R4 Iterators pair constructors for stack and queue](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p1425r4.pdf)
++    - C++23でのイテレータペアへの対応
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>コンパイラの実装状況 -- C++20 : 「評価されない文脈での定数式評価によって特殊メンバ関数がインスタンス化されることを規定」を追加 (close #721)</title>
@@ -2367,33 +2662,6 @@ index f3d49be7a..f7039ea23 100644
       <author>
         <name>yoh</name>
         <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>permissions -- filesystem::permissions : fchmodatの参照ページを変更</title>
-      <link href="https://cpprefjp.github.io/reference/filesystem/permissions.html"/>
-      <id>656fc53b64cad065efef0f085094510e22d1a663:reference/filesystem/permissions.md</id>
-      <updated>2021-08-10T11:28:14+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/filesystem/permissions.md b/reference/filesystem/permissions.md
-index 0a4c58113..e691e841f 100644
---- a/reference/filesystem/permissions.md
-+++ b/reference/filesystem/permissions.md
-@@ -20,7 +20,7 @@ namespace std::filesystem {
- 
- 
- ## 効果
--- POSIX環境では、[`fchmodat()`](http://surf.ml.seikei.ac.jp/~nakano/JMwww/html/LDP_man-pages/man2/fchmodat.2.html)関数を使用して、パス`to`のファイルに対する権限を設定する
-+- POSIX環境では、[`fchmodat()`](http://ja.manpages.org/fchmodat/2)関数を使用して、パス`to`のファイルに対する権限を設定する
- - (2) は、権限オプションとして[`perm_options::replace`](perm_options.md)が使用される
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
       </author>
     </entry>
   
