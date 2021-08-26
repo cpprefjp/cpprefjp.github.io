@@ -2,9 +2,1816 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2021-08-26T04:19:30.357726</updated>
-  <id>b13e7a24-c9a4-451a-b6e5-993b68012836</id>
+  <updated>2021-08-26T08:45:57.065764</updated>
+  <id>e4d1801f-a291-440f-a5a7-43031426f2e1</id>
 
+  
+    <entry>
+      <title>コンストラクタ -- P0935R0対応</title>
+      <link href="https://cpprefjp.github.io/reference/locale/wstring_convert/op_constructor.html"/>
+      <id>ff7ce0c0ba1752d1379ae3286dd6d6560dacc749:reference/locale/wstring_convert/op_constructor.md</id>
+      <updated>2021-08-26T17:40:52+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/locale/wstring_convert/op_constructor.md b/reference/locale/wstring_convert/op_constructor.md
+index 9bb5992a9..71a93bbf6 100644
+--- a/reference/locale/wstring_convert/op_constructor.md
++++ b/reference/locale/wstring_convert/op_constructor.md
+@@ -9,41 +9,46 @@
+ ```cpp
+ wstring_convert(Codecvt* pcvt = new Codecvt);          // (1) C++11
+ explicit wstring_convert(Codecvt* pcvt = new Codecvt); // (1) C++14
++wstring_convert() : wstring_convert(new Codecvt) {}    // (1) C++20
+ 
+-wstring_convert(Codecvt* pcvt, state_type state);      // (2) C++11
++explicit wstring_convert(Codecvt* pcvt);               // (2) C++14
++
++wstring_convert(Codecvt* pcvt, state_type state);      // (3) C++11
+ 
+ wstring_convert(
+     const byte_string&amp;amp; byte_err,
+-    const wide_string&amp;amp; wide_err = wide_string());      // (3) C++11
++    const wide_string&amp;amp; wide_err = wide_string());      // (4) C++11
+ explicit wstring_convert(
+     const byte_string&amp;amp; byte_err,
+-    const wide_string&amp;amp; wide_err = wide_string());      // (3) C++14
++    const wide_string&amp;amp; wide_err = wide_string());      // (4) C++14
+ 
+-wstring_convert(const wstring_convert&amp;amp;) = delete;      // (4) C++14
++wstring_convert(const wstring_convert&amp;amp;) = delete;      // (5) C++14
+ ```
+ 
+ このクラスはC++17から非推奨となった。
+ 
+ ## 概要
+ - (1) : デフォルトコンストラクタ。
+-- (2) : コード変換機、および変換状態を受け取るコンストラクタ。
+-- (3) : 変換に失敗した際に返す文字列を受け取るコンストラクタ。
+-- (4) : コピーコンストラクタ。コピー不可。これによりムーブも不可。
++- (2) : コード変換機を受け取るコンストラクタ。
++- (3) : コード変換機、および変換状態を受け取るコンストラクタ。
++- (4) : 変換に失敗した際に返す文字列を受け取るコンストラクタ。
++- (5) : コピーコンストラクタ。コピー不可。これによりムーブも不可。
+ 
+ 
+ ## 要件
+-- (2) : `pcvt != nullptr`であること。
++
++- (2)(3) : `pcvt != nullptr`であること。
+ 
+ 
+ ## 効果
+-- (1) : コード変換機のインスタンス`pcvt`をメンバ変数として保持し、[`from_bytes()`](from_bytes.md)および[`to_bytes()`](to_bytes.md)関数でのコード変換に使用する。
++- (2) : コード変換機のインスタンス`pcvt`をメンバ変数として保持し、[`from_bytes()`](from_bytes.md)および[`to_bytes()`](to_bytes.md)関数でのコード変換に使用する。
+     - [`from_bytes()`](from_bytes.md)メンバ関数での変換失敗時に返されるワイド文字列は未設定となる。
+     - [`to_bytes()`](to_bytes.md)メンバ関数での変換失敗時に返されるバイト文字列は未設定となる。
+     - [`state()`](state.md)メンバ関数で返される状態は、初期状態となる。
+-- (2) : コード変換機のインスタンス`pcvt`をメンバ変数として保持し、[`from_bytes()`](from_bytes.md)および[`to_bytes()`](to_bytes.md)関数でのコード変換に使用する。[`state()`](state.md)メンバ関数で返される値として、パラメータ`state`を保持する。
++- (3) : コード変換機のインスタンス`pcvt`をメンバ変数として保持し、[`from_bytes()`](from_bytes.md)および[`to_bytes()`](to_bytes.md)関数でのコード変換に使用する。[`state()`](state.md)メンバ関数で返される値として、パラメータ`state`を保持する。
+     - [`from_bytes()`](from_bytes.md)メンバ関数での変換失敗時に返されるワイド文字列は未設定となる。
+     - [`to_bytes()`](to_bytes.md)メンバ関数での変換失敗時に返されるバイト文字列は未設定となる。
+-- (3) : [`to_bytes()`](to_bytes.md)メンバ関数での変換失敗時に`byte_err`が返されるようになり、[`from_bytes()`](from_bytes.md)メンバ関数での変換失敗時に`wide_err`が返されるようになる。
++- (4) : [`to_bytes()`](to_bytes.md)メンバ関数での変換失敗時に`byte_err`が返されるようになり、[`from_bytes()`](from_bytes.md)メンバ関数での変換失敗時に`wide_err`が返されるようになる。
+     - 式`new Codecvt`で生成したコード変換機のインスタンスを、メンバ変数として保持する。
+     - [`state()`](state.md)メンバ関数で返される状態は、初期状態となる。
+ 
+@@ -64,12 +69,12 @@ int main()
+   // デフォルトコンストラクタ
+   converter_t converter1;
+     
+-  // (2)
++  // (3)
+   // コード変換機のインスタンス、および変換状態を受け取るコンストラクタ
+   std::mbstate_t state;
+   converter_t converter2(new cvt_t(), state);
+     
+-  // (3)
++  // (4)
+   // 変換失敗時に返す文字列を受け取るコンストラクタ
+   converter_t converter3(u8&amp;#34;convert error&amp;#34;, U&amp;#34;convert error&amp;#34;);
+ }
+@@ -96,4 +101,4 @@ int main()
+ ## 参照
+ - [LWG Issue 2175. `wstring_convert` and `wbuffer_convert` validity](http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#2176)
+ - [LWG Issue 2176. Special members for `wstring_convert` and `wbuffer_convert`](http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#2176)
+-
++- [P0935R0 Eradicating unnecessarily explicit default constructors from the standard library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0935r0.html)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- P0935R0対応</title>
+      <link href="https://cpprefjp.github.io/reference/queue/priority_queue/op_constructor.html"/>
+      <id>ff7ce0c0ba1752d1379ae3286dd6d6560dacc749:reference/queue/priority_queue/op_constructor.md</id>
+      <updated>2021-08-26T17:40:52+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/queue/priority_queue/op_constructor.md b/reference/queue/priority_queue/op_constructor.md
+index c8bc8ad5a..6ea308258 100644
+--- a/reference/queue/priority_queue/op_constructor.md
++++ b/reference/queue/priority_queue/op_constructor.md
+@@ -7,12 +7,17 @@
+ ```cpp
+ explicit priority_queue(
+              const Compare&amp;amp; x = Compare(),
+-             const Container&amp;amp; other = Container());       // (1) C++03まで
+-
+-priority_queue(const Compare&amp;amp; x, const Container&amp;amp; other); // (2) C++11
++             const Container&amp;amp; other = Container());       // (1) C++03
+ 
+ explicit priority_queue(const Compare&amp;amp; x = Compare(),
+-                        Container&amp;amp;&amp;amp; = Container());       // (3) C++11
++                        Container&amp;amp;&amp;amp; y = Container());     // (1) C++11
++
++priority_queue() : priority_queue(Compare()) {}           // (1) C++20
++
++explicit priority_queue(const Compare&amp;amp; x)
++  : priority_queue(x, Container()) {}                     // (2) C++20
++
++priority_queue(const Compare&amp;amp; x, const Container&amp;amp; other); // (3) C++11
+ 
+ priority_queue(const priority_queue&amp;amp;);                    // (4) C++03
+ priority_queue(const priority_queue&amp;amp;) = default;          // (4) C++11
+@@ -61,8 +66,11 @@ priority_queue(priority_queue&amp;amp;&amp;amp; que,
+ 
+ ## 概要
+ - (1) : デフォルトコンストラクタ
+-- (2) : 比較関数と、元となるコンテナのコピーから構築するコンストラクタ。
+-- (3) : デフォルトコンストラクタ。比較関数のコピーと、元となるコンテナをムーブして構築する。
++    - C++03 : 比較関数と元となるコンテナをコピーして構築する。
++    - C++11 : 比較関数をコピー、元となるコンテナをムーブして構築する。
++    - C++20 : (2)に移譲。
++- (2) : 比較関数のコピーと元となるコンテナをデフォルト構築して構築するコンストラクタ。
++- (3) : 比較関数と、元となるコンテナのコピーから構築するコンストラクタ。
+ - (4) : コピーコンストラクタ
+ - (5), (6), (7) : イテレータ範囲で優先順位付きキューを構築する。
+ - (8) : ムーブコンストラクタ
+@@ -80,14 +88,19 @@ priority_queue(priority_queue&amp;amp;&amp;amp; que,
+ 
+ ## 効果
+ - (1) :
++    - C++03
++        1. メンバ変数`comp`を`x`でコピー構築する。
++        2. メンバ変数`c`を`other`でコピー構築する。
++        3. [`make_heap`](/reference/algorithm/make_heap.md)`(c.begin(), c.end(), comp)`を呼び出す。
++    - C++11
++        1. メンバ変数`comp`を`x`でコピー構築する。
++        2. メンバ変数`c`を`y`でムーブ構築する。
++        3. [`make_heap`](/reference/algorithm/make_heap.md)`(c.begin(), c.end(), comp)`を呼び出す。
++- (3) :
+     1. メンバ変数`comp`を`x`でコピー構築する。
+     2. メンバ変数`c`を`other`でコピー構築する。
+     3. [`make_heap`](/reference/algorithm/make_heap.md)`(c.begin(), c.end(), comp)`を呼び出す。
+-- (2) :
+-    1. メンバ変数`comp`を`x`でコピー構築する。
+-    2. メンバ変数`c`を`other`でコピー構築する。
+-    3. [`make_heap`](/reference/algorithm/make_heap.md)`(c.begin(), c.end(), comp)`を呼び出す。
+-- (3) :
++- (4) :
+     1. メンバ変数`comp`を`x`でコピー構築する。
+     2. メンバ変数`c`を`other`でムーブ構築する。
+     3. [`make_heap`](/reference/algorithm/make_heap.md)`(c.begin(), c.end(), comp)`を呼び出す。
+@@ -195,4 +208,4 @@ que5 : 5 4 3 2 1
+ 
+ ## 参照
+ 
+-
++- [P0935R0 Eradicating unnecessarily explicit default constructors from the standard library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0935r0.html)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- P0935R0対応</title>
+      <link href="https://cpprefjp.github.io/reference/queue/queue/op_constructor.html"/>
+      <id>ff7ce0c0ba1752d1379ae3286dd6d6560dacc749:reference/queue/queue/op_constructor.md</id>
+      <updated>2021-08-26T17:40:52+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/queue/queue/op_constructor.md b/reference/queue/queue/op_constructor.md
+index a4edc8e84..a5f74dd5e 100644
+--- a/reference/queue/queue/op_constructor.md
++++ b/reference/queue/queue/op_constructor.md
+@@ -13,18 +13,23 @@ explicit queue(const Container&amp;amp; other);           // (2)
+ explicit queue(Container&amp;amp;&amp;amp; other = Container());  // (1),(3)
+ 
+ // C++20以降
+-queue: queue(Container()) {}             // (1)
++queue() : queue(Container()) {}          // (1)
+ explicit queue(const Container&amp;amp; other);  // (2)
+ explicit queue(Container&amp;amp;&amp;amp; other);       // (3)
+ 
+ template&amp;lt;class InputIterator&amp;gt;
+ queue(InputIterator first, InputIterator last);  // (4) C++23
+ 
+-template &amp;lt;class Alloc&amp;gt; explicit queue(const Alloc&amp;amp; alloc);                // (5) C++11
+-template &amp;lt;class Alloc&amp;gt; queue(const Container&amp;amp; other, const Alloc&amp;amp; alloc); // (6) C++11
+-template &amp;lt;class Alloc&amp;gt; queue(Container&amp;amp;&amp;amp; other, const Alloc&amp;amp; alloc);      // (7) C++11
+-template &amp;lt;class Alloc&amp;gt; queue(const queue&amp;amp; que, const Alloc&amp;amp; alloc);       // (8) C++11
+-template &amp;lt;class Alloc&amp;gt; queue(queue&amp;amp;&amp;amp; que, const Alloc&amp;amp; alloc);            // (9) C++11
++template &amp;lt;class Alloc&amp;gt;
++explicit queue(const Alloc&amp;amp; alloc);                // (5) C++11
++template &amp;lt;class Alloc&amp;gt;
++queue(const Container&amp;amp; other, const Alloc&amp;amp; alloc); // (6) C++11
++template &amp;lt;class Alloc&amp;gt;
++queue(Container&amp;amp;&amp;amp; other, const Alloc&amp;amp; alloc);      // (7) C++11
++template &amp;lt;class Alloc&amp;gt;
++queue(const queue&amp;amp; que, const Alloc&amp;amp; alloc);       // (8) C++11
++template &amp;lt;class Alloc&amp;gt;
++queue(queue&amp;amp;&amp;amp; que, const Alloc&amp;amp; alloc);            // (9) C++11
+ 
+ template&amp;lt;class InputIterator, class Alloc&amp;gt;
+ queue(InputIterator first, InputIterator last, const Alloc&amp;amp;);  // (10) C++23
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- P0935R0対応</title>
+      <link href="https://cpprefjp.github.io/reference/random/bernoulli_distribution/op_constructor.html"/>
+      <id>ff7ce0c0ba1752d1379ae3286dd6d6560dacc749:reference/random/bernoulli_distribution/op_constructor.md</id>
+      <updated>2021-08-26T17:40:52+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/random/bernoulli_distribution/op_constructor.md b/reference/random/bernoulli_distribution/op_constructor.md
+index aa640e679..5aec73876 100644
+--- a/reference/random/bernoulli_distribution/op_constructor.md
++++ b/reference/random/bernoulli_distribution/op_constructor.md
+@@ -6,17 +6,25 @@
+ * cpp11[meta cpp]
+ 
+ ```cpp
+-explicit bernoulli_distribution(double p = 0.5);         // (1)
+-explicit bernoulli_distribution(const param_type&amp;amp; parm); // (2)
++explicit bernoulli_distribution(double p = 0.5);          // (1)
++bernoulli_distribution() : bernoulli_distribution(0.5) {} // (1) C++20
++
++explicit bernoulli_distribution(double p);                // (2) C++20
++
++explicit bernoulli_distribution(const param_type&amp;amp; parm);  // (3)
+ ```
+ 
+ ## 概要
+-- (1) : 確率`p`を受け取るコンストラクタ。確率`p`で`true`が生成され、確率`1.0 - p`で`false`が生成される。
+-- (2) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
++
++- (1) : デフォルトコンストラクタ
++    - C++17まで : 確率`p`を受け取るコンストラクタ。
++    - C++20 : 確率`p`を`0.5`として(2)に委譲。
++- (2) : 確率`p`を受け取るコンストラクタ。確率`p`で`true`が生成され、確率`1.0 - p`で`false`が生成される。
++- (3) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
+ 
+ 
+ ## 要件
+-- (1) : `p &amp;gt;= 0.0 &amp;amp;&amp;amp; p &amp;lt;= 1.0`であること。
++- (1)(C++17まで)、(2) : `p &amp;gt;= 0.0 &amp;amp;&amp;amp; p &amp;lt;= 1.0`であること。
+ 
+ 
+ ## 例
+@@ -95,4 +103,4 @@ true
+ 
+ ## 参照
+ 
+-
++- [P0935R0 Eradicating unnecessarily explicit default constructors from the standard library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0935r0.html)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- P0935R0対応</title>
+      <link href="https://cpprefjp.github.io/reference/random/binomial_distribution/op_constructor.html"/>
+      <id>ff7ce0c0ba1752d1379ae3286dd6d6560dacc749:reference/random/binomial_distribution/op_constructor.md</id>
+      <updated>2021-08-26T17:40:52+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/random/binomial_distribution/op_constructor.md b/reference/random/binomial_distribution/op_constructor.md
+index 4a4475c9c..3d02a43d2 100644
+--- a/reference/random/binomial_distribution/op_constructor.md
++++ b/reference/random/binomial_distribution/op_constructor.md
+@@ -7,16 +7,24 @@
+ 
+ ```cpp
+ explicit binomial_distribution(IntType t = 1, double p = 0.5); // (1)
+-explicit binomial_distribution(const param_type&amp;amp; parm);        // (2)
++binomial_distribution() : binomial_distribution(1) {}          // (1)
++
++explicit binomial_distribution(IntType t, double p = 0.5);     // (2)
++
++explicit binomial_distribution(const param_type&amp;amp; parm);        // (3)
+ ```
+ 
+ ## 概要
+-- (1) : 成功確率`p`および試行回数`t`を受け取るコンストラクタ。
+-- (2) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
++
++- (1) : デフォルトコンストラクタ
++    - C++17まで : 成功確率`p`および試行回数`t`を受け取るコンストラクタ。
++    - C++20 : 成功確率`p = 0.5`、試行回数`t = 1`として(2)に委譲。
++- (2) : 成功確率`p`および試行回数`t`を受け取るコンストラクタ。
++- (3) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
+ 
+ 
+ ## 要件
+-- (1) : `p &amp;gt;= 0.0 &amp;amp;&amp;amp; p &amp;lt;= 1.0`かつ`t &amp;gt;= 0`であること
++- (2) : `p &amp;gt;= 0.0 &amp;amp;&amp;amp; p &amp;lt;= 1.0`かつ`t &amp;gt;= 0`であること
+ 
+ 
+ ## 例
+@@ -73,4 +81,4 @@ int main()
+ 
+ ## 参照
+ 
+-
++- [P0935R0 Eradicating unnecessarily explicit default constructors from the standard library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0935r0.html)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- P0935R0対応</title>
+      <link href="https://cpprefjp.github.io/reference/random/cauchy_distribution/op_constructor.html"/>
+      <id>ff7ce0c0ba1752d1379ae3286dd6d6560dacc749:reference/random/cauchy_distribution/op_constructor.md</id>
+      <updated>2021-08-26T17:40:52+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/random/cauchy_distribution/op_constructor.md b/reference/random/cauchy_distribution/op_constructor.md
+index aacc2cfda..6012670db 100644
+--- a/reference/random/cauchy_distribution/op_constructor.md
++++ b/reference/random/cauchy_distribution/op_constructor.md
+@@ -7,16 +7,24 @@
+ 
+ ```cpp
+ explicit cauchy_distribution(RealType a = 0.0, RealType b = 1.0); // (1)
+-explicit cauchy_distribution(const param_type&amp;amp; parm);             // (2)
++cauchy_distribution() : cauchy_distribution(0.0) {}               // (1) C++20
++
++explicit cauchy_distribution(RealType a, RealType b = 1.0);       // (2) C++20
++
++explicit cauchy_distribution(const param_type&amp;amp; parm);             // (3)
+ ```
+ 
+ ## 概要
+-- (1) : コーシー分布の位置母数`a`および尺度母数`b`を受け取るコンストラクタ。
+-- (2) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
++
++- (1) : デフォルトコンストラクタ
++    - C++17まで : コーシー分布の位置母数`a`および尺度母数`b`を受け取るコンストラクタ。
++    - C++20 : コーシー分布の位置母数`a = 0.0`および尺度母数`b = 1.0`として(2)に委譲。
++- (2) : コーシー分布の位置母数`a`および尺度母数`b`を受け取るコンストラクタ。
++- (3) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
+ 
+ 
+ ## 要件
+-- (1) : `b &amp;gt; 0`であること
++- (2) : `b &amp;gt; 0`であること
+ 
+ 
+ ## 例
+@@ -95,4 +103,4 @@ int main()
+ 
+ ## 参照
+ 
+-
++- [P0935R0 Eradicating unnecessarily explicit default constructors from the standard library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0935r0.html)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- P0935R0対応</title>
+      <link href="https://cpprefjp.github.io/reference/random/chi_squared_distribution/op_constructor.html"/>
+      <id>ff7ce0c0ba1752d1379ae3286dd6d6560dacc749:reference/random/chi_squared_distribution/op_constructor.md</id>
+      <updated>2021-08-26T17:40:52+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/random/chi_squared_distribution/op_constructor.md b/reference/random/chi_squared_distribution/op_constructor.md
+index 836230190..c17ce7bdd 100644
+--- a/reference/random/chi_squared_distribution/op_constructor.md
++++ b/reference/random/chi_squared_distribution/op_constructor.md
+@@ -6,17 +6,25 @@
+ * cpp11[meta cpp]
+ 
+ ```cpp
+-explicit chi_squared_distribution(RealType n = 1);         // (1)
+-explicit chi_squared_distribution(const param_type&amp;amp; parm); // (2)
++explicit chi_squared_distribution(RealType n = 1);            // (1)
++chi_squared_distribution() : chi_squared_distribution(1.0) {} // (1) C++20
++
++explicit chi_squared_distribution(RealType n);                // (2) C++20
++
++explicit chi_squared_distribution(const param_type&amp;amp; parm);    // (3)
+ ```
+ 
+ ## 概要
+-- (1) : カイ二乗分布の自由度`n`を受け取るコンストラクタ。
+-- (2) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
++
++- (1) : デフォルトコンストラクタ
++    - C++17まで : カイ二乗分布の自由度`n`を受け取るコンストラクタ。
++    - C++20 : カイ二乗分布の自由度`n = 1.0`として(2)に委譲。
++- (2) : カイ二乗分布の自由度`n`を受け取るコンストラクタ。
++- (3) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
+ 
+ 
+ ## 要件
+-- (1) : `n &amp;gt; 0`であること
++- (2) : `n &amp;gt; 0`であること
+ 
+ 
+ ## 例
+@@ -94,4 +102,4 @@ int main()
+ 
+ ## 参照
+ 
+-
++- [P0935R0 Eradicating unnecessarily explicit default constructors from the standard library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0935r0.html)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- P0935R0対応</title>
+      <link href="https://cpprefjp.github.io/reference/random/exponential_distribution/op_constructor.html"/>
+      <id>ff7ce0c0ba1752d1379ae3286dd6d6560dacc749:reference/random/exponential_distribution/op_constructor.md</id>
+      <updated>2021-08-26T17:40:52+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/random/exponential_distribution/op_constructor.md b/reference/random/exponential_distribution/op_constructor.md
+index 4caae0333..54272a638 100644
+--- a/reference/random/exponential_distribution/op_constructor.md
++++ b/reference/random/exponential_distribution/op_constructor.md
+@@ -6,17 +6,25 @@
+ * cpp11[meta cpp]
+ 
+ ```cpp
+-explicit exponential_distribution(RealType lambda = 1.0);  // (1)
+-explicit exponential_distribution(const param_type&amp;amp; parm); // (2)
++explicit exponential_distribution(RealType lambda = 1.0);      // (1)
++exponential_distribution() : exponential_distribution(1.0) {}  // (1) C++20
++
++explicit exponential_distribution(RealType lambda);            // (2) C++20
++
++explicit exponential_distribution(const param_type&amp;amp; parm);     // (3)
+ ```
+ 
+ ## 概要
+-- (1) : 指数分布のパラメータλ(`lambda`)を受け取るコンストラクタ。
+-- (2) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
++
++- (1) : デフォルトコンストラクタ
++    - C++17まで : 指数分布のパラメータλ(`lambda`)を受け取るコンストラクタ。
++    - C++20 : 指数分布のパラメータ`lambda = 1.0`として(2)に委譲。
++- (2) : 指数分布のパラメータλ(`lambda`)を受け取るコンストラクタ。
++- (3) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
+ 
+ 
+ ## 要件
+-- (1) : `lambda &amp;gt; 0`であること
++- (2) : `lambda &amp;gt; 0`であること
+ 
+ 
+ ## 例
+@@ -29,7 +37,7 @@ int main()
+   std::random_device seed_gen;
+   std::default_random_engine engine(seed_gen());
+ 
+-  // (1)
++  // (2)
+   {
+     std::exponential_distribution&amp;lt;&amp;gt; dist(1.0);
+ 
+@@ -39,7 +47,7 @@ int main()
+   }
+   std::cout &amp;lt;&amp;lt; std::endl;
+ 
+-  // (2)
++  // (3)
+   {
+     using dist_type = std::exponential_distribution&amp;lt;&amp;gt;;
+ 
+@@ -72,4 +80,4 @@ int main()
+ 
+ ## 参照
+ 
+-
++- [P0935R0 Eradicating unnecessarily explicit default constructors from the standard library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0935r0.html)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- P0935R0対応</title>
+      <link href="https://cpprefjp.github.io/reference/random/extreme_value_distribution/op_constructor.html"/>
+      <id>ff7ce0c0ba1752d1379ae3286dd6d6560dacc749:reference/random/extreme_value_distribution/op_constructor.md</id>
+      <updated>2021-08-26T17:40:52+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/random/extreme_value_distribution/op_constructor.md b/reference/random/extreme_value_distribution/op_constructor.md
+index 6a9e97591..e89d92fca 100644
+--- a/reference/random/extreme_value_distribution/op_constructor.md
++++ b/reference/random/extreme_value_distribution/op_constructor.md
+@@ -7,16 +7,24 @@
+ 
+ ```cpp
+ explicit extreme_value_distribution(RealType a = 0.0, RealType b = 1.0); // (1)
+-explicit extreme_value_distribution(const param_type&amp;amp; parm);             // (2)
++extreme_value_distribution() : extreme_value_distribution(0.0) {}        // (1) C++20
++
++explicit extreme_value_distribution(RealType a, RealType b = 1.0);       // (2) C++20
++
++explicit extreme_value_distribution(const param_type&amp;amp; parm);             // (3)
+ ```
+ 
+ ## 概要
+-- (1) : 極値分布の位置パラメータ`a`と尺度パラメータ`b`を受け取るコンストラクタ。
+-- (2) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
++
++- (1) : デフォルトコンストラクタ
++    - C++17まで : 極値分布の位置パラメータ`a`と尺度パラメータ`b`を受け取るコンストラクタ。
++    - C++20 : 極値分布の位置パラメータ`a = 0.0`、尺度パラメータ`b = 1.0`として(2)に委譲。
++- (2) : 極値分布の位置パラメータ`a`と尺度パラメータ`b`を受け取るコンストラクタ。
++- (3) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
+ 
+ 
+ ## 要件
+-- (1) : `b &amp;gt; 0`であること
++- (2) : `b &amp;gt; 0`であること
+ 
+ 
+ ## 例
+@@ -29,7 +37,7 @@ int main()
+   std::random_device seed_gen;
+   std::default_random_engine engine(seed_gen());
+ 
+-  // (1) パラメータを個別に指定する
++  // (2) パラメータを個別に指定する
+   {
+     // 位置パラメータ0.0、尺度パラメータ1.0で分布させる
+     std::extreme_value_distribution&amp;lt;&amp;gt; dist(0.0, 1.0);
+@@ -40,7 +48,7 @@ int main()
+   }
+   std::cout &amp;lt;&amp;lt; std::endl;
+ 
+-  // (2) パラメータを通して範囲指定する
++  // (3) パラメータを通して範囲指定する
+   {
+     using dist_type = std::extreme_value_distribution&amp;lt;&amp;gt;;
+ 
+@@ -93,4 +101,4 @@ int main()
+ 
+ ## 参照
+ 
+-
++- [P0935R0 Eradicating unnecessarily explicit default constructors from the standard library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0935r0.html)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- P0935R0対応</title>
+      <link href="https://cpprefjp.github.io/reference/random/fisher_f_distribution/op_constructor.html"/>
+      <id>ff7ce0c0ba1752d1379ae3286dd6d6560dacc749:reference/random/fisher_f_distribution/op_constructor.md</id>
+      <updated>2021-08-26T17:40:52+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/random/fisher_f_distribution/op_constructor.md b/reference/random/fisher_f_distribution/op_constructor.md
+index 6f841ec4c..acd0a7a23 100644
+--- a/reference/random/fisher_f_distribution/op_constructor.md
++++ b/reference/random/fisher_f_distribution/op_constructor.md
+@@ -6,17 +6,25 @@
+ * cpp11[meta cpp]
+ 
+ ```cpp
+-explicit fisher_f_distribution(RealType m = 1, RealType n = 1); // (1)
+-explicit fisher_f_distribution(const param_type&amp;amp; parm);         // (2)
++explicit fisher_f_distribution(RealType m = 1.0, RealType n = 1.0); // (1)
++fisher_f_distribution() : fisher_f_distribution(1.0) {}             // (1) C++20
++
++explicit fisher_f_distribution(RealType m, RealType n = 1.0);       // (2) C++20
++
++explicit fisher_f_distribution(const param_type&amp;amp; parm);             // (3)
+ ```
+ 
+ ## 概要
+-- (1) : フィッシャーのF分布の自由度`m`と`n`を受け取るコンストラクタ。
+-- (2) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
++
++- (1) : デフォルトコンストラクタ
++    - C++17まで : フィッシャーのF分布の自由度`m`と`n`を受け取るコンストラクタ。
++    - C++20 : フィッシャーのF分布の自由度`m = 1.0`と`n = 1.0`として(2)に委譲。
++- (2) : フィッシャーのF分布の自由度`m`と`n`を受け取るコンストラクタ。
++- (3) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
+ 
+ 
+ ## 要件
+-- (1) : `m &amp;gt; 0`かつ`n &amp;gt; 0`であること
++- (2) : `m &amp;gt; 0`かつ`n &amp;gt; 0`であること
+ 
+ 
+ ## 例
+@@ -95,4 +103,4 @@ int main()
+ 
+ ## 参照
+ 
+-
++- [P0935R0 Eradicating unnecessarily explicit default constructors from the standard library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0935r0.html)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- P0935R0対応</title>
+      <link href="https://cpprefjp.github.io/reference/random/gamma_distribution/op_constructor.html"/>
+      <id>ff7ce0c0ba1752d1379ae3286dd6d6560dacc749:reference/random/gamma_distribution/op_constructor.md</id>
+      <updated>2021-08-26T17:40:52+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/random/gamma_distribution/op_constructor.md b/reference/random/gamma_distribution/op_constructor.md
+index 529eb52a3..8df6dc105 100644
+--- a/reference/random/gamma_distribution/op_constructor.md
++++ b/reference/random/gamma_distribution/op_constructor.md
+@@ -7,16 +7,24 @@
+ 
+ ```cpp
+ explicit gamma_distribution(RealType alpha = 1.0, RealType beta = 1.0); // (1)
+-explicit gamma_distribution(const param_type&amp;amp; parm);                    // (2)
++gamma_distribution() : gamma_distribution(1.0) {}                       // (1) C++20
++
++explicit gamma_distribution(RealType alpha, RealType beta = 1.0);       // (2) C++20
++
++explicit gamma_distribution(const param_type&amp;amp; parm);                    // (3)
+ ```
+ 
+ ## 概要
+-- (1) : ガンマ分布の形状母数`alpha`および尺度母数`beta`を受け取るコンストラクタ。
+-- (2) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
++
++- (1) : デフォルトコンストラクタ
++    - C++17まで : ガンマ分布の形状母数`alpha`および尺度母数`beta`を受け取るコンストラクタ。
++    - C++20 : ガンマ分布の形状母数`alpha = 1.0`、尺度母数`beta = 1.0`として(2)に委譲。
++- (2) : ガンマ分布の形状母数`alpha`および尺度母数`beta`を受け取るコンストラクタ。
++- (3) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
+ 
+ 
+ ## 要件
+-- (1) : `a &amp;gt; 0`かつ`b &amp;gt; 0`であること
++- (2) : `a &amp;gt; 0`かつ`b &amp;gt; 0`であること
+ 
+ 
+ ## 例
+@@ -29,7 +37,7 @@ int main()
+   std::random_device seed_gen;
+   std::default_random_engine engine(seed_gen());
+ 
+-  // (1) パラメータを個別に指定する
++  // (2) パラメータを個別に指定する
+   {
+     // 形状母数1.0、尺度母数1.0で分布させる
+     std::gamma_distribution&amp;lt;&amp;gt; dist(1.0, 1.0);
+@@ -40,7 +48,7 @@ int main()
+   }
+   std::cout &amp;lt;&amp;lt; std::endl;
+ 
+-  // (2) パラメータを通して範囲指定する
++  // (3) パラメータを通して範囲指定する
+   {
+     using dist_type = std::gamma_distribution&amp;lt;&amp;gt;;
+ 
+@@ -74,4 +82,4 @@ int main()
+ 
+ ## 参照
+ 
+-
++- [P0935R0 Eradicating unnecessarily explicit default constructors from the standard library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0935r0.html)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- P0935R0対応</title>
+      <link href="https://cpprefjp.github.io/reference/random/geometric_distribution/op_constructor.html"/>
+      <id>ff7ce0c0ba1752d1379ae3286dd6d6560dacc749:reference/random/geometric_distribution/op_constructor.md</id>
+      <updated>2021-08-26T17:40:52+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/random/geometric_distribution/op_constructor.md b/reference/random/geometric_distribution/op_constructor.md
+index b0c98742e..95c0aadb9 100644
+--- a/reference/random/geometric_distribution/op_constructor.md
++++ b/reference/random/geometric_distribution/op_constructor.md
+@@ -6,17 +6,25 @@
+ * cpp11[meta cpp]
+ 
+ ```cpp
+-explicit geometric_distribution(double p = 0.5);         // (1)
+-explicit geometric_distribution(const param_type&amp;amp; parm); // (2)
++explicit geometric_distribution(double p = 0.5);          // (1)
++geometric_distribution() : geometric_distribution(0.5) {} // (1) C++20
++
++explicit geometric_distribution(double p);                // (2) C++20
++
++explicit geometric_distribution(const param_type&amp;amp; parm);  // (3)
+ ```
+ 
+ ## 概要
+-- (1) : 一度の事象が成功する確率`p`を受け取るコンストラクタ。
+-- (2) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
++
++- (1) : デフォルトコンストラクタ
++    - C++17まで : 一度の事象が成功する確率`p`を受け取るコンストラクタ。
++    - C++20 : 一度の事象が成功する確率`p = 0.5`として(2)に委譲。
++- (2) : 一度の事象が成功する確率`p`を受け取るコンストラクタ。
++- (3) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
+ 
+ 
+ ## 要件
+-- (1) : `p &amp;gt; 0.0 &amp;amp;&amp;amp; p &amp;lt; 1.0`であること。(`p == 0`だと無限ループになってしまうため)
++- (2) : `p &amp;gt; 0.0 &amp;amp;&amp;amp; p &amp;lt; 1.0`であること。(`p == 0`だと無限ループになってしまうため)
+ 
+ 
+ ## 例
+@@ -29,7 +37,7 @@ int main()
+   std::random_device seed_gen;
+   std::default_random_engine engine(seed_gen());
+ 
+-  // (1) パラメータを個別に指定する
++  // (2) パラメータを個別に指定する
+   {
+     // 確率0.5で成功する事象を、成功するまで施行する
+     std::geometric_distribution&amp;lt;&amp;gt; dist(0.5);
+@@ -39,7 +47,7 @@ int main()
+     std::cout &amp;lt;&amp;lt; result &amp;lt;&amp;lt; std::endl;
+   }
+ 
+-  // (2) パラメータを通して範囲指定する
++  // (3) パラメータを通して範囲指定する
+   {
+     using dist_type = std::geometric_distribution&amp;lt;&amp;gt;;
+ 
+@@ -73,4 +81,4 @@ int main()
+ 
+ ## 参照
+ 
+-
++- [P0935R0 Eradicating unnecessarily explicit default constructors from the standard library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0935r0.html)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- P0935R0対応</title>
+      <link href="https://cpprefjp.github.io/reference/random/linear_congruential_engine/op_constructor.html"/>
+      <id>ff7ce0c0ba1752d1379ae3286dd6d6560dacc749:reference/random/linear_congruential_engine/op_constructor.md</id>
+      <updated>2021-08-26T17:40:52+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/random/linear_congruential_engine/op_constructor.md b/reference/random/linear_congruential_engine/op_constructor.md
+index 0e51eab0b..176e1a8e0 100644
+--- a/reference/random/linear_congruential_engine/op_constructor.md
++++ b/reference/random/linear_congruential_engine/op_constructor.md
+@@ -7,22 +7,29 @@
+ 
+ ```cpp
+ explicit linear_congruential_engine(result_type s = default_seed);         // (1)
+-template&amp;lt;class Sseq&amp;gt; explicit linear_congruential_engine(Sseq&amp;amp; q);         // (2)
++linear_congruential_engine() : linear_congruential_engine(default_seed) {} // (1) C++20
+ 
+-linear_congruential_engine(const linear_congruential_engine&amp;amp; e) = default; // (3)
+-linear_congruential_engine(linear_congruential_engine&amp;amp;&amp;amp; e) = default;      // (4)
++explicit linear_congruential_engine(result_type s);                        // (2) C++20
++
++template&amp;lt;class Sseq&amp;gt;
++explicit linear_congruential_engine(Sseq&amp;amp; q);         // (3)
++
++linear_congruential_engine(const linear_congruential_engine&amp;amp; e) = default; // (4)
++linear_congruential_engine(linear_congruential_engine&amp;amp;&amp;amp; e) = default;      // (5)
+ ```
+ 
+ ## 概要
+-- (1) : シード値を受け取って状態シーケンスを構築する
+-    - シード値が指定されない場合はデフォルトのシード値 (`linear_congruential_engine::default_seed`) で構築される
+-- (2) : シードのシーケンスを受け取って状態シーケンスを構築する
+-- (3) : コピーコンストラクタ。状態シーケンスをコピーする
+-- (4) : ムーブコンストラクタ。可能であれば状態シーケンスを移動する
++- (1) : デフォルトコンストラクタ
++    - C++17まで : シード値が指定されない場合はデフォルトのシード値 (`linear_congruential_engine::default_seed`) で構築される
++    - C++20 : デフォルトのシード値 (`linear_congruential_engine::default_seed`) で(2)に委譲
++- (2) : シード値を受け取って状態シーケンスを構築する
++- (3) : シードのシーケンスを受け取って状態シーケンスを構築する
++- (4) : コピーコンストラクタ。状態シーケンスをコピーする
++- (5) : ムーブコンストラクタ。可能であれば状態シーケンスを移動する
+ 
+ 
+ ## 計算量
+-- (1) : O(1)
++- (1)(2) : O(1)
+ 
+ 
+ ## 例
+@@ -42,7 +49,7 @@ int main()
+     std::cout &amp;lt;&amp;lt; result &amp;lt;&amp;lt; std::endl;
+   }
+ 
+-  // (1) シード値を指定して構築
++  // (2) シード値を指定して構築
+   {
+     std::uint32_t seed = std::random_device()();
+     std::minstd_rand engine(seed);
+@@ -51,7 +58,7 @@ int main()
+     std::cout &amp;lt;&amp;lt; result &amp;lt;&amp;lt; std::endl;
+   }
+ 
+-  // (2) シードのシーケンスを指定して構築
++  // (3) シードのシーケンスを指定して構築
+   {
+     // シードのシーケンスを作る
+     std::random_device seed_gen;
+@@ -96,4 +103,4 @@ int main()
+ 
+ ## 参照
+ 
+-
++- [P0935R0 Eradicating unnecessarily explicit default constructors from the standard library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0935r0.html)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- P0935R0対応</title>
+      <link href="https://cpprefjp.github.io/reference/random/lognormal_distribution/op_constructor.html"/>
+      <id>ff7ce0c0ba1752d1379ae3286dd6d6560dacc749:reference/random/lognormal_distribution/op_constructor.md</id>
+      <updated>2021-08-26T17:40:52+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/random/lognormal_distribution/op_constructor.md b/reference/random/lognormal_distribution/op_constructor.md
+index bd0714b90..9bf9d9e83 100644
+--- a/reference/random/lognormal_distribution/op_constructor.md
++++ b/reference/random/lognormal_distribution/op_constructor.md
+@@ -7,16 +7,24 @@
+ 
+ ```cpp
+ explicit lognormal_distribution(RealType m = 0.0, RealType s = 1.0); // (1)
+-explicit lognormal_distribution(const param_type&amp;amp; param);            // (2)
++lognormal_distribution() : lognormal_distribution(0.0) {}            // (1) C++20
++
++explicit lognormal_distribution(RealType m, RealType s = 1.0);       // (2) C++20
++
++explicit lognormal_distribution(const param_type&amp;amp; param);            // (3)
+ ```
+ 
+ ## 概要
+-- (1) : 対数正規分布の平均値`m`および標準偏差`s`を受け取るコンストラクタ
+-- (2) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
++
++- (1) : デフォルトコンストラクタ
++    - C++17まで : 対数正規分布の平均値`m`および標準偏差`s`を受け取るコンストラクタ。
++    - C++20 : 対数正規分布の平均値`m = 0.0`、標準偏差`s = 1.0`として(2)に委譲
++- (2) : 対数正規分布の平均値`m`および標準偏差`s`を受け取るコンストラクタ
++- (3) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
+ 
+ 
+ ## 要件
+-- (1) : `s &amp;gt; 0`であること
++- (2) : `s &amp;gt; 0`であること
+ 
+ 
+ ## 例
+@@ -29,7 +37,7 @@ int main()
+   std::random_device seed_gen;
+   std::default_random_engine engine(seed_gen());
+ 
+-  // (1) パラメータを個別に指定する
++  // (2) パラメータを個別に指定する
+   {
+     // 平均0.0、標準偏差1.0で分布させる
+     std::lognormal_distribution&amp;lt;&amp;gt; dist(0.0, 1.0);
+@@ -41,7 +49,7 @@ int main()
+   }
+   std::cout &amp;lt;&amp;lt; std::endl;
+ 
+-  // (2) パラメータを通して範囲指定する
++  // (3) パラメータを通して範囲指定する
+   {
+     using dist_type = std::lognormal_distribution&amp;lt;&amp;gt;;
+ 
+@@ -95,4 +103,4 @@ int main()
+ 
+ ## 参照
+ 
+-
++- [P0935R0 Eradicating unnecessarily explicit default constructors from the standard library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0935r0.html)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- P0935R0対応</title>
+      <link href="https://cpprefjp.github.io/reference/random/mersenne_twister_engine/op_constructor.html"/>
+      <id>ff7ce0c0ba1752d1379ae3286dd6d6560dacc749:reference/random/mersenne_twister_engine/op_constructor.md</id>
+      <updated>2021-08-26T17:40:52+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/random/mersenne_twister_engine/op_constructor.md b/reference/random/mersenne_twister_engine/op_constructor.md
+index 634df885a..7da0b0f2b 100644
+--- a/reference/random/mersenne_twister_engine/op_constructor.md
++++ b/reference/random/mersenne_twister_engine/op_constructor.md
+@@ -7,23 +7,30 @@
+ 
+ ```cpp
+ explicit mersenne_twister_engine(result_type value = default_seed);  // (1)
+-template&amp;lt;class Sseq&amp;gt; explicit mersenne_twister_engine(Sseq&amp;amp; q);      // (2)
++mersenne_twister_engine() : mersenne_twister_engine(default_seed) {} // (1) C++20
+ 
+-mersenne_twister_engine(const mersenne_twister_engine&amp;amp; e) = default; // (3)
+-mersenne_twister_engine(mersenne_twister_engine&amp;amp;&amp;amp; e) = default;      // (4)
++explicit mersenne_twister_engine(result_type value);                 // (2) C++20
++
++template&amp;lt;class Sseq&amp;gt;
++explicit mersenne_twister_engine(Sseq&amp;amp; q);                           // (3)
++
++mersenne_twister_engine(const mersenne_twister_engine&amp;amp; e) = default; // (4)
++mersenne_twister_engine(mersenne_twister_engine&amp;amp;&amp;amp; e) = default;      // (5)
+ ```
+ 
+ ## 概要
+-- (1) : シード値を受け取って状態シーケンスを構築する。
+-    - シード値が指定されない場合はデフォルトのシード値 (`mersenne_twister_engine::default_seed`) で構築される
+-- (2) : シードのシーケンスを受け取って状態シーケンスを構築する。
+-- (3) : コピーコンストラクタ。状態シーケンスをコピーする。
+-- (4) : ムーブコンストラクタ。
++- (1) : デフォルトコンストラクタ。
++    - C++17まで : シード値が指定されない場合はデフォルトのシード値 (`mersenne_twister_engine::default_seed`) で構築される
++    - C++20 : デフォルトのシード値 (`mersenne_twister_engine::default_seed`) で(2)に委譲
++- (2) : シード値を受け取って状態シーケンスを構築する。
++- (3) : シードのシーケンスを受け取って状態シーケンスを構築する。
++- (4) : コピーコンストラクタ。状態シーケンスをコピーする。
++- (5) : ムーブコンストラクタ。
+ 
+ 
+ ## 計算量
+-- (1) : 状態のサイズ `n` (`mersenne_twister_engine::state_size`) に対し O(n)
+-- (4) : 状態シーケンスの要素数はコンパイル時に決定されるため、多くの場合状態シーケンスはスタック上(配列)に作られる。そのため、ムーブが効果的に動作することは期待できない
++- (1)(2) : 状態のサイズ `n` (`mersenne_twister_engine::state_size`) に対し O(n)
++- (5) : 状態シーケンスの要素数はコンパイル時に決定されるため、多くの場合状態シーケンスはスタック上(配列)に作られる。そのため、ムーブが効果的に動作することは期待できない
+ 
+ 
+ ## 例
+@@ -43,7 +50,7 @@ int main()
+     std::cout &amp;lt;&amp;lt; result &amp;lt;&amp;lt; std::endl;
+   }
+ 
+-  // (1) シード値を指定して構築
++  // (2) シード値を指定して構築
+   {
+     std::uint32_t seed = std::random_device()();
+     std::mt19937 engine(seed);
+@@ -52,7 +59,7 @@ int main()
+     std::cout &amp;lt;&amp;lt; result &amp;lt;&amp;lt; std::endl;
+   }
+ 
+-  // (2) シードのシーケンスを指定して構築
++  // (3) シードのシーケンスを指定して構築
+   {
+     // シードのシーケンスを作る
+     std::random_device seed_gen;
+@@ -98,4 +105,4 @@ int main()
+ 
+ ## 参照
+ 
+-
++- [P0935R0 Eradicating unnecessarily explicit default constructors from the standard library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0935r0.html)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- P0935R0対応</title>
+      <link href="https://cpprefjp.github.io/reference/random/negative_binomial_distribution/op_constructor.html"/>
+      <id>ff7ce0c0ba1752d1379ae3286dd6d6560dacc749:reference/random/negative_binomial_distribution/op_constructor.md</id>
+      <updated>2021-08-26T17:40:52+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/random/negative_binomial_distribution/op_constructor.md b/reference/random/negative_binomial_distribution/op_constructor.md
+index b4a6ba019..bea08204b 100644
+--- a/reference/random/negative_binomial_distribution/op_constructor.md
++++ b/reference/random/negative_binomial_distribution/op_constructor.md
+@@ -7,16 +7,24 @@
+ 
+ ```cpp
+ explicit negative_binomial_distribution(IntType k = 1, double p = 0.5); // (1)
+-explicit negative_binomial_distribution(const param_type&amp;amp; parm);        // (2)
++negative_binomial_distribution() : negative_binomial_distribution(1) {} // (1) C++20
++
++explicit negative_binomial_distribution(IntType k, double p = 0.5);     // (2) C++20
++
++explicit negative_binomial_distribution(const param_type&amp;amp; parm);        // (3)
+ ```
+ 
+ ## 概要
+-- (1) : 成功回数`k`、および一度の事象が成功する確率`p`を受け取るコンストラクタ
+-- (2) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
+ 
++- (1) : デフォルトコンストラクタ
++    - C++17まで : 成功回数`k`、および一度の事象が成功する確率`p`を受け取るコンストラクタ
++    - C++20 : 成功回数`k = 1`、一度の事象が成功する確率`p = 0.5`として(2)に委譲。
++- (2) : 成功回数`k`、および一度の事象が成功する確率`p`を受け取るコンストラクタ
++- (3) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
+ 
+-## 概要
+-- (1) : `p &amp;gt; 0.0 &amp;amp;&amp;amp; p &amp;lt;= 1.0`かつ`k &amp;gt; 0`であること。(`p == 0`だと無限ループしてしまうため)
++
++## 要件
++- (2) : `p &amp;gt; 0.0 &amp;amp;&amp;amp; p &amp;lt;= 1.0`かつ`k &amp;gt; 0`であること。(`p == 0`だと無限ループしてしまうため)
+ 
+ 
+ ## 例
+@@ -29,7 +37,7 @@ int main()
+   std::random_device seed_gen;
+   std::default_random_engine engine(seed_gen());
+ 
+-  // (1) パラメータを個別に指定する
++  // (2) パラメータを個別に指定する
+   {
+     // 確率0.5で成功する事象を、3回成功させる
+     std::negative_binomial_distribution&amp;lt;&amp;gt; dist(3, 0.5);
+@@ -39,7 +47,7 @@ int main()
+     std::cout &amp;lt;&amp;lt; result &amp;lt;&amp;lt; std::endl;
+   }
+ 
+-  // (2) パラメータを通して範囲指定する
++  // (3) パラメータを通して範囲指定する
+   {
+     using dist_type = std::negative_binomial_distribution&amp;lt;&amp;gt;;
+ 
+@@ -73,4 +81,4 @@ int main()
+ 
+ ## 参照
+ 
+-
++- [P0935R0 Eradicating unnecessarily explicit default constructors from the standard library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0935r0.html)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- P0935R0対応</title>
+      <link href="https://cpprefjp.github.io/reference/random/normal_distribution/op_constructor.html"/>
+      <id>ff7ce0c0ba1752d1379ae3286dd6d6560dacc749:reference/random/normal_distribution/op_constructor.md</id>
+      <updated>2021-08-26T17:40:52+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/random/normal_distribution/op_constructor.md b/reference/random/normal_distribution/op_constructor.md
+index 8f4fe35c5..20a7fe940 100644
+--- a/reference/random/normal_distribution/op_constructor.md
++++ b/reference/random/normal_distribution/op_constructor.md
+@@ -7,16 +7,24 @@
+ 
+ ```cpp
+ explicit normal_distribution(RealType mean = 0.0, RealType stddev = 1.0); // (1)
+-explicit normal_distribution(const param_type&amp;amp; parm);                     // (2)
++normal_distribution() : normal_distribution(0.0) {}                       // (1) C++20
++
++explicit normal_distribution(RealType mean, RealType stddev = 1.0);       // (2) C++20
++
++explicit normal_distribution(const param_type&amp;amp; parm);                     // (3)
+ ```
+ 
+ ## 概要
+-- (1) : 正規分布の平均値`mean`および標準偏差`stddev`を受け取るコンストラクタ
+-- (2) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。 
++
++- (1) : デフォルトコンストラクタ
++    - C++17まで : 正規分布の平均値`mean`および標準偏差`stddev`を受け取るコンストラクタ。
++    - C++20 : 正規分布の平均値`mean = 0.0`、標準偏差`stddev = 1.0`として(2)に委譲
++- (2) : 正規分布の平均値`mean`および標準偏差`stddev`を受け取るコンストラクタ
++- (3) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。 
+ 
+ 
+ ## 要件
+-- (1) : `stddev &amp;gt; 0`であること
++- (2) : `stddev &amp;gt; 0`であること
+ 
+ 
+ ## 例
+@@ -29,7 +37,7 @@ int main()
+   std::random_device seed_gen;
+   std::default_random_engine engine(seed_gen());
+ 
+-  // (1) パラメータを個別に指定する
++  // (2) パラメータを個別に指定する
+   {
+     // 平均0.0、標準偏差1.0で分布させる
+     std::normal_distribution&amp;lt;&amp;gt; dist(0.0, 1.0);
+@@ -41,7 +49,7 @@ int main()
+   }
+   std::cout &amp;lt;&amp;lt; std::endl;
+ 
+-  // (2) パラメータを通して範囲指定する
++  // (3) パラメータを通して範囲指定する
+   {
+     using dist_type = std::normal_distribution&amp;lt;&amp;gt;;
+ 
+@@ -95,4 +103,4 @@ int main()
+ 
+ ## 参照
+ 
+-
++- [P0935R0 Eradicating unnecessarily explicit default constructors from the standard library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0935r0.html)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- P0935R0対応</title>
+      <link href="https://cpprefjp.github.io/reference/random/poisson_distribution/op_constructor.html"/>
+      <id>ff7ce0c0ba1752d1379ae3286dd6d6560dacc749:reference/random/poisson_distribution/op_constructor.md</id>
+      <updated>2021-08-26T17:40:52+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/random/poisson_distribution/op_constructor.md b/reference/random/poisson_distribution/op_constructor.md
+index 00fc4fef0..6e940b594 100644
+--- a/reference/random/poisson_distribution/op_constructor.md
++++ b/reference/random/poisson_distribution/op_constructor.md
+@@ -7,16 +7,24 @@
+ 
+ ```cpp
+ explicit poisson_distribution(double mean = 1.0);      // (1)
+-explicit poisson_distribution(const param_type&amp;amp; parm); // (2)
++poisson_distribution() : poisson_distribution(1.0) {}  // (1) C++20
++
++explicit poisson_distribution(double mean);            // (2) C++20
++
++explicit poisson_distribution(const param_type&amp;amp; parm); // (3)
+ ```
+ 
+ ## 概要
+-- (1) : ポワソン分布の平均値`mean`を受け取るコンストラクタ
+-- (2) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
++
++- (1) : デフォルトコンストラクタ
++    - C++17まで : ポワソン分布の平均値`mean`を受け取るコンストラクタ
++    - C++20 : ポワソン分布の平均値`mean = 1.0`として(2)に委譲。
++- (2) : ポワソン分布の平均値`mean`を受け取るコンストラクタ
++- (3) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
+ 
+ 
+ ## 要件
+-- (1) : `mean &amp;gt; 0`であること
++- (2) : `mean &amp;gt; 0`であること
+ 
+ 
+ ## 例
+@@ -29,7 +37,7 @@ int main()
+   std::random_device seed_gen;
+   std::default_random_engine engine(seed_gen());
+ 
+-  // (1) パラメータを個別に指定する
++  // (2) パラメータを個別に指定する
+   {
+     // 平均値1.0で分布させる
+     std::poisson_distribution&amp;lt;&amp;gt; dist(1.0);
+@@ -40,7 +48,7 @@ int main()
+   }
+   std::cout &amp;lt;&amp;lt; std::endl;
+ 
+-  // (2) パラメータを通して範囲指定する
++  // (3) パラメータを通して範囲指定する
+   {
+     using dist_type = std::poisson_distribution&amp;lt;&amp;gt;;
+ 
+@@ -74,4 +82,4 @@ int main()
+ 
+ ## 参照
+ 
+-
++- [P0935R0 Eradicating unnecessarily explicit default constructors from the standard library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0935r0.html)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- P0935R0対応</title>
+      <link href="https://cpprefjp.github.io/reference/random/random_device/op_constructor.html"/>
+      <id>ff7ce0c0ba1752d1379ae3286dd6d6560dacc749:reference/random/random_device/op_constructor.md</id>
+      <updated>2021-08-26T17:40:52+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/random/random_device/op_constructor.md b/reference/random/random_device/op_constructor.md
+index ccbc45c6c..901b37412 100644
+--- a/reference/random/random_device/op_constructor.md
++++ b/reference/random/random_device/op_constructor.md
+@@ -7,15 +7,21 @@
+ 
+ ```cpp
+ explicit random_device(const string&amp;amp; token = implementation-defined); // (1)
++random_device() : random_device(implementation-defined) {}            // (1) C++20
+ 
+-random_device(const random_device&amp;amp;) = delete;                         // (2)
++explicit random_device(const string&amp;amp; token);                          // (2) C++20
++
++random_device(const random_device&amp;amp;) = delete;                         // (3)
+ ```
+ * string[link /reference/string/basic_string.md]
+ 
+ ## 概要
+-- (1) : トークンを受け取って乱数生成器を構築する。デフォルトのトークンパラメータは実装定義である。
++- (1) : デフォルトコンストラクタ
++    - C++17まで : トークンを受け取って乱数生成器を構築する。デフォルトのトークンパラメータは実装定義である。
++    - C++20 : 実装定義のデフォルトトークンパラメータによって(2)に委譲。
++- (2) : トークンを受け取って乱数生成器を構築する。
+     - ※実装は、このトークンパラメータによって、異なるランダムのソースを使用してもよい。
+-- (2) : コピーコンストラクタ。コピー禁止。
++- (3) : コピーコンストラクタ。コピー禁止。
+     - これによって、ムーブコンストラクタも自動生成されない。
+ 
+ ### 有効なトークン
+@@ -31,7 +37,7 @@ random_device(const random_device&amp;amp;) = delete;                         // (2)
+       デフォルトでは、CPU の `RDRAND` 命令が使用できれば (`_GLIBCXX_X86_RDRAND` が定義されていれば) それを、そうでなければ `/dev/urandom` から値を取得する
+ 
+ ## 例外
+-- (1) : 乱数生成器を初期化できなかった場合、[`exception`](/reference/exception/exception.md)から派生した実装定義の例外オブジェクトを送出する
++- (1)(2) : 乱数生成器を初期化できなかった場合、[`exception`](/reference/exception/exception.md)から派生した実装定義の例外オブジェクトを送出する
+ 
+ 
+ ## 例
+@@ -71,4 +77,4 @@ int main()
+ 
+ ## 参照
+ 
+-
++- [P0935R0 Eradicating unnecessarily explicit default constructors from the standard library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0935r0.html)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- P0935R0対応</title>
+      <link href="https://cpprefjp.github.io/reference/random/student_t_distribution/op_constructor.html"/>
+      <id>ff7ce0c0ba1752d1379ae3286dd6d6560dacc749:reference/random/student_t_distribution/op_constructor.md</id>
+      <updated>2021-08-26T17:40:52+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/random/student_t_distribution/op_constructor.md b/reference/random/student_t_distribution/op_constructor.md
+index 535a3476c..714ad3345 100644
+--- a/reference/random/student_t_distribution/op_constructor.md
++++ b/reference/random/student_t_distribution/op_constructor.md
+@@ -6,17 +6,25 @@
+ * cpp11[meta cpp]
+ 
+ ```cpp
+-explicit student_t_distribution(RealType n = 1);         // (1)
+-explicit student_t_distribution(const param_type&amp;amp; parm); // (2)
++explicit student_t_distribution(RealType n = 1.0);        // (1)
++student_t_distribution() : student_t_distribution(1.0) {} // (1) C++20
++
++explicit student_t_distribution(RealType n);              // (2) C++20
++
++explicit student_t_distribution(const param_type&amp;amp; parm);  // (3)
+ ```
+ 
+ ## 概要
+-- (1) : ステューデントのt分布の自由度`n`を受け取るコンストラクタ
+-- (2) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスのコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
++
++- (1) : デフォルトコンストラクタ
++    - C++17まで : ステューデントのt分布の自由度`n`を受け取るコンストラクタ。
++    - C++20 : ステューデントのt分布の自由度`n = 1.0`として(2)に委譲。
++- (2) : ステューデントのt分布の自由度`n`を受け取るコンストラクタ
++- (3) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスのコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
+ 
+ 
+ ## 要件
+-- (1) : `n &amp;gt; 0`であること
++- (2) : `n &amp;gt; 0`であること
+ 
+ 
+ ## 例
+@@ -29,7 +37,7 @@ int main()
+   std::random_device seed_gen;
+   std::default_random_engine engine(seed_gen());
+ 
+-  // (1) パラメータを個別に指定する
++  // (2) パラメータを個別に指定する
+   {
+     // 自由度1で分布させる
+     std::student_t_distribution&amp;lt;&amp;gt; dist(1.0);
+@@ -41,7 +49,7 @@ int main()
+   }
+   std::cout &amp;lt;&amp;lt; std::endl;
+ 
+-  // (2) パラメータを指定する
++  // (3) パラメータを指定する
+   {
+     using dist_type = std::student_t_distribution&amp;lt;&amp;gt;;
+ 
+@@ -95,4 +103,4 @@ int main()
+ 
+ ## 参照
+ 
+-
++- [P0935R0 Eradicating unnecessarily explicit default constructors from the standard library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0935r0.html)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- P0935R0対応</title>
+      <link href="https://cpprefjp.github.io/reference/random/subtract_with_carry_engine/op_constructor.html"/>
+      <id>ff7ce0c0ba1752d1379ae3286dd6d6560dacc749:reference/random/subtract_with_carry_engine/op_constructor.md</id>
+      <updated>2021-08-26T17:40:52+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/random/subtract_with_carry_engine/op_constructor.md b/reference/random/subtract_with_carry_engine/op_constructor.md
+index 81a30845c..3e8b6ef94 100644
+--- a/reference/random/subtract_with_carry_engine/op_constructor.md
++++ b/reference/random/subtract_with_carry_engine/op_constructor.md
+@@ -8,23 +8,31 @@
+ 
+ ```cpp
+ explicit subtract_with_carry_engine(result_type value = default_seed);     // (1)
+-template&amp;lt;class Sseq&amp;gt; explicit subtract_with_carry_engine(Sseq&amp;amp; q);         // (2)
++subtract_with_carry_engine() : subtract_with_carry_engine(default_seed) {} // (1) C++20
+ 
+-subtract_with_carry_engine(const subtract_with_carry_engine&amp;amp; e) = default; // (3)
+-subtract_with_carry_engine(subtract_with_carry_engine&amp;amp;&amp;amp; e) = default;      // (4)
++explicit subtract_with_carry_engine(result_type value);                    // (2) C++20
++
++template&amp;lt;class Sseq&amp;gt;
++explicit subtract_with_carry_engine(Sseq&amp;amp; q);         // (3)
++
++subtract_with_carry_engine(const subtract_with_carry_engine&amp;amp; e) = default; // (4)
++subtract_with_carry_engine(subtract_with_carry_engine&amp;amp;&amp;amp; e) = default;      // (5)
+ ```
+ 
+ ## 概要
+-- (1) : シード値を受け取って状態シーケンスを構築する
+-    - シード値が指定されない場合はデフォルトのシード値 (`subtract_with_carry_engine::default_seed`) で構築される
++- (1) : デフォルトコンストラクタ
++    - C++17まで：シード値が指定されない場合はデフォルトのシード値 (`subtract_with_carry_engine::default_seed`) で構築される
++      - [`linear_congruential_engine`](../linear_congruential_engine.md) を $n = \lceil 32 / \mathtt{w} \rceil$ 回 (`w` は `subtract_with_carry_engine::word_size`) 呼び出して内部状態を初期化する
++    - C++20 : デフォルトのシード値 (`mersenne_twister_engine::default_seed`) で(2)に委譲
++- (2) : シード値を受け取って状態シーケンスを構築する
+     - [`linear_congruential_engine`](../linear_congruential_engine.md) を $n = \lceil 32 / \mathtt{w} \rceil$ 回 (`w` は `subtract_with_carry_engine::word_size`) 呼び出して内部状態を初期化する
+-- (2) : シードのシーケンスを受け取って状態シーケンスを構築する
+-- (3) : コピーコンストラクタ。状態シーケンスをコピーする
+-- (4) : ムーブコンストラクタ。可能であれば状態シーケンスを移動する
++- (3) : シードのシーケンスを受け取って状態シーケンスを構築する
++- (4) : コピーコンストラクタ。状態シーケンスをコピーする
++- (5) : ムーブコンストラクタ。可能であれば状態シーケンスを移動する
+ 
+ 
+ ## 計算量
+-- (1) : 正確に $n \times \mathtt{r}$ 回 (`r` は `subtract_with_carry_engine::long_lag`) [`linear_congruential_engine` を呼ぶ](../linear_congruential_engine/op_call.md)
++- (1)(2) : 正確に $n \times \mathtt{r}$ 回 (`r` は `subtract_with_carry_engine::long_lag`) [`linear_congruential_engine` を呼ぶ](../linear_congruential_engine/op_call.md)
+ 
+ 
+ ## 例
+@@ -45,7 +53,7 @@ int main()
+     std::cout &amp;lt;&amp;lt; result &amp;lt;&amp;lt; std::endl;
+   }
+ 
+-  // (1) シード値を指定して構築
++  // (2) シード値を指定して構築
+   {
+     std::uint32_t seed = std::random_device()();
+     std::ranlux24_base engine(seed);
+@@ -54,7 +62,7 @@ int main()
+     std::cout &amp;lt;&amp;lt; result &amp;lt;&amp;lt; std::endl;
+   }
+ 
+-  // (2) シードのシーケンスを指定して構築
++  // (3) シードのシーケンスを指定して構築
+   {
+     // シードのシーケンスを作る
+     std::random_device seed_gen;
+@@ -100,4 +108,4 @@ int main()
+ 
+ ## 参照
+ 
+-
++- [P0935R0 Eradicating unnecessarily explicit default constructors from the standard library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0935r0.html)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- P0935R0対応</title>
+      <link href="https://cpprefjp.github.io/reference/random/uniform_int_distribution/op_constructor.html"/>
+      <id>ff7ce0c0ba1752d1379ae3286dd6d6560dacc749:reference/random/uniform_int_distribution/op_constructor.md</id>
+      <updated>2021-08-26T17:40:52+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/random/uniform_int_distribution/op_constructor.md b/reference/random/uniform_int_distribution/op_constructor.md
+index a8d79cf98..907af0cf0 100644
+--- a/reference/random/uniform_int_distribution/op_constructor.md
++++ b/reference/random/uniform_int_distribution/op_constructor.md
+@@ -8,19 +8,27 @@
+ ```cpp
+ explicit uniform_int_distribution(IntType a = 0,
+                                   IntType b = numeric_limits&amp;lt;IntType&amp;gt;::max()); // (1)
++uniform_int_distribution() : uniform_int_distribution(0) {}                    // (1) C++20
+ 
+-explicit uniform_int_distribution(const param_type&amp;amp; parm);                     // (2)
++explicit uniform_int_distribution(IntType a,
++                                  IntType b = numeric_limits&amp;lt;IntType&amp;gt;::max()); // (2) C++20
++
++explicit uniform_int_distribution(const param_type&amp;amp; parm);                     // (3)
+ ```
+ * numeric_limits[link /reference/limits/numeric_limits.md]
+ * max()[link /reference/limits/numeric_limits/max.md]
+ 
+ ## 概要
+-- (1) : 一様整数分布の下限`a`および上限`b`を受け取るコンストラクタ。`a`以上`b`以下(範囲`[a, b]`)の値が生成される
+-- (2) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
++
++- (1) : デフォルトコンストラクタ。
++    - C++17 : 一様整数分布の下限`a`および上限`b`を受け取るコンストラクタ。
++    - C++20 : 分布の範囲を`[0, numeric_limits&amp;lt;IntType&amp;gt;::max()]`として(2)に委譲。
++- (2) : 一様整数分布の下限`a`および上限`b`を受け取るコンストラクタ。`a`以上`b`以下(範囲`[a, b]`)の値が生成される
++- (3) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
+ 
+ 
+ ## 要件
+-- (1) : `a &amp;lt;= b`であること
++- (1)(2) : `a &amp;lt;= b`であること
+ 
+ 
+ ## 例
+@@ -33,7 +41,7 @@ int main()
+   std::random_device seed_gen;
+   std::default_random_engine engine(seed_gen());
+ 
+-  // (1) 範囲を指定する
++  // (2) 範囲を指定する
+   {
+     // 0以上3以下の範囲で、値を等確率で生成する
+     std::uniform_int_distribution&amp;lt;&amp;gt; dist(0, 3);
+@@ -44,7 +52,7 @@ int main()
+   }
+   std::cout &amp;lt;&amp;lt; std::endl;
+ 
+-  // (2) パラメータを通して範囲指定する
++  // (3) パラメータを通して範囲指定する
+   {
+     using dist_type = std::uniform_int_distribution&amp;lt;&amp;gt;;
+ 
+@@ -78,4 +86,4 @@ int main()
+ 
+ ## 参照
+ 
+-
++- [P0935R0 Eradicating unnecessarily explicit default constructors from the standard library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0935r0.html)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- P0935R0対応</title>
+      <link href="https://cpprefjp.github.io/reference/random/uniform_real_distribution/op_constructor.html"/>
+      <id>ff7ce0c0ba1752d1379ae3286dd6d6560dacc749:reference/random/uniform_real_distribution/op_constructor.md</id>
+      <updated>2021-08-26T17:40:52+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/random/uniform_real_distribution/op_constructor.md b/reference/random/uniform_real_distribution/op_constructor.md
+index 21b826d99..52a8f4efc 100644
+--- a/reference/random/uniform_real_distribution/op_constructor.md
++++ b/reference/random/uniform_real_distribution/op_constructor.md
+@@ -7,16 +7,24 @@
+ 
+ ```cpp
+ explicit uniform_real_distribution(RealType a = 0.0, RealType b = 1.0); // (1)
+-explicit uniform_real_distribution(const param_type&amp;amp; parm);             // (2)
++uniform_real_distribution() : uniform_real_distribution(0.0) {}         // (1) C++20
++
++explicit uniform_real_distribution(RealType a, RealType b = 1.0);       // (2) C++20
++
++explicit uniform_real_distribution(const param_type&amp;amp; parm);             // (3)
+ ```
+ 
+ ## 概要
+-- (1) : 一様実数分布の下限`a`および上限`b`を受け取るコンストラクタ。`a`以上`b`未満(`[a, b)`)の値が生成される
+-- (2) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
++
++- (1) : デフォルトコンストラクタ
++    - C++17まで : 一様実数分布の下限`a`および上限`b`を受け取るコンストラクタ。
++    - C++20 : 分布の範囲を`[0.0, 1.0)`として(2)に委譲。
++- (2) : 一様実数分布の下限`a`および上限`b`を受け取るコンストラクタ。`a`以上`b`未満(`[a, b)`)の値が生成される
++- (3) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
+ 
+ 
+ ## 要件
+-- (1) : `a &amp;lt;= b`かつ`b - a &amp;lt;=` [`numeric_limits`](/reference/limits/numeric_limits.md)`&amp;lt;RealType&amp;gt;::`[`max()`](/reference/limits/numeric_limits/max.md)であること
++- (1)(2) : `a &amp;lt;= b`かつ`b - a &amp;lt;=` [`numeric_limits`](/reference/limits/numeric_limits.md)`&amp;lt;RealType&amp;gt;::`[`max()`](/reference/limits/numeric_limits/max.md)であること
+ 
+ 
+ ## 例
+@@ -29,7 +37,7 @@ int main()
+   std::random_device seed_gen;
+   std::default_random_engine engine(seed_gen());
+ 
+-  // (1) 範囲を指定する
++  // (2) 範囲を指定する
+   {
+     // 0.0以上1.0未満の範囲で、値を等確率で生成する
+     std::uniform_real_distribution&amp;lt;&amp;gt; dist(0.0, 1.0);
+@@ -40,7 +48,7 @@ int main()
+   }
+   std::cout &amp;lt;&amp;lt; std::endl;
+ 
+-  // (2) パラメータを通して範囲指定する
++  // (3) パラメータを通して範囲指定する
+   {
+     using dist_type = std::uniform_real_distribution&amp;lt;&amp;gt;;
+ 
+@@ -74,4 +82,4 @@ int main()
+ 
+ ## 参照
+ 
+-
++- [P0935R0 Eradicating unnecessarily explicit default constructors from the standard library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0935r0.html)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- P0935R0対応</title>
+      <link href="https://cpprefjp.github.io/reference/random/weibull_distribution/op_constructor.html"/>
+      <id>ff7ce0c0ba1752d1379ae3286dd6d6560dacc749:reference/random/weibull_distribution/op_constructor.md</id>
+      <updated>2021-08-26T17:40:52+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/random/weibull_distribution/op_constructor.md b/reference/random/weibull_distribution/op_constructor.md
+index b235a77d3..eeb34c7f9 100644
+--- a/reference/random/weibull_distribution/op_constructor.md
++++ b/reference/random/weibull_distribution/op_constructor.md
+@@ -7,16 +7,24 @@
+ 
+ ```cpp
+ explicit weibull_distribution(RealType a = 1.0, RealType b = 1.0); // (1)
+-explicit weibull_distribution(const param_type&amp;amp; parm);             // (2)
++weibull_distribution() : weibull_distribution(1.0) {}              // (1) C++20
++
++explicit weibull_distribution(RealType a, RealType b = 1.0);       // (2) C++20
++
++explicit weibull_distribution(const param_type&amp;amp; parm);             // (3)
+ ```
+ 
+ ## 概要
+-- (1) : ワイブル分布の形状パラメータ(ワイブル係数)`a`と尺度パラメータ`b`を受け取るコンストラクタ
+-- (2) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
++
++- (1) : デフォルトコンストラクタ
++    - C++17まで : ワイブル分布の形状パラメータ(ワイブル係数)`a`と尺度パラメータ`b`を受け取るコンストラクタ。
++    - C++20 : ワイブル分布の形状パラメータ`a = 1.0`、尺度パラメータ`b = 1.0`として(2)に委譲。
++- (2) : ワイブル分布の形状パラメータ(ワイブル係数)`a`と尺度パラメータ`b`を受け取るコンストラクタ
++- (3) : パラメータオブジェクトを受け取るコンストラクタ。`param_type`は、このクラスの(1)のコンストラクタと同じオーバーロードを持ち、それらのコンストラクタのパラメータを保持している。このコンストラクタでは、`param`オブジェクトが持っているパラメータを、このクラスのコンストラクタに転送する。
+ 
+ 
+ ## 要件
+-- (1) : `a &amp;gt; 0`かつ`b &amp;gt; 0`であること
++- (2) : `a &amp;gt; 0`かつ`b &amp;gt; 0`であること
+ 
+ 
+ ## 例
+@@ -93,4 +101,4 @@ int main()
+ 
+ ## 参照
+ 
+-
++- [P0935R0 Eradicating unnecessarily explicit default constructors from the standard library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0935r0.html)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- P0935R0対応</title>
+      <link href="https://cpprefjp.github.io/reference/regex/match_results/op_constructor.html"/>
+      <id>ff7ce0c0ba1752d1379ae3286dd6d6560dacc749:reference/regex/match_results/op_constructor.md</id>
+      <updated>2021-08-26T17:40:52+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/regex/match_results/op_constructor.md b/reference/regex/match_results/op_constructor.md
+index a21b2d08a..054eec96b 100644
+--- a/reference/regex/match_results/op_constructor.md
++++ b/reference/regex/match_results/op_constructor.md
+@@ -7,10 +7,13 @@
+ 
+ ```cpp
+ match_results(const Allocator&amp;amp; a = Allocator());    // (1)
++match_results() : match_results(Allocator()) {}     // (1) C++20
+ 
+-match_results(const match_results&amp;amp; m);              // (2)
++match_results(const Allocator&amp;amp; a);                  // (2) C++20
+ 
+-match_results(match_results&amp;amp;&amp;amp; m) noexcept;          // (3)
++match_results(const match_results&amp;amp; m);              // (3)
++
++match_results(match_results&amp;amp;&amp;amp; m) noexcept;          // (4)
+ ```
+ 
+ ## 概要
+@@ -18,19 +21,22 @@ match_results(match_results&amp;amp;&amp;amp; m) noexcept;          // (3)
+ 
+ 
+ ## 要件
+-- (3) `Allocator` のムーブコンストラクタは例外で終了しないこと。
++- (4) `Allocator` のムーブコンストラクタは例外で終了しないこと。
+ 
+ 
+ ## 効果
+-- (1) デフォルトコンストラクタ。`match_results` オブジェクトを構築する。
+-- (2) コピーコンストラクタ。引数 `m` をコピーした `match_results` オブジェクトを構築する。
+-- (3) ムーブコンストラクタ。引数 `m` をムーブした `match_results` オブジェクトを構築する。
++- (1) デフォルトコンストラクタ。
++    - C++17まで : 指定したアロケータ`a`を用いて`match_results` オブジェクトを構築する。
++    - C++20 : アロケータをデフォルト構築して`match_results` オブジェクトを構築する。
++- (2) 指定したアロケータ`a`を用いて`match_results` オブジェクトを構築する。
++- (3) コピーコンストラクタ。引数 `m` をコピーした `match_results` オブジェクトを構築する。
++- (4) ムーブコンストラクタ。引数 `m` をムーブした `match_results` オブジェクトを構築する。
+ 
+ 
+ ## 事後条件
+-- (1) [`ready`](ready.md)`() == false`、かつ、[`size`](size.md)`() == 0`、かつ、[`get_allocator`](get_allocator.md)`() == a`
+-- (2) 構築したオブジェクトを `u` とすると、`u == m`
+-- (3) 以下の表を満たす。
++- (1)(2) [`ready`](ready.md)`() == false`、かつ、[`size`](size.md)`() == 0`、かつ、[`get_allocator`](get_allocator.md)`() == a`
++- (3) 構築したオブジェクトを `u` とすると、`u == m`
++- (4) 以下の表を満たす。
+ 
+     | 要素                                    | 値                                                                                            |
+     |-----------------------------------------|-----------------------------------------------------------------------------------------------|
+@@ -46,15 +52,15 @@ match_results(match_results&amp;amp;&amp;amp; m) noexcept;          // (3)
+ 
+ 
+ ## 計算量
+-- (1) 定数時間
+-- (2) 線形時間
+-- (3) 定数時間
++- (1)(2) 定数時間
++- (3) 線形時間
++- (4) 定数時間
+ 
+ 
+ ## 備考
+-規格では明確ではないものの、(2) の形式でも以下の事後条件を満たすべきであると思われる。
++規格では明確ではないものの、(3) の形式でも以下の事後条件を満たすべきであると思われる。
+ 
+-- (3) の事後条件のアロケータ以外のもの
++- (4) の事後条件のアロケータ以外のもの
+ - [`get_allocator`](get_allocator.md)`() ==` [`allocator_traits`](../../memory/allocator_traits.md)`&amp;lt;allocator_type&amp;gt;::`[`select_on_container_copy_construction`](../../memory/allocator_traits/select_on_container_copy_construction.md)`(m.`[`get_allocator`](get_allocator.md)`())`
+ 
+ 
+@@ -87,10 +93,10 @@ int main()
+   std::regex_search(s, m1, re);
+   print(m1);
+ 
+-  std::cmatch m2(m1);               // (2) の形式
++  std::cmatch m2(m1);               // (3) の形式
+   print(m2);
+ 
+-  std::cmatch m3(std::move(m1));    // (3) の形式
++  std::cmatch m3(std::move(m1));    // (4) の形式
+   print(m3);
+ }
+ ```
+@@ -147,3 +153,7 @@ suffix:&amp;#39; &amp;#39;
+ 
+ ### 備考
+ GCC(libstdc++) の 4.9.2 までは、[`regex_iterator`](../regex_iterator.md) を間接参照した結果から (2)、あるいは、(3) の形式で構築した場合に [`position`](position.md) の結果が正しくコピーされない。これは、4.9.3 以降で修正される予定である。
++
++## 参照
++
++- [P0935R0 Eradicating unnecessarily explicit default constructors from the standard library](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0935r0.html)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- P0935R0対応</title>
+      <link href="https://cpprefjp.github.io/reference/stack/stack/op_constructor.html"/>
+      <id>ff7ce0c0ba1752d1379ae3286dd6d6560dacc749:reference/stack/stack/op_constructor.md</id>
+      <updated>2021-08-26T17:40:52+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/stack/stack/op_constructor.md b/reference/stack/stack/op_constructor.md
+index b8a412392..c5da7122c 100644
+--- a/reference/stack/stack/op_constructor.md
++++ b/reference/stack/stack/op_constructor.md
+@@ -18,7 +18,7 @@ explicit stack(const Container&amp;amp;);  // (2)
+ explicit stack(Container&amp;amp;&amp;amp;);       // (3)
+ 
+ template&amp;lt;class InputIterator&amp;gt;
+-stack(InputIterator first, InputIterator last);  // (4) C++23
++stack(InputIterator first, InputIterator last);       // (4) C++23
+ 
+ template &amp;lt;class Allocator&amp;gt;
+ explicit stack(const Allocator&amp;amp; alloc);               // (5) C++11
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>cend -- 不可視文字を削除</title>
@@ -1607,107 +3414,6 @@ index afaabc2ec..e466aa1bf 100644
       <author>
         <name>Tetsuro Matsumura</name>
         <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>cbegin -- 不可視文字の削除</title>
-      <link href="https://cpprefjp.github.io/reference/ranges/cbegin.html"/>
-      <id>f5ecbccb0e7bddfef1c3fe4caa8ffacef900751f:reference/ranges/cbegin.md</id>
-      <updated>2021-08-26T11:05:27+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/cbegin.md b/reference/ranges/cbegin.md
-index 6056b54da..afaabc2ec 100644
---- a/reference/ranges/cbegin.md
-+++ b/reference/ranges/cbegin.md
-@@ -18,14 +18,14 @@ namespace std::ranges {
- ## 効果
- 部分式`E`の型を`T`とする。このとき、式`ranges::cbegin(E)`の効果は以下の式と等しい。
- 
--1. `E`がlvalueであれば、[`ranges​::​begin`](begin.md)`(static_cast&amp;lt;const T&amp;amp;&amp;gt;(E))`
--2. それ以外の場合、[`ranges​::​begin`](begin.md)`(static_cast&amp;lt;const T&amp;amp;&amp;amp;&amp;gt;(E))`
-+1. `E`がlvalueであれば、[`ranges::begin`](begin.md)`(static_cast&amp;lt;const T&amp;amp;&amp;gt;(E))`
-+2. それ以外の場合、[`ranges::begin`](begin.md)`(static_cast&amp;lt;const T&amp;amp;&amp;amp;&amp;gt;(E))`
- 
- ## 戻り値
- 先頭要素への読み取り専用イテレータ。
- 
- ## カスタマイゼーションポイント
--範囲が`const`な場合について[`ranges​::​begin`](begin.md)をカスタマイズすることで、`ranges::cbegin`をカスタマイズできる。
-+範囲が`const`な場合について[`ranges::begin`](begin.md)をカスタマイズすることで、`ranges::cbegin`をカスタマイズできる。
- 
- ## 備考
- `ranges::cbegin`の呼び出しが有効な式であるとき、その型は[`input_or_output_iterator`](/reference/iterator/input_or_output_iterator.md)のモデルである。
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>cend -- 不可視文字の削除</title>
-      <link href="https://cpprefjp.github.io/reference/ranges/cend.html"/>
-      <id>f5ecbccb0e7bddfef1c3fe4caa8ffacef900751f:reference/ranges/cend.md</id>
-      <updated>2021-08-26T11:05:27+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/cend.md b/reference/ranges/cend.md
-index fd3b69d9b..5e1cb93a7 100644
---- a/reference/ranges/cend.md
-+++ b/reference/ranges/cend.md
-@@ -18,8 +18,8 @@ namespace std::ranges {
- ## 効果
- 部分式`E`の型を`T`とする。このとき、式`ranges::cend(E)`の効果は以下の式と等しい。
- 
--1. `E`がlvalueであれば、[`ranges​::end`](end.md)`(static_cast&amp;lt;const T&amp;amp;&amp;gt;(E))`
--2. それ以外の場合、[`ranges​::end`](end.md)`(static_cast&amp;lt;const T&amp;amp;&amp;amp;&amp;gt;(E))`
-+1. `E`がlvalueであれば、[`ranges::end`](end.md)`(static_cast&amp;lt;const T&amp;amp;&amp;gt;(E))`
-+2. それ以外の場合、[`ranges::end`](end.md)`(static_cast&amp;lt;const T&amp;amp;&amp;amp;&amp;gt;(E))`
- 
- ## 戻り値
- 最後尾要素の次を指す読み取り専用イテレータもしくは番兵。
-@@ -28,7 +28,7 @@ namespace std::ranges {
- 範囲が`const`な場合について[`ranges::end`](end.md)をカスタマイズすることで、`ranges::cend`をカスタマイズできる。
- 
- ## 備考
--`ranges​::c​end(E)`が有効な式であるとき、`ranges::cend(E)`の型`S`、[`ranges::cbegin`](begin.md)`(E)`の型`T`は[`sentinel_for`](/reference/iterator/sentinel_for.md)のモデルである。
-+`ranges::cend(E)`が有効な式であるとき、`ranges::cend(E)`の型`S`、[`ranges::cbegin`](begin.md)`(E)`の型`T`は[`sentinel_for`](/reference/iterator/sentinel_for.md)のモデルである。
- 
- ## 例
- ```cpp example
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>end -- 不可視文字の削除</title>
-      <link href="https://cpprefjp.github.io/reference/ranges/end.html"/>
-      <id>f5ecbccb0e7bddfef1c3fe4caa8ffacef900751f:reference/ranges/end.md</id>
-      <updated>2021-08-26T11:05:27+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/end.md b/reference/ranges/end.md
-index ecb6e383f..ba32a50b9 100644
---- a/reference/ranges/end.md
-+++ b/reference/ranges/end.md
-@@ -48,7 +48,7 @@ constexpr decay_t&amp;lt;T&amp;gt; decay-copy(T&amp;amp;&amp;amp; v) noexcept(is_nothrow_convertible_v&amp;lt;T, deca
- 3か4の条件を満たすようにする。例えば、ユーザー定義のフリー関数`end`を定義するか、ユーザー定義のクラスにメンバ関数`end`を持たせることでカスタマイズできる。
- 
- ## 備考
--`ranges​::​end(E)`が有効な式であるとき、`ranges::end(E)`の型`S`、[`ranges::begin`](begin.md)`(E)`の型`T`は[`sentinel_for`](/reference/iterator/sentinel_for.md)のモデルである。
-+`ranges::end(E)`が有効な式であるとき、`ranges::end(E)`の型`S`、[`ranges::begin`](begin.md)`(E)`の型`T`は[`sentinel_for`](/reference/iterator/sentinel_for.md)のモデルである。
- 
- ## 例
- ```cpp example
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
       </author>
     </entry>
   
