@@ -2,9 +2,181 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2021-08-30T14:35:09.916534</updated>
-  <id>36e2a956-7788-484f-a3c7-2751412daed4</id>
+  <updated>2021-08-30T17:18:14.753921</updated>
+  <id>797e93a0-3c15-406b-afb7-cf93316bb29a</id>
 
+  
+    <entry>
+      <title>borrowed_iterator_t -- &lt;ranges&gt; ダングリングイテレータハンドリングの例を追加 #713</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/borrowed_iterator_t.html"/>
+      <id>7c333939c458f6784927b3c33809f8159301176f:reference/ranges/borrowed_iterator_t.md</id>
+      <updated>2021-08-31T02:13:08+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/borrowed_iterator_t.md b/reference/ranges/borrowed_iterator_t.md
+index 21552087b..8ff960ba4 100644
+--- a/reference/ranges/borrowed_iterator_t.md
++++ b/reference/ranges/borrowed_iterator_t.md
+@@ -16,13 +16,54 @@ namespace std::ranges {
+ * dangling[link dangling.md]
+ 
+ ## 概要
+-
+ 任意の範囲型`R`のイテレータの型を取得する。ただし、`R`が[`borrowed_range`](borrowed_range.md)ではない場合、[`dangling`](dangling.md)になる。
+ 
++イテレータを返す関数では、これを戻り値型に使うことでダングリングイテレータになる場合に自動的に[`dangling`](dangling.md)を返すことができる。
++
+ ## 例
+ ```cpp example
++#include &amp;lt;ranges&amp;gt;
++#include &amp;lt;vector&amp;gt;
++
++using namespace std;
++
++template&amp;lt;ranges::range R&amp;gt;
++ranges::borrowed_iterator_t&amp;lt;R&amp;gt; my_find(R&amp;amp;&amp;amp; r, const ranges::range_value_t&amp;lt;R&amp;gt;&amp;amp; v) {
++  auto i = ranges::begin(r);
++  auto e = ranges::end(r);
++  while(i != e) {
++    if(*i == v) return i;
++    ++i;
++  }
++  return e;
++}
++
++vector&amp;lt;int&amp;gt; f(){ return {}; }
++
++int main() {
++  // borrowed_rangeではない範囲のrvalueが渡された場合、danglingが返る
++  auto result1 = my_find(f(), 42);
++  static_assert(same_as&amp;lt;decltype(result1), ranges::dangling&amp;gt;);
++
++  // lvalueが渡された場合、danglingにはならない
++  auto vec = f();
++  auto result2 = my_find(vec, 42);
++  static_assert(same_as&amp;lt;decltype(result2), vector&amp;lt;int&amp;gt;::iterator&amp;gt;);
++
++  // borrowed_rangeのrvalueが渡された場合、danglingにはならない
++  auto result3 = my_find(ranges::subrange{vec}, 42);
++  static_assert(same_as&amp;lt;decltype(result3), vector&amp;lt;int&amp;gt;::iterator&amp;gt;);
++}
+ ```
+-* std::ranges::range_difference_t[color ff0000]
++* ranges::ranges::borrowed_iterator_t[color ff0000]
++* ranges::range[link range.md]
++* ranges::begin[link begin.md]
++* ranges::end[link end.md]
++* ranges::range_value_t[link range_value_t.md]
++* ranges::dangling[link dangling.md]
++* ranges::subrange[link subrange.md.nolink]
++* borrowed_range[link borrowed_range.md]
++* same_as[link /reference/concepts/same_as.md]
+ 
+ ### 出力
+ ```
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>borrowed_subrange_t -- &lt;ranges&gt; ダングリングイテレータハンドリングの例を追加 #713</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/borrowed_subrange_t.html"/>
+      <id>7c333939c458f6784927b3c33809f8159301176f:reference/ranges/borrowed_subrange_t.md</id>
+      <updated>2021-08-31T02:13:08+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/borrowed_subrange_t.md b/reference/ranges/borrowed_subrange_t.md
+index 9fc3de068..0cc747537 100644
+--- a/reference/ranges/borrowed_subrange_t.md
++++ b/reference/ranges/borrowed_subrange_t.md
+@@ -20,10 +20,47 @@ namespace std::ranges {
+ 
+ 任意の範囲型`R`の部分範囲の型を取得する。ただし、`R`が[`borrowed_range`](borrowed_range.md)ではない場合、[`dangling`](dangling.md)になる。
+ 
++
+ ## 例
+ ```cpp example
++#include &amp;lt;ranges&amp;gt;
++#include &amp;lt;vector&amp;gt;
++
++using namespace std;
++
++template&amp;lt;ranges::range R&amp;gt;
++ranges::borrowed_subrange_t&amp;lt;R&amp;gt; my_all(R&amp;amp;&amp;amp; r) {
++  auto i = ranges::begin(r);
++  auto e = ranges::end(r);
++  return {i, e};
++}
++
++vector&amp;lt;int&amp;gt; f(){ return {}; }
++
++int main() {
++  // borrowed_rangeではない範囲のrvalueが渡された場合、danglingが返る
++  auto result1 = my_all(f());
++  static_assert(same_as&amp;lt;decltype(result1), ranges::dangling&amp;gt;);
++
++  // lvalueが渡された場合、danglingにはならない
++  auto vec = f();
++  auto result2 = my_all(vec);
++  static_assert(!same_as&amp;lt;decltype(result2), ranges::dangling&amp;gt;);
++
++  // borrowed_rangeのrvalueが渡された場合、danglingにはならない
++  auto result3 = my_all(ranges::subrange{vec});
++  static_assert(!same_as&amp;lt;decltype(result3), ranges::dangling&amp;gt;);
++}
+ ```
+-* std::ranges::# borrowed_subrange_t[color ff0000]
++* ranges::ranges::borrowed_iborrowed_subrange_tterator_t[color ff0000]
++* ranges::range[link range.md]
++* ranges::begin[link begin.md]
++* ranges::end[link end.md]
++* ranges::range_value_t[link range_value_t.md]
++* ranges::dangling[link dangling.md]
++* ranges::subrange[link subrange.md.nolink]
++* borrowed_range[link borrowed_range.md]
++* same_as[link /reference/concepts/same_as.md]
+ 
+ ### 出力
+ ```
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>dangling -- &lt;ranges&gt; ダングリングイテレータハンドリングの例を追加 #713</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/dangling.html"/>
+      <id>7c333939c458f6784927b3c33809f8159301176f:reference/ranges/dangling.md</id>
+      <updated>2021-08-31T02:13:08+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/dangling.md b/reference/ranges/dangling.md
+index da7536e0e..0ac2e2ad0 100644
+--- a/reference/ranges/dangling.md
++++ b/reference/ranges/dangling.md
+@@ -55,7 +55,10 @@ int main()
+ }
+ ```
+ * ranges::dangling[color ff0000]
+-* std::ranges::crend[link crend.md]
++* ranges::find[link /reference/algorithm/find.md]
++* ranges::subrange[link subrange.md.nolink]
++* borrowed_range[link borrowed_range.md]
++* same_as[link /reference/concepts/same_as.md]
+ 
+ ### 出力
+ ```
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>concepts -- boolean-testable移動</title>
@@ -1096,38 +1268,6 @@ index 884aa0c6e..9fc3de068 100644
  * iterator_t[link iterator_t.md]
  * dangling[link dangling.md]
  
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>compare -- P1855R0対応</title>
-      <link href="https://cpprefjp.github.io/reference/compare.html"/>
-      <id>2fe87e830125e8f3bfc21040da20b1202353fb27:reference/compare.md</id>
-      <updated>2021-08-30T12:20:44+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/compare.md b/reference/compare.md
-index 9e131df40..7d5e542ab 100644
---- a/reference/compare.md
-+++ b/reference/compare.md
-@@ -9,6 +9,8 @@
- 
- 比較カテゴリ型を返す`&amp;lt;=&amp;gt;`を利用する際は本ヘッダのインクルードは必須である。
- 
-+本ヘッダはフリースタンディング環境でも提供される。
-+
- ## 代入可能性（*substitutability*）
- 
- 代入可能性とは、`a == b`ならば`f(a) == f(b)`となる性質の事である。なお、ここでの`f()`は内部状態や副作用を持たず入力のアクセス可能な要素のみによって出力が決まる関数で、`pure`な関数と呼ばれるものである。
-@@ -84,3 +86,4 @@
- - [P0768R1 Library support for the spaceship (comparison) operator](http://wg21.link/p0768)
- - [P1614R2 The Mothership has Landed (Adding &amp;lt;=&amp;gt; to the Library)](http://wg21.link/p1614)
- - [P1959R0 Remove `std::weak_equality` and `std::strong_equality`](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1959r0.html)
-+- [P1855R0 Make &amp;lt;compare&amp;gt; freestanding](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1855r0.html)
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
