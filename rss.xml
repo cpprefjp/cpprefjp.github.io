@@ -2,9 +2,284 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2021-09-08T14:37:30.460902</updated>
-  <id>06e9a011-5280-4409-9ca6-c0988a1593fc</id>
+  <updated>2021-09-08T19:25:29.576572</updated>
+  <id>fdb33273-2a70-4869-af66-8a5105eedbda</id>
 
+  
+    <entry>
+      <title>ranges -- &lt;ranges&gt; ref_viewを追加 #713</title>
+      <link href="https://cpprefjp.github.io/reference/ranges.html"/>
+      <id>f2d47eac4b68d18e0098ee84a8ea5e783a648edd:reference/ranges.md</id>
+      <updated>2021-09-09T04:20:34+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges.md b/reference/ranges.md
+index fedf6ade0..b4908527d 100644
+--- a/reference/ranges.md
++++ b/reference/ranges.md
+@@ -90,6 +90,9 @@ C++20では関数によるカスタマイゼーションポイントの問題点
+ 
+ ## 範囲ファクトリ
+ 
++範囲ファクトリは、範囲ではないオブジェクトから[`view`](ranges/view.md)を生成するものである。
++その実体は、引数の無いものは変数テンプレート、引数のあるものは関数テンプレートやカスタマイゼーションポイントオブジェクトとなっている。
++
+ ### empty view
+ 
+ | 名前                                 | 説明                                       | 対応バージョン |
+@@ -120,13 +123,40 @@ C++20では関数によるカスタマイゼーションポイントの問題点
+ 
+ ## 範囲アダプタ
+ 
++範囲アダプタは、既存の範囲に作用して新たな[`view`](ranges/view.md)を生成するものである。
++その実体は、引数の無いものは変数テンプレート、引数のあるものは関数テンプレートやカスタマイゼーションポイントオブジェクトとなっている。
++
++範囲アダプタを範囲に作用させる方法には、関数記法とパイプライン記法の2つがある。
++
++`R`を範囲アダプタ、`r`を元になる範囲とする。このとき、以下の2つの式は同じ[`view`](ranges/view.md)を生成する。
++
++```cpp
++R(r)   // 関数記法
++r | R  // パイプライン記法
++```
++
++範囲アダプタを適用した結果は[`view`](ranges/view.md)、すなわち範囲であることから、範囲アダプタを次々と繋いでいくことができる。
++
++```cpp
++R1(R2(R3(r)))     // 関数記法
++r | R1 | R2 | R3  // パイプライン記法
++```
++
++範囲アダプタの処理は遅延評価され、要素は必要になるまで生成されない。このような仕組みは実際の仕事の多くをイテレータが担うことで実現している。
++
++```cpp
++for (auto&amp;amp;&amp;amp; item : r | R) {
++  // ループ一回ごとに、(r | R)の要素を1つ生成する。このとき、rの要素を必要なだけ取得する。
++}
++```
++
+ ### all view
+ 
+-| 名前                                    | 説明           | 対応バージョン |
+-|-----------------------------------------|----------------|----------------|
+-| [`ref_view`](ranges/ref_view.md.nolink) | 範囲への参照として振る舞うビュー (class template)     | C++20          |
+-| [`all`](ranges/all.md.nolink)           | 範囲への参照として振る舞うビューを生成する (customization point object) | C++20          |
+-| [`all_t`](ranges/all_t.md.nolink)       | `all`の戻り値型 (alias template)     | C++20          |
++| 名前                             | 説明                                                                    | 対応バージョン |
++|----------------------------------|-------------------------------------------------------------------------|----------------|
++| [`ref_view`](ranges/ref_view.md) | 範囲への参照として振る舞うビュー (class template)                       | C++20          |
++| [`all`](ranges/ref_view.md)      | 範囲への参照として振る舞うビューを生成する (customization point object) | C++20          |
++| [`all_t`](ranges/ref_view.md)    | `all`の戻り値型 (alias template)                                        | C++20          |
+ 
+ ### filter view
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>ref_view -- &lt;ranges&gt; ref_viewを追加 #713</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/ref_view.html"/>
+      <id>f2d47eac4b68d18e0098ee84a8ea5e783a648edd:reference/ranges/ref_view.md</id>
+      <updated>2021-09-09T04:20:34+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/ref_view.md b/reference/ranges/ref_view.md
+new file mode 100644
+index 000000000..90d23c222
+--- /dev/null
++++ b/reference/ranges/ref_view.md
+@@ -0,0 +1,119 @@
++# ref_view
++* ranges[meta header]
++* std::ranges[meta namespace]
++* class template[meta id-type]
++* cpp20[meta cpp]
++
++```cpp
++namespace std {
++  namespace ranges {
++    template&amp;lt;range R&amp;gt;
++    requires is_object_v&amp;lt;R&amp;gt;
++    class ref_view : public view_interface&amp;lt;ref_view&amp;lt;R&amp;gt;&amp;gt; { …… }; // (1)
++
++    namespace views {
++      inline constexpr /*unspecified*/ all = /*unspecified*/;     // (2)
++
++      template&amp;lt;viewable_range R&amp;gt;
++      using all_t = decltype(all(declval&amp;lt;R&amp;gt;()));                  // (3)
++    }
++  }
++
++  namespace views = ranges::views;
++}
++```
++* movable[link /reference/concepts/movable.md]
++* default_initializable[link /reference/concepts/default_initializable.md]
++* viewable_range[link viewable_range.md]
++* view_interface[link view_interface.md]
++* stream-extractable[italic]
++
++## 概要
++`ref_view`(1)は、範囲への参照として振る舞う[`view`](view.md)。
++
++カスタマイゼーションポイントオブジェクト`all`(2)で、範囲への参照として振る舞う[`view`](view.md)を生成できる。
++
++`all`の戻り値は`ref_view`とは限らず、元の範囲そのものや[`subrange`](subrange.md)にもなる。戻り値型はエイリアステンプレート`all_t`(3)で取得できる。これらをまとめて&amp;#34;all view&amp;#34;と呼ぶことがある。
++
++### 範囲カテゴリ
++
++| borrowed | sized | output | input | forward | bidirectional | random_access | contiguous | common | viewable | view |
++|----------|-------|--------|-------|---------|---------------|---------------|------------|--------|----------|------|
++| ○       | ※    | ※     | ※    | ※      | ※            | ※            | ※         | ※     | ○       | ○   |
++
++※ 参照先の範囲に従う
++
++## テンプレートパラメータ制約
++
++- [`range`](range.md)`&amp;lt;R&amp;gt;`
++- [`is_object_v`](/reference/type_traits/is_object.md)`&amp;lt;R&amp;gt;`
++
++## 効果
++
++- (2): 式`views​::​all(E)`の効果は次の通り
++    - `E`の[`decay`](/reference/type_traits/decay.md)した型が[`view`](view.md)のモデルであれば、[`decay-copy`](/reference/exposition-only/decay-copy.md)`(E)`と等しい
++    - それ以外のとき、`ref_­view{E}`が有効な式であれば、`ref_­view{E}`と等しい
++    - それ以外のとき、[`subrange`](subrange.md)`{E}`と等しい
++
++## メンバ関数
++
++| 名前                                             | 説明                             | 対応バージョン |
++|--------------------------------------------------|----------------------------------|----------------|
++| [`(constructor)`](ref_view/op_constructor.md.nolink)  | コンストラクタ                   | C++20          |
++| [`base`](ref_view/base.md.nolink)                     | `R`の参照を取得する              | C++20          |
++| [`begin`](ref_view/begin.md.nolink)                   | 先頭を指すイテレータを取得する   | C++20          |
++| [`end`](ref_view/end.md.nolink)                       | 番兵を取得する                   | C++20          |
++| [`empty`](ref_view/empty.md.nolink)                   | 範囲が空かどうかを判定する       | C++20          |
++| [`size`](ref_view/size.md.nolink)                     | 要素数を取得する                 | C++20          |
++| [`data`](ref_view/data.md.nolink)                     | 範囲の先頭へのポインタを取得する | C++20          |
++
++`r`を参照先の範囲とする。`empty`、`size`、`data`は、それぞれ[`ranges::empty`](empty.md)`(r)`、[`ranges::size`](size.md)`(r)`、[`ranges::data`](data.md)`(r)`が有効な式であるときに定義される。
++
++## 継承しているメンバ関数
++
++| 名前                                         | 説明                             | 対応バージョン |
++|----------------------------------------------|----------------------------------|----------------|
++| [`operator bool`](view_interface/op_bool.md) | 範囲が空でないかどうかを判定する | C++20          |
++| [`front`](view_interface/front.md)           | 先頭要素への参照を取得する       | C++20          |
++| [`back`](view_interface/back.md)             | 末尾要素への参照を取得する       | C++20          |
++| [`operator[]`](view_interface/op_at.md)      | 要素へアクセスする               | C++20          |
++
++## 推論補助
++
++| 名前                                                  | 説明                         | 対応バージョン |
++|-------------------------------------------------------|------------------------------|----------------|
++| [`(deduction_guide)`](ref_view/op_deduction_guide.md.nolink) | クラステンプレートの推論補助 | C++20          |
++
++## 例
++```cpp example
++#include &amp;lt;ranges&amp;gt;
++
++int main() {
++  using namespace std;
++  int a[] = {1, 2, 3, 4, 5};
++
++  for (int i : a | views::all) {
++    cout &amp;lt;&amp;lt; i;
++  }
++}
++```
++* views::all[color ff0000]
++
++### 出力
++```
++12345
++```
++
++## バージョン
++### 言語
++- C++20
++
++### 処理系
++- [Clang](/implementation.md#clang): 13.0.0
++- [GCC](/implementation.md#gcc): 10.1.0
++- [ICC](/implementation.md#icc): ?
++- [Visual C++](/implementation.md#visual_cpp): 2019 Update 10
++
++## 参照
++- [N4861 24 Ranges library](https://timsong-cpp.github.io/cppwp/n4861/ranges)
++- [C++20 ranges](https://techbookfest.org/product/5134506308665344)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>basic_istream_view -- &lt;ranges&gt; 説明を修正 #713</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/basic_istream_view.html"/>
+      <id>a525889c6b56aaac3ac84566a11c17da2ec5f328:reference/ranges/basic_istream_view.md</id>
+      <updated>2021-09-04T08:12:40+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/basic_istream_view.md b/reference/ranges/basic_istream_view.md
+index aa6344653..2eb045566 100644
+--- a/reference/ranges/basic_istream_view.md
++++ b/reference/ranges/basic_istream_view.md
+@@ -57,11 +57,11 @@ concept stream-extractable = requires(basic_istream&amp;lt;CharT, Traits&amp;gt;&amp;amp; is, Val&amp;amp; t)
+ 
+ ## メンバ関数
+ 
+-| 名前                                             | 説明                             | 対応バージョン |
+-|--------------------------------------------------|----------------------------------|----------------|
+-| [`(constructor)`](iota_view/op_constructor.md.nolink)  | コンストラクタ                   | C++20          |
+-| [`begin`](iota_view/begin.md.nolink)                   | 先頭を指すイテレータを取得する   | C++20          |
+-| [`end`](iota_view/end.md.nolink)                       | 番兵を取得する                   | C++20          |
++| 名前                                                     | 説明                             | 対応バージョン |
++|----------------------------------------------------------|----------------------------------|----------------|
++| [`(constructor)`](basic_istream_view/op_constructor.md.nolink)  | コンストラクタ                   | C++20          |
++| [`begin`](basic_istream_view/begin.md.nolink)                   | 先頭を指すイテレータを取得する   | C++20          |
++| [`end`](basic_istream_view/end.md.nolink)                       | 番兵を取得する                   | C++20          |
+ 
+ ## 例
+ ```cpp example
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>view_interface -- &lt;ranges&gt; 説明を修正 #713</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/view_interface.html"/>
+      <id>a525889c6b56aaac3ac84566a11c17da2ec5f328:reference/ranges/view_interface.md</id>
+      <updated>2021-09-04T08:12:40+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/view_interface.md b/reference/ranges/view_interface.md
+index 6d7a5e637..f9f46f59e 100644
+--- a/reference/ranges/view_interface.md
++++ b/reference/ranges/view_interface.md
+@@ -28,7 +28,7 @@ namespace std::ranges {
+ |----------------------------------------------|----------------------------------|----------------|
+ | [`empty`](view_interface/empty.md)           | 範囲が空かどうかを判定する       | C++20          |
+ | [`operator bool`](view_interface/op_bool.md) | 範囲が空でないかどうかを判定する | C++20          |
+-| [`data`](view_interface/data.md)             | 配列の先頭へのポインタを取得する | C++20          |
++| [`data`](view_interface/data.md)             | 範囲の先頭へのポインタを取得する | C++20          |
+ | [`size`](view_interface/size.md)             | 要素数を取得する                 | C++20          |
+ | [`front`](view_interface/front.md)           | 先頭要素への参照を取得する       | C++20          |
+ | [`back`](view_interface/back.md)             | 末尾要素への参照を取得する       | C++20          |
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>operator new[] -- Typo の修正</title>
@@ -188,109 +463,6 @@ index af3bdeb8a..d3648db38 100644
       <author>
         <name>Naoya Sakabe</name>
         <email>k.exa.apostrophe@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>bidirectional_iterator -- iterator/bidirectional_iterator: リンク調整</title>
-      <link href="https://cpprefjp.github.io/reference/iterator/bidirectional_iterator.html"/>
-      <id>3581cc83393610e0d5f719b2b33c5f0a76efe6f7:reference/iterator/bidirectional_iterator.md</id>
-      <updated>2021-09-03T17:34:41+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/bidirectional_iterator.md b/reference/iterator/bidirectional_iterator.md
-index b280311ff..b20f1ecce 100644
---- a/reference/iterator/bidirectional_iterator.md
-+++ b/reference/iterator/bidirectional_iterator.md
-@@ -16,10 +16,10 @@ namespace std {
-     };
- }
- ```
--* forward_iterator[link /reference/iterator/forward_iterator.md]
-+* forward_iterator[link forward_iterator.md]
- * derived_from[link /reference/concepts/derived_from.md]
- * ITER_CONCEPT[link /reference/iterator/input_iterator.md#iter_concept]
--* bidirectional_iterator_tag[link /reference/iterator/iterator_tag.md]
-+* bidirectional_iterator_tag[link iterator_tag.md]
- * same_as[link /reference/concepts/same_as.md]
- 
- ## 概要
-@@ -37,7 +37,7 @@ namespace std {
- 型`I`の等しい2つのオブジェクト`a, b`について次の条件を満たす場合に限って、型`I`は`bidirectional_iterator`のモデルである。
- 
- - `a, b`がデクリメント可能ならば、次の4つの条件を全て満たす
--    - `addressof(--a) == addressof(a)`
-+    - [`addressof`](/reference/memory/addressof.md)`(--a) == `[`addressof`](/reference/memory/addressof.md)`(a)`
-     - `bool(a-- == b)`
-     - `a--, --b`の評価の後でも、`bool(a == b)`は`true`となる
-     - `bool(++(--a) == b)`
-@@ -95,6 +95,7 @@ int main() {
- }
- ```
- * std::bidirectional_iterator[color ff0000]
-+* std::istream_iterator[link istream_iterator.md]
- 
- ### 出力
- ```
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>assignable_from -- concepts/assignable_from: 調整</title>
-      <link href="https://cpprefjp.github.io/reference/concepts/assignable_from.html"/>
-      <id>ccaeccb41d44782ddc6c524c78c89172f046ee67:reference/concepts/assignable_from.md</id>
-      <updated>2021-09-03T17:27:25+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/concepts/assignable_from.md b/reference/concepts/assignable_from.md
-index 833dfffac..256e22170 100644
---- a/reference/concepts/assignable_from.md
-+++ b/reference/concepts/assignable_from.md
-@@ -17,8 +17,8 @@ namespace std {
- ```
- * is_lvalue_reference_v[link /reference/type_traits/is_lvalue_reference.md]
- * remove_reference_t[link /reference/type_traits/remove_reference.md]
--* common_reference_with[link /reference/concepts/common_reference_with.md]
--* same_as[link /reference/concepts/same_as.md]
-+* common_reference_with[link common_reference_with.md]
-+* same_as[link same_as.md]
- 
- ## 概要
- 
-@@ -30,7 +30,7 @@ namespace std {
- 
- これらの`lhs, rhs, lcopy, rcopy`について、以下の条件を満たす場合に限って、型`LHS, RHS`は`assignable_from`のモデルである。
- 
--- `addressof(lhs = rhs) == addressof(lcopy)`となる
-+- [`addressof`](/reference/memory/addressof.md)`(lhs = rhs) == `[`addressof`](/reference/memory/addressof.md)`(lcopy)`となる
- - `lhs = rhs;`という式の評価の後で以下のいずれかのことが成り立っている
-     - `rhs`が`lcopy`を参照する非`const` *xvalue*でないならば
-         - `lhs`は`rcopy`と等値である
-@@ -38,6 +38,7 @@ namespace std {
-         - `rhs`が参照するオブジェクトの状態は有効だが未規定
-     - それ以外の場合で、`rhs`が*glvalue*ならば
-         - `rhs`が参照するオブジェクトは変更されない
-+
- ## 備考
- 
- 代入操作では、引数型の一部の値が本コンセプトが要求する構文・意味論的制約を必ずしも満たしていなくても構わない。特に、あるオブジェクト`x`への代入操作によって別のオブジェクト`y`が変更される時、`x, y`はその場合の`=`の定義域に含まれない事がある。
-@@ -53,7 +54,7 @@ namespace std {
- #include &amp;lt;memory&amp;gt;
- 
- template&amp;lt;typename LHS, typename RHS&amp;gt;
--requires std::assignable_from&amp;lt;LHS, RHS&amp;gt;
-+  requires std::assignable_from&amp;lt;LHS, RHS&amp;gt;
- void f(const char* name, const char* arg) {
-   std::cout &amp;lt;&amp;lt; name &amp;lt;&amp;lt; &amp;#34; is assignable from &amp;#34; &amp;lt;&amp;lt; arg &amp;lt;&amp;lt; std::endl;
- }
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
       </author>
     </entry>
   
