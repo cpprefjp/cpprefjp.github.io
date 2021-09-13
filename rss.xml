@@ -2,9 +2,239 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2021-09-13T14:37:08.775262</updated>
-  <id>bb5c29af-1944-4f9d-b37b-07b0388e39b0</id>
+  <updated>2021-09-13T20:20:12.498033</updated>
+  <id>155428e8-54ea-4d19-92df-a8e241e54212</id>
 
+  
+    <entry>
+      <title>ranges -- &lt;ranges&gt; filter_viewを追加 #713</title>
+      <link href="https://cpprefjp.github.io/reference/ranges.html"/>
+      <id>2910af5952d7ef2c81a42679288e5ae4684d4e3c:reference/ranges.md</id>
+      <updated>2021-09-14T05:14:19+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges.md b/reference/ranges.md
+index b4908527d..b2b195dc5 100644
+--- a/reference/ranges.md
++++ b/reference/ranges.md
+@@ -150,6 +150,8 @@ for (auto&amp;amp;&amp;amp; item : r | R) {
+ }
+ ```
+ 
++第1引数に[`viewable_range`](ranges/viewable_range.md)を受け取って[`view`](ranges/view.md)を返すカスタマイゼーションポイントオブジェクトを、**範囲アダプタオブジェクト**という。とくに、1引数のものを、**範囲アダプタクロージャオブジェクト**という。
++
+ ### all view
+ 
+ | 名前                             | 説明                                                                    | 対応バージョン |
+@@ -160,10 +162,10 @@ for (auto&amp;amp;&amp;amp; item : r | R) {
+ 
+ ### filter view
+ 
+-| 名前                                          | 説明           | 対応バージョン |
+-|-----------------------------------------------|----------------|----------------|
+-| [`filter_view`](ranges/filter_view.md.nolink) | 指定した条件を満たす要素だけを集めるビュー (class template)     | C++20          |
+-| [`filter`](ranges/filter.md.nolink)           | 指定した条件を満たす要素だけを集めるビューを生成する (customization point object)  | C++20          |
++| 名前                                   | 説明                                                                               | 対応バージョン |
++|----------------------------------------|------------------------------------------------------------------------------------|----------------|
++| [`filter_view`](ranges/filter_view.md) | 指定した条件を満たす要素だけを集めるビュー (class template)                        | C++20          |
++| [`filter`](ranges/filter_view.md)      | 指定した条件を満たす要素だけを集めるビューを生成する (customization point object)  | C++20          |
+ 
+ ### transform view
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>filter_view -- &lt;ranges&gt; filter_viewを追加 #713</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/filter_view.html"/>
+      <id>2910af5952d7ef2c81a42679288e5ae4684d4e3c:reference/ranges/filter_view.md</id>
+      <updated>2021-09-14T05:14:19+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/filter_view.md b/reference/ranges/filter_view.md
+new file mode 100644
+index 000000000..85c632882
+--- /dev/null
++++ b/reference/ranges/filter_view.md
+@@ -0,0 +1,116 @@
++# filter_view
++* ranges[meta header]
++* std::ranges[meta namespace]
++* class template[meta id-type]
++* cpp20[meta cpp]
++
++```cpp
++namespace std {
++  namespace ranges {
++    template&amp;lt;input_range V, indirect_unary_predicate&amp;lt;iterator_t&amp;lt;V&amp;gt;&amp;gt; Pred&amp;gt;
++    requires view&amp;lt;V&amp;gt; &amp;amp;&amp;amp; is_object_v&amp;lt;Pred&amp;gt;
++    class filter_view : public view_interface&amp;lt;filter_view&amp;lt;V, Pred&amp;gt;&amp;gt; { …… }; // (1)
++
++    namespace views {
++      inline constexpr /*unspecified*/ filter = /*unspecified*/;     // (2)
++    }
++  }
++
++  namespace views = ranges::views;
++}
++```
++* input_range[link input_range.md]
++* indirect_unary_predicate[link /reference/concepts/indirect_unary_predicate.md]
++* iterator_t[link iterator_t.md]
++* view[link view.md]
++* is_object_v[link /reference/type_traits/is_object.md]
++* view_interface[link view_interface.md]
++
++## 概要
++- (1): 指定された条件`Pred`を満たす要素だけが残っているような範囲として振る舞う[`view`](view.md)
++- (2): `filter_view`を生成する範囲アダプタオブジェクト
++
++`filter_view`の要素を書き換えてもよいが、書き換えた後の要素が`Pred`を満たさない場合は未定義動作となる。
++
++元の範囲から条件を満たす要素を探す処理は遅延評価される。
++
++初めてメンバ関数[`begin`](filter_view/begin.md.nolink)が呼び出されたときに先頭の要素を決定し、残りはイテレータが進むときに求める。
++
++[`begin`](filter_view/begin.md.nolink)は償却定数時間で実行できなければならないため、[`begin`](filter_view/begin.md.nolink)の値はキャッシュされる。
++
++### 範囲カテゴリ
++
++| borrowed | sized | output | input | forward | bidirectional | random_access | contiguous | common | viewable | view |
++|----------|-------|--------|-------|---------|---------------|---------------|------------|--------|----------|------|
++|          |       |        | ※    | ※      | ※            |               |            | ※     | ○       | ○   |
++
++※ `V`に従う
++
++## テンプレートパラメータ制約
++
++- [`input_range`](input_range.md)`&amp;lt;V&amp;gt;`
++- [`view`](view.md)`&amp;lt;V&amp;gt;`
++- [`is_object_v`](/reference/type_traits/is_object.md)`&amp;lt;Pred&amp;gt;`
++- [`indirect_unary_predicate`](/reference/iterator/indirect_unary_predicate.md)`&amp;lt;Pred, `[`iterator_t`](iterator_t.md)`&amp;lt;V&amp;gt;&amp;gt;`
++
++## 効果
++
++- (2): 式`views::filter(E, P)`の効果は`filter_view{E, P}`と等しい
++
++## メンバ関数
++
++| 名前                                             | 説明                             | 対応バージョン |
++|--------------------------------------------------|----------------------------------|----------------|
++| [`(constructor)`](filter_view/op_constructor.md.nolink)  | コンストラクタ                   | C++20          |
++| [`base`](filter_view/base.md.nolink)                     | `V`の参照を取得する              | C++20          |
++| [`pred`](filter_view/pred.md.nolink)                     | 述語を取得する                   | C++20          |
++| [`begin`](filter_view/begin.md.nolink)                   | 先頭を指すイテレータを取得する   | C++20          |
++| [`end`](filter_view/end.md.nolink)                       | 番兵を取得する                   | C++20          |
++
++## 継承しているメンバ関数
++
++| 名前                                         | 説明                             | 対応バージョン |
++|----------------------------------------------|----------------------------------|----------------|
++| [`operator bool`](view_interface/op_bool.md) | 範囲が空でないかどうかを判定する | C++20          |
++| [`front`](view_interface/front.md)           | 先頭要素への参照を取得する       | C++20          |
++| [`back`](view_interface/back.md)             | 末尾要素への参照を取得する       | C++20          |
++
++## 推論補助
++
++| 名前                                                  | 説明                         | 対応バージョン |
++|-------------------------------------------------------|------------------------------|----------------|
++| [`(deduction_guide)`](filter_view/op_deduction_guide.md.nolink) | クラステンプレートの推論補助 | C++20          |
++
++## 例
++```cpp example
++#include &amp;lt;ranges&amp;gt;
++
++int main() {
++  using namespace std;
++  int a[] = {1, 2, 3, 4, 5};
++
++  for (int i : a | views::filter([](int x){ return x % 2 == 0; })) {
++    cout &amp;lt;&amp;lt; i;
++  }
++}
++```
++* views::filter[color ff0000]
++
++### 出力
++```
++24
++```
++
++## バージョン
++### 言語
++- C++20
++
++### 処理系
++- [Clang](/implementation.md#clang): 13.0.0
++- [GCC](/implementation.md#gcc): 10.1.0
++- [ICC](/implementation.md#icc): ?
++- [Visual C++](/implementation.md#visual_cpp): 2019 Update 10
++
++## 参照
++- [N4861 24 Ranges library](https://timsong-cpp.github.io/cppwp/n4861/ranges)
++- [C++20 ranges](https://techbookfest.org/product/5134506308665344)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>ref_view -- &lt;ranges&gt; filter_viewを追加 #713</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/ref_view.html"/>
+      <id>2910af5952d7ef2c81a42679288e5ae4684d4e3c:reference/ranges/ref_view.md</id>
+      <updated>2021-09-14T05:14:19+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/ref_view.md b/reference/ranges/ref_view.md
+index 42fb6c013..22d9e222e 100644
+--- a/reference/ranges/ref_view.md
++++ b/reference/ranges/ref_view.md
+@@ -22,18 +22,18 @@ namespace std {
+   namespace views = ranges::views;
+ }
+ ```
++* range[link range.md]
++* is_object_v[link /reference/type_traits/is_object.md]
+ * movable[link /reference/concepts/movable.md]
+ * default_initializable[link /reference/concepts/default_initializable.md]
+ * viewable_range[link viewable_range.md]
+ * view_interface[link view_interface.md]
+-* stream-extractable[italic]
++* declval[link /reference/utility/declval.md]
+ 
+ ## 概要
+-`ref_view`(1)は、範囲への参照として振る舞う[`view`](view.md)。
+-
+-カスタマイゼーションポイントオブジェクト`all`(2)で、範囲への参照として振る舞う[`view`](view.md)を生成できる。
+-
+-`all`の戻り値は`ref_view`とは限らず、元の範囲そのものや[`subrange`](subrange.md)にもなる。戻り値型はエイリアステンプレート`all_t`(3)で取得できる。これらをまとめて&amp;#34;all view&amp;#34;と呼ぶことがある。
++- (1): 範囲への参照として振る舞う[`view`](view.md)
++- (2): 範囲への参照として振る舞う[`view`](view.md)を生成する範囲アダプタクロージャオブジェクト。`all`の戻り値は`ref_view`の他に、元の範囲そのものや[`subrange`](subrange.md)の場合があり、まとめて&amp;#34;all view&amp;#34;と呼ぶことがある
++- (3): `all`の戻り値の型を得るエイリアステンプレート。`all_t`を使えば、`all`の分岐を気にせずに&amp;#34;all view&amp;#34;の型を得ることができる
+ 
+ ### 範囲カテゴリ
+ 
+@@ -55,6 +55,8 @@ namespace std {
+     - それ以外のとき、`ref_view{E}`が有効な式であれば、`ref_view{E}`と等しい
+     - それ以外のとき、[`subrange`](subrange.md)`{E}`と等しい
+ 
++引数にした範囲が元々[`view`](view.md)である場合はそのまま使用する。そうでないときは、まず引数を`ref_view`でラップしようとする。それもできないときは、イテレータと番兵を[`subrange`](subrange.md)でラップする。
++
+ ## メンバ関数
+ 
+ | 名前                                             | 説明                             | 対応バージョン |
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>operator&lt; -- Merge pull request #899 from cpprefjp/Jumpaku-patch-1</title>
@@ -150,111 +380,6 @@ index a8c246564..1cd386e9a 100644
  
  
  ## 備考
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>format -- consteval/即時関数に当該言語機能へのリンク付与</title>
-      <link href="https://cpprefjp.github.io/reference/format/format.html"/>
-      <id>8fd39c7d3a324e27967350123188860d4edc0a37:reference/format/format.md</id>
-      <updated>2021-09-09T16:33:21+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/format.md b/reference/format/format.md
-index 99f7fd060..87071c218 100644
---- a/reference/format/format.md
-+++ b/reference/format/format.md
-@@ -198,6 +198,7 @@ namespace std {
-   template&amp;lt;class... Args&amp;gt; using wformat_string
-     = basic_format_string&amp;lt;wchar_t, type_identity_t&amp;lt;Args&amp;gt;...&amp;gt;; // exposition only
- ```
-+* consteval[link /lang/cpp20/immediate_functions.md]
- 
- _`basic_format_string`_ のコンストラクタは[即時関数](/lang/cpp20/immediate_functions.md)であり、書式文字列が正しい場合にのみ定数式として評価できるように実装される。即時関数であるため、定数式として評価できない場合はエラーとなる。
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>source_location -- consteval/即時関数に当該言語機能へのリンク付与</title>
-      <link href="https://cpprefjp.github.io/reference/source_location/source_location.html"/>
-      <id>8fd39c7d3a324e27967350123188860d4edc0a37:reference/source_location/source_location.md</id>
-      <updated>2021-09-09T16:33:21+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/source_location/source_location.md b/reference/source_location/source_location.md
-index d47337d4d..abccdb775 100644
---- a/reference/source_location/source_location.md
-+++ b/reference/source_location/source_location.md
-@@ -23,6 +23,7 @@ namespace std {
-   };
- }
- ```
-+* consteval[link /lang/cpp20/immediate_functions.md]
- * uint_least32_t[link /reference/cstdint/uint_least32_t.md]
- 
- ## 概要
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>current -- consteval/即時関数に当該言語機能へのリンク付与</title>
-      <link href="https://cpprefjp.github.io/reference/source_location/source_location/current.html"/>
-      <id>8fd39c7d3a324e27967350123188860d4edc0a37:reference/source_location/source_location/current.md</id>
-      <updated>2021-09-09T16:33:21+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/source_location/source_location/current.md b/reference/source_location/source_location/current.md
-index 919d9f4f1..cd61cd057 100644
---- a/reference/source_location/source_location/current.md
-+++ b/reference/source_location/source_location/current.md
-@@ -8,6 +8,7 @@
- ```cpp
- static consteval source_location current() noexcept;
- ```
-+* consteval[link /lang/cpp20/immediate_functions.md]
- * source_location[link ../source_location.md]
- 
- ## 概要
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>is_constant_evaluated -- consteval/即時関数に当該言語機能へのリンク付与</title>
-      <link href="https://cpprefjp.github.io/reference/type_traits/is_constant_evaluated.html"/>
-      <id>8fd39c7d3a324e27967350123188860d4edc0a37:reference/type_traits/is_constant_evaluated.md</id>
-      <updated>2021-09-09T16:33:21+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/type_traits/is_constant_evaluated.md b/reference/type_traits/is_constant_evaluated.md
-index 42c671631..a8c246564 100644
---- a/reference/type_traits/is_constant_evaluated.md
-+++ b/reference/type_traits/is_constant_evaluated.md
-@@ -21,7 +21,7 @@ namespace std {
- 
- - 文法上の定数式（配列型の要素数、`case`ラベルの値、など）
- - `constexpr if`の条件式
--- `consteval`関数の呼び出し内
-+- [`consteval`関数](/lang/cpp20/immediate_functions.md)の呼び出し内
- - コンセプトの定義式
-     - `requires`節内
-     - 入れ子要件内
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
