@@ -2,9 +2,366 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2021-09-25T04:56:55.652468</updated>
-  <id>473da0ee-e367-443f-afcf-c4f81e28864d</id>
+  <updated>2021-09-25T06:49:21.791752</updated>
+  <id>f6fd0a85-db5f-41da-8b40-e98d0fa62725</id>
 
+  
+    <entry>
+      <title>ranges -- &lt;ranges&gt; elements_view追加 #713</title>
+      <link href="https://cpprefjp.github.io/reference/ranges.html"/>
+      <id>e2e3d4fe909c01fb79eb49917f9472dcd2f5bde1:reference/ranges.md</id>
+      <updated>2021-09-25T15:37:42+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges.md b/reference/ranges.md
+index bcd0bb678..8200dca1a 100644
+--- a/reference/ranges.md
++++ b/reference/ranges.md
+@@ -254,14 +254,14 @@ range | adaptor(args...)
+ 
+ ### elements view
+ 
+-| 名前                                              | 説明           | 対応バージョン |
+-|---------------------------------------------------|----------------|----------------|
+-| [`elements_view`](ranges/elements_view.md.nolink) | 第n要素を集めたビュー (class template)     | C++20          |
+-| [`keys_view`](ranges/keys_view.md.nolink)         | 第0要素を集めたビュー (alias template)     | C++20          |
+-| [`values_view`](ranges/values_view.md.nolink)     | 第1要素を集めたビュー (alias template)     | C++20          |
+-| [`elements`](ranges/elements.md.nolink)           | `elements_view`を生成する (variable template) | C++20          |
+-| [`keys`](ranges/keys.md.nolink)                   | `keys_view`を生成する (customization point object)  | C++20          |
+-| [`values`](ranges/values.md.nolink)               | `values_view`を生成する (customization point object)  | C++20          |
++| 名前                                       | 説明                                                  | 対応バージョン |
++|--------------------------------------------|-------------------------------------------------------|----------------|
++| [`elements_view`](ranges/elements_view.md) | 第n要素を集めたビュー (class template)                 | C++20          |
++| [`keys_view`](ranges/elements_view.md)     | 第0要素を集めたビュー (alias template)                 | C++20          |
++| [`values_view`](ranges/elements_view.md)   | 第1要素を集めたビュー (alias template)                 | C++20          |
++| [`elements`](ranges/elements_view.md)      | `elements_view`を生成する (customization point object) | C++20          |
++| [`keys`](ranges/elements_view.md)          | `keys_view`を生成する (customization point object)     | C++20          |
++| [`values`](ranges/elements_view.md)        | `values_view`を生成する (customization point object)   | C++20          |
+ 
+ ## バージョン
+ ### 言語
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>elements_view -- &lt;ranges&gt; elements_view追加 #713</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/elements_view.html"/>
+      <id>e2e3d4fe909c01fb79eb49917f9472dcd2f5bde1:reference/ranges/elements_view.md</id>
+      <updated>2021-09-25T15:37:42+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/elements_view.md b/reference/ranges/elements_view.md
+new file mode 100644
+index 000000000..ef342cb23
+--- /dev/null
++++ b/reference/ranges/elements_view.md
+@@ -0,0 +1,166 @@
++# elements_view
++* ranges[meta header]
++* std::ranges[meta namespace]
++* class template[meta id-type]
++* cpp20[meta cpp]
++
++```cpp
++namespace std {
++  namespace ranges {
++    template&amp;lt;input_range V, size_t N&amp;gt;
++    requires view&amp;lt;V&amp;gt; &amp;amp;&amp;amp; has-tuple-element&amp;lt;range_value_t&amp;lt;V&amp;gt;, N&amp;gt; &amp;amp;&amp;amp;
++             has-tuple-element&amp;lt;remove_reference_t&amp;lt;range_reference_t&amp;lt;V&amp;gt;&amp;gt;, N&amp;gt;
++    class elements_view : public view_interface&amp;lt;elements_view&amp;lt;V, N&amp;gt;&amp;gt; { …… }; // (1)
++
++    template&amp;lt;class R&amp;gt;
++    using keys_view = elements_view&amp;lt;views::all_t&amp;lt;R&amp;gt;, 0&amp;gt;;                     // (2)
++
++    template&amp;lt;class R&amp;gt;
++    using values_view = elements_view&amp;lt;views::all_t&amp;lt;R&amp;gt;, 1&amp;gt;;                   // (3)
++
++    namespace views {
++      inline constexpr /*unspecified*/ elements = /*unspecified*/;           // (4)
++
++      inline constexpr auto keys = elements&amp;lt;0&amp;gt;;                              // (5)
++
++      inline constexpr auto values = elements&amp;lt;1&amp;gt;;                            // (6)
++    }
++  }
++
++  namespace views = ranges::views;
++}
++```
++* view[link view.md]
++* range_value_t[link range_value_t.md]
++* remove_reference_t[link /reference/type_traits/remove_reference.md]
++* range_reference_t[link range_reference_t.md]
++* view_interface[link view_interface.md]
++* views::all_t[link ref_view.md]
++
++## 概要
++
++タプルと見なせる型を要素とするRangeに対して、各要素に[`get`](/reference/tuple/tuple/get.md)を適用する[`view`](view.md)。
++
++- (1): 各要素に[`get`](/reference/tuple/tuple/get.md)`&amp;lt;N&amp;gt;`を適用する[`view`](view.md)
++- (2): 各要素に[`get`](/reference/tuple/tuple/get.md)`&amp;lt;0&amp;gt;`を適用する[`view`](view.md)
++- (3): 各要素に[`get`](/reference/tuple/tuple/get.md)`&amp;lt;1&amp;gt;`を適用する[`view`](view.md)
++- (4): `elements_view`を生成するRangeアダプタオブジェクト
++- (5): `keys_view`を生成するRangeアダプタオブジェクト
++- (6): `values_view`を生成するRangeアダプタオブジェクト
++
++`elements`で得られる[`view`](view.md)の大きさは、指定した個数に関わらず、元のRangeの大きさを超えることは無い。
++
++### Rangeコンセプト
++
++| borrowed | sized | output | input | forward | bidirectional | random_access | contiguous | common | viewable | view |
++|----------|-------|--------|-------|---------|---------------|---------------|------------|--------|----------|------|
++| (1)      | (1)   | (1)    | (1)   | (1)     | (1)           | (1)           |            | (1)    | ○        | ○   |
++
++- (1): `V`に従う
++
++## テンプレートパラメータ制約
++
++説明専用コンセプト`has-tuple-element`を次のように定義する。
++
++```cpp
++template&amp;lt;class T, size_t N&amp;gt;
++concept has-tuple-element =
++  requires(T t) {
++    typename tuple_size&amp;lt;T&amp;gt;::type;
++    requires N &amp;lt; tuple_size_v&amp;lt;T&amp;gt;;
++    typename tuple_element_t&amp;lt;N, T&amp;gt;;
++    { get&amp;lt;N&amp;gt;(t) } -&amp;gt; convertible_to&amp;lt;const tuple_element_t&amp;lt;N, T&amp;gt;&amp;amp;&amp;gt;;
++  };
++```
++* tuple_size[link /reference/tuple/tuple_size.md]
++* tuple_element_t[link /reference/tuple/tuple_element.md]
++* get[link /reference/tuple/tuple/get.md]
++* convertible_to[link /reference/concepts/convertible_to.md]
++* remove_reference_t[link /reference/type_traits/remove_reference.md]
++
++これを用いて、
++
++- [`view`](view.md)`&amp;lt;V&amp;gt;`
++- [`input_range`](input_range.md)`&amp;lt;V&amp;gt;`
++- `has-tuple-element&amp;lt;`[`range_value_t`](range_value_t.md)`&amp;lt;V&amp;gt;, N&amp;gt;`
++- `has-tuple-element&amp;lt;`[`remove_reference_t`](/reference/type_traits/remove_reference.md)`&amp;lt;`[`range_reference_t`](range_reference_t.md)`&amp;lt;V&amp;gt;&amp;gt;, N&amp;gt;`
++
++## 効果
++
++- (4): `E`を部分式、`N`を定数式とするとき、式`views::elements&amp;lt;N&amp;gt;(E)`の効果は`elements_view&amp;lt;`[`views::all_t`](ref_view.md)`&amp;lt;`[`decltype`](/lang/cpp11/decltype.md)`((E))&amp;gt;, N&amp;gt;{E}`と等しい。
++
++## メンバ関数
++
++| 名前                                             | 説明                             | 対応バージョン |
++|--------------------------------------------------|----------------------------------|----------------|
++| [`(constructor)`](elements_view/op_constructor.md.nolink)  | コンストラクタ                   | C++20          |
++| [`base`](elements_view/base.md.nolink)                     | `V`の参照を取得する              | C++20          |
++| [`begin`](elements_view/begin.md.nolink)                   | 先頭を指すイテレータを取得する   | C++20          |
++| [`end`](elements_view/end.md.nolink)                       | 番兵を取得する                   | C++20          |
++| [`size`](elements_view/size.md.nolink)                     | 要素数を取得する                 | C++20          |
++
++`r`を元のRangeとする。`size`は[`ranges::size`](size.md)`(r)`が有効な式であるときに定義される。
++
++## 継承しているメンバ関数
++
++| 名前                                         | 説明                              | 対応バージョン |
++|----------------------------------------------|-----------------------------------|----------------|
++| [`empty`](view_interface/empty.md)           | Rangeが空かどうかを判定する       | C++20          |
++| [`operator bool`](view_interface/op_bool.md) | Rangeが空でないかどうかを判定する | C++20          |
++| [`front`](view_interface/front.md)           | 先頭要素への参照を取得する        | C++20          |
++| [`back`](view_interface/back.md)             | 末尾要素への参照を取得する        | C++20          |
++| [`operator[]`](view_interface/op_at.md)      | 要素へアクセスする                | C++20          |
++
++## 推論補助
++
++| 名前                                                  | 説明                         | 対応バージョン |
++|-------------------------------------------------------|------------------------------|----------------|
++| [`(deduction_guide)`](elements_view/op_deduction_guide.md.nolink) | クラステンプレートの推論補助 | C++20          |
++
++## 例
++```cpp example
++#include &amp;lt;ranges&amp;gt;
++#include &amp;lt;map&amp;gt;
++#include &amp;lt;string&amp;gt;
++#include &amp;lt;iostream&amp;gt;
++
++int main() {
++  using namespace std;
++  map&amp;lt;int, string&amp;gt; m = {{1, &amp;#34;one&amp;#34;}, {2, &amp;#34;two&amp;#34;}, {3, &amp;#34;three&amp;#34;}};
++
++  for (int i : m | views::keys) {
++    cout &amp;lt;&amp;lt; i &amp;lt;&amp;lt; &amp;#39;\n&amp;#39;;
++  }
++    
++  for (const string&amp;amp; i : m | views::values) {
++    cout &amp;lt;&amp;lt; i &amp;lt;&amp;lt; &amp;#39;\n&amp;#39;;
++  }
++}
++```
++* views::keys[color ff0000]
++* views::values[color ff0000]
++
++### 出力
++```
++1
++2
++3
++
++one
++two
++three
++```
++
++## バージョン
++### 言語
++- C++20
++
++### 処理系
++- [Clang](/implementation.md#clang): 13.0.0
++- [GCC](/implementation.md#gcc): 10.1.0
++- [ICC](/implementation.md#icc): ?
++- [Visual C++](/implementation.md#visual_cpp): 2019 Update 10
++
++## 参照
++- [N4861 24 Ranges library](https://timsong-cpp.github.io/cppwp/n4861/ranges)
++- [C++20 ranges](https://techbookfest.org/product/5134506308665344)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>drop_view -- コード例のinclude漏れを修正</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/drop_view.html"/>
+      <id>0a35cacdf8ecd9d2b3f010230c957b63df666f00:reference/ranges/drop_view.md</id>
+      <updated>2021-09-25T15:23:41+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/drop_view.md b/reference/ranges/drop_view.md
+index 2219c0ace..99c4dcbb9 100644
+--- a/reference/ranges/drop_view.md
++++ b/reference/ranges/drop_view.md
+@@ -85,6 +85,7 @@ namespace std {
+ ## 例
+ ```cpp example
+ #include &amp;lt;ranges&amp;gt;
++#include &amp;lt;iostream&amp;gt;
+ 
+ int main() {
+   using namespace std;
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>filter_view -- コード例のinclude漏れを修正</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/filter_view.html"/>
+      <id>0a35cacdf8ecd9d2b3f010230c957b63df666f00:reference/ranges/filter_view.md</id>
+      <updated>2021-09-25T15:23:41+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/filter_view.md b/reference/ranges/filter_view.md
+index eb3bd0978..2c419dc91 100644
+--- a/reference/ranges/filter_view.md
++++ b/reference/ranges/filter_view.md
+@@ -86,6 +86,7 @@ namespace std {
+ ## 例
+ ```cpp example
+ #include &amp;lt;ranges&amp;gt;
++#include &amp;lt;iostream&amp;gt;
+ 
+ int main() {
+   using namespace std;
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>ref_view -- コード例のinclude漏れを修正</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/ref_view.html"/>
+      <id>0a35cacdf8ecd9d2b3f010230c957b63df666f00:reference/ranges/ref_view.md</id>
+      <updated>2021-09-25T15:23:41+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/ref_view.md b/reference/ranges/ref_view.md
+index 6f7186a5a..2b5be48ec 100644
+--- a/reference/ranges/ref_view.md
++++ b/reference/ranges/ref_view.md
+@@ -89,6 +89,7 @@ namespace std {
+ ## 例
+ ```cpp example
+ #include &amp;lt;ranges&amp;gt;
++#include &amp;lt;iostream&amp;gt;
+ 
+ int main() {
+   using namespace std;
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>take_view -- コード例のinclude漏れを修正</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/take_view.html"/>
+      <id>0a35cacdf8ecd9d2b3f010230c957b63df666f00:reference/ranges/take_view.md</id>
+      <updated>2021-09-25T15:23:41+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/take_view.md b/reference/ranges/take_view.md
+index 78b4e9cf5..f82bccb03 100644
+--- a/reference/ranges/take_view.md
++++ b/reference/ranges/take_view.md
+@@ -85,6 +85,7 @@ namespace std {
+ ## 例
+ ```cpp example
+ #include &amp;lt;ranges&amp;gt;
++#include &amp;lt;iostream&amp;gt;
+ 
+ int main() {
+   using namespace std;
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>transform_view -- コード例のinclude漏れを修正</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/transform_view.html"/>
+      <id>0a35cacdf8ecd9d2b3f010230c957b63df666f00:reference/ranges/transform_view.md</id>
+      <updated>2021-09-25T15:23:41+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/transform_view.md b/reference/ranges/transform_view.md
+index 607deaef9..10ffebdec 100644
+--- a/reference/ranges/transform_view.md
++++ b/reference/ranges/transform_view.md
+@@ -88,6 +88,7 @@ namespace std {
+ ## 例
+ ```cpp example
+ #include &amp;lt;ranges&amp;gt;
++#include &amp;lt;iostream&amp;gt;
+ 
+ int main() {
+   using namespace std;
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>output_range -- リンク修正</title>
@@ -246,382 +603,6 @@ index 9ce2c7d11..a75053774 100644
       <author>
         <name>Tetsuro Matsumura</name>
         <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>ranges -- &lt;ranges&gt; take_view, drop_viewを追加 #713</title>
-      <link href="https://cpprefjp.github.io/reference/ranges.html"/>
-      <id>03210030276991aa7c0574c55b65b7cf7e872273:reference/ranges.md</id>
-      <updated>2021-09-25T08:48:11+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges.md b/reference/ranges.md
-index 21dfec9c9..bcd0bb678 100644
---- a/reference/ranges.md
-+++ b/reference/ranges.md
-@@ -192,10 +192,10 @@ range | adaptor(args...)
- 
- ### take view
- 
--| 名前                                      | 説明           | 対応バージョン |
--|-------------------------------------------|----------------|----------------|
--| [`take_view`](ranges/take_view.md.nolink) | 先頭から指定した個数だけ取り出すビュー (class template)     | C++20          |
--| [`take`](ranges/take.md.nolink)           | 先頭から指定した個数だけ取り出すビューを生成する (customization point object)  | C++20          |
-+| 名前                               | 説明                                                                          | 対応バージョン |
-+|------------------------------------|-------------------------------------------------------------------------------|----------------|
-+| [`take_view`](ranges/take_view.md) | 先頭から指定した個数だけ取り出すビュー (class template)                       | C++20          |
-+| [`take`](ranges/take_view.md)      | 先頭から指定した個数だけ取り出すビューを生成する (customization point object) | C++20          |
- 
- ### take while view
- 
-@@ -206,10 +206,10 @@ range | adaptor(args...)
- 
- ### drop view
- 
--| 名前                                      | 説明           | 対応バージョン |
--|-------------------------------------------|----------------|----------------|
--| [`drop_view`](ranges/drop_view.md.nolink) | 先頭から指定した個数だけ除外するビュー (class template)     | C++20          |
--| [`drop`](ranges/drop.md.nolink)           | 先頭から指定した個数だけ除外するビューを生成する (customization point object)  | C++20          |
-+| 名前                               | 説明                                                                          | 対応バージョン |
-+|------------------------------------|-------------------------------------------------------------------------------|----------------|
-+| [`drop_view`](ranges/drop_view.md) | 先頭から指定した個数だけ除外するビュー (class template)                       | C++20          |
-+| [`drop`](ranges/drop_view.md)      | 先頭から指定した個数だけ除外するビューを生成する (customization point object) | C++20          |
- 
- ### drop while view
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>drop_view -- &lt;ranges&gt; take_view, drop_viewを追加 #713</title>
-      <link href="https://cpprefjp.github.io/reference/ranges/drop_view.html"/>
-      <id>03210030276991aa7c0574c55b65b7cf7e872273:reference/ranges/drop_view.md</id>
-      <updated>2021-09-25T08:48:11+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/drop_view.md b/reference/ranges/drop_view.md
-new file mode 100644
-index 000000000..809d0e5a5
---- /dev/null
-+++ b/reference/ranges/drop_view.md
-@@ -0,0 +1,117 @@
-+# drop_view
-+* ranges[meta header]
-+* std::ranges[meta namespace]
-+* class template[meta id-type]
-+* cpp20[meta cpp]
-+
-+```cpp
-+namespace std {
-+  namespace ranges {
-+    template&amp;lt;view V&amp;gt;
-+    class drop_view : public view_interface&amp;lt;drop_view&amp;lt;V&amp;gt;&amp;gt; { …… }; // (1)
-+
-+    namespace views {
-+      inline constexpr /*unspecified*/ drop = /*unspecified*/;     // (2)
-+    }
-+  }
-+
-+  namespace views = ranges::views;
-+}
-+```
-+* view[link view.md]
-+* view_interface[link view_interface.md]
-+
-+## 概要
-+- (1): 元のRangeの先頭から指定した個数の値を除去したRangeとして振る舞う[`view`](view.md)
-+- (2): `drop_view`、または(1)の動作を実現する[`view`](view.md)を生成するRangeアダプタオブジェクト
-+
-+元のRangeの大きさを超える個数が指定された場合、`drop`が返す[`view`](view.md)は空になる。
-+
-+### Rangeコンセプト
-+
-+| borrowed | sized | output | input | forward | bidirectional | random_access | contiguous | common | viewable | view |
-+|----------|-------|--------|-------|---------|---------------|---------------|------------|--------|----------|------|
-+| (1)      | (1)   | (1)    | (1)   | (1)     | (1)           | (1)           | (1)        | (1)    | ○       | ○   |
-+
-+- (1): `V`に従う
-+
-+## テンプレートパラメータ制約
-+
-+- [`view`](view.md)`&amp;lt;V&amp;gt;`
-+
-+## 効果
-+
-+- (2): `E`および`F`を式、型`T`を[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;`[`decltype`](/lang/cpp11/decltype.md)`((E))&amp;gt;`、型`D`を[`range_difference_t`](range_difference_t.md)`&amp;lt;`[`decltype`](/lang/cpp11/decltype.md)`((E))&amp;gt;`とする。式`views::drop(E, F)`の効果は以下の通り
-+    - [`decltype`](/lang/cpp11/decltype.md)`((F))`が[`convertible_to](/reference/concepts/convertible_to.md)`&amp;lt;D&amp;gt;`のモデルでなければ、呼び出しは不適格
-+    - `T`が[`ranges::empty_view`](empty_view.md)の特殊化であれば、`((void) F, `[`decay-copy`](/reference/exposition-only/decay-copy.md)`(E))`と等しい
-+    - `T`が[`random_access_range`](random_access_range.md)および[`sized_range`](sized_range.md)のモデルであり、かつ次のいずれかの特殊化であるとき、`T{`[`ranges::begin`](begin.md)`(E) + `[`min`](/reference/algorithm/min.md)`&amp;lt;D&amp;gt;(`[`ranges::size`](size.md)`(E), F), `[`ranges::end`](begin.md)`(E)}`と等しい。ただし、`E`は1度だけ評価される
-+        - [`span`](/reference/span/span.md) (ただし、`T::extent == `[`dynamic_extent`](/reference/span/dynamic_extent.md)であること)
-+        - [`basic_string_view`](/reference/string_view/basic_string_view.md)
-+        - [`ranges::iota_view`](iota_view.md)
-+        - [`ranges::subrange`](subrange.md)
-+    - それ以外のとき、`ranges::drop_view{E, F}`
-+
-+`drop_view`でラップする必要が無い型では`drop_view`を使わないようになっている。
-+
-+## メンバ関数
-+
-+| 名前                                             | 説明                             | 対応バージョン |
-+|--------------------------------------------------|----------------------------------|----------------|
-+| [`(constructor)`](drop_view/op_constructor.md.nolink)  | コンストラクタ                   | C++20          |
-+| [`base`](drop_view/base.md.nolink)                     | `V`の参照を取得する              | C++20          |
-+| [`begin`](drop_view/begin.md.nolink)                   | 先頭を指すイテレータを取得する   | C++20          |
-+| [`end`](drop_view/end.md.nolink)                       | 番兵を取得する                   | C++20          |
-+| [`size`](drop_view/size.md.nolink)                     | 要素数を取得する                 | C++20          |
-+
-+`r`を元のRangeとする。`size`は[`ranges::size`](size.md)`(r)`が有効な式であるときに定義される。
-+
-+## 継承しているメンバ関数
-+
-+| 名前                                         | 説明                              | 対応バージョン |
-+|----------------------------------------------|-----------------------------------|----------------|
-+| [`empty`](view_interface/empty.md)           | Rangeが空かどうかを判定する       | C++20          |
-+| [`operator bool`](view_interface/op_bool.md) | Rangeが空でないかどうかを判定する | C++20          |
-+| [`data`](view_interface/data.md)             | Rangeの先頭へのポインタを取得する | C++20          |
-+| [`front`](view_interface/front.md)           | 先頭要素への参照を取得する        | C++20          |
-+| [`back`](view_interface/back.md)             | 末尾要素への参照を取得する        | C++20          |
-+| [`operator[]`](view_interface/op_at.md)      | 要素へアクセスする                | C++20          |
-+
-+## 推論補助
-+
-+| 名前                                                  | 説明                         | 対応バージョン |
-+|-------------------------------------------------------|------------------------------|----------------|
-+| [`(deduction_guide)`](drop_view/op_deduction_guide.md.nolink) | クラステンプレートの推論補助 | C++20          |
-+
-+## 例
-+```cpp example
-+#include &amp;lt;ranges&amp;gt;
-+
-+int main() {
-+  using namespace std;
-+
-+  for (int i : views::iota(1, 10) | views::drop(5)) {
-+    cout &amp;lt;&amp;lt; i;
-+  }
-+}
-+```
-+* views::drop[color ff0000]
-+* views::iota[link iota_view.md]
-+
-+### 出力
-+```
-+6789
-+```
-+
-+## バージョン
-+### 言語
-+- C++20
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): 13.0.0
-+- [GCC](/implementation.md#gcc): 10.1.0
-+- [ICC](/implementation.md#icc): ?
-+- [Visual C++](/implementation.md#visual_cpp): 2019 Update 10
-+
-+## 参照
-+- [N4861 24 Ranges library](https://timsong-cpp.github.io/cppwp/n4861/ranges)
-+- [C++20 ranges](https://techbookfest.org/product/5134506308665344)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>take_view -- &lt;ranges&gt; take_view, drop_viewを追加 #713</title>
-      <link href="https://cpprefjp.github.io/reference/ranges/take_view.html"/>
-      <id>03210030276991aa7c0574c55b65b7cf7e872273:reference/ranges/take_view.md</id>
-      <updated>2021-09-25T08:48:11+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/take_view.md b/reference/ranges/take_view.md
-new file mode 100644
-index 000000000..af290d114
---- /dev/null
-+++ b/reference/ranges/take_view.md
-@@ -0,0 +1,117 @@
-+# take_view
-+* ranges[meta header]
-+* std::ranges[meta namespace]
-+* class template[meta id-type]
-+* cpp20[meta cpp]
-+
-+```cpp
-+namespace std {
-+  namespace ranges {
-+    template&amp;lt;view V&amp;gt;
-+    class take_view : public view_interface&amp;lt;take_view&amp;lt;V&amp;gt;&amp;gt; { …… }; // (1)
-+
-+    namespace views {
-+      inline constexpr /*unspecified*/ take = /*unspecified*/;     // (2)
-+    }
-+  }
-+
-+  namespace views = ranges::views;
-+}
-+```
-+* view[link view.md]
-+* view_interface[link view_interface.md]
-+
-+## 概要
-+- (1): 元のRangeの先頭から指定した個数の値を取り出す[`view`](view.md)
-+- (2): `take_view`、または(1)の動作を実現する[`view`](view.md)を生成するRangeアダプタオブジェクト
-+
-+`take`で得られる[`view`](view.md)の大きさは、指定した個数に関わらず、元のRangeの大きさを超えることは無い。
-+
-+### Rangeコンセプト
-+
-+| borrowed | sized | output | input | forward | bidirectional | random_access | contiguous | common | viewable | view |
-+|----------|-------|--------|-------|---------|---------------|---------------|------------|--------|----------|------|
-+| (1)      | (1)   | (1)    | (1)   | (1)     | (1)           | (1)           | (1)        | (1)    | ○       | ○   |
-+
-+- (1): `V`に従う
-+
-+## テンプレートパラメータ制約
-+
-+- [`view`](view.md)`&amp;lt;V&amp;gt;`
-+
-+## 効果
-+
-+- (2): `E`および`F`を式、型`T`を[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;`[`decltype`](/lang/cpp11/decltype.md)`((E))&amp;gt;`、型`D`を[`range_difference_t`](range_difference_t.md)`&amp;lt;`[`decltype`](/lang/cpp11/decltype.md)`((E))&amp;gt;`とする。式`views::take(E, F)`の効果は以下の通り
-+    - [`decltype`](/lang/cpp11/decltype.md)`((F))`が[`convertible_to](/reference/concepts/convertible_to.md)`&amp;lt;D&amp;gt;`のモデルでなければ、呼び出しは不適格
-+    - `T`が[`ranges::empty_view`](empty_view.md)の特殊化であれば、`((void) F, `[`decay-copy`](/reference/exposition-only/decay-copy.md)`(E))`と等しい
-+    - `T`が[`random_access_range`](random_access_range.md)および[`sized_range`](sized_range.md)のモデルであり、かつ次のいずれかの特殊化であるとき、`T{`[`ranges::begin`](begin.md)`(E), `[`ranges::begin`](begin.md)`(E) + `[`min`](/reference/algorithm/min.md)`&amp;lt;D&amp;gt;(`[`ranges::size`](size.md)`(E), F)}`と等しい。ただし、`E`は1度だけ評価される
-+        - [`span`](/reference/span/span.md) (ただし、`T::extent == `[`dynamic_extent`](/reference/span/dynamic_extent.md)であること)
-+        - [`basic_string_view`](/reference/string_view/basic_string_view.md)
-+        - [`ranges::iota_view`](iota_view.md)
-+        - [`ranges::subrange`](subrange.md)
-+    - それ以外のとき、`ranges::take_view{E, F}`
-+
-+`take_view`でラップする必要が無い型では`take_view`を使わないようになっている。
-+
-+## メンバ関数
-+
-+| 名前                                             | 説明                             | 対応バージョン |
-+|--------------------------------------------------|----------------------------------|----------------|
-+| [`(constructor)`](take_view/op_constructor.md.nolink)  | コンストラクタ                   | C++20          |
-+| [`base`](take_view/base.md.nolink)                     | `V`の参照を取得する              | C++20          |
-+| [`begin`](take_view/begin.md.nolink)                   | 先頭を指すイテレータを取得する   | C++20          |
-+| [`end`](take_view/end.md.nolink)                       | 番兵を取得する                   | C++20          |
-+| [`size`](take_view/size.md.nolink)                     | 要素数を取得する                 | C++20          |
-+
-+`r`を元のRangeとする。`size`は[`ranges::size`](size.md)`(r)`が有効な式であるときに定義される。
-+
-+## 継承しているメンバ関数
-+
-+| 名前                                         | 説明                              | 対応バージョン |
-+|----------------------------------------------|-----------------------------------|----------------|
-+| [`empty`](view_interface/empty.md)           | Rangeが空かどうかを判定する       | C++20          |
-+| [`operator bool`](view_interface/op_bool.md) | Rangeが空でないかどうかを判定する | C++20          |
-+| [`data`](view_interface/data.md)             | Rangeの先頭へのポインタを取得する | C++20          |
-+| [`front`](view_interface/front.md)           | 先頭要素への参照を取得する        | C++20          |
-+| [`back`](view_interface/back.md)             | 末尾要素への参照を取得する        | C++20          |
-+| [`operator[]`](view_interface/op_at.md)      | 要素へアクセスする                | C++20          |
-+
-+## 推論補助
-+
-+| 名前                                                  | 説明                         | 対応バージョン |
-+|-------------------------------------------------------|------------------------------|----------------|
-+| [`(deduction_guide)`](take_view/op_deduction_guide.md.nolink) | クラステンプレートの推論補助 | C++20          |
-+
-+## 例
-+```cpp example
-+#include &amp;lt;ranges&amp;gt;
-+
-+int main() {
-+  using namespace std;
-+
-+  for (int i : views::iota(1) | views::take(5)) {
-+    cout &amp;lt;&amp;lt; i;
-+  }
-+}
-+```
-+* views::take[color ff0000]
-+* views::iota[link iota_view.md]
-+
-+### 出力
-+```
-+12345
-+```
-+
-+## バージョン
-+### 言語
-+- C++20
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): 13.0.0
-+- [GCC](/implementation.md#gcc): 10.1.0
-+- [ICC](/implementation.md#icc): ?
-+- [Visual C++](/implementation.md#visual_cpp): 2019 Update 10
-+
-+## 参照
-+- [N4861 24 Ranges library](https://timsong-cpp.github.io/cppwp/n4861/ranges)
-+- [C++20 ranges](https://techbookfest.org/product/5134506308665344)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>transform_view -- &lt;ranges&gt; take_view, drop_viewを追加 #713</title>
-      <link href="https://cpprefjp.github.io/reference/ranges/transform_view.html"/>
-      <id>03210030276991aa7c0574c55b65b7cf7e872273:reference/ranges/transform_view.md</id>
-      <updated>2021-09-25T08:48:11+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/transform_view.md b/reference/ranges/transform_view.md
-index 6542bc238..607deaef9 100644
---- a/reference/ranges/transform_view.md
-+++ b/reference/ranges/transform_view.md
-@@ -67,7 +67,7 @@ namespace std {
- | [`end`](transform_view/end.md.nolink)                       | 番兵を取得する                   | C++20          |
- | [`size`](transform_view/size.md.nolink)                     | 要素数を取得する                 | C++20          |
- 
--`r`を元のRangeとする。`size`、`data`は、それぞれ[`ranges::size`](size.md)`(r)`、[`ranges::data`](data.md)`(r)`が有効な式であるときに定義される。
-+`r`を元のRangeとする。`size`は[`ranges::size`](size.md)`(r)`が有効な式であるときに定義される。
- 
- ## 継承しているメンバ関数
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator&lt;&lt; -- string_view operator&lt;&lt; : テンプレートパラメータ名を統一</title>
-      <link href="https://cpprefjp.github.io/reference/string_view/basic_string_view/op_ostream.html"/>
-      <id>972d9eef12df5d22895beb29c7c5151be96a23c0:reference/string_view/basic_string_view/op_ostream.md</id>
-      <updated>2021-09-24T15:36:44+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string_view/basic_string_view/op_ostream.md b/reference/string_view/basic_string_view/op_ostream.md
-index 230f0a952..2ae0c4d97 100644
---- a/reference/string_view/basic_string_view/op_ostream.md
-+++ b/reference/string_view/basic_string_view/op_ostream.md
-@@ -8,7 +8,7 @@
- namespace std {
-   template &amp;lt;class CharT, class Traits&amp;gt;
-   std::basic_ostream&amp;lt;CharT, Traits&amp;gt;&amp;amp;
--    operator&amp;lt;&amp;lt;(std::basic_ostream&amp;lt;charT, traits&amp;gt;&amp;amp; os, std::basic_string_view&amp;lt;CharT, Traits&amp;gt; sv);
-+    operator&amp;lt;&amp;lt;(std::basic_ostream&amp;lt;CharT, Traits&amp;gt;&amp;amp; os, std::basic_string_view&amp;lt;CharT, Traits&amp;gt; sv);
- }
- ```
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
       </author>
     </entry>
   
