@@ -2,9 +2,296 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2021-12-29T14:41:46.394130</updated>
-  <id>a446aafc-2db1-4258-ab1c-39b766944429</id>
+  <updated>2021-12-29T14:59:37.315594</updated>
+  <id>31958e92-51c2-4542-a66d-a9f8f5f9109e</id>
 
+  
+    <entry>
+      <title>algorithm -- ranges::conut/count_ifを追加 #919</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm.html"/>
+      <id>19ad00b6639e426c1e71560a3de49e1e5051f908:reference/algorithm.md</id>
+      <updated>2021-12-29T23:48:55+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm.md b/reference/algorithm.md
+index 75a3d626a..2ec416178 100644
+--- a/reference/algorithm.md
++++ b/reference/algorithm.md
+@@ -130,8 +130,8 @@ ranges::sort(pv, {}, [](auto&amp;amp;&amp;amp; a){ return a.name; });
+ | [`ranges::find_end`](algorithm/ranges_find_end.md.nolink)           | 指定された最後のサブシーケンスを検索する             | C++20 |
+ | [`ranges::find_first_of`](algorithm/ra.nolinknges_find_first_of.md.nolink) | ある集合の1つとマッチする最初の要素を検索する        | C++20 |
+ | [`ranges::adjacent_find`](algorithm/ra.nolinknges_adjacent_find.md.nolink) | 隣接する要素で条件を満たしている最初の要素を検索する | C++20 |
+-| [`ranges::count`](algorithm/ranges_count.md.nolink)                 | 指定された値である要素の数を数える                   | C++20 |
+-| [`ranges::count_if`](algorithm/ranges_count_if.md.nolink)           | 条件を満たしている要素の数を数える                   | C++20 |
++| [`ranges::count`](algorithm/ranges_count.md)                 | 指定された値である要素の数を数える                   | C++20 |
++| [`ranges::count_if`](algorithm/ranges_count_if.md)           | 条件を満たしている要素の数を数える                   | C++20 |
+ | [`ranges::mismatch`](algorithm/ranges_mismatch.md.nolink)           | 2つの範囲が一致していない場所を検索する              | C++20 |
+ | [`ranges::equal`](algorithm/ranges_equal.md.nolink)                 | 2つの範囲を等値比較する                              | C++20 |
+ | [`ranges::search`](algorithm/ranges_search.md.nolink)               | 指定された最初のサブシーケンスを検索する             | C++20 |
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>count -- ranges::conut/count_ifを追加 #919</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_count.html"/>
+      <id>19ad00b6639e426c1e71560a3de49e1e5051f908:reference/algorithm/ranges_count.md</id>
+      <updated>2021-12-29T23:48:55+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_count.md b/reference/algorithm/ranges_count.md
+new file mode 100644
+index 000000000..b0ff3b076
+--- /dev/null
++++ b/reference/algorithm/ranges_count.md
+@@ -0,0 +1,110 @@
++# count
++* algorithm[meta header]
++* std::ranges[meta namespace]
++* function template[meta id-type]
++* cpp20[meta cpp]
++
++```cpp
++namespace std::ranges {
++  template&amp;lt;input_iterator I, sentinel_for&amp;lt;I&amp;gt; S, class T, class Proj = identity&amp;gt;
++    requires indirect_binary_predicate&amp;lt;equal_to, projected&amp;lt;I, Proj&amp;gt;, const T*&amp;gt;
++  constexpr iter_difference_t&amp;lt;I&amp;gt; count(I first, S last, const T&amp;amp; value, Proj proj = {}); // (1)
++
++  template&amp;lt;input_range R, class T, class Proj = identity&amp;gt;
++    requires indirect_binary_predicate&amp;lt;equal_to, projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;, const T*&amp;gt;
++  constexpr range_difference_t&amp;lt;R&amp;gt; count(R&amp;amp;&amp;amp; r, const T&amp;amp; value, Proj proj = {});          // (2)
++}
++```
++* sentinel_for[link /reference/iterator/sentinel_for.md]
++* identity[link /reference/functional/identity.md]
++* indirect_binary_predicate[link /reference/iterator/indirect_binary_predicate.md]
++* equal_to[link /reference/functional/equal_to.md]
++* projected[link /reference/iterator/projected.md]
++* iter_difference_t[link /reference/iterator/iter_difference_t.md]
++* range_difference_t[link /reference/ranges/range_difference_t.md]
++
++## 概要
++指定された値と等値な要素の数を数える。
++
++## テンプレートパラメータ制約
++- (1):
++    - `I`が[`input_iterator`](/reference/iterator/input_iterator.md)である
++    - `S`が[`I`に対する番兵](/reference/iterator/sentinel_for.md)である
++    - `I`を`Proj`で射影した値と指定された値が[`equal_to`](/reference/functional/equal_to.md)によって等値比較できる
++- (2):
++    - `R`が[`input_range`](/reference/ranges/input_range.md)である
++    - `Pred`は`R`のイテレータを`Proj`で射影した値が[`equal_to`](/reference/functional/equal_to.md)によって等値比較できる
++
++## 戻り値
++`[first,last)` 内のイテレータ `i` について、[`invoke`](/reference/functional/invoke.md)`(proj, *i) == value` であるイテレータの数を返す
++
++## 計算量
++正確に `last - first` 回の比較を行う
++
++
++## 例
++```cpp example
++#include &amp;lt;algorithm&amp;gt;
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;array&amp;gt;
++
++int main() {
++  constexpr std::array v = { 1,4,3,3,1,2,2,1 };
++
++  // 値が 1 の要素がいくつあるかを数える
++  std::cout &amp;lt;&amp;lt; &amp;#34;count of 1: &amp;#34; &amp;lt;&amp;lt; std::ranges::count(v, 1) &amp;lt;&amp;lt; std::endl;
++}
++```
++* std::ranges::count[color ff0000]
++
++### 出力
++```
++count of 1: 3
++```
++
++
++## 実装例
++```cpp
++struct count_impl {
++  template&amp;lt;input_iterator I, sentinel_for&amp;lt;I&amp;gt; S, class T, class Proj = identity&amp;gt;
++    requires indirect_binary_predicate&amp;lt;equal_to, projected&amp;lt;I, Proj&amp;gt;, const T*&amp;gt;
++  constexpr iter_difference_t&amp;lt;I&amp;gt; operator()(I first, S last, const T&amp;amp; value, Proj proj = {}) {
++    iter_difference_t&amp;lt;I&amp;gt; count = 0;
++    for ( ; first != last; ++first)
++      if (value == invoke(proj, *first)) count++;
++    return count;
++  }
++
++  template&amp;lt;input_range R, class T, class Proj = identity&amp;gt;
++    requires indirect_binary_predicate&amp;lt;equal_to, projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;, const T*&amp;gt;
++  constexpr range_difference_t&amp;lt;R&amp;gt; operator()(R&amp;amp;&amp;amp; r, const T&amp;amp; value, Proj proj = {}) {
++    return (*this)(begin(r), end(r), value, ref(proj));
++  }
++};
++
++inline constexpr count_impl count;
++```
++* sentinel_for[link /reference/iterator/sentinel_for.md]
++* identity[link /reference/functional/identity.md]
++* indirect_binary_predicate[link /reference/iterator/indirect_binary_predicate.md]
++* equal_to[link /reference/functional/equal_to.md]
++* projected[link /reference/iterator/projected.md]
++* iter_difference_t[link /reference/iterator/iter_difference_t.md]
++* range_difference_t[link /reference/ranges/range_difference_t.md]
++* invoke[link /reference/functional/invoke.md]
++* begin[link /reference/ranges/begin.md]
++* end[link /reference/ranges/end.md]
++* ref[link /reference/functional/ref.md]
++
++## バージョン
++### 言語
++- C++20
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): 10.1.0
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): 2019 Update 10
++
++## 参照
++- [N4821 25 Algorithms library](https://timsong-cpp.github.io/cppwp/n4861/algorithms)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>count_if -- ranges::conut/count_ifを追加 #919</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_count_if.html"/>
+      <id>19ad00b6639e426c1e71560a3de49e1e5051f908:reference/algorithm/ranges_count_if.md</id>
+      <updated>2021-12-29T23:48:55+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_count_if.md b/reference/algorithm/ranges_count_if.md
+new file mode 100644
+index 000000000..91e06e948
+--- /dev/null
++++ b/reference/algorithm/ranges_count_if.md
+@@ -0,0 +1,108 @@
++# count_if
++* algorithm[meta header]
++* std::ranges[meta namespace]
++* function template[meta id-type]
++* cpp20[meta cpp]
++
++```cpp
++namespace std {
++  template&amp;lt;input_iterator I, sentinel_for&amp;lt;I&amp;gt; S, class Proj = identity, indirect_unary_predicate&amp;lt;projected&amp;lt;I, Proj&amp;gt;&amp;gt; Pred&amp;gt;
++  constexpr iter_difference_t&amp;lt;I&amp;gt; count_if(I first, S last, Pred pred, Proj proj = {}); // (1)
++
++  template&amp;lt;input_range R, class Proj = identity, indirect_unary_predicate&amp;lt;projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;&amp;gt; Pred&amp;gt;
++  constexpr range_difference_t&amp;lt;R&amp;gt; count_if(R&amp;amp;&amp;amp; r, Pred pred, Proj proj = {});          // (2)
++}
++```
++* sentinel_for[link /reference/iterator/sentinel_for.md]
++* identity[link /reference/functional/identity.md]
++* indirect_binarindirect_unary_predicatey_predicate[link /reference/iterator/indirect_unary_predicate.md]
++* projected[link /reference/iterator/projected.md]
++* iter_difference_t[link /reference/iterator/iter_difference_t.md]
++* range_difference_t[link /reference/ranges/range_difference_t.md]
++
++
++## 概要
++条件を満たしている要素の数を数える。
++
++## テンプレートパラメータ制約
++- (1):
++    - `I`が[`input_iterator`](/reference/iterator/input_iterator.md)である
++    - `S`が[`I`に対する番兵](/reference/iterator/sentinel_for.md)である
++    - `Pred`は`I`を`Proj`で射影した値を[参照で渡すことができる1引数の述語](/reference/iterator/indirect_unary_predicate.md)である
++- (2):
++    - `R`が[`input_range`](/reference/ranges/input_range.md)である
++    - `Pred`は`R`のイテレータを`Proj`で射影した値を[参照で渡すことができる1引数の述語](/reference/iterator/indirect_unary_predicate.md)である
++
++
++## 戻り値
++`[first,last)` 内のイテレータ `i` について、[`invoke`](/reference/functional/invoke.md)`(pred, `[`invoke`](/reference/functional/invoke.md)`(proj, *i)) != false` であるイテレータの数を返す
++
++
++## 計算量
++正確に `last - first` 回の述語の適用を行う
++
++
++## 例
++```cpp example
++#include &amp;lt;algorithm&amp;gt;
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;array&amp;gt;
++
++int main() {
++  constexpr std::array v = { 1,4,3,3,1,2,2,1 };
++
++  // 値が 1 または 3 の要素がいくつあるかを数える
++  auto count = std::ranges::count_if(v, [](int x) { return x == 1 || x == 3; });
++  std::cout &amp;lt;&amp;lt; &amp;#34;count of 1 or 3: &amp;#34; &amp;lt;&amp;lt; count &amp;lt;&amp;lt; std::endl;
++}
++```
++* std::ranges::count_if[color ff0000]
++
++### 出力
++```cpp
++count of 1 or 3: 5
++```
++
++
++## 実装例
++```cpp
++struct count_if_impl {
++  template&amp;lt;input_iterator I, sentinel_for&amp;lt;I&amp;gt; S, class Proj = identity, indirect_unary_predicate&amp;lt;projected&amp;lt;I, Proj&amp;gt;&amp;gt; Pred&amp;gt;
++  constexpr iter_difference_t&amp;lt;I&amp;gt; operator()(I first, S last, Pred pred, Proj proj = {}) {
++    iter_difference_t&amp;lt;I&amp;gt; count = 0;
++    for ( ; first != last; ++first)
++      if (invoke(pred, invoke(proj, *first))) count++;
++    return count;
++  }
++
++  template&amp;lt;input_range R, class Proj = identity, indirect_unary_predicate&amp;lt;projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;&amp;gt; Pred&amp;gt;
++  constexpr range_difference_t&amp;lt;R&amp;gt; operator()(R&amp;amp;&amp;amp; r, Pred pred, Proj proj = {}) {
++    return (*this)(begin(r), end(r), ref(pred), ref(proj));
++  }
++};
++
++inline constexpr count_if_impl count_if;
++```
++* sentinel_for[link /reference/iterator/sentinel_for.md]
++* identity[link /reference/functional/identity.md]
++* indirect_unary_predicate[link /reference/iterator/indirect_unary_predicate.md]
++* projected[link /reference/iterator/projected.md]
++* iter_difference_t[link /reference/iterator/iter_difference_t.md]
++* range_difference_t[link /reference/ranges/range_difference_t.md]
++* invoke[link /reference/functional/invoke.md]
++* begin[link /reference/ranges/begin.md]
++* end[link /reference/ranges/end.md]
++* ref[link /reference/functional/ref.md]
++
++## バージョン
++### 言語
++- C++20
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): 10.1.0
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): 2019 Update 10
++
++## 参照
++- [N4821 25 Algorithms library](https://timsong-cpp.github.io/cppwp/n4861/algorithms)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>ratio -- Merge pull request #933 from cpprefjp/improve_ratio</title>
@@ -625,33 +912,6 @@ index 57dc32036..97b26ccfd 100644
       <author>
         <name>suomesta</name>
         <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>初期化子リスト -- typo 初期化リスト → 初期化子リスト</title>
-      <link href="https://cpprefjp.github.io/lang/cpp11/initializer_lists.html"/>
-      <id>a37f564f81f464e44c7bec222f90eddd101f49e8:lang/cpp11/initializer_lists.md</id>
-      <updated>2021-12-27T16:45:20+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp11/initializer_lists.md b/lang/cpp11/initializer_lists.md
-index 435878b52..30235501f 100644
---- a/lang/cpp11/initializer_lists.md
-+++ b/lang/cpp11/initializer_lists.md
-@@ -251,7 +251,7 @@ int main()
- 
- 
- ### &amp;lt;a id=&amp;#34;type-deduction&amp;#34; href=&amp;#34;#type-deduction&amp;#34;&amp;gt;型推論&amp;lt;/a&amp;gt;
--- 初期化リストを`auto`で受けた場合、`std::initializer_list`型に推論される。ただし、空の初期化子リストは推論に失敗する
-+- 初期化子リストを`auto`で受けた場合、`std::initializer_list`型に推論される。ただし、空の初期化子リストは推論に失敗する
- 
-     ```cpp
-     auto x1 = {1, 2, 3}; // x1の型はstd::initializer_list&amp;lt;int&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Yusuke Kameda</name>
-        <email>yusuke.kameda@gmail.com</email>
       </author>
     </entry>
   
