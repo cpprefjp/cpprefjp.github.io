@@ -2,9 +2,584 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2021-12-30T05:53:03.600036</updated>
-  <id>cba1a021-13f2-4683-b648-c42f18501782</id>
+  <updated>2021-12-30T07:03:58.194760</updated>
+  <id>9eda28a1-89b3-4328-925d-cf62c8ab11ef</id>
 
+  
+    <entry>
+      <title>find_end -- ranges::find_first_of/find_end/search/search_nを追加 #919</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_find_end.html"/>
+      <id>1dc74c36e9f05e3f39d7f20f1ee1fd78014bdd1d:reference/algorithm/ranges_find_end.md</id>
+      <updated>2021-12-30T15:58:31+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_find_end.md b/reference/algorithm/ranges_find_end.md
+new file mode 100644
+index 000000000..ec3bc16d8
+--- /dev/null
++++ b/reference/algorithm/ranges_find_end.md
+@@ -0,0 +1,106 @@
++# find_end
++* algorithm[meta header]
++* std::ranges[meta namespace]
++* function template[meta id-type]
++* cpp20[meta cpp]
++
++```cpp
++namespace std::ranges {
++  template&amp;lt;forward_iterator I1, sentinel_for&amp;lt;I1&amp;gt; S1, forward_iterator I2, sentinel_for&amp;lt;I2&amp;gt; S2, class Pred = ranges::equal_to, class Proj1 = identity, class Proj2 = identity&amp;gt;
++    requires indirectly_comparable&amp;lt;I1, I2, Pred, Proj1, Proj2&amp;gt;
++  constexpr subrange&amp;lt;I1&amp;gt; find_end(I1 first1, S1 last1, I2 first2, S2 last2, Pred pred = {}, Proj1 proj1 = {}, Proj2 proj2 = {});
++
++  template&amp;lt;forward_range R1, forward_range R2, class Pred = ranges::equal_to, class Proj1 = identity, class Proj2 = identity&amp;gt;
++    requires indirectly_comparable&amp;lt;iterator_t&amp;lt;R1&amp;gt;, iterator_t&amp;lt;R2&amp;gt;, Pred, Proj1, Proj2&amp;gt;
++  constexpr borrowed_subrange_t&amp;lt;R1&amp;gt; find_end(R1&amp;amp;&amp;amp; r1, R2&amp;amp;&amp;amp; r2, Pred pred = {}, Proj1 proj1 = {}, Proj2 proj2 = {});
++}
++```
++
++## 概要
++範囲の中から、特定のサブシーケンスを検索する。
++
++
++## 戻り値
++- (1): `[first1,last1 - (last2 - first2))` 内のイテレータ `i` があるとき、0 以上 `last2 - first2` 未満の全ての整数 `n` について、それぞれ `*(i + n) == *(first2 + n)` もしくは `invoke(pred, invoke(proj1, *(i + n)), invoke(proj2, *(first2 + n)))) != false` であるようなサブシーケンスを探し、見つかった **最後の** サブシーケンス`{i, i + (i == last1 ? 0 : last2 - first2)}`を返す。そのようなイテレータが見つからない、もしくは `[first2,last2)` が空である場合は `{last1, last1}` を返す。
++- (2): `first1 = begin(r1)`, `last1 = end(r1)`, `first2 = begin(r2)`, `last2 = end(r2)`の下で(1)と等しい。
++
++## 計算量
++最大で `(last2 - first2) * (last1 - first1 - (last2 - first2) + 1)` 回の、対応する比較もしくは述語が適用される
++
++
++## 備考
++[`ranges::search()`](ranges_search.md) と `ranges::find_end()` は共にサブシーケンスを検索する関数だが、以下の点が異なる。
++
++* `ranges::search()` は見つかった最初のサブシーケンスを返すが `ranges::find_end()` は見つかった最後のサブシーケンスを返す
++* `[first2,last2)` が空であるときに `search()` は `{first1, first1}` を返すが、`ranges::find_end()` は `{last1, last1}` を返す
++
++
++## 例
++```cpp example
++#include &amp;lt;algorithm&amp;gt;
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;vector&amp;gt;
++#include &amp;lt;list&amp;gt;
++
++int main() {
++  std::vector&amp;lt;int&amp;gt; v = { 1,2,1,2,3 };
++  std::list&amp;lt;int&amp;gt; ls = { 1,2 };
++
++  // 1,2 と連続している最後のシーケンスを探す
++  subrange it = std::ranges::find_end(v, ls);
++  // v[2] の位置を指すイテレータが見つかる。
++  // v[0] の位置を指すイテレータではない。
++  if (it == v.end()) {
++    std::cout &amp;lt;&amp;lt; &amp;#34;not found&amp;#34; &amp;lt;&amp;lt; std::endl;
++  } else {
++    std::cout &amp;lt;&amp;lt; &amp;#34;found: index==&amp;#34; &amp;lt;&amp;lt; std::distance(v.begin(), it) &amp;lt;&amp;lt; std::endl;
++  }
++}
++```
++* std::ranges::find_end[color ff0000]
++
++### 出力
++```
++found: index==2
++```
++
++
++## 実装例
++```cpp
++struct find_end_impl {
++  template&amp;lt;forward_iterator I1, sentinel_for&amp;lt;I1&amp;gt; S1, forward_iterator I2, sentinel_for&amp;lt;I2&amp;gt; S2, class Pred = ranges::equal_to, class Proj1 = identity, class Proj2 = identity&amp;gt;
++    requires indirectly_comparable&amp;lt;I1, I2, Pred, Proj1, Proj2&amp;gt;
++  constexpr subrange&amp;lt;I1&amp;gt; operator()(I1 first1, S1 last1, I2 first2, S2 last2, Pred pred = {}, Proj1 proj1 = {}, Proj2 proj2 = {}) {
++    if (first2 == last2)
++      return last1;
++    I1 result = last1;
++    while ((first1 = search(first1, last1, first2, last2, ref(pred), ref(proj1), ref(proj2))) != last1) {
++      result = first1;
++      ++first1;
++    }
++    return result;
++  }
++
++  template&amp;lt;forward_range R1, forward_range R2, class Pred = ranges::equal_to, class Proj1 = identity, class Proj2 = identity&amp;gt;
++    requires indirectly_comparable&amp;lt;iterator_t&amp;lt;R1&amp;gt;, iterator_t&amp;lt;R2&amp;gt;, Pred, Proj1, Proj2&amp;gt;
++  constexpr borrowed_subrange_t&amp;lt;R1&amp;gt; operator()(R1&amp;amp;&amp;amp; r1, R2&amp;amp;&amp;amp; r2, Pred pred = {}, Proj1 proj1 = {}, Proj2 proj2 = {}) {
++    return (*this)(begin(r1), end(r1), begin(r2), end(r2), ref(pred), ref(proj1), ref(proj2));
++  }
++};
++
++inline constexpr find_end_impl find_end;
++```
++* search[link ranges_search.md]
++
++## バージョン
++### 言語
++- C++20
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): 10.1.0
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): 2019 Update 10
++
++## 参照
++- [N4821 25 Algorithms library](https://timsong-cpp.github.io/cppwp/n4861/algorithms)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>find_first_of -- ranges::find_first_of/find_end/search/search_nを追加 #919</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_find_first_of.html"/>
+      <id>1dc74c36e9f05e3f39d7f20f1ee1fd78014bdd1d:reference/algorithm/ranges_find_first_of.md</id>
+      <updated>2021-12-30T15:58:31+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_find_first_of.md b/reference/algorithm/ranges_find_first_of.md
+new file mode 100644
+index 000000000..f6f9f3a71
+--- /dev/null
++++ b/reference/algorithm/ranges_find_first_of.md
+@@ -0,0 +1,121 @@
++# find_first_of
++* algorithm[meta header]
++* std::ranges[meta namespace]
++* function template[meta id-type]
++* cpp20[meta cpp]
++
++```cpp
++namespace std::ranges {
++  template&amp;lt;input_iterator I1, sentinel_for&amp;lt;I1&amp;gt; S1, forward_iterator I2, sentinel_for&amp;lt;I2&amp;gt; S2, class Pred = ranges::equal_to, class Proj1 = identity, class Proj2 = identity&amp;gt;
++    requires indirectly_comparable&amp;lt;I1, I2, Pred, Proj1, Proj2&amp;gt;
++  constexpr I1 find_first_of(I1 first1, S1 last1, I2 first2, S2 last2, Pred pred = {}, Proj1 proj1 = {}, Proj2 proj2 = {});
++
++  template&amp;lt;input_range R1, forward_range R2, class Pred = ranges::equal_to, class Proj1 = identity, class Proj2 = identity&amp;gt;
++    requires indirectly_comparable&amp;lt;iterator_t&amp;lt;R1&amp;gt;, iterator_t&amp;lt;R2&amp;gt;, Pred, Proj1, Proj2&amp;gt;
++  constexpr borrowed_iterator_t&amp;lt;R1&amp;gt; find_first_of(R1&amp;amp;&amp;amp; r1, R2&amp;amp;&amp;amp; r2, Pred pred = {}, Proj1 proj1 = {}, Proj2 proj2 = {});
++}
++```
++- input_iterator[link /reference/iterator/input_iterator.md]
++- forward_iterator[link /reference/iterator/forward_iterator.md]
++- sentinel_for[link /reference/iterator/sentinel_for.md]
++- ranges::equal_to[link /reference/algorithm/ranges_equal_to.md]
++- borrowed_iterator_t[link /reference/ranges/borrowed_iterator_t.md]
++- iterator_t[link /reference/ranges/iterator_t.md]
++- identity[link /reference/functional/identity.md]
++- indirectly_comparable[link /reference/iterator/indirectly_comparable.md]
++- input_range[link /reference/ranges/input_range.md]
++- forward_range[link /reference/ranges/forward_range.md]
++
++## 概要
++ある集合の1つとマッチする最初の要素を検索する。
++
++
++## 戻り値
++`[first1,last1 - (last2 - first2))` 内のイテレータ `i` があるとき、`[first2,last2)` 内のイテレータ `j` について、どれかが [`invoke`](/reference/functional/invoke.md)`(pred, `[`invoke`](/reference/functional/invoke.md)`(proj1, *i), `[`invoke`](/reference/functional/invoke.md)`(proj2, *j)) == true` であるような最初のイテレータを返す。
++
++そのようなイテレータが見つからない、もしくは `[first2,last2)` が空である場合は `last1` を返す。
++
++
++## 計算量
++最大で `(last1 - first1) * (last2 - first2)` 回の、対応する比較もしくは述語が適用される。
++
++
++## 例
++```cpp example
++#include &amp;lt;algorithm&amp;gt;
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;vector&amp;gt;
++#include &amp;lt;list&amp;gt;
++
++int main() {
++  std::vector v = { 1,3,7,4,2 };
++  std::list ls = { 2,4,6,8 };
++
++  // 2,4,6,8 のどれかと一致する最初の要素を返す
++  auto it = std::ranges::find_first_of(v, ls.begin(), ls.end());
++  if (it == v.end()) {
++    std::cout &amp;lt;&amp;lt; &amp;#34;not found&amp;#34; &amp;lt;&amp;lt; std::endl;
++  } else {
++    std::cout &amp;lt;&amp;lt; &amp;#34;found: index==&amp;#34; &amp;lt;&amp;lt; std::distance(v.begin(), it) &amp;lt;&amp;lt; &amp;#34;, value==&amp;#34; &amp;lt;&amp;lt; *it &amp;lt;&amp;lt; std::endl;
++  }
++}
++```
++* std::ranges::find_first_of[color ff0000]
++* ls.begin()[link /reference/list/list/begin.md]
++* ls.end()[link /reference/list/list/end.md]
++
++### 出力
++```
++found: index==3, value==4
++```
++
++
++## 実装例
++```cpp
++struct find_first_of_impl {
++  template&amp;lt;input_iterator I1, sentinel_for&amp;lt;I1&amp;gt; S1, forward_iterator I2, sentinel_for&amp;lt;I2&amp;gt; S2, class Pred = ranges::equal_to, class Proj1 = identity, class Proj2 = identity&amp;gt;
++    requires indirectly_comparable&amp;lt;I1, I2, Pred, Proj1, Proj2&amp;gt;
++  constexpr I1 find_first_of(I1 first1, S1 last1, I2 first2, S2 last2, Pred pred = {}, Proj1 proj1 = {}, Proj2 proj2 = {}) {
++    for ( ; first1 != last1; ++first1)
++      for (I2 it = first2; it != last2; ++it)
++        if (invoke(pred, invoke(proj1, *first1), invoke(proj2, *it))) return first1;
++    return last1;
++  }
++
++  template&amp;lt;input_range R1, forward_range R2, class Pred = ranges::equal_to, class Proj1 = identity, class Proj2 = identity&amp;gt;
++    requires indirectly_comparable&amp;lt;iterator_t&amp;lt;R1&amp;gt;, iterator_t&amp;lt;R2&amp;gt;, Pred, Proj1, Proj2&amp;gt;
++  constexpr borrowed_iterator_t&amp;lt;R1&amp;gt; find_first_of(R1&amp;amp;&amp;amp; r1, R2&amp;amp;&amp;amp; r2, Pred pred = {}, Proj1 proj1 = {}, Proj2 proj2 = {}) {
++    return (*this)(begin(r1), end(r1), begin(r2), end(r2), ref(pred), ref(proj1), ref(proj2));
++  }
++};
++
++inline constexpr find_first_of_impl find_first_of;
++```
++- input_iterator[link /reference/iterator/input_iterator.md]
++- forward_iterator[link /reference/iterator/forward_iterator.md]
++- sentinel_for[link /reference/iterator/sentinel_for.md]
++- ranges::equal_to[link /reference/algorithm/ranges_equal_to.md]
++- borrowed_iterator_t[link /reference/ranges/borrowed_iterator_t.md]
++- iterator_t[link /reference/ranges/iterator_t.md]
++- identity[link /reference/functional/identity.md]
++- indirectly_comparable[link /reference/iterator/indirectly_comparable.md]
++- input_range[link /reference/ranges/input_range.md]
++- forward_range[link /reference/ranges/forward_range.md]
++- invoke[link /reference/functional/invoke.md]
++- begin[link /reference/ranges/begin.md]
++- end[link /reference/ranges/end.md]
++- ref[link /reference/functional/ref.md]
++
++
++## バージョン
++### 言語
++- C++20
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): 10.1.0
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): 2019 Update 10
++
++## 参照
++- [N4821 25 Algorithms library](https://timsong-cpp.github.io/cppwp/n4861/algorithms)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>search -- ranges::find_first_of/find_end/search/search_nを追加 #919</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_search.html"/>
+      <id>1dc74c36e9f05e3f39d7f20f1ee1fd78014bdd1d:reference/algorithm/ranges_search.md</id>
+      <updated>2021-12-30T15:58:31+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_search.md b/reference/algorithm/ranges_search.md
+new file mode 100644
+index 000000000..28e53d54d
+--- /dev/null
++++ b/reference/algorithm/ranges_search.md
+@@ -0,0 +1,124 @@
++# search
++* algorithm[meta header]
++* std::ranges[meta namespace]
++* function template[meta id-type]
++* cpp20[meta cpp]
++
++```cpp
++namespace std::ranges {
++  template&amp;lt;forward_iterator I1, sentinel_for&amp;lt;I1&amp;gt; S1, forward_iterator I2,
++  sentinel_for&amp;lt;I2&amp;gt; S2, class Pred = ranges::equal_to, class Proj1 = identity, class Proj2 = identity&amp;gt;
++    requires indirectly_comparable&amp;lt;I1, I2, Pred, Proj1, Proj2&amp;gt;
++  constexpr subrange&amp;lt;I1&amp;gt; search(I1 first1, S1 last1, I2 first2, S2 last2, Pred pred = {}, Proj1 proj1 = {}, Proj2 proj2 = {}); // (1)
++
++  template&amp;lt;forward_range R1, forward_range R2, class Pred = ranges::equal_to, class Proj1 = identity, class Proj2 = identity&amp;gt;
++    requires indirectly_comparable&amp;lt;iterator_t&amp;lt;R1&amp;gt;, iterator_t&amp;lt;R2&amp;gt;, Pred, Proj1, Proj2&amp;gt;
++  constexpr borrowed_subrange_t&amp;lt;R1&amp;gt; search(R1&amp;amp;&amp;amp; r1, R2&amp;amp;&amp;amp; r2, Pred pred = {}, Proj1 proj1 = {}, Proj2 proj2 = {});              // (2)
++}
++```
++- forward_iterator[link /reference/iterator/forward_iterator.md]
++- sentinel_for[link /reference/iterator/sentinel_for.md]
++- ranges::equal_to[link /reference/functional/ranges_equal_to.md]
++- identity[link /reference/functional/identity.md]
++- indirectly_comparable[link /reference/iterator/indirectly_comparable.md]
++- subrange[link /reference/ranges/subrange.md]
++- forward_range[link /reference/ranges/forward_range.md]
++- iterator_t[link /reference/ranges/iterator_t.md]
++- borrowed_subrange_t[link /reference/ranges/borrowed_subrange_t.md]
++
++## 概要
++あるシーケンスの中から、特定のサブシーケンスを探す
++
++## 戻り値
++- (1) :
++    - `[first1,last1 - (last2 - first2))` 内のイテレータ `i` があるとき、0 以上 `last2 - first2` 未満の整数 `n` について、それぞれ [`invoke`](/reference/functional/invoke.md)`(pred, `[`invoke`](/reference/functional/invoke.md)`(proj1, *(i + n)), `[`invoke`](/reference/functional/invoke.md)`(proj2, *(first2 + n)))` であるようなサブシーケンスを探し、見つかった最初のサブシーケンスを返す。
++    - そのようなイテレータが見つからない場合は `{last1, last1}` を返し、`[first2,last2)` が空である場合には `{first1, first1}` を返す。
++- (2): `first1 = begin(r1)`, `last1 = end(r1)`, `first2 = begin(r2)`, `last2 = end(r2)`の下で(1)と等しい。
++
++## 計算量
++最大で `(last1 - first1) * (last2 - first2)` 回の、対応する比較もしくは述語が適用される
++
++## 例
++```cpp example
++#include &amp;lt;algorithm&amp;gt;
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;vector&amp;gt;
++#include &amp;lt;list&amp;gt;
++#include &amp;lt;ranges&amp;gt;
++
++int main() {
++  std::vector&amp;lt;int&amp;gt; v = { 1,2,1,2,3 };
++  std::list&amp;lt;int&amp;gt; ls = { 1,2 };
++
++  // 1,2 と連続している最初のシーケンスを探す
++  std::ranges::subrange sr = std::ranges::search(v, ls);
++  // v[0] の位置を指すイテレータが見つかる。
++  if (sr.empty()) {
++    std::cout &amp;lt;&amp;lt; &amp;#34;not found&amp;#34; &amp;lt;&amp;lt; std::endl;
++  } else {
++    std::cout &amp;lt;&amp;lt; &amp;#34;found: index==&amp;#34; &amp;lt;&amp;lt; std::distance(v.begin(), sr.begin()) &amp;lt;&amp;lt; std::endl;
++  }
++}
++```
++* std::search[color ff0000]
++
++#### 出力
++```
++found: index==0
++```
++
++
++## 実装例
++```cpp
++struct search_impl {
++  template&amp;lt;forward_iterator I1, sentinel_for&amp;lt;I1&amp;gt; S1, forward_iterator I2,
++  sentinel_for&amp;lt;I2&amp;gt; S2, class Pred = ranges::equal_to, class Proj1 = identity, class Proj2 = identity&amp;gt;
++    requires indirectly_comparable&amp;lt;I1, I2, Pred, Proj1, Proj2&amp;gt;
++  constexpr subrange&amp;lt;I1&amp;gt; search(I1 first1, S1 last1, I2 first2, S2 last2, Pred pred = {}, Proj1 proj1 = {}, Proj2 proj2 = {}) {
++    for ( ; first1 != last1; ++first1) {
++      I1 p1 = first1;
++      I2 p2 = first2;
++      while (true) {
++        if (p2 == last2) return {first1, p1};
++        if (p1 == last1) return {last1, last1};
++        if (!invoke(pred, invoke(proj1, *p1), invoke(proj2, *p2))) break;
++        ++p1, ++p2;
++      }
++    }
++  }
++
++  template&amp;lt;forward_range R1, forward_range R2, class Pred = ranges::equal_to, class Proj1 = identity, class Proj2 = identity&amp;gt;
++    requires indirectly_comparable&amp;lt;iterator_t&amp;lt;R1&amp;gt;, iterator_t&amp;lt;R2&amp;gt;, Pred, Proj1, Proj2&amp;gt;
++  constexpr borrowed_subrange_t&amp;lt;R1&amp;gt; search(R1&amp;amp;&amp;amp; r1, R2&amp;amp;&amp;amp; r2, Pred pred = {}, Proj1 proj1 = {}, Proj2 proj2 = {}) {
++    return (*this)(begin(r1), end(r1), begin(r2), end(r2), ref(pred), ref(proj1), ref(proj2));
++  }
++};
++
++inline constexpr search_impl search;
++```
++- forward_iterator[link /reference/iterator/forward_iterator.md]
++- sentinel_for[link /reference/iterator/sentinel_for.md]
++- ranges::equal_to[link /reference/functional/ranges_equal_to.md]
++- identity[link /reference/functional/identity.md]
++- indirectly_comparable[link /reference/iterator/indirectly_comparable.md]
++- subrange[link /reference/ranges/subrange.md]
++- forward_range[link /reference/ranges/forward_range.md]
++- iterator_t[link /reference/ranges/iterator_t.md]
++- borrowed_subrange_t[link /reference/ranges/borrowed_subrange_t.md]
++- invoke[link /reference/functional/invoke.md]
++- begin[link /reference/ranges/begin.md]
++- end[link /reference/ranges/end.md]
++- ref[link /reference/functional/ref.md]
++
++## バージョン
++### 言語
++- C++20
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): 10.1.0
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): 2019 Update 10
++
++## 参照
++- [N4821 25 Algorithms library](https://timsong-cpp.github.io/cppwp/n4861/algorithms)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>search_n -- ranges::find_first_of/find_end/search/search_nを追加 #919</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_search_n.html"/>
+      <id>1dc74c36e9f05e3f39d7f20f1ee1fd78014bdd1d:reference/algorithm/ranges_search_n.md</id>
+      <updated>2021-12-30T15:58:31+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_search_n.md b/reference/algorithm/ranges_search_n.md
+new file mode 100644
+index 000000000..72dd0b3e6
+--- /dev/null
++++ b/reference/algorithm/ranges_search_n.md
+@@ -0,0 +1,144 @@
++# search_n
++* algorithm[meta header]
++* std::ranges[meta namespace]
++* function template[meta id-type]
++* cpp20[meta cpp]
++
++```cpp
++namespace std::ranges {]
++  template&amp;lt;forward_iterator I, sentinel_for&amp;lt;I&amp;gt; S, class T, class Pred = ranges::equal_to, class Proj = identity&amp;gt;
++    requires indirectly_comparable&amp;lt;I, const T*, Pred, Proj&amp;gt;
++  constexpr subrange&amp;lt;I&amp;gt; search_n(I first, S last, iter_difference_t&amp;lt;I&amp;gt; count, const T&amp;amp; value, Pred pred = {}, Proj proj = {});
++
++  template&amp;lt;forward_range R, class T, class Pred = ranges::equal_to, class Proj = identity&amp;gt;
++    requires indirectly_comparable&amp;lt;iterator_t&amp;lt;R&amp;gt;, const T*, Pred, Proj&amp;gt;
++  constexpr borrowed_subrange_t&amp;lt;R&amp;gt; search_n(R&amp;amp;&amp;amp; r, range_difference_t&amp;lt;R&amp;gt; count, const T&amp;amp; value, Pred pred = {}, Proj proj = {});
++}
++```
++- forward_iterator[link /reference/iterator/forward_iterator.md]
++- sentinel_for[link /reference/iterator/sentinel_for.md]
++- ranges::equal_to[link /reference/functional/ranges_equal_to.md]
++- identity[link /reference/functional/identity.md]
++- indirectly_comparable[link /reference/iterator/indirectly_comparable.md]
++- iter_difference_t[link /reference/iterator/iter_difference_t.md]
++- subrange[link /reference/ranges/subrange.md]
++- forward_range[link /reference/ranges/forward_range.md]
++- iterator_t[link /reference/ranges/iterator_t.md]
++- borrowed_subrange_t[link /reference/ranges/borrowed_subrange_t.md]
++
++
++## 概要
++あるシーケンスの中から、指定の要素が連続するサブシーケンスを探す。
++
++## 戻り値
++`[first,last-count)` 内のイテレータ `i` があるとき、0 以上 `count` 未満の整数 `n` について、それぞれ [`invoke`](/reference/functional/invoke.md)`(pred, `[`invoke`](/reference/functional/invoke.md)`(proj, *(i + n)), value)` であるようなサブシーケンスを探し、見つかった最初のサブシーケンスを返す。
++
++そのようなイテレータが見つからない場合は `{last, last}` を返す。
++
++
++## 計算量
++最大で `last - first` 回の対応する比較もしくは述語が適用される。
++
++
++## 例
++```cpp example
++#include &amp;lt;algorithm&amp;gt;
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;vector&amp;gt;
++
++int main() {
++  std::vector&amp;lt;int&amp;gt; v = { 1,2,3,2,1,3,3,2,3,3,1 };
++
++  // 3 が 2 つ連続している最初のシーケンスを探す
++  std::ranges::subrange sr1 = std::ranges::search_n(v, 2, 3);
++  // v[5] の位置を指すイテレータが見つかる。
++  if (sr1.empty()) {
++    std::cout &amp;lt;&amp;lt; &amp;#34;not found&amp;#34; &amp;lt;&amp;lt; std::endl;
++  } else {
++    std::cout &amp;lt;&amp;lt; &amp;#34;found: index==&amp;#34; &amp;lt;&amp;lt; std::distance(v.begin(), sr1.begin()) &amp;lt;&amp;lt; std::endl;
++  }
++
++  // 3 未満が 2 つ連続している最初のシーケンスを探す
++  auto sr2 = std::ranges::search_n(v, 2, 3, [](int x, int y) { return x &amp;lt; y; });
++  // v[0] の位置を指すイテレータが見つかる。
++  if (sr2.empty()) {
++    std::cout &amp;lt;&amp;lt; &amp;#34;not found&amp;#34; &amp;lt;&amp;lt; std::endl;
++  } else {
++    std::cout &amp;lt;&amp;lt; &amp;#34;found: index==&amp;#34; &amp;lt;&amp;lt; std::distance(v.begin(), sr2.begin()) &amp;lt;&amp;lt; std::endl;
++  }
++}
++```
++* std::search_n[color ff0000]
++* v.begin()[link /reference/vector/vector/begin.md]
++
++### 出力
++```
++found: index==5
++found: index==0
++```
++
++
++## 実装例
++```cpp
++struct search_n_impl {
++  template&amp;lt;forward_iterator I, sentinel_for&amp;lt;I&amp;gt; S, class T, class Pred = ranges::equal_to, class Proj = identity&amp;gt;
++    requires indirectly_comparable&amp;lt;I, const T*, Pred, Proj&amp;gt;
++  constexpr subrange&amp;lt;I&amp;gt; operator()(I first, S last, iter_difference_t&amp;lt;I&amp;gt; count, const T&amp;amp; value, Pred pred = {}, Proj proj = {}) {
++    if (first == last || count &amp;lt;= 0)
++      return first;
++
++    while (first != last) {
++      if (*first == value) {
++        I it = first;
++        ++it;
++        iter_difference_t&amp;lt;I&amp;gt; i = 1;
++        for (; i &amp;lt; count &amp;amp;&amp;amp; it != last &amp;amp;&amp;amp; invoke(pred, invoke(proj, *it), value); ++i, ++it)
++          ;
++        if (i == count)
++          return {first, i};
++        else if (it == last)
++          return {last, last};
++        else
++          first = it;
++      }
++      ++first;
++    }
++  }
++
++  template&amp;lt;forward_range R, class T, class Pred = ranges::equal_to, class Proj = identity&amp;gt;
++    requires indirectly_comparable&amp;lt;iterator_t&amp;lt;R&amp;gt;, const T*, Pred, Proj&amp;gt;
++  constexpr borrowed_subrange_t&amp;lt;R&amp;gt; operator()(R&amp;amp;&amp;amp; r, range_difference_t&amp;lt;R&amp;gt; count, const T&amp;amp; value, Pred pred = {}, Proj proj = {}) {
++    return (*this)(begin(r1), end(r1), count, value, ref(pred), ref(proj));
++  }
++};
++
++inline constexpr search_n_impl search_n;
++```
++- forward_iterator[link /reference/iterator/forward_iterator.md]
++- sentinel_for[link /reference/iterator/sentinel_for.md]
++- ranges::equal_to[link /reference/functional/ranges_equal_to.md]
++- identity[link /reference/functional/identity.md]
++- indirectly_comparable[link /reference/iterator/indirectly_comparable.md]
++- iter_difference_t[link /reference/iterator/iter_difference_t.md]
++- subrange[link /reference/ranges/subrange.md]
++- forward_range[link /reference/ranges/forward_range.md]
++- iterator_t[link /reference/ranges/iterator_t.md]
++- borrowed_subrange_t[link /reference/ranges/borrowed_subrange_t.md]
++- invoke[link /reference/functional/invoke.md]
++- begin[link /reference/ranges/begin.md]
++- end[link /reference/ranges/end.md]
++- ref[link /reference/functional/ref.md]
++
++
++## バージョン
++### 言語
++- C++20
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): 10.1.0
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): 2019 Update 10
++
++## 参照
++- [N4821 25 Algorithms library](https://timsong-cpp.github.io/cppwp/n4861/algorithms)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>count -- リンク修正</title>
@@ -1135,33 +1710,6 @@ index 000000000..32d9b47ea
 +
 +## 参照
 +- [N4821 25 Algorithms library](https://timsong-cpp.github.io/cppwp/n4861/algorithms)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>count_if -- リンク修正</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_count_if.html"/>
-      <id>6e1108a14d5e51b030b369b047a6d115dfeadd23:reference/algorithm/ranges_count_if.md</id>
-      <updated>2021-12-30T08:22:50+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_count_if.md b/reference/algorithm/ranges_count_if.md
-index 91e06e948..99310f936 100644
---- a/reference/algorithm/ranges_count_if.md
-+++ b/reference/algorithm/ranges_count_if.md
-@@ -15,7 +15,7 @@ namespace std {
- ```
- * sentinel_for[link /reference/iterator/sentinel_for.md]
- * identity[link /reference/functional/identity.md]
--* indirect_binarindirect_unary_predicatey_predicate[link /reference/iterator/indirect_unary_predicate.md]
-+* indirect_unary_predicate[link /reference/iterator/indirect_unary_predicate.md]
- * projected[link /reference/iterator/projected.md]
- * iter_difference_t[link /reference/iterator/iter_difference_t.md]
- * range_difference_t[link /reference/ranges/range_difference_t.md]
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
