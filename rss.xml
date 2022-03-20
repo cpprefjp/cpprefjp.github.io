@@ -2,9 +2,318 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2022-03-20T00:29:04.882365</updated>
-  <id>0e25f1b6-8c20-4806-92dc-bc632138fa58</id>
+  <updated>2022-03-20T00:39:21.861999</updated>
+  <id>b9ab457d-0ab6-42b5-9883-0a5c7cf009ae</id>
 
+  
+    <entry>
+      <title>ranges_lower_bound.md -- リンク修正 #919</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_lower_bound.html"/>
+      <id>7e37e927e5986b12e46fe6885c677c7cf4f80bd5:reference/algorithm/ranges_lower_bound.md</id>
+      <updated>2022-03-20T09:34:26+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_lower_bound.md b/reference/algorithm/ranges_lower_bound.md
+deleted file mode 100644
+index 78c61d462..000000000
+--- a/reference/algorithm/ranges_lower_bound.md
++++ /dev/null
+@@ -1,143 +0,0 @@
+-# lower_bound
+-* algorithm[meta header]
+-* std::ranges[meta namespace]
+-* function template[meta id-type]
+-* cpp20[meta cpp]
+-
+-```cpp
+-namespace std::ranges {
+-  template&amp;lt;forward_iterator I, sentinel_for&amp;lt;I&amp;gt; S, class T, class Proj = identity,
+-           indirect_strict_weak_order&amp;lt;const T*, projected&amp;lt;I, Proj&amp;gt;&amp;gt; Comp = ranges::less&amp;gt;
+-  constexpr I lower_bound(I first, S last, const T&amp;amp; value, Comp comp = {}, Proj proj = {});
+-
+-  template&amp;lt;forward_range R, class T, class Proj = identity,
+-           indirect_strict_weak_order&amp;lt;const T*, projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;&amp;gt; Comp = ranges::less&amp;gt;
+-  constexpr borrowed_iterator_t&amp;lt;R&amp;gt; lower_bound(R&amp;amp;&amp;amp; r, const T&amp;amp; value, Comp comp = {}, Proj proj = {});
+-}
+-```
+-* forward_iterator[link /reference/iterator/forward_iterator.md]
+-* sentinel_for[link /reference/iterator/sentinel_for.md]
+-* ranges::less[link /reference/functional/ranges_less.md]
+-* identity[link /reference/functional/identity.md]
+-* indirect_strict_weak_order[link /reference/iterator/indirect_strict_weak_order.md]
+-* projected[link /reference/iterator/projected.md]
+-* forward_range[link /reference/ranges/forward_range.md]
+-* iterator_t[link /reference/ranges/iterator_t.md]
+-* borrowed_iterator_t[link /reference/ranges/borrowed_iterator_t.md]
+-
+-## 概要
+-指定された要素以上の値が現れる最初の位置のイテレータを取得する。
+-
+-この関数の用途としては、ソート済み範囲に対して、任意の値を二分探索で見つけるために使用できる。[`std::multiset`](/reference/set/multiset.md)のように同じキーを持つ要素が複数あり、その全てを列挙したい場合にはこの関数の代わりに[`std::ranges::equal_range()`](ranges_equal_range.md)関数を使用できる。
+-
+-
+-## 事前条件
+-- `[first,last)` の要素 `e` は `e &amp;lt; value` または `comp(e, value)` によって[区分化](/reference/algorithm.md#sequence-is-partitioned)されていること。
+-  つまり、`e &amp;lt; value` または `comp(e, value)` が `true` となる全ての要素 `e` は、`false` となる全ての要素よりも左側（`first` に近い方）になければならない。
+-
+-
+-## 戻り値
+-`[first, last]` 内のイテレータ `i` のうち、以下の条件を満たす、最も右側（`first` から遠い方）のもの
+-
+-- `[first, i)` 内の全てのイテレータ `j` が `*j &amp;lt; value` または `comp(*j, value) != false` である
+-
+-（つまり、`value` 以上の要素のうち最初のものを指すイテレータ。`value` 以上の要素が無ければ `last`）
+-
+-
+-## 計算量
+-最大で log2(`last - first`) + O(1) 回の比較を行う
+-
+-## 例
+-```cpp example
+-#include &amp;lt;iostream&amp;gt;
+-#include &amp;lt;algorithm&amp;gt;
+-#include &amp;lt;vector&amp;gt;
+-#include &amp;lt;string&amp;gt;
+-
+-struct X {
+-  int id;
+-  std::string name;
+-};
+-
+-int main()
+-{
+-  // この関数単体としての使い方
+-  {
+-    // lower_bound で 4 以上の要素の位置を検索する場合、
+-    // 4 より小さい物と 4 以上の物がその順に並んでいれば、
+-    // 必ずしもソートされている必要はない。
+-    std::vector&amp;lt;int&amp;gt; v = {3, 1, 4, 6, 5};
+-
+-    // 4以上の要素を二分探索で検索
+-    auto it = std::ranges::lower_bound(v, 4);
+-    if (it != v.end()) {
+-      std::size_t pos = std::ranges::distance(v.begin(), it);
+-      std::cout &amp;lt;&amp;lt; *it &amp;lt;&amp;lt; &amp;#34; pos=&amp;#34; &amp;lt;&amp;lt; pos &amp;lt;&amp;lt; std::endl;
+-    }
+-  }
+-
+-  // 基本的な用途
+-  // ソート済み範囲から、特定の値を二分探索で見つける
+-  {
+-    std::vector&amp;lt;int&amp;gt; v = {3, 1, 4, 6, 5};
+-    std::ranges::sort(v);
+-
+-    // 二分探索で値4を検索
+-    auto it = std::ranges::lower_bound(v, 4);
+-    if (it != v.end() &amp;amp;&amp;amp; *it == 4) { // lower_boundでは4&amp;#34;以上&amp;#34;の値が見つかるので、
+-                                     // 値4を見つけたいなら検索結果の値を比較する必要がある
+-      std::size_t pos = std::ranges::distance(v.begin(), it);
+-      std::cout &amp;lt;&amp;lt; *it &amp;lt;&amp;lt; &amp;#34; pos=&amp;#34; &amp;lt;&amp;lt; pos &amp;lt;&amp;lt; std::endl;
+-    }
+-  }
+-
+-  // 要素の一部の値を比較して見つける
+-  {
+-    // 要素は複数のメンバ変数をもつ
+-    std::vector&amp;lt;X&amp;gt; v = {
+-      {1, &amp;#34;Carol&amp;#34;},
+-      {3, &amp;#34;Alice&amp;#34;},
+-      {4, &amp;#34;Bob&amp;#34;},
+-      {5, &amp;#34;Eve&amp;#34;},
+-      {6, &amp;#34;Dave&amp;#34;}
+-    };
+-
+-    const std::string key = &amp;#34;Bob&amp;#34;;
+-
+-    // X::nameメンバ変数をキーにして、
+-    // X::name == &amp;#34;Bob&amp;#34;となる要素を二分探索で見つける
+-    auto it = std::ranges::lower_bound(v, key, {}, &amp;amp;X::name);
+-
+-    if (it != v.end() &amp;amp;&amp;amp; it-&amp;gt;name == key) {
+-      std::size_t pos = std::ranges::distance(v.begin(), it);
+-      std::cout &amp;lt;&amp;lt; &amp;#34;id=&amp;#34; &amp;lt;&amp;lt; it-&amp;gt;id
+-                &amp;lt;&amp;lt; &amp;#34; name=&amp;#34; &amp;lt;&amp;lt; it-&amp;gt;name
+-                &amp;lt;&amp;lt; &amp;#34; pos=&amp;#34; &amp;lt;&amp;lt; pos
+-                &amp;lt;&amp;lt; std::endl;
+-    }
+-  }
+-}
+-```
+-* std::ranges::sort[link ranges_sort.md]
+-* std::ranges::distance[link /reference/iterator/ranges_distance.md]
+-* std::ranges::lower_bound[color ff0000]
+-
+-### 出力
+-```
+-4 pos=2
+-4 pos=2
+-id=4 name=Bob pos=2
+-```
+-
+-## バージョン
+-### 言語
+-- C++20
+-
+-### 処理系
+-- [Clang](/implementation.md#clang): ??
+-- [GCC](/implementation.md#gcc): 10.1.0
+-- [ICC](/implementation.md#icc): ??
+-- [Visual C++](/implementation.md#visual_cpp): 2019 Update 10
+-
+-## 参照
+-- [N4861 25 Algorithms library](https://timsong-cpp.github.io/cppwp/n4861/algorithms)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>ranges_max_element.md -- リンク修正 #919</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_max_element.html"/>
+      <id>7e37e927e5986b12e46fe6885c677c7cf4f80bd5:reference/algorithm/ranges_max_element.md</id>
+      <updated>2022-03-20T09:34:26+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_max_element.md b/reference/algorithm/ranges_max_element.md
+deleted file mode 100644
+index ed9768a1f..000000000
+--- a/reference/algorithm/ranges_max_element.md
++++ /dev/null
+@@ -1,126 +0,0 @@
+-# max_element
+-* algorithm[meta header]
+-* std::ranges[meta namespace]
+-* function template[meta id-type]
+-* cpp20[meta cpp]
+-
+-```cpp
+-namespace std {
+-  template&amp;lt;class ForwardIterator&amp;gt;
+-  ForwardIterator
+-    max_element(ForwardIterator first,
+-                ForwardIterator last); // (1) C++03
+-
+-  template&amp;lt;class ForwardIterator, class Compare&amp;gt;
+-  ForwardIterator
+-    max_element(ForwardIterator first,
+-                ForwardIterator last,
+-                Compare comp);         // (2) C++03
+-
+-  template &amp;lt;class ExecutionPolicy, class ForwardIterator&amp;gt;
+-  ForwardIterator
+-    max_element(ExecutionPolicy&amp;amp;&amp;amp; exec,
+-                ForwardIterator first,
+-                ForwardIterator last); // (3) C++17
+-
+-  template &amp;lt;class ExecutionPolicy, class ForwardIterator, class Compare&amp;gt;
+-  ForwardIterator
+-    max_element(ExecutionPolicy&amp;amp;&amp;amp; exec,
+-                ForwardIterator first,
+-                ForwardIterator last,
+-                Compare comp);         // (4) C++17
+-}
+-```
+-
+-## 概要
+-`[first, last)`の範囲において、最大要素を指す最初のイテレータを取得する。
+-
+-
+-
+-## 戻り値
+-`*j &amp;lt; *i`もしくは`comp(*j, *i)`の比較によって最大と判断された最初の要素を指すイテレータ
+-
+-
+-## 計算量
+-[`max`](max.md)`((last - first) - 1, 0)`回の比較を行う
+-
+-
+-## 例
+-```cpp example
+-#include &amp;lt;algorithm&amp;gt;
+-#include &amp;lt;cassert&amp;gt;
+-#include &amp;lt;utility&amp;gt;
+-#include &amp;lt;vector&amp;gt;
+-
+-int main()
+-{
+-  // (1)
+-  std::vector&amp;lt;int&amp;gt; v1 = {3, 1, 4};
+-
+-  decltype(v1)::iterator v1_max_element = std::max_element(v1.begin(), v1.end());
+-  assert(*v1_max_element == 4);
+-
+-
+-  // (2)
+-  std::vector&amp;lt;std::pair&amp;lt;int, int&amp;gt;&amp;gt; v2 = {{0, 3}, {1, 1}, {2, 4}};
+-
+-  decltype(v2)::iterator v2_max_element = std::max_element(v2.begin(), v2.end(), [](const auto&amp;amp; a, const auto&amp;amp; b) {
+-    return a.second &amp;lt; b.second;
+-  });
+-  assert(v2_max_element-&amp;gt;first == 2);
+-  assert(v2_max_element-&amp;gt;second == 4);
+-}
+-```
+-* std::max_element[color ff0000]
+-
+-### 出力
+-```
+-```
+-
+-
+-## 実装例
+-```cpp
+-template &amp;lt;class ForwardIterator&amp;gt;
+-ForwardIterator max_element(ForwardIterator first, ForwardIterator last)
+-{
+-  if (first == last)
+-    return first;
+-
+-  ForwardIterator result = first++;
+-  for (; first != last; ++first) {
+-    if (*result &amp;lt; *first) {
+-      result = first;
+-    }
+-  }
+-  return result;
+-}
+-
+-template &amp;lt;class ForwardIterator, class Compare&amp;gt;
+-ForwardIterator max_element(ForwardIterator first, ForwardIterator last, Compare comp)
+-{
+-  if (first == last)
+-    return first;
+-
+-  ForwardIterator result = first++;
+-  for (; first != last; ++first) {
+-    if (comp(*result, *first)) {
+-      result = first;
+-    }
+-  }
+-  return result;
+-}
+-```
+-
+-
+-## バージョン
+-### 言語
+-- C++20
+-
+-### 処理系
+-- [Clang](/implementation.md#clang): ??
+-- [GCC](/implementation.md#gcc): 10.1.0
+-- [ICC](/implementation.md#icc): ??
+-- [Visual C++](/implementation.md#visual_cpp): 2019 Update 10
+-
+-## 参照
+-- [N4861 25 Algorithms library](https://timsong-cpp.github.io/cppwp/n4861/algorithms)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>lower_bound -- リンク修正 #919</title>
@@ -734,739 +1043,6 @@ index c7f2b0cef..9c7922ca3 100644
  
  
  ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>algorithm -- ソート系関数の残りの説明を追加 #919</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm.html"/>
-      <id>93d43ae764c0123c6b7c46d86c77d709314000e4:reference/algorithm.md</id>
-      <updated>2022-03-20T07:54:03+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm.md b/reference/algorithm.md
-index 9f329068e..8949fa970 100644
---- a/reference/algorithm.md
-+++ b/reference/algorithm.md
-@@ -275,11 +275,11 @@ ranges::sort(pv, {}, &amp;amp;Parson::name);
- | [`is_sorted`](algorithm/is_sorted.md)                 | ソート済みか判定する | C++11 |
- | [`is_sorted_until`](algorithm/is_sorted_until.md)     | ソート済みか判定し、ソートされていない位置のイテレータを取得する | C++11 |
- | [`ranges::sort`](algorithm/ranges_sort.md)                           | 範囲を並べ替える                                                 | C++20 |
--| [`ranges::stable_sort`](algorithm/ranges_stable_sort.md.nolink)             | 範囲を安定ソートで並べ替える                                     | C++20 |
--| [`ranges::partial_sort`](algorithm/ranges_partial_sort.md.nolink)           | 範囲を部分的にソートし、先頭N個を並んだ状態にする                | C++20 |
--| [`ranges::partial_sort_copy`](algorithm/ranges_partial_sort_copy.md.nolink) | 範囲を部分的にソートした結果を他の範囲にコピーする               | C++20 |
--| [`ranges::is_sorted`](algorithm/ranges_is_sorted.md.nolink)                 | ソート済みか判定する                                             | C++20 |
--| [`ranges::is_sorted_until`](algorithm/ranges_is_sorted_until.md.nolink)     | ソート済みか判定し、ソートされていない位置のイテレータを取得する | C++20 |
-+| [`ranges::stable_sort`](algorithm/ranges_stable_sort.md)             | 範囲を安定ソートで並べ替える                                     | C++20 |
-+| [`ranges::partial_sort`](algorithm/ranges_partial_sort.md)           | 範囲を部分的にソートし、先頭N個を並んだ状態にする                | C++20 |
-+| [`ranges::partial_sort_copy`](algorithm/ranges_partial_sort_copy.md) | 範囲を部分的にソートした結果を他の範囲にコピーする               | C++20 |
-+| [`ranges::is_sorted`](algorithm/ranges_is_sorted.md)                 | ソート済みか判定する                                             | C++20 |
-+| [`ranges::is_sorted_until`](algorithm/ranges_is_sorted_until.md)     | ソート済みか判定し、ソートされていない位置のイテレータを取得する | C++20 |
- 
- ### N 番目の要素
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>is_sorted -- ソート系関数の残りの説明を追加 #919</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_is_sorted.html"/>
-      <id>93d43ae764c0123c6b7c46d86c77d709314000e4:reference/algorithm/ranges_is_sorted.md</id>
-      <updated>2022-03-20T07:54:03+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_is_sorted.md b/reference/algorithm/ranges_is_sorted.md
-new file mode 100644
-index 000000000..6b9bf9a3a
---- /dev/null
-+++ b/reference/algorithm/ranges_is_sorted.md
-@@ -0,0 +1,73 @@
-+# is_sorted
-+* algorithm[meta header]
-+* std::ranges[meta namespace]
-+* function template[meta id-type]
-+* cpp20[meta cpp]
-+* cpp11[meta cpp]
-+
-+```cpp
-+namespace std::ranges {
-+  template&amp;lt;forward_iterator I, sentinel_for&amp;lt;I&amp;gt; S, class Proj = identity,
-+           indirect_strict_weak_order&amp;lt;projected&amp;lt;I, Proj&amp;gt;&amp;gt; Comp = ranges::less&amp;gt;
-+  constexpr bool is_sorted(I first, S last, Comp comp = {}, Proj proj = {});
-+
-+  template&amp;lt;forward_range R, class Proj = identity,
-+           indirect_strict_weak_order&amp;lt;projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;&amp;gt; Comp = ranges::less&amp;gt;
-+  constexpr bool is_sorted(R&amp;amp;&amp;amp; r, Comp comp = {}, Proj proj = {});
-+}
-+```
-+* forward_iterator[link /reference/iterator/forward_iterator.md]
-+* sentinel_for[link /reference/iterator/sentinel_for.md]
-+* ranges::less[link /reference/functional/ranges_less.md]
-+* identity[link /reference/functional/identity.md]
-+* indirect_strict_weak_order[link /reference/iterator/indirect_strict_weak_order.md]
-+* projected[link /reference/iterator/projected.md]
-+* forward_range[link /reference/ranges/forward_range.md]
-+* iterator_t[link /reference/ranges/iterator_t.md]
-+
-+## 概要
-+与えられた範囲がソート済みか判定する。
-+
-+### 戻り値
-+- (1) : [`ranges::is_sorted_until`](/reference/algorithm/ranges_is_sorted_until.md)`(first, last, comp, proj) == last`
-+- (2) : [`ranges::is_sorted_until`](/reference/algorithm/ranges_is_sorted_until.md)`(r, comp, proj) == last`
-+
-+## 例
-+```cpp example
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;vector&amp;gt;
-+#include &amp;lt;algorithm&amp;gt;
-+
-+int main()
-+{
-+  std::vector&amp;lt;int&amp;gt; v = {3, 1, 4, 2, 5};
-+
-+  std::cout &amp;lt;&amp;lt; std::boolalpha;
-+  std::cout &amp;lt;&amp;lt; &amp;#34;before: is sorted? &amp;#34; &amp;lt;&amp;lt; std::ranges::is_sorted(v) &amp;lt;&amp;lt; std::endl;
-+
-+  std::ranges::sort(v);
-+
-+  std::cout &amp;lt;&amp;lt; &amp;#34; after: is sorted? &amp;#34; &amp;lt;&amp;lt; std::ranges::is_sorted(v) &amp;lt;&amp;lt; std::endl;
-+}
-+```
-+* std::ranges::sort[link ranges_sort.md]
-+* std::ranges::is_sorted[color ff0000]
-+
-+### 出力
-+```
-+before: is sorted? false
-+ after: is sorted? true
-+```
-+
-+## バージョン
-+### 言語
-+- C++20
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): 10.1.0
-+- [ICC](/implementation.md#icc): ??
-+- [Visual C++](/implementation.md#visual_cpp): 2019 Update 10
-+
-+## 参照
-+- [N4861 25 Algorithms library](https://timsong-cpp.github.io/cppwp/n4861/algorithms)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>is_sorted_until -- ソート系関数の残りの説明を追加 #919</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_is_sorted_until.html"/>
-      <id>93d43ae764c0123c6b7c46d86c77d709314000e4:reference/algorithm/ranges_is_sorted_until.md</id>
-      <updated>2022-03-20T07:54:03+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_is_sorted_until.md b/reference/algorithm/ranges_is_sorted_until.md
-new file mode 100644
-index 000000000..56950e369
---- /dev/null
-+++ b/reference/algorithm/ranges_is_sorted_until.md
-@@ -0,0 +1,119 @@
-+# is_sorted_until
-+* algorithm[meta header]
-+* std::ranges[meta namespace]
-+* function template[meta id-type]
-+* cpp20[meta cpp]
-+
-+```cpp
-+namespace std {
-+  template&amp;lt;forward_iterator I, sentinel_for&amp;lt;I&amp;gt; S, class Proj = identity,
-+           indirect_strict_weak_order&amp;lt;projected&amp;lt;I, Proj&amp;gt;&amp;gt; Comp = ranges::less&amp;gt;
-+  constexpr I is_sorted_until(I first, S last, Comp comp = {}, Proj proj = {});
-+
-+  template&amp;lt;forward_range R, class Proj = identity,
-+           indirect_strict_weak_order&amp;lt;projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;&amp;gt; Comp = ranges::less&amp;gt;
-+  constexpr borrowed_iterator_t&amp;lt;R&amp;gt; is_sorted_until(R&amp;amp;&amp;amp; r, Comp comp = {}, Proj proj = {});
-+}
-+```
-+* forward_iterator[link /reference/iterator/forward_iterator.md]
-+* sentinel_for[link /reference/iterator/sentinel_for.md]
-+* ranges::less[link /reference/functional/ranges_less.md]
-+* identity[link /reference/functional/identity.md]
-+* indirect_strict_weak_order[link /reference/iterator/indirect_strict_weak_order.md]
-+* projected[link /reference/iterator/projected.md]
-+* forward_range[link /reference/ranges/forward_range.md]
-+* iterator_t[link /reference/ranges/iterator_t.md]
-+* borrowed_iterator_t[link /reference/ranges/borrowed_iterator_t.md]
-+
-+## 概要
-+ソート済みか判定し、ソートされていない位置のイテレータを取得する
-+
-+* (1): イテレーターペアで範囲を指定する
-+* (2): 範囲を直接指定する
-+
-+## 戻り値
-+[`distance`](/reference/iterator/distance.md)`(first, last) &amp;lt; 2` なら `last` を返す。そうでない場合、`[first,last]` の中でソートされている範囲を `[first,i)` としたとき、そのイテレータ `i` を返す。
-+
-+
-+## 計算量
-+線形時間
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;vector&amp;gt;
-+#include &amp;lt;algorithm&amp;gt;
-+
-+int main()
-+{
-+  std::vector&amp;lt;int&amp;gt; v = {3, 1, 4, 2, 5};
-+
-+  std::cout &amp;lt;&amp;lt; std::boolalpha;
-+  std::cout &amp;lt;&amp;lt; &amp;#34;before: is sorted? &amp;#34;
-+            &amp;lt;&amp;lt; (std::ranges::is_sorted_until(v) == v.end()) &amp;lt;&amp;lt; std::endl;
-+
-+  std::sort(v.begin(), v.end());
-+
-+  std::cout &amp;lt;&amp;lt; &amp;#34; after: is sorted? &amp;#34;
-+            &amp;lt;&amp;lt; (std::ranges::is_sorted_until(v) == v.end()) &amp;lt;&amp;lt; std::endl;
-+}
-+```
-+* std::ranges::is_sorted_until[color ff0000]
-+
-+### 出力
-+```
-+before: is sorted? false
-+ after: is sorted? true
-+```
-+
-+
-+## 実装例
-+```cpp
-+
-+struct is_sorted_until_impl {
-+  template&amp;lt;forward_iterator I, sentinel_for&amp;lt;I&amp;gt; S, class Proj = identity,
-+           indirect_strict_weak_order&amp;lt;projected&amp;lt;I, Proj&amp;gt;&amp;gt; Comp = ranges::less&amp;gt;
-+  constexpr I operator()(I first, S last, Comp comp = {}, Proj proj = {}) {
-+    auto it = first;
-+    if (it == last || ++it == last)
-+      return last;
-+    while (it != last &amp;amp;&amp;amp; *first &amp;lt; *it)
-+      ++first, ++it;
-+    return it;
-+  }
-+
-+  template&amp;lt;forward_range R, class Proj = identity,
-+           indirect_strict_weak_order&amp;lt;projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;&amp;gt; Comp = ranges::less&amp;gt;
-+  constexpr borrowed_iterator_t&amp;lt;R&amp;gt; operator()(R&amp;amp;&amp;amp; r, Comp comp = {}, Proj proj = {}) {
-+    return (*this)(begin(r), end(r), ref(comp), ref(proj));
-+  }
-+};
-+
-+inline constexpr is_sorted_until_impl is_sorted_until;
-+```
-+* forward_iterator[link /reference/iterator/forward_iterator.md]
-+* sentinel_for[link /reference/iterator/sentinel_for.md]
-+* ranges::less[link /reference/functional/ranges_less.md]
-+* identity[link /reference/functional/identity.md]
-+* indirect_strict_weak_order[link /reference/iterator/indirect_strict_weak_order.md]
-+* projected[link /reference/iterator/projected.md]
-+* forward_range[link /reference/ranges/forward_range.md]
-+* iterator_t[link /reference/ranges/iterator_t.md]
-+* borrowed_iterator_t[link /reference/ranges/borrowed_iterator_t.md]
-+* begin[link /reference/ranges/begin.md]
-+* end[link /reference/ranges/end.md]
-+* ref[link /reference/functional/ref.md]
-+
-+## バージョン
-+### 言語
-+- C++20
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): 10.1.0
-+- [ICC](/implementation.md#icc): ??
-+- [Visual C++](/implementation.md#visual_cpp): 2019 Update 10
-+
-+## 参照
-+- [N4861 25 Algorithms library](https://timsong-cpp.github.io/cppwp/n4861/algorithms)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>partial_sort -- ソート系関数の残りの説明を追加 #919</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_partial_sort.html"/>
-      <id>93d43ae764c0123c6b7c46d86c77d709314000e4:reference/algorithm/ranges_partial_sort.md</id>
-      <updated>2022-03-20T07:54:03+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_partial_sort.md b/reference/algorithm/ranges_partial_sort.md
-new file mode 100644
-index 000000000..6ea70e671
---- /dev/null
-+++ b/reference/algorithm/ranges_partial_sort.md
-@@ -0,0 +1,76 @@
-+# partial_sort
-+* algorithm[meta header]
-+* std::ranges[meta namespace]
-+* function template[meta id-type]
-+* cpp20[meta cpp]
-+
-+```cpp
-+namespace std::ranges {
-+  template&amp;lt;random_access_iterator I, sentinel_for&amp;lt;I&amp;gt; S, class Comp = ranges::less, class Proj = identity&amp;gt;
-+    requires sortable&amp;lt;I, Comp, Proj&amp;gt;
-+  constexpr I partial_sort(I first, I middle, S last, Comp comp = {}, Proj proj = {});
-+}
-+```
-+* random_access_iterator[link /reference/iterator/random_access_iterator.md]
-+* sentinel_for[link /reference/iterator/sentinel_for.md]
-+* ranges::less[link /reference/functional/ranges_less.md]
-+* identity[link /reference/functional/identity.md]
-+* sortable[link /reference/iterator/sortable.md]
-+
-+
-+## 概要
-+範囲を部分的にソートし、先頭 `N` 個を順に並んだ状態にする。`N` は `middle - first` で決まる。
-+
-+この関数は、「売り上げランキング トップ1位から10位まで」のように、全体ではなく最高順位から途中までの順位がわかればよい状況で、全体を並び替える[`sort()`](sort.md)関数の代わりに使用できる。
-+
-+なお、トップ10がどれかわかれば十分である（1位から10位までは順不同でよい）ような場合、[`nth_element()`](nth_element.md)が使用できる。
-+
-+## 効果
-+`[first,last)` にある要素の中から、`middle - first` 個の要素をソート済みの状態で `[first,middle)` に配置する。残りの `[middle,last)` にある要素は unspecified order に配置される。
-+
-+
-+## 戻り値
-+`last`
-+
-+## 計算量
-+ほぼ `(last - first) * log(middle - first)` 回の比較を行う
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;vector&amp;gt;
-+#include &amp;lt;algorithm&amp;gt;
-+
-+int main()
-+{
-+  std::vector&amp;lt;int&amp;gt; v = {3, 1, 4, 2, 5};
-+
-+  // 先頭2要素を並んだ状態にする
-+  std::ranges::partial_sort(v.begin(), v.begin() + 2, v.end());
-+
-+  for (int i : v) {
-+    std::cout &amp;lt;&amp;lt; i;
-+  }
-+  std::cout &amp;lt;&amp;lt; std::endl;
-+}
-+```
-+* std::ranges::partial_sort[color ff0000]
-+
-+### 出力
-+```
-+12435
-+```
-+
-+## バージョン
-+### 言語
-+- C++20
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): 10.1.0
-+- [ICC](/implementation.md#icc): ??
-+- [Visual C++](/implementation.md#visual_cpp): 2019 Update 10
-+
-+## 参照
-+- [N4861 25 Algorithms library](https://timsong-cpp.github.io/cppwp/n4861/algorithms)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>partial_sort_copy -- ソート系関数の残りの説明を追加 #919</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_partial_sort_copy.html"/>
-      <id>93d43ae764c0123c6b7c46d86c77d709314000e4:reference/algorithm/ranges_partial_sort_copy.md</id>
-      <updated>2022-03-20T07:54:03+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_partial_sort_copy.md b/reference/algorithm/ranges_partial_sort_copy.md
-new file mode 100644
-index 000000000..c7f2b0cef
---- /dev/null
-+++ b/reference/algorithm/ranges_partial_sort_copy.md
-@@ -0,0 +1,99 @@
-+# partial_sort_copy
-+* algorithm[meta header]
-+* std::ranges[meta namespace]
-+* function template[meta id-type]
-+* cpp20[meta cpp]
-+
-+```cpp
-+namespace std::ranges {
-+  template&amp;lt;class I, class O&amp;gt;
-+  using partial_sort_copy_result = in_out_result&amp;lt;I, O&amp;gt;;
-+
-+  template&amp;lt;input_iterator I1, sentinel_for&amp;lt;I1&amp;gt; S1, random_access_iterator I2, sentinel_for&amp;lt;I2&amp;gt; S2,
-+           class Comp = ranges::less, class Proj1 = identity, class Proj2 = identity&amp;gt;
-+    requires indirectly_copyable&amp;lt;I1, I2&amp;gt; &amp;amp;&amp;amp; sortable&amp;lt;I2, Comp, Proj2&amp;gt; &amp;amp;&amp;amp;
-+             indirect_strict_weak_order&amp;lt;Comp, projected&amp;lt;I1, Proj1&amp;gt;, projected&amp;lt;I2, Proj2&amp;gt;&amp;gt;
-+  constexpr partial_sort_copy_result&amp;lt;I1, I2&amp;gt;
-+    partial_sort_copy(I1 first, S1 last, I2 result_first, S2 result_last, Comp comp = {}, Proj1 proj1 = {}, Proj2 proj2 = {}); // (1)
-+
-+  template&amp;lt;input_range R1, random_access_range R2,
-+           class Comp = ranges::less, class Proj1 = identity, class Proj2 = identity&amp;gt;
-+    requires indirectly_copyable&amp;lt;iterator_t&amp;lt;R1&amp;gt;, iterator_t&amp;lt;R2&amp;gt;&amp;gt; &amp;amp;&amp;amp;
-+             sortable&amp;lt;iterator_t&amp;lt;R2&amp;gt;, Comp, Proj2&amp;gt; &amp;amp;&amp;amp;
-+             indirect_strict_weak_order&amp;lt;Comp, projected&amp;lt;iterator_t&amp;lt;R1&amp;gt;, Proj1&amp;gt;, projected&amp;lt;iterator_t&amp;lt;R2&amp;gt;, Proj2&amp;gt;&amp;gt;
-+  constexpr partial_sort_copy_result&amp;lt;borrowed_iterator_t&amp;lt;R1&amp;gt;, borrowed_iterator_t&amp;lt;R2&amp;gt;&amp;gt;
-+    partial_sort_copy(R1&amp;amp;&amp;amp; r, R2&amp;amp;&amp;amp; result_r, Comp comp = {}, Proj1 proj1 = {}, Proj2 proj2 = {});                              // (2)
-+}
-+```
-+* in_out_result[link in_out_result.md.nolink]
-+* input_iterator[link /reference/iterator/input_iterator.md]
-+* random_access_iterator[link /reference/iterator/random_access_iterator.md]
-+* sentinel_for[link /reference/iterator/sentinel_for.md]
-+* ranges::less[link /reference/functional/ranges_less.md]
-+* identity[link /reference/functional/identity.md]
-+* indirectly_copyable[link /reference/iterator/indirectly_copyable.md]
-+* indirect_strict_weak_order[link /reference/iterator/indirect_strict_weak_order.md]
-+* projected[link /reference/iterator/projected.md]
-+* sortable[link /reference/iterator/sortable.md]
-+* input_range[link /reference/ranges/input_range.md]
-+* random_access_range[link /reference/ranges/random_access_range.md]
-+* iterator_t[link /reference/ranges/iterator_t.md]
-+* borrowed_iterator_t[link /reference/ranges/borrowed_iterator_t.md]
-+
-+## 概要
-+範囲を部分的にソートした結果を他の範囲にコピーする
-+
-+* (1): イテレーターペアで範囲を指定する
-+* (2): 範囲を直接指定する
-+
-+## 効果
-+`[first,last)` にある要素の中から、[`min`](/reference/algorithm/min.md)`(last - first, result_last - result_first)` 個の要素をソート済みの状態で `[result_first,result_first +` [`min`](/reference/algorithm/min.md)`(last - first, result_last - result_first))` に配置する。
-+
-+
-+## 戻り値
-+`result_last` と `result_first + (last - first)` で小さい方が返される
-+
-+
-+## 計算量
-+ほぼ `(last - first) * log(min(last - first, result_last - result_- first))` 回の比較を行う
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;vector&amp;gt;
-+#include &amp;lt;algorithm&amp;gt;
-+
-+int main()
-+{
-+  std::vector&amp;lt;int&amp;gt; v = {3, 1, 4, 2, 5};
-+
-+  // vから小さい順に2要素取り出す
-+  std::vector&amp;lt;int&amp;gt; result(2);
-+  std::ranges::partial_sort_copy(v, result);
-+
-+  for (int i : result) {
-+    std::cout &amp;lt;&amp;lt; i;
-+  }
-+  std::cout &amp;lt;&amp;lt; std::endl;
-+}
-+```
-+* std::ranges::partial_sort_copy[color ff0000]
-+
-+### 出力
-+```
-+12
-+```
-+
-+## バージョン
-+### 言語
-+- C++20
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): 10.1.0
-+- [ICC](/implementation.md#icc): ??
-+- [Visual C++](/implementation.md#visual_cpp): 2019 Update 10
-+
-+## 参照
-+- [N4861 25 Algorithms library](https://timsong-cpp.github.io/cppwp/n4861/algorithms)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>partition_copy -- ソート系関数の残りの説明を追加 #919</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_partition_copy.html"/>
-      <id>93d43ae764c0123c6b7c46d86c77d709314000e4:reference/algorithm/ranges_partition_copy.md</id>
-      <updated>2022-03-20T07:54:03+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_partition_copy.md b/reference/algorithm/ranges_partition_copy.md
-new file mode 100644
-index 000000000..2dc175e2c
---- /dev/null
-+++ b/reference/algorithm/ranges_partition_copy.md
-@@ -0,0 +1,125 @@
-+# partition_copy
-+* algorithm[meta header]
-+* std::ranges[meta namespace]
-+* function template[meta id-type]
-+* cpp20[meta cpp]
-+* cpp11[meta cpp]
-+
-+```cpp
-+namespace std {
-+  template &amp;lt;class InputIterator,
-+            class OutputIterator1,
-+            class OutputIterator2,
-+            class Predicate&amp;gt;
-+  pair&amp;lt;OutputIterator1, OutputIterator2&amp;gt;
-+    partition_copy(InputIterator first,
-+                   InputIterator last,
-+                   OutputIterator1 out_true,
-+                   OutputIterator2 out_false,
-+                   Predicate pred);            // (1) C++11
-+
-+  template &amp;lt;class InputIterator,
-+            class OutputIterator1,
-+            class OutputIterator2,
-+            class Predicate&amp;gt;
-+  constexpr pair&amp;lt;OutputIterator1, OutputIterator2&amp;gt;
-+    partition_copy(InputIterator first,
-+                   InputIterator last,
-+                   OutputIterator1 out_true,
-+                   OutputIterator2 out_false,
-+                   Predicate pred);            // (1) C++20
-+
-+  template &amp;lt;class ExecutionPolicy,
-+            class ForwardIterator,
-+            class ForwardIterator1,
-+            class ForwardIterator2,
-+            class Predicate&amp;gt;
-+  pair&amp;lt;ForwardIterator1, ForwardIterator2&amp;gt;
-+    partition_copy(ExecutionPolicy&amp;amp;&amp;amp; exec,
-+                   ForwardIterator first,
-+                   ForwardIterator last,
-+                   ForwardIterator1 out_true,
-+                   ForwardIterator2 out_false,
-+                   Predicate pred);            // (2) C++17
-+}
-+```
-+* pair[link /reference/utility/pair.md]
-+
-+## 概要
-+与えられた範囲を条件によって 2 つの出力の範囲へ分けてコピーする。
-+
-+
-+## 要件
-+- `InputIterator` の value type は `Assignable` で、`out_true` と `out_false` の `OutputIterator` へ書き込み可能で、`Predicate` の argument type へ変換可能でなければならない。
-+- 入力範囲は出力範囲のどちらとも重なっていてはならない。
-+
-+
-+## 効果
-+`[first,last)` 内にあるそれぞれのイテレータ `i` について、`pred(*i)` が `true` なら `*i` を `out_true` へコピーし、そうでない場合は `out_false` へコピーする。
-+
-+
-+## 戻り値
-+`first` には `out_true` の終端が、`second` には `out_false` の終端が格納された[`pair`](/reference/utility/pair.md)オブジェクトを返す。
-+
-+
-+## 計算量
-+正確に `last - first` 回述語が適用される。
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;vector&amp;gt;
-+#include &amp;lt;algorithm&amp;gt;
-+#include &amp;lt;iterator&amp;gt;
-+#include &amp;lt;string&amp;gt;
-+
-+void print(const std::string&amp;amp; name, const std::vector&amp;lt;int&amp;gt;&amp;amp; v)
-+{
-+  std::cout &amp;lt;&amp;lt; name &amp;lt;&amp;lt; &amp;#34; : &amp;#34;;
-+  std::for_each(v.begin(), v.end(), [](int x) {
-+    std::cout &amp;lt;&amp;lt; x &amp;lt;&amp;lt; &amp;#34;,&amp;#34;;
-+  });
-+  std::cout &amp;lt;&amp;lt; std::endl;
-+}
-+
-+bool is_even(int x) { return x % 2 == 0; }
-+
-+int main()
-+{
-+  std::vector&amp;lt;int&amp;gt; v = {1, 2, 3, 4, 5};
-+
-+  // 偶数グループと奇数グループに分ける
-+  std::vector&amp;lt;int&amp;gt; evens;
-+  std::vector&amp;lt;int&amp;gt; odds;
-+  std::partition_copy(v.begin(), v.end(),
-+                      std::back_inserter(evens),
-+                      std::back_inserter(odds),
-+                      is_even);
-+
-+  print(&amp;#34;v&amp;#34;, v);
-+  print(&amp;#34;evens&amp;#34;, evens);
-+  print(&amp;#34;odds&amp;#34;, odds);
-+}
-+```
-+* std::partition_copy[color ff0000]
-+
-+### 出力
-+```
-+v : 1,2,3,4,5,
-+evens : 2,4,
-+odds : 1,3,5,
-+```
-+
-+## バージョン
-+### 言語
-+- C++20
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): 10.1.0
-+- [ICC](/implementation.md#icc): ??
-+- [Visual C++](/implementation.md#visual_cpp): 2019 Update 10
-+
-+## 参照
-+- [N4861 25 Algorithms library](https://timsong-cpp.github.io/cppwp/n4861/algorithms)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>stable_sort -- ソート系関数の残りの説明を追加 #919</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_stable_sort.html"/>
-      <id>93d43ae764c0123c6b7c46d86c77d709314000e4:reference/algorithm/ranges_stable_sort.md</id>
-      <updated>2022-03-20T07:54:03+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_stable_sort.md b/reference/algorithm/ranges_stable_sort.md
-new file mode 100644
-index 000000000..b65a6a10c
---- /dev/null
-+++ b/reference/algorithm/ranges_stable_sort.md
-@@ -0,0 +1,86 @@
-+# stable_sort
-+* algorithm[meta header]
-+* std::ranges[meta namespace]
-+* function template[meta id-type]
-+* cpp20[meta cpp]
-+
-+```cpp
-+namespace std::ranges {
-+  template&amp;lt;random_access_iterator I, sentinel_for&amp;lt;I&amp;gt; S, class Comp = ranges::less, class Proj = identity&amp;gt;
-+    requires sortable&amp;lt;I, Comp, Proj&amp;gt;
-+  I stable_sort(I first, S last, Comp comp = {}, Proj proj = {});            // (1)
-+
-+  template&amp;lt;random_access_range R, class Comp = ranges::less, class Proj = identity&amp;gt;
-+    requires sortable&amp;lt;iterator_t&amp;lt;R&amp;gt;, Comp, Proj&amp;gt;
-+  borrowed_iterator_t&amp;lt;R&amp;gt; stable_sort(R&amp;amp;&amp;amp; r, Comp comp = {}, Proj proj = {}); // (2)
-+}
-+```
-+* random_access_iterator[link /reference/iterator/random_access_iterator.md]
-+* sentinel_for[link /reference/iterator/sentinel_for.md]
-+* ranges::less[link /reference/functional/ranges_less.md]
-+* identity[link /reference/functional/identity.md]
-+* sortable[link /reference/iterator/sortable.md]
-+* random_access_range[link /reference/ranges/random_access_range.md]
-+* iterator_t[link /reference/ranges/iterator_t.md]
-+* borrowed_iterator_t[link /reference/ranges/borrowed_iterator_t.md]
-+
-+## 概要
-+範囲を安定ソートで並べ替える
-+
-+* (1): イテレーターペアで範囲を指定する
-+* (2): 範囲を直接指定する
-+
-+## 効果
-+`[first,last)` の範囲をソートする
-+
-+
-+## 戻り値
-+`last`
-+
-+## 計算量
-+最大で N log^2(N) （N == `last - first`）回の比較を行う。ただし、十分なメモリがあれば N log(N) になる。
-+
-+
-+## 備考
-+同じ値が複数あった場合に、ソート前の位置関係が保たれる、「安定ソート」を行う。
-+一般的にマージソートで実装される。
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;vector&amp;gt;
-+#include &amp;lt;algorithm&amp;gt;
-+
-+int main()
-+{
-+  std::vector&amp;lt;int&amp;gt; v = {3, 1, 4, 2, 5};
-+
-+  // 並べ替える
-+  std::ranges::stable_sort(v);
-+
-+  for (int i : v) {
-+    std::cout &amp;lt;&amp;lt; i;
-+  }
-+  std::cout &amp;lt;&amp;lt; std::endl;
-+}
-+```
-+* std::stable_sort[color ff0000]
-+
-+### 出力
-+```
-+12345
-+```
-+
-+## バージョン
-+### 言語
-+- C++20
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): 10.1.0
-+- [ICC](/implementation.md#icc): ??
-+- [Visual C++](/implementation.md#visual_cpp): 2019 Update 10
-+
-+## 参照
-+- [N4861 25 Algorithms library](https://timsong-cpp.github.io/cppwp/n4861/algorithms)
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
