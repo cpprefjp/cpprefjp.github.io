@@ -189,12 +189,12 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2021-10-20T02:53:54">
-        2021年10月20日 02時53分54秒
+      <span itemprop="datePublished" content="2022-03-23T23:38:25">
+        2022年03月23日 23時38分25秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">onihusube</span>
+        <span itemprop="name">Tetsuro Matsumura</span>
       </span>
       が更新
     </small></p>
@@ -369,6 +369,53 @@
 <h3>出力</h3>
 <p><pre><code>1
 </code></pre></p>
+<h2>実装例</h2>
+<p><div class="codehilite"><pre><span></span><code><span class="k">namespace</span> <span class="n">std</span><span class="o">::</span><span class="n">ranges</span> <span class="p">{</span>
+  <span class="k">template</span><span class="o">&lt;</span><span class="n"><a href="https://cpprefjp.github.io/reference/concepts/copy_constructible.html">copy_constructible</a></span> <span class="n">T</span><span class="o">&gt;</span>
+    <span class="n">requires</span> <span class="n"><a href="https://cpprefjp.github.io/reference/type_traits/is_object.html">is_object_v</a></span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span>
+  <span class="k">class</span> <span class="nc">single_view</span> <span class="o">:</span> <span class="k">public</span> <span class="n"><a href="https://cpprefjp.github.io/reference/ranges/view_interface.html">view_interface</a></span><span class="o">&lt;</span><span class="n">single_view</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span> <span class="p">{</span>
+  <span class="k">private</span><span class="o">:</span>
+    <span class="n"><a href="https://cpprefjp.github.io/reference/ranges/copyable_box.html">copyable-box</a></span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">value_</span><span class="p">;</span>
+
+  <span class="k">public</span><span class="o">:</span>
+    <span class="n">single_view</span><span class="p">()</span> <span class="n">requires</span> <span class="n"><a href="https://cpprefjp.github.io/reference/concepts/default_initializable.html">default_initializable</a></span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+    <span class="k">constexpr</span> <span class="k">explicit</span> <span class="nf">single_view</span><span class="p">(</span><span class="k">const</span> <span class="n">T</span><span class="o">&amp;</span> <span class="n">t</span><span class="p">)</span><span class="o">:</span> <span class="n">value_</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="p">{</span>
+    <span class="p">}</span>
+    <span class="k">constexpr</span> <span class="k">explicit</span> <span class="nf">single_view</span><span class="p">(</span><span class="n">T</span><span class="o">&amp;&amp;</span> <span class="n">t</span><span class="p">)</span><span class="o">:</span> <span class="n">value_</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="p">{</span>
+    <span class="p">}</span>
+    <span class="k">template</span><span class="o">&lt;</span><span class="n">class</span><span class="p">...</span> <span class="n">Args</span><span class="o">&gt;</span>
+      <span class="n">requires</span> <span class="n"><a href="https://cpprefjp.github.io/reference/concepts/constructible_from.html">constructible_from</a></span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Args</span><span class="p">...</span><span class="o">&gt;</span>
+    <span class="k">constexpr</span> <span class="k">explicit</span> <span class="n">single_view</span><span class="p">(</span><span class="n">in_place_t</span><span class="p">,</span> <span class="n">Args</span><span class="o">&amp;&amp;</span><span class="p">...</span> <span class="n">args</span><span class="p">)</span><span class="o">:</span> <span class="n">value_</span><span class="p">{</span><span class="n">in_place</span><span class="p">,</span> <span class="n">forward</span><span class="o">&lt;</span><span class="n">Args</span><span class="o">&gt;</span><span class="p">(</span><span class="n">args</span><span class="p">)...}</span> <span class="p">{</span>
+    <span class="p">}</span>
+
+    <span class="k">constexpr</span> <span class="n">T</span><span class="o">*</span> <span class="n">begin</span><span class="p">()</span> <span class="k">noexcept</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="n">data</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="k">constexpr</span> <span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="n">begin</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="n">data</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="k">constexpr</span> <span class="n">T</span><span class="o">*</span> <span class="n">end</span><span class="p">()</span> <span class="k">noexcept</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="n">data</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">constexpr</span> <span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="n">end</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="n">data</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">size_t</span> <span class="n">size</span><span class="p">()</span> <span class="k">noexcept</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">constexpr</span> <span class="n">T</span><span class="o">*</span> <span class="n">data</span><span class="p">()</span> <span class="k">noexcept</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="n">value_</span><span class="p">.</span><span class="k">operator</span><span class="o">-&gt;</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="k">constexpr</span> <span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="n">data</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="n">value_</span><span class="p">.</span><span class="k">operator</span><span class="o">-&gt;</span><span class="p">();</span>
+    <span class="p">}</span>
+  <span class="p">};</span>
+
+  <span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="o">&gt;</span>
+    <span class="n">single_view</span><span class="p">(</span><span class="n">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">single_view</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
 <h2>バージョン</h2>
 <h3>言語</h3>
 <ul>
