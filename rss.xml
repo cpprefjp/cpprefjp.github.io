@@ -2,9 +2,115 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2022-04-08T15:04:53.219937</updated>
-  <id>22a9454e-4227-4d25-823f-2047b33f88d1</id>
+  <updated>2022-04-08T16:50:37.739582</updated>
+  <id>c4556ae0-8853-4942-94ae-018aca654814</id>
 
+  
+    <entry>
+      <title>basic_istream_view -- 実装例を追加 #713</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/basic_istream_view.html"/>
+      <id>20ab3c80fed65840954944911824412362ad958f:reference/ranges/basic_istream_view.md</id>
+      <updated>2022-04-09T01:44:36+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/basic_istream_view.md b/reference/ranges/basic_istream_view.md
+index 7520b6153..c030b8bac 100644
+--- a/reference/ranges/basic_istream_view.md
++++ b/reference/ranges/basic_istream_view.md
+@@ -95,6 +95,87 @@ int main() {
+ 12345
+ ```
+ 
++## 実装例
++
++```cpp
++namespace std::ranges {
++  template&amp;lt;class Val, class CharT, class Traits&amp;gt;
++  concept stream_extractable = requires(basic_istream&amp;lt;CharT, Traits&amp;gt;&amp;amp; is, Val&amp;amp; t) { is &amp;gt;&amp;gt; t; };
++
++  template&amp;lt;movable Val, class CharT, class Traits = char_traits&amp;lt;CharT&amp;gt;&amp;gt;
++    requires default_initializable&amp;lt;Val&amp;gt; &amp;amp;&amp;amp; stream_extractable&amp;lt;Val, CharT, Traits&amp;gt;
++  class basic_istream_view : public view_interface&amp;lt;basic_istream_view&amp;lt;Val, CharT, Traits&amp;gt;&amp;gt; {
++
++  private:
++    template&amp;lt;movable Val, class CharT, class Traits&amp;gt;
++      requires default_initializable&amp;lt;Val&amp;gt; &amp;amp;&amp;amp; stream_extractable&amp;lt;Val, CharT, Traits&amp;gt;
++    class iterator {
++    public:
++      using iterator_concept = input_iterator_tag;
++      using difference_type = ptrdiff_t;
++      using value_type = Val;
++
++      constexpr explicit iterator(basic_istream_view&amp;amp; parent) noexcept
++        : parent_(addressof(parent))
++      {}
++
++      iterator(const iterator&amp;amp;) = delete;
++      iterator(iterator&amp;amp;&amp;amp;) = default;
++      iterator&amp;amp; operator=(const iterator&amp;amp;) = delete;
++      iterator&amp;amp; operator=(iterator&amp;amp;&amp;amp;) = default;
++
++      iterator&amp;amp; operator++() {
++        *parent_-&amp;gt;stream_ &amp;gt;&amp;gt; parent_-&amp;gt;value_;
++        return *this;
++      }
++
++      void operator++(int) {
++        ++*this;
++      }
++
++      Val&amp;amp; operator*() const {
++        return parent_-&amp;gt;value_;
++      }
++
++      friend bool operator==(const iterator&amp;amp; x, default_sentinel_t) {
++        return !*x.parent_-&amp;gt;stream_;
++      }
++
++    private:
++      basic_istream_view* parent_;
++    };
++
++  public:
++    constexpr explicit basic_istream_view(basic_istream&amp;lt;CharT, Traits&amp;gt;&amp;amp; stream)
++      : stream_(addressof(stream))
++    {
++    }
++
++    constexpr auto begin() {
++      *stream_ &amp;gt;&amp;gt; value_;
++      return iterator{*this};
++    }
++
++    constexpr default_sentinel_t end() const noexcept {
++      return default_sentinel;
++    }
++
++  private:
++    struct iterator;
++    basic_istream&amp;lt;CharT, Traits&amp;gt;* stream_;
++    Val value_ = Val();
++  };
++}
++```
++* movable[link /reference/concepts/movable.md]
++* default_initializable[link /reference/concepts/default_initializable.md]
++* view_interface[link view_interface.md]
++* input_iterator_tag[link /reference/iterator/iterator_tag.md]
++* addressof[link /reference/memory/addressof.md]
++* default_sentinel_t[link /reference/iterator/default_sentinel_t.md]
++* basic_istream[likn /reference/istream/basic_istream.md]
++* char_traits[likn /reference/string/char_traits.md]
++
+ ## バージョン
+ ### 言語
+ - C++20
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>forward_range -- リンク修正</title>
@@ -229,35 +335,6 @@ index 805780d98..6908989a2 100644
  ## 参照
  - [N4861 24 Ranges library](https://timsong-cpp.github.io/cppwp/n4861/ranges)
  - [C++20 ranges](https://techbookfest.org/product/5134506308665344)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>sized_range -- sized_rangeの説明を追加</title>
-      <link href="https://cpprefjp.github.io/reference/ranges/sized_range.html"/>
-      <id>c3bc5be038ff92fca5766d485fdb5732bf1a1a7f:reference/ranges/sized_range.md</id>
-      <updated>2022-04-08T21:58:54+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/sized_range.md b/reference/ranges/sized_range.md
-index 3ea230f0b..77e0f6928 100644
---- a/reference/ranges/sized_range.md
-+++ b/reference/ranges/sized_range.md
-@@ -18,6 +18,10 @@ namespace std::ranges {
- 
- `sized_range`なRangeからは[`ranges::size`](size.md)で大きさを取得できる。
- 
-+`sized_range`ではないRangeとしては、[`iota_view`](iota_view.md)のように無限長のもの、
-+[`forward_list`](/reference/forward_list/forward_list.md)のように大きさは決まっているが償却定数時間で求められないもの、
-+[`basic_istream_view`](basic_istream_view.md)のように事前に求められないものなどがある。
-+
- ## モデル
- 型が[`remove_reference_t`](/reference/type_traits/remove_reference.md)`&amp;lt;T&amp;gt;`であるようなlvalue`t`があるとする。`T`が`sized_range`のモデルとなるのは、以下の条件をすべて満たす場合である。
- 
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
