@@ -2,9 +2,288 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2022-06-04T14:39:06.951483</updated>
-  <id>2776b643-2745-45ef-a3bc-3c4542eb1e42</id>
+  <updated>2022-06-05T13:32:59.509309</updated>
+  <id>0c4f5c2d-1bab-4203-97cd-aa5d13bc5df9</id>
 
+  
+    <entry>
+      <title>インライン変数 -- Merge pull request #975 from cpprefjp/inline-variables</title>
+      <link href="https://cpprefjp.github.io/lang/cpp17/inline_variables.html"/>
+      <id>6809d28c7d5e094988cac60d9166391c3ce6af8f:lang/cpp17/inline_variables.md</id>
+      <updated>2022-06-05T22:27:48+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp17/inline_variables.md b/lang/cpp17/inline_variables.md
+index cd2f84cea..bb89382a8 100644
+--- a/lang/cpp17/inline_variables.md
++++ b/lang/cpp17/inline_variables.md
+@@ -3,7 +3,7 @@
+ 
+ ## 概要
+ 
+-外部リンケージを持つ変数に対しインライン`inline`を指定することで、複数の翻訳単位で同じ変数を宣言できるようになり、変数の実体はただ一つとすることができる。
++外部リンケージを持つ変数に対しインライン`inline`を指定することで、複数の翻訳単位で同じ変数を定義できるようになり、変数の実体はただ一つとすることができる。
+ 
+ C++14までは関数のみインライン指定ができたが、C++17では関数、変数ともにインライン指定が可能になった。
+ 
+@@ -34,29 +34,30 @@ int X::foo;
+ 
+ ## 仕様
+ 
+-`inline`は関数または変数の宣言、定義に対して指定できる。外部リンケージを持つ関数、変数がどこか一つの翻訳単位で`inline`指定された場合、全ての翻訳単位で`inline`指定されたことになる。`inline`指定された関数、変数は全ての翻訳単位で同じアドレスに配置される。
++`inline`は関数または変数の宣言、定義に対して指定できる。外部リンケージを持つ関数、変数がどこか一つの翻訳単位で`inline`指定された場合、同名の変数が宣言されている全ての翻訳単位で`inline`指定を行う必要がある。`inline`指定された関数、変数は全ての翻訳単位で同じアドレスに配置される。
+ 
+-`inline`ではない変数宣言のあとに`inline`は宣言できず、文法違反となる。
++変数定義のあとに後付けで初めての`inline`指定を行うのは不適格である。
+ 
+ ```cpp
+ int a = 100;
+ 
+-// コンパイルエラー
++// 不適格につきコンパイルエラー
+ extern inline int a;
+ ```
+ 
+-`inline`指定した変数は全て同じ定義にすべきである。翻訳単位によって異なる型、初期値で変数を定義したり、`inline`指定を宣言した翻訳単位が出てくる前に別の翻訳単位で同じ変数の定義をしたりすると、プログラムは正常に動作しない。
++`inline`指定した同名の変数は全て同じ定義にすべきである。翻訳単位によって異なる型、初期値で変数を定義すると、プログラムは正常に動作しない可能性がある (不適格(例外付き診断不要))。
+ 
+ ```cpp
+ // b.cpp
+-int hoge = 10;
++inline int hoge = 10;
+ 
+ // a.cpp
+ inline int hoge = 100;
+ 
+ int main()
+ {
+-  // コンパイルエラーにならないかもしれないが、正常に動作しない
++  // 不適格(診断不要)
++  // コンパイルエラーにならないかもしれないが、正常に動作しない可能性がある
+   return hoge;
+ }
+ ```
+@@ -100,31 +101,50 @@ function-specifier:
+ #include &amp;lt;iostream&amp;gt;
+ 
+ namespace N {
+-  // static指定(翻訳単位ごとにアドレスが変わる)
+-  static inline int static_var = 10;
+-  static inline int static_func(void) {
++
++  // 外部リンケージ &amp;amp; 非インライン
++  // →ODR違反により不適格
++  /*
++  int var = 0;
++  int func() {
++    return 0;
++  }
++  */
++
++  // 外部リンケージ &amp;amp; インライン(inline指定)
++  // →全翻訳単位でアドレスは同一
++  inline int inline_var = 10;
++  inline int inline_func() {
+     return 20;
+   }
+ 
+-  // inline指定(全翻訳単位でアドレスは同一)
+-  inline int inline_var = 30;
+-  inline int inline_func(void) {
++  // 内部リンケージ(static指定) &amp;amp; 非インライン
++  // →翻訳単位毎に異なるアドレス
++  static int static_var = 30;
++  static int static_func() {
+     return 40;
+   }
+ 
+-  // constexprだがinlineは指定されない
+-  constexpr int constexpr_var = 50;
+-  // 関数かつconstexprなので
+-  // 暗黙のうちにinlineが指定される
+-  constexpr int constexpr_func(void) {
++  // 内部リンケージ(static指定) &amp;amp; インライン(inline指定)
++  // →外部リンケージではないのでインライン指定はアドレスに影響しない。
++  //   static のみ指定したときと同様に、翻訳単位毎に異なるアドレスになる。
++  static inline int static_inline_var = 50;
++  static inline int static_inline_func() {
+     return 60;
+   }
++
++  // 外部リンケージ &amp;amp; 非インライン(constexpr変数は暗黙にinlineにはならない)
++  constexpr int constexpr_var = 70;
++  // 外部リンケージ &amp;amp; インライン(constexpr関数は暗黙にinlineとなる)
++  constexpr int constexpr_func() {
++    return 80;
++  }
+ }
+ 
+ struct A {
+   // inline指定(全翻訳単位でアドレスは同一)
+   static inline int inline_var = 100;
+-  static inline int inline_func(void) {
++  static inline int inline_func() {
+     return 200;
+   }
+ 
+@@ -133,12 +153,12 @@ struct A {
+   static constexpr int constexpr_var = 300;
+   // 関数かつconstexprなので
+   // 暗黙のうちにinlineが指定される
+-  static constexpr int constexpr_func(void) {
++  static constexpr int constexpr_func() {
+     return 400;
+   }
+ };
+ 
+-void func(void);
++void func();
+ 
+ 
+ //inline_variable1.cpp
+@@ -149,17 +169,19 @@ void func(void);
+ int main()
+ {
+   std::cout &amp;lt;&amp;lt; __func__ &amp;lt;&amp;lt; std::endl
+-    &amp;lt;&amp;lt; &amp;#34;  N::static_var    :&amp;#34; &amp;lt;&amp;lt; &amp;amp;N::static_var &amp;lt;&amp;lt; std::endl
+-    &amp;lt;&amp;lt; &amp;#34;  N::static_func   :&amp;#34; &amp;lt;&amp;lt; reinterpret_cast&amp;lt;void *&amp;gt;(N::static_func) &amp;lt;&amp;lt; std::endl
+-    &amp;lt;&amp;lt; &amp;#34;  N::inline_var    :&amp;#34; &amp;lt;&amp;lt; &amp;amp;N::inline_var &amp;lt;&amp;lt; std::endl
+-    &amp;lt;&amp;lt; &amp;#34;  N::inline_func   :&amp;#34; &amp;lt;&amp;lt; reinterpret_cast&amp;lt;void *&amp;gt;(N::inline_func) &amp;lt;&amp;lt; std::endl
+-    &amp;lt;&amp;lt; &amp;#34;  N::constexpr_var :&amp;#34; &amp;lt;&amp;lt; &amp;amp;N::constexpr_var &amp;lt;&amp;lt; std::endl
+-    &amp;lt;&amp;lt; &amp;#34;  N::constexpr_func:&amp;#34; &amp;lt;&amp;lt; reinterpret_cast&amp;lt;void *&amp;gt;(N::constexpr_func) &amp;lt;&amp;lt; std::endl
++    &amp;lt;&amp;lt; &amp;#34;  N::inline_var        :&amp;#34; &amp;lt;&amp;lt; &amp;amp;N::inline_var &amp;lt;&amp;lt; std::endl
++    &amp;lt;&amp;lt; &amp;#34;  N::inline_func       :&amp;#34; &amp;lt;&amp;lt; reinterpret_cast&amp;lt;void *&amp;gt;(N::inline_func) &amp;lt;&amp;lt; std::endl
++    &amp;lt;&amp;lt; &amp;#34;  N::static_var        :&amp;#34; &amp;lt;&amp;lt; &amp;amp;N::static_var &amp;lt;&amp;lt; std::endl
++    &amp;lt;&amp;lt; &amp;#34;  N::static_func       :&amp;#34; &amp;lt;&amp;lt; reinterpret_cast&amp;lt;void *&amp;gt;(N::static_func) &amp;lt;&amp;lt; std::endl
++    &amp;lt;&amp;lt; &amp;#34;  N::static_inline_var :&amp;#34; &amp;lt;&amp;lt; &amp;amp;N::static_inline_var &amp;lt;&amp;lt; std::endl
++    &amp;lt;&amp;lt; &amp;#34;  N::static_inline_func:&amp;#34; &amp;lt;&amp;lt; reinterpret_cast&amp;lt;void *&amp;gt;(N::static_inline_func) &amp;lt;&amp;lt; std::endl
++    &amp;lt;&amp;lt; &amp;#34;  N::constexpr_var     :&amp;#34; &amp;lt;&amp;lt; &amp;amp;N::constexpr_var &amp;lt;&amp;lt; std::endl
++    &amp;lt;&amp;lt; &amp;#34;  N::constexpr_func    :&amp;#34; &amp;lt;&amp;lt; reinterpret_cast&amp;lt;void *&amp;gt;(N::constexpr_func) &amp;lt;&amp;lt; std::endl
+     &amp;lt;&amp;lt; std::endl
+-    &amp;lt;&amp;lt; &amp;#34;  A::inline_var    :&amp;#34; &amp;lt;&amp;lt; &amp;amp;A::inline_var &amp;lt;&amp;lt; std::endl
+-    &amp;lt;&amp;lt; &amp;#34;  A::inline_func   :&amp;#34; &amp;lt;&amp;lt; reinterpret_cast&amp;lt;void *&amp;gt;(A::inline_func) &amp;lt;&amp;lt; std::endl
+-    &amp;lt;&amp;lt; &amp;#34;  A::constexpr_var :&amp;#34; &amp;lt;&amp;lt; &amp;amp;A::constexpr_var &amp;lt;&amp;lt; std::endl
+-    &amp;lt;&amp;lt; &amp;#34;  A::constexpr_func:&amp;#34; &amp;lt;&amp;lt; reinterpret_cast&amp;lt;void *&amp;gt;(A::constexpr_func) &amp;lt;&amp;lt; std::endl
++    &amp;lt;&amp;lt; &amp;#34;  A::inline_var        :&amp;#34; &amp;lt;&amp;lt; &amp;amp;A::inline_var &amp;lt;&amp;lt; std::endl
++    &amp;lt;&amp;lt; &amp;#34;  A::inline_func       :&amp;#34; &amp;lt;&amp;lt; reinterpret_cast&amp;lt;void *&amp;gt;(A::inline_func) &amp;lt;&amp;lt; std::endl
++    &amp;lt;&amp;lt; &amp;#34;  A::constexpr_var     :&amp;#34; &amp;lt;&amp;lt; &amp;amp;A::constexpr_var &amp;lt;&amp;lt; std::endl
++    &amp;lt;&amp;lt; &amp;#34;  A::constexpr_func    :&amp;#34; &amp;lt;&amp;lt; reinterpret_cast&amp;lt;void *&amp;gt;(A::constexpr_func) &amp;lt;&amp;lt; std::endl
+     &amp;lt;&amp;lt; std::endl;
+ 
+   func();
+@@ -173,54 +195,61 @@ int main()
+ #include &amp;lt;iostream&amp;gt;
+ #include &amp;#34;inline_variable.hpp&amp;#34;
+ 
+-void func(void)
++void func()
+ {
+   std::cout &amp;lt;&amp;lt; __func__ &amp;lt;&amp;lt; std::endl
+-    &amp;lt;&amp;lt; &amp;#34;  N::static_var    :&amp;#34; &amp;lt;&amp;lt; &amp;amp;N::static_var &amp;lt;&amp;lt; std::endl
+-    &amp;lt;&amp;lt; &amp;#34;  N::static_func   :&amp;#34; &amp;lt;&amp;lt; reinterpret_cast&amp;lt;void *&amp;gt;(N::static_func) &amp;lt;&amp;lt; std::endl
+-    &amp;lt;&amp;lt; &amp;#34;  N::inline_var    :&amp;#34; &amp;lt;&amp;lt; &amp;amp;N::inline_var &amp;lt;&amp;lt; std::endl
+-    &amp;lt;&amp;lt; &amp;#34;  N::inline_func   :&amp;#34; &amp;lt;&amp;lt; reinterpret_cast&amp;lt;void *&amp;gt;(N::inline_func) &amp;lt;&amp;lt; std::endl
+-    &amp;lt;&amp;lt; &amp;#34;  N::constexpr_var :&amp;#34; &amp;lt;&amp;lt; &amp;amp;N::constexpr_var &amp;lt;&amp;lt; std::endl
+-    &amp;lt;&amp;lt; &amp;#34;  N::constexpr_func:&amp;#34; &amp;lt;&amp;lt; reinterpret_cast&amp;lt;void *&amp;gt;(N::constexpr_func) &amp;lt;&amp;lt; std::endl
++    &amp;lt;&amp;lt; &amp;#34;  N::inline_var        :&amp;#34; &amp;lt;&amp;lt; &amp;amp;N::inline_var &amp;lt;&amp;lt; std::endl
++    &amp;lt;&amp;lt; &amp;#34;  N::inline_func       :&amp;#34; &amp;lt;&amp;lt; reinterpret_cast&amp;lt;void *&amp;gt;(N::inline_func) &amp;lt;&amp;lt; std::endl
++    &amp;lt;&amp;lt; &amp;#34;  N::static_var        :&amp;#34; &amp;lt;&amp;lt; &amp;amp;N::static_var &amp;lt;&amp;lt; std::endl
++    &amp;lt;&amp;lt; &amp;#34;  N::static_func       :&amp;#34; &amp;lt;&amp;lt; reinterpret_cast&amp;lt;void *&amp;gt;(N::static_func) &amp;lt;&amp;lt; std::endl
++    &amp;lt;&amp;lt; &amp;#34;  N::static_inline_var :&amp;#34; &amp;lt;&amp;lt; &amp;amp;N::static_inline_var &amp;lt;&amp;lt; std::endl
++    &amp;lt;&amp;lt; &amp;#34;  N::static_inline_func:&amp;#34; &amp;lt;&amp;lt; reinterpret_cast&amp;lt;void *&amp;gt;(N::static_inline_func) &amp;lt;&amp;lt; std::endl
++    &amp;lt;&amp;lt; &amp;#34;  N::constexpr_var     :&amp;#34; &amp;lt;&amp;lt; &amp;amp;N::constexpr_var &amp;lt;&amp;lt; std::endl
++    &amp;lt;&amp;lt; &amp;#34;  N::constexpr_func    :&amp;#34; &amp;lt;&amp;lt; reinterpret_cast&amp;lt;void *&amp;gt;(N::constexpr_func) &amp;lt;&amp;lt; std::endl
+     &amp;lt;&amp;lt; std::endl
+-    &amp;lt;&amp;lt; &amp;#34;  A::inline_var    :&amp;#34; &amp;lt;&amp;lt; &amp;amp;A::inline_var &amp;lt;&amp;lt; std::endl
+-    &amp;lt;&amp;lt; &amp;#34;  A::inline_func   :&amp;#34; &amp;lt;&amp;lt; reinterpret_cast&amp;lt;void *&amp;gt;(A::inline_func) &amp;lt;&amp;lt; std::endl
+-    &amp;lt;&amp;lt; &amp;#34;  A::constexpr_var :&amp;#34; &amp;lt;&amp;lt; &amp;amp;A::constexpr_var &amp;lt;&amp;lt; std::endl
+-    &amp;lt;&amp;lt; &amp;#34;  A::constexpr_func:&amp;#34; &amp;lt;&amp;lt; reinterpret_cast&amp;lt;void *&amp;gt;(A::constexpr_func) &amp;lt;&amp;lt; std::endl
++    &amp;lt;&amp;lt; &amp;#34;  A::inline_var        :&amp;#34; &amp;lt;&amp;lt; &amp;amp;A::inline_var &amp;lt;&amp;lt; std::endl
++    &amp;lt;&amp;lt; &amp;#34;  A::inline_func       :&amp;#34; &amp;lt;&amp;lt; reinterpret_cast&amp;lt;void *&amp;gt;(A::inline_func) &amp;lt;&amp;lt; std::endl
++    &amp;lt;&amp;lt; &amp;#34;  A::constexpr_var     :&amp;#34; &amp;lt;&amp;lt; &amp;amp;A::constexpr_var &amp;lt;&amp;lt; std::endl
++    &amp;lt;&amp;lt; &amp;#34;  A::constexpr_func    :&amp;#34; &amp;lt;&amp;lt; reinterpret_cast&amp;lt;void *&amp;gt;(A::constexpr_func) &amp;lt;&amp;lt; std::endl
+     &amp;lt;&amp;lt; std::endl;
+ }
+ ```
+ 
+ ### 出力
+ 
+-clang++ 5.0.0 にて amd64 向けにコンパイル、実行した場合。
++clang++ 14.0.0 (Fedora 14.0.0-1.fc36) にて amd64 向けにコンパイル、実行した場合。
+ 
+ ```
+ main
+-  N::static_var    :0x602060
+-  N::static_func   :0x400b30
+-  N::inline_var    :0x602064
+-  N::inline_func   :0x400b40
+-  N::constexpr_var :0x400f6c
+-  N::constexpr_func:0x400b50
+-
+-  A::inline_var    :0x602068
+-  A::inline_func   :0x400b60
+-  A::constexpr_var :0x400f70
+-  A::constexpr_func:0x400b70
++  N::inline_var        :0x404054
++  N::inline_func       :0x401550
++  N::static_var        :0x404058
++  N::static_func       :0x401530
++  N::static_inline_var :0x40405c
++  N::static_inline_func:0x401540
++  N::constexpr_var     :0x402144
++  N::constexpr_func    :0x401560
++
++  A::inline_var        :0x404060
++  A::inline_func       :0x401570
++  A::constexpr_var     :0x402148
++  A::constexpr_func    :0x401580
+ 
+ func
+-  N::static_var    :0x60206c
+-  N::static_func   :0x400e00
+-  N::inline_var    :0x602064
+-  N::inline_func   :0x400b40
+-  N::constexpr_var :0x400f7c
+-  N::constexpr_func:0x400b50
+-
+-  A::inline_var    :0x602068
+-  A::inline_func   :0x400b60
+-  A::constexpr_var :0x400f70
+-  A::constexpr_func:0x400b70
++  N::inline_var        :0x404054
++  N::inline_func       :0x401550
++  N::static_var        :0x404064
++  N::static_func       :0x401870
++  N::static_inline_var :0x404068
++  N::static_inline_func:0x401880
++  N::constexpr_var     :0x402154
++  N::constexpr_func    :0x401560
++
++  A::inline_var        :0x404060
++  A::inline_func       :0x401570
++  A::constexpr_var     :0x402148
++  A::constexpr_func    :0x401580
++
+ ```
+ 
+ 表示されるアドレスは環境によって異なる可能性がある。
+@@ -229,4 +258,9 @@ func
+ - [C++11 constexpr](/lang/cpp11/constexpr.md)
+ 
+ ## 参照
+-- [P0386R2 Inline Variables](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0386r2.pdf)
++- [N4147 - Inline variables, or encapsulated expressions?](https://isocpp.org/files/papers/n4147.pdf), 2014-09-25
++- [N4424 - Inline Variables](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4424.pdf), 2015-04-07
++- [P0386R0 - Inline Variables](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0386r0.pdf), 2016-05-30
++- [P0386R2 - Inline Variables](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0386r2.pdf), 2016-06-24
++- [P0607R0 - Inline Variables for the Standard Library](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0607r0.html), 2017-02-27
++- [C++1z インライン変数 - Faith and Brave - C++で遊ぼう](https://faithandbrave.hateblo.jp/entry/2016/11/11/172954)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Koichi Murase</name>
+        <email>myoga.murase@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>コルーチン -- fix typo</title>
@@ -153,212 +432,92 @@ index 615ec8359..7306c45cf 100644
     </entry>
   
     <entry>
-      <title>bad_function_call -- update commentary of std::bad_weak_ptr gcc supports</title>
-      <link href="https://cpprefjp.github.io/reference/functional/bad_function_call.html"/>
-      <id>20e67f32d5464eeffbc6cb68a1986512fa60378c:reference/functional/bad_function_call.md</id>
-      <updated>2022-05-25T20:16:00+09:00</updated>
+      <title>インライン変数 -- cpp17/inline_variables: C言語的無引数明示指定の削除</title>
+      <link href="https://cpprefjp.github.io/lang/cpp17/inline_variables.html"/>
+      <id>b4e1a773cdb4296860d079d71500260f216fa1d6:lang/cpp17/inline_variables.md</id>
+      <updated>2022-05-24T18:07:00+09:00</updated>
       
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/functional/bad_function_call.md b/reference/functional/bad_function_call.md
-index cf67045f1..4f201b09e 100644
---- a/reference/functional/bad_function_call.md
-+++ b/reference/functional/bad_function_call.md
-@@ -47,7 +47,7 @@ bad function call
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp17/inline_variables.md b/lang/cpp17/inline_variables.md
+index efdb669d6..bb89382a8 100644
+--- a/lang/cpp17/inline_variables.md
++++ b/lang/cpp17/inline_variables.md
+@@ -106,7 +106,7 @@ namespace N {
+   // →ODR違反により不適格
+   /*
+   int var = 0;
+-  int func(void) {
++  int func() {
+     return 0;
+   }
+   */
+@@ -114,14 +114,14 @@ namespace N {
+   // 外部リンケージ &amp;amp; インライン(inline指定)
+   // →全翻訳単位でアドレスは同一
+   inline int inline_var = 10;
+-  inline int inline_func(void) {
++  inline int inline_func() {
+     return 20;
+   }
  
- ### 処理系
- - [Clang](/implementation.md#clang): ??
--- [GCC](/implementation.md#gcc): 4.4, 4.7.2(what()が&amp;#34;std::bad_weak_ptr&amp;#34;を返すので規格違反。バグ報告済み: [#55847](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=55847)。4.7.3で修正されている。)
-+- [GCC](/implementation.md#gcc): 4.4
- - [ICC](/implementation.md#icc): ??
- - [Visual C++](/implementation.md#visual_cpp): 2010
+   // 内部リンケージ(static指定) &amp;amp; 非インライン
+   // →翻訳単位毎に異なるアドレス
+   static int static_var = 30;
+-  static int static_func(void) {
++  static int static_func() {
+     return 40;
+   }
  
+@@ -129,14 +129,14 @@ namespace N {
+   // →外部リンケージではないのでインライン指定はアドレスに影響しない。
+   //   static のみ指定したときと同様に、翻訳単位毎に異なるアドレスになる。
+   static inline int static_inline_var = 50;
+-  static inline int static_inline_func(void) {
++  static inline int static_inline_func() {
+     return 60;
+   }
+ 
+   // 外部リンケージ &amp;amp; 非インライン(constexpr変数は暗黙にinlineにはならない)
+   constexpr int constexpr_var = 70;
+   // 外部リンケージ &amp;amp; インライン(constexpr関数は暗黙にinlineとなる)
+-  constexpr int constexpr_func(void) {
++  constexpr int constexpr_func() {
+     return 80;
+   }
+ }
+@@ -144,7 +144,7 @@ namespace N {
+ struct A {
+   // inline指定(全翻訳単位でアドレスは同一)
+   static inline int inline_var = 100;
+-  static inline int inline_func(void) {
++  static inline int inline_func() {
+     return 200;
+   }
+ 
+@@ -153,12 +153,12 @@ struct A {
+   static constexpr int constexpr_var = 300;
+   // 関数かつconstexprなので
+   // 暗黙のうちにinlineが指定される
+-  static constexpr int constexpr_func(void) {
++  static constexpr int constexpr_func() {
+     return 400;
+   }
+ };
+ 
+-void func(void);
++void func();
+ 
+ 
+ //inline_variable1.cpp
+@@ -195,7 +195,7 @@ int main()
+ #include &amp;lt;iostream&amp;gt;
+ #include &amp;#34;inline_variable.hpp&amp;#34;
+ 
+-void func(void)
++void func()
+ {
+   std::cout &amp;lt;&amp;lt; __func__ &amp;lt;&amp;lt; std::endl
+     &amp;lt;&amp;lt; &amp;#34;  N::inline_var        :&amp;#34; &amp;lt;&amp;lt; &amp;amp;N::inline_var &amp;lt;&amp;lt; std::endl
 &lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>bad_weak_ptr -- update commentary of std::bad_weak_ptr gcc supports</title>
-      <link href="https://cpprefjp.github.io/reference/memory/bad_weak_ptr.html"/>
-      <id>20e67f32d5464eeffbc6cb68a1986512fa60378c:reference/memory/bad_weak_ptr.md</id>
-      <updated>2022-05-25T20:16:00+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/bad_weak_ptr.md b/reference/memory/bad_weak_ptr.md
-index 615ec8359..7306c45cf 100644
---- a/reference/memory/bad_weak_ptr.md
-+++ b/reference/memory/bad_weak_ptr.md
-@@ -47,9 +47,9 @@ int main() {
- * sp.reset[link shared_ptr/reset.md]
- * std::exception[link /reference/exception/exception.md]
- 
--### 出力(GCC 4.7での出力。規格上は&amp;#34;bad_weak_ptr&amp;#34;と出力されるのが正しい)
-+### 出力
- ```
--std::bad_weak_ptr
-+bad_weak_ptr
- ```
- 
- ## バージョン
-@@ -58,7 +58,7 @@ std::bad_weak_ptr
- 
- ### 処理系
- - [Clang](/implementation.md#clang): ??
--- [GCC](/implementation.md#gcc): 4.4, 4.7.2(`what()`が`&amp;#34;std::bad_weak_ptr&amp;#34;`を返すので規格違反。バグ報告済み。[#55847](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=55847))
-+- [GCC](/implementation.md#gcc): 4.4, 4.7.2(what()が&amp;#34;std::bad_weak_ptr&amp;#34;を返すので規格違反。バグ報告済み: [#55847](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=55847)。4.7.3で修正されている。)
- - [ICC](/implementation.md#icc): ??
- - [Visual C++](/implementation.md#visual_cpp): 2008 (TR1), 2010, 2012, 2013
-     - 2010までは`what()`が`&amp;#34;tr1::bad_weak_ptr&amp;#34;`を返す。
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>C++国際標準規格 -- international-standard: 規格原案番号の修正 N4971 =&gt; N4968</title>
-      <link href="https://cpprefjp.github.io/international-standard.html"/>
-      <id>ceb41b43ca9104a239600f56d88d7d19fe6c4a84:international-standard.md</id>
-      <updated>2022-05-25T06:25:04+09:00</updated>
-      
-        <content type="html">&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;token&#34;&gt;C++国際標準規格&lt;/span&gt;&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;h2&gt;&lt;a href=&#34;https://cpprefjp.github.io/international-standard.html#summary&#34; id=&#34;summary&#34;&gt;概要&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;C++ の標準規格の実例として ISO/IEC による&lt;strong&gt;国際標準規格&lt;/strong&gt; (international standard) がある。
-最新の国際標準規格は「ISO/IEC 14882:2020 Programming Languages -- C++」(通称 C++20) である。
-C++ の標準規格は、他にも各国の規格化団体によって国際標準規格に等価なものが定められている。
-日本では日本工業標準調査会 (JISC) により「JIS X 3014:2003 プログラム言語C++」が定められているが古い (C++03 相当)。
-ここでは特に国際標準規格について取り扱う。&lt;/p&gt;
-&lt;h2&gt;&lt;a href=&#34;https://cpprefjp.github.io/international-standard.html#list-of-iso-cpp&#34; id=&#34;list-of-iso-cpp&#34;&gt;国際標準規格の一覧&lt;/a&gt;&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th align=&#34;left&#34;&gt;通称&lt;sup&gt;&lt;a href=&#34;https://cpprefjp.github.io/international-standard.html#note-t1-1&#34; id=&#34;note_ref-t1-1&#34;&gt;†1&lt;/a&gt;&lt;/sup&gt;&lt;/th&gt;
-&lt;th align=&#34;left&#34;&gt;名称&lt;/th&gt;
-&lt;th align=&#34;left&#34;&gt;参照する規格案&lt;sup&gt;&lt;a href=&#34;https://cpprefjp.github.io/international-standard.html#note-t1-2&#34; id=&#34;note_ref-t1-2&#34;&gt;†2&lt;/a&gt;&lt;/sup&gt;&lt;/th&gt;
-&lt;th align=&#34;left&#34;&gt;規格案・原案&lt;/th&gt;
-&lt;th align=&#34;left&#34;&gt;&lt;code&gt;__cplusplus&lt;/code&gt;&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td align=&#34;left&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23.html&#34;&gt;C++23&lt;/a&gt; (C++2b)&lt;/td&gt;
-&lt;td align=&#34;left&#34;&gt;ISO/IEC 14882:2023 (予定)&lt;/td&gt;
-&lt;td align=&#34;left&#34;&gt;N4910(&lt;a href=&#34;http://open-std.org/jtc1/sc22/wg21/docs/papers/2022/n4910.pdf&#34; target=&#34;_blank&#34;&gt;PDF&lt;/a&gt;/&lt;a href=&#34;https://timsong-cpp.github.io/cppwp/&#34; target=&#34;_blank&#34;&gt;HTML&lt;/a&gt;)&lt;/td&gt;
-&lt;td align=&#34;left&#34;&gt;N4910 N4901 N4892 N4885 N4878&lt;br /&gt;N4868 N4861&lt;/td&gt;
-&lt;td align=&#34;left&#34;&gt;--&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align=&#34;left&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp20.html&#34;&gt;C++20&lt;/a&gt; (C++2a)&lt;/td&gt;
-&lt;td align=&#34;left&#34;&gt;ISO/IEC 14882:2020&lt;/td&gt;
-&lt;td align=&#34;left&#34;&gt;N4861&lt;sup&gt;&lt;a href=&#34;https://cpprefjp.github.io/international-standard.html#note-t1-3&#34; id=&#34;note_ref-t1-3&#34;&gt;†3&lt;/a&gt;&lt;/sup&gt;(&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/n4861.pdf&#34; target=&#34;_blank&#34;&gt;PDF&lt;/a&gt;/&lt;a href=&#34;https://timsong-cpp.github.io/cppwp/n4861/&#34; target=&#34;_blank&#34;&gt;HTML&lt;/a&gt;)&lt;/td&gt;
-&lt;td align=&#34;left&#34;&gt;N4860 N4849 N4842 N4835 N4830&lt;br /&gt;N4820 N4810 N4800 N4791 &lt;del&gt;N4788&lt;/del&gt;&lt;sup&gt;&lt;a href=&#34;https://cpprefjp.github.io/international-standard.html#note-t1-4&#34; id=&#34;note_ref-t1-4&#34;&gt;†4&lt;/a&gt;&lt;/sup&gt;&lt;br /&gt;N4778 N4762 N4750 N4741 N4727&lt;br /&gt;N4713 N4700 N4687&lt;/td&gt;
-&lt;td align=&#34;left&#34;&gt;&lt;code&gt;202002L&lt;/code&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align=&#34;left&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp17.html&#34;&gt;C++17&lt;/a&gt; (C++1z)&lt;/td&gt;
-&lt;td align=&#34;left&#34;&gt;ISO/IEC 14882:2017&lt;/td&gt;
-&lt;td align=&#34;left&#34;&gt;N4659(&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/n4659.pdf&#34; target=&#34;_blank&#34;&gt;PDF&lt;/a&gt;/&lt;a href=&#34;https://timsong-cpp.github.io/cppwp/n4659/&#34; target=&#34;_blank&#34;&gt;HTML&lt;/a&gt;)&lt;/td&gt;
-&lt;td align=&#34;left&#34;&gt;N4660 N4659 N4640 N4618 N4606&lt;br /&gt;N4594 N4582 N4567 N4527 N4431&lt;br /&gt;N4296&lt;/td&gt;
-&lt;td align=&#34;left&#34;&gt;&lt;code&gt;201703L&lt;/code&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align=&#34;left&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp14.html&#34;&gt;C++14&lt;/a&gt; (C++1y)&lt;/td&gt;
-&lt;td align=&#34;left&#34;&gt;ISO/IEC 14882:2014&lt;/td&gt;
-&lt;td align=&#34;left&#34;&gt;N4140(&lt;a href=&#34;https://github.com/cplusplus/draft/blob/master/papers/n4140.pdf?raw=true&#34; target=&#34;_blank&#34;&gt;PDF&lt;/a&gt;/&lt;a href=&#34;https://timsong-cpp.github.io/cppwp/n4140/&#34; target=&#34;_blank&#34;&gt;HTML&lt;/a&gt;)&lt;/td&gt;
-&lt;td align=&#34;left&#34;&gt;N4141 N4140 N3937 N3936 N3797&lt;br /&gt;N3691 N3690 N3485 N3376 N3337&lt;/td&gt;
-&lt;td align=&#34;left&#34;&gt;&lt;code&gt;201402L&lt;/code&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align=&#34;left&#34;&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp11.html&#34;&gt;C++11&lt;/a&gt; (C++0x)&lt;/td&gt;
-&lt;td align=&#34;left&#34;&gt;ISO/IEC 14882:2011&lt;/td&gt;
-&lt;td align=&#34;left&#34;&gt;N3337&lt;sup&gt;&lt;a href=&#34;https://cpprefjp.github.io/international-standard.html#note-t1-5&#34; id=&#34;note_ref-t1-5&#34;&gt;†5&lt;/a&gt;&lt;/sup&gt;(&lt;a href=&#34;https://wg21.link/std11&#34; target=&#34;_blank&#34;&gt;PDF&lt;/a&gt;/&lt;a href=&#34;https://timsong-cpp.github.io/cppwp/n3337/&#34; target=&#34;_blank&#34;&gt;HTML&lt;/a&gt;)&lt;/td&gt;
-&lt;td align=&#34;left&#34;&gt;N3291 N3290 N3242 N3225 N3126&lt;br /&gt;N3090 N3035 N3000 N2960 N2914&lt;br /&gt;N2857 N2798 N2723 N2691 N2606&lt;br /&gt;N2588 N2521 N2461 N2369 N2315&lt;br /&gt;N2284 N2134 N2009 N1905 N1804&lt;br /&gt;N1733 N1655&lt;/td&gt;
-&lt;td align=&#34;left&#34;&gt;&lt;code&gt;201103L&lt;/code&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align=&#34;left&#34;&gt;C++03&lt;/td&gt;
-&lt;td align=&#34;left&#34;&gt;ISO/IEC 14882:2003&lt;/td&gt;
-&lt;td align=&#34;left&#34;&gt;N1577&lt;/td&gt;
-&lt;td align=&#34;left&#34;&gt;N1577 ?&lt;/td&gt;
-&lt;td align=&#34;left&#34;&gt;&lt;code&gt;199711L&lt;/code&gt;&lt;br /&gt;(C++98 と同じ)&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align=&#34;left&#34;&gt;C++98&lt;/td&gt;
-&lt;td align=&#34;left&#34;&gt;ISO/IEC 14882:1998&lt;/td&gt;
-&lt;td align=&#34;left&#34;&gt;?&lt;/td&gt;
-&lt;td align=&#34;left&#34;&gt;?&lt;/td&gt;
-&lt;td align=&#34;left&#34;&gt;&lt;code&gt;199711L&lt;/code&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;ol&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/international-standard.html#note_ref-t1-1&#34; id=&#34;note-t1-1&#34;&gt;&lt;strong&gt;^&lt;/strong&gt;&lt;/a&gt; 括弧内は策定時・標準化前に一時的に用いられた通称&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/international-standard.html#note_ref-t1-2&#34; id=&#34;note-t1-2&#34;&gt;&lt;strong&gt;^&lt;/strong&gt;&lt;/a&gt; 最終国際規格案はPDFやHTMLなどの形で一般公開されていないため、それにほぼ同一の内容の規格案を参照する。&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/international-standard.html#note_ref-t1-3&#34; id=&#34;note-t1-3&#34;&gt;&lt;strong&gt;^&lt;/strong&gt;&lt;/a&gt; N4861 は、C++20 DISであるN4860に対するデザインレベルの差とC++17との相互参照がない以外の差はないため、事実上 N4861 が C++20 を参照する時に用いられる。&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/international-standard.html#note_ref-t1-4&#34; id=&#34;note-t1-4&#34;&gt;&lt;strong&gt;^&lt;/strong&gt;&lt;/a&gt; N4788 は政治的事情により撤回された (参照 N4792)&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/international-standard.html#note_ref-t1-5&#34; id=&#34;note-t1-5&#34;&gt;&lt;strong&gt;^&lt;/strong&gt;&lt;/a&gt; N3337 は、C++11規格に対する編集レベルの修正のみが適用された仕様案であるため、事実上 N3337 が C++11 を参照する時に用いられる。C++11規格からN3337への変更点は、&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3338.html&#34; target=&#34;_blank&#34;&gt;N3338&lt;/a&gt;を参照。&lt;br /&gt;
-(それより前の公開されているC++11向け仕様案であるN3242からC++11規格に対しては、機能的な変更がいくつかあるため、C++11規格として参照するには適さない)&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;最新のDraftのHTML版は以下で公開されている。&lt;br /&gt;
-&lt;a href=&#34;https://timsong-cpp.github.io/cppwp/&#34; target=&#34;_blank&#34;&gt;Draft C++ Standard: Contents&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;標準規格の文章はtexで書かれており、そのソースコードは以下で2011年8月16日以降のものについて(つまりN3291より後、N3337より前)公開されている。&lt;br /&gt;
-&lt;a href=&#34;https://github.com/cplusplus/draft&#34; target=&#34;_blank&#34;&gt;cplusplus/draft: C++ standards drafts&lt;/a&gt;&lt;/p&gt;
-&lt;h2&gt;&lt;a href=&#34;https://cpprefjp.github.io/international-standard.html#iso-cpp-committee&#34; id=&#34;iso-cpp-committee&#34;&gt;用語: 国際標準規格を定める組織&lt;/a&gt;&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;C++標準化委員会&lt;/strong&gt; (C++ Standards Committee): C++ の国際標準規格を策定する団体。
-  組織としての位置づけはISO/IEC JTC1/SC22/WG21になる。
-  &lt;strong&gt;国際標準化機構&lt;/strong&gt; (ISO; international organization for standardization) および&lt;strong&gt;国際電気標準会議&lt;/strong&gt; (IEC; International Electronics Commission) はそれぞれ様々な規格の標準化団体である。
-  &lt;strong&gt;第一合同技術委員会&lt;/strong&gt; (JTC1; Joint Technical Committee 1) は ISO/IEC の下で情報技術の標準化を行う団体である。
-  下部組織の SC22 はプログラム言語の標準化を行う&lt;strong&gt;副委員会&lt;/strong&gt; (SC; subcommittee) である。
-  C++標準化委員会は WG21 という&lt;strong&gt;作業グループ&lt;/strong&gt; (WG; working group) である。&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;CWG&lt;/strong&gt; (Core working group): C++標準化委員会の内、コア言語機能の策定を行う作業グループ&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;LWG&lt;/strong&gt; (Library working group): C++標準化委員会の内、標準ライブラリ機能の策定を行う作業グループ&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;NB&lt;/strong&gt; (national body) または&lt;strong&gt;MB/NC&lt;/strong&gt; (member body/national committee): C++標準化委員会の正会員つまり各国から派遣される団体のこと。本来は member body は ISO での名称で、national committee は IEC での名称。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;&lt;a href=&#34;https://cpprefjp.github.io/international-standard.html#iso-cpp-documents&#34; id=&#34;iso-cpp-documents&#34;&gt;用語: 国際標準規格の文書&lt;/a&gt;&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;提案&lt;/strong&gt; (proposal): 標準規格の変更についての提案文書&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;問題&lt;/strong&gt; (issue): C++標準規格の問題や課題のこと&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;欠陥&lt;/strong&gt; (defect): C++標準規格に含まれるいわば &#34;バグ&#34; のこと&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;DR&lt;/strong&gt; (defect report, defect resolution): 委員会で承認された欠陥の報告または欠陥の修正のこと&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;NAD&lt;/strong&gt; (not a defect): 委員会により標準規格の欠陥ではないとされた問題のこと&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;DRWP&lt;/strong&gt;: 最新の規格原案に取り込み済みの DR のこと&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;WD&lt;/strong&gt; (working draft): 作業原案&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;CD&lt;/strong&gt; (committee draft): 委員会原案&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;FCD&lt;/strong&gt; (final committee draft): 最終委員会原案&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;DIS&lt;/strong&gt; (draft international standard): 国際規格案&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;FDIS&lt;/strong&gt; (final draft international standard): 最終国際規格案&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;IS&lt;/strong&gt; (international standard): 国際規格&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;TR&lt;/strong&gt; (technical report): 技術報告書。用例: TR1&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;TS&lt;/strong&gt; (technical specifications): 技術仕様書。用例: Concepts TS&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;参照&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;標準規格&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.iso.org/standard/79358.html&#34; target=&#34;_blank&#34;&gt;ISO/IEC 14882:2020 - Programming languages — C++&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.iso.org/standard/68564.html&#34; target=&#34;_blank&#34;&gt;ISO/IEC 14882:2017 - Programming languages -- C++&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.iso.org/standard/64029.html&#34; target=&#34;_blank&#34;&gt;ISO/IEC 14882:2014 - Information technology -- Programming languages -- C++&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.iso.org/standard/50372.html&#34; target=&#34;_blank&#34;&gt;ISO/IEC 14882:2011 - Information technology -- Programming languages -- C++&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.iso.org/standard/38110.html&#34; target=&#34;_blank&#34;&gt;ISO/IEC 14882:2003 - Programming languages -- C++&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.iso.org/standard/25845.html&#34; target=&#34;_blank&#34;&gt;ISO/IEC 14882:1998 - Programming languages -- C++&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://webdesk.jsa.or.jp/books/W11M0090/index/?bunsyo_id=JIS%20X%203014:2003&#34; target=&#34;_blank&#34;&gt;JIS X 3014:2003 プログラム言語Ｃ＋＋／Information Technology -- Programming languages -- C++ 日本規格協会 JSA Webdesk&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://en.cppreference.com/w/cpp/experimental&#34; target=&#34;_blank&#34;&gt;Experimental C++ Features - cppreference.com&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://stackoverflow.com/questions/29115656/which-draft-is-closest-to-the-c14-standard&#34; target=&#34;_blank&#34;&gt;c++ - Which draft is closest to the C++14 standard? - Stack Overflow&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://stackoverflow.com/questions/81656/where-do-i-find-the-current-c-or-c-standard-documents&#34; target=&#34;_blank&#34;&gt;Where do I find the current C or C++ standard documents? - Stack Overflow&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://stackoverflow.com/questions/11053960/how-are-the-cplusplus-directive-defined-in-various-compilers&#34; target=&#34;_blank&#34;&gt;c++ - How are the __cplusplus directive defined in various compilers? - Stack Overflow&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/&#34; target=&#34;_blank&#34;&gt;ISO/IEC JTC1/SC22/WG21 - The C++ Standards Committee - ISOCPP&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://ja.wikipedia.org/wiki/%E5%9B%BD%E9%9A%9B%E6%A8%99%E6%BA%96%E5%8C%96%E6%A9%9F%E6%A7%8B&#34; target=&#34;_blank&#34;&gt;国際標準化機構 - Wikipedia&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://ja.wikipedia.org/wiki/%E5%9B%BD%E9%9A%9B%E9%9B%BB%E6%B0%97%E6%A8%99%E6%BA%96%E4%BC%9A%E8%AD%B0&#34; target=&#34;_blank&#34;&gt;国際電気標準会議 - Wikipedia&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://ja.wikipedia.org/wiki/ISO/IEC_JTC_1&#34; target=&#34;_blank&#34;&gt;ISO/IEC JTC 1 - Wikipedia&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://ja.wikipedia.org/wiki/ISO/IEC_JTC_1/SC_22&#34; target=&#34;_blank&#34;&gt;ISO/IEC JTC 1/SC 22 - Wikipedia&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/div&gt;</content>
       
       <author>
         <name>Koichi Murase</name>
