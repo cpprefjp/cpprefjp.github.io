@@ -182,12 +182,15 @@ var Content = function Content(log) {
 };
 
 
+// EXTERNAL MODULE: ../node_modules/@babel/runtime/helpers/esm/toConsumableArray.js + 3 modules
+var toConsumableArray = __webpack_require__(126);
 // EXTERNAL MODULE: ../node_modules/@babel/runtime/helpers/esm/slicedToArray.js + 3 modules
 var slicedToArray = __webpack_require__(5809);
 // EXTERNAL MODULE: ../node_modules/crsearch/js/crsearch.js + 9 modules
 var crsearch = __webpack_require__(5704);
 ;// CONCATENATED MODULE: ./kunai/ui/treeview.js
 /* provided dependency */ var treeview_$ = __webpack_require__(5638);
+
 
 
 
@@ -1052,7 +1055,9 @@ var Treeview = /*#__PURE__*/function () {
     key: "onPageID",
     value: function () {
       var _onPageID = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee23(ids) {
-        var h;
+        var _this5 = this;
+
+        var h, selector, article;
         return regenerator_default().wrap(function _callee23$(_context23) {
           while (1) {
             switch (_context23.prev = _context23.next) {
@@ -1105,31 +1110,39 @@ var Treeview = /*#__PURE__*/function () {
 
               case 20:
                 if (!(ids.length > 1)) {
-                  _context23.next = 24;
+                  _context23.next = 25;
                   break;
                 }
 
-                // highlight self
+                if (this.page_idx.id.type === 'article' && this.page_idx.id.indexes.length > 1) {
+                  selector = "[data-lang-id=\"C++".concat(this.page_idx.cpp_version, "\"] li.article");
+                  article = (0,toConsumableArray/* default */.Z)(treeview_$(selector)).find(function (li) {
+                    return li.innerText === _this5.page_idx.name;
+                  });
+                  this.dom.indexElems.set(this.page_idx.id, treeview_$(article));
+                } // highlight self
+
+
                 this.dom.indexElems.get(this.page_idx.id).addClass('current-page'); // finally, always scroll to self
 
-                _context23.next = 24;
+                _context23.next = 25;
                 return this.dom.scrollAt(this.page_idx.id);
 
-              case 24:
-                _context23.next = 29;
+              case 25:
+                _context23.next = 30;
                 break;
 
-              case 26:
-                _context23.prev = 26;
+              case 27:
+                _context23.prev = 27;
                 _context23.t0 = _context23["catch"](0);
                 this.log.error("Failed to determine current page for id '".concat(ids.join('/'), "'. Sidebar will NOT work properly! (").concat(_context23.t0, ")"), ids);
 
-              case 29:
+              case 30:
               case "end":
                 return _context23.stop();
             }
           }
-        }, _callee23, this, [[0, 26]]);
+        }, _callee23, this, [[0, 27]]);
       }));
 
       function onPageID(_x23) {
@@ -1194,7 +1207,7 @@ var Treeview = /*#__PURE__*/function () {
     key: "onDataImpl",
     value: function () {
       var _onDataImpl = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee27() {
-        var _this5 = this;
+        var _this6 = this;
 
         var root, cats;
         return regenerator_default().wrap(function _callee27$(_context27) {
@@ -1223,7 +1236,7 @@ var Treeview = /*#__PURE__*/function () {
                               'data-top-id': topID
                             });
 
-                            _this5.dom.topElems.set(topID, stack);
+                            _this6.dom.topElems.set(topID, stack);
 
                             _context26.t0 = stack;
                             _context26.t1 = treeview_$('<div>', {
@@ -1235,7 +1248,7 @@ var Treeview = /*#__PURE__*/function () {
                                 while (1) {
                                   switch (_context25.prev = _context25.next) {
                                     case 0:
-                                      _this5.dom.doStackExpand(topID);
+                                      _this6.dom.doStackExpand(topID);
 
                                     case 1:
                                     case "end":
@@ -1245,7 +1258,7 @@ var Treeview = /*#__PURE__*/function () {
                               }, _callee25);
                             }))));
                             _context26.next = 7;
-                            return _this5.dom.makeTitle(top);
+                            return _this6.dom.makeTitle(top);
 
                           case 7:
                             _context26.t2 = _context26.sent;
@@ -1267,7 +1280,7 @@ var Treeview = /*#__PURE__*/function () {
                             }
 
                             _context26.next = 16;
-                            return _this5.processLangTop(top, content);
+                            return _this6.processLangTop(top, content);
 
                           case 16:
                             is_not_empty = _context26.sent;
@@ -1276,7 +1289,7 @@ var Treeview = /*#__PURE__*/function () {
 
                           case 19:
                             _context26.next = 21;
-                            return _this5.processTop(top, content);
+                            return _this6.processTop(top, content);
 
                           case 21:
                             is_not_empty = _context26.sent;
@@ -1324,7 +1337,7 @@ var Treeview = /*#__PURE__*/function () {
     key: "processTop",
     value: function () {
       var _processTop = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee30(top, e) {
-        var _this6 = this;
+        var _this7 = this;
 
         var is_empty, self, _self;
 
@@ -1351,7 +1364,7 @@ var Treeview = /*#__PURE__*/function () {
                         switch (_context28.prev = _context28.next) {
                           case 0:
                             _context28.next = 2;
-                            return _this6.dom.makeArticle(ar);
+                            return _this7.dom.makeArticle(ar);
 
                           case 2:
                             return _context28.abrupt("return", _context28.sent);
@@ -1399,7 +1412,7 @@ var Treeview = /*#__PURE__*/function () {
                         switch (_context29.prev = _context29.next) {
                           case 0:
                             _context29.next = 2;
-                            return _this6.dom.makeHeader(h);
+                            return _this7.dom.makeHeader(h);
 
                           case 2:
                             return _context29.abrupt("return", _context29.sent);
@@ -1450,7 +1463,7 @@ var Treeview = /*#__PURE__*/function () {
     key: "processLangTop",
     value: function () {
       var _processLangTop = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee32(top, e) {
-        var _this7 = this;
+        var _this8 = this;
 
         var ars, ltops, _iterator3, _step3, ar, langs;
 
@@ -1513,7 +1526,7 @@ var Treeview = /*#__PURE__*/function () {
                           case 0:
                             _ref18 = (0,slicedToArray/* default */.Z)(_ref17, 2), id = _ref18[0], t = _ref18[1];
                             _context31.next = 3;
-                            return _this7.dom.makeLang(t);
+                            return _this8.dom.makeLang(t);
 
                           case 3:
                             return _context31.abrupt("return", _context31.sent);
@@ -2079,8 +2092,6 @@ var Meta = /*#__PURE__*/function () {
 ;// CONCATENATED MODULE: ./kunai/meta.js
 
 
-// EXTERNAL MODULE: ../node_modules/@babel/runtime/helpers/esm/toConsumableArray.js + 3 modules
-var toConsumableArray = __webpack_require__(126);
 // EXTERNAL MODULE: ../node_modules/numeral/numeral.js
 var numeral = __webpack_require__(4960);
 var numeral_default = /*#__PURE__*/__webpack_require__.n(numeral);
