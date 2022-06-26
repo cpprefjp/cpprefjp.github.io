@@ -2,9 +2,55 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2022-06-25T14:40:19.403880</updated>
-  <id>5e994e1b-4801-4e86-b36c-76f4e7eba90a</id>
+  <updated>2022-06-26T08:42:02.087538</updated>
+  <id>6e4c5418-ab73-49a0-8245-80c016dc299f</id>
 
+  
+    <entry>
+      <title>operator() -- compare_three_way : nullptr_tとの比較はエラーっぽい</title>
+      <link href="https://cpprefjp.github.io/reference/compare/compare_three_way/op_call.html"/>
+      <id>281969e21993a21027181029aeb663ec143de648:reference/compare/compare_three_way/op_call.md</id>
+      <updated>2022-06-26T17:37:10+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/compare/compare_three_way/op_call.md b/reference/compare/compare_three_way/op_call.md
+index bdbbfb80a..8df83ccb3 100644
+--- a/reference/compare/compare_three_way/op_call.md
++++ b/reference/compare/compare_three_way/op_call.md
+@@ -49,7 +49,7 @@ constexpr auto operator()(T&amp;amp;&amp;amp; t, U&amp;amp;&amp;amp; u) const;
+ ポインタ比較時の順序付けは、ポインタ型`P`に対する実装定義の狭義全順序の上で行われ、`P`に対する組み込みの比較演算子が持つ半順序関係との一貫性がある。  
+ すなわちこの関数オブジェクトによるポインタ値の比較では、組み込みの`&amp;lt; &amp;lt;= &amp;gt; &amp;gt;= == !=`演算子の結果が未規定の場合でも実装定義ではあるが大小もしくは等価性を判定でき、順序が規定されている範囲での順序関係は組み込みの演算子の結果と一致する。
+ 
+-例えば、同じ型の異なるオブジェクトに対するポインタ間やポインタと`nullptr`の間に何らかの順序を付ける事ができる。  
++例えば、同じ型の異なる（1つの配列内に含まれていない）オブジェクトに対するポインタ間に何らかの順序を付ける事ができる。  
+ ただし、そのような順序付けの結果がコンパイラや実行環境を超えて一致する保証はないので注意が必要である。
+ 
+ 
+@@ -72,17 +72,15 @@ int main() {
+   std::cout &amp;lt;&amp;lt; (comp(pa, pb) == 0) &amp;lt;&amp;lt; std::endl;
+   std::cout &amp;lt;&amp;lt; (comp(pa, pb) &amp;lt;  0) &amp;lt;&amp;lt; std::endl;
+   std::cout &amp;lt;&amp;lt; (comp(pa, pb) &amp;gt;  0) &amp;lt;&amp;lt; std::endl;
+-  std::cout &amp;lt;&amp;lt; (comp(pa, nullptr) &amp;gt;  0) &amp;lt;&amp;lt; std::endl;
+ }
+ ```
+ 
+-### 出力例（GCC 10.0.0）
++### 出力
+ ```
+ true
+ false
+ false
+ true
+-true
+ ```
+ 
+ ## バージョン
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>month -- fix typo regarding decrement</title>
@@ -256,49 +302,6 @@ index 60aac5dd5..8af93a5ed 100644
  
  ### 出力
  ```
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>compare_three_way_result -- compare_three_way_result : サンプルコードを動くように修正</title>
-      <link href="https://cpprefjp.github.io/reference/compare/compare_three_way_result.html"/>
-      <id>03e07f60c74b80e61a0afc55e016b6c7e2a24d0d:reference/compare/compare_three_way_result.md</id>
-      <updated>2022-06-23T01:25:17+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/compare/compare_three_way_result.md b/reference/compare/compare_three_way_result.md
-index fa4895254..60aac5dd5 100644
---- a/reference/compare/compare_three_way_result.md
-+++ b/reference/compare/compare_three_way_result.md
-@@ -42,7 +42,14 @@ namespace std {
- #include &amp;lt;type_traits&amp;gt;
- 
- template&amp;lt;typename T, typename Cat&amp;gt;
--using fallback_comp3way = std::conditional_t&amp;lt;std::three_way_comparable&amp;lt;T&amp;gt;, std::compare_three_way_result_t&amp;lt;T&amp;gt;, Cat&amp;gt;;
-+struct fallback_comp3way {
-+  using type = Cat;
-+};
-+
-+template&amp;lt;std::three_way_comparable T, typename Cat&amp;gt;
-+struct fallback_comp3way&amp;lt;T, Cat&amp;gt; {
-+  using type = std::compare_three_way_result_t&amp;lt;T&amp;gt;;
-+};
- 
- template&amp;lt;typename T&amp;gt;
- struct wrap {
-@@ -50,7 +57,7 @@ struct wrap {
- 
-   //&amp;lt;=&amp;gt;を使用可能ならそれを、そうでないなら&amp;lt; ==を使ってdefault実装
-   auto operator&amp;lt;=&amp;gt;(const wrap&amp;amp;) const
--    -&amp;gt; fallback_comp3way&amp;lt;T, std::weak_ordering&amp;gt;
-+    -&amp;gt; fallback_comp3way&amp;lt;T, std::weak_ordering&amp;gt;::type
-       = default;
- }
- 
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
