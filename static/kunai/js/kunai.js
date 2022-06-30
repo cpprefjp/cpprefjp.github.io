@@ -16,7 +16,7 @@ importAll(__webpack_require__(2364));
 
 /***/ }),
 
-/***/ 5749:
+/***/ 6554:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -168,18 +168,175 @@ var sanitize = function sanitize(badges) {
 };
 
 
+;// CONCATENATED MODULE: ./kunai/ui/tooltip.js
+
+
+
+
+var Tooltip = /*#__PURE__*/function () {
+  /**
+   * ツールチップを構築します。
+   * @param {Document} [_document] - 表示対象のドキュメント
+   * @param {object} [config] - 設定
+   */
+  function Tooltip(_document, config) {
+    (0,classCallCheck/* default */.Z)(this, Tooltip);
+
+    this.document = _document || document;
+    this.view = this.document.defaultView || window;
+    this.config = {
+      horizontalMargin: 8,
+      // (設定) ツールチップ配置時のビューポート横余白
+      verticalMargin: 8,
+      // (設定) ツールチップ配置時のビューポート縦余白
+      verticalOffset: 2,
+      // (設定) ツールチップと対象要素の縦の距離
+      tooltipId: 'kunai-ui-tooltip',
+      tooltipClassRevealed: 'kunai-ui-tooltip-revealed'
+    };
+    if (config) (0,esm_extends/* default */.Z)(this.config, config);
+    this.span = document.createElement('span');
+    this.span.id = this.config.tooltipId;
+    this.document.body.appendChild(this.span);
+  }
+
+  (0,createClass/* default */.Z)(Tooltip, [{
+    key: "_place",
+    value: function _place(x, y) {
+      // 物理ピクセル位置にぴったり合わせる
+      var pixelRatio = this.view.devicePixelRatio;
+      x = Math.round(x * pixelRatio) / pixelRatio;
+      y = Math.round(y * pixelRatio) / pixelRatio;
+      this.span.style.left = "".concat(x, "px");
+      this.span.style.top = "".concat(y, "px");
+      this.span.classList.add(this.config.tooltipClassRevealed);
+    }
+    /**
+     * マウス位置および対象領域を元にして、ツールチップを適切な位置に表示します。
+     * @param {string} desc - 表示する文字列
+     * @param {number} mouseX - ビューポート内のマウス位置X 
+     * @param {number} mouseY - ビューポート内のマウス位置Y
+     * @param {DOMRect} rect - 表示対象オブジェクトの領域
+     *
+     */
+
+  }, {
+    key: "show",
+    value: function show(desc, mouseX, mouseY, rect) {
+      // 幾何情報の取得
+      this.span.dataset.desc = desc;
+      var tw = this.span.offsetWidth; // ツールチップの表示幅
+
+      var th = this.span.offsetHeight; // ツールチップの表示高さ
+
+      var vw = this.document.documentElement.clientWidth; // スクロールバーを除くビューポートの幅
+
+      var vh = this.document.documentElement.clientHeight; // スクロールバーを除くビューポートの高さ
+      // 位置の決定
+
+      var x = Math.max(this.config.horizontalMargin, Math.min(vw - tw - this.config.horizontalMargin, mouseX));
+      var y = rect.top - this.config.verticalOffset - th;
+
+      if (y < this.config.verticalMargin) {
+        y = rect.bottom + this.config.verticalOffset;
+        if (y + th > vh - this.config.verticalMargin) y = mouseY + this.config.verticalOffset;
+      }
+
+      this._place(x, y);
+    }
+    /**
+     * ツールチップを隠します。
+     */
+
+  }, {
+    key: "hide",
+    value: function hide() {
+      this.span.classList.remove(this.config.tooltipClassRevealed);
+    }
+  }]);
+
+  return Tooltip;
+}();
+
+
 ;// CONCATENATED MODULE: ./kunai/ui/content.js
 /* provided dependency */ var content_$ = __webpack_require__(5638);
 
 
 
-var Content = function Content(log) {
-  (0,classCallCheck/* default */.Z)(this, Content);
+function content_createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = content_unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
 
-  this.log = log.makeContext('Content');
-  this.log.debug('initialzing...');
-  this.log.debug("found ".concat(sanitize(content_$('main[role="main"] div[itemtype="http://schema.org/Article"] .content-body span.cpp')), " badges"));
+function content_unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return content_arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return content_arrayLikeToArray(o, minLen); }
+
+function content_arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+
+
+
+var _hitElementRects = function _hitElementRects(elem, x, y) {
+  var _iterator = content_createForOfIteratorHelper(elem.getClientRects()),
+      _step;
+
+  try {
+    for (_iterator.s(); !(_step = _iterator.n()).done;) {
+      var rect = _step.value;
+      if (rect.left <= x && x <= rect.right && rect.top <= y && y <= rect.bottom) return rect;
+    }
+  } catch (err) {
+    _iterator.e(err);
+  } finally {
+    _iterator.f();
+  }
+
+  return null;
 };
+
+var Content = /*#__PURE__*/function () {
+  function Content(log) {
+    (0,classCallCheck/* default */.Z)(this, Content);
+
+    this.log = log.makeContext('Content');
+    this.log.debug('initialzing...');
+    this.log.debug("found ".concat(sanitize(content_$('main[role="main"] div[itemtype="http://schema.org/Article"] .content-body span.cpp')), " badges"));
+    this.setupTooltip();
+  }
+
+  (0,createClass/* default */.Z)(Content, [{
+    key: "setupTooltip",
+    value: function setupTooltip() {
+      var tooltip = new Tooltip(document);
+      var target = null;
+      content_$('a[data-desc]').on({
+        mouseover: function mouseover(e) {
+          var rect = _hitElementRects(this, e.clientX, e.clientY);
+
+          if (rect) {
+            target = this;
+            tooltip.show(this.dataset.desc, e.clientX, e.clientY, rect);
+          }
+        },
+        mouseout: function mouseout() {
+          if (this === target) {
+            target = null;
+            tooltip.hide();
+          }
+        }
+      });
+
+      var checkScroll = function checkScroll(e) {
+        if (target !== null && !_hitElementRects(target, e.clientX, e.clientY)) {
+          target = null;
+          tooltip.hide();
+        }
+      };
+
+      window.addEventListener('scroll', checkScroll, true);
+      window.addEventListener('resize', checkScroll);
+    }
+  }]);
+
+  return Content;
+}();
 
 
 // EXTERNAL MODULE: ../node_modules/@babel/runtime/helpers/esm/toConsumableArray.js + 3 modules
@@ -3517,7 +3674,7 @@ module.exports = JSON.parse('{"order_priority":[["op_deduction_guide","推論補
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module depends on other loaded chunks and execution need to be delayed
-/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [449], function() { return __webpack_require__(5749); })
+/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [449], function() { return __webpack_require__(6554); })
 /******/ 	__webpack_exports__ = __webpack_require__.O(__webpack_exports__);
 /******/ 	window.Kunai = __webpack_exports__.Kunai;
 /******/ 	
