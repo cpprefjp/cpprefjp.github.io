@@ -388,7 +388,7 @@ var DOM = /*#__PURE__*/function () {
               case 0:
                 this.log.info("createContent '".concat(obj.self.id, "'"), obj);
                 _context.t0 = obj.self.id.type;
-                _context.next = _context.t0 === crsearch/* IndexType.header */.PX.header ? 4 : _context.t0 === crsearch/* IndexType.category */.PX.category ? 4 : 7;
+                _context.next = _context.t0 === crsearch/* IndexType.header */.PX.header ? 4 : _context.t0 === crsearch/* IndexType.category */.PX.category ? 4 : _context.t0 === crsearch/* IndexType.module */.PX.module ? 4 : 7;
                 break;
 
               case 4:

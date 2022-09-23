@@ -664,6 +664,7 @@ __webpack_require__.d(kunai_config_namespaceObject, {
 var IndexType = {
   header: 'header',
   category: 'category',
+  module: 'module',
   namespace: 'namespace',
   class: 'class',
   function: 'function',
@@ -684,7 +685,7 @@ var IndexType = {
     return [this.article, this.meta].includes(type);
   },
   isHeader: function isHeader(type) {
-    return [this.header, this.category].includes(type);
+    return [this.header, this.category, this.module].includes(type);
   },
   isClassy: function isClassy(type) {
     return [this.class, this.function, this.mem_fun, this.enum, this.variable, this.type_alias, this.concept, this.namespace, this.cpo].includes(type);
@@ -910,6 +911,10 @@ var Query = /*#__PURE__*/function () {
                   break;
 
                 case 'category':
+                  kind = index_type.category;
+                  break;
+
+                case 'module':
                   kind = index_type.category;
                   break;
 
@@ -2446,7 +2451,7 @@ var CRSearch = /*#__PURE__*/function () {
                 cr_info_link = crsearch_crsearch_$('<a />');
                 cr_info_link.attr('href', CRSearch._HOMEPAGE);
                 cr_info_link.attr('target', '_blank');
-                cr_info_link.text("".concat(CRSearch._APPNAME, " v").concat({"version":"3.0.8","bugs_url":"https://github.com/cpprefjp/crsearch/issues"}.version));
+                cr_info_link.text("".concat(CRSearch._APPNAME, " v").concat({"version":"3.0.9","bugs_url":"https://github.com/cpprefjp/crsearch/issues"}.version));
                 cr_info_link.appendTo(cr_info);
                 cr_info.appendTo(result_wrapper);
                 input.on('focusin', function () {
