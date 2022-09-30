@@ -1078,9 +1078,12 @@ var DOM = /*#__PURE__*/function () {
               li.addClass('added-in-spec').attr('title', "".concat(cppv, "\u3067\u8FFD\u52A0"));
             }
           } else {
-            name = attr == 'future' ? '将来' : attr == 'archive' ? '廃案' : '';
-            li.addClass('named-version-spec').attr('title', "C++ (".concat(name, ")"));
-            li.attr('named-version', attr);
+            name = attr == 'future' ? '将来' : attr == 'archive' ? '廃案' : null;
+
+            if (name) {
+              li.addClass('named-version-spec').attr('title', "C++ (".concat(name, ")"));
+              li.attr('named-version', attr);
+            }
           }
 
           if (['deprecated_in_latest', 'removed_in_latest', 'added_in_latest'].includes(attr)) {
@@ -2455,7 +2458,7 @@ var CRSearch = /*#__PURE__*/function () {
                 cr_info_link = crsearch_crsearch_$('<a />');
                 cr_info_link.attr('href', CRSearch._HOMEPAGE);
                 cr_info_link.attr('target', '_blank');
-                cr_info_link.text("".concat(CRSearch._APPNAME, " v").concat({"version":"3.0.12","bugs_url":"https://github.com/cpprefjp/crsearch/issues"}.version));
+                cr_info_link.text("".concat(CRSearch._APPNAME, " v").concat({"version":"3.0.13","bugs_url":"https://github.com/cpprefjp/crsearch/issues"}.version));
                 cr_info_link.appendTo(cr_info);
                 cr_info.appendTo(result_wrapper);
                 input.on('focusin', function () {
