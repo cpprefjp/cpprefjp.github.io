@@ -118,6 +118,7 @@ var sanitize = function sanitize(badges) {
 
       var deprecated_or_removed = false;
       var cppv = null;
+      var named_version = null;
 
       var _iterator2 = _createForOfIteratorHelper(b_classes),
           _step2;
@@ -126,7 +127,13 @@ var sanitize = function sanitize(badges) {
         for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
           var c = _step2.value;
           var cppm = c.match(/^cpp(\d[\da-zA-Z])(.*)$/);
-          if (!cppm) continue;
+
+          if (!cppm) {
+            named_version = c;
+            classes.push('named-version-spec');
+            continue;
+          }
+
           b.attr('data-cpp-version', cppm[1]);
 
           if (cppm[1].length) {
@@ -152,7 +159,7 @@ var sanitize = function sanitize(badges) {
       }
 
       b.addClass(classes.join(' '));
-      var lang_path = cppv ? "/lang/cpp".concat(cppv) : "/lang";
+      var lang_path = cppv ? "/lang/cpp".concat(cppv) : named_version ? "/lang/".concat(named_version) : "/lang";
       b.empty().append(badge_$('<a>', {
         href: "".concat(lang_path, ".html")
       }).append(badge_$('<i>')) // .append($('<span>').text(clean_txt))
