@@ -126,14 +126,16 @@ var sanitize = function sanitize(badges) {
       try {
         for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
           var c = _step2.value;
-          var cppm = c.match(/^cpp(\d[\da-zA-Z])(.*)$/);
 
-          if (!cppm) {
+          if (/^(?:future|archive)$/.test(c)) {
             named_version = c;
+            b.attr('data-named-version', c);
             classes.push('named-version-spec');
             continue;
           }
 
+          var cppm = c.match(/^cpp(\d[\da-zA-Z])(.*)$/);
+          if (!cppm) continue;
           b.attr('data-cpp-version', cppm[1]);
 
           if (cppm[1].length) {
