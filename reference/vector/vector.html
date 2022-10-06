@@ -189,12 +189,12 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2022-05-18T11:22:36">
-        2022年05月18日 11時22分36秒
+      <span itemprop="datePublished" content="2022-10-06T07:13:02">
+        2022年10月06日 07時13分02秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">suomesta</span>
+        <span itemprop="name">Akira Takahashi</span>
       </span>
       が更新
     </small></p>
@@ -656,16 +656,16 @@
 <h2><code>vector&lt;bool&gt;</code>特殊化</h2>
 <p><code>vector</code>は<code>bool</code>型に対して特殊化されている。</p>
 <p>この特殊化はメモリ領域を最小化するために提供されていて、各要素は1bitの領域のみを必要とする。</p>
-<p><code>vector&lt;bool&gt;::reference</code>は<code>bool</code>への参照ではなく、領域内の1bitを指す型であり、以下のようなインタフェースである。</p>
+<p><code>vector&lt;bool&gt;::reference</code>は<code>bool</code>への参照ではなく、領域内の1bitを指す型であり、以下のようなインタフェースである (<code>constexpr</code>はC++20から付加される)。</p>
 <p><div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;::</span><span class="n">reference</span> <span class="p">{</span>
   <span class="k">friend</span> <span class="k">class</span> <span class="nc">vector</span><span class="p">;</span>
-  <span class="n">reference</span><span class="p">();</span>                              <span class="c1">// コンストラクタは非公開</span>
+  <span class="k">constexpr</span> <span class="nf">reference</span><span class="p">();</span>                              <span class="c1">// コンストラクタは非公開</span>
 <span class="k">public</span><span class="o">:</span>
-  <span class="o">~</span><span class="n">reference</span><span class="p">();</span>
-  <span class="k">operator</span> <span class="nf">bool</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>                    <span class="c1">// boolへの暗黙変換</span>
-  <span class="n">reference</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="kt">bool</span> <span class="n">x</span><span class="p">);</span>       <span class="c1">// boolからの代入</span>
-  <span class="n">reference</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">reference</span><span class="o">&amp;</span> <span class="n">x</span><span class="p">);</span> <span class="c1">// vector&lt;bool&gt;のビットからの代入</span>
-  <span class="kt">void</span> <span class="nf">flip</span><span class="p">();</span>                              <span class="c1">// ビットの反転</span>
+  <span class="k">constexpr</span> <span class="o">~</span><span class="n">reference</span><span class="p">();</span>
+  <span class="k">constexpr</span> <span class="k">operator</span> <span class="nf">bool</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>                    <span class="c1">// boolへの暗黙変換</span>
+  <span class="k">constexpr</span> <span class="n">reference</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="kt">bool</span> <span class="n">x</span><span class="p">);</span>       <span class="c1">// boolからの代入</span>
+  <span class="k">constexpr</span> <span class="n">reference</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">reference</span><span class="o">&amp;</span> <span class="n">x</span><span class="p">);</span> <span class="c1">// vector&lt;bool&gt;のビットからの代入</span>
+  <span class="k">constexpr</span> <span class="kt">void</span> <span class="nf">flip</span><span class="p">();</span>                              <span class="c1">// ビットの反転</span>
 <span class="p">}</span>
 </code></pre></div>
 </p>
@@ -852,6 +852,33 @@
 1
 </code></pre></p>
 <p><code>vector&lt;bool&gt;</code>の要素は参照するとプロキシオブジェクトのコピーが返ってくるため、RandomAccessIteratorの要件を満たさない。</p>
+<h3>定数式内でvectorを使用する (C++20)</h3>
+<p><div class="codehilite"><pre><span></span><code><span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/cassert.html">&lt;cassert&gt;</a></span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/vector.html">&lt;vector&gt;</a></span><span class="cp"></span>
+
+<span class="k">constexpr</span> <span class="kt">bool</span> <span class="nf">f</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/vector/vector.html">std::vector</a></span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">v</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">};</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/vector/vector/push_back.html">v.push_back</a></span><span class="p">(</span><span class="mi">4</span><span class="p">);</span>
+
+  <span class="k">auto</span><span class="o">*</span> <span class="n">p</span> <span class="o">=</span> <span class="n"><a href="https://cpprefjp.github.io/reference/vector/vector/data.html">v.data</a></span><span class="p">();</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/cassert/assert.html">assert</a></span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+
+  <span class="kt">int</span> <span class="n">sum</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="nl">x</span> <span class="p">:</span> <span class="n">v</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">sum</span> <span class="o">+=</span> <span class="n">x</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="n">sum</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="k">static_assert</span><span class="p">(</span><span class="n">f</span><span class="p">());</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<h4>出力</h4>
+<p><pre><code></code></pre></p>
 <h2>参照</h2>
 <ul>
 <li><code>vector</code>のメモリ効率について<ul>
