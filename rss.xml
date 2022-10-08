@@ -2,9 +2,36 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2022-10-07T14:58:33.367883</updated>
-  <id>d4d42c05-530d-4adf-90e3-0028f45e2e03</id>
+  <updated>2022-10-08T04:06:39.430305</updated>
+  <id>cb67896c-5ae4-45c2-8b00-a356b7392ce0</id>
 
+  
+    <entry>
+      <title>enable_view -- bit_or (|) を or (||) に修正</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/enable_view.html"/>
+      <id>34c194d100887fac38d259b97623aa4150e49ea5:reference/ranges/enable_view.md</id>
+      <updated>2022-10-08T13:02:04+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/enable_view.md b/reference/ranges/enable_view.md
+index 88acefd57..db48f1175 100644
+--- a/reference/ranges/enable_view.md
++++ b/reference/ranges/enable_view.md
+@@ -7,7 +7,7 @@
+ ```cpp
+ namespace std::ranges {
+   template&amp;lt;class T&amp;gt;
+-  inline constexpr bool enable_view = derived_from&amp;lt;T, view_base&amp;gt; | is-derived-from-view-interface&amp;lt;T&amp;gt;;
++  inline constexpr bool enable_view = derived_from&amp;lt;T, view_base&amp;gt; || is-derived-from-view-interface&amp;lt;T&amp;gt;;
+ }
+ ```
+ * derived_from[link /reference/concepts/derived_from.md]
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>acd1034</name>
+        <email>48613285+acd1034@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>非型テンプレートパラメータとしてクラス型を許可する -- C++20 非型テンプレートパラメータとしてクラス型を許可する : vectorとstringのオブジェクトをテンプレート引数に指定できないことを記載</title>
@@ -5314,371 +5341,6 @@ index 81a2eefeb..07f5fd60c 100644
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator== -- vectorの非メンバ関数をconstexpr対応 #688</title>
-      <link href="https://cpprefjp.github.io/reference/vector/vector/op_equal.html"/>
-      <id>942b7b3d48e218199f98f246121eda9d1936231d:reference/vector/vector/op_equal.md</id>
-      <updated>2022-10-06T14:59:38+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/vector/vector/op_equal.md b/reference/vector/vector/op_equal.md
-index 758f84b44..a05215bf2 100644
---- a/reference/vector/vector/op_equal.md
-+++ b/reference/vector/vector/op_equal.md
-@@ -6,7 +6,12 @@
- ```cpp
- namespace std {
-   template &amp;lt;class T, class Allocator&amp;gt;
--  bool operator==(const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; x, const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; y);
-+  bool operator==(const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; x,
-+                  const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; y);           // (1) C++03
-+
-+  template &amp;lt;class T, class Allocator&amp;gt;
-+  constexpr bool operator==(const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; x,
-+                            const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; y); // (1) C++20
- }
- ```
- 
-@@ -32,11 +37,12 @@ namespace std {
- 
- 
- ## 例
-+### 基本的な使い方 (C++11)
- ```cpp example
- #include &amp;lt;iostream&amp;gt;
- #include &amp;lt;vector&amp;gt;
- 
--int main ()
-+int main()
- {
-   std::vector&amp;lt;int&amp;gt; v1 = {1, 2, 3};
-   std::vector&amp;lt;int&amp;gt; v2 = {1, 2, 3};
-@@ -52,14 +58,44 @@ int main ()
- }
- ```
- 
--### 出力
-+#### 出力
- ```
- true
- false
- ```
- 
-+### 基本的な使い方 (C++20 constexpr)
-+```cpp example
-+#include &amp;lt;cassert&amp;gt;
-+#include &amp;lt;vector&amp;gt;
-+
-+constexpr bool f()
-+{
-+  std::vector&amp;lt;int&amp;gt; v1 = {1, 2, 3};
-+  std::vector&amp;lt;int&amp;gt; v2 = {1, 2, 3};
-+  std::vector&amp;lt;int&amp;gt; v3 = {1, 2, 3, 4};
-+
-+  // 要素数と要素の値が等しい
-+  assert(v1 == v2);
-+
-+  // 要素の値は(左辺の要素数分まで)等しいが要素数が異なる
-+  assert(!(v1 == v3));
-+
-+  return true;
-+}
-+
-+int main()
-+{
-+  static_assert(f());
-+}
-+```
-+
-+#### 出力
-+```
-+```
-+
-+
- ## 参照
- - [LWG Issue 2257. Simplify container requirements with the new algorithms](http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#2257)
-     - C++14から、2つ目の範囲のendイテレータをとる`equal()`アルゴリズムを使用するようになった。
--
--
-+- [P0784R7 More constexpr containers](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0784r7.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator&gt; -- vectorの非メンバ関数をconstexpr対応 #688</title>
-      <link href="https://cpprefjp.github.io/reference/vector/vector/op_greater.html"/>
-      <id>942b7b3d48e218199f98f246121eda9d1936231d:reference/vector/vector/op_greater.md</id>
-      <updated>2022-10-06T14:59:38+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/vector/vector/op_greater.md b/reference/vector/vector/op_greater.md
-index 40a967a8c..4b547b33b 100644
---- a/reference/vector/vector/op_greater.md
-+++ b/reference/vector/vector/op_greater.md
-@@ -6,7 +6,12 @@
- ```cpp
- namespace std {
-   template &amp;lt;class T, class Allocator&amp;gt;
--  bool operator&amp;gt;(const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; x, const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; y);
-+  bool operator&amp;gt;(const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; x,
-+                 const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; y);           // (1) C++03
-+
-+  template &amp;lt;class T, class Allocator&amp;gt;
-+  constexpr bool operator&amp;gt;(const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; x,
-+                           const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; y); // (1) C++20
- }
- ```
- 
-@@ -44,5 +49,4 @@ true
- ```
- 
- ## 参照
--
--
-+- [P0784R7 More constexpr containers](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0784r7.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator&gt;= -- vectorの非メンバ関数をconstexpr対応 #688</title>
-      <link href="https://cpprefjp.github.io/reference/vector/vector/op_greater_equal.html"/>
-      <id>942b7b3d48e218199f98f246121eda9d1936231d:reference/vector/vector/op_greater_equal.md</id>
-      <updated>2022-10-06T14:59:38+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/vector/vector/op_greater_equal.md b/reference/vector/vector/op_greater_equal.md
-index 7fc34781e..1b330b4cc 100644
---- a/reference/vector/vector/op_greater_equal.md
-+++ b/reference/vector/vector/op_greater_equal.md
-@@ -6,7 +6,12 @@
- ```cpp
- namespace std {
-   template &amp;lt;class T, class Allocator&amp;gt;
--  bool operator&amp;gt;=(const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; x, const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; y);
-+  bool operator&amp;gt;=(const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; x,
-+                  const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; y);           // (1) C++03
-+
-+  template &amp;lt;class T, class Allocator&amp;gt;
-+  constexpr bool operator&amp;gt;=(const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; x,
-+                            const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; y); // (1) C++20
- }
- ```
- 
-@@ -44,5 +49,4 @@ true
- ```
- 
- ## 参照
--
--
-+- [P0784R7 More constexpr containers](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0784r7.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator&lt; -- vectorの非メンバ関数をconstexpr対応 #688</title>
-      <link href="https://cpprefjp.github.io/reference/vector/vector/op_less.html"/>
-      <id>942b7b3d48e218199f98f246121eda9d1936231d:reference/vector/vector/op_less.md</id>
-      <updated>2022-10-06T14:59:38+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/vector/vector/op_less.md b/reference/vector/vector/op_less.md
-index 617fe23d1..fd305ed4a 100644
---- a/reference/vector/vector/op_less.md
-+++ b/reference/vector/vector/op_less.md
-@@ -6,7 +6,12 @@
- ```cpp
- namespace std {
-   template &amp;lt;class T, class Allocator&amp;gt;
--  bool operator&amp;lt;(const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; x, const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; y);
-+  bool operator&amp;lt;(const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; x,
-+                 const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; y);           // (1) C++03
-+
-+  template &amp;lt;class T, class Allocator&amp;gt;
-+  constexpr bool operator&amp;lt;(const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; x,
-+                           const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; y); // (1) C++20
- }
- ```
- 
-@@ -53,5 +58,4 @@ true
- ```
- 
- ## 参照
--
--
-+- [P0784R7 More constexpr containers](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0784r7.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator&lt;= -- vectorの非メンバ関数をconstexpr対応 #688</title>
-      <link href="https://cpprefjp.github.io/reference/vector/vector/op_less_equal.html"/>
-      <id>942b7b3d48e218199f98f246121eda9d1936231d:reference/vector/vector/op_less_equal.md</id>
-      <updated>2022-10-06T14:59:38+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/vector/vector/op_less_equal.md b/reference/vector/vector/op_less_equal.md
-index acbcdd138..5fb810ab3 100644
---- a/reference/vector/vector/op_less_equal.md
-+++ b/reference/vector/vector/op_less_equal.md
-@@ -6,7 +6,12 @@
- ```cpp
- namespace std {
-   template &amp;lt;class T, class Allocator&amp;gt;
--  bool operator&amp;lt;=(const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; x, const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; y);
-+  bool operator&amp;lt;=(const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; x,
-+                  const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; y);           // (1) C++03
-+
-+  template &amp;lt;class T, class Allocator&amp;gt;
-+  constexpr bool operator&amp;lt;=(const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; x,
-+                            const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; y); // (1) C++20
- }
- ```
- 
-@@ -44,5 +49,4 @@ true
- ```
- 
- ## 参照
--
--
-+- [P0784R7 More constexpr containers](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0784r7.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator!= -- vectorの非メンバ関数をconstexpr対応 #688</title>
-      <link href="https://cpprefjp.github.io/reference/vector/vector/op_not_equal.html"/>
-      <id>942b7b3d48e218199f98f246121eda9d1936231d:reference/vector/vector/op_not_equal.md</id>
-      <updated>2022-10-06T14:59:38+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/vector/vector/op_not_equal.md b/reference/vector/vector/op_not_equal.md
-index 58b0f356c..9f0fe6050 100644
---- a/reference/vector/vector/op_not_equal.md
-+++ b/reference/vector/vector/op_not_equal.md
-@@ -6,7 +6,12 @@
- ```cpp
- namespace std {
-   template &amp;lt;class T, class Allocator&amp;gt;
--  bool operator!=(const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; x,const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; y);
-+  bool operator!=(const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; x,
-+                  const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; y);           // (1) C++03
-+
-+  template &amp;lt;class T, class Allocator&amp;gt;
-+  constexpr bool operator!=(const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; x,
-+                            const vector&amp;lt;T, Allocator&amp;gt;&amp;amp; y); // (1) C++20
- }
- ```
- 
-@@ -27,6 +32,7 @@ namespace std {
- 
- 
- ## 例
-+### 基本的な使い方 (C++11)
- ```cpp example
- #include &amp;lt;iostream&amp;gt;
- #include &amp;lt;vector&amp;gt;
-@@ -47,12 +53,38 @@ int main ()
- }
- ```
- 
--### 出力
-+#### 出力
- ```
- false
- true
- ```
- 
--## 参照
- 
-+### 基本的な使い方 (C++20 constexpr)
-+```cpp
-+#include &amp;lt;cassert&amp;gt;
-+#include &amp;lt;vector&amp;gt;
- 
-+constexpr bool f()
-+{
-+  std::vector&amp;lt;int&amp;gt; v1 = {1, 2, 3};
-+  std::vector&amp;lt;int&amp;gt; v2 = {1, 2, 3};
-+  std::vector&amp;lt;int&amp;gt; v3 = {1, 2, 3, 4};
-+
-+  // 要素の値は(左辺の要素数分まで)等しいが要素数が異なる
-+  assert(v1 != v3);
-+
-+  // 要素数と要素の値が等しい
-+  assert(!(v1 != v2));
-+
-+  return true;
-+}
-+
-+int main()
-+{
-+  static_assert(f());
-+}
-+```
-+
-+## 参照
-+- [P0784R7 More constexpr containers](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0784r7.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>swap (非メンバ関数) -- vectorの非メンバ関数をconstexpr対応 #688</title>
-      <link href="https://cpprefjp.github.io/reference/vector/vector/swap_free.html"/>
-      <id>942b7b3d48e218199f98f246121eda9d1936231d:reference/vector/vector/swap_free.md</id>
-      <updated>2022-10-06T14:59:38+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/vector/vector/swap_free.md b/reference/vector/vector/swap_free.md
-index 880cdad0d..81a2eefeb 100644
---- a/reference/vector/vector/swap_free.md
-+++ b/reference/vector/vector/swap_free.md
-@@ -11,6 +11,10 @@ namespace std {
-   template &amp;lt;class T, class Allocator&amp;gt;
-   void swap(vector&amp;lt;T,Allocator&amp;gt;&amp;amp; x, vector&amp;lt;T,Allocator&amp;gt;&amp;amp; y)
-     noexcept(noexcept(x.swap(y)));                             // (1) C++17
-+
-+  template &amp;lt;class T, class Allocator&amp;gt;
-+  constexpr void swap(vector&amp;lt;T,Allocator&amp;gt;&amp;amp; x, vector&amp;lt;T,Allocator&amp;gt;&amp;amp; y)
-+    noexcept(noexcept(x.swap(y)));                             // (1) C++20
- }
- ```
- 
-@@ -65,3 +69,4 @@ v2 : {1 2 3 }
- ## 参照
- - [N4258 Cleaning-up noexcept in the Library, Rev 3](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4258.pdf)
-     - `noexcept` 追加の経緯となる提案文書
-+- [P0784R7 More constexpr containers](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0784r7.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
         <name>Akira Takahashi</name>
