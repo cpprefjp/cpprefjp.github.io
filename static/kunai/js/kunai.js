@@ -306,7 +306,9 @@ var Content = /*#__PURE__*/function () {
 
     this.log = log.makeContext('Content');
     this.log.debug('initialzing...');
-    this.log.debug("found ".concat(sanitize(content_$('main[role="main"] div[itemtype="http://schema.org/Article"] .content-body span.cpp')), " badges"));
+    this.log.debug("found ".concat(sanitize(content_$('main[role="main"] div[itemtype="http://schema.org/Article"] .content-body span.cpp')), " badges")); // 横幅を超える画像を横スクロール可能にするためにスクロール用のdivで囲む
+
+    content_$('div[itemprop="articleBody"]').find('img').wrap('<div class="scrollable">');
     this.setupTooltip();
   }
 
