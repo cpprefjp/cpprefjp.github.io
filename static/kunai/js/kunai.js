@@ -354,8 +354,8 @@ var Content = /*#__PURE__*/function () {
 var toConsumableArray = __webpack_require__(126);
 // EXTERNAL MODULE: ../node_modules/@babel/runtime/helpers/esm/slicedToArray.js + 3 modules
 var slicedToArray = __webpack_require__(5809);
-// EXTERNAL MODULE: ../node_modules/crsearch/js/crsearch.js + 9 modules
-var crsearch = __webpack_require__(5704);
+// EXTERNAL MODULE: ../node_modules/crsearch/js/crsearch.js + 10 modules
+var crsearch = __webpack_require__(8559);
 ;// CONCATENATED MODULE: ./kunai/ui/treeview.js
 /* provided dependency */ var treeview_$ = __webpack_require__(5638);
 
