@@ -2,9 +2,339 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2022-11-19T09:37:29.086613</updated>
-  <id>c6bbcbfe-67d1-425d-87eb-364c97d0572c</id>
+  <updated>2022-11-19T13:32:33.390163</updated>
+  <id>5b82e481-a9a3-476a-b1a3-f492897bcb75</id>
 
+  
+    <entry>
+      <title>allocate_shared -- スマートポインタ生成関数のfor_overwriteの違いを明確化、説明の修正</title>
+      <link href="https://cpprefjp.github.io/reference/memory/allocate_shared.html"/>
+      <id>7be2ca01483cfe883c4ef8ac4e46df99d20fa7b9:reference/memory/allocate_shared.md</id>
+      <updated>2022-11-19T22:28:32+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/allocate_shared.md b/reference/memory/allocate_shared.md
+index 05b624473..71eb47794 100644
+--- a/reference/memory/allocate_shared.md
++++ b/reference/memory/allocate_shared.md
+@@ -53,7 +53,7 @@ namespace std {
+ 
+ 配列型`U`のオブジェクトが（同じ型の）`u`の初期値を持つように指定されている場合、これは、オブジェクトの各配列要素が初期値として`u`からの対応する要素を持つことを意味すると解釈される。
+ 
+-配列タイプのオブジェクトがデフォルトの初期値を持つように指定されている場合、これはオブジェクトの各配列要素がデフォルトの初期値を持つことを意味すると解釈される。
++配列タイプのオブジェクトがデフォルトの初期値を持つように指定されている場合、これはオブジェクトの各配列要素がデフォルトの初期値を持つ（値初期化される）ことを意味すると解釈される。
+ 
+ 非配列型Uの（サブ）オブジェクトが初期値`v`または`U(l...)`を持つように指定されている場合（`l...`はコンストラクタ引数のリスト）、この関数は次の式を介してこの（サブ）オブジェクトを初期化する。
+ 
+@@ -93,6 +93,7 @@ namespace std {
+ 同様の効果を持つ関数に、[`make_shared()`](make_shared.md)があるが、
+ この関数はメモリの確保にユーザー定義のアロケータを使用したい場合などに用いることができる。
+ 
++この関数では初期値が指定されない場合に確保した領域にオブジェクトが値初期化され構築される。値初期化においては、組み込み型は`0`相当の値で初期化され、クラス型はデフォルトコンストラクタによって初期化される。この関数でメモリを確保した後ですぐに別の値で上書きしている場合、代わりに[`allocate_shared_for_overwrite()`](allocate_shared_for_overwrite.md)を使用することで初期化のオーバーヘッドを削減できる可能性がある。
+ 
+ ## 例
+ ```cpp example
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>allocate_shared_for_overwrite -- スマートポインタ生成関数のfor_overwriteの違いを明確化、説明の修正</title>
+      <link href="https://cpprefjp.github.io/reference/memory/allocate_shared_for_overwrite.html"/>
+      <id>7be2ca01483cfe883c4ef8ac4e46df99d20fa7b9:reference/memory/allocate_shared_for_overwrite.md</id>
+      <updated>2022-11-19T22:28:32+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/allocate_shared_for_overwrite.md b/reference/memory/allocate_shared_for_overwrite.md
+index 9bce28633..4bfc4d91e 100644
+--- a/reference/memory/allocate_shared_for_overwrite.md
++++ b/reference/memory/allocate_shared_for_overwrite.md
+@@ -16,7 +16,7 @@ namespace std {
+ * shared_ptr[link shared_ptr.md]
+ 
+ ## 概要
+-デフォルトの初期値を持つ`T`型のオブジェクト、またはその配列への[`shared_ptr`](shared_ptr.md)を構築し、返却する。
++`T`型のオブジェクト、またはその配列への[`shared_ptr`](shared_ptr.md)を構築し、返却する。
+ 
+ 
+ ## 要件
+@@ -26,13 +26,11 @@ namespace std {
+ ## 効果
+ 型`T`のオブジェクトにメモリを割り当てる（`T`が`U[]`の場合は`U[N]`。`N`はそれぞれのオーバーロードで指定された引数から決定される）。メモリは、引数`a`のコピー(参照カウンタと型`T`の本体を連続メモリ領域に配置するためには`T`のサイズより大きい領域をアロケートする必要があるために`allocator_traits&amp;lt;Alloc&amp;gt;::rebind_alloc&amp;lt;value_type&amp;gt;`を用いて再束縛されたもの)を使用して割り当てられる。
+ 
+-オブジェクトは、デフォルト初期化される。
++すべてのオーバーロードにおいて、確保された領域のオブジェクトはデフォルト構築される。
+ 
+ 例外がスローされた場合、関数は効果がない。
+ 
+-配列型`U`のオブジェクトが（同じ型の）`u`の初期値を持つように指定されている場合、これは、オブジェクトの各配列要素が初期値として`u`からの対応する要素を持つことを意味すると解釈される。
+-
+-配列タイプのオブジェクトがデフォルトの初期値を持つように指定されている場合、これはオブジェクトの各配列要素がデフォルトの初期値を持つことを意味すると解釈される。
++非配列型`U`の（サブ）オブジェクトがこの関数によって初期化されるときは、式`::new(pv) U`によって初期化される。ここで、`pv`は型 `void *`を持ち、型`U`のオブジェクトを保持するための適切なストレージを指す。
+ 
+ 配列要素は、アドレスの昇順で初期化される。
+ 
+@@ -57,6 +55,7 @@ namespace std {
+ 同様の効果を持つ関数に、[`make_shared_for_overwrite()`](make_shared_for_overwrite.md)があるが、
+ この関数はメモリの確保にユーザー定義のアロケータを使用したい場合などに用いることができる。
+ 
++デフォルト構築においては、[トリビアルにデフォルト構築可能](/reference/type_traits/is_trivially_default_constructible.md)な型のオブジェクトは未初期化状態となるため、値を読みだす前に明示的に初期化（*overwrite*）する必要がある。初期化後の状態が不定になってほしくない場合はこの関数ではなく[`allocate_shared()`](allocate_shared.md)を使用すべき。
+ 
+ ## 例
+ ```cpp example
+@@ -67,6 +66,7 @@ int main() {
+   std::allocator&amp;lt;int&amp;gt; alloc;
+   std::shared_ptr&amp;lt;int&amp;gt; sp = std::allocate_shared_for_overwrite&amp;lt;int&amp;gt;(alloc);
+   if (sp) {
++    *sp = 0;  // 必ず初期化する
+     std::cout &amp;lt;&amp;lt; *sp &amp;lt;&amp;lt; std::endl;
+   }
+ }
+@@ -75,7 +75,7 @@ int main() {
+ 
+ ### 出力
+ ```
+-42
++0
+ ```
+ 
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>make_shared -- スマートポインタ生成関数のfor_overwriteの違いを明確化、説明の修正</title>
+      <link href="https://cpprefjp.github.io/reference/memory/make_shared.html"/>
+      <id>7be2ca01483cfe883c4ef8ac4e46df99d20fa7b9:reference/memory/make_shared.md</id>
+      <updated>2022-11-19T22:28:32+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/make_shared.md b/reference/memory/make_shared.md
+index 89874db33..1020f5d3c 100644
+--- a/reference/memory/make_shared.md
++++ b/reference/memory/make_shared.md
+@@ -38,7 +38,7 @@ namespace std {
+ 
+ 配列型`U`のオブジェクトが（同じ型の）`u`の初期値を持つように指定されている場合、これは、オブジェクトの各配列要素が初期値として`u`からの対応する要素を持つことを意味すると解釈される。
+ 
+-配列タイプのオブジェクトがデフォルトの初期値を持つように指定されている場合、これはオブジェクトの各配列要素がデフォルトの初期値を持つことを意味すると解釈される。
++配列タイプのオブジェクトがデフォルトの初期値を持つように指定されている場合、これはオブジェクトの各配列要素がデフォルトの初期値を持つ（値初期化される）ことを意味すると解釈される。
+ 
+ 非配列型`U`の（サブ）オブジェクトが、`v`または`U(l ...)`の初期値を持つように指定されている場合(`l...`はコンストラクタ引数のリスト）、`make_shared`は、式`::new (pv) U(v)`または`::new (pv) U(l...)`を使用して、この（サブ）オブジェクトを初期化する。ここで、`pv`の型は`void*`であり、型`U`のオブジェクトを保持するのに適したストレージを指す。
+ 
+@@ -79,6 +79,8 @@ namespace std {
+ 
+ メモリの確保にユーザー定義のアロケータを使用したい場合には、 [`allocate_shared()`](allocate_shared.md) を使用する。
+ 
++この関数では初期値が指定されない場合に確保した領域にオブジェクトが値初期化され構築される。値初期化においては、組み込み型は`0`相当の値で初期化され、クラス型はデフォルトコンストラクタによって初期化される。この関数でメモリを確保した後ですぐに別の値で上書きしている場合、代わりに[`make_shared_for_overwrite()`](make_shared_for_overwrite.md)を使用することで初期化のオーバーヘッドを削減できる可能性がある。
++
+ ## 例
+ ```cpp example
+ #include &amp;lt;memory&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>make_shared_for_overwrite -- スマートポインタ生成関数のfor_overwriteの違いを明確化、説明の修正</title>
+      <link href="https://cpprefjp.github.io/reference/memory/make_shared_for_overwrite.html"/>
+      <id>7be2ca01483cfe883c4ef8ac4e46df99d20fa7b9:reference/memory/make_shared_for_overwrite.md</id>
+      <updated>2022-11-19T22:28:32+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/make_shared_for_overwrite.md b/reference/memory/make_shared_for_overwrite.md
+index b69fca099..e95f9967d 100644
+--- a/reference/memory/make_shared_for_overwrite.md
++++ b/reference/memory/make_shared_for_overwrite.md
+@@ -16,24 +16,20 @@ namespace std {
+ * shared_ptr[link shared_ptr.md]
+ 
+ ## 概要
+-デフォルトの初期値を持つ`T`型のオブジェクト、またはその配列への[`shared_ptr`](shared_ptr.md)を構築し、返却する。
++`T`型のオブジェクト、またはその配列への[`shared_ptr`](shared_ptr.md)を構築し、返却する。
+ 
+ 
+ ## 効果
+ 型`T`のオブジェクトにメモリを割り当てる（`T`が`U[]`の場合は`U[N]`。`N`はそれぞれのオーバーロードで指定された引数から決定される）。
+ 
+-オブジェクトは、デフォルト初期化される。
++すべてのオーバーロードにおいて、確保された領域のオブジェクトはデフォルト構築される。
+ 
+ 例外がスローされた場合、関数は効果がない。
+ 
+-配列型`U`のオブジェクトが（同じ型の）`u`の初期値を持つように指定されている場合、これは、オブジェクトの各配列要素が初期値として`u`からの対応する要素を持つことを意味すると解釈される。
+-
+-配列タイプのオブジェクトがデフォルトの初期値を持つように指定されている場合、これはオブジェクトの各配列要素がデフォルトの初期値を持つことを意味すると解釈される。
++非配列型`U`の（サブ）オブジェクトがこの関数によって初期化されるときは、式`::new(pv) U`によって初期化される。ここで、`pv`は型 `void *`を持ち、型`U`のオブジェクトを保持するための適切なストレージを指す。
+ 
+ 配列要素は、アドレスの昇順で初期化される。
+ 
+-非配列型`U`の（サブ）オブジェクトがこの関数によって初期化されるときは、式`::new(pv) U`によって初期化される。ここで、`pv`は型 `void *`を持ち、型`U`のオブジェクトを保持するための適切なストレージを指す。
+-
+ 戻り値によって管理されるオブジェクトの`lifetime`が終了するか、配列要素の初期化が例外をスローすると、初期化された要素は元の構造の逆の順序で破棄される。
+ 
+ - (1) : このオーバーロードが選択されるとき、`T`は、不明な境界の配列ではない。`T`型のオブジェクトへの`shared_ptr`を返す。
+@@ -54,6 +50,7 @@ namespace std {
+ ## 備考
+ メモリの確保にユーザー定義のアロケータを使用したい場合には、 [`allocate_shared_for_overwrite()`](allocate_shared_for_overwrite.md) を使用する。
+ 
++デフォルト構築においては、[トリビアルにデフォルト構築可能](/reference/type_traits/is_trivially_default_constructible.md)な型のオブジェクトは未初期化状態となるため、値を読みだす前に明示的に初期化（*overwrite*）する必要がある。初期化後の状態が不定になってほしくない場合はこの関数ではなく[`make_shared()`](make_shared.md)を使用すべき。
+ 
+ ## 例
+ ```cpp example
+@@ -63,6 +60,7 @@ namespace std {
+ int main() {
+   std::shared_ptr&amp;lt;int&amp;gt; sp = std::make_shared_for_overwrite&amp;lt;int&amp;gt;();
+   if (sp) {
++    *sp = 0;  // 必ず初期化する
+     std::cout &amp;lt;&amp;lt; *sp &amp;lt;&amp;lt; std::endl;
+   }
+ }
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>make_unique -- スマートポインタ生成関数のfor_overwriteの違いを明確化、説明の修正</title>
+      <link href="https://cpprefjp.github.io/reference/memory/make_unique.html"/>
+      <id>7be2ca01483cfe883c4ef8ac4e46df99d20fa7b9:reference/memory/make_unique.md</id>
+      <updated>2022-11-19T22:28:32+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/make_unique.md b/reference/memory/make_unique.md
+index 2524d0aa2..1edcdd71d 100644
+--- a/reference/memory/make_unique.md
++++ b/reference/memory/make_unique.md
+@@ -26,6 +26,10 @@ namespace std {
+ - (2) : 配列型`T`の要素数を受け取り、`unique_ptr&amp;lt;T&amp;gt;`オブジェクトを構築する。
+ - (3) : (1)に配列型が指定された場合に、許可されていないオーバーロードとして宣言される。
+ 
++## テンプレートパラメータ制約
++- (1) : `T`は配列型ではない
++- (2) : `T`は要素数不明の配列型（`U[]`）
++- (3) : `T`は要素数既知の配列型（`U[N]`）
+ 
+ ## 戻り値
+ - (1) : `unique_ptr&amp;lt;T&amp;gt;(new T(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...))`
+@@ -33,9 +37,8 @@ namespace std {
+ 
+ 
+ ## 備考
+-- (1) : 型`T`が配列型である場合、この関数はオーバーロード解決の候補に入ってはならない。
+-- (2), (3) : 型`T`が要素数不明の配列型でない場合、この関数はオーバーロード解決の候補に入ってはならない。
+ 
++この関数では初期値が指定されない場合に確保した領域にオブジェクトが値初期化され構築される。値初期化においては、組み込み型は`0`相当の値で初期化され、クラス型はデフォルトコンストラクタによって初期化される。この関数でメモリを確保した後ですぐに別の値で上書きしている場合、代わりに[`make_unique_for_overwrite()`](make_unique_for_overwrite.md)を使用することで初期化のオーバーヘッドを削減できる可能性がある。
+ 
+ ## 例
+ ```cpp example
+@@ -84,6 +87,8 @@ int main()
+ ## 参照
+ - [N3588 make_unique](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3588.htm)
+ - [N3656 make_unique (Revision 1)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3656.htm)
++- [Why is `make_unique&amp;lt;T[N]&amp;gt;` disallowed? - stackoverflow](https://stackoverflow.com/questions/16596950/why-is-make-uniquetn-disallowed)
++    - (3)のオーバーロードの意味について
+ 
+ ## 関連項目
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>make_unique_for_overwrite -- スマートポインタ生成関数のfor_overwriteの違いを明確化、説明の修正</title>
+      <link href="https://cpprefjp.github.io/reference/memory/make_unique_for_overwrite.html"/>
+      <id>7be2ca01483cfe883c4ef8ac4e46df99d20fa7b9:reference/memory/make_unique_for_overwrite.md</id>
+      <updated>2022-11-19T22:28:32+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/make_unique_for_overwrite.md b/reference/memory/make_unique_for_overwrite.md
+index b14120e7c..37ce5f94e 100644
+--- a/reference/memory/make_unique_for_overwrite.md
++++ b/reference/memory/make_unique_for_overwrite.md
+@@ -6,11 +6,14 @@
+ 
+ ```cpp
+ namespace std {
+-  template&amp;lt;class T&amp;gt; unique_ptr&amp;lt;T&amp;gt; make_unique_for_overwrite();                                // (1)
++  template&amp;lt;class T&amp;gt;
++  unique_ptr&amp;lt;T&amp;gt; make_unique_for_overwrite();                 // (1)
+ 
+-  template&amp;lt;class T&amp;gt; unique_ptr&amp;lt;T&amp;gt; make_unique_for_overwrite(size_t n);                        // (2)
++  template&amp;lt;class T&amp;gt;
++  unique_ptr&amp;lt;T&amp;gt; make_unique_for_overwrite(size_t n);         // (2)
+ 
+-  template&amp;lt;class T, class... Args&amp;gt; unspecified make_unique_for_overwrite(Args&amp;amp;&amp;amp;...) = delete; // (3)
++  template&amp;lt;class T, class... Args&amp;gt;
++  unspecified make_unique_for_overwrite(Args&amp;amp;&amp;amp;...) = delete; // (3)
+ }
+ ```
+ * unique_ptr[link unique_ptr.md]
+@@ -20,14 +23,21 @@ namespace std {
+ `unique_ptr`オブジェクトを構築する。その際、型`T`のオブジェクトはデフォルト構築される。
+ 
+ - (1) : `T`が配列型でないときに選択される。
+-- (2) : `T`が不明な境界の配列のときに選択される。
+-- (3) : 許可されていないオーバーロードとして宣言される。`T`は既知の境界の配列型である。
++- (2) : `T`が要素数不明の配列型のときに選択される。
++- (3) : 許可されていないオーバーロードとして宣言される。`T`は要素数既知の配列型である。
+ 
++## テンプレートパラメータ制約
++- (1) : `T`は配列型ではない
++- (2) : `T`は要素数不明の配列型（`U[]`）
++- (3) : `T`は要素数既知の配列型（`U[N]`）
+ 
+ ## 戻り値
+-- (1) : `unique_ptr&amp;lt;T&amp;gt;(new T())`
+-- (2) : `unique_ptr&amp;lt;T&amp;gt;(new` [`remove_extent_t`](/reference/type_traits/remove_extent.md)`&amp;lt;T&amp;gt;[n]())`
++- (1) : `unique_ptr&amp;lt;T&amp;gt;(new T)`
++- (2) : `unique_ptr&amp;lt;T&amp;gt;(new` [`remove_extent_t`](/reference/type_traits/remove_extent.md)`&amp;lt;T&amp;gt;[n])`
+ 
++## 備考
++
++デフォルト構築においては、[トリビアルにデフォルト構築可能](/reference/type_traits/is_trivially_default_constructible.md)な型のオブジェクトは未初期化状態となるため、値を読みだす前に明示的に初期化（*overwrite*）する必要がある。初期化後の状態が不定になってほしくない場合はこの関数ではなく[`make_unique()`](make_unique.md)を使用すべき。
+ 
+ ## 例
+ ```cpp example
+@@ -38,6 +48,11 @@ namespace std {
+ int main()
+ {
+   std::unique_ptr&amp;lt;std::pair&amp;lt;int, int&amp;gt;&amp;gt; p1 = std::make_unique_for_overwrite&amp;lt;std::pair&amp;lt;int, int&amp;gt;&amp;gt;();
++
++  // 必ず初期化する
++  p1-&amp;gt;first = 0;
++  p1-&amp;gt;second = 0;
++
+   std::cout &amp;lt;&amp;lt; p1-&amp;gt;first &amp;lt;&amp;lt; &amp;#39;:&amp;#39; &amp;lt;&amp;lt; p1-&amp;gt;second &amp;lt;&amp;lt; std::endl;
+ }
+ ```
+@@ -65,3 +80,5 @@ int main()
+ ## 参照
+ - [P1020R1 Smart pointer creation with default initialization](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1020r1.html)
+ - [P1973R1 Rename &amp;#34;_default_init&amp;#34; Functions](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1973r1.pdf)
++- [Why is `make_unique&amp;lt;T[N]&amp;gt;` disallowed? - stackoverflow](https://stackoverflow.com/questions/16596950/why-is-make-uniquetn-disallowed)
++    - (3)のオーバーロードの意味について
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>uninitialized_copy -- uninitialized_(copy|move)系関数 : 初期化対象引数の明確化</title>
@@ -1419,754 +1749,6 @@ index 70d8db320..5b7321396 100644
  
  
  ## 例外
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>memory -- &lt;memory&gt; : ranges::uninitialized_move_nを追加 #999</title>
-      <link href="https://cpprefjp.github.io/reference/memory.html"/>
-      <id>7d958e637404a12543239fcbb98d0ea4e7f792e4:reference/memory.md</id>
-      <updated>2022-11-17T13:52:06+09:00</updated>
-      
-        <content type="html">&lt;div class=&#34;header&#34;&gt;&amp;lt;memory&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;token&#34;&gt;memory&lt;/span&gt;&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;&lt;code&gt;&amp;lt;memory&amp;gt;&lt;/code&gt;ヘッダでは、メモリアロケータ、未初期化領域に関する関数群、スマートポインタ、ガベージコレクションを作るためのユーティリティ関数といった、メモリを扱うための機能を定義する。&lt;/p&gt;
-&lt;p&gt;このヘッダでは、以下の標準ヘッダをインクルードする：&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/compare.html&#34;&gt;&amp;lt;compare&amp;gt;&lt;/a&gt;&lt;/code&gt; (C++20)&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;メモリアロケータ&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/allocator.html&#34;&gt;allocator&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;メモリアロケータの標準実装(class template)&lt;/td&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/allocator_traits.html&#34;&gt;allocator_traits&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;アロケータクラスへの間接的なアクセス(class template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/allocator_arg_t.html&#34;&gt;allocator_arg_t&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;アロケータを引数として渡す際の、オーバーロード解決のためのタグ(class)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/allocator_arg_t.html&#34;&gt;allocator_arg&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;アロケータを引数として渡す際の、オーバーロード解決のためのタグ(constant value)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/uses_allocator.html&#34;&gt;uses_allocator&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;型&lt;code&gt;T&lt;/code&gt;がアロケータを使用するか調べる&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/uses_allocator_construction_args.html&#34;&gt;uses_allocator_construction_args&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;uses-allocator 構築のためのコンストラクタ引数を &lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/tuple/tuple.html&#34;&gt;tuple&lt;/a&gt;&lt;/code&gt; 型にして返す&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/make_obj_using_allocator.html&#34;&gt;make_obj_using_allocator&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;uses-allocator 構築する&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/uninitialized_construct_using_allocator.html&#34;&gt;uninitialized_construct_using_allocator&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;指定された領域に uses-allocator 構築する&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;メモリ特化のコンセプト&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/no-throw-input-iterator.md.nolink&#34;&gt;no-throw-input-iterator&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;各操作で例外送出をしない説明用の入力イテレータ (concept)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/no-throw-forward-iterator.md.nolink&#34;&gt;no-throw-forward-iterator&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;各操作で例外送出をしない説明用の前方向イテレータ (concept)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/no-throw-sentinel.md.nolink&#34;&gt;no-throw-sentinel&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;各操作で例外送出をしない説明用の番兵 (concept)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/no-throw-input-range.md.nolink&#34;&gt;no-throw-input-range&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;各操作で例外送出をしない入力Range (concept)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/no-throw-forward-range.md.nolink&#34;&gt;no-throw-forward-range&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;各操作で例外送出をしない前方向Range (concept)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;未初期化領域に対する操作&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/uninitialized_default_construct.html&#34;&gt;uninitialized_default_construct&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲の各要素をデフォルト構築する(function template)&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/uninitialized_default_construct_n.html&#34;&gt;uninitialized_default_construct_n&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲のうち、先頭&lt;code&gt;N&lt;/code&gt;個の要素をデフォルト構築する(function template)&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/uninitialized_value_construct.html&#34;&gt;uninitialized_value_construct&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲の各要素配置を値構築する(function template)&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/uninitialized_value_construct_n.html&#34;&gt;uninitialized_value_construct_n&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲のうち、先頭&lt;code&gt;N&lt;/code&gt;個の要素を値構築する(function template)&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/uninitialized_copy.html&#34;&gt;uninitialized_copy&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲を配置&lt;code&gt;new&lt;/code&gt;で初期化してコピー出力する(function template)&lt;/td&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/uninitialized_copy_n.html&#34;&gt;uninitialized_copy_n&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲のうち、先頭&lt;code&gt;N&lt;/code&gt;個の要素を配置&lt;code&gt;new&lt;/code&gt;で初期化してコピー出力する(function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/uninitialized_move.html&#34;&gt;uninitialized_move&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲を配置&lt;code&gt;new&lt;/code&gt;で初期化してムーブ出力する(function template)&lt;/td&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/uninitialized_move_n.html&#34;&gt;uninitialized_move_n&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲のうち、先頭&lt;code&gt;N&lt;/code&gt;個の要素を配置&lt;code&gt;new&lt;/code&gt;で初期化してムーブ出力する(function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/uninitialized_fill.html&#34;&gt;uninitialized_fill&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲を、指定された値で配置&lt;code&gt;new&lt;/code&gt;する(function template)&lt;/td&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/uninitialized_fill_n.html&#34;&gt;uninitialized_fill_n&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲のうち、先頭&lt;code&gt;N&lt;/code&gt;個の要素を指定された値で配置&lt;code&gt;new&lt;/code&gt;する(function template)&lt;/td&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/construct_at.html&#34;&gt;construct_at&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;コンストラクタを呼び出す(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/destroy_at.html&#34;&gt;destroy_at&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;デストラクタを呼び出す(function template)&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/destroy.html&#34;&gt;destroy&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;範囲の各要素に対してデストラクタを呼び出す(function template)&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/destroy_n.html&#34;&gt;destroy_n&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;範囲のうち、先頭&lt;code&gt;N&lt;/code&gt;個の要素に対してデストラクタを呼び出す(function template)&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/ranges_uninitialized_default_construct.md.nolink&#34;&gt;ranges::uninitialized_default_construct&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲の各要素をデフォルト構築する(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/ranges_uninitialized_default_construct_n.md.nolink&#34;&gt;ranges::uninitialized_default_construct_n&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲のうち、先頭&lt;code&gt;N&lt;/code&gt;個の要素をデフォルト構築する(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/ranges_uninitialized_value_construct.md.nolink&#34;&gt;ranges::uninitialized_value_construct&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲の各要素配置を値構築する(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/ranges_uninitialized_value_construct_n.md.nolink&#34;&gt;ranges::uninitialized_value_construct_n&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲のうち、先頭&lt;code&gt;N&lt;/code&gt;個の要素を値構築する(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/ranges_uninitialized_copy.html&#34;&gt;ranges::uninitialized_copy&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲を配置&lt;code&gt;new&lt;/code&gt;で初期化してコピー出力する(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/ranges_uninitialized_copy_n.html&#34;&gt;ranges::uninitialized_copy_n&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲のうち、先頭&lt;code&gt;N&lt;/code&gt;個の要素を配置&lt;code&gt;new&lt;/code&gt;で初期化してコピー出力する(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/ranges_uninitialized_move.html&#34;&gt;ranges::uninitialized_move&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲を配置&lt;code&gt;new&lt;/code&gt;で初期化してムーブ出力する(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/ranges_uninitialized_move_n.html&#34;&gt;ranges::uninitialized_move_n&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲のうち、先頭&lt;code&gt;N&lt;/code&gt;個の要素を配置&lt;code&gt;new&lt;/code&gt;で初期化してムーブ出力する(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/ranges_uninitialized_fill.md.nolink&#34;&gt;ranges::uninitialized_fill&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲を、指定された値で配置&lt;code&gt;new&lt;/code&gt;する(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/ranges_uninitialized_fill_n.md.nolink&#34;&gt;ranges::uninitialized_fill_n&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲のうち、先頭&lt;code&gt;N&lt;/code&gt;個の要素を指定された値で配置&lt;code&gt;new&lt;/code&gt;する(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/ranges_construct_at.md.nolink&#34;&gt;ranges::construct_at&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;コンストラクタを呼び出す(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/ranges_destroy_at.md.nolink&#34;&gt;ranges::destroy_at&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;デストラクタを呼び出す(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/ranges_destroy.md.nolink&#34;&gt;ranges::destroy&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;範囲の各要素に対してデストラクタを呼び出す(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/ranges_destroy_n.md.nolink&#34;&gt;ranges::destroy_n&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;範囲のうち、先頭&lt;code&gt;N&lt;/code&gt;個の要素に対してデストラクタを呼び出す(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/raw_storage_iterator.html&#34;&gt;raw_storage_iterator&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域に書き込むための出力イテレータ(class template)&lt;/td&gt;
-&lt;td&gt;C++17から非推奨&lt;br /&gt; C++20で削除&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/get_temporary_buffer.html&#34;&gt;get_temporary_buffer&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;短期的なメモリ領域を確保する(function template)&lt;/td&gt;
-&lt;td&gt;C++17から非推奨&lt;br /&gt; C++20で削除&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/return_temporary_buffer.html&#34;&gt;return_temporary_buffer&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;get_temporary_buffer()&lt;/code&gt;で確保された領域を解放する(function)&lt;/td&gt;
-&lt;td&gt;C++17から非推奨&lt;br /&gt; C++20で削除&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;スマートポインタ&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/shared_ptr.html&#34;&gt;shared_ptr&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;共有方式スマートポインタ(class template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/make_shared.html&#34;&gt;make_shared&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;shared_ptr&lt;/code&gt;を構築するヘルパ関数(function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/make_shared_for_overwrite.html&#34;&gt;make_shared_for_overwrite&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;shared_ptr&lt;/code&gt;を構築するヘルパ関数(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/allocate_shared.html&#34;&gt;allocate_shared&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;アロケータを指定して&lt;code&gt;shared_ptr&lt;/code&gt;を構築するヘルパ関数(function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/allocate_shared_for_overwrite.html&#34;&gt;allocate_shared_for_overwrite&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;アロケータを指定して&lt;code&gt;shared_ptr&lt;/code&gt;を構築するヘルパ関数(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/enable_shared_from_this.html&#34;&gt;enable_shared_from_this&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;this&lt;/code&gt;を指す&lt;code&gt;shared_ptr&lt;/code&gt;を可能にする(class template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/weak_ptr.html&#34;&gt;weak_ptr&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;shared_ptr&lt;/code&gt;のインスタンス監視(class template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/bad_weak_ptr.html&#34;&gt;bad_weak_ptr&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;weak_ptr&lt;/code&gt;から投げられる例外クラス(class template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/owner_less.html&#34;&gt;owner_less&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;所有権ベースの小なり比較(class template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/unique_ptr.html&#34;&gt;unique_ptr&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;専有方式スマートポインタ(class template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/make_unique.html&#34;&gt;make_unique&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;unique_ptr&lt;/code&gt;を構築するヘルパ関数(function template)&lt;/td&gt;
-&lt;td&gt;C++14&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/make_unique_for_overwrite.html&#34;&gt;make_unique_for_overwrite&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;unique_ptr&lt;/code&gt;を構築するヘルパ関数(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/default_delete.html&#34;&gt;default_delete&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;unique_ptr&lt;/code&gt;のデフォルトの削除子(class template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;auto_ptr&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;古い専有方式スマートポインタ(class template)&lt;/td&gt;
-&lt;td&gt;C++11から非推奨&lt;br /&gt; C++17で削除&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;スマートポインタのアトミック操作&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;template&amp;lt;class T&amp;gt; struct atomic&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;atomic&lt;/code&gt;クラスの先行宣言 (class template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/atomic.html&#34;&gt;template&amp;lt;class T&amp;gt; struct atomic&amp;lt;shared_ptr&amp;lt;T&amp;gt;&amp;gt;;&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;atomic&lt;/code&gt;クラスの&lt;code&gt;shared_ptr&lt;/code&gt;に対する特殊化 (class template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/atomic.html&#34;&gt;template&amp;lt;class T&amp;gt; struct atomic&amp;lt;weak_ptr&amp;lt;T&amp;gt;&amp;gt;;&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;atomic&lt;/code&gt;クラスの&lt;code&gt;weak_ptr&lt;/code&gt;に対する特殊化 (class template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;atomic_is_lock_free&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;shared_ptr&lt;/code&gt;に対するアトミック操作がロックフリーに振る舞うことができるかを調べる (function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;br /&gt; C++20で非推奨&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;atomic_load&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;shared_ptr&lt;/code&gt;の値をアトミックに読み込む (function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;br /&gt; C++20で非推奨&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;atomic_load_explicit&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;メモリオーダーを指定して、&lt;code&gt;shared_ptr&lt;/code&gt;の値をアトミックに読み込む (function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;br /&gt; C++20で非推奨&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;atomic_store&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;shared_ptr&lt;/code&gt;値をアトミックに書き込む (function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;br /&gt; C++20で非推奨&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;atomic_store_explicit&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;メモリオーダーを指定して、&lt;code&gt;shared_ptr&lt;/code&gt;の値をアトミックに書き込む (function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;br /&gt; C++20で非推奨&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;atomic_exchange&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;shared_ptr&lt;/code&gt;の値をアトミックに入れ替える (function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;br /&gt; C++20で非推奨&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;atomic_exchange_explicit&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;メモリオーダーを指定して、&lt;code&gt;shared_ptr&lt;/code&gt;の値をアトミックに入れ替える (function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;br /&gt; C++20で非推奨&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;atomic_compare_exchange_weak&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;弱い比較で&lt;code&gt;shared_ptr&lt;/code&gt;の値の入れ替えをアトミックに行う (function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;br /&gt; C++20で非推奨&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;atomic_compare_exchange_strong&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;強い比較で&lt;code&gt;shared_ptr&lt;/code&gt;の値の入れ替えをアトミックに行う (function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;br /&gt; C++20で非推奨&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;atomic_compare_exchange_weak_explicit&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;弱い比較でメモリオーダーを指定して、&lt;code&gt;shared_ptr&lt;/code&gt;の値の入れ替えをアトミックに行う (function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;br /&gt; C++20で非推奨&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;atomic_compare_exchange_strong_explicit&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;強い比較でメモリオーダーを指定して、&lt;code&gt;shared_ptr&lt;/code&gt;の値の入れ替えをアトミックに行う (function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;br /&gt; C++20で非推奨&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;ガベージコレクション支援&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/pointer_safety.html&#34;&gt;pointer_safety&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;ポインタ安全性について実装/挙動を示す列挙型(enum class)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/get_pointer_safety.html&#34;&gt;get_pointer_safety&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;処理系の、ポインタ安全性についての実装/挙動を取得する(function)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/declare_reachable.html&#34;&gt;declare_reachable&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;ポインタが到達可能であることを宣言する(function)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/undeclare_reachable.html&#34;&gt;undeclare_reachable&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;ポインタが到達可能であるという宣言を削除する(function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/declare_no_pointers.html&#34;&gt;declare_no_pointers&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;指定された範囲のポインタが、追跡可能ではないことを宣言する(function)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/undeclare_no_pointers.html&#34;&gt;undeclare_no_pointers&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;declare_no_pointers&lt;/code&gt;で宣言された範囲を無効化する(function)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;ポインタのユーティリティ&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/pointer_traits.html&#34;&gt;pointer_traits&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;ポインタの型特性(class template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/to_address.html&#34;&gt;to_address&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;ポインタと見なせるオブジェクトからアドレスを取得する (function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/addressof.html&#34;&gt;addressof&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;変数のアドレスを必ず取得する(function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/align.html&#34;&gt;align&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;アライメント調整された領域を得る(function)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/assume_aligned.html&#34;&gt;assume_aligned&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;コンパイラへアライメントのヒントを与える(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;参照&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4190.htm&#34; target=&#34;_blank&#34;&gt;N4190 Removing &lt;code&gt;auto_ptr&lt;/code&gt;, &lt;code&gt;random_shuffle()&lt;/code&gt;, And Old &lt;code&gt;&amp;lt;functional&amp;gt;&lt;/code&gt; Stuff&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0718r2.html&#34; target=&#34;_blank&#34;&gt;P0718R2 Revising &lt;code&gt;atomic_shared_ptr&lt;/code&gt; for C++20&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2051r0.html&#34; target=&#34;_blank&#34;&gt;P2051R0 C++ Standard Library Issues to be moved in Prague&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>uninitialized_move -- &lt;memory&gt; : ranges::uninitialized_move_nを追加 #999</title>
-      <link href="https://cpprefjp.github.io/reference/memory/ranges_uninitialized_move.html"/>
-      <id>7d958e637404a12543239fcbb98d0ea4e7f792e4:reference/memory/ranges_uninitialized_move.md</id>
-      <updated>2022-11-17T13:52:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/ranges_uninitialized_move.md b/reference/memory/ranges_uninitialized_move.md
-index c1366b00a..8f3837600 100644
---- a/reference/memory/ranges_uninitialized_move.md
-+++ b/reference/memory/ranges_uninitialized_move.md
-@@ -107,7 +107,7 @@ int main()
-   // 未初期化領域pを初期化しつつ範囲vから要素をムーブ
-   std::ranges::uninitialized_move(v, std::ranges::subrange{p, p + size});
- 
--  // pの領域が初期化され、かつvからpに要素がコピーされているか確認
-+  // pの領域が初期化され、かつvからpに要素がムーブされているか確認
-   std::for_each(p, p + size, [](int x) {
-     std::cout &amp;lt;&amp;lt; x &amp;lt;&amp;lt; std::endl;
-   });
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>uninitialized_move_n -- &lt;memory&gt; : ranges::uninitialized_move_nを追加 #999</title>
-      <link href="https://cpprefjp.github.io/reference/memory/ranges_uninitialized_move_n.html"/>
-      <id>7d958e637404a12543239fcbb98d0ea4e7f792e4:reference/memory/ranges_uninitialized_move_n.md</id>
-      <updated>2022-11-17T13:52:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/ranges_uninitialized_move_n.md b/reference/memory/ranges_uninitialized_move_n.md
-new file mode 100644
-index 000000000..7fc4d6526
---- /dev/null
-+++ b/reference/memory/ranges_uninitialized_move_n.md
-@@ -0,0 +1,131 @@
-+# uninitialized_move_n
-+* memory[meta header]
-+* std::ranges[meta namespace]
-+* function template[meta id-type]
-+* cpp20[meta cpp]
-+
-+```cpp
-+namespace std::ranges {
-+  template &amp;lt;class I, class O&amp;gt;
-+  using uninitialized_move_n_result = in_out_result&amp;lt;I, O&amp;gt;;
-+
-+  template &amp;lt;input_iterator I,
-+            no-throw-forward-iterator O,
-+            no-throw-sentinel&amp;lt;O&amp;gt; S&amp;gt;
-+  requires constructible_from&amp;lt;iter_value_t&amp;lt;O&amp;gt;, iter_rvalue_reference_t&amp;lt;I&amp;gt;&amp;gt;
-+  uninitialized_move_n_result&amp;lt;I, O&amp;gt;
-+    uninitialized_move_n(
-+      I ifirst,
-+      iter_difference_t&amp;lt;I&amp;gt; n,
-+      O ofirst,
-+      S olast
-+    );                               // (1) C++20
-+}
-+```
-+* in_out_result[link /reference/algorithm/ranges_in_out_result.md]
-+* input_iterator[link /reference/iterator/input_iterator.md]
-+* no-throw-forward-iterator[link no-throw-forward-iterator.md.nolink]
-+* no-throw-sentinel[link no-throw-sentinel.md.nolink]
-+* constructible_from[link /reference/concepts/constructible_from.md]
-+* iter_rvalue_reference_t[link /reference/iterator/iter_rvalue_reference_t.md]
-+
-+## 概要
-+未初期化領域の範囲`[ifirst, ifirst + n)`を配置`new`で初期化してムーブ出力する。
-+
-+- (1): イテレータペアで範囲を指定する
-+
-+
-+## テンプレートパラメータ制約
-+- (1):
-+    - `I`が[`input_iterator`](/reference/iterator/input_iterator.md)である
-+    - `O`が[`no-throw-forward-iterator`](no-throw-forward-iterator.md.nolink)である
-+    - `S`が[`O`に対する例外を投げない番兵](no-throw-sentinel.md.nolink)である
-+    - `O`の要素型が、`I`の要素型の右辺値を引数として[構築可能](/reference/concepts/constructible_from.md)である
-+
-+
-+## 事前条件
-+
-+- 範囲`[ofirst, olast)`が範囲`ifirst + [0, n)`と重ならないこと
-+
-+
-+## 効果
-+以下と等価である：
-+
-+```cpp
-+auto t = uninitialized_move(counted_iterator(ifirst, n),
-+                            default_sentinel, ofirst, olast);
-+return {std::move(t.in).base(), t.out};
-+```
-+* uninitialized_move[link ranges_uninitialized_move.md]
-+* counted_iterator[link /reference/iterator/counted_iterator.md]
-+* base()[link /reference/iterator/counted_iterator/base.md]
-+* default_sentinel[link /reference/iterator/default_sentinel_t.md]
-+* std::move[link /reference/utility/move.md]
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;memory&amp;gt;
-+
-+#include &amp;lt;vector&amp;gt;
-+#include &amp;lt;algorithm&amp;gt;
-+
-+int main()
-+{
-+  const std::vector&amp;lt;int&amp;gt; v = {1, 2, 3};
-+
-+  std::allocator&amp;lt;int&amp;gt; alloc;
-+
-+  // メモリ確保。
-+  // この段階では、[p, p + size)の領域は未初期化
-+  const std::size_t size = 3;
-+  int* p = alloc.allocate(size);
-+
-+  // 未初期化領域pを初期化しつつ範囲vから要素をムーブ
-+  std::ranges::uninitialized_move_n(v.begin(), size, p, p + size);
-+
-+  // pの領域が初期化され、かつvからpに要素がムーブされているか確認
-+  std::for_each(p, p + size, [](int x) {
-+    std::cout &amp;lt;&amp;lt; x &amp;lt;&amp;lt; std::endl;
-+  });
-+
-+  // 要素を破棄
-+  for (std::size_t i = 0; i &amp;lt; size; ++i) {
-+    std::destroy_at(p + i);
-+  }
-+
-+  // メモリ解放
-+  alloc.deallocate(p, size);
-+}
-+```
-+* std::ranges::uninitialized_move_n[color ff0000]
-+* std::ranges::subrange[link /reference/ranges/subrange.md]
-+* std::allocator[link allocator.md]
-+* alloc.allocate[link allocator/allocate.md]
-+* std::destroy_at[link destroy_at.md]
-+* alloc.deallocate[link allocator/deallocate.md]
-+
-+### 出力
-+```
-+1
-+2
-+3
-+```
-+
-+
-+## バージョン
-+### 言語
-+- C++20
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): 16.0
-+- [GCC](/implementation.md#gcc): 10.2.0
-+- [Visual C++](/implementation.md#visual_cpp): 2019 Update 10
-+
-+
-+## 関連項目
-+- [`uninitialized_move_n`](uninitialized_move_n.md)
-+
-+## 参照
-+- [P9896R4 The One Ranges Proposal](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0896r4.pdf)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>uninitialized_move_n -- &lt;memory&gt; : ranges::uninitialized_move_nを追加 #999</title>
-      <link href="https://cpprefjp.github.io/reference/memory/uninitialized_move_n.html"/>
-      <id>7d958e637404a12543239fcbb98d0ea4e7f792e4:reference/memory/uninitialized_move_n.md</id>
-      <updated>2022-11-17T13:52:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/uninitialized_move_n.md b/reference/memory/uninitialized_move_n.md
-index 77615bb43..ef0ff491e 100644
---- a/reference/memory/uninitialized_move_n.md
-+++ b/reference/memory/uninitialized_move_n.md
-@@ -73,7 +73,7 @@ int main()
- 
-   // 要素を破棄
-   for (std::size_t i = 0; i &amp;lt; size; ++i) {
--    alloc.destroy(p + i);
-+    std::destroy_at(p + i);
-   }
- 
-   // メモリ解放
-@@ -83,7 +83,7 @@ int main()
- * std::uninitialized_move_n[color ff0000]
- * std::allocator[link allocator.md]
- * alloc.allocate[link allocator/allocate.md]
--* alloc.destroy[link allocator/destroy.md]
-+* std::destroy_at[link destroy_at.md]
- * alloc.deallocate[link allocator/deallocate.md]
- 
- ### 出力
-@@ -103,5 +103,9 @@ int main()
- - [Visual C++](/implementation.md#visual_cpp): ??
- 
- 
-+## 関連項目
-+- [`ranges::uninitialized_move_n`](ranges_uninitialized_move_n.md)
-+
-+
- ## 参照
- - [P0040R3 Extending memory management tools](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0040r3.html)
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
