@@ -2,9 +2,220 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2022-11-25T14:40:14.666875</updated>
-  <id>64f1f6c2-db1a-4a47-b009-3bb1322c708d</id>
+  <updated>2022-11-26T05:40:48.908520</updated>
+  <id>a98369c9-4e1d-49ca-9528-5737067264db</id>
 
+  
+    <entry>
+      <title>operator== -- LWG Issue 3683対応と比較演算子導出の対kい</title>
+      <link href="https://cpprefjp.github.io/reference/memory_resource/memory_resource/op_equal.html"/>
+      <id>42138f9f244902049e45faa68ac23b1b560029cb:reference/memory_resource/memory_resource/op_equal.md</id>
+      <updated>2022-11-26T14:35:36+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory_resource/memory_resource/op_equal.md b/reference/memory_resource/memory_resource/op_equal.md
+index ed8532f30..141e7e0ef 100644
+--- a/reference/memory_resource/memory_resource/op_equal.md
++++ b/reference/memory_resource/memory_resource/op_equal.md
+@@ -19,6 +19,13 @@ namespace std::pmr {
+ 
+ 結果が`true`となる場合、`a`で確保したメモリ領域を`b`で解放してもその逆を行っても問題ないことを示す。
+ 
++## 備考
++
++C++20以降、この演算子により以下の演算子が使用可能になる（制約は使用する`==`に準ずる）。
++
++```cpp
++bool operator!=(const memory_resource&amp;amp; a, const memory_resource&amp;amp; b) noexcept;
++```
+ 
+ ## 例
+ ```cpp example
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator!= -- LWG Issue 3683対応と比較演算子導出の対kい</title>
+      <link href="https://cpprefjp.github.io/reference/memory_resource/memory_resource/op_not_equal.html"/>
+      <id>42138f9f244902049e45faa68ac23b1b560029cb:reference/memory_resource/memory_resource/op_not_equal.md</id>
+      <updated>2022-11-26T14:35:36+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory_resource/memory_resource/op_not_equal.md b/reference/memory_resource/memory_resource/op_not_equal.md
+index 1d3f96087..846d451b9 100644
+--- a/reference/memory_resource/memory_resource/op_not_equal.md
++++ b/reference/memory_resource/memory_resource/op_not_equal.md
+@@ -19,6 +19,10 @@ namespace std::pmr {
+ 
+ 結果が`true`となる場合、`a`で確保したメモリ領域を`b`で解放するのもその逆も行ってはならない。
+ 
++## 備考
++
++この演算子はC++20以降、対応する[`==`を利用して導出](/lang/cpp20/consistent_comparison.md)される。
++
+ ## 例
+ ```cpp example
+ #include &amp;lt;iostream&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator== -- LWG Issue 3683対応と比較演算子導出の対kい</title>
+      <link href="https://cpprefjp.github.io/reference/memory_resource/polymorphic_allocator/op_equal.html"/>
+      <id>42138f9f244902049e45faa68ac23b1b560029cb:reference/memory_resource/polymorphic_allocator/op_equal.md</id>
+      <updated>2022-11-26T14:35:36+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory_resource/polymorphic_allocator/op_equal.md b/reference/memory_resource/polymorphic_allocator/op_equal.md
+index cd82bb69f..a39ea343f 100644
+--- a/reference/memory_resource/polymorphic_allocator/op_equal.md
++++ b/reference/memory_resource/polymorphic_allocator/op_equal.md
+@@ -6,9 +6,20 @@
+ 
+ ```cpp
+ namespace std::pmr {
++
++  template &amp;lt;class Tp = byte&amp;gt;
++  class polymorphic_allocator {
++
++  public:
++
++    friend bool operator==(const polymorphic_allocator&amp;amp; a,
++                           const polymorphic_allocator&amp;amp; b) noexcept;  // (1)
++
++  };
++
+   template &amp;lt;class T1, class T2&amp;gt;
+   bool operator==(const polymorphic_allocator&amp;lt;T1&amp;gt;&amp;amp; a,
+-                  const polymorphic_allocator&amp;lt;T2&amp;gt;&amp;amp; b) noexcept;
++                  const polymorphic_allocator&amp;lt;T2&amp;gt;&amp;amp; b) noexcept;       // (2)
+ }
+ ```
+ 
+@@ -18,6 +29,21 @@ namespace std::pmr {
+ ## 戻り値
+ `*a.resource() == *b.resource()`
+ 
++## 備考
++
++C++20以降、これらの演算子により以下の演算子が使用可能になる（制約は使用する`==`に準ずる）。
++
++```cpp
++friend bool operator!=(const polymorphic_allocator&amp;amp; a,
++                       const polymorphic_allocator&amp;amp; b) noexcept;  // (3)
++
++template &amp;lt;class T1, class T2&amp;gt;
++bool operator!=(const polymorphic_allocator&amp;lt;T1&amp;gt;&amp;amp; a,
++                const polymorphic_allocator&amp;lt;T2&amp;gt;&amp;amp; b) noexcept;
++```
++
++(1)と(3)の演算子は[*Hidden friends*](/article/lib/hidden_friends.md)として定義される。
++
+ ## 例
+ ```cpp example
+ #include &amp;lt;iostream&amp;gt;
+@@ -25,15 +51,22 @@ namespace std::pmr {
+ 
+ int main()
+ {
++  std::cout &amp;lt;&amp;lt; std::boolalpha;
+   auto mr = std::pmr::monotonic_buffer_resource{};
+   std::pmr::polymorphic_allocator&amp;lt;int&amp;gt; alloc{ &amp;amp;mr };
++
++  // (1) : memory_resourceとの比較
++  std::cout &amp;lt;&amp;lt; (alloc == &amp;amp;mr) &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; (alloc == std::pmr::get_default_resource()) &amp;lt;&amp;lt; std::endl;
++  
++  std::cout &amp;lt;&amp;lt; &amp;#39;\n&amp;#39;;
+   std::pmr::polymorphic_allocator&amp;lt;int&amp;gt; alloc2{};
+   std::pmr::polymorphic_allocator&amp;lt;double&amp;gt; alloc3{ &amp;amp;mr };
+ 
+-  std::cout &amp;lt;&amp;lt; std::boolalpha;
++  // (2) : polymorphic_allocator同士の比較
+   std::cout &amp;lt;&amp;lt; (alloc == alloc2) &amp;lt;&amp;lt; std::endl;
+   std::cout &amp;lt;&amp;lt; (alloc == alloc) &amp;lt;&amp;lt; std::endl;
+-  //同じmemory_resourceを利用していればtrue
++  // 同じmemory_resourceを利用していればtrue
+   std::cout &amp;lt;&amp;lt; (alloc == alloc3) &amp;lt;&amp;lt; std::endl;
+ }
+ ```
+@@ -42,6 +75,9 @@ int main()
+ 
+ ### 出力
+ ```
++true
++false
++
+ false
+ true
+ true
+@@ -57,4 +93,8 @@ true
+ - [Visual C++](/implementation.md#visual_cpp): 2017 update 6
+ 
+ ## 関連項目
+-- [`operator==`](/reference/memory_resource/memory_resource/op_equal.md)
+\ No newline at end of file
++- [`operator==`](/reference/memory_resource/memory_resource/op_equal.md)
++
++## 参照
++
++- [LWG Issue 3683. `operator==` for `polymorphic_allocator` cannot deduce template argument in common cases](https://cplusplus.github.io/LWG/issue3683)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator!= -- LWG Issue 3683対応と比較演算子導出の対kい</title>
+      <link href="https://cpprefjp.github.io/reference/memory_resource/polymorphic_allocator/op_not_equal.html"/>
+      <id>42138f9f244902049e45faa68ac23b1b560029cb:reference/memory_resource/polymorphic_allocator/op_not_equal.md</id>
+      <updated>2022-11-26T14:35:36+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory_resource/polymorphic_allocator/op_not_equal.md b/reference/memory_resource/polymorphic_allocator/op_not_equal.md
+index 029e8de47..165b1b8d4 100644
+--- a/reference/memory_resource/polymorphic_allocator/op_not_equal.md
++++ b/reference/memory_resource/polymorphic_allocator/op_not_equal.md
+@@ -18,6 +18,10 @@ namespace std::pmr {
+ ## 戻り値
+ `!(a == b)`
+ 
++## 備考
++
++この演算子はC++20以降、対応する[`==`を利用して導出](/lang/cpp20/consistent_comparison.md)される。
++
+ ## 例
+ ```cpp example
+ #include &amp;lt;iostream&amp;gt;
+@@ -53,8 +57,8 @@ false
+ 
+ ### 処理系
+ - [Clang](/implementation.md#clang): ??
+-- [GCC](/implementation.md#gcc): 9.1
+-- [Visual C++](/implementation.md#visual_cpp): 2017 update 6
++- [GCC](/implementation.md#gcc): 9.1 (2), 13.1 (1)
++- [Visual C++](/implementation.md#visual_cpp): 2017 update 6 (2), 2022 17.4 (1)
+ 
+ ## 関連項目
+ - [`operator!=`](/reference/memory_resource/memory_resource/op_not_equal.md)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>コンストラクタ -- pathコンストラクタ : char8_t対応を明記</title>
@@ -1764,177 +1975,6 @@ index 5265953d0..7c896d2b7 100644
 +
  ## 参照
  - [LWG Issue 2433 `uninitialized_copy()`/etc. should tolerate overloaded `operator&amp;amp;`](https://wg21.cmeerw.net/lwg/issue2433)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>jthread -- jthread : request_stopを追加 #689</title>
-      <link href="https://cpprefjp.github.io/reference/thread/jthread.html"/>
-      <id>66a9e672d4a2fe29f6aa7ab26e0dc62aa2846304:reference/thread/jthread.md</id>
-      <updated>2022-11-24T13:14:54+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/thread/jthread.md b/reference/thread/jthread.md
-index 87389828b..b25b29b13 100644
---- a/reference/thread/jthread.md
-+++ b/reference/thread/jthread.md
-@@ -33,7 +33,7 @@ namespace std {
- | [`native_handle`](jthread/native_handle.md.nolink) | スレッドに関連付けられたネイティブハンドルを取得する［処理系定義］ | C++20 |
- | [`get_stop_source`](jthread/get_stop_source.md) | 停止要求を作成するための[`stop_source`](/reference/stop_token/stop_source.md)オブジェクトを取得する | C++20 |
- | [`get_stop_token`](jthread/get_stop_token.md.nolink) | 停止状態を問い合わせるための[`stop_token`](/reference/stop_token/stop_token.md)オブジェクトを取得する | C++20 |
--| [`request_stop`](jthread/request_stop.md.nolink) | スレッドに対する停止要求を作成する | C++20 |
-+| [`request_stop`](jthread/request_stop.md) | スレッドに対する停止要求を作成する | C++20 |
- 
- ## 静的メンバ関数
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>コンストラクタ -- jthread : request_stopを追加 #689</title>
-      <link href="https://cpprefjp.github.io/reference/thread/jthread/op_constructor.html"/>
-      <id>66a9e672d4a2fe29f6aa7ab26e0dc62aa2846304:reference/thread/jthread/op_constructor.md</id>
-      <updated>2022-11-24T13:14:54+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/thread/jthread/op_constructor.md b/reference/thread/jthread/op_constructor.md
-index 5b7321396..f65e457c8 100644
---- a/reference/thread/jthread/op_constructor.md
-+++ b/reference/thread/jthread/op_constructor.md
-@@ -150,7 +150,7 @@ int main()
- * std::stop_token[link /reference/stop_token/stop_token.md]
- * token.stop_requested()[link /reference/stop_token/stop_token/stop_requested.md]
- * std::this_thread::sleep_for[link /reference/thread/this_thread/sleep_for.md]
--* t1.request_stop()[link request_stop.md.nolink]
-+* t1.request_stop()[link request_stop.md]
- 
- 
- ### 出力例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>デストラクタ -- jthread : request_stopを追加 #689</title>
-      <link href="https://cpprefjp.github.io/reference/thread/jthread/op_destructor.html"/>
-      <id>66a9e672d4a2fe29f6aa7ab26e0dc62aa2846304:reference/thread/jthread/op_destructor.md</id>
-      <updated>2022-11-24T13:14:54+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/thread/jthread/op_destructor.md b/reference/thread/jthread/op_destructor.md
-index a6fe4ad0e..830515ca5 100644
---- a/reference/thread/jthread/op_destructor.md
-+++ b/reference/thread/jthread/op_destructor.md
-@@ -14,7 +14,7 @@
- 
- 
- ## 効果
--[`joinable`](joinable.md)が`true`である場合、[`request_stop()`](request_stop.md.nolink)とそのあと[`join()`](join.md.nolink)を呼び出す。
-+[`joinable`](joinable.md)が`true`である場合、[`request_stop()`](request_stop.md)とそのあと[`join()`](join.md.nolink)を呼び出す。
- 
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>request_stop -- jthread : request_stopを追加 #689</title>
-      <link href="https://cpprefjp.github.io/reference/thread/jthread/request_stop.html"/>
-      <id>66a9e672d4a2fe29f6aa7ab26e0dc62aa2846304:reference/thread/jthread/request_stop.md</id>
-      <updated>2022-11-24T13:14:54+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/thread/jthread/request_stop.md b/reference/thread/jthread/request_stop.md
-new file mode 100644
-index 000000000..907488762
---- /dev/null
-+++ b/reference/thread/jthread/request_stop.md
-@@ -0,0 +1,70 @@
-+# request_stop
-+* thread[meta header]
-+* std[meta namespace]
-+* jthread[meta class]
-+* function[meta id-type]
-+* cpp20[meta cpp]
-+
-+```cpp
-+bool request_stop() noexcept;
-+```
-+
-+
-+## 概要
-+スレッドに対する停止要求を作成する。
-+
-+この関数を実行することで、対象のスレッドがもつ[`std::stop_token`](/reference/stop_token/stop_token.md)型オブジェクトの[`stop_requested()`](/reference/stop_token/stop_token/stop_requested.md)メンバ関数が`true`を返すようになる。
-+
-+
-+## 効果
-+メンバ変数として保持している[`std::stop_source`](/reference/stop_token/stop_source.md)型オブジェクト`ssource`があるとして、以下と等価：
-+
-+```cpp
-+return ssource.request_stop();
-+```
-+* request_stop()[link /reference/stop_token/stop_source/request_stop.md]
-+
-+
-+## 例外
-+送出しない。
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;thread&amp;gt;
-+
-+int main()
-+{
-+  std::jthread t {
-+    [](std::stop_token stoken) {
-+      while (!stoken.stop_requested()) {
-+        // 停止要求がくるまで処理を継続する…
-+      }
-+      std::cout &amp;lt;&amp;lt; &amp;#34;exit t1 thread&amp;#34; &amp;lt;&amp;lt; std::endl;
-+    }
-+  };
-+
-+  // 停止要求を作成する
-+  t.request_stop();
-+  t.join();
-+}
-+```
-+* request_stop()[color ff0000]
-+* std::stop_token[link /reference/stop_token/stop_token.md]
-+* stop_requested()[link /reference/stop_token/stop_token/stop_requested.md]
-+* t.join()[link join.md.nolink]
-+
-+### 出力
-+```
-+exit t1 thread
-+```
-+
-+## バージョン
-+### 言語
-+- C++20
-+
-+### 処理系
-+- [Clang](/implementation.md#clang):
-+- [GCC](/implementation.md#gcc): 10.2.0
-+- [Visual C++](/implementation.md#visual_cpp): ??
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
