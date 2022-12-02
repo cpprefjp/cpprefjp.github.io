@@ -2,9 +2,125 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2022-12-01T14:42:16.698184</updated>
-  <id>7d10228b-e4b4-43ba-bfb1-da0a3b55dfba</id>
+  <updated>2022-12-02T03:50:46.919800</updated>
+  <id>9ca716de-b40a-47b1-a912-23b5c766b78c</id>
 
+  
+    <entry>
+      <title>jthread -- jthread : operator=を追加 #689</title>
+      <link href="https://cpprefjp.github.io/reference/thread/jthread.html"/>
+      <id>5bbc361538431caf3f184cd113228c551c56e57f:reference/thread/jthread.md</id>
+      <updated>2022-12-02T12:46:26+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/thread/jthread.md b/reference/thread/jthread.md
+index 03848e3d6..1ceb8c41c 100644
+--- a/reference/thread/jthread.md
++++ b/reference/thread/jthread.md
+@@ -24,7 +24,7 @@ namespace std {
+ |----------------------------------------------|--------------------------------------------------------------------|-------|
+ | [`(constructor)`](jthread/op_constructor.md)        | コンストラクタ | C++20 |
+ | [`(destructor)`](jthread/op_destructor.md)        | デストラクタ | C++20 |
+-| [`operator=`](jthread/op_assign.md.nolink)         | 代入演算子 | C++20 |
++| [`operator=`](jthread/op_assign.md)         | 代入演算子 | C++20 |
+ | [`swap`](jthread/swap.md.nolink)                   | 別の`jthread`と交換する | C++20 |
+ | [`joinable`](jthread/joinable.md)           | スレッドに関連付けられているか否かを取得する | C++20 |
+ | [`join`](jthread/join.md)                   | スレッドが終了するまで待機する | C++20 |
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator= -- jthread : operator=を追加 #689</title>
+      <link href="https://cpprefjp.github.io/reference/thread/jthread/op_assign.html"/>
+      <id>5bbc361538431caf3f184cd113228c551c56e57f:reference/thread/jthread/op_assign.md</id>
+      <updated>2022-12-02T12:46:26+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/thread/jthread/op_assign.md b/reference/thread/jthread/op_assign.md
+new file mode 100644
+index 000000000..4fda5a039
+--- /dev/null
++++ b/reference/thread/jthread/op_assign.md
+@@ -0,0 +1,69 @@
++# operator=
++* thread[meta header]
++* std[meta namespace]
++* jthread[meta class]
++* function[meta id-type]
++* cpp20[meta cpp]
++
++```cpp
++jthread&amp;amp; operator=(const jthread&amp;amp;) = delete; // (1) C++20
++jthread&amp;amp; operator=(jthread&amp;amp;&amp;amp; x) noexcept;    // (2) C++20
++```
++
++## 概要
++`jthread`オブジェクトの代入。
++
++- (1) : コピー代入。コピー不可
++- (2) : ムーブ代入。ムーブ不可
++
++
++## 効果
++- [`joinable()`](joinable.md)が`true`を返す場合、[`request_stop()`](request_stop.md)と[`join()`](join.md)を呼び出す
++- `x`の状態を`*this`に代入し、`x`をデフォルト構築された状態に設定する
++
++ムーブ代入演算子呼び出し時点で`this`にスレッドが関連付けられている場合、[`std::terminate()`](/reference/exception/terminate.md)を呼び出してプログラムを異常終了する。そうでなければ`x`から`this`へのムーブ代入を行う。
++
++
++## 事後条件
++- `x.`[`get_id()`](get_id.md) `==` [`id`](id.md)`()`であること
++- [`get_id()`](get_id.md)の呼び出しでは、代入前の`x.`[`get_id()`](get_id.md)が返されるようになること
++- メンバ変数として保持している[`std::stop_source`](/reference/stop_token/stop_source.md)型オブジェクト`ssource`は、代入前の`x.ssource`の値を持ち、`x.ssource.`[`stop_possible()`](/reference/stop_token/stop_source/stop_possible.md)は`false`となること
++
++
++## 戻り値
++`*this`を返す。
++
++
++## 例
++```cpp example
++#include &amp;lt;thread&amp;gt;
++#include &amp;lt;cassert&amp;gt;
++
++int main()
++{
++  std::jthread t1([]{ /*...*/ });
++  std::jthread t2;
++  assert(t1.joinable() &amp;amp;&amp;amp; !t2.joinable());
++
++  // t1からt2へムーブ代入
++  t2 = std::move(t1);
++  assert(!t1.joinable() &amp;amp;&amp;amp; t2.joinable());
++
++  t2.join();
++}
++```
++* t2 = std::move(t1);[color ff0000]
++* joinable()[link joinable.md]
++
++### 出力
++```
++```
++
++## バージョン
++### 言語
++- C++20
++
++### 処理系
++- [Clang](/implementation.md#clang):
++- [GCC](/implementation.md#gcc): 10.2.0
++- [Visual C++](/implementation.md#visual_cpp): ??
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>memory -- &lt;memory&gt; : ranges::uninitialized_value_construct_nを追加 #999</title>
