@@ -2,9 +2,603 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2022-12-09T06:40:21.110363</updated>
-  <id>8d34d9ca-dc14-4f15-9524-83da1d62d984</id>
+  <updated>2022-12-09T11:14:11.495710</updated>
+  <id>1dc8aec2-9f77-48fb-a94d-058a05a3c9b5</id>
 
+  
+    <entry>
+      <title>optional -- optional : 三方比較演算子に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/optional/optional.html"/>
+      <id>b4577ca90aac4b1f0f93334272b0d18ca7a22417:reference/optional/optional.md</id>
+      <updated>2022-12-09T20:10:04+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/optional/optional.md b/reference/optional/optional.md
+index 5f3a1d9d8..31583cad9 100644
+--- a/reference/optional/optional.md
++++ b/reference/optional/optional.md
+@@ -106,6 +106,7 @@ namespace std {
+ |------|------|----------------|
+ | [`operator==`](optional/op_equal.md)         | 等値比較 | C++17 |
+ | [`operator!=`](optional/op_not_equal.md)     | 非等値比較 | C++17 |
++| [`operator&amp;lt;=&amp;gt;`](optional/op_compare_3way.md) | 三方比較 | C++17 |
+ | [`operator&amp;lt;`](optional/op_less.md)           | 左辺が右辺より小さいかを判定する | C++17 |
+ | [`operator&amp;lt;=`](optional/op_less_equal.md)    | 左辺が右辺以下かを判定する | C++17 |
+ | [`operator&amp;gt;`](optional/op_greater.md)        | 左辺が右辺より大きいかを判定する | C++17 |
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator&lt;=&gt; -- optional : 三方比較演算子に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/optional/optional/op_compare_3way.html"/>
+      <id>b4577ca90aac4b1f0f93334272b0d18ca7a22417:reference/optional/optional/op_compare_3way.md</id>
+      <updated>2022-12-09T20:10:04+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/optional/optional/op_compare_3way.md b/reference/optional/optional/op_compare_3way.md
+new file mode 100644
+index 000000000..a29b52666
+--- /dev/null
++++ b/reference/optional/optional/op_compare_3way.md
+@@ -0,0 +1,122 @@
++# operator&amp;lt;=&amp;gt;
++* optional[meta header]
++* std[meta namespace]
++* function template[meta id-type]
++* cpp20[meta cpp]
++
++```cpp
++namespace std {
++  template &amp;lt;class T, three_way_comparable_with&amp;lt;T&amp;gt; U&amp;gt;
++  constexpr compare_three_way_result_t&amp;lt;T,U&amp;gt;
++    operator&amp;lt;=&amp;gt;(const optional&amp;lt;T&amp;gt;&amp;amp; x, const optional&amp;lt;U&amp;gt;&amp;amp; y); // (1) C++20
++
++  template &amp;lt;class T&amp;gt;
++  constexpr strong_ordering
++    operator&amp;lt;=&amp;gt;(const optional&amp;lt;T&amp;gt;&amp;amp;, nullopt_t) noexcept;     // (2) C++20
++
++  template &amp;lt;class T, three_way_comparable_with&amp;lt;T&amp;gt; U&amp;gt;
++  constexpr compare_three_way_result_t&amp;lt;T,U&amp;gt;
++    operator&amp;lt;=&amp;gt;(const optional&amp;lt;T&amp;gt;&amp;amp; x, const U&amp;amp; y);           // (3) C++20
++}
++```
++* nullopt_t[link /reference/optional/nullopt_t.md]
++
++## 概要
++`optional`オブジェクトの三方比較を行う。
++
++- (1) : `optional&amp;lt;T&amp;gt;`と`optional&amp;lt;U&amp;gt;`の三方比較
++- (2) : `optional&amp;lt;T&amp;gt;`と無効値[`nullopt_t`](/reference/optional/nullopt_t.md)の三方比較
++- (3) : `optional&amp;lt;T&amp;gt;`と有効値`U`の三方比較
++
++
++## 戻り値
++- (1) :
++    - `x &amp;amp;&amp;amp; y`が`true`である場合`*x &amp;lt;=&amp;gt; *y`を返し、そうでなければ`bool(x) &amp;lt;=&amp;gt; bool(y)`を返す
++
++- (2) :
++    ```cpp
++    ```return bool(x) &amp;lt;=&amp;gt; false;`
++    ```
++
++- (3) : 以下と等価
++    ```cpp
++    return bool(x) ? *x &amp;lt;=&amp;gt; v : strong_ordering::less;
++    ```
++
++
++## 備考
++- (2) : この演算子により、以下の演算子が使用可能になる (C++20)：
++    - `bool operator&amp;lt;(const optional&amp;lt;T&amp;gt;&amp;amp;, const nullopt_t&amp;amp;) noexcept;`
++    - `bool operator&amp;lt;(const nullopt_t&amp;amp;, const optional&amp;lt;T&amp;gt;&amp;amp;) noexcept;`
++    - `bool operator&amp;lt;=(const optional&amp;lt;T&amp;gt;&amp;amp;, const nullopt_t&amp;amp;) noexcept;`
++    - `bool operator&amp;lt;=(const nullopt_t&amp;amp;, const optional&amp;lt;T&amp;gt;&amp;amp;) noexcept;`
++    - `bool operator&amp;gt;(const optional&amp;lt;T&amp;gt;&amp;amp;, const nullopt_t&amp;amp;) noexcept;`
++    - `bool operator&amp;gt;(const nullopt_t&amp;amp;, const optional&amp;lt;T&amp;gt;&amp;amp;) noexcept;`
++    - `bool operator&amp;gt;=(const optional&amp;lt;T&amp;gt;&amp;amp;, const nullopt_t&amp;amp;) noexcept;`
++    - `bool operator&amp;gt;=(const nullopt_t&amp;amp;, const optional&amp;lt;T&amp;gt;&amp;amp;) noexcept;`
++
++
++## 例
++```cpp example
++#include &amp;lt;cassert&amp;gt;
++#include &amp;lt;optional&amp;gt;
++
++int main()
++{
++  // optionalオブジェクト同士の比較
++  {
++    std::optional&amp;lt;int&amp;gt; a = 3;
++    std::optional&amp;lt;int&amp;gt; b = 1;
++    std::optional&amp;lt;int&amp;gt; c = 3;
++    std::optional&amp;lt;int&amp;gt; none;
++
++    assert((a &amp;lt;=&amp;gt; c) == 0);
++    assert((a &amp;lt;=&amp;gt; b) != 0);
++    assert((a &amp;lt;=&amp;gt; none) != 0);
++    assert((none &amp;lt;=&amp;gt; a) != 0);
++  }
++
++  // optionalオブジェクトとnulloptの比較
++  {
++    std::optional&amp;lt;int&amp;gt; p = 3;
++    std::optional&amp;lt;int&amp;gt; none;
++
++    assert((p &amp;lt;=&amp;gt; std::nullopt) != 0);
++    assert((none &amp;lt;=&amp;gt; std::nullopt) == 0);
++
++    assert((std::nullopt &amp;lt;=&amp;gt; p) != 0);
++    assert((std::nullopt &amp;lt;=&amp;gt; none) == 0);
++  }
++
++  // optionalオブジェクトと有効値の比較
++  {
++    std::optional&amp;lt;int&amp;gt; p = 3;
++    std::optional&amp;lt;int&amp;gt; none;
++
++    assert((p &amp;lt;=&amp;gt; 3) == 0);
++    assert((3 &amp;lt;=&amp;gt; p) == 0);
++
++    assert((none &amp;lt;=&amp;gt; 3) != 0);
++    assert((3 &amp;lt;=&amp;gt; none) != 0);
++  }
++}
++```
++* std::nullopt[link /reference/optional/nullopt_t.md]
++
++### 出力
++```
++```
++
++## バージョン
++### 言語
++- C++20
++
++### 処理系
++- [Clang](/implementation.md#clang):
++- [GCC](/implementation.md#gcc): 10
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 参照
++- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
++    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator== -- optional : 三方比較演算子に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/optional/optional/op_equal.html"/>
+      <id>b4577ca90aac4b1f0f93334272b0d18ca7a22417:reference/optional/optional/op_equal.md</id>
+      <updated>2022-12-09T20:10:04+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/optional/optional/op_equal.md b/reference/optional/optional/op_equal.md
+index 17c376266..416c31df2 100644
+--- a/reference/optional/optional/op_equal.md
++++ b/reference/optional/optional/op_equal.md
+@@ -7,17 +7,20 @@
+ ```cpp
+ namespace std {
+   template &amp;lt;class T, class U&amp;gt;
+-  constexpr bool operator==(const optional&amp;lt;T&amp;gt;&amp;amp; x, const optional&amp;lt;U&amp;gt;&amp;amp; y); // (1)
++  constexpr bool operator==(const optional&amp;lt;T&amp;gt;&amp;amp; x, const optional&amp;lt;U&amp;gt;&amp;amp; y); // (1) C++17
+ 
+   template &amp;lt;class T&amp;gt;
+-  constexpr bool operator==(const optional&amp;lt;T&amp;gt;&amp;amp; x, nullopt_t) noexcept;   // (2)
+-  template &amp;lt;class T&amp;gt;
+-  constexpr bool operator==(nullopt_t, const optional&amp;lt;T&amp;gt;&amp;amp; y) noexcept;   // (3)
++  constexpr bool operator==(const optional&amp;lt;T&amp;gt;&amp;amp; x, nullopt_t) noexcept;   // (2) C++17
+ 
+   template &amp;lt;class T, class U&amp;gt;
+-  constexpr bool operator==(const optional&amp;lt;T&amp;gt;&amp;amp; x, const U&amp;amp; y);           // (4)
++  constexpr bool operator==(const optional&amp;lt;T&amp;gt;&amp;amp; x, const U&amp;amp; y);           // (3) C++17
++
+   template &amp;lt;class T, class U&amp;gt;
+-  constexpr bool operator==(const U&amp;amp; x, const optional&amp;lt;T&amp;gt;&amp;amp; y);           // (5)
++  constexpr bool operator==(const T&amp;amp; x, const optional&amp;lt;U&amp;gt;&amp;amp; y);           // (4) C++17
++
++  // (2) により、以下のオーバーロードが使用可能になる (C++20)
++  template &amp;lt;class T&amp;gt;
++  constexpr bool operator==(nullopt_t, const optional&amp;lt;T&amp;gt;&amp;amp; y) noexcept;   // (5) C++17
+ }
+ ```
+ * nullopt_t[link /reference/optional/nullopt_t.md]
+@@ -27,15 +30,22 @@ namespace std {
+ 
+ 
+ ## 要件
+-- (1), (4), (5) : 型`T`が`==`で比較可能であること
++- (1), (3), (4) : 型`T`が`==`で比較可能であること
+ 
+ 
+ ## 戻り値
+ - (1) : `x`と`y`がどちらも有効値を持っていれば、有効値同士を等値比較した結果を返す。`x`と`y`がどちらも有効値を持っていなければ`true`を返す。`x`と`y`のうち、どちらかが有効値を持ち、どちらかが持たない場合は`false`を返す
+ - (2) : `x`が有効値を持っていなければ`true`、そうでなければ`false`を返す
+-- (3) : `y`が有効値を持っていなければ`true`、そうでなければ`false`を返す
+-- (4) : `x`が有効値を持っていれば、`y`と等値比較した結果を返す。そうでなければ`false`を返す
+-- (5) : `y`が有効値を持っていれば、`x`と等値比較した結果を返す。そうでなければ`false`を返す
++- (3) : `x`が有効値を持っていれば、`y`と等値比較した結果を返す。そうでなければ`false`を返す
++- (4) : `y`が有効値を持っていれば、`x`と等値比較した結果を返す。そうでなければ`false`を返す
++- (5) : `y`が有効値を持っていなければ`true`、そうでなければ`false`を返す
++
++
++## 備考
++- (2) : この演算子により、以下の演算子が使用可能になる (C++20)：
++    - `bool operator==(const nullopt_t&amp;amp;, const optional&amp;lt;T&amp;gt;&amp;amp;) noexcept;`
++    - `bool operator!=(const optional&amp;lt;T&amp;gt;&amp;amp;, const nullopt_t&amp;amp;) noexcept;`
++    - `bool operator!=(const nullopt_t&amp;amp;, const optional&amp;lt;T&amp;gt;&amp;amp;) noexcept;`
+ 
+ 
+ ## 例
+@@ -102,3 +112,5 @@ int main()
+ 
+ ## 参照
+ - [LWG Issue 2934. `optional&amp;lt;const T&amp;gt;` doesn&amp;#39;t compare with `T`](https://wg21.cmeerw.net/lwg/issue2934)
++- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
++    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator&gt; -- optional : 三方比較演算子に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/optional/optional/op_greater.html"/>
+      <id>b4577ca90aac4b1f0f93334272b0d18ca7a22417:reference/optional/optional/op_greater.md</id>
+      <updated>2022-12-09T20:10:04+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/optional/optional/op_greater.md b/reference/optional/optional/op_greater.md
+index 630d46018..07e39dea2 100644
+--- a/reference/optional/optional/op_greater.md
++++ b/reference/optional/optional/op_greater.md
+@@ -7,17 +7,18 @@
+ ```cpp
+ namespace std {
+   template &amp;lt;class T, class U&amp;gt;
+-  constexpr bool operator&amp;gt;(const optional&amp;lt;T&amp;gt;&amp;amp; x, const optional&amp;lt;U&amp;gt;&amp;amp; y); // (1)
+-
+-  template &amp;lt;class T&amp;gt;
+-  constexpr bool operator&amp;gt;(const optional&amp;lt;T&amp;gt;&amp;amp; x, nullopt_t) noexcept;   // (2)
+-  template &amp;lt;class T&amp;gt;
+-  constexpr bool operator&amp;gt;(nullopt_t, const optional&amp;lt;T&amp;gt;&amp;amp; y) noexcept;   // (3)
++  constexpr bool operator&amp;gt;(const optional&amp;lt;T&amp;gt;&amp;amp; x, const optional&amp;lt;U&amp;gt;&amp;amp; y); // (1) C++17
+ 
+   template &amp;lt;class T, class U&amp;gt;
+-  constexpr bool operator&amp;gt;(const optional&amp;lt;T&amp;gt;&amp;amp; x, const U&amp;amp; y);           // (4)
++  constexpr bool operator&amp;gt;(const optional&amp;lt;T&amp;gt;&amp;amp; x, const U&amp;amp; y);           // (2) C++17
+   template &amp;lt;class T, class U&amp;gt;
+-  constexpr bool operator&amp;gt;(const U&amp;amp; x, const optional&amp;lt;T&amp;gt;&amp;amp; y);           // (5)
++  constexpr bool operator&amp;gt;(const U&amp;amp; x, const optional&amp;lt;T&amp;gt;&amp;amp; y);           // (3) C++17
++
++  // operator&amp;lt;=&amp;gt;により、以下のオーバーロードが使用可能になる (C++20)
++  template &amp;lt;class T&amp;gt;
++  constexpr bool operator&amp;gt;(const optional&amp;lt;T&amp;gt;&amp;amp; x, nullopt_t) noexcept;   // (4) C++17
++  template &amp;lt;class T&amp;gt;
++  constexpr bool operator&amp;gt;(nullopt_t, const optional&amp;lt;T&amp;gt;&amp;amp; y) noexcept;   // (5) C++17
+ }
+ ```
+ * nullopt_t[link /reference/optional/nullopt_t.md]
+@@ -27,15 +28,15 @@ namespace std {
+ 
+ 
+ ## 要件
+-- (1), (4), (5) : 型`T`と型`U`が`&amp;gt;`演算子で比較可能であること
++- (1), (2), (3) : 型`T`と型`U`が`&amp;gt;`演算子で比較可能であること
+ 
+ 
+ ## 戻り値
+ - (1) : `x`と`y`がどちらも有効値を持っていれば、有効値同士を`&amp;gt;`演算子で比較した結果を返す。`x`が有効値を持っていなければ`false`を返す。`y`が有効値を持っていなければ`true`を返す
+-- (2) : `x.`[`has_value()`](has_value.md)を返す
+-- (3) : `false`を返す
+-- (4) : `return x.`[`has_value()`](has_value.md) `? x.`[`value()`](value.md) `&amp;gt; y : false;`
+-- (5) : `return y.`[`has_value()`](has_value.md) `? x &amp;gt; y.`[`value()`](value.md) `: true;`
++- (2) : `return x.`[`has_value()`](has_value.md) `? x.`[`value()`](value.md) `&amp;gt; y : false;`
++- (3) : `return y.`[`has_value()`](has_value.md) `? x &amp;gt; y.`[`value()`](value.md) `: true;`
++- (4) : `x.`[`has_value()`](has_value.md)を返す
++- (5) : `false`を返す
+ 
+ 
+ ## 例
+@@ -101,3 +102,5 @@ int main()
+ ## 参照
+ - [P0307R2 Making Optional Greater Equal Again](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0307r2.pdf)
+ - [LWG Issue 2934. `optional&amp;lt;const T&amp;gt;` doesn&amp;#39;t compare with `T`](https://wg21.cmeerw.net/lwg/issue2934)
++- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
++    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator&gt;= -- optional : 三方比較演算子に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/optional/optional/op_greater_equal.html"/>
+      <id>b4577ca90aac4b1f0f93334272b0d18ca7a22417:reference/optional/optional/op_greater_equal.md</id>
+      <updated>2022-12-09T20:10:04+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/optional/optional/op_greater_equal.md b/reference/optional/optional/op_greater_equal.md
+index 32ace7a1d..d7ceff76b 100644
+--- a/reference/optional/optional/op_greater_equal.md
++++ b/reference/optional/optional/op_greater_equal.md
+@@ -7,17 +7,18 @@
+ ```cpp
+ namespace std {
+   template &amp;lt;class T, class U&amp;gt;
+-  constexpr bool operator&amp;gt;=(const optional&amp;lt;T&amp;gt;&amp;amp; x, const optional&amp;lt;U&amp;gt;&amp;amp; y); // (1)
+-
+-  template &amp;lt;class T&amp;gt;
+-  constexpr bool operator&amp;gt;=(const optional&amp;lt;T&amp;gt;&amp;amp; x, nullopt_t) noexcept;   // (2)
+-  template &amp;lt;class T&amp;gt;
+-  constexpr bool operator&amp;gt;=(nullopt_t, const optional&amp;lt;T&amp;gt;&amp;amp; y) noexcept;   // (3)
++  constexpr bool operator&amp;gt;=(const optional&amp;lt;T&amp;gt;&amp;amp; x, const optional&amp;lt;U&amp;gt;&amp;amp; y); // (1) C++17
+ 
+   template &amp;lt;class T, class U&amp;gt;
+-  constexpr bool operator&amp;gt;=(const optional&amp;lt;T&amp;gt;&amp;amp; x, const U&amp;amp; y);           // (4)
++  constexpr bool operator&amp;gt;=(const optional&amp;lt;T&amp;gt;&amp;amp; x, const U&amp;amp; y);           // (2) C++17
+   template &amp;lt;class T, class U&amp;gt;
+-  constexpr bool operator&amp;gt;=(const U&amp;amp; x, const optional&amp;lt;T&amp;gt;&amp;amp; y);           // (5)
++  constexpr bool operator&amp;gt;=(const U&amp;amp; x, const optional&amp;lt;T&amp;gt;&amp;amp; y);           // (3) C++17
++
++  // operator&amp;lt;=&amp;gt;により、以下のオーバーロードが使用可能になる (C++20)
++  template &amp;lt;class T&amp;gt;
++  constexpr bool operator&amp;gt;=(const optional&amp;lt;T&amp;gt;&amp;amp; x, nullopt_t) noexcept;   // (4) C++17
++  template &amp;lt;class T&amp;gt;
++  constexpr bool operator&amp;gt;=(nullopt_t, const optional&amp;lt;T&amp;gt;&amp;amp; y) noexcept;   // (5) C++17
+ }
+ ```
+ * nullopt_t[link /reference/optional/nullopt_t.md]
+@@ -27,15 +28,15 @@ namespace std {
+ 
+ 
+ ## 要件
+-- (1), (4), (5) : 型`T`と型`U`が`&amp;gt;=`演算子で比較可能であること
++- (1), (2), (3) : 型`T`と型`U`が`&amp;gt;=`演算子で比較可能であること
+ 
+ 
+ ## 戻り値
+ - (1) : `x`と`y`がどちらも有効値を持っていれば、有効値同士を`&amp;gt;=`演算子で比較した結果を返す。`y`が有効値を持っていなければ`true`を返す。`x`が有効値を持っていなければ`false`を返す
+-- (2) : `true`を返す
+-- (3) : `!x.`[`has_value()`](has_value.md)を返す
+-- (4) : `return x.`[`has_value()`](has_value.md) `? x.`[`value()`](value.md) `&amp;gt;= y : false;`
+-- (5) : `return y.`[`has_value()`](has_value.md) `? x &amp;gt;= y.`[`value()`](value.md) `: true;`
++- (2) : `return x.`[`has_value()`](has_value.md) `? x.`[`value()`](value.md) `&amp;gt;= y : false;`
++- (3) : `return y.`[`has_value()`](has_value.md) `? x &amp;gt;= y.`[`value()`](value.md) `: true;`
++- (4) : `true`を返す
++- (5) : `!x.`[`has_value()`](has_value.md)を返す
+ 
+ 
+ ## 例
+@@ -101,3 +102,5 @@ int main()
+ ## 参照
+ - [P0307R2 Making Optional Greater Equal Again](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0307r2.pdf)
+ - [LWG Issue 2934. `optional&amp;lt;const T&amp;gt;` doesn&amp;#39;t compare with `T`](https://wg21.cmeerw.net/lwg/issue2934)
++- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
++    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator&lt; -- optional : 三方比較演算子に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/optional/optional/op_less.html"/>
+      <id>b4577ca90aac4b1f0f93334272b0d18ca7a22417:reference/optional/optional/op_less.md</id>
+      <updated>2022-12-09T20:10:04+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/optional/optional/op_less.md b/reference/optional/optional/op_less.md
+index 9e041d380..ff86c98ee 100644
+--- a/reference/optional/optional/op_less.md
++++ b/reference/optional/optional/op_less.md
+@@ -7,17 +7,18 @@
+ ```cpp
+ namespace std {
+   template &amp;lt;class T, class U&amp;gt;
+-  constexpr bool operator&amp;lt;(const optional&amp;lt;T&amp;gt;&amp;amp; x, const optional&amp;lt;U&amp;gt;&amp;amp; y); // (1)
+-
+-  template &amp;lt;class T&amp;gt;
+-  constexpr bool operator&amp;lt;(const optional&amp;lt;T&amp;gt;&amp;amp; x, nullopt_t) noexcept;   // (2)
+-  template &amp;lt;class T&amp;gt;
+-  constexpr bool operator&amp;lt;(nullopt_t, const optional&amp;lt;T&amp;gt;&amp;amp; y) noexcept;   // (3)
++  constexpr bool operator&amp;lt;(const optional&amp;lt;T&amp;gt;&amp;amp; x, const optional&amp;lt;U&amp;gt;&amp;amp; y); // (1) C++17
+ 
+   template &amp;lt;class T, class U&amp;gt;
+-  constexpr bool operator&amp;lt;(const optional&amp;lt;T&amp;gt;&amp;amp; x, const U&amp;amp; y);           // (4)
++  constexpr bool operator&amp;lt;(const optional&amp;lt;T&amp;gt;&amp;amp; x, const U&amp;amp; y);           // (2) C++17
+   template &amp;lt;class T, class U&amp;gt;
+-  constexpr bool operator&amp;lt;(const U&amp;amp; x, const optional&amp;lt;T&amp;gt;&amp;amp; y);           // (5)
++  constexpr bool operator&amp;lt;(const U&amp;amp; x, const optional&amp;lt;T&amp;gt;&amp;amp; y);           // (3) C++17
++
++  // operator&amp;lt;=&amp;gt;により、以下のオーバーロードが使用可能になる (C++20)
++  template &amp;lt;class T&amp;gt;
++  constexpr bool operator&amp;lt;(const optional&amp;lt;T&amp;gt;&amp;amp; x, nullopt_t) noexcept;   // (4) C++17
++  template &amp;lt;class T&amp;gt;
++  constexpr bool operator&amp;lt;(nullopt_t, const optional&amp;lt;T&amp;gt;&amp;amp; y) noexcept;   // (5) C++17
+ }
+ ```
+ * nullopt_t[link /reference/optional/nullopt_t.md]
+@@ -27,15 +28,15 @@ namespace std {
+ 
+ 
+ ## 要件
+-- (1), (4), (5) : 型`T`と型`U`が`&amp;lt;`演算子で比較可能であること
++- (1), (2), (3) : 型`T`と型`U`が`&amp;lt;`演算子で比較可能であること
+ 
+ 
+ ## 戻り値
+ - (1) : `x`と`y`がどちらも有効値を持っていれば、有効値同士を`&amp;lt;`演算子で比較した結果を返す。`y`が有効値を持っていなければ`false`を返す。`x`が有効値を持っていなければ`true`を返す
+-- (2) : `false`を返す
+-- (3) : `y`が有効値を持っていれば`true`、そうでなければ`false`を返す
+-- (4) : `return x.`[`has_value()`](has_value.md) `? x.`[`value()`](value.md) `&amp;lt; y : true;`
+-- (5) : `return y.`[`has_value()`](has_value.md) `? x &amp;lt; y.`[`value()`](value.md) `: false;`
++- (2) : `return x.`[`has_value()`](has_value.md) `? x.`[`value()`](value.md) `&amp;lt; y : true;`
++- (3) : `return y.`[`has_value()`](has_value.md) `? x &amp;lt; y.`[`value()`](value.md) `: false;`
++- (4) : `false`を返す
++- (5) : `y`が有効値を持っていれば`true`、そうでなければ`false`を返す
+ 
+ 
+ ## 例
+@@ -101,3 +102,5 @@ int main()
+ ## 参照
+ - [P0307R2 Making Optional Greater Equal Again](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0307r2.pdf)
+ - [LWG Issue 2934. `optional&amp;lt;const T&amp;gt;` doesn&amp;#39;t compare with `T`](https://wg21.cmeerw.net/lwg/issue2934)
++- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
++    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator&lt;= -- optional : 三方比較演算子に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/optional/optional/op_less_equal.html"/>
+      <id>b4577ca90aac4b1f0f93334272b0d18ca7a22417:reference/optional/optional/op_less_equal.md</id>
+      <updated>2022-12-09T20:10:04+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/optional/optional/op_less_equal.md b/reference/optional/optional/op_less_equal.md
+index f7ff7df03..d9af21a96 100644
+--- a/reference/optional/optional/op_less_equal.md
++++ b/reference/optional/optional/op_less_equal.md
+@@ -7,17 +7,18 @@
+ ```cpp
+ namespace std {
+   template &amp;lt;class T, class U&amp;gt;
+-  constexpr bool operator&amp;lt;=(const optional&amp;lt;T&amp;gt;&amp;amp; x, const optional&amp;lt;U&amp;gt;&amp;amp; y); // (1)
+-
+-  template &amp;lt;class T&amp;gt;
+-  constexpr bool operator&amp;lt;=(const optional&amp;lt;T&amp;gt;&amp;amp; x, nullopt_t) noexcept;   // (2)
+-  template &amp;lt;class T&amp;gt;
+-  constexpr bool operator&amp;lt;=(nullopt_t, const optional&amp;lt;T&amp;gt;&amp;amp; y) noexcept;   // (3)
++  constexpr bool operator&amp;lt;=(const optional&amp;lt;T&amp;gt;&amp;amp; x, const optional&amp;lt;U&amp;gt;&amp;amp; y); // (1) C++17
+ 
+   template &amp;lt;class T, class U&amp;gt;
+-  constexpr bool operator&amp;lt;=(const optional&amp;lt;T&amp;gt;&amp;amp; x, const U&amp;amp; y);           // (4)
++  constexpr bool operator&amp;lt;=(const optional&amp;lt;T&amp;gt;&amp;amp; x, const U&amp;amp; y);           // (2) C++17
+   template &amp;lt;class T, class U&amp;gt;
+-  constexpr bool operator&amp;lt;=(const U&amp;amp; x, const optional&amp;lt;T&amp;gt;&amp;amp; y);           // (5)
++  constexpr bool operator&amp;lt;=(const U&amp;amp; x, const optional&amp;lt;T&amp;gt;&amp;amp; y);           // (3) C++17
++
++  // operator&amp;lt;=&amp;gt;により、以下のオーバーロードが使用可能になる (C++20)
++  template &amp;lt;class T&amp;gt;
++  constexpr bool operator&amp;lt;=(const optional&amp;lt;T&amp;gt;&amp;amp; x, nullopt_t) noexcept;   // (4) C++17
++  template &amp;lt;class T&amp;gt;
++  constexpr bool operator&amp;lt;=(nullopt_t, const optional&amp;lt;T&amp;gt;&amp;amp; y) noexcept;   // (5) C++17
+ }
+ ```
+ * nullopt_t[link /reference/optional/nullopt_t.md]
+@@ -27,15 +28,15 @@ namespace std {
+ 
+ 
+ ## 要件
+-- (1), (4), (5) : 型`T`と型`U`が`&amp;lt;=`演算子で比較可能であること
++- (1), (2), (3) : 型`T`と型`U`が`&amp;lt;=`演算子で比較可能であること
+ 
+ 
+ ## 戻り値
+ - (1) : `x`と`y`がどちらも有効値を持っていれば、有効値同士を`&amp;lt;=`演算子で比較した結果を返す。`x`が有効値を持っていなければ`true`を返す。`y`が有効値を持っていなければ`false`を返す
+-- (2) : `!x.`[`has_value()`](has_value.md)を返す
+-- (3) : `true`を返す
+-- (4) : `return x.`[`has_value()`](has_value.md) `? x.`[`value()`](value.md) `&amp;lt;= v : true;`
+-- (5) : `return y.`[`has_value()`](has_value.md) `? x &amp;lt;= y.`[`value()`](value.md) `: false;`
++- (2) : `return x.`[`has_value()`](has_value.md) `? x.`[`value()`](value.md) `&amp;lt;= v : true;`
++- (3) : `return y.`[`has_value()`](has_value.md) `? x &amp;lt;= y.`[`value()`](value.md) `: false;`
++- (4) : `!x.`[`has_value()`](has_value.md)を返す
++- (5) : `true`を返す
+ 
+ 
+ ## 例
+@@ -101,3 +102,5 @@ int main()
+ ## 参照
+ - [P0307R2 Making Optional Greater Equal Again](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0307r2.pdf)
+ - [LWG Issue 2934. `optional&amp;lt;const T&amp;gt;` doesn&amp;#39;t compare with `T`](https://wg21.cmeerw.net/lwg/issue2934)
++- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
++    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator!= -- optional : 三方比較演算子に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/optional/optional/op_not_equal.html"/>
+      <id>b4577ca90aac4b1f0f93334272b0d18ca7a22417:reference/optional/optional/op_not_equal.md</id>
+      <updated>2022-12-09T20:10:04+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/optional/optional/op_not_equal.md b/reference/optional/optional/op_not_equal.md
+index da541bae8..377588484 100644
+--- a/reference/optional/optional/op_not_equal.md
++++ b/reference/optional/optional/op_not_equal.md
+@@ -7,17 +7,18 @@
+ ```cpp
+ namespace std {
+   template &amp;lt;class T, class U&amp;gt;
+-  constexpr bool operator!=(const optional&amp;lt;T&amp;gt;&amp;amp; x, const optional&amp;lt;U&amp;gt;&amp;amp; y); // (1)
+-
+-  template &amp;lt;class T&amp;gt;
+-  constexpr bool operator!=(const optional&amp;lt;T&amp;gt;&amp;amp; x, nullopt_t y) noexcept; // (2)
+-  template &amp;lt;class T&amp;gt;
+-  constexpr bool operator!=(nullopt_t x, const optional&amp;lt;T&amp;gt;&amp;amp; y) noexcept; // (3)
++  constexpr bool operator!=(const optional&amp;lt;T&amp;gt;&amp;amp; x, const optional&amp;lt;U&amp;gt;&amp;amp; y); // (1) C++17
+ 
+   template &amp;lt;class T, class U&amp;gt;
+-  constexpr bool operator!=(const optional&amp;lt;T&amp;gt;&amp;amp; x, const U&amp;amp; y);           // (4)
++  constexpr bool operator!=(const optional&amp;lt;T&amp;gt;&amp;amp; x, const U&amp;amp; y);           // (2) C++17
+   template &amp;lt;class T, class U&amp;gt;
+-  constexpr bool operator!=(const U&amp;amp; x, const optional&amp;lt;T&amp;gt;&amp;amp; y);           // (5)
++  constexpr bool operator!=(const U&amp;amp; x, const optional&amp;lt;T&amp;gt;&amp;amp; y);           // (3) C++17
++
++  // operator==により、以下のオーバーロードが使用可能になる (C++20)
++  template &amp;lt;class T&amp;gt;
++  constexpr bool operator!=(const optional&amp;lt;T&amp;gt;&amp;amp; x, nullopt_t y) noexcept; // (4) C++17
++  template &amp;lt;class T&amp;gt;
++  constexpr bool operator!=(nullopt_t x, const optional&amp;lt;T&amp;gt;&amp;amp; y) noexcept; // (5) C++17
+ }
+ ```
+ * nullopt_t[link /reference/optional/nullopt_t.md]
+@@ -27,7 +28,7 @@ namespace std {
+ 
+ 
+ ## 要件
+-- (1), (4), (5) : 型`T`が`!=`で比較可能であること
++- (1), (2), (3) : 型`T`が`!=`で比較可能であること
+ 
+ 
+ ## 戻り値
+@@ -98,3 +99,5 @@ int main()
+ 
+ ## 参照
+ - [LWG Issue 2934. `optional&amp;lt;const T&amp;gt;` doesn&amp;#39;t compare with `T`](https://wg21.cmeerw.net/lwg/issue2934)
++- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
++    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>uninitialized_copy -- 未初期化領域のRangeアルゴリズム : サンプルコードとしてdestroy_atの代わりにdestroy/destroy_nを使用するよう修正</title>
@@ -2446,649 +3040,6 @@ index 83445362d..9f35e5cb7 100644
  
  
  ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>memory -- &lt;memory&gt; : no-throw-input-iteratorを追加 #999</title>
-      <link href="https://cpprefjp.github.io/reference/memory.html"/>
-      <id>970db36ebccdc3b35fc3c73f385c14263f2599a9:reference/memory.md</id>
-      <updated>2022-12-08T11:34:12+09:00</updated>
-      
-        <content type="html">&lt;div class=&#34;header&#34;&gt;&amp;lt;memory&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;token&#34;&gt;memory&lt;/span&gt;&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;&lt;code&gt;&amp;lt;memory&amp;gt;&lt;/code&gt;ヘッダでは、メモリアロケータ、未初期化領域に関する関数群、スマートポインタ、ガベージコレクションを作るためのユーティリティ関数といった、メモリを扱うための機能を定義する。&lt;/p&gt;
-&lt;p&gt;このヘッダでは、以下の標準ヘッダをインクルードする：&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/compare.html&#34;&gt;&amp;lt;compare&amp;gt;&lt;/a&gt;&lt;/code&gt; (C++20)&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;メモリアロケータ&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/allocator.html&#34;&gt;allocator&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;メモリアロケータの標準実装(class template)&lt;/td&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/allocator_traits.html&#34;&gt;allocator_traits&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;アロケータクラスへの間接的なアクセス(class template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/allocator_arg_t.html&#34;&gt;allocator_arg_t&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;アロケータを引数として渡す際の、オーバーロード解決のためのタグ(class)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/allocator_arg_t.html&#34;&gt;allocator_arg&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;アロケータを引数として渡す際の、オーバーロード解決のためのタグ(constant value)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/uses_allocator.html&#34;&gt;uses_allocator&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;型&lt;code&gt;T&lt;/code&gt;がアロケータを使用するか調べる&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/uses_allocator_construction_args.html&#34;&gt;uses_allocator_construction_args&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;uses-allocator 構築のためのコンストラクタ引数を &lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/tuple/tuple.html&#34;&gt;tuple&lt;/a&gt;&lt;/code&gt; 型にして返す&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/make_obj_using_allocator.html&#34;&gt;make_obj_using_allocator&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;uses-allocator 構築する&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/uninitialized_construct_using_allocator.html&#34;&gt;uninitialized_construct_using_allocator&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;指定された領域に uses-allocator 構築する&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;メモリ特化のコンセプト&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/no-throw-input-iterator.html&#34;&gt;no-throw-input-iterator&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;各操作で例外送出をしない説明用の入力イテレータ (concept)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/no-throw-forward-iterator.md.nolink&#34;&gt;no-throw-forward-iterator&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;各操作で例外送出をしない説明用の前方向イテレータ (concept)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/no-throw-sentinel.md.nolink&#34;&gt;no-throw-sentinel&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;各操作で例外送出をしない説明用の番兵 (concept)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/no-throw-input-range.md.nolink&#34;&gt;no-throw-input-range&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;各操作で例外送出をしない入力Range (concept)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/no-throw-forward-range.md.nolink&#34;&gt;no-throw-forward-range&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;各操作で例外送出をしない前方向Range (concept)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;未初期化領域に対する操作&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/uninitialized_default_construct.html&#34;&gt;uninitialized_default_construct&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲の各要素をデフォルト構築する(function template)&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/uninitialized_default_construct_n.html&#34;&gt;uninitialized_default_construct_n&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲のうち、先頭&lt;code&gt;N&lt;/code&gt;個の要素をデフォルト構築する(function template)&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/uninitialized_value_construct.html&#34;&gt;uninitialized_value_construct&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲の各要素配置を値構築する(function template)&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/uninitialized_value_construct_n.html&#34;&gt;uninitialized_value_construct_n&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲のうち、先頭&lt;code&gt;N&lt;/code&gt;個の要素を値構築する(function template)&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/uninitialized_copy.html&#34;&gt;uninitialized_copy&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲を配置&lt;code&gt;new&lt;/code&gt;で初期化してコピー出力する(function template)&lt;/td&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/uninitialized_copy_n.html&#34;&gt;uninitialized_copy_n&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲のうち、先頭&lt;code&gt;N&lt;/code&gt;個の要素を配置&lt;code&gt;new&lt;/code&gt;で初期化してコピー出力する(function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/uninitialized_move.html&#34;&gt;uninitialized_move&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲を配置&lt;code&gt;new&lt;/code&gt;で初期化してムーブ出力する(function template)&lt;/td&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/uninitialized_move_n.html&#34;&gt;uninitialized_move_n&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲のうち、先頭&lt;code&gt;N&lt;/code&gt;個の要素を配置&lt;code&gt;new&lt;/code&gt;で初期化してムーブ出力する(function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/uninitialized_fill.html&#34;&gt;uninitialized_fill&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲を、指定された値で配置&lt;code&gt;new&lt;/code&gt;する(function template)&lt;/td&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/uninitialized_fill_n.html&#34;&gt;uninitialized_fill_n&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲のうち、先頭&lt;code&gt;N&lt;/code&gt;個の要素を指定された値で配置&lt;code&gt;new&lt;/code&gt;する(function template)&lt;/td&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/construct_at.html&#34;&gt;construct_at&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;コンストラクタを呼び出す(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/destroy_at.html&#34;&gt;destroy_at&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;デストラクタを呼び出す(function template)&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/destroy.html&#34;&gt;destroy&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;範囲の各要素に対してデストラクタを呼び出す(function template)&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/destroy_n.html&#34;&gt;destroy_n&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;範囲のうち、先頭&lt;code&gt;N&lt;/code&gt;個の要素に対してデストラクタを呼び出す(function template)&lt;/td&gt;
-&lt;td&gt;C++17&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/ranges_uninitialized_default_construct.html&#34;&gt;ranges::uninitialized_default_construct&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲の各要素をデフォルト構築する(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/ranges_uninitialized_default_construct_n.html&#34;&gt;ranges::uninitialized_default_construct_n&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲のうち、先頭&lt;code&gt;N&lt;/code&gt;個の要素をデフォルト構築する(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/ranges_uninitialized_value_construct.html&#34;&gt;ranges::uninitialized_value_construct&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲の各要素配置を値構築する(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/ranges_uninitialized_value_construct_n.html&#34;&gt;ranges::uninitialized_value_construct_n&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲のうち、先頭&lt;code&gt;N&lt;/code&gt;個の要素を値構築する(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/ranges_uninitialized_copy.html&#34;&gt;ranges::uninitialized_copy&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲を配置&lt;code&gt;new&lt;/code&gt;で初期化してコピー出力する(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/ranges_uninitialized_copy_n.html&#34;&gt;ranges::uninitialized_copy_n&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲のうち、先頭&lt;code&gt;N&lt;/code&gt;個の要素を配置&lt;code&gt;new&lt;/code&gt;で初期化してコピー出力する(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/ranges_uninitialized_move.html&#34;&gt;ranges::uninitialized_move&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲を配置&lt;code&gt;new&lt;/code&gt;で初期化してムーブ出力する(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/ranges_uninitialized_move_n.html&#34;&gt;ranges::uninitialized_move_n&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲のうち、先頭&lt;code&gt;N&lt;/code&gt;個の要素を配置&lt;code&gt;new&lt;/code&gt;で初期化してムーブ出力する(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/ranges_uninitialized_fill.html&#34;&gt;ranges::uninitialized_fill&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲を、指定された値で配置&lt;code&gt;new&lt;/code&gt;する(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/ranges_uninitialized_fill_n.html&#34;&gt;ranges::uninitialized_fill_n&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域の範囲のうち、先頭&lt;code&gt;N&lt;/code&gt;個の要素を指定された値で配置&lt;code&gt;new&lt;/code&gt;する(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/ranges_construct_at.html&#34;&gt;ranges::construct_at&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;コンストラクタを呼び出す(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/ranges_destroy_at.html&#34;&gt;ranges::destroy_at&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;デストラクタを呼び出す(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/ranges_destroy.html&#34;&gt;ranges::destroy&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;範囲の各要素に対してデストラクタを呼び出す(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/ranges_destroy_n.html&#34;&gt;ranges::destroy_n&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;範囲のうち、先頭&lt;code&gt;N&lt;/code&gt;個の要素に対してデストラクタを呼び出す(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/raw_storage_iterator.html&#34;&gt;raw_storage_iterator&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;未初期化領域に書き込むための出力イテレータ(class template)&lt;/td&gt;
-&lt;td&gt;C++17から非推奨&lt;br /&gt; C++20で削除&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/get_temporary_buffer.html&#34;&gt;get_temporary_buffer&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;短期的なメモリ領域を確保する(function template)&lt;/td&gt;
-&lt;td&gt;C++17から非推奨&lt;br /&gt; C++20で削除&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/return_temporary_buffer.html&#34;&gt;return_temporary_buffer&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;get_temporary_buffer()&lt;/code&gt;で確保された領域を解放する(function)&lt;/td&gt;
-&lt;td&gt;C++17から非推奨&lt;br /&gt; C++20で削除&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;スマートポインタ&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/shared_ptr.html&#34;&gt;shared_ptr&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;共有方式スマートポインタ(class template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/make_shared.html&#34;&gt;make_shared&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;shared_ptr&lt;/code&gt;を構築するヘルパ関数(function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/make_shared_for_overwrite.html&#34;&gt;make_shared_for_overwrite&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;shared_ptr&lt;/code&gt;を構築するヘルパ関数(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/allocate_shared.html&#34;&gt;allocate_shared&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;アロケータを指定して&lt;code&gt;shared_ptr&lt;/code&gt;を構築するヘルパ関数(function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/allocate_shared_for_overwrite.html&#34;&gt;allocate_shared_for_overwrite&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;アロケータを指定して&lt;code&gt;shared_ptr&lt;/code&gt;を構築するヘルパ関数(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/enable_shared_from_this.html&#34;&gt;enable_shared_from_this&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;this&lt;/code&gt;を指す&lt;code&gt;shared_ptr&lt;/code&gt;を可能にする(class template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/weak_ptr.html&#34;&gt;weak_ptr&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;shared_ptr&lt;/code&gt;のインスタンス監視(class template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/bad_weak_ptr.html&#34;&gt;bad_weak_ptr&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;weak_ptr&lt;/code&gt;から投げられる例外クラス(class template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/owner_less.html&#34;&gt;owner_less&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;所有権ベースの小なり比較(class template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/unique_ptr.html&#34;&gt;unique_ptr&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;専有方式スマートポインタ(class template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/make_unique.html&#34;&gt;make_unique&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;unique_ptr&lt;/code&gt;を構築するヘルパ関数(function template)&lt;/td&gt;
-&lt;td&gt;C++14&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/make_unique_for_overwrite.html&#34;&gt;make_unique_for_overwrite&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;unique_ptr&lt;/code&gt;を構築するヘルパ関数(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/default_delete.html&#34;&gt;default_delete&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;unique_ptr&lt;/code&gt;のデフォルトの削除子(class template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;auto_ptr&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;古い専有方式スマートポインタ(class template)&lt;/td&gt;
-&lt;td&gt;C++11から非推奨&lt;br /&gt; C++17で削除&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;スマートポインタのアトミック操作&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;template&amp;lt;class T&amp;gt; struct atomic&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;atomic&lt;/code&gt;クラスの先行宣言 (class template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/atomic.html&#34;&gt;template&amp;lt;class T&amp;gt; struct atomic&amp;lt;shared_ptr&amp;lt;T&amp;gt;&amp;gt;;&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;atomic&lt;/code&gt;クラスの&lt;code&gt;shared_ptr&lt;/code&gt;に対する特殊化 (class template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/atomic.html&#34;&gt;template&amp;lt;class T&amp;gt; struct atomic&amp;lt;weak_ptr&amp;lt;T&amp;gt;&amp;gt;;&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;atomic&lt;/code&gt;クラスの&lt;code&gt;weak_ptr&lt;/code&gt;に対する特殊化 (class template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;atomic_is_lock_free&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;shared_ptr&lt;/code&gt;に対するアトミック操作がロックフリーに振る舞うことができるかを調べる (function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;br /&gt; C++20で非推奨&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;atomic_load&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;shared_ptr&lt;/code&gt;の値をアトミックに読み込む (function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;br /&gt; C++20で非推奨&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;atomic_load_explicit&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;メモリオーダーを指定して、&lt;code&gt;shared_ptr&lt;/code&gt;の値をアトミックに読み込む (function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;br /&gt; C++20で非推奨&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;atomic_store&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;shared_ptr&lt;/code&gt;値をアトミックに書き込む (function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;br /&gt; C++20で非推奨&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;atomic_store_explicit&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;メモリオーダーを指定して、&lt;code&gt;shared_ptr&lt;/code&gt;の値をアトミックに書き込む (function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;br /&gt; C++20で非推奨&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;atomic_exchange&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;shared_ptr&lt;/code&gt;の値をアトミックに入れ替える (function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;br /&gt; C++20で非推奨&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;atomic_exchange_explicit&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;メモリオーダーを指定して、&lt;code&gt;shared_ptr&lt;/code&gt;の値をアトミックに入れ替える (function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;br /&gt; C++20で非推奨&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;atomic_compare_exchange_weak&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;弱い比較で&lt;code&gt;shared_ptr&lt;/code&gt;の値の入れ替えをアトミックに行う (function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;br /&gt; C++20で非推奨&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;atomic_compare_exchange_strong&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;強い比較で&lt;code&gt;shared_ptr&lt;/code&gt;の値の入れ替えをアトミックに行う (function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;br /&gt; C++20で非推奨&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;atomic_compare_exchange_weak_explicit&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;弱い比較でメモリオーダーを指定して、&lt;code&gt;shared_ptr&lt;/code&gt;の値の入れ替えをアトミックに行う (function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;br /&gt; C++20で非推奨&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;atomic_compare_exchange_strong_explicit&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;強い比較でメモリオーダーを指定して、&lt;code&gt;shared_ptr&lt;/code&gt;の値の入れ替えをアトミックに行う (function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;br /&gt; C++20で非推奨&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;ガベージコレクション支援&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/pointer_safety.html&#34;&gt;pointer_safety&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;ポインタ安全性について実装/挙動を示す列挙型(enum class)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/get_pointer_safety.html&#34;&gt;get_pointer_safety&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;処理系の、ポインタ安全性についての実装/挙動を取得する(function)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/declare_reachable.html&#34;&gt;declare_reachable&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;ポインタが到達可能であることを宣言する(function)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/undeclare_reachable.html&#34;&gt;undeclare_reachable&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;ポインタが到達可能であるという宣言を削除する(function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/declare_no_pointers.html&#34;&gt;declare_no_pointers&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;指定された範囲のポインタが、追跡可能ではないことを宣言する(function)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/undeclare_no_pointers.html&#34;&gt;undeclare_no_pointers&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;declare_no_pointers&lt;/code&gt;で宣言された範囲を無効化する(function)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;ポインタのユーティリティ&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/pointer_traits.html&#34;&gt;pointer_traits&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;ポインタの型特性(class template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/to_address.html&#34;&gt;to_address&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;ポインタと見なせるオブジェクトからアドレスを取得する (function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/addressof.html&#34;&gt;addressof&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;変数のアドレスを必ず取得する(function template)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/align.html&#34;&gt;align&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;アライメント調整された領域を得る(function)&lt;/td&gt;
-&lt;td&gt;C++11&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/assume_aligned.html&#34;&gt;assume_aligned&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;コンパイラへアライメントのヒントを与える(function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;参照&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4190.htm&#34; target=&#34;_blank&#34;&gt;N4190 Removing &lt;code&gt;auto_ptr&lt;/code&gt;, &lt;code&gt;random_shuffle()&lt;/code&gt;, And Old &lt;code&gt;&amp;lt;functional&amp;gt;&lt;/code&gt; Stuff&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0718r2.html&#34; target=&#34;_blank&#34;&gt;P0718R2 Revising &lt;code&gt;atomic_shared_ptr&lt;/code&gt; for C++20&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2051r0.html&#34; target=&#34;_blank&#34;&gt;P2051R0 C++ Standard Library Issues to be moved in Prague&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>no-throw-input-iterator -- &lt;memory&gt; : no-throw-input-iteratorを追加 #999</title>
-      <link href="https://cpprefjp.github.io/reference/memory/no-throw-input-iterator.html"/>
-      <id>970db36ebccdc3b35fc3c73f385c14263f2599a9:reference/memory/no-throw-input-iterator.md</id>
-      <updated>2022-12-08T11:34:12+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/no-throw-input-iterator.md b/reference/memory/no-throw-input-iterator.md
-new file mode 100644
-index 000000000..83445362d
---- /dev/null
-+++ b/reference/memory/no-throw-input-iterator.md
-@@ -0,0 +1,99 @@
-+# no-throw-input-iterator
-+* memory[meta header]
-+* std[meta namespace]
-+* concept[meta id-type]
-+* cpp20[meta cpp]
-+
-+```cpp
-+namespace std {
-+  template &amp;lt;class I&amp;gt;
-+  concept no-throw-input-iterator =
-+    input_iterator&amp;lt;I&amp;gt; &amp;amp;&amp;amp;
-+    is_lvalue_reference_v&amp;lt;iter_reference_t&amp;lt;I&amp;gt;&amp;gt; &amp;amp;&amp;amp;
-+    same_as&amp;lt;remove_cvref_t&amp;lt;iter_reference_t&amp;lt;I&amp;gt;&amp;gt;, iter_value_t&amp;lt;I&amp;gt;&amp;gt;;
-+}
-+```
-+* input_iterator[link /reference/iterator/input_iterator.md]
-+* is_lvalue_reference_v[link /reference/type_traits/is_lvalue_reference.md]
-+* iter_reference_t[link /reference/iterator/iter_reference_t.md]
-+* iter_value_t[link /reference/iterator/iter_value_t.md]
-+* same_as[link /reference/concepts/same_as.md]
-+* remove_cvref_t[link /reference/type_traits/remove_cvref.md]
-+
-+## 概要
-+
-+`no-throw-forward-iterator`は、イテレータ型`I`が以下の操作で例外を投げない入力イテレータの説明用コンセプトである：
-+
-+- インクリメント
-+- コピー構築
-+- ムーブ構築
-+- コピー代入
-+- ムーブ代入
-+- 有効なイテレータの間接参照
-+
-+
-+## 備考
-+- このコンセプトは[`input_iterator`](/reference/iterator/input_iterator.md)のいくつかの操作で例外を投げることを許可する
-+- このクラスは、[`std::vector`](/reference/vector/vector.md)`&amp;lt;bool&amp;gt;`のイテレータのような、プロキシオブジェクトを指すイテレータを除外する
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;concepts&amp;gt;
-+#include &amp;lt;iterator&amp;gt;
-+#include &amp;lt;memory&amp;gt;
-+#include &amp;lt;vector&amp;gt;
-+#include &amp;lt;forward_list&amp;gt;
-+#include &amp;lt;list&amp;gt;
-+
-+template &amp;lt;class I&amp;gt;
-+concept no_throw_input_iterator =
-+  std::input_iterator&amp;lt;I&amp;gt; &amp;amp;&amp;amp;
-+  std::is_lvalue_reference_v&amp;lt;std::iter_reference_t&amp;lt;I&amp;gt;&amp;gt; &amp;amp;&amp;amp;
-+  std::same_as&amp;lt;std::remove_cvref_t&amp;lt;std::iter_reference_t&amp;lt;I&amp;gt;&amp;gt;, std::iter_value_t&amp;lt;I&amp;gt;&amp;gt;;
-+
-+template &amp;lt;no_throw_input_iterator I&amp;gt;
-+void f(const char* name) {
-+  std::cout &amp;lt;&amp;lt; name &amp;lt;&amp;lt; &amp;#34; is no-throw-input-iterator&amp;#34; &amp;lt;&amp;lt; std::endl;
-+}
-+
-+template&amp;lt;typename I&amp;gt;
-+void f(const char* name) {
-+  std::cout &amp;lt;&amp;lt; name &amp;lt;&amp;lt; &amp;#34; is not no-throw-input-iterator&amp;#34; &amp;lt;&amp;lt; std::endl;
-+}
-+
-+int main() {
-+  f&amp;lt;int*&amp;gt;(&amp;#34;int*&amp;#34;);
-+  f&amp;lt;const int*&amp;gt;(&amp;#34;const int*&amp;#34;);
-+  f&amp;lt;std::forward_list&amp;lt;int&amp;gt;::iterator&amp;gt;(&amp;#34;std::forward_list&amp;lt;int&amp;gt;::iterator&amp;#34;);
-+  f&amp;lt;std::list&amp;lt;int&amp;gt;::iterator&amp;gt;(&amp;#34;std::list&amp;lt;int&amp;gt;::iterator&amp;#34;);
-+  f&amp;lt;std::vector&amp;lt;int&amp;gt;::iterator&amp;gt;(&amp;#34;std::vector&amp;lt;int&amp;gt;::iterator&amp;#34;);
-+  f&amp;lt;std::vector&amp;lt;bool&amp;gt;::iterator&amp;gt;(&amp;#34;std::vector&amp;lt;bool&amp;gt;::iterator&amp;#34;);
-+
-+  std::cout &amp;lt;&amp;lt; &amp;#34;\n&amp;#34;;
-+}
-+```
-+* no_throw_input_iterator[color ff0000]
-+* std::input_iterator[link /reference/iterator/input_iterator.md]
-+* std::is_lvalue_reference_v[link /reference/type_traits/is_lvalue_reference.md]
-+* std::iter_reference_t[link /reference/iterator/iter_reference_t.md]
-+* std::iter_value_t[link /reference/iterator/iter_value_t.md]
-+* std::same_as[link /reference/concepts/same_as.md]
-+* std::remove_cvref_t[link /reference/type_traits/remove_cvref.md]
-+* std::forward_list[link /reference/forward_list/forward_list.md]
-+* std::list[link /reference/list/list.md]
-+
-+### 出力
-+```
-+int* is no-throw-input-iterator
-+const int* is no-throw-input-iterator
-+std::forward_list&amp;lt;int&amp;gt;::iterator is no-throw-input-iterator
-+std::list&amp;lt;int&amp;gt;::iterator is no-throw-input-iterator
-+std::vector&amp;lt;int&amp;gt;::iterator is no-throw-input-iterator
-+std::vector&amp;lt;bool&amp;gt;::iterator is not no-throw-input-iterator
-+```
-+
-+
-+## 参照
-+- [P0896R4 The One Ranges Proposal (was Merging the Ranges TS)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0896r4.pdf)
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
