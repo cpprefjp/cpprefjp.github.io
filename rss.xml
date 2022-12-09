@@ -2,9 +2,872 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2022-12-09T13:05:27.200587</updated>
-  <id>c9a734fa-1bb5-4b17-b6af-48135f1790b2</id>
+  <updated>2022-12-09T13:44:25.866709</updated>
+  <id>2baff345-e484-4065-8593-2c45f5991194</id>
 
+  
+    <entry>
+      <title>sub_match -- sub_match : 三方比較演算子と自動導出に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/regex/sub_match.html"/>
+      <id>4c87e24eca7cd629077caa9ccaf040cbc28c7be5:reference/regex/sub_match.md</id>
+      <updated>2022-12-09T22:40:05+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/regex/sub_match.md b/reference/regex/sub_match.md
+index 003bf8810..ae081b608 100644
+--- a/reference/regex/sub_match.md
++++ b/reference/regex/sub_match.md
+@@ -59,6 +59,7 @@ namespace std {
+ |-----------------------------------------------|------------------------------------|----------------|
+ | [`operator==`](sub_match/op_equal.md)         | 等値比較を行う                     | C++11          |
+ | [`operator!=`](sub_match/op_not_equal.md)     | 非等値比較を行う                   | C++11          |
++| [`operator&amp;lt;=&amp;gt;`](sub_match/op_compare_3way.md) | 三方比較を行う                     | C++20          |
+ | [`operator&amp;lt;`](sub_match/op_less.md)           | 左辺が右辺よりも小さいか判定を行う | C++11          |
+ | [`operator&amp;lt;=`](sub_match/op_less_equal.md)    | 左辺が右辺以下か判定を行う         | C++11          |
+ | [`operator&amp;gt;`](sub_match/op_greater.md)        | 左辺が右辺より大きいか判定を行う   | C++11          |
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator&lt;=&gt; -- sub_match : 三方比較演算子と自動導出に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/regex/sub_match/op_compare_3way.html"/>
+      <id>4c87e24eca7cd629077caa9ccaf040cbc28c7be5:reference/regex/sub_match/op_compare_3way.md</id>
+      <updated>2022-12-09T22:40:05+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/regex/sub_match/op_compare_3way.md b/reference/regex/sub_match/op_compare_3way.md
+new file mode 100644
+index 000000000..ae16f6d17
+--- /dev/null
++++ b/reference/regex/sub_match/op_compare_3way.md
+@@ -0,0 +1,139 @@
++# operator&amp;lt;=&amp;gt;
++* regex[meta header]
++* std[meta namespace]
++* function template[meta id-type]
++* cpp20[meta cpp]
++
++```cpp
++namespace std {
++  template &amp;lt;class BiIter&amp;gt;
++  auto operator&amp;lt;=&amp;gt;(
++    const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs,
++    const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                            // (1) C++20
++
++  template &amp;lt;class BiIter, class ST, class SA&amp;gt;
++  auto operator&amp;lt;=&amp;gt;(
++    const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs,
++    const basic_string&amp;lt;
++      typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type,
++      ST,
++      SA
++    &amp;gt;&amp;amp; rhs);                                                  // (2) C++20
++
++  template &amp;lt;class BiIter&amp;gt;
++  auto operator==(
++    const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs,
++    const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type&amp;amp; rhs); // (3) C++20
++
++  template &amp;lt;class BiIter&amp;gt;
++  auto operator==(
++    const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs,
++    const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type* rhs); // (4) C++20
++}
++```
++
++## 概要
++マッチした文字列を等値比較する。
++
++
++## 戻り値
++以下の定義があるとして、
++
++```cpp
++SM_CAT(I) = compare_three_way_result_t&amp;lt;basic_string&amp;lt;typename iterator_traits&amp;lt;I&amp;gt;::value_type&amp;gt;&amp;gt;
++```
++
++- (1) :
++    ```cpp
++    return static_cast&amp;lt;SM_CAT(BiIter)&amp;gt;(lhs.compare(rhs) &amp;lt;=&amp;gt; 0);
++    ```
++    * compare[link compare.md]
++
++- (2) :
++    ```cpp
++    return lhs.compare(typename sub_match&amp;lt;BiIter&amp;gt;::string_type(rhs.data(), rhs.size())) == 0;
++    ```
++    * compare[link compare.md]
++    * data()[link /reference/string/basic_string/data.md]
++    * size()[link /reference/string/basic_string/size.md]
++
++- (3) :
++    ```cpp
++    return static_cast&amp;lt;SM_CAT(BiIter)&amp;gt;(lhs.compare(
++      typename sub_match&amp;lt;BiIter&amp;gt;::string_type(rhs.data(), rhs.size())
++    ) &amp;lt;=&amp;gt; 0)
++    ```
++    * compare[link compare.md]
++    * data()[link /reference/string/basic_string/data.md]
++    * size()[link /reference/string/basic_string/size.md]
++
++- (4) :
++    ```cpp
++    return static_cast&amp;lt;SM_CAT(BiIter)&amp;gt;(lhs.compare(rhs) &amp;lt;=&amp;gt; 0);
++    ```
++    * compare[link compare.md]
++
++## 備考
++- (1) の形式でもマッチした文字列のみが比較され、マッチした位置は考慮されない。（例を参照）
++- (2) の形式でも比較に使用する文字特性クラスは標準の [`char_traits`](../../string/char_traits.md)`&amp;lt;value_type&amp;gt;` が使用され、テンプレート引数に指定された文字特性クラス `ST` は考慮されない。
++- この演算子により、以下の演算子が使用可能にになる：
++    - `operator&amp;lt;`
++    - `operator&amp;lt;=`
++    - `operator&amp;gt;`
++    - `operator&amp;gt;=`
++
++
++## 例
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;regex&amp;gt;
++#include &amp;lt;string&amp;gt;
++
++int main()
++{
++  const char ca[] = &amp;#34;abc abc&amp;#34;;
++  const std::regex re(R&amp;#34;((\w+) (\w+))&amp;#34;);
++
++  std::cmatch m;
++  if (std::regex_search(ca, m, re)) {
++    std::csub_match sub1 = m[1];
++    std::csub_match sub2 = m[2];
++    const std::string s1 = &amp;#34;abc&amp;#34;;
++    const std::string s2 = &amp;#34;ABC&amp;#34;;
++    std::cout &amp;lt;&amp;lt; std::boolalpha
++              &amp;lt;&amp;lt; ((sub1  &amp;lt;=&amp;gt; sub2 ) == 0) &amp;lt;&amp;lt; std::endl  // (1) の形式
++              &amp;lt;&amp;lt; ((sub1  &amp;lt;=&amp;gt; s2   ) == 0) &amp;lt;&amp;lt; std::endl  // (2) の形式
++              &amp;lt;&amp;lt; ((sub1  &amp;lt;=&amp;gt; &amp;#34;abc&amp;#34;) == 0) &amp;lt;&amp;lt; std::endl  // (3) の形式
++              &amp;lt;&amp;lt; ((sub1  &amp;lt;=&amp;gt; &amp;#39;a&amp;#39;  ) == 0) &amp;lt;&amp;lt; std::endl; // (4) の形式
++  } else {
++    std::cout &amp;lt;&amp;lt; &amp;#34;not match&amp;#34; &amp;lt;&amp;lt; std::endl;
++  }
++}
++```
++* &amp;lt;=&amp;gt;[color ff0000]
++* std::regex[link ../basic_regex.md]
++* std::cmatch[link ../match_results.md]
++* std::regex_search[link ../regex_search.md]
++* std::csub_match[link ../sub_match.md]
++
++### 出力
++```
++true
++false
++true
++false
++```
++
++
++## バージョン
++### 言語
++- C++20
++
++### 処理系
++- [Clang](/implementation.md#clang):
++- [GCC](/implementation.md#gcc): 10
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++## 参照
++- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
++    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator== -- sub_match : 三方比較演算子と自動導出に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/regex/sub_match/op_equal.html"/>
+      <id>4c87e24eca7cd629077caa9ccaf040cbc28c7be5:reference/regex/sub_match/op_equal.md</id>
+      <updated>2022-12-09T22:40:05+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/regex/sub_match/op_equal.md b/reference/regex/sub_match/op_equal.md
+index 1aa4022dc..0b1371856 100644
+--- a/reference/regex/sub_match/op_equal.md
++++ b/reference/regex/sub_match/op_equal.md
+@@ -1,4 +1,4 @@
+-# operator== (非メンバ関数)
++# operator==
+ * regex[meta header]
+ * std[meta namespace]
+ * function template[meta id-type]
+@@ -7,37 +7,48 @@
+ ```cpp
+ namespace std {
+   template &amp;lt;class BiIter&amp;gt;
+-    bool operator==(const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs, const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);        // (1)
+-
+-  template &amp;lt;class BiIter, class ST, class SA&amp;gt;
+     bool operator==(
+-      const basic_string&amp;lt;typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type, ST, SA&amp;gt;&amp;amp; lhs,
+-      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                                                    // (2)
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs,
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                            // (1) C++11
+ 
+   template &amp;lt;class BiIter, class ST, class SA&amp;gt;
+     bool operator==(
+       const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs,
+-      const basic_string&amp;lt;typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type, ST, SA&amp;gt;&amp;amp; rhs)    // (3)
++      const basic_string&amp;lt;
++        typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type,
++        ST,
++        SA
++      &amp;gt;&amp;amp; rhs);                                                  // (2) C++11
+ 
+   template &amp;lt;class BiIter&amp;gt;
+     bool operator==(
+-      const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type* lhs,
+-      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                                                    // (4)
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs,
++      const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type&amp;amp; rhs); // (3) C++11
+ 
+   template &amp;lt;class BiIter&amp;gt;
+     bool operator==(
+       const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs,
+-      const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type* rhs);                         // (5)
++      const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type* rhs); // (4) C++11
++
++  // operator==により、以下のオーバーロードが使用可能になる (C++20)
++  template &amp;lt;class BiIter, class ST, class SA&amp;gt;
++    bool operator==(
++      const basic_string&amp;lt;
++        typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type,
++        ST,
++        SA
++      &amp;gt;&amp;amp; lhs,
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                            // (5) C++11
+ 
+   template &amp;lt;class BiIter&amp;gt;
+     bool operator==(
+-      const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type&amp;amp; lhs,
+-      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                                                    // (6)
++      const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type* lhs,
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                            // (6) C++11
+ 
+   template &amp;lt;class BiIter&amp;gt;
+     bool operator==(
+-      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs,
+-      const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type&amp;amp; rhs);                         // (7)
++      const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type&amp;amp; lhs,
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                            // (7) C++11
+ }
+ ```
+ 
+@@ -47,18 +58,20 @@ namespace std {
+ 
+ ## 戻り値
+ - (1) `lhs.`[`compare`](compare.md)`(rhs) == 0`
+-- (2) `rhs.`[`compare`](compare.md)`(typename` [`sub_match`](../sub_match.md)`&amp;lt;BiIter&amp;gt;::string_type(lhs.`[`data`](../../string/basic_string/data.md)`(), lhs.`[`size`](../../string/basic_string/size.md)`())) == 0`  
+-	なお、C++11 の規格書では `rhs.`[`compare`](compare.md)`(lhs.`[`c_str`](../../string/basic_string/c_str.md)`()) == 0` となっているが、この式では `lhs` に `&amp;#39;\0&amp;#39;` が含まれていた場合に正しく比較することができないため、規格上の誤りとして上記の式に修正された。
+-- (3) `lhs.`[`compare`](compare.md)`(typename` [`sub_match`](../sub_match.md)`&amp;lt;BiIter&amp;gt;::string_type(rhs.`[`data`](../../string/basic_string/data.md)`(), rhs.`[`size`](../../string/basic_string/size.md)`())) == 0`  
+-	なお、C++11 の規格書では `lhs.`[`compare`](compare.md)`(rhs.`[`c_str`](../../string/basic_string/c_str.md)`()) == 0` となっているが、この式では `rhs` に `&amp;#39;\0&amp;#39;` が含まれていた場合に正しく比較することができないため、規格上の誤りとして上記の式に修正された。
+-- (4) `rhs.`[`compare`](compare.md)`(lhs) == 0`
+-- (5) `lhs.`[`compare`](compare.md)`(rhs) == 0`
+-- (6) `rhs.`[`compare`](compare.md)`(typename` [`sub_match`](../sub_match.md)`&amp;lt;BiIter&amp;gt;::string_type(1, lhs)) == 0`
+-- (7) `lhs.`[`compare`](compare.md)`(typename` [`sub_match`](../sub_match.md)`&amp;lt;BiIter&amp;gt;::string_type(1, rhs)) == 0`
++- (2) `lhs.`[`compare`](compare.md)`(typename` [`sub_match`](../sub_match.md)`&amp;lt;BiIter&amp;gt;::string_type(rhs.`[`data`](../../string/basic_string/data.md)`(), rhs.`[`size`](../../string/basic_string/size.md)`())) == 0`  
++- (3) `lhs.`[`compare`](compare.md)`(rhs) == 0`
++- (4) `lhs.`[`compare`](compare.md)`(typename` [`sub_match`](../sub_match.md)`&amp;lt;BiIter&amp;gt;::string_type(1, rhs)) == 0`
++- (5) `rhs.`[`compare`](compare.md)`(typename` [`sub_match`](../sub_match.md)`&amp;lt;BiIter&amp;gt;::string_type(lhs.`[`data`](../../string/basic_string/data.md)`(), lhs.`[`size`](../../string/basic_string/size.md)`())) == 0`  
++    なお、C++11 の規格書では `rhs.`[`compare`](compare.md)`(lhs.`[`c_str`](../../string/basic_string/c_str.md)`()) == 0` となっているが、この式では `lhs` に `&amp;#39;\0&amp;#39;` が含まれていた場合に正しく比較することができないため、規格上の誤りとして上記の式に修正された。
++    なお、C++11 の規格書では `lhs.`[`compare`](compare.md)`(rhs.`[`c_str`](../../string/basic_string/c_str.md)`()) == 0` となっているが、この式では `rhs` に `&amp;#39;\0&amp;#39;` が含まれていた場合に正しく比較することができないため、規格上の誤りとして上記の式に修正された。
++- (6) `rhs.`[`compare`](compare.md)`(lhs) == 0`
++- (7) `rhs.`[`compare`](compare.md)`(typename` [`sub_match`](../sub_match.md)`&amp;lt;BiIter&amp;gt;::string_type(1, lhs)) == 0`
+ 
+ ## 備考
+ - (1) の形式でもマッチした文字列のみが比較され、マッチした位置は考慮されない。（例を参照）
+-- (2)、および、(3) の形式でも比較に使用する文字特性クラスは標準の [`char_traits`](../../string/char_traits.md)`&amp;lt;value_type&amp;gt;` が使用され、テンプレート引数に指定された文字特性クラス `ST` は考慮されない。
++- (2)、および、(5) の形式でも比較に使用する文字特性クラスは標準の [`char_traits`](../../string/char_traits.md)`&amp;lt;value_type&amp;gt;` が使用され、テンプレート引数に指定された文字特性クラス `ST` は考慮されない。
++- この演算子により、以下の演算子が使用可能にになる (C++20)：
++    - `operator!=`
+ 
+ 
+ ## 例
+@@ -80,12 +93,12 @@ int main()
+     const std::string s2 = &amp;#34;ABC&amp;#34;;
+     std::cout &amp;lt;&amp;lt; std::boolalpha
+               &amp;lt;&amp;lt; (sub1  == sub2 ) &amp;lt;&amp;lt; std::endl  // (1) の形式
+-              &amp;lt;&amp;lt; (s1    == sub2 ) &amp;lt;&amp;lt; std::endl  // (2) の形式
+-              &amp;lt;&amp;lt; (sub1  == s2   ) &amp;lt;&amp;lt; std::endl  // (3) の形式
+-              &amp;lt;&amp;lt; (&amp;#34;ABC&amp;#34; == sub2 ) &amp;lt;&amp;lt; std::endl  // (4) の形式
+-              &amp;lt;&amp;lt; (sub1  == &amp;#34;abc&amp;#34;) &amp;lt;&amp;lt; std::endl  // (5) の形式
+-              &amp;lt;&amp;lt; (&amp;#39;A&amp;#39;   == sub2 ) &amp;lt;&amp;lt; std::endl  // (6) の形式
+-              &amp;lt;&amp;lt; (sub1  == &amp;#39;a&amp;#39;  ) &amp;lt;&amp;lt; std::endl; // (7) の形式
++              &amp;lt;&amp;lt; (sub1  == s2   ) &amp;lt;&amp;lt; std::endl  // (2) の形式
++              &amp;lt;&amp;lt; (sub1  == &amp;#34;abc&amp;#34;) &amp;lt;&amp;lt; std::endl  // (3) の形式
++              &amp;lt;&amp;lt; (sub1  == &amp;#39;a&amp;#39;  ) &amp;lt;&amp;lt; std::endl  // (4) の形式
++              &amp;lt;&amp;lt; (s1    == sub2 ) &amp;lt;&amp;lt; std::endl  // (5) の形式
++              &amp;lt;&amp;lt; (&amp;#34;ABC&amp;#34; == sub2 ) &amp;lt;&amp;lt; std::endl  // (6) の形式
++              &amp;lt;&amp;lt; (&amp;#39;A&amp;#39;   == sub2 ) &amp;lt;&amp;lt; std::endl; // (7) の形式
+   } else {
+     std::cout &amp;lt;&amp;lt; &amp;#34;not match&amp;#34; &amp;lt;&amp;lt; std::endl;
+   }
+@@ -100,8 +113,8 @@ int main()
+ ### 出力
+ ```
+ true
+-true
+ false
++true
+ false
+ true
+ false
+@@ -114,8 +127,11 @@ false
+ - C++11
+ 
+ ### 処理系
+-- [Clang](/implementation.md#clang): -
+ - [Clang](/implementation.md#clang): 3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6
+ - [GCC](/implementation.md#gcc): 4.9.0, 4.9.1, 5.0.0
+ - [ICC](/implementation.md#icc): ??
+ - [Visual C++](/implementation.md#visual_cpp): ??
++
++## 参照
++- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
++    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator&gt; -- sub_match : 三方比較演算子と自動導出に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/regex/sub_match/op_greater.html"/>
+      <id>4c87e24eca7cd629077caa9ccaf040cbc28c7be5:reference/regex/sub_match/op_greater.md</id>
+      <updated>2022-12-09T22:40:05+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/regex/sub_match/op_greater.md b/reference/regex/sub_match/op_greater.md
+index 91f04d8ac..c48dabd22 100644
+--- a/reference/regex/sub_match/op_greater.md
++++ b/reference/regex/sub_match/op_greater.md
+@@ -1,4 +1,4 @@
+-# operator&amp;gt; (非メンバ関数)
++# operator&amp;gt;
+ * regex[meta header]
+ * std[meta namespace]
+ * function template[meta id-type]
+@@ -6,38 +6,49 @@
+ 
+ ```cpp
+ namespace std {
++  // operator&amp;lt;=&amp;gt;により、以下の演算子が使用可能になる (C++20)
+   template &amp;lt;class BiIter&amp;gt;
+-    bool operator&amp;gt;(const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs, const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);         // (1)
++    bool operator&amp;gt;(
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs,
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);         // (1) C++11
+ 
+   template &amp;lt;class BiIter, class ST, class SA&amp;gt;
+     bool operator&amp;gt;(
+-      const basic_string&amp;lt;typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type, ST, SA&amp;gt;&amp;amp; lhs,
+-      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                                                    // (2)
++      const basic_string&amp;lt;
++        typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type,
++        ST,
++        SA
++      &amp;gt;&amp;amp; lhs,
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                            // (2) C++11
+ 
+   template &amp;lt;class BiIter, class ST, class SA&amp;gt;
+     bool operator&amp;gt;(
+       const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs,
+-      const basic_string&amp;lt;typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type, ST, SA&amp;gt;&amp;amp; rhs)    // (3)
++      const basic_string&amp;lt;
++        typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type,
++        ST,
++        SA
++      &amp;gt;&amp;amp; rhs);                                                  // (3) C++11
+ 
+   template &amp;lt;class BiIter&amp;gt;
+     bool operator&amp;gt;(
+       const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type* lhs,
+-      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                                                    // (4)
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                            // (4) C++11
+ 
+   template &amp;lt;class BiIter&amp;gt;
+     bool operator&amp;gt;(
+       const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs,
+-      const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type* rhs);                         // (5)
++      const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type* rhs); // (5) C++11
+ 
+   template &amp;lt;class BiIter&amp;gt;
+     bool operator&amp;gt;(
+       const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type&amp;amp; lhs,
+-      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                                                    // (6)
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                            // (6) C++11
+ 
+   template &amp;lt;class BiIter&amp;gt;
+     bool operator&amp;gt;(
+       const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs,
+-      const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type&amp;amp; rhs);                         // (7)
++      const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type&amp;amp; rhs); // (7) C++11
+ }
+ ```
+ 
+@@ -106,8 +117,12 @@ true
+ - C++11
+ 
+ ### 処理系
+-- [Clang](/implementation.md#clang): -
+ - [Clang](/implementation.md#clang): 3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6
+ - [GCC](/implementation.md#gcc): 4.9.0, 4.9.1, 5.0.0
+ - [ICC](/implementation.md#icc): ??
+ - [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 参照
++- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
++    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator&gt;= -- sub_match : 三方比較演算子と自動導出に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/regex/sub_match/op_greater_equal.html"/>
+      <id>4c87e24eca7cd629077caa9ccaf040cbc28c7be5:reference/regex/sub_match/op_greater_equal.md</id>
+      <updated>2022-12-09T22:40:05+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/regex/sub_match/op_greater_equal.md b/reference/regex/sub_match/op_greater_equal.md
+index 4e351f460..ad6dc8425 100644
+--- a/reference/regex/sub_match/op_greater_equal.md
++++ b/reference/regex/sub_match/op_greater_equal.md
+@@ -1,4 +1,4 @@
+-# operator&amp;gt;= (非メンバ関数)
++# operator&amp;gt;=
+ * regex[meta header]
+ * std[meta namespace]
+ * function template[meta id-type]
+@@ -6,38 +6,49 @@
+ 
+ ```cpp
+ namespace std {
++  // operator&amp;lt;=&amp;gt;により、以下の演算子が使用可能になる (C++20)
+   template &amp;lt;class BiIter&amp;gt;
+-    bool operator&amp;gt;=(const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs, const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);        // (1)
++    bool operator&amp;gt;=(
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs,
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                            // (1) C++11
+ 
+   template &amp;lt;class BiIter, class ST, class SA&amp;gt;
+     bool operator&amp;gt;=(
+-      const basic_string&amp;lt;typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type, ST, SA&amp;gt;&amp;amp; lhs,
+-      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                                                    // (2)
++      const basic_string&amp;lt;
++        typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type,
++        ST,
++        SA
++      &amp;gt;&amp;amp; lhs,
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                            // (2) C++11
+ 
+   template &amp;lt;class BiIter, class ST, class SA&amp;gt;
+     bool operator&amp;gt;=(
+       const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs,
+-      const basic_string&amp;lt;typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type, ST, SA&amp;gt;&amp;amp; rhs)    // (3)
++      const basic_string&amp;lt;
++        typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type,
++        ST,
++        SA
++      &amp;gt;&amp;amp; rhs);                                                  // (3) C++11
+ 
+   template &amp;lt;class BiIter&amp;gt;
+     bool operator&amp;gt;=(
+       const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type* lhs,
+-      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                                                    // (4)
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                            // (4) C++11
+ 
+   template &amp;lt;class BiIter&amp;gt;
+     bool operator&amp;gt;=(
+       const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs,
+-      const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type* rhs);                         // (5)
++      const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type* rhs); // (5) C++11
+ 
+   template &amp;lt;class BiIter&amp;gt;
+     bool operator&amp;gt;=(
+       const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type&amp;amp; lhs,
+-      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                                                    // (6)
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                            // (6) C++11
+ 
+   template &amp;lt;class BiIter&amp;gt;
+     bool operator&amp;gt;=(
+       const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs,
+-      const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type&amp;amp; rhs);                         // (7)
++      const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type&amp;amp; rhs); // (7) C++11
+ }
+ ```
+ 
+@@ -106,8 +117,12 @@ true
+ - C++11
+ 
+ ### 処理系
+-- [Clang](/implementation.md#clang): -
+ - [Clang](/implementation.md#clang): 3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6
+ - [GCC](/implementation.md#gcc): 4.9.0, 4.9.1, 5.0.0
+ - [ICC](/implementation.md#icc): ??
+ - [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 参照
++- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
++    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator&lt; -- sub_match : 三方比較演算子と自動導出に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/regex/sub_match/op_less.html"/>
+      <id>4c87e24eca7cd629077caa9ccaf040cbc28c7be5:reference/regex/sub_match/op_less.md</id>
+      <updated>2022-12-09T22:40:05+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/regex/sub_match/op_less.md b/reference/regex/sub_match/op_less.md
+index d37dd0a9e..cb24b9058 100644
+--- a/reference/regex/sub_match/op_less.md
++++ b/reference/regex/sub_match/op_less.md
+@@ -1,4 +1,4 @@
+-# operator&amp;lt; (非メンバ関数)
++# operator&amp;lt;
+ * regex[meta header]
+ * std[meta namespace]
+ * function template[meta id-type]
+@@ -6,38 +6,49 @@
+ 
+ ```cpp
+ namespace std {
++  // operator&amp;lt;=&amp;gt;により、以下の演算子が使用可能になる (C++20)
+   template &amp;lt;class BiIter&amp;gt;
+-    bool operator&amp;lt;(const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs, const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);         // (1)
++    bool operator&amp;lt;(
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs,
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                            // (1) C++11
+ 
+   template &amp;lt;class BiIter, class ST, class SA&amp;gt;
+     bool operator&amp;lt;(
+-      const basic_string&amp;lt;typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type, ST, SA&amp;gt;&amp;amp; lhs,
+-      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                                                    // (2)
++      const basic_string&amp;lt;
++        typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type,
++        ST,
++        SA
++      &amp;gt;&amp;amp; lhs,
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                            // (2) C++11
+ 
+   template &amp;lt;class BiIter, class ST, class SA&amp;gt;
+     bool operator&amp;lt;(
+       const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs,
+-      const basic_string&amp;lt;typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type, ST, SA&amp;gt;&amp;amp; rhs)    // (3)
++      const basic_string&amp;lt;
++        typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type,
++        ST,
++        SA
++      &amp;gt;&amp;amp; rhs)                                                   // (3) C++11
+ 
+   template &amp;lt;class BiIter&amp;gt;
+     bool operator&amp;lt;(
+       const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type* lhs,
+-      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                                                    // (4)
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                            // (4) C++11
+ 
+   template &amp;lt;class BiIter&amp;gt;
+     bool operator&amp;lt;(
+       const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs,
+-      const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type* rhs);                         // (5)
++      const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type* rhs); // (5) C++11
+ 
+   template &amp;lt;class BiIter&amp;gt;
+     bool operator&amp;lt;(
+       const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type&amp;amp; lhs,
+-      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                                                    // (6)
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                            // (6) C++11
+ 
+   template &amp;lt;class BiIter&amp;gt;
+     bool operator&amp;lt;(
+       const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs,
+-      const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type&amp;amp; rhs);                         // (7)
++      const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type&amp;amp; rhs); // (7) C++11
+ }
+ ```
+ 
+@@ -113,8 +124,11 @@ false
+ - C++11
+ 
+ ### 処理系
+-- [Clang](/implementation.md#clang): -
+ - [Clang](/implementation.md#clang): 3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6
+ - [GCC](/implementation.md#gcc): 4.9.0, 4.9.1, 5.0.0
+ - [ICC](/implementation.md#icc): ??
+ - [Visual C++](/implementation.md#visual_cpp): ??
++
++## 参照
++- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
++    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator&lt;= -- sub_match : 三方比較演算子と自動導出に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/regex/sub_match/op_less_equal.html"/>
+      <id>4c87e24eca7cd629077caa9ccaf040cbc28c7be5:reference/regex/sub_match/op_less_equal.md</id>
+      <updated>2022-12-09T22:40:05+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/regex/sub_match/op_less_equal.md b/reference/regex/sub_match/op_less_equal.md
+index eb27451af..493ea706b 100644
+--- a/reference/regex/sub_match/op_less_equal.md
++++ b/reference/regex/sub_match/op_less_equal.md
+@@ -1,4 +1,4 @@
+-# operator&amp;lt;= (非メンバ関数)
++# operator&amp;lt;=
+ * regex[meta header]
+ * std[meta namespace]
+ * function template[meta id-type]
+@@ -6,38 +6,49 @@
+ 
+ ```cpp
+ namespace std {
++  // operator&amp;lt;=&amp;gt;により、以下の演算子が使用可能になる (C++20)
+   template &amp;lt;class BiIter&amp;gt;
+-    bool operator&amp;lt;=(const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs, const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);        // (1)
++    bool operator&amp;lt;=(
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs,
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                            // (1) C++11
+ 
+   template &amp;lt;class BiIter, class ST, class SA&amp;gt;
+     bool operator&amp;lt;=(
+-      const basic_string&amp;lt;typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type, ST, SA&amp;gt;&amp;amp; lhs,
+-      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                                                    // (2)
++      const basic_string&amp;lt;
++        typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type,
++        ST,
++        SA
++      &amp;gt;&amp;amp; lhs,
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                            // (2) C++11
+ 
+   template &amp;lt;class BiIter, class ST, class SA&amp;gt;
+     bool operator&amp;lt;=(
+       const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs,
+-      const basic_string&amp;lt;typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type, ST, SA&amp;gt;&amp;amp; rhs)    // (3)
++      const basic_string&amp;lt;
++        typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type,
++        ST,
++        SA
++      &amp;gt;&amp;amp; rhs);                                                  // (3) C++11
+ 
+   template &amp;lt;class BiIter&amp;gt;
+     bool operator&amp;lt;=(
+       const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type* lhs,
+-      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                                                    // (4)
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                            // (4) C++11
+ 
+   template &amp;lt;class BiIter&amp;gt;
+     bool operator&amp;lt;=(
+       const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs,
+-      const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type* rhs);                         // (5)
++      const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type* rhs); // (5) C++11
+ 
+   template &amp;lt;class BiIter&amp;gt;
+     bool operator&amp;lt;=(
+       const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type&amp;amp; lhs,
+-      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                                                    // (6)
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                            // (6) C++11
+ 
+   template &amp;lt;class BiIter&amp;gt;
+     bool operator&amp;lt;=(
+       const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs,
+-      const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type&amp;amp; rhs);                         // (7)
++      const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type&amp;amp; rhs); // (7) C++11
+ }
+ ```
+ 
+@@ -106,8 +117,11 @@ false
+ - C++11
+ 
+ ### 処理系
+-- [Clang](/implementation.md#clang): -
+ - [Clang](/implementation.md#clang): 3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6
+ - [GCC](/implementation.md#gcc): 4.9.0, 4.9.1, 5.0.0
+ - [ICC](/implementation.md#icc): ??
+ - [Visual C++](/implementation.md#visual_cpp): ??
++
++## 参照
++- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
++    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator!= -- sub_match : 三方比較演算子と自動導出に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/regex/sub_match/op_not_equal.html"/>
+      <id>4c87e24eca7cd629077caa9ccaf040cbc28c7be5:reference/regex/sub_match/op_not_equal.md</id>
+      <updated>2022-12-09T22:40:05+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/regex/sub_match/op_not_equal.md b/reference/regex/sub_match/op_not_equal.md
+index ae3e3a2b2..2d5b2b153 100644
+--- a/reference/regex/sub_match/op_not_equal.md
++++ b/reference/regex/sub_match/op_not_equal.md
+@@ -1,4 +1,4 @@
+-# operator!= (非メンバ関数)
++# operator!=
+ * regex[meta header]
+ * std[meta namespace]
+ * function template[meta id-type]
+@@ -6,38 +6,49 @@
+ 
+ ```cpp
+ namespace std {
++  // operator==により、以下の演算子が使用可能になる (C++20)
+   template &amp;lt;class BiIter&amp;gt;
+-    bool operator!=(const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs, const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);        // (1)
++    bool operator!=(
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs,
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                            // (1) C++11
+ 
+   template &amp;lt;class BiIter, class ST, class SA&amp;gt;
+     bool operator!=(
+-      const basic_string&amp;lt;typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type, ST, SA&amp;gt;&amp;amp; lhs,
+-      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                                                    // (2)
++      const basic_string&amp;lt;
++        typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type,
++        ST,
++        SA
++      &amp;gt;&amp;amp; lhs,
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                            // (2) C++11
+ 
+   template &amp;lt;class BiIter, class ST, class SA&amp;gt;
+     bool operator!=(
+       const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs,
+-      const basic_string&amp;lt;typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type, ST, SA&amp;gt;&amp;amp; rhs)    // (3)
++      const basic_string&amp;lt;
++        typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type,
++        ST,
++        SA
++      &amp;gt;&amp;amp; rhs);                                                  // (3) C++11
+ 
+   template &amp;lt;class BiIter&amp;gt;
+     bool operator!=(
+       const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type* lhs,
+-      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                                                    // (4)
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                            // (4) C++11
+ 
+   template &amp;lt;class BiIter&amp;gt;
+     bool operator!=(
+       const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs,
+-      const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type* rhs);                         // (5)
++      const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type* rhs); // (5) C++11
+ 
+   template &amp;lt;class BiIter&amp;gt;
+     bool operator!=(
+       const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type&amp;amp; lhs,
+-      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                                                    // (6)
++      const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; rhs);                            // (6) C++11
+ 
+   template &amp;lt;class BiIter&amp;gt;
+     bool operator!=(
+       const sub_match&amp;lt;BiIter&amp;gt;&amp;amp; lhs,
+-      const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type&amp;amp; rhs);                         // (7)
++      const typename iterator_traits&amp;lt;BiIter&amp;gt;::value_type&amp;amp; rhs); // (7) C++11
+ }
+ ```
+ 
+@@ -106,8 +117,11 @@ true
+ - C++11
+ 
+ ### 処理系
+-- [Clang](/implementation.md#clang): -
+ - [Clang](/implementation.md#clang): 3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6
+ - [GCC](/implementation.md#gcc): 4.9.0, 4.9.1, 5.0.0
+ - [ICC](/implementation.md#icc): ??
+ - [Visual C++](/implementation.md#visual_cpp): ??
++
++## 参照
++- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
++    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>id -- thread::id : 三方比較演算子と自動導出に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/thread/thread/id.html"/>
+      <id>bfd7d7077b27d086b8a8e5f3479badfe311896b5:reference/thread/thread/id.md</id>
+      <updated>2022-12-09T22:09:21+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/thread/thread/id.md b/reference/thread/thread/id.md
+index 7f2fbc712..e2be00e8a 100644
+--- a/reference/thread/thread/id.md
++++ b/reference/thread/thread/id.md
+@@ -48,11 +48,12 @@ namespace std {
+ | 名前 | 説明 | 対応バージョン |
+ |--------------|------------------------------------|-------|
+ | `operator==` | 等値比較                           | C++11 |
+-| `operator!=` | 非等値比較                         | C++11 |
+-| `operator&amp;lt;`  | 左辺が右辺より小さいかの判定を行う | C++11 |
+-| `operator&amp;lt;=` | 左辺が右辺以下かの判定を行う       | C++11 |
+-| `operator&amp;gt;`  | 左辺が右辺より大きいかの判定を行う | C++11 |
+-| `operator&amp;gt;=` | 左辺が右辺以上かの判定を行う       | C++11 |
++| `operator!=` | 非等値比較 (C++20から`operator==`により使用可能)                         | C++11 |
++| `operator&amp;lt;`  | 左辺が右辺より小さいかの判定を行う (C++20から`operator==`により使用可能) | C++11 |
++| `operator&amp;lt;=` | 左辺が右辺以下かの判定を行う (C++20から`operator==`により使用可能)       | C++11 |
++| `operator&amp;gt;`  | 左辺が右辺より大きいかの判定を行う (C++20から`operator==`により使用可能) | C++11 |
++| `operator&amp;gt;=` | 左辺が右辺以上かの判定を行う (C++20から`operator==`により使用可能)       | C++11 |
++| `strong_ordering operator&amp;lt;=&amp;gt;(thread::id x, thread::id y) noexcept;` | 三方比較 | C++20 |
+ 
+ ### ストリーム出力
+ 
+@@ -100,4 +101,5 @@ main=824a30
+ 
+ ## 参照
+ - [LWG Issue 783. `thread::id` reuse](http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#783)
+-
++- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
++    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>locale -- locale : operator!=の自動導出に対応 #900</title>
@@ -871,399 +1734,6 @@ index 2553e0fd6..cd5627c31 100644
 +
 +
 +## 参照
-+- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
-+    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator!= -- file_statusとspace_info : operator==を追加 #900</title>
-      <link href="https://cpprefjp.github.io/reference/bitset/bitset/op_not_equal.html"/>
-      <id>b1ed54b5c8ebb82332fb273538dc9038646c4d4c:reference/bitset/bitset/op_not_equal.md</id>
-      <updated>2022-12-09T21:31:21+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/bitset/bitset/op_not_equal.md b/reference/bitset/bitset/op_not_equal.md
-index ca9a44a4d..4506c6580 100644
---- a/reference/bitset/bitset/op_not_equal.md
-+++ b/reference/bitset/bitset/op_not_equal.md
-@@ -22,6 +22,10 @@ bool operator!=(const bitset&amp;lt;N&amp;gt;&amp;amp; rhs) const noexcept; // (2) C++11
- 投げない。
- 
- 
-+## 備考
-+- この演算子により、`operator!=`が使用可能になる (C++20)
-+
-+
- ## 例
- ```cpp example
- #include &amp;lt;iostream&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>file_status -- file_statusとspace_info : operator==を追加 #900</title>
-      <link href="https://cpprefjp.github.io/reference/filesystem/file_status.html"/>
-      <id>b1ed54b5c8ebb82332fb273538dc9038646c4d4c:reference/filesystem/file_status.md</id>
-      <updated>2022-12-09T21:31:21+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/filesystem/file_status.md b/reference/filesystem/file_status.md
-index c95b2a48d..419587bf2 100644
---- a/reference/filesystem/file_status.md
-+++ b/reference/filesystem/file_status.md
-@@ -32,6 +32,14 @@ namespace std::filesystem {
- | [`permissions`](file_status/permissions.md) | ファイルの権限を設定・取得する | C++17 |
- 
- 
-+### 比較演算子
-+
-+| 名前 | 説明 | 対応バージョン |
-+|------|------|----------------|
-+| [`operator==`](file_status/op_equal.md) | 等値比較 | C++20 |
-+| `friend bool operator!=(const file_status&amp;amp;, const file_status&amp;amp;);` | 非等値比較 (`==`により使用可能) | C++20 |
-+
-+
- ## 例
- ```cpp example
- #include &amp;lt;cassert&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator== -- file_statusとspace_info : operator==を追加 #900</title>
-      <link href="https://cpprefjp.github.io/reference/filesystem/file_status/op_equal.html"/>
-      <id>b1ed54b5c8ebb82332fb273538dc9038646c4d4c:reference/filesystem/file_status/op_equal.md</id>
-      <updated>2022-12-09T21:31:21+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/filesystem/file_status/op_equal.md b/reference/filesystem/file_status/op_equal.md
-new file mode 100644
-index 000000000..94e9e5289
---- /dev/null
-+++ b/reference/filesystem/file_status/op_equal.md
-@@ -0,0 +1,66 @@
-+# operator==
-+* filesystem[meta header]
-+* std::filesystem[meta namespace]
-+* file_status[meta class]
-+* function[meta id-type]
-+* cpp20[meta cpp]
-+
-+```cpp
-+friend bool operator==(const file_status&amp;amp; x, const file_status&amp;amp; y) noexcept; // (1) C++20
-+```
-+
-+## 概要
-+等値比較を行う
-+
-+
-+## 戻り値
-+```cpp
-+return x.type() == y.type() &amp;amp;&amp;amp; x.permissions() == y.permissions();
-+```
-+* type()[link type.md]
-+* permissions()[link permissions.md]
-+
-+
-+## 備考
-+- この演算子により、`operator!=`が使用可能になる (C++20)
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;cassert&amp;gt;
-+#include &amp;lt;filesystem&amp;gt;
-+
-+namespace fs = std::filesystem;
-+
-+int main()
-+{
-+  fs::file_status a;
-+  a.type(fs::file_type::regular);
-+
-+  fs::file_status b;
-+  b.type(fs::file_type::regular);
-+
-+  assert(a == b);
-+}
-+```
-+* ==[color ff0000]
-+* type[link type.md]
-+* fs::file_type[link /reference/filesystem/file_type.md]
-+
-+### 出力
-+```
-+```
-+
-+## バージョン
-+### 言語
-+- C++20
-+
-+### 処理系
-+- [Clang](/implementation.md#clang):
-+- [GCC](/implementation.md#gcc): 10
-+- [Visual C++](/implementation.md#visual_cpp): ??
-+
-+
-+## 参照
-+- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
-+    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>space_info -- file_statusとspace_info : operator==を追加 #900</title>
-      <link href="https://cpprefjp.github.io/reference/filesystem/space_info.html"/>
-      <id>b1ed54b5c8ebb82332fb273538dc9038646c4d4c:reference/filesystem/space_info.md</id>
-      <updated>2022-12-09T21:31:21+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/filesystem/space_info.md b/reference/filesystem/space_info.md
-index b7143ba68..8f6e5d7b1 100644
---- a/reference/filesystem/space_info.md
-+++ b/reference/filesystem/space_info.md
-@@ -16,6 +16,15 @@ namespace std::filesystem {
- `available`の値はOS依存であるが、値としては`free`以下となるだろう。POSIX環境では、非特権プロセスが使用できる容量を表す。
- 
- 
-+## メンバ関数
-+### 比較演算子
-+
-+| 名前 | 説明 | 対応バージョン |
-+|------|------|----------------|
-+| `friend bool operator==(const space_info&amp;amp;, const space_info&amp;amp;) = default;` | 等値比較 | C++20 |
-+| `friend bool operator!=(const space_info&amp;amp;, const space_info&amp;amp;);` | 非等値比較 (`==`により使用可能) | C++20 |
-+
-+
- ## メンバ変数
- 
- | 名前 | 説明 | 対応バージョン |
-@@ -74,3 +83,8 @@ available : 1048580096[B] (1000[MB])
- - [Clang](/implementation.md#clang): 7.0
- - [GCC](/implementation.md#gcc): 8.1
- - [Visual C++](/implementation.md#visual_cpp):
-+
-+
-+## 参照
-+- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
-+    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator== -- istream(buf)_iterator : 演算子の自動導出に対応 #900</title>
-      <link href="https://cpprefjp.github.io/reference/iterator/istream_iterator/op_equal.html"/>
-      <id>3c34a1b95c79fcf1de37c01461bfdfd0df3140d6:reference/iterator/istream_iterator/op_equal.md</id>
-      <updated>2022-12-09T21:10:12+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/istream_iterator/op_equal.md b/reference/iterator/istream_iterator/op_equal.md
-index d79330313..d0c092673 100644
---- a/reference/iterator/istream_iterator/op_equal.md
-+++ b/reference/iterator/istream_iterator/op_equal.md
-@@ -7,16 +7,35 @@
- namespace std {
-   template &amp;lt;class T, class CharT, class Traits, class Distance&amp;gt;
-   bool operator==(const istream_iterator&amp;lt;T, CharT, Traits, Distance&amp;gt;&amp;amp; x,
--                  const istream_iterator&amp;lt;T, CharT, Traits, Distance&amp;gt;&amp;amp; y);
-+                  const istream_iterator&amp;lt;T, CharT, Traits, Distance&amp;gt;&amp;amp; y); // (1) C++03
-+
-+  template &amp;lt;class T,
-+           class charT = char,
-+           class traits = char_traits&amp;lt;charT&amp;gt;,
-+           class Distance = ptrdiff_t&amp;gt;
-+  class istream_iterator {
-+  public:
-+    friend bool operator==(const istream_iterator&amp;amp; i, default_sentinel_t); // (2) C++20
-+  };
- }
- ```
-+* char_traits[link /reference/string/char_traits.md]
- 
- ## 概要
- 2つの`istream_iterator`オブジェクトを等値比較する
- 
- 
- ## 戻り値
--`x`と`y`がどちらも同じ有効な入力ストリームオブジェクトを指す場合、もしくはどちらも無効な入力ストリームオブジェクトを指す場合は`true`を返し、そうでなければ`false`を返す。
-+- (1) : `x`と`y`がどちらも同じ有効な入力ストリームオブジェクトを指す場合、もしくはどちらも無効な入力ストリームオブジェクトを指す場合は`true`を返し、そうでなければ`false`を返す
-+- (2) : `i`が有効な入力ストリームオブジェクトを指していれば`true`、そうでなければ`false`を返す
-+
-+
-+## 備考
-+- この演算子により、以下の演算子が自動導出される (C++20)：
-+    - `operator==(default_sentinel_t, const istream_iterator&amp;amp;)`
-+    - `operator!=(const istream_iterator&amp;amp;, const istream_iterator&amp;amp;)`
-+    - `operator!=(const istream_iterator&amp;amp;, default_sentinel_t)`
-+    - `operator!=(default_sentinel_t, const istream_iterator&amp;amp;)`
- 
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator!= -- istream(buf)_iterator : 演算子の自動導出に対応 #900</title>
-      <link href="https://cpprefjp.github.io/reference/iterator/istream_iterator/op_not_equal.html"/>
-      <id>3c34a1b95c79fcf1de37c01461bfdfd0df3140d6:reference/iterator/istream_iterator/op_not_equal.md</id>
-      <updated>2022-12-09T21:10:12+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/istream_iterator/op_not_equal.md b/reference/iterator/istream_iterator/op_not_equal.md
-index 1a1503ff2..12a3345b4 100644
---- a/reference/iterator/istream_iterator/op_not_equal.md
-+++ b/reference/iterator/istream_iterator/op_not_equal.md
-@@ -5,9 +5,20 @@
- 
- ```cpp
- namespace std {
-+  // operator==により、以下の演算子が使用可能になる (C++20)
-   template &amp;lt;class T, class CharT, class Traits, class Distance&amp;gt;
-   bool operator!=(const istream_iterator&amp;lt;T, CharT, Traits, Distance&amp;gt;&amp;amp; x,
--                  const istream_iterator&amp;lt;T, CharT, Traits, Distance&amp;gt;&amp;amp; y);
-+                  const istream_iterator&amp;lt;T, CharT, Traits, Distance&amp;gt;&amp;amp; y); // (1) C++03
-+
-+  template &amp;lt;class T,
-+           class charT = char,
-+           class traits = char_traits&amp;lt;charT&amp;gt;,
-+           class Distance = ptrdiff_t&amp;gt;
-+  class istream_iterator {
-+  public:
-+    friend bool operator!=(const istream_iterator&amp;amp; i, default_sentinel_t); // (2) C++20
-+    friend bool operator!=(default_sentinel_t, const istream_iterator&amp;amp; i); // (3) C++20
-+  };
- }
- ```
- 
-@@ -55,5 +66,5 @@ it1 == last : false
- ```
- 
- ## 参照
--
--
-+- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
-+    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator== -- istream(buf)_iterator : 演算子の自動導出に対応 #900</title>
-      <link href="https://cpprefjp.github.io/reference/iterator/istreambuf_iterator/op_equal.html"/>
-      <id>3c34a1b95c79fcf1de37c01461bfdfd0df3140d6:reference/iterator/istreambuf_iterator/op_equal.md</id>
-      <updated>2022-12-09T21:10:12+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/istreambuf_iterator/op_equal.md b/reference/iterator/istreambuf_iterator/op_equal.md
-index 20ff338bb..11384386d 100644
---- a/reference/iterator/istreambuf_iterator/op_equal.md
-+++ b/reference/iterator/istreambuf_iterator/op_equal.md
-@@ -7,7 +7,14 @@
- namespace std {
-   template &amp;lt;class CharT, class Traits&amp;gt;
-   bool operator==(const istreambuf_iterator&amp;lt;CharT, Traits&amp;gt;&amp;amp; a,
--                  const istreambuf_iterator&amp;lt;CharT, Traits&amp;gt;&amp;amp; b);
-+                  const istreambuf_iterator&amp;lt;CharT, Traits&amp;gt;&amp;amp; b); // (1) C++03
-+
-+  template &amp;lt;class charT,
-+            class traits = char_traits&amp;lt;charT&amp;gt;&amp;gt;
-+  class istream_iterator {
-+  public:
-+    friend bool operator==(const istreambuf_iterator&amp;amp; i, default_sentinel_t); // (2) C++20
-+  };
- }
- ```
- 
-@@ -16,7 +23,16 @@ namespace std {
- 
- 
- ## 戻り値
--`a.equal(b)`
-+- (1) : `a.equal(b)`
-+- (2) : `i`が有効な入力ストリームオブジェクトを指していれば`true`、そうでなければ`false`を返す
-+
-+
-+## 備考
-+- この演算子により、以下の演算子が自動導出される (C++20)：
-+    - `operator==(default_sentinel_t, const istreambuf_iterator&amp;amp;)`
-+    - `operator!=(const istreambuf_iterator&amp;amp;, const istreambuf_iterator&amp;amp;)`
-+    - `operator!=(const istreambuf_iterator&amp;amp;, default_sentinel_t)`
-+    - `operator!=(default_sentinel_t, const istream_iteratorbuf&amp;amp;)`
- 
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator!= -- istream(buf)_iterator : 演算子の自動導出に対応 #900</title>
-      <link href="https://cpprefjp.github.io/reference/iterator/istreambuf_iterator/op_not_equal.html"/>
-      <id>3c34a1b95c79fcf1de37c01461bfdfd0df3140d6:reference/iterator/istreambuf_iterator/op_not_equal.md</id>
-      <updated>2022-12-09T21:10:12+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/istreambuf_iterator/op_not_equal.md b/reference/iterator/istreambuf_iterator/op_not_equal.md
-index db54751ee..3271bc401 100644
---- a/reference/iterator/istreambuf_iterator/op_not_equal.md
-+++ b/reference/iterator/istreambuf_iterator/op_not_equal.md
-@@ -5,9 +5,18 @@
- 
- ```cpp
- namespace std {
-+  // operator==により、以下の演算子が使用可能になる (C++20)
-   template &amp;lt;class CharT, class Traits&amp;gt;
-   bool operator!=(const istreambuf_iterator&amp;lt;CharT, Traits&amp;gt;&amp;amp; a,
--                  const istreambuf_iterator&amp;lt;CharT, Traits&amp;gt;&amp;amp; b);
-+                  const istreambuf_iterator&amp;lt;CharT, Traits&amp;gt;&amp;amp; b); // (1) C++03
-+
-+  template &amp;lt;class charT,
-+            class traits = char_traits&amp;lt;charT&amp;gt;&amp;gt;
-+  class istream_iterator {
-+  public:
-+    friend bool operator!=(const istreambuf_iterator&amp;amp; i, default_sentinel_t); // (2) C++20
-+    friend bool operator!=(default_sentinel_t, const istreambuf_iterator&amp;amp; i); // (3) C++20
-+  };
- }
- ```
- 
-@@ -49,5 +58,5 @@ not equal
- ```
- 
- ## 参照
--
--
 +- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
 +    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
 &lt;/code&gt;&lt;/pre&gt;</summary>
