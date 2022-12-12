@@ -2,9 +2,180 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2022-12-12T18:53:28.089385</updated>
-  <id>6f60dcaf-bd14-49ca-ac1f-137db391dd41</id>
+  <updated>2022-12-12T19:23:05.281181</updated>
+  <id>c59a7588-3f9f-47fe-b653-b76d02eb3838</id>
 
+  
+    <entry>
+      <title>variant -- variant : 三方比較演算子を追加 #900</title>
+      <link href="https://cpprefjp.github.io/reference/variant/variant.html"/>
+      <id>584eb3e60661c730a23c4bd96df7ee316b9456b0:reference/variant/variant.md</id>
+      <updated>2022-12-13T04:18:00+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/variant/variant.md b/reference/variant/variant.md
+index 2bcff796b..fa7cd33db 100644
+--- a/reference/variant/variant.md
++++ b/reference/variant/variant.md
+@@ -120,6 +120,7 @@ std::visit([](auto&amp;amp; x) {
+ |------|------|----------------|
+ | [`operator==`](variant/op_equal.md)         | 等値比較 | C++17 |
+ | [`operator!=`](variant/op_not_equal.md)     | 非等値比較 | C++17 |
++| [`operator&amp;lt;=&amp;gt;`](variant/op_compare_3way.md) | 三方比較 | C++20 |
+ | [`operator&amp;lt;`](variant/op_less.md)           | 左辺が右辺より小さいかを判定する | C++17 |
+ | [`operator&amp;lt;=`](variant/op_less_equal.md)    | 左辺が右辺以下かを判定する | C++17 |
+ | [`operator&amp;gt;`](variant/op_greater.md)        | 左辺が右辺より大きいかを判定する | C++17 |
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator&lt;=&gt; -- variant : 三方比較演算子を追加 #900</title>
+      <link href="https://cpprefjp.github.io/reference/variant/variant/op_compare_3way.html"/>
+      <id>584eb3e60661c730a23c4bd96df7ee316b9456b0:reference/variant/variant/op_compare_3way.md</id>
+      <updated>2022-12-13T04:18:00+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/variant/variant/op_compare_3way.md b/reference/variant/variant/op_compare_3way.md
+new file mode 100644
+index 000000000..072bf4493
+--- /dev/null
++++ b/reference/variant/variant/op_compare_3way.md
+@@ -0,0 +1,80 @@
++# operator&amp;lt;=&amp;gt;
++* variant[meta header]
++* std[meta namespace]
++* function template[meta id-type]
++* cpp20[meta cpp]
++
++```cpp
++namespace std {
++  template &amp;lt;class... Types&amp;gt;
++    requires (three_way_comparable&amp;lt;Types&amp;gt; &amp;amp;&amp;amp; ...)
++  constexpr common_comparison_category_t&amp;lt;compare_three_way_result_t&amp;lt;Types&amp;gt;...&amp;gt;
++    operator&amp;lt;=&amp;gt;(const variant&amp;lt;Types...&amp;gt;&amp;amp; v, const variant&amp;lt;Types...&amp;gt;&amp;amp; w); // (1) C++20
++}
++```
++* common_comparison_category_t[link /reference/compare/common_comparison_category.md]
++
++## 概要
++`variant`オブジェクトの三方比較を行う。
++
++
++## テンプレートパラメータ制約
++- 全ての候補型が[三方比較可能](/reference/compare/three_way_comparable.md)であること
++
++
++## 戻り値
++以下と等価：
++
++```cpp
++if (v.valueless_by_exception() &amp;amp;&amp;amp; w.valueless_by_exception())
++  return strong_ordering::equal;
++if (v.valueless_by_exception())
++  return strong_ordering::less;
++if (w.valueless_by_exception())
++  return strong_ordering::greater;
++if (auto c = v.index() &amp;lt;=&amp;gt; w.index(); c != 0)
++  return c;
++return get&amp;lt;i&amp;gt;(v) &amp;lt;=&amp;gt; get&amp;lt;i&amp;gt;(w);
++```
++* valueless_by_exception()[link valueless_by_exception.md]
++* index()[link index.md]
++* get[link get.md]
++
++ここで`i`は`v.index()`である。
++
++
++## 例
++```cpp example
++#include &amp;lt;cassert&amp;gt;
++#include &amp;lt;variant&amp;gt;
++
++int main()
++{
++  std::variant&amp;lt;int, char, double&amp;gt; a = 1;
++  std::variant&amp;lt;int, char, double&amp;gt; b = 3.14;
++  std::variant&amp;lt;int, char, double&amp;gt; c = 3;
++
++  assert((a &amp;lt;=&amp;gt; a) == 0); // 保持する型と値が同じ
++  assert((b &amp;lt;=&amp;gt; b) == 0); // 保持する型と値が同じ
++  assert((a &amp;lt;=&amp;gt; b) != 0); // 保持する型が異なる
++  assert((a &amp;lt;=&amp;gt; c) != 0); // 保持する型が同じだが、値が異なる
++}
++```
++
++### 出力
++```
++```
++
++## バージョン
++### 言語
++- C++20
++
++### 処理系
++- [Clang](/implementation.md#clang):
++- [GCC](/implementation.md#gcc): 10
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 参照
++- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
++    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>monostate -- monostate : 三方比較演算子の追加と自動導出に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/variant/monostate.html"/>
+      <id>66a9622721641b682ca0189385ef492f60c6efa0:reference/variant/monostate.md</id>
+      <updated>2022-12-13T04:10:40+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/variant/monostate.md b/reference/variant/monostate.md
+index 5cda28465..911a62676 100644
+--- a/reference/variant/monostate.md
++++ b/reference/variant/monostate.md
+@@ -39,11 +39,12 @@ namespace std {
+ | 名前 | 説明 | 対応バージョン |
+ |------|------|----------------|
+ | `constexpr bool operator==(monostate, monostate) noexcept;` | 等値比較。`true`を返す | C++17 |
+-| `constexpr bool operator!=(monostate, monostate) noexcept;` | 非等値比較。`false`を返す | C++17 |
+-| `constexpr bool operator&amp;lt;(monostate, monostate) noexcept;`  | 左辺が右辺より小さいかを判定する。`false`を返す | C++17 |
+-| `constexpr bool operator&amp;lt;=(monostate, monostate) noexcept;` | 左辺が右辺以下かを判定する。`true`を返す | C++17 |
+-| `constexpr bool operator&amp;gt;(monostate, monostate) noexcept;`  | 左辺が右辺より大きいかを判定する。`false`を返す | C++17 |
+-| `constexpr bool operator&amp;gt;=(monostate, monostate) noexcept;` | 左辺が右辺以上かを判定する。`true`を返す | C++17 |
++| `constexpr bool operator!=(monostate, monostate) noexcept;` | 非等値比較。`false`を返す (C++20から`==`により使用可能) | C++17 |
++| `constexpr strong_ordering operator&amp;lt;=&amp;gt;(monostate, monostate) noexcept;` | 三方比較。`strong_ordering::equal`を返す | C++20 |
++| `constexpr bool operator&amp;lt;(monostate, monostate) noexcept;`  | 左辺が右辺より小さいかを判定する。`false`を返す (C++20から`&amp;lt;=&amp;gt;`により使用可能) | C++17 |
++| `constexpr bool operator&amp;lt;=(monostate, monostate) noexcept;` | 左辺が右辺以下かを判定する。`true`を返す (C++20から`&amp;lt;=&amp;gt;`により使用可能) | C++17 |
++| `constexpr bool operator&amp;gt;(monostate, monostate) noexcept;`  | 左辺が右辺より大きいかを判定する。`false`を返す (C++20から`&amp;lt;=&amp;gt;`により使用可能) | C++17 |
++| `constexpr bool operator&amp;gt;=(monostate, monostate) noexcept;` | 左辺が右辺以上かを判定する。`true`を返す (C++20から`&amp;lt;=&amp;gt;`により使用可能) | C++17 |
+ 
+ 
+ ## 例
+@@ -82,3 +83,8 @@ empty
+ - [Clang](/implementation.md#clang): 7.3
+ - [GCC](/implementation.md#gcc): 4.0
+ - [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 参照
++- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
++    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>basic_string_view -- basic_string_view : 三方比較演算子の追加と自動導出に対応 #900</title>
@@ -809,120 +980,6 @@ index e08f35e39..0771ee496 100644
 +## 参照
 +- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
 +    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>from_chars_result -- from_chars_result, to_chars_result : 参照を追加</title>
-      <link href="https://cpprefjp.github.io/reference/charconv/from_chars_result.html"/>
-      <id>f7da52303237c9ae8814e84c092cc4eff4ba19e7:reference/charconv/from_chars_result.md</id>
-      <updated>2022-12-13T03:24:34+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/charconv/from_chars_result.md b/reference/charconv/from_chars_result.md
-index ae7aba874..ec3a237ef 100644
---- a/reference/charconv/from_chars_result.md
-+++ b/reference/charconv/from_chars_result.md
-@@ -50,3 +50,5 @@ namespace std {
- ## 参照
- - [P0067R5: Elementary string conversions, revision 5](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0067r5.html)
- - [P0682R1: Repairing elementary string conversions](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0682r1.html)
-+- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
-+    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>to_chars_result -- from_chars_result, to_chars_result : 参照を追加</title>
-      <link href="https://cpprefjp.github.io/reference/charconv/to_chars_result.html"/>
-      <id>f7da52303237c9ae8814e84c092cc4eff4ba19e7:reference/charconv/to_chars_result.md</id>
-      <updated>2022-12-13T03:24:34+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/charconv/to_chars_result.md b/reference/charconv/to_chars_result.md
-index 6b4d1744f..3db47772c 100644
---- a/reference/charconv/to_chars_result.md
-+++ b/reference/charconv/to_chars_result.md
-@@ -49,3 +49,5 @@ namespace std {
- ## 参照
- - [P0067R5: Elementary string conversions, revision 5](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0067r5.html)
- - [P0682R1: Repairing elementary string conversions](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0682r1.html)
-+- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
-+    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>from_chars_result -- from_chars_result, to_chars_result : operator==を追加 #900</title>
-      <link href="https://cpprefjp.github.io/reference/charconv/from_chars_result.html"/>
-      <id>a586d38f7d0df9fc74f27238187ae6e2a453f300:reference/charconv/from_chars_result.md</id>
-      <updated>2022-12-13T03:21:13+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/charconv/from_chars_result.md b/reference/charconv/from_chars_result.md
-index fc30c8d49..ae7aba874 100644
---- a/reference/charconv/from_chars_result.md
-+++ b/reference/charconv/from_chars_result.md
-@@ -24,6 +24,14 @@ namespace std {
- | ptr | （指定したフォーマットの）パターンにマッチしない最初の入力文字の位置を指すか、入力文字列の先頭を指すポインタ。 | C++17 |
- | ec | 成功なら`ec == errc{}`、失敗ならば`errc::invalid_argument`を表す[`errc`](/reference/system_error/errc.md)の値。 | C++17 |
- 
-+## メンバ関数
-+### 比較演算子
-+
-+| 名前 | 説明 | 対応バージョン |
-+|------|------|----------------|
-+| `friend bool operator==(const from_chars_result&amp;amp;, const from_chars_result&amp;amp;) = default;` | 等値比較を行う | C++20 |
-+| `friend bool operator!=(const from_chars_result&amp;amp;, const from_chars_result&amp;amp;);` | 非等値比較を行う (`==`により使用可能) | C++20 |
-+
- 詳細は[`from_chars`](../charconv/from_chars.md)の戻り値の項を参照のこと。
- 
- ## バージョン
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>to_chars_result -- from_chars_result, to_chars_result : operator==を追加 #900</title>
-      <link href="https://cpprefjp.github.io/reference/charconv/to_chars_result.html"/>
-      <id>a586d38f7d0df9fc74f27238187ae6e2a453f300:reference/charconv/to_chars_result.md</id>
-      <updated>2022-12-13T03:21:13+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/charconv/to_chars_result.md b/reference/charconv/to_chars_result.md
-index 5f8e3f5e7..6b4d1744f 100644
---- a/reference/charconv/to_chars_result.md
-+++ b/reference/charconv/to_chars_result.md
-@@ -23,6 +23,14 @@ namespace std {
- | ptr | 成功した場合、書き込まれた最後の文字の次の位置を指すポインタ。 | C++17 |
- | ec | 成功なら`ec == errc{}`、失敗ならば`errc::value_too_large`を表す[`errc`](/reference/system_error/errc.md)の値。 | C++17 |
- 
-+## メンバ関数
-+### 比較演算子
-+
-+| 名前 | 説明 | 対応バージョン |
-+|------|------|----------------|
-+| `friend bool operator==(const to_chars_result&amp;amp;, const to_chars_result&amp;amp;) = default;` | 等値比較を行う | C++20 |
-+| `friend bool operator!=(const to_chars_result&amp;amp;, const to_chars_result&amp;amp;);` | 非等値比較を行う (`==`により使用可能) | C++20 |
-+
- 詳細は[`to_chars`](../charconv/to_chars.md)の戻り値の項を参照のこと。
- 
- ## バージョン
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
