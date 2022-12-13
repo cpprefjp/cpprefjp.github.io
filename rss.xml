@@ -2,9 +2,260 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2022-12-12T19:23:05.281181</updated>
-  <id>c59a7588-3f9f-47fe-b653-b76d02eb3838</id>
+  <updated>2022-12-13T13:58:10.182445</updated>
+  <id>203c00d3-d8b8-4d68-8e00-4662a7c14645</id>
 
+  
+    <entry>
+      <title>unique_ptr -- unique_ptr : 三方比較演算子の追加と自動導出に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr.html"/>
+      <id>57678971b5fdd014ed6ce5ac8148ca8ecfefd68f:reference/memory/unique_ptr.md</id>
+      <updated>2022-12-13T22:52:28+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr.md b/reference/memory/unique_ptr.md
+index ff994f1fa..9f1a4861c 100644
+--- a/reference/memory/unique_ptr.md
++++ b/reference/memory/unique_ptr.md
+@@ -70,9 +70,10 @@ namespace std {
+ ## 非メンバ関数
+ 
+ | 名前 | 説明 | 対応バージョン |
+-|--------------------------------------------------|-------------------------------------------|-------|
++|------------------------------------------------|-------------------------------------------|-------|
+ | [`operator==`](unique_ptr/op_equal.md)         | 等値比較                                  | C++11 |
+ | [`operator!=`](unique_ptr/op_not_equal.md)     | 非等値比較                                | C++11 |
++| [`operator&amp;lt;=&amp;gt;`](unique_ptr/op_compare_3way.md) | 三方比較                                  | C++20 |
+ | [`operator&amp;lt;`](unique_ptr/op_less.md)           | 左辺が右辺より小さいかを判定する          | C++11 |
+ | [`operator&amp;lt;=`](unique_ptr/op_less_equal.md)    | 左辺が右辺以下かを判定する                | C++11 |
+ | [`operator&amp;gt;`](unique_ptr/op_greater.md)        | 左辺が右辺より大きいかを判定する          | C++11 |
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator&lt;=&gt; -- unique_ptr : 三方比較演算子の追加と自動導出に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr/op_compare_3way.html"/>
+      <id>57678971b5fdd014ed6ce5ac8148ca8ecfefd68f:reference/memory/unique_ptr/op_compare_3way.md</id>
+      <updated>2022-12-13T22:52:28+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr/op_compare_3way.md b/reference/memory/unique_ptr/op_compare_3way.md
+new file mode 100644
+index 000000000..927572fd1
+--- /dev/null
++++ b/reference/memory/unique_ptr/op_compare_3way.md
+@@ -0,0 +1,98 @@
++# operator&amp;lt;=&amp;gt;
++* memory[meta header]
++* std[meta namespace]
++* function template[meta id-type]
++* cpp20[meta cpp]
++
++```cpp
++namespace std {
++  template &amp;lt;class T1, class D1, class T2, class D2&amp;gt;
++    requires three_way_comparable_with&amp;lt;
++               typename unique_ptr&amp;lt;T1, D1&amp;gt;::pointer,
++               typename unique_ptr&amp;lt;T2, D2&amp;gt;::pointer&amp;gt;
++  compare_three_way_result_t&amp;lt;
++    typename unique_ptr&amp;lt;T1, D1&amp;gt;::pointer,
++    typename unique_ptr&amp;lt;T2, D2&amp;gt;::pointer&amp;gt;
++  operator&amp;lt;=&amp;gt;(const unique_ptr&amp;lt;T1, D1&amp;gt;&amp;amp; x, const unique_ptr&amp;lt;T2, D2&amp;gt;&amp;amp; y); // (1) C++20
++
++  template &amp;lt;class T, class D&amp;gt;
++    requires three_way_comparable_with&amp;lt;
++               typename unique_ptr&amp;lt;T, D&amp;gt;::pointer,
++               nullptr_t&amp;gt;
++  compare_three_way_result_t&amp;lt;
++    typename unique_ptr&amp;lt;T, D&amp;gt;::pointer,
++    nullptr_t&amp;gt;
++  operator&amp;lt;=&amp;gt;(const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x, nullptr_t);                     // (2) C++20
++}
++```
++* nullptr_t[link /reference/cstddef/nullptr_t.md]
++
++## 概要
++`unique_ptr`オブジェクトの三方比較を行う。
++
++
++## テンプレートパラメータ制約
++
++- (1) : 型`unique_ptr&amp;lt;T1, D1&amp;gt;::pointer`と型`unique_ptr&amp;lt;T2, D2&amp;gt;::pointer`が三方比較可能であること
++- (2) : 型`unique_ptr&amp;lt;T, D&amp;gt;::pointer`と型[`nullptr_t`](/reference/cstddef/nullptr_t.md)が三方比較可能であること
++
++
++## 戻り値
++- (1) :
++    ```cpp
++    return compare_three_way()(x.get(), y.get());
++    ```
++    * compare_three_way[link /reference/compare/compare_three_way.md]
++    * get()[link get.md]
++
++- (2) :
++    ```cpp
++    return compare_three_way()(x.get(), nullptr);
++    ```
++    * compare_three_way[link /reference/compare/compare_three_way.md]
++    * get()[link get.md]
++
++
++## 例
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;memory&amp;gt;
++
++int main()
++{
++  std::unique_ptr&amp;lt;int&amp;gt; p1(new int(3));
++  if ((p1 &amp;lt;=&amp;gt; p1) == 0) {
++    std::cout &amp;lt;&amp;lt; &amp;#34;equal&amp;#34; &amp;lt;&amp;lt; std::endl;
++  }
++
++  std::unique_ptr&amp;lt;int&amp;gt; p2;
++  if ((p2 &amp;lt;=&amp;gt; nullptr) == 0) {
++    std::cout &amp;lt;&amp;lt; &amp;#34;p2 is nullptr&amp;#34; &amp;lt;&amp;lt; std::endl;
++  }
++
++  if ((nullptr &amp;lt;=&amp;gt; p2) == 0) {
++    std::cout &amp;lt;&amp;lt; &amp;#34;p2 is nullptr&amp;#34; &amp;lt;&amp;lt; std::endl;
++  }
++}
++```
++
++### 出力
++```
++equal
++p2 is nullptr
++p2 is nullptr
++```
++
++## バージョン
++### 言語
++- C++20
++
++### 処理系
++- [Clang](/implementation.md#clang):
++- [GCC](/implementation.md#gcc): 10
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 参照
++- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
++    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator== -- unique_ptr : 三方比較演算子の追加と自動導出に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr/op_equal.html"/>
+      <id>57678971b5fdd014ed6ce5ac8148ca8ecfefd68f:reference/memory/unique_ptr/op_equal.md</id>
+      <updated>2022-12-13T22:52:28+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr/op_equal.md b/reference/memory/unique_ptr/op_equal.md
+index f483e6a4f..d2f8a3b2b 100644
+--- a/reference/memory/unique_ptr/op_equal.md
++++ b/reference/memory/unique_ptr/op_equal.md
+@@ -7,13 +7,14 @@
+ ```cpp
+ namespace std {
+   template &amp;lt;class T1, class D1, class T2, class D2&amp;gt;
+-  bool operator==(const unique_ptr&amp;lt;T1, D1&amp;gt;&amp;amp; a, const unique_ptr&amp;lt;T2, D2&amp;gt;&amp;amp; b); // (1)
++  bool operator==(const unique_ptr&amp;lt;T1, D1&amp;gt;&amp;amp; a, const unique_ptr&amp;lt;T2, D2&amp;gt;&amp;amp; b); // (1) C++11
+ 
+   template &amp;lt;class T, class D&amp;gt;
+-  bool operator==(const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x, nullptr_t) noexcept;            // (2)
++  bool operator==(const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x, nullptr_t) noexcept;            // (2) C++11
+ 
++  // (2)により以下のオーバーロードが使用可能 (C++20)
+   template &amp;lt;class T, class D&amp;gt;
+-  bool operator==(nullptr_t, const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x) noexcept;            // (3)
++  bool operator==(nullptr_t, const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x) noexcept;            // (3) C++11
+ }
+ ```
+ * nullptr_t[link /reference/cstddef/nullptr_t.md]
+@@ -27,6 +28,11 @@ namespace std {
+ - (2), (3) : `!x`
+ 
+ 
++## 備考
++- この演算子により、以下の演算子が使用可能になる (C++20)：
++    - `operator!=`
++
++
+ ## 例
+ ```cpp example
+ #include &amp;lt;iostream&amp;gt;
+@@ -67,3 +73,8 @@ p2 is nullptr
+ - [ICC](/implementation.md#icc): ?
+ - [Visual C++](/implementation.md#visual_cpp): 2010, 2012, 2013
+ 	- 2012までは`nullptr`バージョンがない。
++
++
++## 参照
++- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
++    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator!= -- unique_ptr : 三方比較演算子の追加と自動導出に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr/op_not_equal.html"/>
+      <id>57678971b5fdd014ed6ce5ac8148ca8ecfefd68f:reference/memory/unique_ptr/op_not_equal.md</id>
+      <updated>2022-12-13T22:52:28+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr/op_not_equal.md b/reference/memory/unique_ptr/op_not_equal.md
+index e706bc12f..d200e0915 100644
+--- a/reference/memory/unique_ptr/op_not_equal.md
++++ b/reference/memory/unique_ptr/op_not_equal.md
+@@ -6,14 +6,15 @@
+ 
+ ```cpp
+ namespace std {
++  // operator==により、以下の演算子が使用可能になる (C++20)
+   template &amp;lt;class T1, class D1, class T2, class D2&amp;gt;
+-  bool operator!=(const unique_ptr&amp;lt;T1, D1&amp;gt;&amp;amp; a, const unique_ptr&amp;lt;T2, D2&amp;gt;&amp;amp; b); // (1)
++  bool operator!=(const unique_ptr&amp;lt;T1, D1&amp;gt;&amp;amp; a, const unique_ptr&amp;lt;T2, D2&amp;gt;&amp;amp; b); // (1) C++11
+ 
+   template &amp;lt;class T, class D&amp;gt;
+-  bool operator!=(const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x, nullptr_t) noexcept;            // (2)
++  bool operator!=(const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x, nullptr_t) noexcept;            // (2) C++11
+ 
+   template &amp;lt;class T, class D&amp;gt;
+-  bool operator!=(nullptr_t, const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x) noexcept;            // (3)
++  bool operator!=(nullptr_t, const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x) noexcept;            // (3) C++11
+ }
+ ```
+ * nullptr_t[link /reference/cstddef/nullptr_t.md]
+@@ -68,3 +69,8 @@ p3 is not nullptr
+ - [ICC](/implementation.md#icc): ?
+ - [Visual C++](/implementation.md#visual_cpp): 2010, 2012, 2013
+ 	- 2012までは`nullptr`バージョンがない。
++
++
++## 参照
++- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
++    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>variant -- variant : 三方比較演算子を追加 #900</title>
@@ -904,80 +1155,6 @@ index a5b55f9ca..957e81642 100644
  ## 参照
  - [LWG2064 - More `noexcept` issues in `basic_string`](https://wg21.cmeerw.net/lwg/issue2064)
  - [P0980R1 Making `std::string` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0980r1.pdf)
-+- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
-+    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>char_traits -- char_traits : comparison_categoryを追加 #900</title>
-      <link href="https://cpprefjp.github.io/reference/string/char_traits.html"/>
-      <id>9b7cb24371db077e2d9127c23bb63f753d53b3d1:reference/string/char_traits.md</id>
-      <updated>2022-12-13T03:24:54+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/char_traits.md b/reference/string/char_traits.md
-index e08f35e39..0771ee496 100644
---- a/reference/string/char_traits.md
-+++ b/reference/string/char_traits.md
-@@ -51,6 +51,7 @@ namespace std {
- | `off_type`   | 文字の差を表す型 | |
- | `pos_type`   | 位置を表す型 | |
- | `state_type` | ストリームのマルチバイト文字の変換の状態を表す型 | |
-+| `comparison_category` | 比較カテゴリ | C++20 |
- 
- 
- ### charによる特殊化のメンバ型定義
-@@ -62,6 +63,7 @@ namespace std {
- | `off_type`   | `streamoff` | |
- | `pos_type`   | `streampos` | |
- | `state_type` | `mbstate_t` | |
-+| `comparison_category` | [`strong_ordering`](/reference/compare/strong_ordering.md) | C++20 |
- 
- ### char8_tによる特殊化のメンバ型定義 (C++20)
- 
-@@ -72,6 +74,7 @@ namespace std {
- | `off_type`   | `streamoff`      | C++20          |
- | `pos_type`   | `u8streampos`   | C++20          |
- | `state_type` | `mbstate_t`      | C++20          |
-+| `comparison_category` | [`strong_ordering`](/reference/compare/strong_ordering.md) | C++20 |
- 
- ### char16_tによる特殊化のメンバ型定義 (C++11)
- 
-@@ -82,6 +85,7 @@ namespace std {
- | `off_type`   | `streamoff`      | C++11          |
- | `pos_type`   | `u16streampos`   | C++11          |
- | `state_type` | `mbstate_t`      | C++11          |
-+| `comparison_category` | [`strong_ordering`](/reference/compare/strong_ordering.md) | C++20 |
- 
- 
- ### char32_tによる特殊化のメンバ型定義 (C++11)
-@@ -93,6 +97,7 @@ namespace std {
- | `off_type`   | `streamoff`      | C++11          |
- | `pos_type`   | `u32streampos`   | C++11          |
- | `state_type` | `mbstate_t`      | C++11          |
-+| `comparison_category` | [`strong_ordering`](/reference/compare/strong_ordering.md) | C++20 |
- 
- 
- ### wchar_tによる特殊化のメンバ型定義
-@@ -104,6 +109,7 @@ namespace std {
- | `off_type`   | `streamoff`      | |
- | `pos_type`   | `wstreampos`     | |
- | `state_type` | `mbstate_t`      | |
-+| `comparison_category` | [`strong_ordering`](/reference/compare/strong_ordering.md) | C++20 |
- 
- 
- ## 例
-@@ -224,3 +230,7 @@ int main() {
- equal
- ```
- 
-+
-+## 参照
 +- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
 +    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
 &lt;/code&gt;&lt;/pre&gt;</summary>
