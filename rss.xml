@@ -2,9 +2,724 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2022-12-13T14:42:19.099186</updated>
-  <id>dba95c31-ad8e-47a8-a05a-5a1fd80ab861</id>
+  <updated>2022-12-13T18:04:10.379842</updated>
+  <id>e9284649-59b9-4d10-91c9-b16284a9a5df</id>
 
+  
+    <entry>
+      <title>error_category -- error_code, error_condition, error_category : 三方比較演算子の追加と自動導出に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/system_error/error_category.html"/>
+      <id>26eca643fa3060f50feedb62a0bb4596382ccbb0:reference/system_error/error_category.md</id>
+      <updated>2022-12-14T02:59:40+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/system_error/error_category.md b/reference/system_error/error_category.md
+index 887f2efbf..26ee36c2d 100644
+--- a/reference/system_error/error_category.md
++++ b/reference/system_error/error_category.md
+@@ -17,6 +17,7 @@ namespace std {
+ 
+ 
+ ## メンバ関数
++### 構築・破棄
+ 
+ | 名前 | 説明 | 対応バージョン |
+ |------|------|----------------|
+@@ -24,10 +25,19 @@ namespace std {
+ | [`(destructor)`](error_category/op_destructor.md)   | デストラクタ | C++11 |
+ | `operator=(const error_category&amp;amp;) = delete`           | 代入演算子(使用不可) | C++11 |
+ | [`default_error_condition`](error_category/default_error_condition.md) | エラー値と自身のカテゴリから`error_condition`を生成 | C++11 |
++
++### 比較
++
++| 名前 | 説明 | 対応バージョン |
++|------|------|----------------|
+ | [`equivalent`](error_category/equivalent.md) | エラーコードとエラー状態の等値比較 | C++11 |
+-| [`operator==`](error_category/op_equal.md) | 等値比較 | C++11 |
++| [`operator==`](error_category/op_equal.md) | 等値比較 (C++20から`operator&amp;lt;=&amp;gt;`により使用可能) | C++11 |
+ | [`operator!=`](error_category/op_not_equal.md) | 非等値比較 | C++11 |
+-| [`operator&amp;lt;`](error_category/op_less.md) | 小なり比較 | C++11 |
++| [`operator&amp;lt;=&amp;gt;`](error_category/op_compare_3way.md) | 三方比較 | C++20 |
++| [`operator&amp;lt;`](error_category/op_less.md) | 左辺が右辺より小さいか比較 (C++20から`operator&amp;lt;=&amp;gt;`により使用可能) | C++11 |
++| `bool operator&amp;lt;=(const error_category&amp;amp;) const noexcept;` | 左辺が右辺以下か比較 (`operator&amp;lt;=&amp;gt;`により使用可能) | C++20 |
++| `bool operator&amp;gt;(const error_category&amp;amp;) const noexcept;` | 左辺が右辺より大きいか比較 (`operator&amp;lt;=&amp;gt;`により使用可能) | C++20 |
++| `bool operator&amp;gt;=(const error_category&amp;amp;) const noexcept;` | 左辺が右辺以上か比較 (`operator&amp;lt;=&amp;gt;`により使用可能) | C++20 |
+ 
+ ### 純粋仮想関数
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator&lt;=&gt; -- error_code, error_condition, error_category : 三方比較演算子の追加と自動導出に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/system_error/error_category/op_compare_3way.html"/>
+      <id>26eca643fa3060f50feedb62a0bb4596382ccbb0:reference/system_error/error_category/op_compare_3way.md</id>
+      <updated>2022-12-14T02:59:40+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/system_error/error_category/op_compare_3way.md b/reference/system_error/error_category/op_compare_3way.md
+new file mode 100644
+index 000000000..ca3e16c59
+--- /dev/null
++++ b/reference/system_error/error_category/op_compare_3way.md
+@@ -0,0 +1,79 @@
++# operator&amp;lt;=&amp;gt;
++* system_error[meta header]
++* std[meta namespace]
++* error_category[meta class]
++* function[meta id-type]
++* cpp20[meta cpp]
++
++```cpp
++strong_ordering operator&amp;lt;=&amp;gt;(const error_category&amp;amp; rhs) const noexcept; // (1) C++11
++```
++
++## 概要
++`error_category`オブジェクトの三方比較を行う。
++
++
++## 戻り値
++```cpp
++return compare_three_way()(this, &amp;amp;rhs);
++```
++* compare_three_way[link /reference/compare/compare_three_way.md]
++
++
++## 例外
++投げない
++
++
++## 備考
++- この演算子により、以下の演算子が使用可能になる (C++20)：
++    - `operator&amp;lt;`
++    - `operator&amp;lt;=`
++    - `operator&amp;gt;`
++    - `operator&amp;gt;=`
++
++
++## 例
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;system_error&amp;gt;
++
++int main()
++{
++  const std::error_category&amp;amp; a = std::generic_category();
++  const std::error_category&amp;amp; b = std::generic_category();
++  const std::error_category&amp;amp; c = std::system_category();
++
++  std::cout &amp;lt;&amp;lt; std::boolalpha;
++
++  std::cout &amp;lt;&amp;lt; ((a &amp;lt;=&amp;gt; b) == 0) &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; (a &amp;lt; c) &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; (a &amp;lt;= c) &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; (a &amp;gt; c) &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; (a &amp;gt;= c) &amp;lt;&amp;lt; std::endl;
++}
++```
++* std::generic_category()[link /reference/system_error/generic_category.md]
++* std::system_category()[link /reference/system_error/system_category.md]
++
++### 出力例
++```
++true
++false
++false
++true
++true
++```
++
++## バージョン
++### 言語
++- C++20
++
++### 処理系
++- [Clang](/implementation.md#clang):
++- [GCC](/implementation.md#gcc): 10
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 参照
++- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
++    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator== -- error_code, error_condition, error_category : 三方比較演算子の追加と自動導出に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/system_error/error_category/op_equal.html"/>
+      <id>26eca643fa3060f50feedb62a0bb4596382ccbb0:reference/system_error/error_category/op_equal.md</id>
+      <updated>2022-12-14T02:59:40+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/system_error/error_category/op_equal.md b/reference/system_error/error_category/op_equal.md
+index c1717b523..b1f26b0c3 100644
+--- a/reference/system_error/error_category/op_equal.md
++++ b/reference/system_error/error_category/op_equal.md
+@@ -6,7 +6,7 @@
+ * cpp11[meta cpp]
+ 
+ ```cpp
+-bool operator==(const error_category&amp;amp; rhs) const noexcept;
++bool operator==(const error_category&amp;amp; rhs) const noexcept; // (1) C++11
+ ```
+ 
+ ## 概要
+@@ -23,6 +23,11 @@ bool operator==(const error_category&amp;amp; rhs) const noexcept;
+ 投げない
+ 
+ 
++## 備考
++- この演算子により、以下の演算子が使用可能になる (C++20)：
++    - `operator!=`
++
++
+ ## 例
+ ```cpp example
+ #include &amp;lt;iostream&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator&lt; -- error_code, error_condition, error_category : 三方比較演算子の追加と自動導出に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/system_error/error_category/op_less.html"/>
+      <id>26eca643fa3060f50feedb62a0bb4596382ccbb0:reference/system_error/error_category/op_less.md</id>
+      <updated>2022-12-14T02:59:40+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/system_error/error_category/op_less.md b/reference/system_error/error_category/op_less.md
+index 873dfaeee..6274b0373 100644
+--- a/reference/system_error/error_category/op_less.md
++++ b/reference/system_error/error_category/op_less.md
+@@ -6,7 +6,8 @@
+ * cpp11[meta cpp]
+ 
+ ```cpp
+-bool operator&amp;lt;(const error_category&amp;amp; rhs) const noexcept;
++// operator&amp;lt;=&amp;gt;により、以下の演算子が使用可能になる (C++20)
++bool operator&amp;lt;(const error_category&amp;amp; rhs) const noexcept; // (1) C++11
+ ```
+ 
+ ## 概要
+@@ -61,3 +62,5 @@ false
+ 
+ 
+ ## 参照
++- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
++    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator!= -- error_code, error_condition, error_category : 三方比較演算子の追加と自動導出に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/system_error/error_category/op_not_equal.html"/>
+      <id>26eca643fa3060f50feedb62a0bb4596382ccbb0:reference/system_error/error_category/op_not_equal.md</id>
+      <updated>2022-12-14T02:59:40+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/system_error/error_category/op_not_equal.md b/reference/system_error/error_category/op_not_equal.md
+index eedbc9a9d..aebcc0c34 100644
+--- a/reference/system_error/error_category/op_not_equal.md
++++ b/reference/system_error/error_category/op_not_equal.md
+@@ -6,7 +6,8 @@
+ * cpp11[meta cpp]
+ 
+ ```cpp
+-bool operator!=(const error_category&amp;amp; rhs) const noexcept;
++// operator==により、以下の演算子が使用可能になる (C++20)
++bool operator!=(const error_category&amp;amp; rhs) const noexcept; // (1) C++11
+ ```
+ 
+ ## 概要
+@@ -61,3 +62,5 @@ true
+ 
+ 
+ ## 参照
++- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
++    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>error_code -- error_code, error_condition, error_category : 三方比較演算子の追加と自動導出に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/system_error/error_code.html"/>
+      <id>26eca643fa3060f50feedb62a0bb4596382ccbb0:reference/system_error/error_code.md</id>
+      <updated>2022-12-14T02:59:40+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/system_error/error_code.md b/reference/system_error/error_code.md
+index e7528921a..d2b1e46f3 100644
+--- a/reference/system_error/error_code.md
++++ b/reference/system_error/error_code.md
+@@ -37,8 +37,12 @@ namespace std {
+ | 名前 | 説明 | 対応バージョン |
+ |------|------|----------------|
+ | [`operator==`](op_equal.md) | 等値比較 | C++11 |
+-| [`operator!=`](op_not_equal.md) | 非等値比較 | C++11 |
+-| [`operator&amp;lt;`](error_code/op_less.md) | 左辺が右辺より小さいか判定する | C++11 |
++| [`operator!=`](op_not_equal.md) | 非等値比較 (C++20から`operator&amp;lt;=&amp;gt;`により使用可能) | C++11 |
++| [`operator&amp;lt;=&amp;gt;`](error_code/op_compare_3way.md) | 三方比較 | C++20 |
++| [`operator&amp;lt;`](error_code/op_less.md) | 左辺が右辺より小さいか判定する (C++20から`operator&amp;lt;=&amp;gt;`により使用可能) | C++11 |
++| `bool operator&amp;lt;=(const error_code&amp;amp;, const error_code&amp;amp;) noexcept;` | 左辺が右辺以下か判定する (`operator&amp;lt;=&amp;gt;`により使用可能) | C++20 |
++| `bool operator&amp;gt;(const error_code&amp;amp;, const error_code&amp;amp;) noexcept;` | 左辺が右辺より大きいか判定する (`operator&amp;lt;=&amp;gt;`により使用可能) | C++20 |
++| `bool operator&amp;gt;=(const error_code&amp;amp;, const error_code&amp;amp;) noexcept;` | 左辺が右辺以上か判定する (`operator&amp;lt;=&amp;gt;`により使用可能) | C++20 |
+ | [`operator&amp;lt;&amp;lt;`](error_code/op_ostream.md) | ストリームへ出力 | C++11 |
+ | [`make_error_code`](make_error_code.md) | `errc`から`error_code`オブジェクトを生成する | C++11 |
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator&lt;=&gt; -- error_code, error_condition, error_category : 三方比較演算子の追加と自動導出に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/system_error/error_code/op_compare_3way.html"/>
+      <id>26eca643fa3060f50feedb62a0bb4596382ccbb0:reference/system_error/error_code/op_compare_3way.md</id>
+      <updated>2022-12-14T02:59:40+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/system_error/error_code/op_compare_3way.md b/reference/system_error/error_code/op_compare_3way.md
+new file mode 100644
+index 000000000..e69eca531
+--- /dev/null
++++ b/reference/system_error/error_code/op_compare_3way.md
+@@ -0,0 +1,78 @@
++# operator&amp;lt;=&amp;gt;
++* system_error[meta header]
++* std[meta namespace]
++* function[meta id-type]
++* cpp20[meta cpp]
++
++```cpp
++namespace std {
++  strong_ordering
++    operator&amp;lt;=&amp;gt;(const error_code&amp;amp; lhs,
++                const error_code&amp;amp; rhs) noexcept; // (1) C++20
++}
++```
++
++## 概要
++`error_code`オブジェクトの三方比較を行う。
++
++
++## 効果
++以下と等価：
++
++```cpp
++if (auto c = lhs.category() &amp;lt;=&amp;gt; rhs.category(); c != 0)
++  return c;
++return lhs.value() &amp;lt;=&amp;gt; rhs.value();
++```
++* category()[link category.md]
++* value()[link value.md]
++
++
++## 例外
++投げない
++
++
++## 備考
++- この演算子により、以下の演算子が使用可能になる (C++20)：
++    - `operator&amp;lt;`
++    - `operator&amp;lt;=`
++    - `operator&amp;gt;`
++    - `operator&amp;gt;=`
++
++
++## 例
++```cpp example
++#include &amp;lt;cassert&amp;gt;
++#include &amp;lt;system_error&amp;gt;
++
++int main()
++{
++  std::error_code ec1 = std::make_error_code(std::errc::invalid_argument);
++  std::error_code ec2 = std::make_error_code(std::errc::invalid_argument);
++  std::error_code ec3 = std::make_error_code(std::errc::permission_denied);
++
++  assert((ec1 &amp;lt;=&amp;gt; ec2) == 0);
++  assert((ec1 &amp;lt;=&amp;gt; ec3) != 0);
++}
++```
++* std::make_error_code[link /reference/system_error/make_error_code.md]
++* std::errc::invalid_argument[link /reference/system_error/errc.md]
++* std::errc::permission_denied[link /reference/system_error/errc.md]
++
++### 出力
++```
++```
++
++## バージョン
++### 言語
++- C++20
++
++### 処理系
++- [Clang](/implementation.md#clang):
++- [GCC](/implementation.md#gcc): 10
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 参照
++- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
++    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator&lt; -- error_code, error_condition, error_category : 三方比較演算子の追加と自動導出に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/system_error/error_code/op_less.html"/>
+      <id>26eca643fa3060f50feedb62a0bb4596382ccbb0:reference/system_error/error_code/op_less.md</id>
+      <updated>2022-12-14T02:59:40+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/system_error/error_code/op_less.md b/reference/system_error/error_code/op_less.md
+index 4a547de6c..ff4d23a49 100644
+--- a/reference/system_error/error_code/op_less.md
++++ b/reference/system_error/error_code/op_less.md
+@@ -6,7 +6,10 @@
+ 
+ ```cpp
+ namespace std {
+-  bool operator&amp;lt;(const error_code&amp;amp; lhs, const error_code&amp;amp; rhs) noexcept;
++  // operator&amp;lt;=&amp;gt;により、以下の演算子が使用可能になる (C++20)
++  bool
++    operator&amp;lt;(const error_code&amp;amp; lhs,
++              const error_code&amp;amp; rhs) noexcept; // (1) C++11
+ }
+ ```
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>error_condition -- error_code, error_condition, error_category : 三方比較演算子の追加と自動導出に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/system_error/error_condition.html"/>
+      <id>26eca643fa3060f50feedb62a0bb4596382ccbb0:reference/system_error/error_condition.md</id>
+      <updated>2022-12-14T02:59:40+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/system_error/error_condition.md b/reference/system_error/error_condition.md
+index ffa845b96..5f6a2ef79 100644
+--- a/reference/system_error/error_condition.md
++++ b/reference/system_error/error_condition.md
+@@ -40,8 +40,13 @@ Visual C++ 2010、GCC 4.6.1では[`generic_category()`](generic_category.md)と[
+ | 名前 | 説明 | 対応バージョン |
+ |------|------|----------------|
+ | [`operator==`](op_equal.md) | 等値比較 | C++11 |
+-| [`operator!=`](op_not_equal.md) | 非等値比較 | C++11 |
+-| [`operator&amp;lt;`](error_condition/op_less.md) | 左辺が右辺より小さいか判定する | C++11 |
++| [`operator!=`](op_not_equal.md) | 非等値比較 (C++20から`operator&amp;lt;=&amp;gt;`により使用可能) | C++11 |
++| [`operator&amp;lt;=&amp;gt;`](error_condition/op_compare_3way.md) | 三方比較 | C++20 |
++| [`operator&amp;lt;`](error_condition/op_less.md) | 左辺が右辺より小さいか判定する (C++20から`operator&amp;lt;=&amp;gt;`により使用可能) | C++11 |
++| `bool operator&amp;lt;=(const error_condition&amp;amp;, const error_condition&amp;amp;) noexcept;` | 左辺が右辺以下か判定する (`operator&amp;lt;=&amp;gt;`により使用可能) | C++20 |
++| `bool operator&amp;gt;(const error_condition&amp;amp;, const error_condition&amp;amp;) noexcept;` | 左辺が右辺より大きいか判定する (`operator&amp;lt;=&amp;gt;`により使用可能) | C++20 |
++| `bool operator&amp;gt;=(const error_condition&amp;amp;, const error_condition&amp;amp;) noexcept;` | 左辺が右辺以上か判定する (`operator&amp;lt;=&amp;gt;`により使用可能) | C++20 |
++
+ | [`make_error_condition`](make_error_condition.md) | `errc`から`error_condition`オブジェクトを生成する | C++11 |
+ 
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator&lt;=&gt; -- error_code, error_condition, error_category : 三方比較演算子の追加と自動導出に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/system_error/error_condition/op_compare_3way.html"/>
+      <id>26eca643fa3060f50feedb62a0bb4596382ccbb0:reference/system_error/error_condition/op_compare_3way.md</id>
+      <updated>2022-12-14T02:59:40+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/system_error/error_condition/op_compare_3way.md b/reference/system_error/error_condition/op_compare_3way.md
+new file mode 100644
+index 000000000..0e7991235
+--- /dev/null
++++ b/reference/system_error/error_condition/op_compare_3way.md
+@@ -0,0 +1,78 @@
++# operator&amp;lt;=&amp;gt;
++* system_error[meta header]
++* std[meta namespace]
++* function[meta id-type]
++* cpp20[meta cpp]
++
++```cpp
++namespace std {
++  strong_ordering
++    operator&amp;lt;=&amp;gt;(const error_condition&amp;amp; lhs,
++                const error_condition&amp;amp; rhs) noexcept; // (1) C++20
++}
++```
++
++## 概要
++`error_condition`オブジェクトの三方比較を行う。
++
++
++## 効果
++以下と等価：
++
++```cpp
++if (auto c = lhs.category() &amp;lt;=&amp;gt; rhs.category(); c != 0)
++  return c;
++return lhs.value() &amp;lt;=&amp;gt; rhs.value();
++```
++* category()[link category.md]
++* value()[link value.md]
++
++
++## 例外
++投げない
++
++
++## 備考
++- この演算子により、以下の演算子が使用可能になる (C++20)：
++    - `operator&amp;lt;`
++    - `operator&amp;lt;=`
++    - `operator&amp;gt;`
++    - `operator&amp;gt;=`
++
++
++## 例
++```cpp example
++#include &amp;lt;cassert&amp;gt;
++#include &amp;lt;system_error&amp;gt;
++
++int main()
++{
++  std::error_condition ec1 = std::make_error_condition(std::errc::invalid_argument);
++  std::error_condition ec2 = std::make_error_condition(std::errc::invalid_argument);
++  std::error_condition ec3 = std::make_error_condition(std::errc::permission_denied);
++
++  assert((ec1 &amp;lt;=&amp;gt; ec2) == 0);
++  assert((ec1 &amp;lt;=&amp;gt; ec3) != 0);
++}
++```
++* std::make_error_condition[link /reference/system_error/make_error_condition.md]
++* std::errc::invalid_argument[link /reference/system_error/errc.md]
++* std::errc::permission_denied[link /reference/system_error/errc.md]
++
++### 出力
++```
++```
++
++## バージョン
++### 言語
++- C++20
++
++### 処理系
++- [Clang](/implementation.md#clang):
++- [GCC](/implementation.md#gcc): 10
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 参照
++- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
++    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator&lt; -- error_code, error_condition, error_category : 三方比較演算子の追加と自動導出に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/system_error/error_condition/op_less.html"/>
+      <id>26eca643fa3060f50feedb62a0bb4596382ccbb0:reference/system_error/error_condition/op_less.md</id>
+      <updated>2022-12-14T02:59:40+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/system_error/error_condition/op_less.md b/reference/system_error/error_condition/op_less.md
+index 033d18ff0..9ab45fb4c 100644
+--- a/reference/system_error/error_condition/op_less.md
++++ b/reference/system_error/error_condition/op_less.md
+@@ -6,7 +6,10 @@
+ 
+ ```cpp
+ namespace std {
+-  bool operator&amp;lt;(const error_condition&amp;amp; lhs, const error_condition&amp;amp; rhs) noexcept;
++  // operator&amp;lt;=&amp;gt;により、以下の演算子が使用可能になる (C++20)
++  bool
++    operator&amp;lt;(const error_condition&amp;amp; lhs,
++              const error_condition&amp;amp; rhs) noexcept; // (1) C++11
+ }
+ ```
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator== -- error_code, error_condition, error_category : 三方比較演算子の追加と自動導出に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/system_error/op_equal.html"/>
+      <id>26eca643fa3060f50feedb62a0bb4596382ccbb0:reference/system_error/op_equal.md</id>
+      <updated>2022-12-14T02:59:40+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/system_error/op_equal.md b/reference/system_error/op_equal.md
+index 87ac1967a..b6221a0e7 100644
+--- a/reference/system_error/op_equal.md
++++ b/reference/system_error/op_equal.md
+@@ -6,10 +6,12 @@
+ 
+ ```cpp
+ namespace std {
+-  bool operator==(const error_code&amp;amp; lhs, const error_code&amp;amp; rhs) noexcept;           // (1)
+-  bool operator==(const error_code&amp;amp; lhs, const error_condition&amp;amp; rhs) noexcept;      // (2)
+-  bool operator==(const error_condition&amp;amp; lhs, const error_code&amp;amp; rhs) noexcept;      // (3)
+-  bool operator==(const error_condition&amp;amp; lhs, const error_condition&amp;amp; rhs) noexcept; // (4)
++  bool operator==(const error_code&amp;amp; lhs, const error_code&amp;amp; rhs) noexcept;           // (1) C++11
++  bool operator==(const error_code&amp;amp; lhs, const error_condition&amp;amp; rhs) noexcept;      // (2) C++11
++  bool operator==(const error_condition&amp;amp; lhs, const error_condition&amp;amp; rhs) noexcept; // (3) C++11
++
++  // (2)により以下のオーバーロードが使用可能になる (C++20)
++  bool operator==(const error_condition&amp;amp; lhs, const error_code&amp;amp; rhs) noexcept;      // (4) C++11
+ }
+ ```
+ * error_code[link /reference/system_error/error_code.md]
+@@ -21,7 +23,6 @@ namespace std {
+ 
+ ## 戻り値
+ - (1) :
+-
+     ```cpp
+     lhs.category() == rhs.category() &amp;amp;&amp;amp; lhs.value() == rhs.value()
+     ```
+@@ -30,7 +31,6 @@ namespace std {
+ 
+ 
+ - (2) :
+-
+     ```cpp
+     lhs.category().equivalent(lhs.value(), rhs) || rhs.category().equivalent(lhs, rhs.value())
+     ```
+@@ -40,9 +40,15 @@ namespace std {
+     * lhs.value()[link error_code/value.md]
+     * rhs.value()[link error_condition/value.md]
+ 
+-
+ - (3) :
++    ```cpp
++    lhs.category() == rhs.category() &amp;amp;&amp;amp; lhs.value() == rhs.value()
++    ```
++    * category()[link error_condition/category.md]
++    * value()[link error_condition/value.md]
+ 
++
++- (4) :
+     ```cpp
+     rhs.category().equivalent(rhs.value(), lhs) || lhs.category().equivalent(rhs, lhs.value())
+     ```
+@@ -53,15 +59,6 @@ namespace std {
+     * rhs.value()[link error_code/value.md]
+ 
+ 
+-- (4) :
+-
+-    ```cpp
+-    lhs.category() == rhs.category() &amp;amp;&amp;amp; lhs.value() == rhs.value()
+-    ```
+-    * category()[link error_condition/category.md]
+-    * value()[link error_condition/value.md]
+-
+-
+ ## 例外
+ 投げない
+ 
+@@ -120,5 +117,5 @@ error_condition == error_condition : false
+ 
+ 
+ ## 参照
+-
+-
++- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
++    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator!= -- error_code, error_condition, error_category : 三方比較演算子の追加と自動導出に対応 #900</title>
+      <link href="https://cpprefjp.github.io/reference/system_error/op_not_equal.html"/>
+      <id>26eca643fa3060f50feedb62a0bb4596382ccbb0:reference/system_error/op_not_equal.md</id>
+      <updated>2022-12-14T02:59:40+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/system_error/op_not_equal.md b/reference/system_error/op_not_equal.md
+index 9c6d48b21..0e061e8b6 100644
+--- a/reference/system_error/op_not_equal.md
++++ b/reference/system_error/op_not_equal.md
+@@ -6,10 +6,11 @@
+ 
+ ```cpp
+ namespace std {
+-  bool operator!=(const error_code&amp;amp; lhs, const error_code&amp;amp; rhs) noexcept;
+-  bool operator!=(const error_code&amp;amp; lhs, const error_condition&amp;amp; rhs) noexcept;
+-  bool operator!=(const error_condition&amp;amp; lhs, const error_code&amp;amp; rhs) noexcept;
+-  bool operator!=(const error_condition&amp;amp; lhs, const error_condition&amp;amp; rhs) noexcept;
++  // operator==により、以下の演算子が使用可能になる (C++20)
++  bool operator!=(const error_code&amp;amp; lhs, const error_code&amp;amp; rhs) noexcept;           // (1) C++11
++  bool operator!=(const error_code&amp;amp; lhs, const error_condition&amp;amp; rhs) noexcept;      // (2) C++11
++  bool operator!=(const error_condition&amp;amp; lhs, const error_code&amp;amp; rhs) noexcept;      // (3) C++11
++  bool operator!=(const error_condition&amp;amp; lhs, const error_condition&amp;amp; rhs) noexcept; // (4) C++11
+ }
+ ```
+ * error_code[link error_code.md]
+@@ -80,5 +81,10 @@ error_condition != error_condition : true
+ - [Visual C++](/implementation.md#visual_cpp): 2010
+ 
+ 
++## 関連項目
++- [`operator==()`](op_equal.md)
++
++
+ ## 参照
+-[`operator==()`](op_equal.md)
++- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
++    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>unique_ptr -- unique_ptr : operator&lt;&lt;のページを追加</title>
@@ -951,51 +1666,6 @@ index 000000000..072bf4493
 +- [Clang](/implementation.md#clang):
 +- [GCC](/implementation.md#gcc): 10
 +- [Visual C++](/implementation.md#visual_cpp): ??
-+
-+
-+## 参照
-+- [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
-+    - C++20での三方比較演算子の追加と、関連する演算子の自動導出
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>monostate -- monostate : 三方比較演算子の追加と自動導出に対応 #900</title>
-      <link href="https://cpprefjp.github.io/reference/variant/monostate.html"/>
-      <id>66a9622721641b682ca0189385ef492f60c6efa0:reference/variant/monostate.md</id>
-      <updated>2022-12-13T04:10:40+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/variant/monostate.md b/reference/variant/monostate.md
-index 5cda28465..911a62676 100644
---- a/reference/variant/monostate.md
-+++ b/reference/variant/monostate.md
-@@ -39,11 +39,12 @@ namespace std {
- | 名前 | 説明 | 対応バージョン |
- |------|------|----------------|
- | `constexpr bool operator==(monostate, monostate) noexcept;` | 等値比較。`true`を返す | C++17 |
--| `constexpr bool operator!=(monostate, monostate) noexcept;` | 非等値比較。`false`を返す | C++17 |
--| `constexpr bool operator&amp;lt;(monostate, monostate) noexcept;`  | 左辺が右辺より小さいかを判定する。`false`を返す | C++17 |
--| `constexpr bool operator&amp;lt;=(monostate, monostate) noexcept;` | 左辺が右辺以下かを判定する。`true`を返す | C++17 |
--| `constexpr bool operator&amp;gt;(monostate, monostate) noexcept;`  | 左辺が右辺より大きいかを判定する。`false`を返す | C++17 |
--| `constexpr bool operator&amp;gt;=(monostate, monostate) noexcept;` | 左辺が右辺以上かを判定する。`true`を返す | C++17 |
-+| `constexpr bool operator!=(monostate, monostate) noexcept;` | 非等値比較。`false`を返す (C++20から`==`により使用可能) | C++17 |
-+| `constexpr strong_ordering operator&amp;lt;=&amp;gt;(monostate, monostate) noexcept;` | 三方比較。`strong_ordering::equal`を返す | C++20 |
-+| `constexpr bool operator&amp;lt;(monostate, monostate) noexcept;`  | 左辺が右辺より小さいかを判定する。`false`を返す (C++20から`&amp;lt;=&amp;gt;`により使用可能) | C++17 |
-+| `constexpr bool operator&amp;lt;=(monostate, monostate) noexcept;` | 左辺が右辺以下かを判定する。`true`を返す (C++20から`&amp;lt;=&amp;gt;`により使用可能) | C++17 |
-+| `constexpr bool operator&amp;gt;(monostate, monostate) noexcept;`  | 左辺が右辺より大きいかを判定する。`false`を返す (C++20から`&amp;lt;=&amp;gt;`により使用可能) | C++17 |
-+| `constexpr bool operator&amp;gt;=(monostate, monostate) noexcept;` | 左辺が右辺以上かを判定する。`true`を返す (C++20から`&amp;lt;=&amp;gt;`により使用可能) | C++17 |
- 
- 
- ## 例
-@@ -82,3 +83,8 @@ empty
- - [Clang](/implementation.md#clang): 7.3
- - [GCC](/implementation.md#gcc): 4.0
- - [Visual C++](/implementation.md#visual_cpp): ??
 +
 +
 +## 参照
