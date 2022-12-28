@@ -2,9 +2,132 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2022-12-28T03:21:40.676874</updated>
-  <id>a0bdfabb-2bfe-4d7d-9b9a-1276ca62cf05</id>
+  <updated>2022-12-28T03:45:16.788688</updated>
+  <id>91c8e9e3-aa87-4e0b-8fc7-acfdfabea19f</id>
 
+  
+    <entry>
+      <title>特殊化のアクセスチェック -- 特殊化のアクセスチェック、完了 #722</title>
+      <link href="https://cpprefjp.github.io/lang/cpp20/access_checking_on_specializations.html"/>
+      <id>24e88692a0a90b600a6d0aeff0070de510f72bb2:lang/cpp20/access_checking_on_specializations.md</id>
+      <updated>2022-12-28T12:41:09+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/access_checking_on_specializations.md b/lang/cpp20/access_checking_on_specializations.md
+index ac3ea1d84..fb23dfe79 100644
+--- a/lang/cpp20/access_checking_on_specializations.md
++++ b/lang/cpp20/access_checking_on_specializations.md
+@@ -3,26 +3,26 @@
+ 
+ ## 概要
+ 
+-クラス`C1`の内側で宣言されたクラス（ローカルクラス`impl`）が`private/protected`で宣言されている場合、テンプレートの文脈で`C1`の外側から`impl`を参照することは禁止されていた。しかし、実際にはほぼ全てのコンパイラでこれは許可されており、実際に使用されていた。
++クラス`C`の内側で宣言されたクラス（ローカルクラス`impl`）が`private/protected`で宣言されている場合、テンプレートの文脈で`C`の外側から`impl`を参照することは禁止されていた。しかし、実際にはほぼ全てのコンパイラでこれは許可されており、実際に使用されていた。
+ 
+ ```cpp
+ template&amp;lt;class T&amp;gt;
+-struct trait;
++struct traits;
+ 
+-class C1 {
++class C {
+   class impl; // クラス内ローカルクラス
+ };
+ 
+ // C++17まではill-formed、しかし実際にはほぼ全てのコンパイラでエラーにならなかった
+ // C++20からはok
+ template&amp;lt;&amp;gt;
+-struct trait&amp;lt;C1::impl&amp;gt;;
++struct traits&amp;lt;C::impl&amp;gt;;
+ ```
+ 
+ ただし、この`impl`がクラステンプレートになるとコンパイラによってはエラーとなっていた。
+ 
+ ```cpp
+-class C1 {
++class C {
+   template&amp;lt;typename U&amp;gt;
+   class impl{}; // クラス内ローカルクラステンプレート
+ };
+@@ -30,10 +30,10 @@ class C1 {
+ // C++17まではill-formed、しかし一部のコンパイラではエラーにならなかった
+ // C++20からはok
+ template&amp;lt;&amp;gt;
+-struct trait&amp;lt;C1::impl&amp;gt;;
++struct traits&amp;lt;C::impl&amp;gt;;
+ ```
+ 
+-C++20からはこれらの場合の挙動が標準化され、アクセス指定に関わらずローカルクラスをその親クラスの外側からテンプレートの文脈で参照することが許可されるようになる。
++C++20からはこれらの場合の挙動が標準化され、アクセス指定やテンプレートであるかに関わらずローカルクラスをその親クラスの外側からテンプレートの文脈で参照することが許可されるようになる。
+ 
+ ## 仕様
+ 
+@@ -89,7 +89,58 @@ struct std::iterator_traits&amp;lt;my_view&amp;lt;int&amp;gt;::my_view_iterator&amp;lt;T&amp;gt;&amp;gt;;
+ そのため、C++20においてこの振る舞いを実装間で統一するために、テンプレートの文脈でプライベートローカルクラス（テンプレート）を参照することが許可された。
+ 
+ ## 検討されたほかの選択肢
+-(執筆中)
++
++この問題を解決する他の方法として、`friend`宣言を拡張してプライベートローカルクラスへのアクセスを明示的に許可しようとするものがあり、次のような3つのオプションが検討された
++
++1. プライベートローカルクラスを持つクラスで、そのローカルクラスを使用したテンプレート特殊化の`friend`宣言によってアクセス権を与える
++2. プライベートローカルクラス定義内で、自身を使用したテンプレート特殊化の`friend`宣言によってアクセス権を与える
++3. テンプレートの特殊化ではなくテンプレートの`friend`宣言によってアクセス権を与える
++
++```cpp
++namespace option1 {
++
++  class C {
++    template&amp;lt;typename U&amp;gt;
++    class impl;
++
++    // オプション1によるfriend宣言
++    template&amp;lt;class U&amp;gt;
++    friend struct trait&amp;lt;impl&amp;lt;U&amp;gt;&amp;gt;;
++  };
++}
++
++namespace option2 {
++
++  class C {
++    template&amp;lt;typename U&amp;gt;
++    class impl {
++
++      // オプション2によるfriend宣言
++      friend struct trait&amp;lt;impl&amp;gt;;
++    };
++  };
++}
++
++namespace option3 {
++
++  class C {
++    template&amp;lt;typename U&amp;gt;
++    class impl;
++
++    // オプション3によるfriend宣言
++    friend trait;
++  };
++}
++```
++
++オプション1とオプション2には次のような欠点がある
++
++1. 必要ない場合でも`trait`の定義にクラス`C`への特権アクセスを与えてしまう
++2. 1と同じ欠点に加えて、宣言のなされたローカルクラスではなくその外側のクラスに対するアクセス権が与えられるという点が奇妙（構文とその意味が一致していない）
++
++オプション3そのものには特に欠点は無かったが、このマイナーな問題を解決するためだけの言語機能となることや、全てのオプションにおいてその機能を追加したことによる影響を調査する必要があるなどの問題があった。
++
++この問題に関する既存の振る舞いは少なくとも15年間よく利用されるコンパイラで実装されており、特に問題なく利用されていた。この既存の振る舞いを標準化するだけならば、特定用途のための新しい言語機能を追加する必要がなく他の方法に比べて安全性が高いため、`friend`宣言を拡張する方向性は採用されなかった。
+ 
+ ## 参照
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>iterator -- イテレータの図 : URLを修正</title>
@@ -5070,40 +5193,6 @@ index 963fb6a69..6c76bec67 100644
  - (6) : コピーコンストラクタ。`x` と同じ要素を保持した `vector` オブジェクトを構築する。
  - (7) : ムーブコンストラクタ。`x` の指す先を自分の領域として `vector` オブジェクトを構築する。
  - (8) : アロケータを別で受け取り、`vector` オブジェクトをコピー構築する。
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>インライン変数 -- C++17インライン変数 : 名前のないクラスオブジェクトをインライン指定しても同じ実体にはならないことを記載</title>
-      <link href="https://cpprefjp.github.io/lang/cpp17/inline_variables.html"/>
-      <id>e68299bcaf7535ffe11dcb21247647dd980bd6e7:lang/cpp17/inline_variables.md</id>
-      <updated>2022-12-28T00:53:57+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp17/inline_variables.md b/lang/cpp17/inline_variables.md
-index bb89382a8..10e98f1bb 100644
---- a/lang/cpp17/inline_variables.md
-+++ b/lang/cpp17/inline_variables.md
-@@ -94,6 +94,10 @@ function-specifier:
-   explicit
- ```
- 
-+## 備考
-+- 名前のないクラスのオブジェクトは、インライン指定しても同じ実体にはならない
-+
-+
- ## 例
- 
- ```cpp example
-@@ -264,3 +268,4 @@ func
- - [P0386R2 - Inline Variables](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0386r2.pdf), 2016-06-24
- - [P0607R0 - Inline Variables for the Standard Library](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0607r0.html), 2017-02-27
- - [C++1z インライン変数 - Faith and Brave - C++で遊ぼう](https://faithandbrave.hateblo.jp/entry/2016/11/11/172954)
-+- [インライン変数が翻訳単位毎に別々の実体となってしまう - Stackoverflow](https://ja.stackoverflow.com/questions/93046/)
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>

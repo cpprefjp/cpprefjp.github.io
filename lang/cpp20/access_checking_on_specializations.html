@@ -188,8 +188,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2022-12-27T09:24:47">
-        2022年12月27日 09時24分47秒
+      <span itemprop="datePublished" content="2022-12-28T03:41:09">
+        2022年12月28日 03時41分09秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -214,22 +214,22 @@
         
   <h1 itemprop="name"><span class="token">特殊化のアクセスチェック</span><span class="cpp cpp20" title="C++20で追加">(C++20)</span></h1>
 <div itemprop="articleBody"><h2>概要</h2>
-<p>クラス<code>C1</code>の内側で宣言されたクラス（ローカルクラス<code>impl</code>）が<code>private/protected</code>で宣言されている場合、テンプレートの文脈で<code>C1</code>の外側から<code>impl</code>を参照することは禁止されていた。しかし、実際にはほぼ全てのコンパイラでこれは許可されており、実際に使用されていた。</p>
+<p>クラス<code>C</code>の内側で宣言されたクラス（ローカルクラス<code>impl</code>）が<code>private/protected</code>で宣言されている場合、テンプレートの文脈で<code>C</code>の外側から<code>impl</code>を参照することは禁止されていた。しかし、実際にはほぼ全てのコンパイラでこれは許可されており、実際に使用されていた。</p>
 <p><div class="codehilite"><pre><span></span><code><span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="o">&gt;</span>
-<span class="k">struct</span> <span class="n">trait</span><span class="p">;</span>
+<span class="k">struct</span> <span class="n">traits</span><span class="p">;</span>
 
-<span class="k">class</span> <span class="nc">C1</span> <span class="p">{</span>
+<span class="k">class</span> <span class="nc">C</span> <span class="p">{</span>
   <span class="k">class</span> <span class="nc">impl</span><span class="p">;</span> <span class="c1">// クラス内ローカルクラス</span>
 <span class="p">};</span>
 
 <span class="c1">// C++17まではill-formed、しかし実際にはほぼ全てのコンパイラでエラーにならなかった</span>
 <span class="c1">// C++20からはok</span>
 <span class="k">template</span><span class="o">&lt;&gt;</span>
-<span class="k">struct</span> <span class="n">trait</span><span class="o">&lt;</span><span class="n">C1</span><span class="o">::</span><span class="n">impl</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="k">struct</span> <span class="n">traits</span><span class="o">&lt;</span><span class="n">C</span><span class="o">::</span><span class="n">impl</span><span class="o">&gt;</span><span class="p">;</span>
 </code></pre></div>
 </p>
 <p>ただし、この<code>impl</code>がクラステンプレートになるとコンパイラによってはエラーとなっていた。</p>
-<p><div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">C1</span> <span class="p">{</span>
+<p><div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">C</span> <span class="p">{</span>
   <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">U</span><span class="o">&gt;</span>
   <span class="k">class</span> <span class="nc">impl</span><span class="p">{};</span> <span class="c1">// クラス内ローカルクラステンプレート</span>
 <span class="p">};</span>
@@ -237,10 +237,10 @@
 <span class="c1">// C++17まではill-formed、しかし一部のコンパイラではエラーにならなかった</span>
 <span class="c1">// C++20からはok</span>
 <span class="k">template</span><span class="o">&lt;&gt;</span>
-<span class="k">struct</span> <span class="n">trait</span><span class="o">&lt;</span><span class="n">C1</span><span class="o">::</span><span class="n">impl</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="k">struct</span> <span class="n">traits</span><span class="o">&lt;</span><span class="n">C</span><span class="o">::</span><span class="n">impl</span><span class="o">&gt;</span><span class="p">;</span>
 </code></pre></div>
 </p>
-<p>C++20からはこれらの場合の挙動が標準化され、アクセス指定に関わらずローカルクラスをその親クラスの外側からテンプレートの文脈で参照することが許可されるようになる。</p>
+<p>C++20からはこれらの場合の挙動が標準化され、アクセス指定やテンプレートであるかに関わらずローカルクラスをその親クラスの外側からテンプレートの文脈で参照することが許可されるようになる。</p>
 <h2>仕様</h2>
 <ol>
 <li>通常のアクセスチェックルールは、テンプレートの部分特殊化のテンプレート引数を指定する名前（非依存名）に対しては適用されない。</li>
@@ -290,7 +290,55 @@
 <p>このようなイテレータの実装方法はC++17以前にもよく行われており、C++20の<code>&lt;ranges&gt;</code>の一部の<code>view</code>型の実装においても行われる。これを放置すると、そのような<code>view</code>型ではポータブルかつ合法的に<code>std::iterator_traits</code>を使用することができなくなる。</p>
 <p>そのため、C++20においてこの振る舞いを実装間で統一するために、テンプレートの文脈でプライベートローカルクラス（テンプレート）を参照することが許可された。</p>
 <h2>検討されたほかの選択肢</h2>
-<p>(執筆中)</p>
+<p>この問題を解決する他の方法として、<code>friend</code>宣言を拡張してプライベートローカルクラスへのアクセスを明示的に許可しようとするものがあり、次のような3つのオプションが検討された</p>
+<ol>
+<li>プライベートローカルクラスを持つクラスで、そのローカルクラスを使用したテンプレート特殊化の<code>friend</code>宣言によってアクセス権を与える</li>
+<li>プライベートローカルクラス定義内で、自身を使用したテンプレート特殊化の<code>friend</code>宣言によってアクセス権を与える</li>
+<li>テンプレートの特殊化ではなくテンプレートの<code>friend</code>宣言によってアクセス権を与える</li>
+</ol>
+<p><div class="codehilite"><pre><span></span><code><span class="k">namespace</span> <span class="n">option1</span> <span class="p">{</span>
+
+  <span class="k">class</span> <span class="nc">C</span> <span class="p">{</span>
+    <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">U</span><span class="o">&gt;</span>
+    <span class="k">class</span> <span class="nc">impl</span><span class="p">;</span>
+
+    <span class="c1">// オプション1によるfriend宣言</span>
+    <span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">U</span><span class="o">&gt;</span>
+    <span class="k">friend</span> <span class="k">struct</span> <span class="n">trait</span><span class="o">&lt;</span><span class="n">impl</span><span class="o">&lt;</span><span class="n">U</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+  <span class="p">};</span>
+<span class="p">}</span>
+
+<span class="k">namespace</span> <span class="n">option2</span> <span class="p">{</span>
+
+  <span class="k">class</span> <span class="nc">C</span> <span class="p">{</span>
+    <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">U</span><span class="o">&gt;</span>
+    <span class="k">class</span> <span class="nc">impl</span> <span class="p">{</span>
+
+      <span class="c1">// オプション2によるfriend宣言</span>
+      <span class="k">friend</span> <span class="k">struct</span> <span class="n">trait</span><span class="o">&lt;</span><span class="n">impl</span><span class="o">&gt;</span><span class="p">;</span>
+    <span class="p">};</span>
+  <span class="p">};</span>
+<span class="p">}</span>
+
+<span class="k">namespace</span> <span class="n">option3</span> <span class="p">{</span>
+
+  <span class="k">class</span> <span class="nc">C</span> <span class="p">{</span>
+    <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">U</span><span class="o">&gt;</span>
+    <span class="k">class</span> <span class="nc">impl</span><span class="p">;</span>
+
+    <span class="c1">// オプション3によるfriend宣言</span>
+    <span class="k">friend</span> <span class="n">trait</span><span class="p">;</span>
+  <span class="p">};</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<p>オプション1とオプション2には次のような欠点がある</p>
+<ol>
+<li>必要ない場合でも<code>trait</code>の定義にクラス<code>C</code>への特権アクセスを与えてしまう</li>
+<li>1と同じ欠点に加えて、宣言のなされたローカルクラスではなくその外側のクラスに対するアクセス権が与えられるという点が奇妙（構文とその意味が一致していない）</li>
+</ol>
+<p>オプション3そのものには特に欠点は無かったが、このマイナーな問題を解決するためだけの言語機能となることや、全てのオプションにおいてその機能を追加したことによる影響を調査する必要があるなどの問題があった。</p>
+<p>この問題に関する既存の振る舞いは少なくとも15年間よく利用されるコンパイラで実装されており、特に問題なく利用されていた。この既存の振る舞いを標準化するだけならば、特定用途のための新しい言語機能を追加する必要がなく他の方法に比べて安全性が高いため、<code>friend</code>宣言を拡張する方向性は採用されなかった。</p>
 <h2>参照</h2>
 <ul>
 <li><a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0692r1.html" target="_blank">P0692R1 Access Checking on Specializations</a></li>
