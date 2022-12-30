@@ -2,9 +2,162 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2022-12-30T15:10:52.052128</updated>
-  <id>9b8497a8-7ffa-412b-81f3-4c6c4d46dd7c</id>
+  <updated>2022-12-30T15:47:23.306981</updated>
+  <id>0de38a4e-1053-41c1-8e1f-9e7b886108b8</id>
 
+  
+    <entry>
+      <title>generator -- generator: 概要増補</title>
+      <link href="https://cpprefjp.github.io/reference/generator/generator.html"/>
+      <id>2b4d273d7e1787848f9c13a97bf41de35c104956:reference/generator/generator.md</id>
+      <updated>2022-12-31T00:42:53+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/generator/generator.md b/reference/generator/generator.md
+index bb8445bd0..812d9e28e 100644
+--- a/reference/generator/generator.md
++++ b/reference/generator/generator.md
+@@ -12,31 +12,35 @@ namespace std {
+   }
+ }
+ ```
++* ranges::view_interface[link /reference/ranges/view_interface.md]
+ 
+ 
+ ## 概要
+ `generator`クラステンプレートは、[コルーチン](/lang/cpp20/coroutines.md)の評価により生成される要素列のビュー(view)を表現する。
+-
+ 特殊化された`generator`は[`view`](/reference/ranges/view.md)および[`input_range`](/reference/ranges/input_range.md)のモデルである。
+ 
+-戻り値型`generator`のコルーチン（以降、ジェネレータコルーチン）では`co_yield`式を用いて値を生成する。`co_yield `[`std::ranges::elements_of`](/reference/ranges/elements_of.md)`(rng)`式を用いると、ジェネレータコルーチンから入れ子Range(`rng`)の各要素を逐次生成する。
++戻り値型`generator`のコルーチン（以下、ジェネレータコルーチン）では`co_yield`式を用いて値を生成する。`co_yield` [`std::ranges::elements_of`](/reference/ranges/elements_of.md)`(rng)`式を用いると、ジェネレータコルーチンから入れ子Range(`rng`)の各要素を逐次生成する。
+ 
+-ジェネレータコルーチンの開始は遅延評価されるため、`generator`利用側が先頭要素[`begin`](generator/begin.md.nolink)を指すイテレータを間接参照するまでジェネレータコルーチンの本体処理は実行されない。
++ジェネレータコルーチンは遅延評価される。ジェネレータコルーチンが返す`generator`オブジェクトの利用側（以下、呼び出し側）で先頭要素[`begin`](generator/begin.md.nolink)を指すイテレータを間接参照するまで、ジェネレータコルーチンの本体処理は実行されない。
++呼び出し側がイテレータの間接参照を試みるとジェネレータコルーチンを再開(resume)し、ジェネレータコルーチン本体処理において`co_yield`式に到達すると生成値を保持して再び中断(suspend)する。呼び出し側ではイテレータの間接参照の結果として生成値を取得する。
+ 
+ 
+ `generator`では下記の説明用メンバ型を定義する。
++
+ - `value` == [`conditional_t`](/reference/type_traits/conditional.md)`&amp;lt;`[`is_void_v`](/reference/type_traits/is_void.md)`&amp;lt;V&amp;gt;,` [`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;Ref&amp;gt;, V&amp;gt;`
+ - `reference` == [`conditional_t`](/reference/type_traits/conditional.md)`&amp;lt;`[`is_void_v`](/reference/type_traits/is_void.md)`&amp;lt;V&amp;gt;, Ref&amp;amp;&amp;amp;, Ref&amp;gt;`
+ 
+ 
+ ## 適格要件
+-- `Allocator`が`void`ではない場合、[`allocator_traits&amp;lt;Allocator&amp;gt;`](/reference/memory/allocator_traits.md)`::pointer`はポインタ型
+-- `value`はcv修飾されないオブジェクト型
+-- `reference`は参照型、または[`copy_constructible`](/reference/concepts/copy_constructible.md)のモデルであるcv修飾されないオブジェクト型
+-- `reference`が参照型の場合は`RRef` == [`remove_reference_t`](/reference/type_traits/remove_reference.md)`&amp;lt;reference&amp;gt;&amp;amp;&amp;amp;`、それ以外の場合は`RRef` == `reference`としたとき、それぞれ下記のモデルであること
+-  - [`common_reference_with`](/reference/concepts/common_reference_with.md)`&amp;lt;reference&amp;amp;&amp;amp;, value&amp;amp;&amp;gt;`
+-  - [`common_reference_with`](/reference/concepts/common_reference_with.md)`&amp;lt;reference&amp;amp;&amp;amp;, RRef&amp;amp;&amp;amp;&amp;gt;`
+-  - [`common_reference_with`](/reference/concepts/common_reference_with.md)`&amp;lt;RRef&amp;amp;&amp;amp;, const value&amp;amp;&amp;gt;`
++- テンプレートパラメータ`Allocator`が`void`ではない場合、[`allocator_traits&amp;lt;Allocator&amp;gt;`](/reference/memory/allocator_traits.md)`::pointer`はポインタ型であること。
++- メンバ型`value`はCV修飾されないオブジェクト型であること。
++- メンバ型`reference`は参照型、または[`copy_constructible`](/reference/concepts/copy_constructible.md)のモデルであるCV修飾されないオブジェクト型であること。
++- メンバ型`reference`が参照型の場合には`RRef` == [`remove_reference_t`](/reference/type_traits/remove_reference.md)`&amp;lt;reference&amp;gt;&amp;amp;&amp;amp;`、それ以外の場合には`RRef` == `reference`としたとき、それぞれ下記のモデルであること。
++    - [`common_reference_with`](/reference/concepts/common_reference_with.md)`&amp;lt;reference&amp;amp;&amp;amp;, value&amp;amp;&amp;gt;`
++    - [`common_reference_with`](/reference/concepts/common_reference_with.md)`&amp;lt;reference&amp;amp;&amp;amp;, RRef&amp;amp;&amp;amp;&amp;gt;`
++    - [`common_reference_with`](/reference/concepts/common_reference_with.md)`&amp;lt;RRef&amp;amp;&amp;amp;, const value&amp;amp;&amp;gt;`
++
++テンプレートパラメータ`Allocator`が`void`ではない場合、`Cpp17Allocator`の要件を満たすこと。
+ 
+ 
+ ## メンバ関数
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>elements_of -- generator: 概要増補</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/elements_of.html"/>
+      <id>2b4d273d7e1787848f9c13a97bf41de35c104956:reference/ranges/elements_of.md</id>
+      <updated>2022-12-31T00:42:53+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/elements_of.md b/reference/ranges/elements_of.md
+index c85fc3808..e6c0b3e2f 100644
+--- a/reference/ranges/elements_of.md
++++ b/reference/ranges/elements_of.md
+@@ -16,9 +16,11 @@ namespace std::ranges {
+     elements_of(R&amp;amp;&amp;amp;, Allocator = Allocator()) -&amp;gt; elements_of&amp;lt;R&amp;amp;&amp;amp;, Allocator&amp;gt;;
+ }
+ ```
++* allocator[link /reference/memory/allocator.md]
++
+ 
+ ## 概要
+-ジェネレータ型[`std::generator`](/reference/generator/generator.md)を戻り値とするコルーチンにおいて、`co_yield`式がネストしたRangeの要素を順次生成することを示すタグ型。
++ジェネレータ[`std::generator`](/reference/generator/generator.md)を戻り値型とする[コルーチン](/lang/cpp20/coroutines.md)において、`co_yield`式がネストしたRangeの要素を順次生成することを示すタグ型。
+ 
+ 
+ ## テンプレートパラメータ制約
+@@ -36,8 +38,9 @@ namespace std::ranges {
+ ## 例
+ ```cpp example
+ #include &amp;lt;generator&amp;gt;
+-#include &amp;lt;ranges&amp;gt;
+ #include &amp;lt;iostream&amp;gt;
++#include &amp;lt;ranges&amp;gt;
++#include &amp;lt;vector&amp;gt;
+ 
+ std::vector&amp;lt;int&amp;gt; vec{2, 3, 4};
+ 
+@@ -94,7 +97,7 @@ int main()
+ 
+ 
+ ## 関連項目
+-- [`generator`](/reference/generator.md)
++- [`&amp;lt;generator&amp;gt;`](/reference/generator.md)
+ 
+ ## 参照
+ - [P2502R2 `std::generator`: Synchronous Coroutine Generator for Ranges](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2502r2.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>elements_of -- generator: fix inner links</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/elements_of.html"/>
+      <id>ca1d7414599e876c2eb35d0530aa47ed7437699a:reference/ranges/elements_of.md</id>
+      <updated>2022-12-31T00:08:49+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/elements_of.md b/reference/ranges/elements_of.md
+index f9e66ca7b..c85fc3808 100644
+--- a/reference/ranges/elements_of.md
++++ b/reference/ranges/elements_of.md
+@@ -18,7 +18,7 @@ namespace std::ranges {
+ ```
+ 
+ ## 概要
+-ジェネレータ型[`std::generator`](/reference/generator/generator.md.nolink)を戻り値とするコルーチンにおいて、`co_yield`式がネストしたRangeの要素を順次生成することを示すタグ型。
++ジェネレータ型[`std::generator`](/reference/generator/generator.md)を戻り値とするコルーチンにおいて、`co_yield`式がネストしたRangeの要素を順次生成することを示すタグ型。
+ 
+ 
+ ## テンプレートパラメータ制約
+@@ -69,8 +69,8 @@ int main()
+ }
+ ```
+ * std::ranges::elements_of[color ff0000]
+-* std::generator[link /reference/generator/generator.md.nolink]
+-* co_yield[link /reference/lang/cpp20/coroutines.md]
++* std::generator[link /reference/generator/generator.md]
++* co_yield[link /lang/cpp20/coroutines.md]
+ 
+ ### 出力
+ ```
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>C++23 -- generator: 概要のみ追加</title>
@@ -1629,221 +1782,6 @@ index 6a52a35f9..58a1663e0 100644
  }
  ```
  * tuple[link ../tuple.md]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator&gt;= -- some improvements regarding 3 way compare</title>
-      <link href="https://cpprefjp.github.io/reference/set/set/op_greater_equal.html"/>
-      <id>28d86d4343a3ca65b46f99fdd2d1a5b6abacac35:reference/set/set/op_greater_equal.md</id>
-      <updated>2022-12-28T13:21:49+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/set/set/op_greater_equal.md b/reference/set/set/op_greater_equal.md
-index 11d20fb00..616144e9f 100644
---- a/reference/set/set/op_greater_equal.md
-+++ b/reference/set/set/op_greater_equal.md
-@@ -5,6 +5,7 @@
- 
- ```cpp
- namespace std {
-+  // operator&amp;lt;=&amp;gt;により、以下の演算子が使用可能になる (C++20)
-   template &amp;lt;class Key, class Compare, class Allocator&amp;gt;
-   bool
-     operator&amp;gt;=(const set&amp;lt;Key,Compare,Allocator&amp;gt;&amp;amp; x,
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator&gt; -- some improvements regarding 3 way compare</title>
-      <link href="https://cpprefjp.github.io/reference/string/basic_string/op_greater.html"/>
-      <id>28d86d4343a3ca65b46f99fdd2d1a5b6abacac35:reference/string/basic_string/op_greater.md</id>
-      <updated>2022-12-28T13:21:49+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/basic_string/op_greater.md b/reference/string/basic_string/op_greater.md
-index 5c045b87e..d2b484b7d 100644
---- a/reference/string/basic_string/op_greater.md
-+++ b/reference/string/basic_string/op_greater.md
-@@ -5,7 +5,7 @@
- 
- ```cpp
- namespace std {
--  // operator==により、以下の演算子が使用可能になる (C++20)
-+  // operator&amp;lt;=&amp;gt;により、以下の演算子が使用可能になる (C++20)
-   template &amp;lt;class CharT, class Traits, class Allocator&amp;gt;
-   bool
-     operator&amp;gt;(const basic_string&amp;lt;CharT, Traits, Allocator&amp;gt;&amp;amp; a,
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator&gt; -- some improvements regarding 3 way compare</title>
-      <link href="https://cpprefjp.github.io/reference/string_view/basic_string_view/op_greater.html"/>
-      <id>28d86d4343a3ca65b46f99fdd2d1a5b6abacac35:reference/string_view/basic_string_view/op_greater.md</id>
-      <updated>2022-12-28T13:21:49+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string_view/basic_string_view/op_greater.md b/reference/string_view/basic_string_view/op_greater.md
-index b220585b5..210a1d504 100644
---- a/reference/string_view/basic_string_view/op_greater.md
-+++ b/reference/string_view/basic_string_view/op_greater.md
-@@ -6,7 +6,7 @@
- 
- ```cpp
- namespace std {
--  // operator==により、以下の演算子が使用可能になる (C++20)
-+  // operator&amp;lt;=&amp;gt;により、以下の演算子が使用可能になる (C++20)
-   template &amp;lt;class CharT, class Traits&amp;gt;
-   constexpr bool operator&amp;gt;(basic_string_view&amp;lt;CharT, Traits&amp;gt; x,
-                            basic_string_view&amp;lt;CharT, Traits&amp;gt; y) noexcept; // (1) C++17
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>count -- fix some typo regarding multiset</title>
-      <link href="https://cpprefjp.github.io/reference/set/set/count.html"/>
-      <id>f29a57aecb0b61c88bbb7b9c9724483545959d23:reference/set/set/count.md</id>
-      <updated>2022-12-28T13:17:44+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/set/set/count.md b/reference/set/set/count.md
-index c5a14830b..a9aae4791 100644
---- a/reference/set/set/count.md
-+++ b/reference/set/set/count.md
-@@ -44,7 +44,7 @@ int main()
- {
-   // (1)
-   {
--    std::multiset&amp;lt;std::string&amp;gt; s = { &amp;#34;Alice&amp;#34;, &amp;#34;Bob&amp;#34;, &amp;#34;Bob&amp;#34;, &amp;#34;Carol&amp;#34; };
-+    std::set&amp;lt;std::string&amp;gt; s = { &amp;#34;Alice&amp;#34;, &amp;#34;Bob&amp;#34;, &amp;#34;Bob&amp;#34;, &amp;#34;Carol&amp;#34; };
- 
-     std::size_t n = s.count(&amp;#34;Bob&amp;#34;);
-     std::cout &amp;lt;&amp;lt; n &amp;lt;&amp;lt; std::endl;
-@@ -52,7 +52,7 @@ int main()
- 
-   // (2)
-   {
--    std::multiset&amp;lt;std::string, std::less&amp;lt;&amp;gt;&amp;gt; s = { &amp;#34;Alice&amp;#34;, &amp;#34;Bob&amp;#34;, &amp;#34;Bob&amp;#34;, &amp;#34;Carol&amp;#34; };
-+    std::set&amp;lt;std::string, std::less&amp;lt;&amp;gt;&amp;gt; s = { &amp;#34;Alice&amp;#34;, &amp;#34;Bob&amp;#34;, &amp;#34;Bob&amp;#34;, &amp;#34;Carol&amp;#34; };
- 
-     // std::lessのvoidに対する特殊化を使用することで、
-     // 文字列リテラルをcount()関数の引数として渡した際に、
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>lower_bound -- fix some typo regarding multiset</title>
-      <link href="https://cpprefjp.github.io/reference/set/set/lower_bound.html"/>
-      <id>f29a57aecb0b61c88bbb7b9c9724483545959d23:reference/set/set/lower_bound.md</id>
-      <updated>2022-12-28T13:17:44+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/set/set/lower_bound.md b/reference/set/set/lower_bound.md
-index 409cc8670..b02867c4a 100644
---- a/reference/set/set/lower_bound.md
-+++ b/reference/set/set/lower_bound.md
-@@ -50,7 +50,7 @@ int main()
- {
-   // (1)
-   {
--    std::multiset&amp;lt;std::string&amp;gt; s = { &amp;#34;A&amp;#34;, &amp;#34;B&amp;#34;, &amp;#34;B&amp;#34;, &amp;#34;C&amp;#34;, &amp;#34;D&amp;#34; };
-+    std::set&amp;lt;std::string&amp;gt; s = { &amp;#34;A&amp;#34;, &amp;#34;B&amp;#34;, &amp;#34;B&amp;#34;, &amp;#34;C&amp;#34;, &amp;#34;D&amp;#34; };
- 
-     // B以上D以下の範囲を取得
-     decltype(s)::iterator it = s.lower_bound(&amp;#34;B&amp;#34;);
-@@ -65,7 +65,7 @@ int main()
- 
-   // (2)
-   {
--    std::multiset&amp;lt;std::string, std::less&amp;lt;&amp;gt;&amp;gt; s = { &amp;#34;A&amp;#34;, &amp;#34;B&amp;#34;, &amp;#34;B&amp;#34;, &amp;#34;C&amp;#34;, &amp;#34;D&amp;#34; };
-+    std::set&amp;lt;std::string, std::less&amp;lt;&amp;gt;&amp;gt; s = { &amp;#34;A&amp;#34;, &amp;#34;B&amp;#34;, &amp;#34;B&amp;#34;, &amp;#34;C&amp;#34;, &amp;#34;D&amp;#34; };
- 
-     // std::lessのvoidに対する特殊化を使用することで、
-     // 文字列リテラルをlower_bound()関数の引数として渡した際に、
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>upper_bound -- fix some typo regarding multiset</title>
-      <link href="https://cpprefjp.github.io/reference/set/set/upper_bound.html"/>
-      <id>f29a57aecb0b61c88bbb7b9c9724483545959d23:reference/set/set/upper_bound.md</id>
-      <updated>2022-12-28T13:17:44+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/set/set/upper_bound.md b/reference/set/set/upper_bound.md
-index 3d553bebb..5e2feb56b 100644
---- a/reference/set/set/upper_bound.md
-+++ b/reference/set/set/upper_bound.md
-@@ -50,7 +50,7 @@ int main()
- {
-   // (1)
-   {
--    std::multiset&amp;lt;std::string&amp;gt; s = { &amp;#34;A&amp;#34;, &amp;#34;B&amp;#34;, &amp;#34;B&amp;#34;, &amp;#34;C&amp;#34;, &amp;#34;D&amp;#34; };
-+    std::set&amp;lt;std::string&amp;gt; s = { &amp;#34;A&amp;#34;, &amp;#34;B&amp;#34;, &amp;#34;B&amp;#34;, &amp;#34;C&amp;#34;, &amp;#34;D&amp;#34; };
- 
-     // B以上D以下の範囲を取得
-     decltype(s)::iterator it = s.lower_bound(&amp;#34;B&amp;#34;);
-@@ -65,7 +65,7 @@ int main()
- 
-   // (2)
-   {
--    std::multiset&amp;lt;std::string, std::less&amp;lt;&amp;gt;&amp;gt; s = { &amp;#34;A&amp;#34;, &amp;#34;B&amp;#34;, &amp;#34;B&amp;#34;, &amp;#34;C&amp;#34;, &amp;#34;D&amp;#34; };
-+    std::set&amp;lt;std::string, std::less&amp;lt;&amp;gt;&amp;gt; s = { &amp;#34;A&amp;#34;, &amp;#34;B&amp;#34;, &amp;#34;B&amp;#34;, &amp;#34;C&amp;#34;, &amp;#34;D&amp;#34; };
- 
-     // std::lessのvoidに対する特殊化を使用することで、
-     // 文字列リテラルをlower_bound()関数の引数として渡した際に、
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator!= -- fix some typo regarding multiset</title>
-      <link href="https://cpprefjp.github.io/reference/unordered_map/unordered_multimap/op_not_equal.html"/>
-      <id>f29a57aecb0b61c88bbb7b9c9724483545959d23:reference/unordered_map/unordered_multimap/op_not_equal.md</id>
-      <updated>2022-12-28T13:17:44+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/unordered_map/unordered_multimap/op_not_equal.md b/reference/unordered_map/unordered_multimap/op_not_equal.md
-index f8631cdb7..73b81dadc 100644
---- a/reference/unordered_map/unordered_multimap/op_not_equal.md
-+++ b/reference/unordered_map/unordered_multimap/op_not_equal.md
-@@ -14,7 +14,7 @@ namespace std {
- ```
- 
- ## 概要
--`unordered_multiset` オブジェクトを非等値比較する。
-+`unordered_multimap` オブジェクトを非等値比較する。
- 
- 
- ## 要件
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
