@@ -2,9 +2,464 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2022-12-30T15:47:23.306981</updated>
-  <id>0de38a4e-1053-41c1-8e1f-9e7b886108b8</id>
+  <updated>2022-12-31T08:11:41.406392</updated>
+  <id>44c2f25a-423c-4a15-81f7-cc26046be476</id>
 
+  
+    <entry>
+      <title>コルーチン -- cpp20/coroutines: C++23 &lt;generator&gt;へ言及</title>
+      <link href="https://cpprefjp.github.io/lang/cpp20/coroutines.html"/>
+      <id>15bc9d8a0c10cff544ff15b77ee48c9de54233d3:lang/cpp20/coroutines.md</id>
+      <updated>2022-12-31T17:03:45+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/coroutines.md b/lang/cpp20/coroutines.md
+index e1a25d02f..302629405 100644
+--- a/lang/cpp20/coroutines.md
++++ b/lang/cpp20/coroutines.md
+@@ -8,7 +8,7 @@ C++20時点では、コルーチン動作に関する言語仕様と新キーワ
+ 
+ ```cpp
+ // コルーチンiotaを定義
+-generator iota(int end)
++my_generator iota(int end)
+ {
+   for (int n = 0; n &amp;lt; end; ++n) {
+     co_yield n;
+@@ -21,13 +21,16 @@ for (int v: g) {
+   std::cout &amp;lt;&amp;lt; v;
+ }
+ 
+-// &amp;#34;generator&amp;#34;はライブラリが提供するべきクラス。
++// &amp;#34;my_generator&amp;#34;はライブラリが提供するべきクラス。
+ // 動作可能なサンプルコード全体は後述例を参照のこと。
+ ```
+ * co_yield[color ff0000]
+ 
+ 一般的なアプリケーション実装者からの利用を想定した、ジェネレータや非同期タスク・非同期I/Oといったハイレベルなコルーチンライブラリは、C++23以降での導入にむけて検討されている。
+ 
++C++23ではジェネレータコルーチンを実現する[`&amp;lt;generetor&amp;gt;`](/reference/generator.md)が追加された。
++
++
+ ### 特徴
+ C++コルーチンの特徴は次の通り：
+ 
+@@ -63,7 +66,7 @@ C++コルーチン動作理解の助けとなるよう、ここでは細部を
+ 
+ ```cpp
+ // プログラマが記述するコルーチン
+-generator iota(int end)
++my_generator iota(int end)
+ {
+   for (int n = 0; n &amp;lt; end; ++n) {
+     co_yield n;
+@@ -71,13 +74,13 @@ generator iota(int end)
+ }
+ 
+ // C++コンパイラにより展開されたコード
+-generator iota(int end)
++my_generator iota(int end)
+ {
+   // コルーチンに対応するPromiseオブジェクトを初期化
+-  generator::promise_type promise;
++  my_generator::promise_type promise;
+ 
+   // 戻り値型オブジェクトの初期化
+-  generator result = promise.get_return_object();
++  my_generator result = promise.get_return_object();
+   // コルーチンハンドルをget_return_object内で取得し、resultメンバで保持する。
+   // 生成したresultオブジェクトは、初回のコルーチン中断時に呼出元へ返される。
+ 
+@@ -445,7 +448,7 @@ _p_`.return_void()`が有効な式のとき、コルーチン本体の終端到
+ #include &amp;lt;utility&amp;gt;
+ 
+ // コルーチン利用ライブラリ: ジェネレータ型
+-struct generator {
++struct my_generator {
+   // ジェネレータに関連付けられるPromise型
+   struct promise_type {
+     // co_yield式で指定されるint値を保持する変数
+@@ -455,7 +458,7 @@ struct generator {
+     {
+       // コルーチンに紐づくPromiseオブジェクト(*this)から
+       // ジェネレータ型のコルーチン戻り値オブジェクトを生成
+-      return generator{*this};
++      return my_generator{*this};
+     };
+     auto initial_suspend()
+     {
+@@ -505,14 +508,14 @@ struct generator {
+     }
+   };
+ 
+-  ~generator()
++  ~my_generator()
+   {
+     if (coro_)
+       coro_.destroy();
+   }
+ 
+-  generator(generator const&amp;amp;) = delete;
+-  generator(generator&amp;amp;&amp;amp; rhs) 
++  my_generator(my_generator const&amp;amp;) = delete;
++  my_generator(my_generator&amp;amp;&amp;amp; rhs) 
+     : coro_(std::exchange(rhs.coro_, nullptr)) {}
+ 
+   // 範囲for構文サポート用のメンバ関数
+@@ -531,7 +534,7 @@ struct generator {
+ 
+ private:
+   // Promiseオブジェクト経由でコルーチンハンドルを取得する
+-  explicit generator(promise_type&amp;amp; p)
++  explicit my_generator(promise_type&amp;amp; p)
+     : coro_(coro_handle::from_promise(p)) {}
+ 
+   coro_handle coro_;
+@@ -539,7 +542,7 @@ private:
+ 
+ 
+ // ユーザ定義コルーチン
+-generator iota(int end)
++my_generator iota(int end)
+ {
+   // コルーチンに対応したPromise型 generator::promise_typeの
+   // Promiseオブジェクト(p)が生成される。
+@@ -606,7 +609,8 @@ C++20コルーチンに関するキーワードは、いずれも接頭辞`co_`
+ 
+ 
+ ## 関連項目
+-- [`&amp;lt;coroutine&amp;gt;`](/reference/coroutine.md)
++- C++20 [`&amp;lt;coroutine&amp;gt;`](/reference/coroutine.md)
++- C++23 [`&amp;lt;generator&amp;gt;`](/reference/generator.md)
+ 
+ 
+ ## 参照
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>generator -- generator: iteratorの説明</title>
+      <link href="https://cpprefjp.github.io/reference/generator/generator.html"/>
+      <id>8271607fde00661007d033e76843e007b4c17334:reference/generator/generator.md</id>
+      <updated>2022-12-31T16:53:25+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/generator/generator.md b/reference/generator/generator.md
+index 812d9e28e..8de067e34 100644
+--- a/reference/generator/generator.md
++++ b/reference/generator/generator.md
+@@ -20,8 +20,9 @@ namespace std {
+ 特殊化された`generator`は[`view`](/reference/ranges/view.md)および[`input_range`](/reference/ranges/input_range.md)のモデルである。
+ 
+ 戻り値型`generator`のコルーチン（以下、ジェネレータコルーチン）では`co_yield`式を用いて値を生成する。`co_yield` [`std::ranges::elements_of`](/reference/ranges/elements_of.md)`(rng)`式を用いると、ジェネレータコルーチンから入れ子Range(`rng`)の各要素を逐次生成する。
++ジェネレータコルーチンでは`co_await`式を利用できない。
+ 
+-ジェネレータコルーチンは遅延評価される。ジェネレータコルーチンが返す`generator`オブジェクトの利用側（以下、呼び出し側）で先頭要素[`begin`](generator/begin.md.nolink)を指すイテレータを間接参照するまで、ジェネレータコルーチンの本体処理は実行されない。
++ジェネレータコルーチンは遅延評価される。ジェネレータコルーチンが返す`generator`オブジェクトの利用側（以下、呼び出し側）で先頭要素[`begin`](generator/begin.md)を指すイテレータを間接参照するまで、ジェネレータコルーチンの本体処理は実行されない。
+ 呼び出し側がイテレータの間接参照を試みるとジェネレータコルーチンを再開(resume)し、ジェネレータコルーチン本体処理において`co_yield`式に到達すると生成値を保持して再び中断(suspend)する。呼び出し側ではイテレータの間接参照の結果として生成値を取得する。
+ 
+ 
+@@ -29,6 +30,7 @@ namespace std {
+ 
+ - `value` == [`conditional_t`](/reference/type_traits/conditional.md)`&amp;lt;`[`is_void_v`](/reference/type_traits/is_void.md)`&amp;lt;V&amp;gt;,` [`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;Ref&amp;gt;, V&amp;gt;`
+ - `reference` == [`conditional_t`](/reference/type_traits/conditional.md)`&amp;lt;`[`is_void_v`](/reference/type_traits/is_void.md)`&amp;lt;V&amp;gt;, Ref&amp;amp;&amp;amp;, Ref&amp;gt;`
++- [`iterator`](generator/iterator.md)
+ 
+ 
+ ## 適格要件
+@@ -48,11 +50,11 @@ namespace std {
+ 
+ | 名前            | 説明           | 対応バージョン |
+ |-----------------|----------------|----------------|
+-| `(constructor)` | コンストラクタ | C++23 |
+-| `(destructor)`  | デストラクタ   | C++23 |
+-| `operator=`     | 代入演算子     | C++23 |
+-| [`begin`](generator/begin.md.nolink) | Viewの先頭を指すイテレータを取得する | C++23 |
+-| [`end`](generator/end.md.nolink) | Viewの番兵を取得する | C++23 |
++| [`(constructor)`](generator/op_constructor.md) | コンストラクタ | C++23 |
++| `(destructor)` | デストラクタ | C++23 |
++| `operator=(generator other) noexcept;` | ムーブ代入演算子 | C++23 |
++| [`begin`](generator/begin.md) | Viewの先頭を指すイテレータを取得する | C++23 |
++| [`end`](generator/end.md) | Viewの番兵を取得する | C++23 |
+ 
+ ## メンバ型
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>begin -- generator: iteratorの説明</title>
+      <link href="https://cpprefjp.github.io/reference/generator/generator/begin.html"/>
+      <id>8271607fde00661007d033e76843e007b4c17334:reference/generator/generator/begin.md</id>
+      <updated>2022-12-31T16:53:25+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/generator/generator/begin.md b/reference/generator/generator/begin.md
+new file mode 100644
+index 000000000..fc99bdf61
+--- /dev/null
++++ b/reference/generator/generator/begin.md
+@@ -0,0 +1,42 @@
++# begin
++* generator[meta header]
++* std[meta namespace]
++* generator[meta class]
++* function[meta id-type]
++* cpp23[meta cpp]
++
++```cpp
++iterator begin();
++```
++* iterator[link iterator.md]
++
++
++## 概要
++ジェネレータコルーチンが生成するViewの先頭を指すイテレータを取得する。
++
++
++## 事前条件
++ジェネレータコルーチンは[初期サスペンドポイント](/lang/cpp20/coroutines.md)で中断している。
++
++
++## 効果
++ジェネレータ子ルーチンを再開(resume)する。
++
++
++## 戻り値
++ジェネレータコルーチンに対応する[`iterator`](iterator.md)オブジェクト。
++
++
++## 備考
++同じジェネレータ上で`begin`を複数回呼び出すと、プログラムは未定義の動作を引き起こす。
++
++
++## バージョン
++### 言語
++- C++23
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): ??
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>end -- generator: iteratorの説明</title>
+      <link href="https://cpprefjp.github.io/reference/generator/generator/end.html"/>
+      <id>8271607fde00661007d033e76843e007b4c17334:reference/generator/generator/end.md</id>
+      <updated>2022-12-31T16:53:25+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/generator/generator/end.md b/reference/generator/generator/end.md
+new file mode 100644
+index 000000000..c7289fa6d
+--- /dev/null
++++ b/reference/generator/generator/end.md
+@@ -0,0 +1,33 @@
++# end
++* generator[meta header]
++* std[meta namespace]
++* generator[meta class]
++* function[meta id-type]
++* cpp23[meta cpp]
++
++```cpp
++default_sentinel_t end() const noexcept;
++```
++* default_sentinel_t[link /reference/iterator/default_sentinel_t.md]
++
++## 概要
++ジェネレータコルーチンが生成するViewの番兵を取得する。
++
++
++## 戻り値
++[`default_sentinel`](/reference/iterator/default_sentinel_t.md)
++
++
++## 例外
++投げない
++
++
++## バージョン
++### 言語
++- C++23
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): ??
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>generator::iterator -- generator: iteratorの説明</title>
+      <link href="https://cpprefjp.github.io/reference/generator/generator/iterator.html"/>
+      <id>8271607fde00661007d033e76843e007b4c17334:reference/generator/generator/iterator.md</id>
+      <updated>2022-12-31T16:53:25+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/generator/generator/iterator.md b/reference/generator/generator/iterator.md
+new file mode 100644
+index 000000000..9929ae7ff
+--- /dev/null
++++ b/reference/generator/generator/iterator.md
+@@ -0,0 +1,75 @@
++# generator::iterator
++* generator[meta header]
++* class template[meta id-type]
++* std[meta namespace]
++* cpp23[meta cpp]
++
++```cpp
++namespace std {
++  template&amp;lt;class Ref, class V, class Allocator&amp;gt;
++  class generator&amp;lt;Ref, V, Allocator&amp;gt;::iterator {
++  public:
++    using value_type = value;
++    using difference_type = ptrdiff_t;
++
++    iterator(iterator&amp;amp;&amp;amp; other) noexcept;
++    iterator&amp;amp; operator=(iterator&amp;amp;&amp;amp; other) noexcept;
++
++    reference operator*() const noexcept(is_nothrow_copy_constructible_v&amp;lt;reference&amp;gt;);
++    iterator&amp;amp; operator++();
++    void operator++(int);
++
++    friend bool operator==(const iterator&amp;amp; i, default_sentinel_t);
++  };
++}
++```
++* generator[link ../generator.md]
++* value[link ../generator.md]
++* reference[link ../generator.md]
++* is_nothrow_copy_constructible_v[link /reference/type_traits/is_nothrow_copy_constructible.md]
++
++
++## 概要
++[`generator`](../generator.md)に対応する説明専用のイテレータ型。
++
++
++## メンバ関数
++### 構築・破棄
++
++| 名前            | 説明           | 対応バージョン |
++|-----------------|----------------|----------------|
++| `(constructor)` | コンストラクタ | C++23 |
++| `(destructor)`  | デストラクタ   | C++23 |
++| `operator=`     | 代入演算子     | C++23 |
++| `operator*()` | 間接参照 | C++23 |
++| `operator++()` | 前置インクリメント | C++23 |
++| `operator++(int)` | 後置インクリメント | C++23 |
++
++## メンバ型
++
++| 名前            | 説明           | 対応バージョン |
++|-----------------|----------------|----------------|
++| `value_type` | 要素型となる説明用の型[`value`](../generator.md) | C++23 |
++| `difference_type` | 2つの値の差を表す整数型`ptrdiff_t` | C++23 |
++
++### 比較演算子
++
++| 名前 | 説明 | 対応バージョン |
++|-----|-----|-----|
++| `bool operator==(const iterator&amp;amp; i, default_sentinel_t)` | 等値比較 | C++23 |
++| `bool operator!=(const iterator&amp;amp; i, default_sentinel_t)` | 非等値比較 (`==`により使用可能) | C++23 |
++
++
++## バージョン
++### 言語
++- C++23
++
++### 処理系
++- [Clang](/implementation.md#clang):
++- [GCC](/implementation.md#gcc):
++- [ICC](/implementation.md#icc):
++- [Visual C++](/implementation.md#visual_cpp):
++
++
++## 参照
++- [P2502R2 `std::generator`: Synchronous Coroutine Generator for Ranges](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2502r2.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- generator: iteratorの説明</title>
+      <link href="https://cpprefjp.github.io/reference/generator/generator/op_constructor.html"/>
+      <id>8271607fde00661007d033e76843e007b4c17334:reference/generator/generator/op_constructor.md</id>
+      <updated>2022-12-31T16:53:25+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/generator/generator/op_constructor.md b/reference/generator/generator/op_constructor.md
+new file mode 100644
+index 000000000..1b7886930
+--- /dev/null
++++ b/reference/generator/generator/op_constructor.md
+@@ -0,0 +1,36 @@
++# コンストラクタ
++* generator[meta header]
++* std[meta namespace]
++* generator[meta class]
++* function[meta id-type]
++* cpp23[meta cpp]
++
++```cpp
++generator(const generator&amp;amp;) = delete;   // (1)
++generator(generator&amp;amp;&amp;amp; other) noexcept;  // (2)
++```
++
++## 概要
++有効な`generator`オブジェクトは、ジェネレータ[コルーチン](/lang/cpp20/coroutines.md)呼び出しによってのみ生成される。
++
++- (1) コピーコンストラクタ : コピー禁止。
++- (2) ムーブコンストラクタ
++
++
++## 例外
++投げない
++
++
++## 備考
++- (2) ムーブ前に`other`から取得したイテレータは無効化されず、`*this`に対応するイテレータとなる。
++
++
++## バージョン
++### 言語
++- C++23
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): ??
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>generator -- generator: 概要増補</title>
@@ -1709,84 +2164,6 @@ index 000000000..f9e66ca7b
       <author>
         <name>yoh</name>
         <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>atomic -- atomic : atomic_(un)signed_lock_freeの参照文書を追加</title>
-      <link href="https://cpprefjp.github.io/reference/atomic/atomic.html"/>
-      <id>5a77523a2df54f600ff41cfe9bfc0b716e3c9a3b:reference/atomic/atomic.md</id>
-      <updated>2022-12-28T15:40:46+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/atomic/atomic.md b/reference/atomic/atomic.md
-index 01dc3dc4a..c9909623d 100644
---- a/reference/atomic/atomic.md
-+++ b/reference/atomic/atomic.md
-@@ -302,3 +302,5 @@ int main()
- - [LWG Issue 3045. `atomic` doesn&amp;#39;t have `value_type` or `difference_type`](https://wg21.cmeerw.net/lwg/issue3045)
- - [LWG Issue 3012. `atomic` is unimplementable for non-`is_trivially_copy_constructible` `T`](https://wg21.cmeerw.net/lwg/issue3012)
- - [Correctly implementing a spinlock in C++](https://rigtorp.se/spinlock/)
-+- [P1135R6 The C++20 Synchronization Library](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1135r6.html)
-+    - C++20での`atomic_signed_lock_free`と`atomic_unsigned_lock_free`の追加
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator&lt;=&gt; -- do small improvements</title>
-      <link href="https://cpprefjp.github.io/reference/string_view/basic_string_view/op_compare_3way.html"/>
-      <id>895deebb05fb9c1dd096663d55da046641f14727:reference/string_view/basic_string_view/op_compare_3way.md</id>
-      <updated>2022-12-28T13:32:32+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string_view/basic_string_view/op_compare_3way.md b/reference/string_view/basic_string_view/op_compare_3way.md
-index c9783d134..481609366 100644
---- a/reference/string_view/basic_string_view/op_compare_3way.md
-+++ b/reference/string_view/basic_string_view/op_compare_3way.md
-@@ -22,7 +22,7 @@ namespace std {
- 
- 
- ```cpp
--return static_cast&amp;lt;R&amp;gt;(lhs.compare(rhs) &amp;lt;=&amp;gt; 0);
-+return static_cast&amp;lt;R&amp;gt;(x.compare(y) &amp;lt;=&amp;gt; 0);
- ```
- * compare[link compare.md]
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator&lt;=&gt; -- do small improvements</title>
-      <link href="https://cpprefjp.github.io/reference/tuple/tuple/op_compare_3way.html"/>
-      <id>895deebb05fb9c1dd096663d55da046641f14727:reference/tuple/tuple/op_compare_3way.md</id>
-      <updated>2022-12-28T13:32:32+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/tuple/tuple/op_compare_3way.md b/reference/tuple/tuple/op_compare_3way.md
-index 6a52a35f9..58a1663e0 100644
---- a/reference/tuple/tuple/op_compare_3way.md
-+++ b/reference/tuple/tuple/op_compare_3way.md
-@@ -8,7 +8,7 @@
- namespace std {
-   template&amp;lt;class... TTypes, class... UTypes&amp;gt;
-   constexpr common_comparison_category_t&amp;lt;synth-three-way-result&amp;lt;TTypes, UTypes&amp;gt;...&amp;gt;
--    operator&amp;lt;=&amp;gt;(const tuple&amp;lt;TTypes...&amp;gt;&amp;amp;, const tuple&amp;lt;UTypes...&amp;gt;&amp;amp;); // (1) C++20
-+    operator&amp;lt;=&amp;gt;(const tuple&amp;lt;TTypes...&amp;gt;&amp;amp; t, const tuple&amp;lt;UTypes...&amp;gt;&amp;amp; u); // (1) C++20
- }
- ```
- * tuple[link ../tuple.md]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
       </author>
     </entry>
   
