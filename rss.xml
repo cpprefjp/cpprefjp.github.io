@@ -2,9 +2,156 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2023-01-07T04:54:22.630124</updated>
-  <id>226deeae-4da3-4de6-a933-67ed14d25331</id>
+  <updated>2023-01-07T10:29:52.619304</updated>
+  <id>583057ee-73d8-46a7-bb30-7d4718012e9b</id>
 
+  
+    <entry>
+      <title>generator -- generator: 例示コード拡充</title>
+      <link href="https://cpprefjp.github.io/reference/generator/generator.html"/>
+      <id>09c61f94ef2e5795801b131449073c34e47f4995:reference/generator/generator.md</id>
+      <updated>2023-01-07T19:25:27+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/generator/generator.md b/reference/generator/generator.md
+index db468a516..c7e1c9d10 100644
+--- a/reference/generator/generator.md
++++ b/reference/generator/generator.md
+@@ -82,12 +82,13 @@ using yielded =
+ 
+ 
+ ## 例
++### 例1: 単一値の生成
+ ```cpp example
+ #include &amp;lt;generator&amp;gt;
+ #include &amp;lt;ranges&amp;gt;
+ #include &amp;lt;iostream&amp;gt;
+ 
+-// 偶数値列を(無限に)生成するコルーチン
++// 偶数値列を無限生成するコルーチン
+ std::generator&amp;lt;int&amp;gt; evens()
+ {
+   int n = 0;
+@@ -110,7 +111,7 @@ int main()
+ * co_yield[link /lang/cpp20/coroutines.md]
+ * std::views::take[link /reference/ranges/take_view.md]
+ 
+-### 出力
++#### 出力
+ ```
+ 0
+ 2
+@@ -119,6 +120,104 @@ int main()
+ 8
+ ```
+ 
++### 例2: レンジ要素値の逐次生成
++```cpp example
++#include &amp;lt;generator&amp;gt;
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;list&amp;gt;
++#include &amp;lt;ranges&amp;gt;
++#include &amp;lt;vector&amp;gt;
++
++// レンジの要素値を逐次生成するコルーチン
++std::generator&amp;lt;int&amp;gt; ints()
++{
++  int arr[] = {1, 2, 3};
++  co_yield std::ranges::elements_of(arr);
++  std::vector&amp;lt;int&amp;gt; vec = {4, 5, 6};
++  co_yield std::ranges::elements_of(vec);
++  std::list&amp;lt;int&amp;gt; lst = {7, 8, 9};
++  co_yield std::ranges::elements_of(lst);
++}
++
++int main()
++{
++  for (int n : ints())) {
++    std::cout &amp;lt;&amp;lt; n &amp;lt;&amp;lt; &amp;#39; &amp;#39;;
++  }
++}
++```
++* std::generator[color ff0000]
++* co_yield[link /lang/cpp20/coroutines.md]
++* std::ranges::elements_of[link /reference/ranges/elements_of.md]
++
++#### 出力
++```
++1 2 3 4 5 6 7 8 9 
++```
++
++### 例3: ジェネレータのネスト
++```cpp example
++#include &amp;lt;generator&amp;gt;
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;ranges&amp;gt;
++#include &amp;lt;memory&amp;gt;
++
++// 二分木ノード
++struct node {
++  int value;
++  std::unique_ptr&amp;lt;node&amp;gt; left = nullptr;
++  std::unique_ptr&amp;lt;node&amp;gt; right = nullptr;
++};
++
++// 二分木を幅優先走査: 左(left)→自ノード→右(right)
++std::generator&amp;lt;int&amp;gt; traverse(const node&amp;amp; e)
++{
++  if (e.left) {
++    co_yield std::ranges::elements_of(traverse(*e.left));
++  }
++  co_yield e.value;
++  if (e.right) {
++    co_yield std::ranges::elements_of(traverse(*e.right));
++  }
++}
++
++int main()
++{
++  // tree:
++  //    2
++  //   / ¥
++  //  1   4
++  //     / ¥
++  //    3   5
++  node tree = {
++    2,
++    std::make_unique&amp;lt;node&amp;gt;(1),
++    std::make_unique&amp;lt;node&amp;gt;(
++      4,
++      std::make_unique&amp;lt;node&amp;gt;(3),
++      std::make_unique&amp;lt;node&amp;gt;(5)
++    ),
++  };
++
++  for (int n: traverse(tree)) {
++    std::cout &amp;lt;&amp;lt; n &amp;lt;&amp;lt; std::endl;
++  }
++}
++```
++* std::generator[color ff0000]
++* co_yield[link /lang/cpp20/coroutines.md]
++* std::ranges::elements_of[link /reference/ranges/elements_of.md]
++* std::make_unique[link /reference/memory/make_unique.md]
++
++#### 出力
++```
++1
++2
++3
++4
++5
++```
++
+ 
+ ## バージョン
+ ### 言語
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>NULL -- NULL: C++03 の規定について実際の規格と合致しない記述を修正</title>
@@ -396,204 +543,6 @@ index b7b6aaeb7..a905630c2 100644
       <link href="https://cpprefjp.github.io/reference/variant/variant/swap_free.html"/>
       <id>d32229bcdcc4821f94f0f3357aa8e64aa82daf5b:reference/variant/variant/swap_free.md</id>
       <updated>2023-01-05T18:05:34+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/variant/variant/swap_free.md b/reference/variant/variant/swap_free.md
-index fbf2fa6a0..a1961ca33 100644
---- a/reference/variant/variant/swap_free.md
-+++ b/reference/variant/variant/swap_free.md
-@@ -7,7 +7,9 @@
- ```cpp
- namespace std {
-   template &amp;lt;class... Types&amp;gt;
--  void swap(variant&amp;lt;Types...&amp;gt;&amp;amp; x, variant&amp;lt;Types...&amp;gt;&amp;amp; y) noexcept(see below);
-+  void swap(variant&amp;lt;Types...&amp;gt;&amp;amp; x, variant&amp;lt;Types...&amp;gt;&amp;amp; y) noexcept(see below);            // C++17
-+  template &amp;lt;class... Types&amp;gt;
-+  constexpr void swap(variant&amp;lt;Types...&amp;gt;&amp;amp; x, variant&amp;lt;Types...&amp;gt;&amp;amp; y) noexcept(see below);  // C++23
- }
- ```
- 
-@@ -71,3 +73,6 @@ int main()
- - [Clang](/implementation.md#clang): 4.0.1
- - [GCC](/implementation.md#gcc): 7.3
- - [Visual C++](/implementation.md#visual_cpp): ??
-+
-+## 参照
-+- [P2231R1 Missing `constexpr` in `std::optional` and `std::variant`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2231r1.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>I</name>
-        <email>1091761+wx257osn2@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>emplace -- P2231R1: some functions will be constexpr in C++23</title>
-      <link href="https://cpprefjp.github.io/reference/variant/variant/emplace.html"/>
-      <id>6061559e89e9315c95a53f90cf0cea0fe891e7ae:reference/variant/variant/emplace.md</id>
-      <updated>2023-01-04T16:42:13+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/variant/variant/emplace.md b/reference/variant/variant/emplace.md
-index ef1b24907..c8529d306 100644
---- a/reference/variant/variant/emplace.md
-+++ b/reference/variant/variant/emplace.md
-@@ -7,18 +7,28 @@
- 
- ```cpp
- template &amp;lt;class T, class... Args&amp;gt;
--T&amp;amp; emplace(Args&amp;amp;&amp;amp;... args);                              // (1)
-+T&amp;amp; emplace(Args&amp;amp;&amp;amp;... args);                                        // (1) C++17
-+template &amp;lt;class T, class... Args&amp;gt;
-+constexpr T&amp;amp; emplace(Args&amp;amp;&amp;amp;... args);                              // (1) C++23
- 
- template &amp;lt;class T, class U, class... Args&amp;gt;
--T&amp;amp; emplace(std::initializer_list&amp;lt;U&amp;gt; il, Args&amp;amp;&amp;amp;... args); // (2)
-+T&amp;amp; emplace(std::initializer_list&amp;lt;U&amp;gt; il, Args&amp;amp;&amp;amp;... args);           // (2) C++17
-+template &amp;lt;class T, class U, class... Args&amp;gt;
-+constexpr T&amp;amp; emplace(std::initializer_list&amp;lt;U&amp;gt; il, Args&amp;amp;&amp;amp;... args); // (2) C++23
- 
- template &amp;lt;std::size_t I, class... Args&amp;gt;
- variant_alternative_t&amp;lt;I, variant&amp;lt;Types...&amp;gt;&amp;gt;&amp;amp;
--  emplace(Args&amp;amp;&amp;amp;... args);                               // (3)
-+  emplace(Args&amp;amp;&amp;amp;... args);                                         // (3) C++17
-+template &amp;lt;std::size_t I, class... Args&amp;gt;
-+constexpr variant_alternative_t&amp;lt;I, variant&amp;lt;Types...&amp;gt;&amp;gt;&amp;amp;
-+  emplace(Args&amp;amp;&amp;amp;... args);                                         // (3) C++23
- 
- template &amp;lt;std::size_t I, class U, class... Args&amp;gt;
- variant_alternative_t&amp;lt;I, variant&amp;lt;Types...&amp;gt;&amp;gt;&amp;amp;
--  emplace(std::initializer_list&amp;lt;U&amp;gt; il, Args&amp;amp;&amp;amp;... args);  // (4)
-+  emplace(std::initializer_list&amp;lt;U&amp;gt; il, Args&amp;amp;&amp;amp;... args);            // (4) C++17
-+template &amp;lt;std::size_t I, class U, class... Args&amp;gt;
-+constexpr variant_alternative_t&amp;lt;I, variant&amp;lt;Types...&amp;gt;&amp;gt;&amp;amp;
-+  emplace(std::initializer_list&amp;lt;U&amp;gt; il, Args&amp;amp;&amp;amp;... args);            // (4) C++23
- ```
- * variant_alternative_t[link /reference/variant/variant_alternative.md]
- 
-@@ -177,3 +187,6 @@ int main()
- - [Clang](/implementation.md#clang): 4.0.1
- - [GCC](/implementation.md#gcc): 7.3
- - [Visual C++](/implementation.md#visual_cpp): ??
-+
-+## 参照
-+- [P2231R1 Missing `constexpr` in `std::optional` and `std::variant`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2231r1.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>I</name>
-        <email>1091761+wx257osn2@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator= -- P2231R1: some functions will be constexpr in C++23</title>
-      <link href="https://cpprefjp.github.io/reference/variant/variant/op_assign.html"/>
-      <id>6061559e89e9315c95a53f90cf0cea0fe891e7ae:reference/variant/variant/op_assign.md</id>
-      <updated>2023-01-04T16:42:13+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/variant/variant/op_assign.md b/reference/variant/variant/op_assign.md
-index b98f075a9..24293b012 100644
---- a/reference/variant/variant/op_assign.md
-+++ b/reference/variant/variant/op_assign.md
-@@ -10,7 +10,9 @@ constexpr variant&amp;amp; operator=(const variant&amp;amp; rhs);              // (1)
- constexpr variant&amp;amp; operator=(variant&amp;amp;&amp;amp; t) noexcept(see below); // (2)
- 
- template &amp;lt;class T&amp;gt;
--variant&amp;amp; operator=(T&amp;amp;&amp;amp; rhs) noexcept(see below);               // (3)
-+variant&amp;amp; operator=(T&amp;amp;&amp;amp; rhs) noexcept(see below);               // (3) C++17
-+template &amp;lt;class T&amp;gt;
-+constexpr variant&amp;amp; operator=(T&amp;amp;&amp;amp; rhs) noexcept(see below);     // (3) C++23
- ```
- 
- ## 概要
-@@ -193,3 +195,4 @@ int main()
- ## 参照
- - [P0608R3 A sane variant converting constructor](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0608r3.html)
- - [P0602R4 `variant` and `optional` should propagate copy/move triviality](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0602r4.html)
-+- [P2231R1 Missing `constexpr` in `std::optional` and `std::variant`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2231r1.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>I</name>
-        <email>1091761+wx257osn2@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>デストラクタ -- P2231R1: some functions will be constexpr in C++23</title>
-      <link href="https://cpprefjp.github.io/reference/variant/variant/op_destructor.html"/>
-      <id>6061559e89e9315c95a53f90cf0cea0fe891e7ae:reference/variant/variant/op_destructor.md</id>
-      <updated>2023-01-04T16:42:13+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/variant/variant/op_destructor.md b/reference/variant/variant/op_destructor.md
-index 39bd9ebaa..9a5b3eb0a 100644
---- a/reference/variant/variant/op_destructor.md
-+++ b/reference/variant/variant/op_destructor.md
-@@ -6,7 +6,8 @@
- * cpp17[meta cpp]
- 
- ```cpp
--~variant();
-+~variant();            // C++17
-+constexpr ~variant();  // C++23
- ```
- 
- ## 概要
-@@ -34,3 +35,6 @@
- 
- ## 関連項目
- - [`std::is_trivially_destructible`](/reference/type_traits/is_trivially_destructible.md)
-+
-+## 参照
-+- [P2231R1 Missing `constexpr` in `std::optional` and `std::variant`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2231r1.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>I</name>
-        <email>1091761+wx257osn2@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>swap -- P2231R1: some functions will be constexpr in C++23</title>
-      <link href="https://cpprefjp.github.io/reference/variant/variant/swap.html"/>
-      <id>6061559e89e9315c95a53f90cf0cea0fe891e7ae:reference/variant/variant/swap.md</id>
-      <updated>2023-01-04T16:42:13+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/variant/variant/swap.md b/reference/variant/variant/swap.md
-index b7b6aaeb7..a905630c2 100644
---- a/reference/variant/variant/swap.md
-+++ b/reference/variant/variant/swap.md
-@@ -6,7 +6,8 @@
- * cpp17[meta cpp]
- 
- ```cpp
--void swap(variant&amp;amp; rhs) noexcept(see below);
-+void swap(variant&amp;amp; rhs) noexcept(see below);            // C++17
-+constexpr void swap(variant&amp;amp; rhs) noexcept(see below);  // C++23
- ```
- 
- ## 概要
-@@ -69,3 +70,6 @@ int main()
- - [Clang](/implementation.md#clang): 4.0.1
- - [GCC](/implementation.md#gcc): 7.3
- - [Visual C++](/implementation.md#visual_cpp): ??
-+
-+## 参照
-+- [P2231R1 Missing `constexpr` in `std::optional` and `std::variant`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2231r1.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>I</name>
-        <email>1091761+wx257osn2@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>swap (非メンバ関数) -- P2231R1: some functions will be constexpr in C++23</title>
-      <link href="https://cpprefjp.github.io/reference/variant/variant/swap_free.html"/>
-      <id>6061559e89e9315c95a53f90cf0cea0fe891e7ae:reference/variant/variant/swap_free.md</id>
-      <updated>2023-01-04T16:42:13+09:00</updated>
       
         <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/variant/variant/swap_free.md b/reference/variant/variant/swap_free.md
 index fbf2fa6a0..a1961ca33 100644
