@@ -2,9 +2,156 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2023-01-10T14:56:16.811172</updated>
-  <id>f4ff4314-846e-4ac4-80b3-7913ab018433</id>
+  <updated>2023-01-11T05:38:33.514187</updated>
+  <id>581f1ca9-0ddd-429f-bfb4-e0944a752deb</id>
 
+  
+    <entry>
+      <title>generator -- generator: クラスユーザ観点での説明追加</title>
+      <link href="https://cpprefjp.github.io/reference/generator/generator.html"/>
+      <id>66d4dc66d3f2259e546b1f7bc5591cf53bb8cc2c:reference/generator/generator.md</id>
+      <updated>2023-01-11T11:08:11+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/generator/generator.md b/reference/generator/generator.md
+index c7e1c9d10..565e90fa1 100644
+--- a/reference/generator/generator.md
++++ b/reference/generator/generator.md
+@@ -22,8 +22,8 @@ namespace std {
+ 戻り値型`generator`のコルーチン（以下、ジェネレータコルーチン）では`co_yield`式を用いて値を生成する。`co_yield` [`std::ranges::elements_of`](/reference/ranges/elements_of.md)`(rng)`式を用いると、ジェネレータコルーチンから入れ子Range(`rng`)の各要素を逐次生成する。
+ ジェネレータコルーチンでは`co_await`式を利用できない。
+ 
+-ジェネレータコルーチンは遅延評価される。ジェネレータコルーチンが返す`generator`オブジェクトの利用側（以下、呼び出し側）で先頭要素[`begin`](generator/begin.md)を指す[イテレータ](generator/iterator.md)を間接参照するまで、ジェネレータコルーチンの本体処理は実行されない。
+-呼び出し側がイテレータの間接参照を試みるとジェネレータコルーチンを再開(resume)し、ジェネレータコルーチン本体処理において`co_yield`式に到達すると生成値を保持して再び中断(suspend)する。呼び出し側ではイテレータの間接参照の結果として生成値を取得する。
++ジェネレータコルーチンは遅延評価される。ジェネレータコルーチンが返す`generator`オブジェクトを利用するコード（以下、ジェネレータ利用側）で先頭要素[`begin`](generator/begin.md)を指す[イテレータ](generator/iterator.md)を間接参照するまで、ジェネレータコルーチンの本体処理は実行されない。
++ジェネレータ利用側がイテレータの間接参照を試みるとジェネレータコルーチンを再開(resume)し、ジェネレータコルーチン本体処理において`co_yield`式に到達すると生成値を保持して再び中断(suspend)する。ジェネレータ利用側ではイテレータの間接参照の結果として生成値を取得する。
+ 
+ 
+ ### 説明用メンバ
+@@ -39,6 +39,61 @@ namespace std {
+ - [`unique_ptr`](/reference/memory/unique_ptr.md)`&amp;lt;`[`stack`](/reference/stack/stack.md)`&amp;lt;`[`coroutine_handle&amp;lt;&amp;gt;`](/reference/coroutine/coroutine_handle.md)`&amp;gt;&amp;gt;`: アクティブスタック(`active_`)
+ 
+ 
++### 第1テンプレートパラメータ`Ref`の概要
++`generator`クラステンプレートでは、テンプレートパラメータ`Ref`, `V`の組み合わせによってco_yieldオペランド型(`yielded`)やイテレータ間接参照の結果型(`reference`)や[イテレータの値型(`value_type`)](generator/iterator.md)を制御する。
++
++第1パラメータ`Ref`以外は省略可能となっており、ほとんどのユースケース（提案文書によれば98%）では、テンプレートパラメータ`Ref`のみの明示指定で十分とされる。
++値型`T`を生成するジェネレータにおいて、第1テンプレートパラメータ`Ref`に応じて関連する型がそれぞれ導出される。
++
++|`Ref`|co_yieldオペランド型|間接参照の結果型|イテレータの値型|
++|-----|----|----|----|
++|`T`&amp;lt;br/&amp;gt;`T&amp;amp;&amp;amp;`|`T&amp;amp;&amp;amp;` と `const T&amp;amp;`|`T&amp;amp;&amp;amp;`|`T`|
++|`T&amp;amp;`|`T&amp;amp;`|`T&amp;amp;`|`T`|
++|`const T&amp;amp;`|`const T&amp;amp;`|`const T&amp;amp;`|`T`|
++
++ジェネレータそれ自身ではイテレータの値型を直接利用しない。ジェネレータ利用側でイテレータの`value_type`型にアクセスする特殊な追加処理を行う場合のみ、第2テンプレートパラメータ`V`の明示指定が必要とされる。
++
++
++### ジェネレータと値のコピー／ムーブ
++`generator`クラステンプレートでは、その内部動作において最低限のコピー／ムーブ処理しか行わないよう設計されている。このため一定条件を満たせば、コピー不可でムーブのみ可能な型や、コピー／ムーブいずれも不可能な型の生成もサポートする。
++
++値型`T`を生成するジェネレータにおいて、第1テンプレートパラメータ`Ref`とco_yield演算子オペランドに指定する式（左辺値／右辺値やconst修飾）に応じて、ジェネレータコルーチン最大1回のコピーが発生する。
++`Ref=T&amp;amp;`とした場合、co_yieldに右辺値を指定するとコンパイルエラーになる。
++
++|`Ref`＼co_yield式|左辺値|const左辺値|右辺値|
++|-----|----|----|----|
++|`T`&amp;lt;br/&amp;gt;`T&amp;amp;&amp;amp;`|コピー 1回|コピー 1回|0回|
++|`T&amp;amp;`|コピー 1回|コピー 1回|(不適格)|
++|`const T&amp;amp;`|0回|0回|0回|
++
++またジェネレータ利用側においては、イテレータ間接参照結果を受ける変数の宣言型`X`との関係に応じて（例：[範囲for文](/lang/cpp11/range_based_for.md)の変数宣言型）、最大で1回のコピーまたはムーブが生じる。
++`Ref=T&amp;amp;`または`Ref=const T&amp;amp;`とした場合、右辺値参照型`T&amp;amp;&amp;amp;`には束縛できないためコンパイルエラーとなる。
++
++|`Ref`＼`X`|`T`|`T&amp;amp;&amp;amp;`|`const T&amp;amp;`|
++|-----|----|----|----|
++|`T`&amp;lt;br/&amp;gt;`T&amp;amp;&amp;amp;`|ムーブ 1回|0回|0回|
++|`T&amp;amp;`|コピー 1回|(不適格)|0回|
++|`const T&amp;amp;`|コピー 1回|(不適格)|0回|
++
++ムーブのみ可能な型（例：[`std::unique_ptr`](/reference/memory/unique_ptr.md)）では、上記表においてコピーが生じる組み合わせを避ければジェネレータより生成可能である。
++同様にコピー／ムーブいずれも不可能な型では、コピーまたはムーブが生じる組み合わせを避ければ生成可能である。
++
++
++### アロケータサポート
++`generator`クラステンプレートの第3テンプレートパラメータ`Allocator`によって、[コルーチン・ステート](/lang/cpp20/coroutines.md)の動的メモリ確保に用いる静的アロケータ型を指定できる。省略時はデフォルトアロケータ[`allocator&amp;lt;byte&amp;gt;`](/reference/memory/allocator.md)が利用される。
++
++またジェネレータコルーチン定義の引数リストに[`allocator_arg`](reference/memory/allocator_arg_t.md)タグ型に続いてアロケータオブジェクトを指定すると、ジェネレータの生成毎に異なるアロケータ利用を指定することもできる。
++
++C++コンパイラによっては、ジェネレータコルーチンに関する動的メモリ確保・解放処理は最適化によって省略され(coroutine elision)、より効率的なコードが生成されることも期待できる。
++
++
++### ジェネレータのネスト
++別の子ジェネレータコルーチンが返す`generator`もRangeとなっているため、ある親ジェネレータコルーチン内部で`co_yield` [`std::ranges::elements_of`](/reference/ranges/elements_of.md)構文を用いると、複数ジェネレータコルーチンのネスト構造をとることができる。
++子ジェネーレタコルーチンの遅延評価によって生成される値は、親ジェネレータコルーチンから生成されたかのように振る舞う。
++
++`generator`クラス（厳密には[`generator::promise_type`](generator/promise_type.md)）ではジェネレータコルーチンのネスト構造を検出し、[対称コルーチン](/lang/cpp20/coroutines.md)としてコルーチン間の実行フロー転送制御を効率的に行う。
++
++
+ ## 適格要件
+ - テンプレートパラメータ`Allocator`が`void`ではない場合、[`allocator_traits`](/reference/memory/allocator_traits.md)`&amp;lt;Allocator&amp;gt;::pointer`はポインタ型であること。
+ - 説明用のメンバ型`value`はCV修飾されないオブジェクト型であること。
+@@ -70,7 +125,7 @@ namespace std {
+ 
+ | 名前            | 説明        | 対応バージョン |
+ |-----------------|-------------|-------|
+-| `yielded`      | `co_yield`式の引数型（後述） | C++23 |
++| `yielded`      | `co_yield`演算子オペランド型（後述） | C++23 |
+ | [`promise_type`](generator/promise_type.md) | ジェネレータコルーチンのPromise型 | C++23 |
+ 
+ ``` cpp
+@@ -169,7 +224,7 @@ struct node {
+   std::unique_ptr&amp;lt;node&amp;gt; right = nullptr;
+ };
+ 
+-// 二分木を幅優先走査: 左(left)→自ノード→右(right)
++// 二分木を走査: 左(left)→自ノード→右(right)
+ std::generator&amp;lt;int&amp;gt; traverse(const node&amp;amp; e)
+ {
+   if (e.left) {
+@@ -236,3 +291,5 @@ int main()
+ 
+ ## 参照
+ - [P2502R2 `std::generator`: Synchronous Coroutine Generator for Ranges](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2502r2.pdf)
++- [P0981R0 Halo: coroutine Heap Allocation eLision Optimization: the joint response](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0981r0.html)
++    - ジェネレータコルーチン実装において、動的メモリ確保が省略最適化される条件の議論。`std::generator`の設計に反映されている。
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>get_return_object -- generator: クラスユーザ観点での説明追加</title>
+      <link href="https://cpprefjp.github.io/reference/generator/generator/promise_type/get_return_object.html"/>
+      <id>66d4dc66d3f2259e546b1f7bc5591cf53bb8cc2c:reference/generator/generator/promise_type/get_return_object.md</id>
+      <updated>2023-01-11T11:08:11+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/generator/generator/promise_type/get_return_object.md b/reference/generator/generator/promise_type/get_return_object.md
+index ba9a6baec..c41948ed9 100644
+--- a/reference/generator/generator/promise_type/get_return_object.md
++++ b/reference/generator/generator/promise_type/get_return_object.md
+@@ -12,12 +12,11 @@ generator get_return_object() noexcept;
+ 
+ ## 概要
+ ジェネレータ[コルーチン](/lang/cpp20/coroutines.md)の戻り値オブジェクトを生成する。
+-戻り値ジェネレータの[アクティブスタック](../../generator.md)を、空(empty)で初期化する。
+ プログラマが本関数を直接利用することは想定されていない。
+ 
+ 
+ ## 戻り値
+-[`coroutine_handle`](/reference/coroutine/coroutine_handle.md)`&amp;lt;promise_type&amp;gt;::`[`from_promise`](/reference/coroutine/coroutine_handle/from_promise.md)`(*this)`で取得したコルーチンハンドルを保持する[`generator`](../../generator.md)オブジェクト。
++[`coroutine_handle`](/reference/coroutine/coroutine_handle.md)`&amp;lt;promise_type&amp;gt;::`[`from_promise`](/reference/coroutine/coroutine_handle/from_promise.md)`(*this)`で取得したコルーチンハンドルを保持し、[アクティブスタック](../../generator.md)を空(empty)で初期化した、[`generator`](../../generator.md)オブジェクト。
+ 
+ 
+ ## 例外
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>コンパイラの実装状況 -- リンク修正</title>
@@ -3326,33 +3473,6 @@ index 000000000..9e1e855e8
       <author>
         <name>Akira Takahashi</name>
         <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>is_literal_type -- Merge pull request #1017 from cpprefjp/wx257osn2-patch-1</title>
-      <link href="https://cpprefjp.github.io/reference/type_traits/is_literal_type.html"/>
-      <id>6c92130d9dd1868af2dd9cd0f4bff7b9bef5ae96:reference/type_traits/is_literal_type.md</id>
-      <updated>2023-01-09T16:24:07+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/type_traits/is_literal_type.md b/reference/type_traits/is_literal_type.md
-index 058871f26..9581cc5f2 100644
---- a/reference/type_traits/is_literal_type.md
-+++ b/reference/type_traits/is_literal_type.md
-@@ -37,7 +37,7 @@ namespace std {
- - 以下の全ての特性を持つクラス型
- 	- [トリビアルなデストラクタを持つ](is_trivially_destructible.md)
- 	- 全てのコンストラクタが、定数式で初期化できること
--	- 集成体であること、もしくは一つ以上の`constexpr`コンストラクタ、もしくはコピー／ムーブコンストラクタ以外のコンストラクタテンプレートを持っていること
-+	- 集成体であること、もしくはコピー／ムーブコンストラクタ以外の`constexpr`コンストラクタや`constexpr`コンストラクタテンプレートを一つ以上持っていること
- 	- 全てのメンバ変数および基底クラスがリテラル型であること
- - `void` (C++14から)
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>I</name>
-        <email>1091761+wx257osn2@users.noreply.github.com</email>
       </author>
     </entry>
   
