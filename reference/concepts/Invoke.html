@@ -27,11 +27,11 @@
         <meta property="og:url" content="https://cpprefjp.github.io//reference/concepts/Invoke.html" />
         <meta property="og:site_name" content="cpprefjp - C++日本語リファレンス" />
         <meta property="og:type" content="article" />
-        <meta property="og:description" content="named requirement&amp;lt;concepts&amp;gt;::INVOKE(C++11) 用語定義  call-signature とは、戻り値型に続けて丸括弧の中に0個以上の引数型を並べたものである。 cf. int ( std::string, int ) callable-type とは、関数呼び出し演算子を適用できる型 ( 関数、関数への参照、関数へのポインタ、operator (" />
+        <meta property="og:description" content="named requirement&amp;lt;concepts&amp;gt;::INVOKE(C++11) C++における関数呼び出しという性質を抽象化しまとめた、仮想操作 INVOKE を定義する。 C++17からは、本仮想操作を実体化したinvoke関数テンプレートが提供される。 用語定義  call-signature とは、戻り値型に続けて丸括弧の中に0個以上の引数型を並べたものである。 cf. i" />
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:title" content="INVOKE - cpprefjp C++日本語リファレンス" />
         <meta name="twitter:url" content="https://cpprefjp.github.io//reference/concepts/Invoke.html" />
-        <meta name="twitter:description" content="named requirement&amp;lt;concepts&amp;gt;::INVOKE(C++11) 用語定義  call-signature とは、戻り値型に続けて丸括弧の中に0個以上の引数型を並べたものである。 cf. int ( std::string, int ) callable-type とは、関数呼び出し演算子を適用できる型 ( 関数、関数への参照、関数へのポインタ、operator (" />
+        <meta name="twitter:description" content="named requirement&amp;lt;concepts&amp;gt;::INVOKE(C++11) C++における関数呼び出しという性質を抽象化しまとめた、仮想操作 INVOKE を定義する。 C++17からは、本仮想操作を実体化したinvoke関数テンプレートが提供される。 用語定義  call-signature とは、戻り値型に続けて丸括弧の中に0個以上の引数型を並べたものである。 cf. i" />
 
         
   <link rel="alternate" type="application/atom+xml" title="Atom" href="https://cpprefjp.github.io/rss.xml" />
@@ -188,12 +188,12 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2021-02-10T09:58:51">
-        2021年02月10日 09時58分51秒
+      <span itemprop="datePublished" content="2023-01-13T09:13:13">
+        2023年01月13日 09時13分13秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">nyaocat</span>
+        <span itemprop="name">yoh</span>
       </span>
       が更新
     </small></p>
@@ -213,7 +213,9 @@
       <div class="col-sm-12 content-body">
         
   <div class="identifier-type">named requirement</div><div class="header">&lt;concepts&gt;</div><h1 itemprop="name"><span class="namespace" title="namespace ">::</span><span class="token">INVOKE</span><span class="cpp cpp11" title="C++11で追加">(C++11)</span></h1>
-<div itemprop="articleBody"><h2>用語定義</h2>
+<div itemprop="articleBody"><p>C++における関数呼び出しという性質を抽象化しまとめた、仮想操作 <em>INVOKE</em> を定義する。</p>
+<p>C++17からは、本仮想操作を実体化した<code><a href="https://cpprefjp.github.io/reference/functional/invoke.html">invoke</a></code>関数テンプレートが提供される。</p>
+<h2>用語定義</h2>
 <ul>
 <li><em>call-signature</em> とは、戻り値型に続けて丸括弧の中に0個以上の引数型を並べたものである。 <em>cf.</em> <code>int ( std::string, int )</code></li>
 <li><em>callable-type</em> とは、関数呼び出し演算子を適用できる型 ( 関数、関数への参照、関数へのポインタ、<code>operator ()</code> をオーバーロードした型もしくはそれを(直接または間接的に) <code>public</code> 継承した型 ) もしくはメンバへのポインタ型を指す。</li>
@@ -261,20 +263,45 @@
 </li>
 <li>すべての <em>call-wrapper</em> は、<em>MoveConstructible</em> でなければならない。</li>
 </ol>
+<h2>要件（C++20）</h2>
+<ol>
+<li>仮想操作 <em>INVOKE</em><code>(f, t1, t2, ..., tN)</code> を次のように定義する。<ul>
+<li><code>f</code> が型 <code>T</code> のメンバ関数へのポインタであり、<code><a href="https://cpprefjp.github.io/reference/type_traits/is_base_of.html">is_baseof_v</a>&lt;T,<a href="https://cpprefjp.github.io/reference/type_traits/remove_cvref.html">remove_cvref_t</a>&lt;decltype(t1)&gt;&gt; == true</code>（<code>t1</code> が <code>T</code> または <code>T</code> を継承した型のオブジェクト/参照）であるとき、 <code>(t1.*f)(t2, ..., tN)</code> と同じ効果を持つ。</li>
+<li><code>f</code> が型 <code>T</code> のメンバ関数へのポインタであり、<code><a href="https://cpprefjp.github.io/reference/type_traits/remove_cvref.html">remove_cvref_t</a>&lt;decltype(t1)&gt;</code>が<code><a href="https://cpprefjp.github.io/reference/functional/reference_wrapper.html">reference_wrapper&lt;T&gt;</a></code>（<code>t1</code>が<code><a href="https://cpprefjp.github.io/reference/functional/reference_wrapper.html">reference_wrapper</a></code>の特殊化）であるとき、 <code>(t1.get().*f)(t2, ..., tN)</code> と同じ効果を持つ。</li>
+<li><code>f</code> が型 <code>T</code> のメンバ関数へのポインタであり、 <code>t1</code> が上記の条件に当てはまらない場合（例えば、t1が<code>T</code>のポインタ）、<code>((*t1).*f)(t2, ..., tN)</code> と同じ効果を持つ。</li>
+<li><code>N == 1</code> で、<code>f</code> が型 <code>T</code> のメンバオブジェクトへのポインタであり、<code><a href="https://cpprefjp.github.io/reference/type_traits/is_base_of.html">is_baseof_v</a>&lt;T,<a href="https://cpprefjp.github.io/reference/type_traits/remove_cvref.html">remove_cvref_t</a>&lt;decltype(t1)&gt;&gt; == true</code>（<code>t1</code> が <code>T</code> または <code>T</code> を継承した型のオブジェクト/参照）であるとき、 <code>t1.*f</code> と同じ効果を持つ。</li>
+<li><code>N == 1</code> で、<code>f</code> が型 <code>T</code> のメンバオブジェクトへのポインタであり、<code><a href="https://cpprefjp.github.io/reference/type_traits/remove_cvref.html">remove_cvref_t</a>&lt;decltype(t1)&gt;</code>が<code><a href="https://cpprefjp.github.io/reference/functional/reference_wrapper.html">reference_wrapper&lt;T&gt;</a></code>（<code>t1</code>が<code><a href="https://cpprefjp.github.io/reference/functional/reference_wrapper.html">reference_wrapper</a></code>の特殊化）であるとき、 <code>t1.get().*f</code> と同じ効果を持つ。</li>
+<li><code>N == 1</code> で、<code>f</code> が型 <code>T</code> のメンバオブジェクトへのポインタであり、<code>t1</code> が上記の条件に当てはまらない場合（例えば、t1が<code>T</code>のポインタ）、 <code>(*t1).*f</code> と同じ効果を持つ。</li>
+<li>上記の条件のどれにも当てはまらない場合、 <code>f(t1, t2, ..., tN)</code> と同じ効果を持つ。</li>
+</ul>
+</li>
+<li><em>INVOKE</em><code>&lt;R&gt;(f, t1, t2, ..., tN)</code> を次のように定義する。<ul>
+<li><code>R</code>が<code>void</code>かそのcv修飾の場合は、<code>static_cast&lt;void&gt;(</code><em>INVOKE</em><code>(f, t1, t2, ..., tN))</code>。</li>
+<li>それ以外の場合は、<em>INVOKE</em><code>(f, t1, t2, ..., tN)</code> の実行結果の戻り値が型 <code>R</code> に暗黙的に変換されること。</li>
+</ul>
+</li>
+<li>すべての <em>call-wrapper</em> は、<em>Cpp17MoveConstructible</em> かつ <em>Cpp17Destructible</em> でなければならない。</li>
+</ol>
 <h2>まとめ</h2>
 <p><a href="https://twitter.com/Cryolite/status/216814363221303296" target="_blank">第1引数がメンバ関数へのポインタの場合でも非静的メンバデータへのポインタの場合でも，第2引数がクラスオブジェクトへの参照の場合でもポインタの場合でもポインタっぽいものの場合でも，なんか知らんけどそれっぽく上手くいく</a> ように取り計らった操作のことである。</p>
 <h2>関連項目</h2>
 <ul>
-<li><a href="https://cpprefjp.github.io/reference/functional/invoke.html">invoke</a></li>
-<li><a href="https://cpprefjp.github.io/reference/functional/function.html">function</a></li>
-<li><a href="https://cpprefjp.github.io/reference/functional/reference_wrapper.html">reference_wrapper</a></li>
-<li><a href="https://cpprefjp.github.io/reference/functional/bind.html">bind</a></li>
-<li><a href="https://cpprefjp.github.io/reference/functional/mem_fn.html">mem_fn</a></li>
-<li><a href="https://cpprefjp.github.io/reference/functional/not_fn.html">not_fn</a></li>
-<li><a href="https://cpprefjp.github.io/reference/thread/thread.html">thread</a></li>
-<li><a href="https://cpprefjp.github.io/reference/future/async.html">async</a></li>
-<li><a href="https://cpprefjp.github.io/reference/future/packaged_task.html">packaged_task</a></li>
-<li><a href="https://cpprefjp.github.io/reference/mutex/call_once.html">call_once</a></li>
+<li><code><a href="https://cpprefjp.github.io/reference/functional/function.html">function</a></code></li>
+<li><code><a href="https://cpprefjp.github.io/reference/functional/reference_wrapper.html">reference_wrapper</a></code></li>
+<li><code><a href="https://cpprefjp.github.io/reference/functional/bind.html">bind</a></code></li>
+<li><code><a href="https://cpprefjp.github.io/reference/functional/mem_fn.html">mem_fn</a></code></li>
+<li><code><a href="https://cpprefjp.github.io/reference/functional/not_fn.html">not_fn</a></code></li>
+<li><code><a href="https://cpprefjp.github.io/reference/thread/thread.html">thread</a></code></li>
+<li><code><a href="https://cpprefjp.github.io/reference/future/async.html">async</a></code></li>
+<li><code><a href="https://cpprefjp.github.io/reference/future/packaged_task.html">packaged_task</a></code></li>
+<li><code><a href="https://cpprefjp.github.io/reference/mutex/call_once.html">call_once</a></code></li>
+</ul>
+<h2>参照</h2>
+<ul>
+<li><a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0777r1.pdf" target="_blank">P0777R1 Treating Unnecessary <code>decay</code></a><ul>
+<li>C++20から<code>decay_t</code>を<code>remove_cvref_t</code>へ変更。</li>
+</ul>
+</li>
 </ul></div>
 
       </div>
