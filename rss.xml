@@ -2,9 +2,1006 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2023-01-16T09:28:34.808657</updated>
-  <id>612b8e07-29e8-451a-8d9a-0c9bd7c7e210</id>
+  <updated>2023-01-16T10:07:10.322611</updated>
+  <id>321c54aa-179d-46cf-8daf-c68c0cf0b096</id>
 
+  
+    <entry>
+      <title>default_delete -- unique_ptr: P2273R3 constexpr化(#1071)</title>
+      <link href="https://cpprefjp.github.io/reference/memory/default_delete.html"/>
+      <id>4c86ef0198c0d52a49f7716a658d20ab273c4d41:reference/memory/default_delete.md</id>
+      <updated>2023-01-16T19:01:51+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/default_delete.md b/reference/memory/default_delete.md
+index b1a0e5c16..9bf2d54ad 100644
+--- a/reference/memory/default_delete.md
++++ b/reference/memory/default_delete.md
+@@ -26,9 +26,10 @@ namespace std {
+ 
+ | 名前 | 説明 | 対応バージョン |
+ |------|------|----------------|
+-| `constexpr default_delete() noexcept=default;`&amp;lt;br/&amp;gt;`template &amp;lt;class U&amp;gt; default_delete()(default_delete&amp;lt;U&amp;gt; const&amp;amp; other) noexcept;` | コンストラクタ。 変換可能な型からのコピーも可能。 | C++11 |
++| `constexpr default_delete() noexcept = default;` | コンストラクタ。 | C++11 |
++| `template&amp;lt;class U&amp;gt; default_delete()(default_delete&amp;lt;U&amp;gt; const&amp;amp; other) noexcept;` | 変換可能な型からのコピーコンストラクタ。 | C++11&amp;lt;br/&amp;gt;C++23からconstexpr指定 |
+ | `~default_delete() = default;` | デストラクタ | C++11 |
+-| `void operator()(T* ptr) const;` | 関数呼び出し演算子。渡されたポインタ`ptr`を `delete ptr;`で削除する | C++11 |
++| `void operator()(T* ptr) const;` | 関数呼び出し演算子。渡されたポインタ`ptr`を `delete ptr;`で削除する | C++11&amp;lt;br/&amp;gt;C++23からconstexpr指定 |
+ 
+ 
+ ## 配列版のメンバ関数
+@@ -36,10 +37,10 @@ namespace std {
+ | 名前 | 説明 | 対応バージョン |
+ |------|------|----------------|
+ | `constexpr default_delete() noexcept=default;` | デフォルトコンストラクタ。 | C++11|
+-| `template &amp;lt;class U&amp;gt; default_delete()(const default_delete&amp;lt;U[]&amp;gt;&amp;amp;) noexcept;` | 変換可能な型からのコピーコンストラクタ。 | C++17 |
++| `template &amp;lt;class U&amp;gt; default_delete()(const default_delete&amp;lt;U[]&amp;gt;&amp;amp;) noexcept;` | 変換可能な型からのコピーコンストラクタ。 | C++17&amp;lt;br/&amp;gt;C++23からconstexpr指定 |
+ | `~default_delete() = default;` | デストラクタ | C++11 |
+ | `void operator()(T* ptr) const;`&amp;lt;br/&amp;gt;`template &amp;lt;class U&amp;gt;`&amp;lt;br/&amp;gt;`void operator()(U*) const = delete;` | 関数呼び出し演算子。渡されたポインタ`ptr`を `delete[] ptr;`で削除する | C++11&amp;lt;br/&amp;gt;C++14まで |
+-| `template &amp;lt;class U&amp;gt; void operator()(U* ptr) const;`| 関数呼び出し演算子。渡されたポインタ`ptr`を `delete[] ptr;`で削除する。変換可能な型の配列へのポインタも削除可能。 | C++17 |
++| `template &amp;lt;class U&amp;gt; void operator()(U* ptr) const;`| 関数呼び出し演算子。渡されたポインタ`ptr`を `delete[] ptr;`で削除する。変換可能な型の配列へのポインタも削除可能。 | C++17&amp;lt;br/&amp;gt;C++23からconstexpr指定 |
+ 
+ 
+ ## 例
+@@ -83,4 +84,4 @@ int main()
+ 
+ 
+ ## 参照
+-
++- [P2273R3 Making `std::unique_ptr` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2273r3.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>make_unique -- unique_ptr: P2273R3 constexpr化(#1071)</title>
+      <link href="https://cpprefjp.github.io/reference/memory/make_unique.html"/>
+      <id>4c86ef0198c0d52a49f7716a658d20ab273c4d41:reference/memory/make_unique.md</id>
+      <updated>2023-01-16T19:01:51+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/make_unique.md b/reference/memory/make_unique.md
+index 1edcdd71d..b15e45c44 100644
+--- a/reference/memory/make_unique.md
++++ b/reference/memory/make_unique.md
+@@ -7,10 +7,14 @@
+ ```cpp
+ namespace std {
+   template &amp;lt;class T, class... Args&amp;gt;
+-  unique_ptr&amp;lt;T&amp;gt; make_unique(Args&amp;amp;&amp;amp;... args);   // (1)
++  unique_ptr&amp;lt;T&amp;gt; make_unique(Args&amp;amp;&amp;amp;... args);           // (1) C++14
++  template &amp;lt;class T, class... Args&amp;gt;
++  constexpr unique_ptr&amp;lt;T&amp;gt; make_unique(Args&amp;amp;&amp;amp;... args); // (1) C++23
+ 
+   template &amp;lt;class T&amp;gt;
+-  unique_ptr&amp;lt;T&amp;gt; make_unique(size_t n);         // (2)
++  unique_ptr&amp;lt;T&amp;gt; make_unique(size_t n);           // (2) C++14
++  template &amp;lt;class T&amp;gt;
++  constexpr unique_ptr&amp;lt;T&amp;gt; make_unique(size_t n); // (2) C++23
+ 
+   template &amp;lt;class T, class... Args&amp;gt;
+   unspecified make_unique(Args&amp;amp;&amp;amp;...) = delete; // (3)
+@@ -89,6 +93,8 @@ int main()
+ - [N3656 make_unique (Revision 1)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3656.htm)
+ - [Why is `make_unique&amp;lt;T[N]&amp;gt;` disallowed? - stackoverflow](https://stackoverflow.com/questions/16596950/why-is-make-uniquetn-disallowed)
+     - (3)のオーバーロードの意味について
++- [P2273R3 Making `std::unique_ptr` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2273r3.pdf)
++
+ 
+ ## 関連項目
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>make_unique_for_overwrite -- unique_ptr: P2273R3 constexpr化(#1071)</title>
+      <link href="https://cpprefjp.github.io/reference/memory/make_unique_for_overwrite.html"/>
+      <id>4c86ef0198c0d52a49f7716a658d20ab273c4d41:reference/memory/make_unique_for_overwrite.md</id>
+      <updated>2023-01-16T19:01:51+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/make_unique_for_overwrite.md b/reference/memory/make_unique_for_overwrite.md
+index 37ce5f94e..e22c00e00 100644
+--- a/reference/memory/make_unique_for_overwrite.md
++++ b/reference/memory/make_unique_for_overwrite.md
+@@ -7,10 +7,14 @@
+ ```cpp
+ namespace std {
+   template&amp;lt;class T&amp;gt;
+-  unique_ptr&amp;lt;T&amp;gt; make_unique_for_overwrite();                 // (1)
++  unique_ptr&amp;lt;T&amp;gt; make_unique_for_overwrite();                   // (1) C++20
++  template&amp;lt;class T&amp;gt;
++  constexpr unique_ptr&amp;lt;T&amp;gt; make_unique_for_overwrite();         // (1) C++23
+ 
+   template&amp;lt;class T&amp;gt;
+-  unique_ptr&amp;lt;T&amp;gt; make_unique_for_overwrite(size_t n);         // (2)
++  unique_ptr&amp;lt;T&amp;gt; make_unique_for_overwrite(size_t n);           // (2) C++20
++  template&amp;lt;class T&amp;gt;
++  constexpr unique_ptr&amp;lt;T&amp;gt; make_unique_for_overwrite(size_t n); // (2) C++23
+ 
+   template&amp;lt;class T, class... Args&amp;gt;
+   unspecified make_unique_for_overwrite(Args&amp;amp;&amp;amp;...) = delete; // (3)
+@@ -82,3 +86,4 @@ int main()
+ - [P1973R1 Rename &amp;#34;_default_init&amp;#34; Functions](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1973r1.pdf)
+ - [Why is `make_unique&amp;lt;T[N]&amp;gt;` disallowed? - stackoverflow](https://stackoverflow.com/questions/16596950/why-is-make-uniquetn-disallowed)
+     - (3)のオーバーロードの意味について
++- [P2273R3 Making `std::unique_ptr` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2273r3.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>get -- unique_ptr: P2273R3 constexpr化(#1071)</title>
+      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr/get.html"/>
+      <id>4c86ef0198c0d52a49f7716a658d20ab273c4d41:reference/memory/unique_ptr/get.md</id>
+      <updated>2023-01-16T19:01:51+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr/get.md b/reference/memory/unique_ptr/get.md
+index 2830bc81a..2876ad801 100644
+--- a/reference/memory/unique_ptr/get.md
++++ b/reference/memory/unique_ptr/get.md
+@@ -6,7 +6,8 @@
+ * cpp11[meta cpp]
+ 
+ ```cpp
+-pointer get() const noexcept;
++pointer get() const noexcept;           // (1) C++11
++constexpr pointer get() const noexcept; // (1) C++23
+ ```
+ 
+ ## 概要
+@@ -51,3 +52,7 @@ int main()
+ - [Clang](/implementation.md#clang): 3.0
+ - [ICC](/implementation.md#icc): ?
+ - [Visual C++](/implementation.md#visual_cpp): 2010, 2012, 2013
++
++
++## 参照
++- [P2273R3 Making `std::unique_ptr` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2273r3.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>get_deleter -- unique_ptr: P2273R3 constexpr化(#1071)</title>
+      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr/get_deleter.html"/>
+      <id>4c86ef0198c0d52a49f7716a658d20ab273c4d41:reference/memory/unique_ptr/get_deleter.md</id>
+      <updated>2023-01-16T19:01:51+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr/get_deleter.md b/reference/memory/unique_ptr/get_deleter.md
+index 4f56d8ac8..73dc0eb67 100644
+--- a/reference/memory/unique_ptr/get_deleter.md
++++ b/reference/memory/unique_ptr/get_deleter.md
+@@ -6,8 +6,11 @@
+ * cpp11[meta cpp]
+ 
+ ```cpp
+-deleter_type&amp;amp; get_deleter() noexcept;
+-const deleter_type&amp;amp; get_deleter() const noexcept;
++deleter_type&amp;amp; get_deleter() noexcept;           // (1) C++11
++constexpr deleter_type&amp;amp; get_deleter() noexcept; // (1) C++23
++
++const deleter_type&amp;amp; get_deleter() const noexcept;           // (2) C++11
++constexpr const deleter_type&amp;amp; get_deleter() const noexcept; // (2) C++23
+ ```
+ 
+ ## 概要
+@@ -47,3 +50,7 @@ int main()
+ - [Clang](/implementation.md#clang): 3.0
+ - [ICC](/implementation.md#icc): ?
+ - [Visual C++](/implementation.md#visual_cpp): 2010, 2012, 2013
++
++
++## 参照
++- [P2273R3 Making `std::unique_ptr` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2273r3.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator-&gt; -- unique_ptr: P2273R3 constexpr化(#1071)</title>
+      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr/op_arrow.html"/>
+      <id>4c86ef0198c0d52a49f7716a658d20ab273c4d41:reference/memory/unique_ptr/op_arrow.md</id>
+      <updated>2023-01-16T19:01:51+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr/op_arrow.md b/reference/memory/unique_ptr/op_arrow.md
+index 12a348a80..dcc984343 100644
+--- a/reference/memory/unique_ptr/op_arrow.md
++++ b/reference/memory/unique_ptr/op_arrow.md
+@@ -6,7 +6,8 @@
+ * cpp11[meta cpp]
+ 
+ ```cpp
+-pointer operator-&amp;gt;() const noexcept;
++pointer operator-&amp;gt;() const noexcept;           // (1) C++11
++constexpr pointer operator-&amp;gt;() const noexcept; // (1) C++23
+ ```
+ 
+ ## 概要
+@@ -53,3 +54,7 @@ hello
+ - [Clang](/implementation.md#clang): 3.0
+ - [ICC](/implementation.md#icc): ?
+ - [Visual C++](/implementation.md#visual_cpp): 2010, 2012, 2013
++
++
++## 参照
++- [P2273R3 Making `std::unique_ptr` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2273r3.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator= -- unique_ptr: P2273R3 constexpr化(#1071)</title>
+      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr/op_assign.html"/>
+      <id>4c86ef0198c0d52a49f7716a658d20ab273c4d41:reference/memory/unique_ptr/op_assign.md</id>
+      <updated>2023-01-16T19:01:51+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr/op_assign.md b/reference/memory/unique_ptr/op_assign.md
+index bbd33568c..78fd8e446 100644
+--- a/reference/memory/unique_ptr/op_assign.md
++++ b/reference/memory/unique_ptr/op_assign.md
+@@ -6,14 +6,19 @@
+ * cpp11[meta cpp]
+ 
+ ```cpp
+-unique_ptr&amp;amp; operator=(unique_ptr&amp;amp;&amp;amp; u) noexcept;       // (1) 単一オブジェクト、配列
++unique_ptr&amp;amp; operator=(unique_ptr&amp;amp;&amp;amp; u) noexcept;           // (1) C++11
++constexpr unique_ptr&amp;amp; operator=(unique_ptr&amp;amp;&amp;amp; u) noexcept; // (1) C++23
+ 
+ template &amp;lt;class U, class E&amp;gt;
+-unique_ptr&amp;amp; operator=(unique_ptr&amp;lt;U, E&amp;gt;&amp;amp;&amp;amp; u) noexcept; // (2) 単一オブジェクト、配列（C++17）
++unique_ptr&amp;amp; operator=(unique_ptr&amp;lt;U, E&amp;gt;&amp;amp;&amp;amp; u) noexcept;           // (2) C++11 単一オブジェクト版
++                                                                // (2) C++17 配列版
++template &amp;lt;class U, class E&amp;gt;
++constexpr unique_ptr&amp;amp; operator=(unique_ptr&amp;lt;U, E&amp;gt;&amp;amp;&amp;amp; u) noexcept; // (2) C++23
+ 
+-unique_ptr&amp;amp; operator=(nullptr_t) noexcept;            // (3) 単一オブジェクト、配列
++unique_ptr&amp;amp; operator=(nullptr_t) noexcept;            // (3) C++11
++constexpr unique_ptr&amp;amp; operator=(nullptr_t) noexcept;  // (3) C++23
+ 
+-unique_ptr&amp;amp; operator=(const unique_ptr&amp;amp;) = delete;    // (4) 単一オブジェクト、配列
++unique_ptr&amp;amp; operator=(const unique_ptr&amp;amp;) = delete;    // (4) C++11
+ ```
+ * nullptr_t[link /reference/cstddef/nullptr_t.md]
+ 
+@@ -112,3 +117,4 @@ int main()
+ - [LWG 2246. `unique_ptr` assignment effects w.r.t. deleter](http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#2246)
+ - [LWG 2228: Missing SFINAE rule in unique_ptr templated assignment](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4366)
+     - (2)のSFINAEルール不足の欠陥修正の提案文書
++- [P2273R3 Making `std::unique_ptr` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2273r3.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator[] -- unique_ptr: P2273R3 constexpr化(#1071)</title>
+      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr/op_at.html"/>
+      <id>4c86ef0198c0d52a49f7716a658d20ab273c4d41:reference/memory/unique_ptr/op_at.md</id>
+      <updated>2023-01-16T19:01:51+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr/op_at.md b/reference/memory/unique_ptr/op_at.md
+index 61d3f0fea..319849610 100644
+--- a/reference/memory/unique_ptr/op_at.md
++++ b/reference/memory/unique_ptr/op_at.md
+@@ -6,7 +6,8 @@
+ * cpp11[meta cpp]
+ 
+ ```cpp
+-T&amp;amp; operator[](std::size_t i) const;
++T&amp;amp; operator[](std::size_t i) const;           // (1) C++11
++constexpr T&amp;amp; operator[](std::size_t i) const; // (1) C++23
+ ```
+ 
+ ## 概要
+@@ -53,3 +54,7 @@ int main()
+ - [Clang](/implementation.md#clang): 3.0
+ - [ICC](/implementation.md#icc): ?
+ - [Visual C++](/implementation.md#visual_cpp): 2010, 2012, 2013
++
++
++## 参照
++- [P2273R3 Making `std::unique_ptr` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2273r3.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator bool -- unique_ptr: P2273R3 constexpr化(#1071)</title>
+      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr/op_bool.html"/>
+      <id>4c86ef0198c0d52a49f7716a658d20ab273c4d41:reference/memory/unique_ptr/op_bool.md</id>
+      <updated>2023-01-16T19:01:51+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr/op_bool.md b/reference/memory/unique_ptr/op_bool.md
+index 145b8743f..8dd564e71 100644
+--- a/reference/memory/unique_ptr/op_bool.md
++++ b/reference/memory/unique_ptr/op_bool.md
+@@ -6,7 +6,8 @@
+ * cpp11[meta cpp]
+ 
+ ```cpp
+-explicit operator bool() const noexcept;
++explicit operator bool() const noexcept;           // (1) C++11
++constexpr explicit operator bool() const noexcept; // (1) C++23
+ ```
+ 
+ ## 概要
+@@ -58,4 +59,4 @@ p has resource
+ 
+ ## 参照
+ - [N2435 Explicit bool for Smart Pointers](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2435.htm)
+-
++- [P2273R3 Making `std::unique_ptr` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2273r3.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator&lt;=&gt; -- unique_ptr: P2273R3 constexpr化(#1071)</title>
+      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr/op_compare_3way.html"/>
+      <id>4c86ef0198c0d52a49f7716a658d20ab273c4d41:reference/memory/unique_ptr/op_compare_3way.md</id>
+      <updated>2023-01-16T19:01:51+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr/op_compare_3way.md b/reference/memory/unique_ptr/op_compare_3way.md
+index 927572fd1..42125823c 100644
+--- a/reference/memory/unique_ptr/op_compare_3way.md
++++ b/reference/memory/unique_ptr/op_compare_3way.md
+@@ -16,13 +16,14 @@ namespace std {
+   operator&amp;lt;=&amp;gt;(const unique_ptr&amp;lt;T1, D1&amp;gt;&amp;amp; x, const unique_ptr&amp;lt;T2, D2&amp;gt;&amp;amp; y); // (1) C++20
+ 
+   template &amp;lt;class T, class D&amp;gt;
+-    requires three_way_comparable_with&amp;lt;
+-               typename unique_ptr&amp;lt;T, D&amp;gt;::pointer,
+-               nullptr_t&amp;gt;
+-  compare_three_way_result_t&amp;lt;
+-    typename unique_ptr&amp;lt;T, D&amp;gt;::pointer,
+-    nullptr_t&amp;gt;
++    requires three_way_comparable_with&amp;lt;typename unique_ptr&amp;lt;T, D&amp;gt;::pointer&amp;gt;
++  compare_three_way_result_t&amp;lt;typename unique_ptr&amp;lt;T, D&amp;gt;::pointer&amp;gt;
+   operator&amp;lt;=&amp;gt;(const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x, nullptr_t);                     // (2) C++20
++
++  template &amp;lt;class T, class D&amp;gt;
++    requires three_way_comparable_with&amp;lt;typename unique_ptr&amp;lt;T, D&amp;gt;::pointer&amp;gt;
++  constexpr compare_three_way_result_t&amp;lt;typename unique_ptr&amp;lt;T, D&amp;gt;::pointer&amp;gt;
++  operator&amp;lt;=&amp;gt;(const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x, nullptr_t);                     // (2) C++23
+ }
+ ```
+ * nullptr_t[link /reference/cstddef/nullptr_t.md]
+@@ -34,7 +35,7 @@ namespace std {
+ ## テンプレートパラメータ制約
+ 
+ - (1) : 型`unique_ptr&amp;lt;T1, D1&amp;gt;::pointer`と型`unique_ptr&amp;lt;T2, D2&amp;gt;::pointer`が三方比較可能であること
+-- (2) : 型`unique_ptr&amp;lt;T, D&amp;gt;::pointer`と型[`nullptr_t`](/reference/cstddef/nullptr_t.md)が三方比較可能であること
++- (2) : 型`unique_ptr&amp;lt;T, D&amp;gt;::pointer`同士が三方比較可能であること
+ 
+ 
+ ## 戻り値
+@@ -47,7 +48,7 @@ namespace std {
+ 
+ - (2) :
+     ```cpp
+-    return compare_three_way()(x.get(), nullptr);
++    return compare_three_way()(x.get(), static_cast&amp;lt;typename unique_ptr&amp;lt;T, D&amp;gt;::pointer&amp;gt;(nullptr));
+     ```
+     * compare_three_way[link /reference/compare/compare_three_way.md]
+     * get()[link get.md]
+@@ -96,3 +97,5 @@ p2 is nullptr
+ ## 参照
+ - [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
+     - C++20での三方比較演算子の追加と、関連する演算子の自動導出
++- [LWG3426 `operator&amp;lt;=&amp;gt;(const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp;, nullptr_t)` can&amp;#39;t get no satisfaction](https://cplusplus.github.io/LWG/issue3426)
++- [P2273R3 Making `std::unique_ptr` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2273r3.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- unique_ptr: P2273R3 constexpr化(#1071)</title>
+      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr/op_constructor.html"/>
+      <id>4c86ef0198c0d52a49f7716a658d20ab273c4d41:reference/memory/unique_ptr/op_constructor.md</id>
+      <updated>2023-01-16T19:01:51+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr/op_constructor.md b/reference/memory/unique_ptr/op_constructor.md
+index 8e7f6b4da..6a6820ebf 100644
+--- a/reference/memory/unique_ptr/op_constructor.md
++++ b/reference/memory/unique_ptr/op_constructor.md
+@@ -8,24 +8,36 @@
+ ```cpp
+ constexpr unique_ptr() noexcept;             // (1) 単一オブジェクト、配列
+ 
+-explicit unique_ptr(pointer p) noexcept;     // (2) 単一オブジェクト、配列（C++14まで）
++explicit unique_ptr(pointer p) noexcept;           // (2) 単一オブジェクト、配列（C++14まで）
++constexpr explicit unique_ptr(pointer p) noexcept; // (2) 単一オブジェクト C++23
+ template&amp;lt;class U&amp;gt;
+-explicit unique_ptr(U p) noexcept;           // (2) 配列 C++17
++explicit unique_ptr(U p) noexcept;                 // (2) 配列 C++17
++template&amp;lt;class U&amp;gt;
++constexpr explicit unique_ptr(U p) noexcept;       // (2) 配列 C++23
+ 
+-unique_ptr(pointer p, const D&amp;amp; d1) noexcept; // (3) 単一オブジェクト、配列（C++14まで）
++unique_ptr(pointer p, const D&amp;amp; d1) noexcept;           // (3) 単一オブジェクト、配列（C++14まで）
++constexpr unique_ptr(pointer p, const D&amp;amp; d1) noexcept; // (3) 単一オブジェクト C++23
++template&amp;lt;class U&amp;gt;
++unique_ptr(U p, const D&amp;amp; d1) noexcept;                 // (3) 配列 C++17
+ template&amp;lt;class U&amp;gt;
+-unique_ptr(U p, const D&amp;amp; d1) noexcept;       // (3) 配列 C++17
++constexpr unique_ptr(U p, const D&amp;amp; d1) noexcept;       // (3) 配列 C++23
+ 
+-unique_ptr(pointer p, D&amp;amp;&amp;amp; d2) noexcept;      // (4) 単一オブジェクト、配列（C++14まで）
++unique_ptr(pointer p, D&amp;amp;&amp;amp; d2) noexcept;           // (4) 単一オブジェクト、配列（C++14まで）
++constexpr unique_ptr(pointer p, D&amp;amp;&amp;amp; d2) noexcept; // (4) 単一オブジェクト C++23
+ template&amp;lt;class U&amp;gt;
+-unique_ptr(U p, D&amp;amp;&amp;amp; d2) noexcept;            // (4) 配列 C++17
++unique_ptr(U p, D&amp;amp;&amp;amp; d2) noexcept;                 // (4) 配列 C++17
++template&amp;lt;class U&amp;gt;
++constexpr unique_ptr(U p, D&amp;amp;&amp;amp; d2) noexcept;       // (4) 配列 C++23
+ 
+-unique_ptr(unique_ptr&amp;amp;&amp;amp; u) noexcept;         // (5) 単一オブジェクト、配列
++unique_ptr(unique_ptr&amp;amp;&amp;amp; u) noexcept;           // (5) 単一オブジェクト、配列
++constexpr unique_ptr(unique_ptr&amp;amp;&amp;amp; u) noexcept; // (5) 単一オブジェクト、配列 C++23
+ 
+ constexpr unique_ptr(nullptr_t) noexcept;    // (6) 単一オブジェクト、配列
+ 
+ template &amp;lt;class U, class E&amp;gt;
+ unique_ptr(unique_ptr&amp;lt;U, E&amp;gt;&amp;amp;&amp;amp; u) noexcept;   // (7) 単一オブジェクト、配列（C++17）
++template &amp;lt;class U, class E&amp;gt;
++constexpr unique_ptr(unique_ptr&amp;lt;U, E&amp;gt;&amp;amp;&amp;amp; u) noexcept; // (7) 単一オブジェクト、配列 C++23
+ 
+ template &amp;lt;class U&amp;gt;
+ unique_ptr(auto_ptr&amp;lt;U&amp;gt;&amp;amp;&amp;amp; u) noexcept;        // (8) 単一オブジェクト
+@@ -163,3 +175,4 @@ int main()
+ - [LWG Issue 2520 : N4089 broke initializing `unique_ptr&amp;lt;T[]&amp;gt;` from a nullptr](https://wg21.cmeerw.net/lwg/issue2520)
+ - [LWG Issue 2801. Default-constructibility of `unique_ptr`](https://wg21.cmeerw.net/lwg/issue2948)
+ - [LWG Issue 2905. `is_constructible_v&amp;lt;unique_ptr&amp;lt;P, D&amp;gt;, P, D const &amp;amp;&amp;gt;` should be false when D is not copy constructible](https://wg21.cmeerw.net/lwg/issue2905)
++- [P2273R3 Making `std::unique_ptr` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2273r3.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator* -- unique_ptr: P2273R3 constexpr化(#1071)</title>
+      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr/op_deref.html"/>
+      <id>4c86ef0198c0d52a49f7716a658d20ab273c4d41:reference/memory/unique_ptr/op_deref.md</id>
+      <updated>2023-01-16T19:01:51+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr/op_deref.md b/reference/memory/unique_ptr/op_deref.md
+index 938ea89a4..1bfd37e7c 100644
+--- a/reference/memory/unique_ptr/op_deref.md
++++ b/reference/memory/unique_ptr/op_deref.md
+@@ -6,9 +6,11 @@
+ * cpp11[meta cpp]
+ 
+ ```cpp
+-typename add_lvalue_reference&amp;lt;T&amp;gt;::type operator*() const;
++typename add_lvalue_reference&amp;lt;T&amp;gt;::type operator*() const; // (1) C++11
++constexpr add_lvalue_reference_t&amp;lt;T&amp;gt; operator*() const;    // (1) C++23
+ ```
+ * add_lvalue_reference[link /reference/type_traits/add_lvalue_reference.md]
++* add_lvalue_reference_t[link /reference/type_traits/add_lvalue_reference.md]
+ 
+ ## 概要
+ ポインタを間接参照する。
+@@ -54,3 +56,7 @@ int main()
+ - [Clang](/implementation.md#clang): 3.0
+ - [ICC](/implementation.md#icc): ?
+ - [Visual C++](/implementation.md#visual_cpp): 2010, 2012, 2013
++
++
++## 参照
++- [P2273R3 Making `std::unique_ptr` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2273r3.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>デストラクタ -- unique_ptr: P2273R3 constexpr化(#1071)</title>
+      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr/op_destructor.html"/>
+      <id>4c86ef0198c0d52a49f7716a658d20ab273c4d41:reference/memory/unique_ptr/op_destructor.md</id>
+      <updated>2023-01-16T19:01:51+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr/op_destructor.md b/reference/memory/unique_ptr/op_destructor.md
+index 123e7905b..9626191ac 100644
+--- a/reference/memory/unique_ptr/op_destructor.md
++++ b/reference/memory/unique_ptr/op_destructor.md
+@@ -6,7 +6,8 @@
+ * cpp11[meta cpp]
+ 
+ ```cpp
+-~unique_ptr();
++~unique_ptr();           // C++11
++constexpr ~unique_ptr(); // C++23
+ ```
+ 
+ ## unique_ptrオブジェクトの破棄
+@@ -26,3 +27,7 @@
+ - [Clang](/implementation.md#clang): 3.0
+ - [ICC](/implementation.md#icc): ?
+ - [Visual C++](/implementation.md#visual_cpp): 2010, 2012, 2013
++
++
++## 参照
++- [P2273R3 Making `std::unique_ptr` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2273r3.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator== -- unique_ptr: P2273R3 constexpr化(#1071)</title>
+      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr/op_equal.html"/>
+      <id>4c86ef0198c0d52a49f7716a658d20ab273c4d41:reference/memory/unique_ptr/op_equal.md</id>
+      <updated>2023-01-16T19:01:51+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr/op_equal.md b/reference/memory/unique_ptr/op_equal.md
+index d2f8a3b2b..b9ede623b 100644
+--- a/reference/memory/unique_ptr/op_equal.md
++++ b/reference/memory/unique_ptr/op_equal.md
+@@ -8,13 +8,19 @@
+ namespace std {
+   template &amp;lt;class T1, class D1, class T2, class D2&amp;gt;
+   bool operator==(const unique_ptr&amp;lt;T1, D1&amp;gt;&amp;amp; a, const unique_ptr&amp;lt;T2, D2&amp;gt;&amp;amp; b); // (1) C++11
++  template &amp;lt;class T1, class D1, class T2, class D2&amp;gt;
++  constexpr bool operator==(const unique_ptr&amp;lt;T1, D1&amp;gt;&amp;amp; a, const unique_ptr&amp;lt;T2, D2&amp;gt;&amp;amp; b); // (1) C++23
+ 
+   template &amp;lt;class T, class D&amp;gt;
+   bool operator==(const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x, nullptr_t) noexcept;            // (2) C++11
++  template &amp;lt;class T, class D&amp;gt;
++  constexpr bool operator==(const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x, nullptr_t) noexcept;  // (2) C++23
+ 
+   // (2)により以下のオーバーロードが使用可能 (C++20)
+   template &amp;lt;class T, class D&amp;gt;
+   bool operator==(nullptr_t, const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x) noexcept;            // (3) C++11
++  template &amp;lt;class T, class D&amp;gt;
++  constexpr bool operator==(nullptr_t, const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x) noexcept;  // (3) C++23
+ }
+ ```
+ * nullptr_t[link /reference/cstddef/nullptr_t.md]
+@@ -78,3 +84,4 @@ p2 is nullptr
+ ## 参照
+ - [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
+     - C++20での三方比較演算子の追加と、関連する演算子の自動導出
++- [P2273R3 Making `std::unique_ptr` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2273r3.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator&gt; -- unique_ptr: P2273R3 constexpr化(#1071)</title>
+      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr/op_greater.html"/>
+      <id>4c86ef0198c0d52a49f7716a658d20ab273c4d41:reference/memory/unique_ptr/op_greater.md</id>
+      <updated>2023-01-16T19:01:51+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr/op_greater.md b/reference/memory/unique_ptr/op_greater.md
+index 026f17887..151f3dbca 100644
+--- a/reference/memory/unique_ptr/op_greater.md
++++ b/reference/memory/unique_ptr/op_greater.md
+@@ -7,13 +7,17 @@
+ ```cpp
+ namespace std {
+   template &amp;lt;class T1, class D1, class T2, class D2&amp;gt;
+-  bool operator&amp;gt;(const unique_ptr&amp;lt;T1, D1&amp;gt;&amp;amp; a, const unique_ptr&amp;lt;T2, D2&amp;gt;&amp;amp; b); // (1)
++  bool operator&amp;gt;(const unique_ptr&amp;lt;T1, D1&amp;gt;&amp;amp; a, const unique_ptr&amp;lt;T2, D2&amp;gt;&amp;amp; b); // (1) C++11
+ 
+   template &amp;lt;class T, class D&amp;gt;
+-  bool operator&amp;gt;(const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x, nullptr_t);                     // (2)
++  bool operator&amp;gt;(const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x, nullptr_t);                     // (2) C++11
++  template &amp;lt;class T, class D&amp;gt;
++  constexpr bool operator&amp;gt;(const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x, nullptr_t);           // (2) C++23
+ 
+   template &amp;lt;class T, class D&amp;gt;
+-  bool operator&amp;gt;(nullptr_t, const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x);                     // (3)
++  bool operator&amp;gt;(nullptr_t, const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x);                     // (3) C++11
++  template &amp;lt;class T, class D&amp;gt;
++  constexpr bool operator&amp;gt;(nullptr_t, const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x);           // (3) C++23
+ }
+ ```
+ * nullptr_t[link /reference/cstddef/nullptr_t.md]
+@@ -70,3 +74,7 @@ false
+ - [ICC](/implementation.md#icc): ?
+ - [Visual C++](/implementation.md#visual_cpp): 2010, 2012, 2013
+ 	- 2012までは`nullptr`バージョンがない。
++
++
++## 参照
++- [P2273R3 Making `std::unique_ptr` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2273r3.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator&gt;= -- unique_ptr: P2273R3 constexpr化(#1071)</title>
+      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr/op_greater_equal.html"/>
+      <id>4c86ef0198c0d52a49f7716a658d20ab273c4d41:reference/memory/unique_ptr/op_greater_equal.md</id>
+      <updated>2023-01-16T19:01:51+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr/op_greater_equal.md b/reference/memory/unique_ptr/op_greater_equal.md
+index 0b3588b0c..267ced55d 100644
+--- a/reference/memory/unique_ptr/op_greater_equal.md
++++ b/reference/memory/unique_ptr/op_greater_equal.md
+@@ -7,13 +7,17 @@
+ ```cpp
+ namespace std {
+   template &amp;lt;class T1, class D1, class T2, class D2&amp;gt;
+-  bool operator&amp;gt;=(const unique_ptr&amp;lt;T1, D1&amp;gt;&amp;amp; a, const unique_ptr&amp;lt;T2, D2&amp;gt;&amp;amp; b); // (1)
++  bool operator&amp;gt;=(const unique_ptr&amp;lt;T1, D1&amp;gt;&amp;amp; a, const unique_ptr&amp;lt;T2, D2&amp;gt;&amp;amp; b); // (1) C++11
+ 
+   template &amp;lt;class T, class D&amp;gt;
+-  bool operator&amp;gt;=(const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x, nullptr_t);                     // (2)
++  bool operator&amp;gt;=(const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x, nullptr_t);                     // (2) C++11
++  template &amp;lt;class T, class D&amp;gt;
++  constexpr bool operator&amp;gt;=(const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x, nullptr_t);           // (2) C++23
+ 
+   template &amp;lt;class T, class D&amp;gt;
+-  bool operator&amp;gt;=(nullptr_t, const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x);                     // (3)
++  bool operator&amp;gt;=(nullptr_t, const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x);                     // (3) C++11
++  template &amp;lt;class T, class D&amp;gt;
++  constexpr bool operator&amp;gt;=(nullptr_t, const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x);           // (3) C++23
+ }
+ ```
+ * nullptr_t[link /reference/cstddef/nullptr_t.md]
+@@ -70,3 +74,7 @@ false
+ - [ICC](/implementation.md#icc): ?
+ - [Visual C++](/implementation.md#visual_cpp): 2010, 2012, 2013
+ 	- 2012までは`nullptr`バージョンがない。
++
++
++## 参照
++- [P2273R3 Making `std::unique_ptr` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2273r3.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator&lt; -- unique_ptr: P2273R3 constexpr化(#1071)</title>
+      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr/op_less.html"/>
+      <id>4c86ef0198c0d52a49f7716a658d20ab273c4d41:reference/memory/unique_ptr/op_less.md</id>
+      <updated>2023-01-16T19:01:51+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr/op_less.md b/reference/memory/unique_ptr/op_less.md
+index 76e2b3943..edf98f2b0 100644
+--- a/reference/memory/unique_ptr/op_less.md
++++ b/reference/memory/unique_ptr/op_less.md
+@@ -7,13 +7,17 @@
+ ```cpp
+ namespace std {
+   template &amp;lt;class T1, class D1, class T2, class D2&amp;gt;
+-  bool operator&amp;lt;(const unique_ptr&amp;lt;T1, D1&amp;gt;&amp;amp; a, const unique_ptr&amp;lt;T2, D2&amp;gt;&amp;amp; b); // (1)
++  bool operator&amp;lt;(const unique_ptr&amp;lt;T1, D1&amp;gt;&amp;amp; a, const unique_ptr&amp;lt;T2, D2&amp;gt;&amp;amp; b); // (1) C++11
+ 
+   template &amp;lt;class T, class D&amp;gt;
+-  bool operator&amp;lt;(const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x, nullptr_t);                     // (2)
++  bool operator&amp;lt;(const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x, nullptr_t);                     // (2) C++11
++  template &amp;lt;class T, class D&amp;gt;
++  constexpr bool operator&amp;lt;(const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x, nullptr_t);           // (2) C++23
+ 
+   template &amp;lt;class T, class D&amp;gt;
+-  bool operator&amp;lt;(nullptr_t, const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x);                     // (3)
++  bool operator&amp;lt;(nullptr_t, const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x);                     // (3) C++11
++  template &amp;lt;class T, class D&amp;gt;
++  constexpr bool operator&amp;lt;(nullptr_t, const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x);           // (3) C++23
+ }
+ ```
+ * nullptr_t[link /reference/cstddef/nullptr_t.md]
+@@ -72,3 +76,7 @@ true
+ - [ICC](/implementation.md#icc): ?
+ - [Visual C++](/implementation.md#visual_cpp): 2010, 2012, 2013
+ 	- 2012までは`nullptr`バージョンがない。
++
++
++## 参照
++- [P2273R3 Making `std::unique_ptr` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2273r3.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator&lt;= -- unique_ptr: P2273R3 constexpr化(#1071)</title>
+      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr/op_less_equal.html"/>
+      <id>4c86ef0198c0d52a49f7716a658d20ab273c4d41:reference/memory/unique_ptr/op_less_equal.md</id>
+      <updated>2023-01-16T19:01:51+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr/op_less_equal.md b/reference/memory/unique_ptr/op_less_equal.md
+index da0fe43b5..663e8a42d 100644
+--- a/reference/memory/unique_ptr/op_less_equal.md
++++ b/reference/memory/unique_ptr/op_less_equal.md
+@@ -7,13 +7,17 @@
+ ```cpp
+ namespace std {
+   template &amp;lt;class T1, class D1, class T2, class D2&amp;gt;
+-  bool operator&amp;lt;=(const unique_ptr&amp;lt;T1, D1&amp;gt;&amp;amp; a, const unique_ptr&amp;lt;T2, D2&amp;gt;&amp;amp; b); // (1)
++  bool operator&amp;lt;=(const unique_ptr&amp;lt;T1, D1&amp;gt;&amp;amp; a, const unique_ptr&amp;lt;T2, D2&amp;gt;&amp;amp; b); // (1) C++11
+ 
+   template &amp;lt;class T, class D&amp;gt;
+-  bool operator&amp;lt;=(const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x, nullptr_t);                     // (2)
++  bool operator&amp;lt;=(const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x, nullptr_t);                     // (2) C++11
++  template &amp;lt;class T, class D&amp;gt;
++  constexpr bool operator&amp;lt;=(const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x, nullptr_t);           // (2) C++23
+ 
+   template &amp;lt;class T, class D&amp;gt;
+-  bool operator&amp;lt;=(nullptr_t, const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x);                     // (3)
++  bool operator&amp;lt;=(nullptr_t, const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x);                     // (3) C++11
++  template &amp;lt;class T, class D&amp;gt;
++  constexpr bool operator&amp;lt;=(nullptr_t, const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x);           // (3) C++23
+ }
+ ```
+ * nullptr_t[link /reference/cstddef/nullptr_t.md]
+@@ -70,3 +74,7 @@ true
+ - [ICC](/implementation.md#icc): ?
+ - [Visual C++](/implementation.md#visual_cpp): 2010, 2012, 2013
+ 	- 2012までは`nullptr`バージョンがない。
++
++
++## 参照
++- [P2273R3 Making `std::unique_ptr` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2273r3.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator!= -- unique_ptr: P2273R3 constexpr化(#1071)</title>
+      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr/op_not_equal.html"/>
+      <id>4c86ef0198c0d52a49f7716a658d20ab273c4d41:reference/memory/unique_ptr/op_not_equal.md</id>
+      <updated>2023-01-16T19:01:51+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr/op_not_equal.md b/reference/memory/unique_ptr/op_not_equal.md
+index d200e0915..698faed96 100644
+--- a/reference/memory/unique_ptr/op_not_equal.md
++++ b/reference/memory/unique_ptr/op_not_equal.md
+@@ -9,12 +9,18 @@ namespace std {
+   // operator==により、以下の演算子が使用可能になる (C++20)
+   template &amp;lt;class T1, class D1, class T2, class D2&amp;gt;
+   bool operator!=(const unique_ptr&amp;lt;T1, D1&amp;gt;&amp;amp; a, const unique_ptr&amp;lt;T2, D2&amp;gt;&amp;amp; b); // (1) C++11
++  template &amp;lt;class T1, class D1, class T2, class D2&amp;gt;
++  constexpr bool operator!=(const unique_ptr&amp;lt;T1, D1&amp;gt;&amp;amp; a, const unique_ptr&amp;lt;T2, D2&amp;gt;&amp;amp; b); // (1) C++23
+ 
+   template &amp;lt;class T, class D&amp;gt;
+   bool operator!=(const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x, nullptr_t) noexcept;            // (2) C++11
++  template &amp;lt;class T, class D&amp;gt;
++  constexpr bool operator!=(const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x, nullptr_t) noexcept;  // (2) C++23
+ 
+   template &amp;lt;class T, class D&amp;gt;
+   bool operator!=(nullptr_t, const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x) noexcept;            // (3) C++11
++  template &amp;lt;class T, class D&amp;gt;
++  constexpr bool operator!=(nullptr_t, const unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; x) noexcept;  // (3) C++23
+ }
+ ```
+ * nullptr_t[link /reference/cstddef/nullptr_t.md]
+@@ -74,3 +80,4 @@ p3 is not nullptr
+ ## 参照
+ - [P1614R2 The Mothership has Landed](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1614r2.html)
+     - C++20での三方比較演算子の追加と、関連する演算子の自動導出
++- [P2273R3 Making `std::unique_ptr` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2273r3.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>release -- unique_ptr: P2273R3 constexpr化(#1071)</title>
+      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr/release.html"/>
+      <id>4c86ef0198c0d52a49f7716a658d20ab273c4d41:reference/memory/unique_ptr/release.md</id>
+      <updated>2023-01-16T19:01:51+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr/release.md b/reference/memory/unique_ptr/release.md
+index 36ab382f4..074cc13c0 100644
+--- a/reference/memory/unique_ptr/release.md
++++ b/reference/memory/unique_ptr/release.md
+@@ -6,7 +6,8 @@
+ * cpp11[meta cpp]
+ 
+ ```cpp
+-pointer release() noexcept;
++pointer release() noexcept;           // (1) C++11
++constexpr pointer release() noexcept; // (1) C++23
+ ```
+ 
+ ## 概要
+@@ -60,3 +61,7 @@ int main()
+ - [Clang](/implementation.md#clang): 3.0
+ - [ICC](/implementation.md#icc): ?
+ - [Visual C++](/implementation.md#visual_cpp): 2010, 2012, 2013
++
++
++## 参照
++- [P2273R3 Making `std::unique_ptr` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2273r3.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>reset -- unique_ptr: P2273R3 constexpr化(#1071)</title>
+      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr/reset.html"/>
+      <id>4c86ef0198c0d52a49f7716a658d20ab273c4d41:reference/memory/unique_ptr/reset.md</id>
+      <updated>2023-01-16T19:01:51+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr/reset.md b/reference/memory/unique_ptr/reset.md
+index a61850b7f..11e85d8f6 100644
+--- a/reference/memory/unique_ptr/reset.md
++++ b/reference/memory/unique_ptr/reset.md
+@@ -6,14 +6,17 @@
+ * cpp11[meta cpp]
+ 
+ ```cpp
+-void reset(pointer p = pointer()) noexcept;   // (1)
++void reset(pointer p = pointer()) noexcept;            // (1) C++11
++constexpr void reset(pointer p = pointer()) noexcept;  // (1) C++23
+ 
+ // 配列版のみ
+-void reset(nullptr_t p) noexcept;             // (2) C++14まで
+-void reset(nullptr_t = nullptr) noexcept;     // (2) C++17
++void reset(nullptr_t p) noexcept;                      // (2) C++11
++void reset(nullptr_t = nullptr) noexcept;              // (2) C++17
++constexpr void reset(nullptr_t = nullptr) noexcept;    // (2) C++23
+ 
+-template &amp;lt;class U&amp;gt; void reset(U) = delete;    // (3) C++14まで
+-template &amp;lt;class U&amp;gt; void reset(U p) noexcept;  // (3) C++17
++template &amp;lt;class U&amp;gt; void reset(U) = delete;             // (3) C++11
++template &amp;lt;class U&amp;gt; void reset(U p) noexcept;           // (3) C++17
++template &amp;lt;class U&amp;gt; constexpr void reset(U p) noexcept; // (3) C++23
+ ```
+ 
+ ## 概要
+@@ -81,3 +84,4 @@ p doesn&amp;#39;t have resource
+ ## 参照
+ - [LWG Issue 2169. Missing `reset()` requirements in `unique_ptr` specialization](http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#2169)
+ - [N4089 Safe conversions in `unique_ptr&amp;lt;T[]&amp;gt;`, revision 2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4089.pdf)
++- [P2273R3 Making `std::unique_ptr` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2273r3.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>swap -- unique_ptr: P2273R3 constexpr化(#1071)</title>
+      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr/swap.html"/>
+      <id>4c86ef0198c0d52a49f7716a658d20ab273c4d41:reference/memory/unique_ptr/swap.md</id>
+      <updated>2023-01-16T19:01:51+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr/swap.md b/reference/memory/unique_ptr/swap.md
+index 737dd6979..3cd9b0f1b 100644
+--- a/reference/memory/unique_ptr/swap.md
++++ b/reference/memory/unique_ptr/swap.md
+@@ -6,7 +6,8 @@
+ * cpp11[meta cpp]
+ 
+ ```cpp
+-void swap(unique_ptr&amp;amp; x) noexcept;
++void swap(unique_ptr&amp;amp; x) noexcept;           // (1) C++11
++constexpr void swap(unique_ptr&amp;amp; x) noexcept; // (1) C++23
+ ```
+ 
+ ## 概要
+@@ -64,3 +65,7 @@ int main()
+ - [Clang](/implementation.md#clang): 3.0
+ - [ICC](/implementation.md#icc): ?
+ - [Visual C++](/implementation.md#visual_cpp): 2010, 2012, 2013
++
++
++## 参照
++- [P2273R3 Making `std::unique_ptr` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2273r3.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>swap (非メンバ関数) -- unique_ptr: P2273R3 constexpr化(#1071)</title>
+      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr/swap_free.html"/>
+      <id>4c86ef0198c0d52a49f7716a658d20ab273c4d41:reference/memory/unique_ptr/swap_free.md</id>
+      <updated>2023-01-16T19:01:51+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr/swap_free.md b/reference/memory/unique_ptr/swap_free.md
+index f91b89791..8d67c3ff0 100644
+--- a/reference/memory/unique_ptr/swap_free.md
++++ b/reference/memory/unique_ptr/swap_free.md
+@@ -7,7 +7,10 @@
+ ```cpp
+ namespace std {
+   template &amp;lt;class T, class D&amp;gt;
+-  void swap(unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; a, unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; b) noexcept;
++  void swap(unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; a, unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; b) noexcept; // (1) C++11
++
++  template &amp;lt;class T, class D&amp;gt;
++  constexpr void swap(unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; a, unique_ptr&amp;lt;T, D&amp;gt;&amp;amp; b) noexcept; // (1) C++23
+ }
+ ```
+ 
+@@ -62,3 +65,7 @@ int main()
+ - [Clang](/implementation.md#clang): 3.0
+ - [ICC](/implementation.md#icc): ?
+ - [Visual C++](/implementation.md#visual_cpp): 2010, 2012, 2013
++
++
++## 参照
++- [P2273R3 Making `std::unique_ptr` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2273r3.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>コンパイラの実装状況 -- リンク修正</title>
@@ -4706,210 +5703,6 @@ index c6c90b009..2b0d44b62 100644
  ## 参照
 -
 +- [P2417R2 A more constexpr bitset](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2417r2.pdf)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>コンストラクタ -- basic_string/substr: P2438R2対応(#1092)</title>
-      <link href="https://cpprefjp.github.io/reference/string/basic_string/op_constructor.html"/>
-      <id>58fba8bb7d3df10b7d1e4052109ae27c22a472ed:reference/string/basic_string/op_constructor.md</id>
-      <updated>2023-01-16T16:44:38+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/basic_string/op_constructor.md b/reference/string/basic_string/op_constructor.md
-index b64ae154e..a4d4337da 100644
---- a/reference/string/basic_string/op_constructor.md
-+++ b/reference/string/basic_string/op_constructor.md
-@@ -5,6 +5,7 @@
- * function[meta id-type]
- 
- ```cpp
-+// デフォルトコンストラクタ
- basic_string();                                                 // (1) C++14
- basic_string() noexcept(noexcept(Allocator()))                  // (1) C++17
-   : basic_string(Allocator()) {}
-@@ -17,12 +18,15 @@ constexpr explicit basic_string(const Allocator&amp;amp; a) noexcept;   // (2) C++20
- 
- explicit basic_string(const Allocator&amp;amp; a = Allocator());        // (1) + (2) C++03
- 
-+// コピーコンストラクタ
- basic_string(const basic_string&amp;amp; str);                          // (3) C++03
- constexpr basic_string(const basic_string&amp;amp; str);                // (3) C++20
- 
-+// ムーブコンストラクタ
- basic_string(basic_string&amp;amp;&amp;amp; str) noexcept;                      // (4) C++11
- constexpr basic_string(basic_string&amp;amp;&amp;amp; str) noexcept;            // (4) C++20
- 
-+// basic_stringの指定範囲から構築するコンストラクタ
- basic_string(const basic_string&amp;amp; str,
-              size_type pos,
-              size_type n = npos,
-@@ -43,6 +47,16 @@ constexpr basic_string(const basic_string&amp;amp; str,
-                        size_type pos,
-                        const Allocator&amp;amp; a = Allocator());       // (6) C++20
- 
-+constexpr basic_string(basic_string&amp;amp;&amp;amp; str,
-+                       size_type pos,
-+                       const Allocator&amp;amp; a = Allocator());       // (17) C++23
-+
-+constexpr basic_string(basic_string&amp;amp;&amp;amp; str,
-+                       size_type pos,
-+                       size_type n,
-+                       const Allocator&amp;amp; a = Allocator());       // (18) C++23
-+
-+// 文字列ポインタから構築するコンストラクタ
- basic_string(const charT* s,
-              size_type n,
-              const Allocator&amp;amp; a = Allocator());                 // (7) C++03
-@@ -55,6 +69,9 @@ basic_string(const charT* s,
- constexpr basic_string(const charT* s,
-                        const Allocator&amp;amp; a = Allocator());       // (8) C++20
- 
-+basic_string(nullptr_t) = delete;                               // (16) C++23
-+
-+// 文字個数から構築するコンストラクタ
- basic_string(size_type n,
-              charT c,
-              const Allocator&amp;amp; a = Allocator());                 // (9) C++03
-@@ -62,6 +79,7 @@ constexpr basic_string(size_type n,
-                        charT c,
-                        const Allocator&amp;amp; a = Allocator());       // (9) C++20
- 
-+// イテレータ範囲から構築するコンストラクタ
- template &amp;lt;class InputIterator&amp;gt;
- basic_string(InputIterator begin, InputIterator end,
-              const Allocator&amp;amp; a = Allocator());                 // (10) C++03
-@@ -69,11 +87,13 @@ template &amp;lt;class InputIterator&amp;gt;
- constexpr basic_string(InputIterator begin, InputIterator end,
-                        const Allocator&amp;amp; a = Allocator());       // (10) C++20
- 
-+// 初期化子リストから構築するコンストラクタ
- basic_string(initializer_list&amp;lt;charT&amp;gt; init,
-              const Allocator&amp;amp; = Allocator());                   // (11) C++11
- constexpr basic_string(initializer_list&amp;lt;charT&amp;gt; init,
-                        const Allocator&amp;amp; = Allocator());         // (11) C++20
- 
-+// アロケータ指定コピー／ムーブコンストラクタ
- basic_string(const basic_string&amp;amp; str, const Allocator&amp;amp;);           // (12) C++11
- constexpr basic_string(const basic_string&amp;amp; str, const Allocator&amp;amp;); // (12) C++20
- 
-@@ -98,8 +118,6 @@ constexpr basic_string(const T&amp;amp; t,
-                        size_type pos,
-                        size_type n,
-                        const Allocator&amp;amp; a = Allocator());        // (15) C++20
--
--basic_string(nullptr_t) = delete; // (16) C++23
- ```
- * initializer_list[link /reference/initializer_list/initializer_list.md]
- 
-@@ -119,6 +137,9 @@ basic_string(nullptr_t) = delete; // (16) C++23
- - (13) : アロケータを受け取るムーブコンストラクタ。
- - (14) : [`std::basic_string_view`](/reference/string_view/basic_string_view.md)オブジェクトからの変換コンストラクタ。[`basic_string_view`](/reference/string_view/basic_string_view.md)`&amp;lt;charT, traits&amp;gt;`に変換可能な`t`が参照する範囲の文字列を`*this`にコピーする。
- - (15) : [`basic_string_view`](/reference/string_view/basic_string_view.md)`&amp;lt;charT, traits&amp;gt;`に変換可能な`t`が参照する範囲の文字列の`pos`番目から`n`文字の部分文字列がコピーされる。`n == npos`の場合、`pos`番目から末尾までの部分文字列がコピーされる。
-+- (17) : `str`オブジェクトの部分文字列のコピーから`basic_string`オブジェクトを構築する。`str`オブジェクトの`pos`番目から`n`文字の部分文字列がコピーされる。`n == npos`の場合、`pos`番目から末尾までの部分文字列がコピーされる。`str`は未規定の値になる。
-+- (18) : `str`オブジェクトの部分文字列のコピーから`basic_string`オブジェクトを構築する。`str`オブジェクトの`pos`番目から末尾までの部分文字列がコピーされる。`str`は未規定の値になる。
-+
- 
- ## テンプレートパラメータ制約
- 
-@@ -138,7 +159,7 @@ basic_string(nullptr_t) = delete; // (16) C++23
- 
- 
- ## 例外
--- (5), (6) : `pos &amp;gt; str.`[`size()`](size.md)の場合、[`out_of_range`](/reference/stdexcept.md)例外を送出する。
-+- (5), (6), (17), (18) : `pos &amp;gt; str.`[`size()`](size.md)の場合、[`out_of_range`](/reference/stdexcept.md)例外を送出する。
- - (13) : `alloc == str.`[`get_allocator()`](get_allocator.md)の場合、例外を投げない。
- 
- 
-@@ -237,6 +258,8 @@ s14 : Hello
-     - `string_view`から範囲を指定して構築する(15)を追加
- - [LWG Issue 2946. LWG 2758&amp;#39;s resolution missed further corrections](https://wg21.cmeerw.net/lwg/issue2946)
-     - 意図しない暗黙変換防止のために`string_view`を受けるオーバーロード(14)の引数型を`const T&amp;amp;`に変更
--- [P2166R1 A Proposal to Prohibit std::basic_string and std::basic_string_view construction from nullptr.](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2166r1.html)
--    - C++23での、`nullptr_t`をとるコンストラクタのdelete宣言追加
- - [P0980R1 Making `std::string` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0980r1.pdf)
-+- [P2166R1 A Proposal to Prohibit std::basic_string and std::basic_string_view construction from nullptr.](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2166r1.html)
-+    - C++23での(16)`nullptr_t`をとるコンストラクタのdelete宣言追加
-+- [P2438R2 `std::string::substr() &amp;amp;&amp;amp;`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2438r2.html)
-+    - C++23での(17),(18)`basic_string&amp;amp;&amp;amp;`と範囲指定をとるコンストラクタ追加
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>substr -- basic_string/substr: P2438R2対応(#1092)</title>
-      <link href="https://cpprefjp.github.io/reference/string/basic_string/substr.html"/>
-      <id>58fba8bb7d3df10b7d1e4052109ae27c22a472ed:reference/string/basic_string/substr.md</id>
-      <updated>2023-01-16T16:44:38+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/basic_string/substr.md b/reference/string/basic_string/substr.md
-index 0e0d9c152..3585e7332 100644
---- a/reference/string/basic_string/substr.md
-+++ b/reference/string/basic_string/substr.md
-@@ -11,18 +11,26 @@ basic_string
- constexpr basic_string
-   substr(size_type pos = 0,
-          size_type n = npos) const; // (1) C++20
-+constexpr basic_string
-+  substr(size_type pos = 0,
-+         size_type n = npos) const &amp;amp;; // (1) C++23
-+
-+constexpr basic_string
-+  substr(size_type pos = 0,
-+         size_type n = npos) &amp;amp;&amp;amp;; // (2) C++23
- ```
- 
- ## 概要
--部分文字列を取得する。  
-+部分文字列を取得する。
- `pos`番目から`n`要素の文字列を返す。
-+引数省略時は、先頭位置（`0`番目）から全要素（`npos`）の文字列を返す。
- 
- 
- ## 要件
- `pos &amp;lt;=` [`size()`](size.md)
- 
- 
--## 戻り値
-+## 戻り値(C++20まで)
- `n`と[`size()`](size.md) `- pos`のうち、小さい方をコピーする長さ`rlen`として、
- 
- `basic_string(`[`data()`](data.md)`+pos, rlen)`
-@@ -30,10 +38,20 @@ constexpr basic_string
- を返す。パラメータ`n`のデフォルト引数である`npos`の場合には、`pos`番目以降の全体を返す。
- 
- 
-+## 効果(C++23から)
-+- (1) 次と等価 : `return` [`basic_string`](op_constructor.md)`(*this, pos, n);`
-+- (2) 次と等価 : `return` [`basic_string`](op_constructor.md)`(std::move(*this), pos, n);`
-+
-+
- ## 例外
- `pos &amp;gt;` [`size()`](size.md)の場合、[`out_of_range`](/reference/stdexcept.md)例外を送出する。
- 
- 
-+## 備考
-+C++23から(2)[右辺値修飾オーバーロード](/lang/cpp11/ref_qualifier_for_this)の追加にともない、従来からある(1)はconst左辺値参照オーバーロードに変更される。
-+同時にメンバ関数`substr`のライブラリ仕様記述は、新たに追加された`basic_string`コンストラクタを用いて書き直されるものの、基本的な動作はC++20までと同一である。
-+
-+
- ## 例
- ```cpp example
- #include &amp;lt;iostream&amp;gt;
-@@ -66,3 +84,5 @@ llo
- 
- ## 参照
- - [P0980R1 Making `std::string` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0980r1.pdf)
-+- [P2438R2 `std::string::substr() &amp;amp;&amp;amp;`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2438r2.html)
-+    - C++23での(2)右辺値修飾オーバーロード追加
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
