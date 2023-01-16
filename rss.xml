@@ -2,9 +2,213 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2023-01-16T07:52:53.651740</updated>
-  <id>e9c162f2-0105-4931-a3d1-938ddbd5e64e</id>
+  <updated>2023-01-16T07:59:49.768076</updated>
+  <id>b29a5bd4-4dfa-4d54-a857-296646f4aeb4</id>
 
+  
+    <entry>
+      <title>コンストラクタ -- basic_string/substr: P2438R2対応(#1092)</title>
+      <link href="https://cpprefjp.github.io/reference/string/basic_string/op_constructor.html"/>
+      <id>58fba8bb7d3df10b7d1e4052109ae27c22a472ed:reference/string/basic_string/op_constructor.md</id>
+      <updated>2023-01-16T16:44:38+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/basic_string/op_constructor.md b/reference/string/basic_string/op_constructor.md
+index b64ae154e..a4d4337da 100644
+--- a/reference/string/basic_string/op_constructor.md
++++ b/reference/string/basic_string/op_constructor.md
+@@ -5,6 +5,7 @@
+ * function[meta id-type]
+ 
+ ```cpp
++// デフォルトコンストラクタ
+ basic_string();                                                 // (1) C++14
+ basic_string() noexcept(noexcept(Allocator()))                  // (1) C++17
+   : basic_string(Allocator()) {}
+@@ -17,12 +18,15 @@ constexpr explicit basic_string(const Allocator&amp;amp; a) noexcept;   // (2) C++20
+ 
+ explicit basic_string(const Allocator&amp;amp; a = Allocator());        // (1) + (2) C++03
+ 
++// コピーコンストラクタ
+ basic_string(const basic_string&amp;amp; str);                          // (3) C++03
+ constexpr basic_string(const basic_string&amp;amp; str);                // (3) C++20
+ 
++// ムーブコンストラクタ
+ basic_string(basic_string&amp;amp;&amp;amp; str) noexcept;                      // (4) C++11
+ constexpr basic_string(basic_string&amp;amp;&amp;amp; str) noexcept;            // (4) C++20
+ 
++// basic_stringの指定範囲から構築するコンストラクタ
+ basic_string(const basic_string&amp;amp; str,
+              size_type pos,
+              size_type n = npos,
+@@ -43,6 +47,16 @@ constexpr basic_string(const basic_string&amp;amp; str,
+                        size_type pos,
+                        const Allocator&amp;amp; a = Allocator());       // (6) C++20
+ 
++constexpr basic_string(basic_string&amp;amp;&amp;amp; str,
++                       size_type pos,
++                       const Allocator&amp;amp; a = Allocator());       // (17) C++23
++
++constexpr basic_string(basic_string&amp;amp;&amp;amp; str,
++                       size_type pos,
++                       size_type n,
++                       const Allocator&amp;amp; a = Allocator());       // (18) C++23
++
++// 文字列ポインタから構築するコンストラクタ
+ basic_string(const charT* s,
+              size_type n,
+              const Allocator&amp;amp; a = Allocator());                 // (7) C++03
+@@ -55,6 +69,9 @@ basic_string(const charT* s,
+ constexpr basic_string(const charT* s,
+                        const Allocator&amp;amp; a = Allocator());       // (8) C++20
+ 
++basic_string(nullptr_t) = delete;                               // (16) C++23
++
++// 文字個数から構築するコンストラクタ
+ basic_string(size_type n,
+              charT c,
+              const Allocator&amp;amp; a = Allocator());                 // (9) C++03
+@@ -62,6 +79,7 @@ constexpr basic_string(size_type n,
+                        charT c,
+                        const Allocator&amp;amp; a = Allocator());       // (9) C++20
+ 
++// イテレータ範囲から構築するコンストラクタ
+ template &amp;lt;class InputIterator&amp;gt;
+ basic_string(InputIterator begin, InputIterator end,
+              const Allocator&amp;amp; a = Allocator());                 // (10) C++03
+@@ -69,11 +87,13 @@ template &amp;lt;class InputIterator&amp;gt;
+ constexpr basic_string(InputIterator begin, InputIterator end,
+                        const Allocator&amp;amp; a = Allocator());       // (10) C++20
+ 
++// 初期化子リストから構築するコンストラクタ
+ basic_string(initializer_list&amp;lt;charT&amp;gt; init,
+              const Allocator&amp;amp; = Allocator());                   // (11) C++11
+ constexpr basic_string(initializer_list&amp;lt;charT&amp;gt; init,
+                        const Allocator&amp;amp; = Allocator());         // (11) C++20
+ 
++// アロケータ指定コピー／ムーブコンストラクタ
+ basic_string(const basic_string&amp;amp; str, const Allocator&amp;amp;);           // (12) C++11
+ constexpr basic_string(const basic_string&amp;amp; str, const Allocator&amp;amp;); // (12) C++20
+ 
+@@ -98,8 +118,6 @@ constexpr basic_string(const T&amp;amp; t,
+                        size_type pos,
+                        size_type n,
+                        const Allocator&amp;amp; a = Allocator());        // (15) C++20
+-
+-basic_string(nullptr_t) = delete; // (16) C++23
+ ```
+ * initializer_list[link /reference/initializer_list/initializer_list.md]
+ 
+@@ -119,6 +137,9 @@ basic_string(nullptr_t) = delete; // (16) C++23
+ - (13) : アロケータを受け取るムーブコンストラクタ。
+ - (14) : [`std::basic_string_view`](/reference/string_view/basic_string_view.md)オブジェクトからの変換コンストラクタ。[`basic_string_view`](/reference/string_view/basic_string_view.md)`&amp;lt;charT, traits&amp;gt;`に変換可能な`t`が参照する範囲の文字列を`*this`にコピーする。
+ - (15) : [`basic_string_view`](/reference/string_view/basic_string_view.md)`&amp;lt;charT, traits&amp;gt;`に変換可能な`t`が参照する範囲の文字列の`pos`番目から`n`文字の部分文字列がコピーされる。`n == npos`の場合、`pos`番目から末尾までの部分文字列がコピーされる。
++- (17) : `str`オブジェクトの部分文字列のコピーから`basic_string`オブジェクトを構築する。`str`オブジェクトの`pos`番目から`n`文字の部分文字列がコピーされる。`n == npos`の場合、`pos`番目から末尾までの部分文字列がコピーされる。`str`は未規定の値になる。
++- (18) : `str`オブジェクトの部分文字列のコピーから`basic_string`オブジェクトを構築する。`str`オブジェクトの`pos`番目から末尾までの部分文字列がコピーされる。`str`は未規定の値になる。
++
+ 
+ ## テンプレートパラメータ制約
+ 
+@@ -138,7 +159,7 @@ basic_string(nullptr_t) = delete; // (16) C++23
+ 
+ 
+ ## 例外
+-- (5), (6) : `pos &amp;gt; str.`[`size()`](size.md)の場合、[`out_of_range`](/reference/stdexcept.md)例外を送出する。
++- (5), (6), (17), (18) : `pos &amp;gt; str.`[`size()`](size.md)の場合、[`out_of_range`](/reference/stdexcept.md)例外を送出する。
+ - (13) : `alloc == str.`[`get_allocator()`](get_allocator.md)の場合、例外を投げない。
+ 
+ 
+@@ -237,6 +258,8 @@ s14 : Hello
+     - `string_view`から範囲を指定して構築する(15)を追加
+ - [LWG Issue 2946. LWG 2758&amp;#39;s resolution missed further corrections](https://wg21.cmeerw.net/lwg/issue2946)
+     - 意図しない暗黙変換防止のために`string_view`を受けるオーバーロード(14)の引数型を`const T&amp;amp;`に変更
+-- [P2166R1 A Proposal to Prohibit std::basic_string and std::basic_string_view construction from nullptr.](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2166r1.html)
+-    - C++23での、`nullptr_t`をとるコンストラクタのdelete宣言追加
+ - [P0980R1 Making `std::string` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0980r1.pdf)
++- [P2166R1 A Proposal to Prohibit std::basic_string and std::basic_string_view construction from nullptr.](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2166r1.html)
++    - C++23での(16)`nullptr_t`をとるコンストラクタのdelete宣言追加
++- [P2438R2 `std::string::substr() &amp;amp;&amp;amp;`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2438r2.html)
++    - C++23での(17),(18)`basic_string&amp;amp;&amp;amp;`と範囲指定をとるコンストラクタ追加
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>substr -- basic_string/substr: P2438R2対応(#1092)</title>
+      <link href="https://cpprefjp.github.io/reference/string/basic_string/substr.html"/>
+      <id>58fba8bb7d3df10b7d1e4052109ae27c22a472ed:reference/string/basic_string/substr.md</id>
+      <updated>2023-01-16T16:44:38+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/basic_string/substr.md b/reference/string/basic_string/substr.md
+index 0e0d9c152..3585e7332 100644
+--- a/reference/string/basic_string/substr.md
++++ b/reference/string/basic_string/substr.md
+@@ -11,18 +11,26 @@ basic_string
+ constexpr basic_string
+   substr(size_type pos = 0,
+          size_type n = npos) const; // (1) C++20
++constexpr basic_string
++  substr(size_type pos = 0,
++         size_type n = npos) const &amp;amp;; // (1) C++23
++
++constexpr basic_string
++  substr(size_type pos = 0,
++         size_type n = npos) &amp;amp;&amp;amp;; // (2) C++23
+ ```
+ 
+ ## 概要
+-部分文字列を取得する。  
++部分文字列を取得する。
+ `pos`番目から`n`要素の文字列を返す。
++引数省略時は、先頭位置（`0`番目）から全要素（`npos`）の文字列を返す。
+ 
+ 
+ ## 要件
+ `pos &amp;lt;=` [`size()`](size.md)
+ 
+ 
+-## 戻り値
++## 戻り値(C++20まで)
+ `n`と[`size()`](size.md) `- pos`のうち、小さい方をコピーする長さ`rlen`として、
+ 
+ `basic_string(`[`data()`](data.md)`+pos, rlen)`
+@@ -30,10 +38,20 @@ constexpr basic_string
+ を返す。パラメータ`n`のデフォルト引数である`npos`の場合には、`pos`番目以降の全体を返す。
+ 
+ 
++## 効果(C++23から)
++- (1) 次と等価 : `return` [`basic_string`](op_constructor.md)`(*this, pos, n);`
++- (2) 次と等価 : `return` [`basic_string`](op_constructor.md)`(std::move(*this), pos, n);`
++
++
+ ## 例外
+ `pos &amp;gt;` [`size()`](size.md)の場合、[`out_of_range`](/reference/stdexcept.md)例外を送出する。
+ 
+ 
++## 備考
++C++23から(2)[右辺値修飾オーバーロード](/lang/cpp11/ref_qualifier_for_this)の追加にともない、従来からある(1)はconst左辺値参照オーバーロードに変更される。
++同時にメンバ関数`substr`のライブラリ仕様記述は、新たに追加された`basic_string`コンストラクタを用いて書き直されるものの、基本的な動作はC++20までと同一である。
++
++
+ ## 例
+ ```cpp example
+ #include &amp;lt;iostream&amp;gt;
+@@ -66,3 +84,5 @@ llo
+ 
+ ## 参照
+ - [P0980R1 Making `std::string` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0980r1.pdf)
++- [P2438R2 `std::string::substr() &amp;amp;&amp;amp;`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2438r2.html)
++    - C++23での(2)右辺値修飾オーバーロード追加
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>C++23 -- C++23 : std::formatのRange、タプルの出力を例示 #1085</title>
@@ -725,221 +929,6 @@ index 347c3dc20..855273b0f 100644
       <author>
         <name>Tetsuro Matsumura</name>
         <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>INVOKE -- C++20 : P0777R1対応</title>
-      <link href="https://cpprefjp.github.io/reference/concepts/Invoke.html"/>
-      <id>df3cf1576616ea59ff5b6f2e46c42aad9b88d734:reference/concepts/Invoke.md</id>
-      <updated>2023-01-13T18:13:13+09:00</updated>
-      
-        <content type="html">&lt;div class=&#34;identifier-type&#34;&gt;named requirement&lt;/div&gt;&lt;div class=&#34;header&#34;&gt;&amp;lt;concepts&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;namespace&#34; title=&#34;namespace &#34;&gt;::&lt;/span&gt;&lt;span class=&#34;token&#34;&gt;INVOKE&lt;/span&gt;&lt;span class=&#34;cpp cpp11&#34; title=&#34;C++11で追加&#34;&gt;(C++11)&lt;/span&gt;&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;C++における関数呼び出しという性質を抽象化しまとめた、仮想操作 &lt;em&gt;INVOKE&lt;/em&gt; を定義する。&lt;/p&gt;
-&lt;p&gt;C++17からは、本仮想操作を実体化した&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/invoke.html&#34;&gt;invoke&lt;/a&gt;&lt;/code&gt;関数テンプレートが提供される。&lt;/p&gt;
-&lt;h2&gt;用語定義&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;em&gt;call-signature&lt;/em&gt; とは、戻り値型に続けて丸括弧の中に0個以上の引数型を並べたものである。 &lt;em&gt;cf.&lt;/em&gt; &lt;code&gt;int ( std::string, int )&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;em&gt;callable-type&lt;/em&gt; とは、関数呼び出し演算子を適用できる型 ( 関数、関数への参照、関数へのポインタ、&lt;code&gt;operator ()&lt;/code&gt; をオーバーロードした型もしくはそれを(直接または間接的に) &lt;code&gt;public&lt;/code&gt; 継承した型 ) もしくはメンバへのポインタ型を指す。&lt;/li&gt;
-&lt;li&gt;&lt;em&gt;callable-object&lt;/em&gt; は、 &lt;em&gt;callable-type&lt;/em&gt; 型のオブジェクトである。&lt;/li&gt;
-&lt;li&gt;&lt;em&gt;call-wrapper-type&lt;/em&gt; は、 &lt;em&gt;callable-object&lt;/em&gt; を保持し、自身に対する関数呼び出し操作が行われたとき、保持しているオブジェクトに委譲する。&lt;/li&gt;
-&lt;li&gt;&lt;em&gt;call-wrapper&lt;/em&gt; は、 &lt;em&gt;call-wrapper-type&lt;/em&gt; 型のオブジェクトである。&lt;/li&gt;
-&lt;li&gt;&lt;em&gt;target-object&lt;/em&gt; とは、 &lt;em&gt;callable-object&lt;/em&gt; に保持されているオブジェクトのことである。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;要件（C++14まで）&lt;/h2&gt;
-&lt;ol&gt;
-&lt;li&gt;仮想操作 &lt;em&gt;INVOKE&lt;/em&gt;&lt;code&gt;(f, t1, t2, ..., tN)&lt;/code&gt; を次のように定義する。&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバ関数へのポインタであり、 &lt;code&gt;t1&lt;/code&gt; が T 型のオブジェクトあるいは &lt;code&gt;T&lt;/code&gt; または &lt;code&gt;T&lt;/code&gt; を継承した型への参照であるとき、 &lt;code&gt;(t1.*f)(t2, ..., tN)&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバ関数へのポインタであり、 &lt;code&gt;t1&lt;/code&gt; が上記の条件に当てはまらない場合、&lt;code&gt;((*t1).*f)(t2, ..., tN)&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;N == 1&lt;/code&gt; で、&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバオブジェクトへのポインタであり、&lt;code&gt;t1&lt;/code&gt; が &lt;code&gt;T&lt;/code&gt; 型のオブジェクトあるいは &lt;code&gt;T&lt;/code&gt; または &lt;code&gt;T&lt;/code&gt; を継承した型への参照であるとき、 &lt;code&gt;t1.*f&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;N == 1&lt;/code&gt; で、&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバオブジェクトへのポインタであり、&lt;code&gt;t1&lt;/code&gt; が上記の条件に当てはまらない場合、 &lt;code&gt;(*t1).*f&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
-&lt;li&gt;上記の条件のどれにも当てはまらない場合、 &lt;code&gt;f(t1, t2, ..., tN)&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;em&gt;INVOKE&lt;/em&gt;&lt;code&gt;(f, t1, t2, ..., tN, R)&lt;/code&gt; を、 &lt;em&gt;INVOKE&lt;/em&gt;&lt;code&gt;(f, t1, t2, ..., tN)&lt;/code&gt; の実行結果の戻り値が型 &lt;code&gt;R&lt;/code&gt; に暗黙的に変換されること、と定義する。&lt;/li&gt;
-&lt;li&gt;&lt;em&gt;call-wrapper&lt;/em&gt; が &lt;em&gt;weak-result-type&lt;/em&gt; を用意している場合、メンバ型 &lt;code&gt;result_type&lt;/code&gt; は&lt;em&gt;target-object&lt;/em&gt; の型 &lt;code&gt;T&lt;/code&gt; に応じて次のように定義される。&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;T&lt;/code&gt; が関数へのポインタ型であるとき、 &lt;code&gt;result_type&lt;/code&gt; は &lt;code&gt;T&lt;/code&gt; の戻り値型と等しい。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;T&lt;/code&gt; がメンバ関数へのポインタ型であるとき、 &lt;code&gt;result_type&lt;/code&gt; は &lt;code&gt;T&lt;/code&gt; の戻り値型と等しい。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;T&lt;/code&gt; が &lt;code&gt;result_type&lt;/code&gt; という名前のメンバ型を持つとき、 &lt;code&gt;result_type&lt;/code&gt; は &lt;code&gt;T::result_type&lt;/code&gt; と等しい。&lt;/li&gt;
-&lt;li&gt;どの条件にも当てはまらない場合、 &lt;code&gt;result_type&lt;/code&gt; は定義されない。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;すべての &lt;em&gt;call-wrapper&lt;/em&gt; は、&lt;em&gt;MoveAssignable&lt;/em&gt; でなければならない。&lt;/li&gt;
-&lt;/ol&gt;
-&lt;h2&gt;要件（C++17）&lt;/h2&gt;
-&lt;ol&gt;
-&lt;li&gt;仮想操作 &lt;em&gt;INVOKE&lt;/em&gt;&lt;code&gt;(f, t1, t2, ..., tN)&lt;/code&gt; を次のように定義する。&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバ関数へのポインタであり、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/is_base_of.html&#34;&gt;is_baseof_v&lt;/a&gt;&amp;lt;T,&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/decay.html&#34;&gt;decay_t&lt;/a&gt;&amp;lt;decltype(t1)&amp;gt;&amp;gt; == true&lt;/code&gt;（&lt;code&gt;t1&lt;/code&gt; が &lt;code&gt;T&lt;/code&gt; または &lt;code&gt;T&lt;/code&gt; を継承した型のオブジェクト/参照）であるとき、 &lt;code&gt;(t1.*f)(t2, ..., tN)&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバ関数へのポインタであり、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/decay.html&#34;&gt;decay_t&lt;/a&gt;&amp;lt;decltype(t1)&amp;gt;&lt;/code&gt;が&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/reference_wrapper.html&#34;&gt;reference_wrapper&amp;lt;T&amp;gt;&lt;/a&gt;&lt;/code&gt;（&lt;code&gt;t1&lt;/code&gt;が&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/reference_wrapper.html&#34;&gt;reference_wrapper&lt;/a&gt;&lt;/code&gt;の特殊化）であるとき、 &lt;code&gt;(t1.get().*f)(t2, ..., tN)&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバ関数へのポインタであり、 &lt;code&gt;t1&lt;/code&gt; が上記の条件に当てはまらない場合（例えば、t1が&lt;code&gt;T&lt;/code&gt;のポインタ）、&lt;code&gt;((*t1).*f)(t2, ..., tN)&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;N == 1&lt;/code&gt; で、&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバオブジェクトへのポインタであり、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/is_base_of.html&#34;&gt;is_baseof_v&lt;/a&gt;&amp;lt;T,&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/decay.html&#34;&gt;decay_t&lt;/a&gt;&amp;lt;decltype(t1)&amp;gt;&amp;gt; == true&lt;/code&gt;（&lt;code&gt;t1&lt;/code&gt; が &lt;code&gt;T&lt;/code&gt; または &lt;code&gt;T&lt;/code&gt; を継承した型のオブジェクト/参照）であるとき、 &lt;code&gt;t1.*f&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;N == 1&lt;/code&gt; で、&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバオブジェクトへのポインタであり、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/decay.html&#34;&gt;decay_t&lt;/a&gt;&amp;lt;decltype(t1)&amp;gt;&lt;/code&gt;が&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/reference_wrapper.html&#34;&gt;reference_wrapper&amp;lt;T&amp;gt;&lt;/a&gt;&lt;/code&gt;（&lt;code&gt;t1&lt;/code&gt;が&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/reference_wrapper.html&#34;&gt;reference_wrapper&lt;/a&gt;&lt;/code&gt;の特殊化）であるとき、 &lt;code&gt;t1.get().*f&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;N == 1&lt;/code&gt; で、&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバオブジェクトへのポインタであり、&lt;code&gt;t1&lt;/code&gt; が上記の条件に当てはまらない場合（例えば、t1が&lt;code&gt;T&lt;/code&gt;のポインタ）、 &lt;code&gt;(*t1).*f&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
-&lt;li&gt;上記の条件のどれにも当てはまらない場合、 &lt;code&gt;f(t1, t2, ..., tN)&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;em&gt;INVOKE&lt;/em&gt;&lt;code&gt;&amp;lt;R&amp;gt;(f, t1, t2, ..., tN)&lt;/code&gt; を次のように定義する。&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;R&lt;/code&gt;が&lt;code&gt;void&lt;/code&gt;かそのcv修飾の場合は、&lt;code&gt;static_cast&amp;lt;void&amp;gt;(&lt;/code&gt;&lt;em&gt;INVOKE&lt;/em&gt;&lt;code&gt;(f, t1, t2, ..., tN))&lt;/code&gt;。&lt;/li&gt;
-&lt;li&gt;それ以外の場合は、&lt;em&gt;INVOKE&lt;/em&gt;&lt;code&gt;(f, t1, t2, ..., tN)&lt;/code&gt; の実行結果の戻り値が型 &lt;code&gt;R&lt;/code&gt; に暗黙的に変換されること。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;すべての &lt;em&gt;call-wrapper&lt;/em&gt; は、&lt;em&gt;MoveConstructible&lt;/em&gt; でなければならない。&lt;/li&gt;
-&lt;/ol&gt;
-&lt;h2&gt;要件（C++20）&lt;/h2&gt;
-&lt;ol&gt;
-&lt;li&gt;仮想操作 &lt;em&gt;INVOKE&lt;/em&gt;&lt;code&gt;(f, t1, t2, ..., tN)&lt;/code&gt; を次のように定義する。&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバ関数へのポインタであり、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/is_base_of.html&#34;&gt;is_baseof_v&lt;/a&gt;&amp;lt;T,&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/remove_cvref.html&#34;&gt;remove_cvref_t&lt;/a&gt;&amp;lt;decltype(t1)&amp;gt;&amp;gt; == true&lt;/code&gt;（&lt;code&gt;t1&lt;/code&gt; が &lt;code&gt;T&lt;/code&gt; または &lt;code&gt;T&lt;/code&gt; を継承した型のオブジェクト/参照）であるとき、 &lt;code&gt;(t1.*f)(t2, ..., tN)&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバ関数へのポインタであり、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/remove_cvref.html&#34;&gt;remove_cvref_t&lt;/a&gt;&amp;lt;decltype(t1)&amp;gt;&lt;/code&gt;が&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/reference_wrapper.html&#34;&gt;reference_wrapper&amp;lt;T&amp;gt;&lt;/a&gt;&lt;/code&gt;（&lt;code&gt;t1&lt;/code&gt;が&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/reference_wrapper.html&#34;&gt;reference_wrapper&lt;/a&gt;&lt;/code&gt;の特殊化）であるとき、 &lt;code&gt;(t1.get().*f)(t2, ..., tN)&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバ関数へのポインタであり、 &lt;code&gt;t1&lt;/code&gt; が上記の条件に当てはまらない場合（例えば、t1が&lt;code&gt;T&lt;/code&gt;のポインタ）、&lt;code&gt;((*t1).*f)(t2, ..., tN)&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;N == 1&lt;/code&gt; で、&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバオブジェクトへのポインタであり、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/is_base_of.html&#34;&gt;is_baseof_v&lt;/a&gt;&amp;lt;T,&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/remove_cvref.html&#34;&gt;remove_cvref_t&lt;/a&gt;&amp;lt;decltype(t1)&amp;gt;&amp;gt; == true&lt;/code&gt;（&lt;code&gt;t1&lt;/code&gt; が &lt;code&gt;T&lt;/code&gt; または &lt;code&gt;T&lt;/code&gt; を継承した型のオブジェクト/参照）であるとき、 &lt;code&gt;t1.*f&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;N == 1&lt;/code&gt; で、&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバオブジェクトへのポインタであり、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/remove_cvref.html&#34;&gt;remove_cvref_t&lt;/a&gt;&amp;lt;decltype(t1)&amp;gt;&lt;/code&gt;が&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/reference_wrapper.html&#34;&gt;reference_wrapper&amp;lt;T&amp;gt;&lt;/a&gt;&lt;/code&gt;（&lt;code&gt;t1&lt;/code&gt;が&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/reference_wrapper.html&#34;&gt;reference_wrapper&lt;/a&gt;&lt;/code&gt;の特殊化）であるとき、 &lt;code&gt;t1.get().*f&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;N == 1&lt;/code&gt; で、&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバオブジェクトへのポインタであり、&lt;code&gt;t1&lt;/code&gt; が上記の条件に当てはまらない場合（例えば、t1が&lt;code&gt;T&lt;/code&gt;のポインタ）、 &lt;code&gt;(*t1).*f&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
-&lt;li&gt;上記の条件のどれにも当てはまらない場合、 &lt;code&gt;f(t1, t2, ..., tN)&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;em&gt;INVOKE&lt;/em&gt;&lt;code&gt;&amp;lt;R&amp;gt;(f, t1, t2, ..., tN)&lt;/code&gt; を次のように定義する。&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;R&lt;/code&gt;が&lt;code&gt;void&lt;/code&gt;かそのcv修飾の場合は、&lt;code&gt;static_cast&amp;lt;void&amp;gt;(&lt;/code&gt;&lt;em&gt;INVOKE&lt;/em&gt;&lt;code&gt;(f, t1, t2, ..., tN))&lt;/code&gt;。&lt;/li&gt;
-&lt;li&gt;それ以外の場合は、&lt;em&gt;INVOKE&lt;/em&gt;&lt;code&gt;(f, t1, t2, ..., tN)&lt;/code&gt; の実行結果の戻り値が型 &lt;code&gt;R&lt;/code&gt; に暗黙的に変換されること。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;すべての &lt;em&gt;call-wrapper&lt;/em&gt; は、&lt;em&gt;Cpp17MoveConstructible&lt;/em&gt; かつ &lt;em&gt;Cpp17Destructible&lt;/em&gt; でなければならない。&lt;/li&gt;
-&lt;/ol&gt;
-&lt;h2&gt;まとめ&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&#34;https://twitter.com/Cryolite/status/216814363221303296&#34; target=&#34;_blank&#34;&gt;第1引数がメンバ関数へのポインタの場合でも非静的メンバデータへのポインタの場合でも，第2引数がクラスオブジェクトへの参照の場合でもポインタの場合でもポインタっぽいものの場合でも，なんか知らんけどそれっぽく上手くいく&lt;/a&gt; ように取り計らった操作のことである。&lt;/p&gt;
-&lt;h2&gt;関連項目&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/function.html&#34;&gt;function&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/reference_wrapper.html&#34;&gt;reference_wrapper&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/bind.html&#34;&gt;bind&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/mem_fn.html&#34;&gt;mem_fn&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/not_fn.html&#34;&gt;not_fn&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/thread/thread.html&#34;&gt;thread&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/future/async.html&#34;&gt;async&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/future/packaged_task.html&#34;&gt;packaged_task&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/mutex/call_once.html&#34;&gt;call_once&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;参照&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0777r1.pdf&#34; target=&#34;_blank&#34;&gt;P0777R1 Treating Unnecessary &lt;code&gt;decay&lt;/code&gt;&lt;/a&gt;&lt;ul&gt;
-&lt;li&gt;C++20から&lt;code&gt;decay_t&lt;/code&gt;を&lt;code&gt;remove_cvref_t&lt;/code&gt;へ変更。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>コンストラクタ -- C++20 : P0777R1対応</title>
-      <link href="https://cpprefjp.github.io/reference/optional/optional/op_constructor.html"/>
-      <id>df3cf1576616ea59ff5b6f2e46c42aad9b88d734:reference/optional/optional/op_constructor.md</id>
-      <updated>2023-01-13T18:13:13+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/optional/optional/op_constructor.md b/reference/optional/optional/op_constructor.md
-index 3046ccd0e..d584fdc65 100644
---- a/reference/optional/optional/op_constructor.md
-+++ b/reference/optional/optional/op_constructor.md
-@@ -221,6 +221,7 @@ int main()
- - [LWG Issue 2842. `in_place_t` check for `optional::optional(U&amp;amp;&amp;amp;)` should decay `U`](https://wg21.cmeerw.net/lwg/issue2842)
-     - 説明の簡略化のため、このオーバーロードで`in_place_t`への言及は現在していない
- - [LWG Issue 2900. The copy and move constructors of `optional` are not `constexpr`](https://wg21.cmeerw.net/lwg/issue2900)
-+- [P0777R1 Treating Unnecessary `decay`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0777r1.pdf)
- - [P0892R2 `explicit(bool)`](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0892r2.html)
-     - C++20での`explicit(bool)`構文への対応
--- [P0602R4 `variant` and `optional` should propagate copy/move triviality](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0602r4.html)
-\ No newline at end of file
-+- [P0602R4 `variant` and `optional` should propagate copy/move triviality](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0602r4.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>apply -- C++20 : P0777R1対応</title>
-      <link href="https://cpprefjp.github.io/reference/tuple/apply.html"/>
-      <id>df3cf1576616ea59ff5b6f2e46c42aad9b88d734:reference/tuple/apply.md</id>
-      <updated>2023-01-13T18:13:13+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/tuple/apply.md b/reference/tuple/apply.md
-index 77d6e1845..ff0343f51 100644
---- a/reference/tuple/apply.md
-+++ b/reference/tuple/apply.md
-@@ -38,8 +38,17 @@ constexpr decltype(auto) apply-impl(F&amp;amp;&amp;amp; f, Tuple&amp;amp;&amp;amp; t, std::index_sequence&amp;lt;I...&amp;gt;)
- * std::invoke[link /reference/functional/invoke.md]
- * std::forward[link /reference/utility/forward.md]
- 
--次と等価である。
-+C++17 : 次と等価である。
-+```cpp
-+return apply-impl(std::forward&amp;lt;F&amp;gt;(f), std::forward&amp;lt;Tuple&amp;gt;(t),
-+                  std::make_index_sequence&amp;lt;std::tuple_size_v&amp;lt;std::decay_t&amp;lt;Tuple&amp;gt;&amp;gt;&amp;gt;{});
-+```
-+* std::tuple_size_v[link tuple_size.md]
-+* std::make_index_sequence[link /reference/utility/make_index_sequence.md]
-+* std::forward[link /reference/utility/forward.md]
-+* std::decay_t[link /reference/type_traits/decay.md]
- 
-+C++20 : 次と等価である。
- ```cpp
- return apply-impl(std::forward&amp;lt;F&amp;gt;(f), std::forward&amp;lt;Tuple&amp;gt;(t),
-                   std::make_index_sequence&amp;lt;std::tuple_size_v&amp;lt;std::remove_reference_t&amp;lt;Tuple&amp;gt;&amp;gt;&amp;gt;{});
-@@ -110,5 +119,7 @@ hello
- - [P0220R0 Adopt Library Fundamentals TS for C++17](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0220r0.html)
- - [P0220R1 Adopt Library Fundamentals V1 TS Components for C++17 (R1)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0220r1.html)
- - [C++1z タプルを展開して関数呼び出しするapply関数 - Faith and Brave - C++で遊ぼう](https://faithandbrave.hateblo.jp/entry/2016/08/18/184315)
-+- [P0777R1 Treating Unnecessary `decay`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0777r1.pdf)
-+    - C++20から効果説明の`decay_t`を`remove_cvref_t`へ変更。
- - [P2517R1 Add a conditional `noexcept` specification to `std::apply`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2517r1.html)
-     - C++23から条件付きで`noexcept`例外指定が行われる。
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>コンストラクタ -- C++20 : P0777R1対応</title>
-      <link href="https://cpprefjp.github.io/reference/variant/variant/op_constructor.html"/>
-      <id>df3cf1576616ea59ff5b6f2e46c42aad9b88d734:reference/variant/variant/op_constructor.md</id>
-      <updated>2023-01-13T18:13:13+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/variant/variant/op_constructor.md b/reference/variant/variant/op_constructor.md
-index a578926e8..38d1724d0 100644
---- a/reference/variant/variant/op_constructor.md
-+++ b/reference/variant/variant/op_constructor.md
-@@ -60,9 +60,10 @@ constexpr explicit variant(in_place_index_t&amp;lt;I&amp;gt;,
- - (4) :
-     - C++17 : ここで説明用に、`*this`が保持している型`Tj`と、そのインデックス値`j`を定義する。`Types...`の各型`Ti`に対して擬似的な関数`FUN(Ti)`を定義したとして、`FUN(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;T&amp;gt;(t))`呼び出しによって選択されたオーバーロードされた関数のパラメータ型を、構築してその後含まれる値の型を`Tj`とする
-     - C++20 : ここで説明用に、`*this`が保持している型`Tj`と、そのインデックス値`j`を定義する。`Types...`の各型`Ti`を、縮小変換を受け付けない型であり (`Ti x[] = {`[`std::forward`](/reference/utility/forward.md)`&amp;lt;T&amp;gt;(t)};`)、CV修飾付き`bool`の場合にCV修飾を外した`bool`型になるとして、その型に対して擬似的な関数`FUN(Ti)`を定義したとして、`FUN(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;T&amp;gt;(t))`呼び出しによって選択されたオーバーロードされた関数のパラメータ型を、構築してその後含まれる値の型を`Tj`とする
--    - [`is_same_v`](/reference/type_traits/is_same.md)`&amp;lt;`[`decay_t`](/reference/type_traits/decay.md)`&amp;lt;T&amp;gt;, variant&amp;gt;`が`false`であること
--    - 型[`decay_t`](/reference/type_traits/decay.md)`&amp;lt;T&amp;gt;`が[`in_place_type_t`](/reference/utility/in_place_type_t.md)および[`in_place_index_t`](/reference/utility/in_place_index_t.md)の特殊化ではないこと
--    - [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;Tj, T&amp;gt;`が`true`であること
-+    - C++17 : [`is_same_v`](/reference/type_traits/is_same.md)`&amp;lt;`[`decay_t`](/reference/type_traits/decay.md)`&amp;lt;T&amp;gt;, variant&amp;gt;`が`false`であること
-+    - C++20 : [`is_same_v`](/reference/type_traits/is_same.md)`&amp;lt;`[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;T&amp;gt;, variant&amp;gt;`が`false`であること
-+    - C++17 : 型[`decay_t`](/reference/type_traits/decay.md)`&amp;lt;T&amp;gt;`が[`in_place_type_t`](/reference/utility/in_place_type_t.md)および[`in_place_index_t`](/reference/utility/in_place_index_t.md)の特殊化ではないこと
-+    - C++20 : 型[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;T&amp;gt;`が[`in_place_type_t`](/reference/utility/in_place_type_t.md)および[`in_place_index_t`](/reference/utility/in_place_index_t.md)の特殊化ではないこと    - [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;Tj, T&amp;gt;`が`true`であること
-     - 式`FUN(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;T&amp;gt;(x))`が適格であること
- - (5) :
-     - `Types...`内に`T`が一度だけ現れること
-@@ -364,3 +365,5 @@ int main()
- - [LWG Issue 2901 Variants cannot properly support allocators](https://cplusplus.github.io/LWG/issue2901)
- - [P0608R3 A sane variant converting constructor](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0608r3.html)
- - [P0602R4 `variant` and `optional` should propagate copy/move triviality](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0602r4.html)
-+- [P0777R1 Treating Unnecessary `decay`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0777r1.pdf)
-+    - C++20からテンプレートパラメータ制約の`decay_t`を`remove_cvref_t`へ変更。
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
       </author>
     </entry>
   
