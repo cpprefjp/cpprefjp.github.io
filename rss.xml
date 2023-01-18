@@ -2,9 +2,73 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2023-01-17T14:40:08.940486</updated>
-  <id>65eb5822-aa62-42ca-8334-0941039af5d2</id>
+  <updated>2023-01-18T00:29:33.594127</updated>
+  <id>a0ed1736-43ee-434f-b0dc-4ccaf964fb25</id>
 
+  
+    <entry>
+      <title>unreachable -- utility/unreachable: 微調整</title>
+      <link href="https://cpprefjp.github.io/reference/utility/unreachable.html"/>
+      <id>da9f2c769593d5d8b94ad15ed3291ab538c5f83f:reference/utility/unreachable.md</id>
+      <updated>2023-01-18T09:25:19+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/utility/unreachable.md b/reference/utility/unreachable.md
+index f4e949d46..9ba4c982d 100644
+--- a/reference/utility/unreachable.md
++++ b/reference/utility/unreachable.md
+@@ -19,7 +19,7 @@ namespace std {
+ 
+ 
+ ## 備考
+-`std::unreachable`関数の事前条件は決して満たされない（恒偽式）となるため、関数呼び出しは常に未定義の動作を引き起こす。
++`std::unreachable`関数の事前条件は決して満たされない（恒偽式）ため、関数呼び出しは常に未定義の動作を引き起こす。
+ C++コンパイラはこの情報を利用し、`std::unreachable`呼び出しを含まないコードパスのみが実行されうると仮定して、より高速に動作するプログラムを生成する可能性がある。
+ 
+ 
+@@ -28,15 +28,18 @@ C++コンパイラはこの情報を利用し、`std::unreachable`呼び出し
+ #include &amp;lt;iostream&amp;gt;
+ #include &amp;lt;utility&amp;gt;
+ 
+-int f(int x)
++int flip(int x)
+ {
+- switch (x) {
+- case 0:
+- case 1:
+-   return x;
+- default:
+-   std::unreachable();
+- }
++  switch (x) {
++  case 0:
++    return 1;
++  case 1:
++    return 0;
++  default:
++    // C++コンパイラは引数 x が値0,1以外を取らないと
++    // 仮定したコード生成を行う可能性がある。
++    std::unreachable();
++  }
+ }
+ 
+ int main()
+@@ -50,8 +53,8 @@ int main()
+ 
+ ### 出力
+ ```
+-0
+ 1
++0
+ ```
+ 
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>format -- format : Rangeのデバッグ出力を解除する例を記載 #1085</title>
@@ -858,178 +922,6 @@ index 388f6a913..b6af30926 100644
       <author>
         <name>Akira Takahashi</name>
         <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>可変長データを扱うクラスの効率的な`delete` -- 仕様と例の追記 #1102</title>
-      <link href="https://cpprefjp.github.io/lang/cpp20/efficient_sized_delete_for_variable_sized_classes.html"/>
-      <id>f86e3825c89e743aedfdd3d66a1850cbd74d63f2:lang/cpp20/efficient_sized_delete_for_variable_sized_classes.md</id>
-      <updated>2023-01-17T18:15:48+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/efficient_sized_delete_for_variable_sized_classes.md b/lang/cpp20/efficient_sized_delete_for_variable_sized_classes.md
-index cffee868b..dc5424748 100644
---- a/lang/cpp20/efficient_sized_delete_for_variable_sized_classes.md
-+++ b/lang/cpp20/efficient_sized_delete_for_variable_sized_classes.md
-@@ -69,10 +69,62 @@ int main() {
- 
- ## 仕様
- 
--- クラス`C`に対する*destroying operator delete*の第一引数は`C*`でなければならない
--- *destroying operator delete*の戻り値型は`void`でなければならない
-+クラススコープで定義された`operator delete()`で、第二引数が`std::destroying_delete_t`であるものを*destroying operator delete*と呼ぶ。クラス`C`に対する*destroying operator delete*の第一引数は`C*`でなければならず、その2点以外は通常の`operator delete`オーバーロードの制約に従う。
- 
--（執筆中）
-+```cpp
-+struct S {
-+  // これらの宣言はいずれも、destroying operator deleteではない（コンパイルエラーとなる）
-+  void operator delete(void*, std::destroying_delete_t);      // 第一引数はS*
-+  void operator delete(S*, auto);                             // 第二引数は std::destroying_delete_t
-+  int* operator delete(S*, std::destroying_delete_t);         // 戻り値はvoid
-+  virtual void operator delete(S*, std::destroying_delete_t); // 仮想関数にできない
-+};
-+```
-+
-+単一オブジェクトに対する`delete`式の実行に伴う`operator delete`の探索の結果、その候補の中に*destroying operator delete*が含まれている場合、*destroying operator delete*ではない`operator delete`は候補から外れる。
-+
-+```cpp
-+struct S {
-+  // destroying operator delete
-+  void operator delete(S*, std::destroying_delete_t);
-+
-+  // destroying operator deleteが定義されている限り、こちらが呼び出されることはない
-+  void operator delete(void*);
-+};
-+```
-+
-+ただし、配列に対する`delete`式の場合は、*destroying operator delete*は考慮されない。
-+
-+```cpp
-+struct S {
-+  // #1 destroying operator delete
-+  void operator delete(S* p, std::destroying_delete_t) {
-+    std::cout &amp;lt;&amp;lt; &amp;#34;S::operator delete()\n&amp;#34;;
-+
-+    std::destroy_at(p);
-+    ::operator delete(p);
-+  }
-+};
-+
-+int main() {
-+  S* p = new S[1]{};
-+
-+  // #1は呼び出されず、要素ごとに破棄された後で配列の領域が解放される
-+  delete[] p;
-+}
-+```
-+
-+また、配列板の`operator delete[]`を*destroying operator delete*としてオーバーロードすることもできない。
-+
-+```cpp
-+struct S {
-+  void operator delete[](S* p, std::destroying_delete_t); // ng
-+};
-+```
-+
-+単一オブジェクトに対する`delete`式においてそのオブジェクトの静的型と動的型が一致しない場合（つまり、基底クラスのポインタから派生クラスのオブジェクトを`delete`しようとする場合など）、その静的型はその動的型の基底クラスである必要があり両方の型に仮想デストラクタが必要となるが、*destroying operator delete*が`operator delete`として使用される場合にはその必要はない。したがって、*destroying operator delete*が使用されない場合に`delete`式が指定されたポインタの指す最も派生したオブジェクトを削除せず未定義動作になるような場合（仮想デストラクタの定義忘れなど）でも、*destroying operator delete*が使用された場合は未定義動作とならない（ただし、呼び出された*destroying operator delete*がそのオブジェクトを正しく破棄しない場合は未定義動作となりうる）。
-+
-+*destroying operator delete*が`operator delete`として使用される`delete`式の実行において、`delete`式は`delete`対象オブジェクトのデストラクタを呼び出さないで`operator delete`を呼び出す。また、その際の*destroying operator delete*の第二引数（`std::destroying_delete_t`に対応する引数）に渡される値は未規定。
- 
- ## 例
- 
-@@ -159,7 +211,7 @@ int main() {
- * std::ranges::destroy[link /reference/memory/ranges_destroy.md]
- 
- 
--### 出力
-+#### 出力
- 
- ```
- inlined_fixed_string::Make() : 47 byte allocate.
-@@ -167,6 +219,78 @@ C++20 destroying operator delete test.
- inlined_fixed_string::operator delete() : 47 byte deallocate.
- ```
- 
-+### 正しいデストラクタへのディスパッチ
-+
-+```cpp example
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;new&amp;gt;
-+
-+// 仮想デストラクタを定義しない基底クラス
-+struct base {
-+  int kind = 0;
-+
-+  // destroying operator delete宣言 #1
-+  void operator delete(base* p, std::destroying_delete_t);
-+};
-+
-+struct derived1 : base {
-+  derived1() : base{1} {}
-+};
-+
-+struct derived2 : base {
-+  derived2() : base{2} {}
-+};
-+
-+// #1に対応する定義
-+void base::operator delete(base* p, std::destroying_delete_t) {
-+
-+  switch(p-&amp;gt;kind) {
-+    case 1:
-+    {
-+      auto* dp = static_cast&amp;lt;derived1*&amp;gt;(p);
-+      std::destroy_at(dp);
-+      ::operator delete(dp);
-+      std::cout &amp;lt;&amp;lt; &amp;#34;destruct derived1\n&amp;#34;;
-+      break;
-+    }
-+    case 2:
-+    {
-+      auto* dp = static_cast&amp;lt;derived2*&amp;gt;(p);
-+      std::destroy_at(dp);
-+      ::operator delete(dp);
-+      std::cout &amp;lt;&amp;lt; &amp;#34;destruct derived2\n&amp;#34;;
-+      break;
-+    }
-+    default:
-+      std::destroy_at(p);
-+      ::operator delete(p);
-+      std::cout &amp;lt;&amp;lt; &amp;#34;destruct base\n&amp;#34;;
-+  }
-+}
-+
-+int main() {
-+  {
-+    base* p = new derived1{};
-+    // #1によってderived1のデストラクタが呼ばれ、メモリが解放される
-+    delete p;
-+  }
-+  {
-+    base* p = new derived2{};
-+    // #1によってderived2のデストラクタが呼ばれ、メモリが解放される
-+    delete p;
-+  }
-+}
-+```
-+* destroying_delete_t[color ff0000]
-+* std::destroy_at[link /reference/memory/destroy_at.md]
-+
-+#### 出力
-+
-+```
-+destruct derived1
-+destruct derived2
-+```
-+
- ## この機能が必要になった背景・経緯
- （執筆中）
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
       </author>
     </entry>
   
