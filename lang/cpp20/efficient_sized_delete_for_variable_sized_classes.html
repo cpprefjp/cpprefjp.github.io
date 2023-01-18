@@ -188,8 +188,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2023-01-17T09:15:48">
-        2023年01月17日 09時15分48秒
+      <span itemprop="datePublished" content="2023-01-18T08:57:22">
+        2023年01月18日 08時57分22秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -318,6 +318,44 @@
 </p>
 <p>単一オブジェクトに対する<code>delete</code>式においてそのオブジェクトの静的型と動的型が一致しない場合（つまり、基底クラスのポインタから派生クラスのオブジェクトを<code>delete</code>しようとする場合など）、その静的型はその動的型の基底クラスである必要があり両方の型に仮想デストラクタが必要となるが、<em>destroying operator delete</em>が<code>operator delete</code>として使用される場合にはその必要はない。したがって、<em>destroying operator delete</em>が使用されない場合に<code>delete</code>式が指定されたポインタの指す最も派生したオブジェクトを削除せず<a class="cpprefjp-defined-word" data-desc="未定義の動作。処理系は予期せぬ動作をする可能性がある。要するに動作保証対象外" href="https://cpprefjp.github.io/implementation-compliance.html#dfn-undefined-behavior">未定義動作</a>になるような場合（仮想デストラクタの定義忘れなど）でも、<em>destroying operator delete</em>が使用された場合は<a class="cpprefjp-defined-word" data-desc="未定義の動作。処理系は予期せぬ動作をする可能性がある。要するに動作保証対象外" href="https://cpprefjp.github.io/implementation-compliance.html#dfn-undefined-behavior">未定義動作</a>とならない（ただし、呼び出された<em>destroying operator delete</em>がそのオブジェクトを正しく破棄しない場合は<a class="cpprefjp-defined-word" data-desc="未定義の動作。処理系は予期せぬ動作をする可能性がある。要するに動作保証対象外" href="https://cpprefjp.github.io/implementation-compliance.html#dfn-undefined-behavior">未定義動作</a>となりうる）。</p>
 <p><em>destroying operator delete</em>が<code>operator delete</code>として使用される<code>delete</code>式の実行において、<code>delete</code>式は<code>delete</code>対象オブジェクトのデストラクタを呼び出さないで<code>operator delete</code>を呼び出す。また、その際の<em>destroying operator delete</em>の第二引数（<code>std::destroying_delete_t</code>に対応する引数）に渡される値は<a class="cpprefjp-defined-word" data-desc="未規定の動作。事前の断りなく処理系によって異なる動作をする" href="https://cpprefjp.github.io/implementation-compliance.html#dfn-unspecified-behavior">未規定</a>。</p>
+<p><code>delete</code>式に指定されているポインタの指すオブジェクトがクラス型であり、そのデストラクタが仮想デストラクタである場合、その<code>delete</code>式の実行に伴う<code>operator delete</code>の探索はそのオブジェクトの動的型（実行時の実際のクラス型）のスコープで行われる。この探索は、クラスの仮想関数を基底クラスから呼び出す時と同じものである。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="c1">// 基底クラス</span>
+<span class="k">struct</span> <span class="n">B</span> <span class="p">{</span>
+  <span class="k">virtual</span> <span class="o">~</span><span class="n">B</span><span class="p">();</span>
+
+  <span class="c1">// 普通のdelete演算子オーバーロード</span>
+  <span class="kt">void</span> <span class="k">operator</span> <span class="nf">delete</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">,</span> <span class="n"><a href="https://cpprefjp.github.io/reference/cstddef/size_t.html">std::size_t</a></span><span class="p">);</span>
+<span class="p">};</span>
+
+<span class="c1">// 派生クラス1</span>
+<span class="k">struct</span> <span class="nl">D</span> <span class="p">:</span> <span class="n">B</span> <span class="p">{</span>
+  <span class="c1">// 普通のdelete演算子オーバーロード</span>
+  <span class="kt">void</span> <span class="k">operator</span> <span class="k">delete</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">);</span>
+<span class="p">};</span>
+
+<span class="c1">// 派生クラス2</span>
+<span class="k">struct</span> <span class="nl">E</span> <span class="p">:</span> <span class="n">B</span> <span class="p">{</span>
+  <span class="kt">void</span> <span class="n">log_deletion</span><span class="p">();</span>
+
+  <span class="c1">// destroying operator delete</span>
+  <span class="kt">void</span> <span class="k">operator</span> <span class="nf">delete</span><span class="p">(</span><span class="n">E</span> <span class="o">*</span><span class="n">p</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">destroying_delete_t</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">p</span><span class="o">-&gt;</span><span class="n">log_deletion</span><span class="p">();</span>
+    <span class="n">p</span><span class="o">-&gt;~</span><span class="n">E</span><span class="p">();</span>
+    <span class="o">::</span><span class="k">operator</span> <span class="k">delete</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="kt">void</span> <span class="nf">f</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">B</span><span class="o">*</span> <span class="n">bp</span> <span class="o">=</span> <span class="k">new</span> <span class="n">D</span><span class="p">;</span>
+  <span class="k">delete</span> <span class="n">bp</span><span class="p">;</span> <span class="c1">// #1 D::operator delete(void*)が呼び出される</span>
+
+  <span class="n">bp</span> <span class="o">=</span> <span class="k">new</span> <span class="n">E</span><span class="p">;</span>
+  <span class="k">delete</span> <span class="n">bp</span><span class="p">;</span> <span class="c1">// #2 E::operator delete(E*, std::destroying_delete_t)が呼び出される</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<p><code>#1</code>において、<code>D</code>のオブジェクトは<code>delete</code>式によって破棄され、そのメモリ領域は<code>D::operator delete</code>によって解放される。<br />
+<code>#2</code>において、<code>E</code>のオブジェクトの破棄とそのメモリ領域の解放は<code>E::operator delete</code>（<em>destroying operator delete</em>）によって行われる。</p>
 <h2>例</h2>
 <h3>可変サイズクラスの<code>delete</code></h3>
 <p><div class="yata" id="de6681b74fc48ef06158b091d3afe2be040eed6e"><div class="codehilite"><pre><span></span><code><span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/iostream.html">&lt;iostream&gt;</a></span><span class="cp"></span>
@@ -467,17 +505,89 @@ inlined_fixed_string::operator delete() : 47 byte deallocate.
 destruct derived2
 </code></pre></p>
 <h2>この機能が必要になった背景・経緯</h2>
-<p>（執筆中）</p>
+<p>1つ目の例に挙げた<code>inlined_fixed_string</code>のような可変サイズクラスの定義は、ポインタの間接参照を回避しながら可変長配列を定義することができ、よく書かれるパターンだった（実際には<em>flexible array member</em>を使用することが多い）。</p>
+<p>しかし、このようなクラスは<a href="https://cpprefjp.github.io/lang/cpp14/sized_deallocation.html">サイズ付きデアロケーション</a>を活用して効率的に削除することができなかった。</p>
+<p><code>inlined_fixed_string</code>のオブジェクトを指すポインタを<code>s</code>とすると、<code>delete s;</code>という式の実行において、C++14（<a href="https://cplusplus.github.io/CWG/issues/2248" target="_blank">CWG Issue 2248</a>解決前）のコンパイラは次のようなコードを呼び出す必要があった</p>
+<p><div class="codehilite"><pre><span></span><code><span class="o">::</span><span class="k">operator</span> <span class="k">delete</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">full_size</span><span class="p">);</span>
+</code></pre></div>
+</p>
+<p>しかし、この場合に自動で<code>full_size</code>を取得することはできない。</p>
+<p>C++17では代わりに次のようなコードを出力する</p>
+<p><div class="codehilite"><pre><span></span><code><span class="o">::</span><span class="k">operator</span> <span class="k">delete</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">inlined_fixed_string</span><span class="p">));</span>
+</code></pre></div>
+</p>
+<p>が、これは正しく確保したメモリ領域を解放していない。</p>
+<p>正しくは、クラスで<code>operator delete</code>をオーバーロードする必要がある</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">static</span> <span class="kt">void</span> <span class="k">operator</span> <span class="nf">delete</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">ptr</span><span class="p">)</span> <span class="p">{</span>
+  <span class="o">::</span><span class="k">operator</span> <span class="k">delete</span><span class="p">(</span><span class="n">ptr</span><span class="p">);</span> <span class="c1">// アロケータが知っているptrのサイズ情報に頼る（アロケータでそのサイズを求めるためのオーバーヘッドが発生しうる）</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<p>すなわち、サイズ付きデアロケーションを全く利用しない。これは安全に解放できるようになる一方で、サイズ付きデアロケーションのパフォーマンス上の利点を全て捨てることになる。</p>
+<p>理想的には、クラスが保存している実際に確保したメモリのサイズを取得できることが望ましい</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">static</span> <span class="kt">void</span> <span class="k">operator</span> <span class="nf">delete</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">ptr</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">inlined_fixed_string</span> <span class="o">*</span><span class="n">s</span> <span class="o">=</span> <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">inlined_fixed_string</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">ptr</span><span class="p">);</span> <span class="c1">// UB</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/cstddef/size_t.html">std::size_t</a></span> <span class="n">full_size</span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">inlined_fixed_string</span><span class="p">)</span> <span class="o">+</span> <span class="n">s</span><span class="o">-&gt;</span><span class="n">size</span><span class="p">();</span>       <span class="c1">// UB</span>
+  <span class="o">::</span><span class="k">operator</span> <span class="k">delete</span><span class="p">(</span><span class="n">ptr</span><span class="p">,</span> <span class="n">full_size</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<p>しかし、前述のように、この<code>operator delete</code>実行の前に<code>ptr</code>にあるオブジェクトは破棄されているため、これは<a class="cpprefjp-defined-word" data-desc="未定義の動作。処理系は予期せぬ動作をする可能性がある。要するに動作保証対象外" href="https://cpprefjp.github.io/implementation-compliance.html#dfn-undefined-behavior">未定義動作</a>となる。</p>
+<p><em>destroying operator delete</em>は、この一番最後の<code>operator delete</code>相当のコードを安全にし、このような可変長クラスの<code>delete</code>を効率化するために導入された。</p>
 <h2>検討されたほかの選択肢</h2>
-<p>（執筆中）</p>
+<h3><code>delete p</code>以外の削除メカニズム</h3>
+<p><em>destroying operator delete</em>が必要となる場合に、<code>delete</code>式ではなく別のメカニズムによってオブジェクトの破棄とメモリ解放を行う方法が検討された。しかし、これに次のような欠点がある</p>
+<ul>
+<li><a class="cpprefjp-defined-word" data-desc="プログラム定義型。標準ライブラリの型を除く、ユーザー（プログラマ）によって定義された型のこと">ユーザー定義型</a>が組み込み型と同様に使用されるという原則に違反している<ul>
+<li>この方法の場合、<code>delete</code>式が使えなくなる</li>
+</ul>
+</li>
+<li>仮想デストラクタを持つ既存のクラス階層は、動的にクラスレイアウトの先頭/末尾に領域を拡張する派生クラスに対して透過的に拡張できない</li>
+<li>メモリ解放戦略のローカルな選択がコードの利用者にリークする<ul>
+<li><code>std::unique_ptr</code>などにおいてはカスタムデリータを指定しなければならない</li>
+<li><code>std::make_unique</code>などは使用できない</li>
+<li>リソース管理に<code>new/delete</code>を使用する多くのリソース管理クラスを使用できない</li>
+</ul>
+</li>
+</ul>
+<p>これらの欠点（特に、<code>delete</code>式が使用できないこと）によって、この方法は好まれなかった。</p>
+<h3>destroying operator deleteの別の構文</h3>
+<p><em>destroying operator delete</em>を宣言する構文として、いくつかの構文が検討された。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">struct</span> <span class="n">S</span> <span class="p">{</span>
+  <span class="c1">// 1. void*の代わりにS*をとる</span>
+  <span class="kt">void</span> <span class="k">operator</span> <span class="k">delete</span><span class="p">(</span><span class="n">S</span><span class="o">*</span><span class="p">);</span>
+
+  <span class="c1">// 2. 1+~を先頭につける</span>
+  <span class="kt">void</span> <span class="k">operator</span> <span class="o">~</span><span class="k">delete</span><span class="p">(</span><span class="n">S</span><span class="o">*</span><span class="p">);</span>
+
+  <span class="c1">// 3. デストラクタ風宣言</span>
+  <span class="o">~</span><span class="n">S</span> <span class="k">delete</span><span class="p">();</span>
+<span class="p">};</span>
+</code></pre></div>
+</p>
+<ol>
+<li>通常の<code>operator delete</code>オーバーロードと区別がつきづらい</li>
+<li>まだ通常の<code>operator delete</code>オーバーロードと区別がつきづらい<ul>
+<li><code>~delete</code>は新しい演算子であるため可読性の問題がある</li>
+<li><em>destroying operator delete</em>は<code>delete</code>式の実行を完全にオーバーライドするものだが、異なる演算子オーバーロードになっていることによってそれを表現していない</li>
+</ul>
+</li>
+<li>デストラクタ風味の宣言によって、サブオブジェクト（メンバや基底クラス）のデストラクタが自動で呼ばれるという勘違いを招く可能性がある。<ul>
+<li>加えて、2と同様の問題がある</li>
+</ul>
+</li>
+</ol>
+<p>結局、<code>std::destroying_delete_t</code>を第二引数に取る形が一番シンプルかつ可読性が高いとして採用された。</p>
 <h2>関連項目</h2>
 <ul>
+<li><a href="https://cpprefjp.github.io/lang/cpp14/sized_deallocation.html">C++14 サイズ付きデアロケーション</a></li>
 <li><code><a href="https://cpprefjp.github.io/reference/new/destroying_delete_t.html">std::destroying_delete_t</a></code></li>
 </ul>
 <h2>参照</h2>
 <ul>
 <li><a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0722r3.html" target="_blank">P0722R3 Efficient sized delete for variable sized classes</a></li>
 <li><a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0722r1.html" target="_blank">P0722R1 Efficient sized delete for variable sized classes</a></li>
+<li><a href="https://cplusplus.github.io/CWG/issues/2248" target="_blank">CWG Issue 2248. Problems with sized delete</a></li>
 </ul></div>
 
       </div>
