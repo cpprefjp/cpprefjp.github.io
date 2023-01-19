@@ -2,9 +2,54 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2023-01-19T08:16:04.748471</updated>
-  <id>c8fa2c3b-66f6-4b78-b232-b93bf8c74cd3</id>
+  <updated>2023-01-19T09:31:10.798861</updated>
+  <id>235f3b54-2203-48a3-a89f-ee1379cffbe8</id>
 
+  
+    <entry>
+      <title>可変長データを扱うクラスの効率的な`delete` -- 可変長データを扱うクラスの効率的なdelete : 修正と追記</title>
+      <link href="https://cpprefjp.github.io/lang/cpp20/efficient_sized_delete_for_variable_sized_classes.html"/>
+      <id>84f996ba10e58682f9cb49fa77382f745e3b71a9:lang/cpp20/efficient_sized_delete_for_variable_sized_classes.md</id>
+      <updated>2023-01-19T18:27:02+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/efficient_sized_delete_for_variable_sized_classes.md b/lang/cpp20/efficient_sized_delete_for_variable_sized_classes.md
+index 913238ea8..2d16ae931 100644
+--- a/lang/cpp20/efficient_sized_delete_for_variable_sized_classes.md
++++ b/lang/cpp20/efficient_sized_delete_for_variable_sized_classes.md
+@@ -14,7 +14,7 @@ struct S {
+   // #1 Sのための operator delete オーバーロード
+   void operator delete(void* p) {
+     // Sのオブジェクトは破棄済みのため、未定義動作となる
+-    const S&amp;amp; self = *p;       // UB
++    const S* self = reinterpret_cast&amp;lt;const S*&amp;gt;(p);  // UB
+     std::cout &amp;lt;&amp;lt; self-&amp;gt;str;   // UB
+ 
+     // メモリ領域の解放
+@@ -69,7 +69,7 @@ int main() {
+ 
+ ## 仕様
+ 
+-クラススコープで定義された`operator delete()`で、第二引数が`std::destroying_delete_t`であるものを*destroying operator delete*と呼ぶ。クラス`C`に対する*destroying operator delete*の第一引数は`C*`でなければならず、その2点以外は通常の`operator delete`オーバーロードの制約に従う。
++クラススコープで定義された`operator delete()`で、第二引数が`std::destroying_delete_t`であるものを*destroying operator delete*と呼ぶ。クラス`C`に対する*destroying operator delete*の第一引数は`C*`でなければならず、それらの点以外は通常の`operator delete`オーバーロードの制約に従う。
+ 
+ ```cpp
+ struct S {
+@@ -126,7 +126,7 @@ struct S {
+ 
+ *destroying operator delete*が`operator delete`として使用される`delete`式の実行において、`delete`式は`delete`対象オブジェクトのデストラクタを呼び出さないで`operator delete`を呼び出す。また、その際の*destroying operator delete*の第二引数（`std::destroying_delete_t`に対応する引数）に渡される値は未規定。
+ 
+-`delete`式に指定されているポインタの指すオブジェクトがクラス型であり、そのデストラクタが仮想デストラクタである場合、その`delete`式の実行に伴う`operator delete`の探索はそのオブジェクトの動的型（実行時の実際のクラス型）のスコープで行われる。この探索は、クラスの仮想関数を基底クラスから呼び出す時と同じものである。
++*destroying operator delete*に限らず全ての`operator delete`オーバーロードにおいて、`delete`式に指定されているポインタの指すオブジェクトがクラス型であり、そのデストラクタが仮想デストラクタである場合、その`delete`式の実行に伴う`operator delete`の探索はそのオブジェクトの動的型（実行時の実際のクラス型）のスコープで行われる。この探索は、クラスの仮想関数を基底クラスから呼び出す時と同じものである。
+ 
+ ```cpp
+ // 基底クラス
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>format_kind -- format_kind : 見出しミスを修正</title>
@@ -1537,59 +1582,6 @@ index cb05cd2f4..0805a8b6e 100644
  - [Visual Studio 2017 version 15.9.0 - Visual Studio 2017 version 15.9 Release Notes](https://docs.microsoft.com/en-us/visualstudio/releasenotes/vs2017-relnotes#-c)
 +- [P2291R3: Add Constexpr Modifiers to Functions to_chars and from_chars for Integral Types in `&amp;lt;charconv&amp;gt;` Header](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2291r3.pdf)
 +    - C++23での(1)constexpr指定
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>rethrow_exception -- exception/rethrow_exception: P1675P2対応(#1060)</title>
-      <link href="https://cpprefjp.github.io/reference/exception/rethrow_exception.html"/>
-      <id>ccc68e9e6e5c615c4801914c5e7110b53ba4d80e:reference/exception/rethrow_exception.md</id>
-      <updated>2023-01-19T14:21:34+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/exception/rethrow_exception.md b/reference/exception/rethrow_exception.md
-index b40a019c7..c84d46525 100644
---- a/reference/exception/rethrow_exception.md
-+++ b/reference/exception/rethrow_exception.md
-@@ -7,15 +7,25 @@
- ```cpp
- [[noreturn]] void rethrow_exception(exception_ptr p);
- ```
-+* exception_ptr[link exception_ptr.md]
- 
- ## 概要
- `exception_ptr`が指す例外オブジェクトを再スローする。
- 
- 
--## 要件
-+## 事前条件
- `p`がヌルを指す`exception_ptr`ではないこと。
- 
- 
-+## 効果
-+説明用の変数`u`を、`p`が指す例外オブジェクトもしくはそのコピーとする。
-+コピーが行われるか否か、コピー時にメモリ確保が行われるか否かは未規定とされる。
-+
-+- `u`用のメモリ確保に失敗した場合、[`bad_alloc`](/reference/new/bad_alloc.md)例外がスローされる。
-+- そうでなければ、`p`が指す例外オブジェクトから`u`へのコピー時に例外スローされた場合、その例外がスローされる。
-+- そうでなければ、`throw u;`
-+
-+
- ## 戻り値
- この関数は決して返らない。
- 
-@@ -73,5 +83,5 @@ terminate called after throwing an instance of &amp;#39;std::runtime_error&amp;#39;
- 
- ## 参照
- - [N2179 Language Support for Transporting Exceptions between Threads](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2179.html)
--
--
-+- [P1675R2 `rethrow_exception` must be allowed to copy](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p1675r2.pdf)
-+    - 既存C++コンパイラの挙動にあわせて効果(Effects)文面を修正。
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>

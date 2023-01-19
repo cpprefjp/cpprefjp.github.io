@@ -188,8 +188,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2023-01-18T08:57:22">
-        2023年01月18日 08時57分22秒
+      <span itemprop="datePublished" content="2023-01-19T09:27:02">
+        2023年01月19日 09時27分02秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -223,7 +223,7 @@
   <span class="c1">// #1 Sのための operator delete オーバーロード</span>
   <span class="kt">void</span> <span class="k">operator</span> <span class="nf">delete</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">p</span><span class="p">)</span> <span class="p">{</span>
     <span class="c1">// Sのオブジェクトは破棄済みのため、未定義動作となる</span>
-    <span class="k">const</span> <span class="n">S</span><span class="o">&amp;</span> <span class="n">self</span> <span class="o">=</span> <span class="o">*</span><span class="n">p</span><span class="p">;</span>       <span class="c1">// UB</span>
+    <span class="k">const</span> <span class="n">S</span><span class="o">*</span> <span class="n">self</span> <span class="o">=</span> <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="k">const</span> <span class="n">S</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>  <span class="c1">// UB</span>
     <span class="n"><a href="https://cpprefjp.github.io/reference/iostream/cout.html">std::cout</a></span> <span class="o">&lt;&lt;</span> <span class="n">self</span><span class="o">-&gt;</span><span class="n">str</span><span class="p">;</span>   <span class="c1">// UB</span>
 
     <span class="c1">// メモリ領域の解放</span>
@@ -271,7 +271,7 @@
 </p>
 <p>このように、<code>std::destroying_delete_t</code>を取る<code>operator delete</code>のオーバーロードのことを<em>destroying operator delete</em>と呼ぶ。<em>destroying operator delete</em>においては、<code>delete</code>式が行う全てのことをユーザーが行う必要がある。</p>
 <h2>仕様</h2>
-<p>クラススコープで定義された<code>operator delete()</code>で、第二引数が<code>std::destroying_delete_t</code>であるものを<em>destroying operator delete</em>と呼ぶ。クラス<code>C</code>に対する<em>destroying operator delete</em>の第一引数は<code>C*</code>でなければならず、その2点以外は通常の<code>operator delete</code>オーバーロードの制約に従う。</p>
+<p>クラススコープで定義された<code>operator delete()</code>で、第二引数が<code>std::destroying_delete_t</code>であるものを<em>destroying operator delete</em>と呼ぶ。クラス<code>C</code>に対する<em>destroying operator delete</em>の第一引数は<code>C*</code>でなければならず、それらの点以外は通常の<code>operator delete</code>オーバーロードの制約に従う。</p>
 <p><div class="codehilite"><pre><span></span><code><span class="k">struct</span> <span class="n">S</span> <span class="p">{</span>
   <span class="c1">// これらの宣言はいずれも、destroying operator deleteではない（コンパイルエラーとなる）</span>
   <span class="kt">void</span> <span class="k">operator</span> <span class="k">delete</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">destroying_delete_t</span><span class="p">);</span>      <span class="c1">// 第一引数はS*</span>
@@ -318,7 +318,7 @@
 </p>
 <p>単一オブジェクトに対する<code>delete</code>式においてそのオブジェクトの静的型と動的型が一致しない場合（つまり、基底クラスのポインタから派生クラスのオブジェクトを<code>delete</code>しようとする場合など）、その静的型はその動的型の基底クラスである必要があり両方の型に仮想デストラクタが必要となるが、<em>destroying operator delete</em>が<code>operator delete</code>として使用される場合にはその必要はない。したがって、<em>destroying operator delete</em>が使用されない場合に<code>delete</code>式が指定されたポインタの指す最も派生したオブジェクトを削除せず<a class="cpprefjp-defined-word" data-desc="未定義の動作。処理系は予期せぬ動作をする可能性がある。要するに動作保証対象外" href="https://cpprefjp.github.io/implementation-compliance.html#dfn-undefined-behavior">未定義動作</a>になるような場合（仮想デストラクタの定義忘れなど）でも、<em>destroying operator delete</em>が使用された場合は<a class="cpprefjp-defined-word" data-desc="未定義の動作。処理系は予期せぬ動作をする可能性がある。要するに動作保証対象外" href="https://cpprefjp.github.io/implementation-compliance.html#dfn-undefined-behavior">未定義動作</a>とならない（ただし、呼び出された<em>destroying operator delete</em>がそのオブジェクトを正しく破棄しない場合は<a class="cpprefjp-defined-word" data-desc="未定義の動作。処理系は予期せぬ動作をする可能性がある。要するに動作保証対象外" href="https://cpprefjp.github.io/implementation-compliance.html#dfn-undefined-behavior">未定義動作</a>となりうる）。</p>
 <p><em>destroying operator delete</em>が<code>operator delete</code>として使用される<code>delete</code>式の実行において、<code>delete</code>式は<code>delete</code>対象オブジェクトのデストラクタを呼び出さないで<code>operator delete</code>を呼び出す。また、その際の<em>destroying operator delete</em>の第二引数（<code>std::destroying_delete_t</code>に対応する引数）に渡される値は<a class="cpprefjp-defined-word" data-desc="未規定の動作。事前の断りなく処理系によって異なる動作をする" href="https://cpprefjp.github.io/implementation-compliance.html#dfn-unspecified-behavior">未規定</a>。</p>
-<p><code>delete</code>式に指定されているポインタの指すオブジェクトがクラス型であり、そのデストラクタが仮想デストラクタである場合、その<code>delete</code>式の実行に伴う<code>operator delete</code>の探索はそのオブジェクトの動的型（実行時の実際のクラス型）のスコープで行われる。この探索は、クラスの仮想関数を基底クラスから呼び出す時と同じものである。</p>
+<p><em>destroying operator delete</em>に限らず全ての<code>operator delete</code>オーバーロードにおいて、<code>delete</code>式に指定されているポインタの指すオブジェクトがクラス型であり、そのデストラクタが仮想デストラクタである場合、その<code>delete</code>式の実行に伴う<code>operator delete</code>の探索はそのオブジェクトの動的型（実行時の実際のクラス型）のスコープで行われる。この探索は、クラスの仮想関数を基底クラスから呼び出す時と同じものである。</p>
 <p><div class="codehilite"><pre><span></span><code><span class="c1">// 基底クラス</span>
 <span class="k">struct</span> <span class="n">B</span> <span class="p">{</span>
   <span class="k">virtual</span> <span class="o">~</span><span class="n">B</span><span class="p">();</span>
