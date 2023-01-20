@@ -2,9 +2,194 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2023-01-19T15:31:02.673058</updated>
-  <id>5e33a4cd-9a89-4479-930b-d1d38777d9e3</id>
+  <updated>2023-01-20T07:56:32.615004</updated>
+  <id>c0e15f35-f0c7-4c85-9b35-122bbc59d239</id>
 
+  
+    <entry>
+      <title>formatter -- formatter : C++23仕様に対応し、サンプルコードのコンパイルエラーを修正 (constが抜けてた) #1085</title>
+      <link href="https://cpprefjp.github.io/reference/format/formatter.html"/>
+      <id>53880060961c5a4400ef61ee610bd6077224c070:reference/format/formatter.md</id>
+      <updated>2023-01-20T16:51:46+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/formatter.md b/reference/format/formatter.md
+index e40791996..5d167a515 100644
+--- a/reference/format/formatter.md
++++ b/reference/format/formatter.md
+@@ -7,15 +7,34 @@
+ 
+ ```cpp
+ namespace std {
+-  template&amp;lt;class T, class U = char&amp;gt;
+-  struct formatter;
++  template &amp;lt;class T, class U = char&amp;gt;
++  struct formatter;                                          // (1) C++20
++
++  template &amp;lt;ranges::input_range R, class charT&amp;gt;
++    requires (format_kind&amp;lt;R&amp;gt; != range_format::disabled) &amp;amp;&amp;amp;
++             formattable&amp;lt;ranges::range_reference_t&amp;lt;R&amp;gt;, charT&amp;gt;
++  struct formatter&amp;lt;R, charT&amp;gt;
++    : range-default-formatter&amp;lt;format_kind&amp;lt;R&amp;gt;, R, charT&amp;gt; { }; // (2) C++23
++
++  template &amp;lt;class charT, formattable&amp;lt;charT&amp;gt;... Ts&amp;gt;
++  struct formatter&amp;lt;pair-or-tuple&amp;lt;Ts...&amp;gt;, charT&amp;gt;;             // (3) C++23
+ }
+ ```
++* ranges::input_range[link /reference/ranges/input_range.md]
++* format_kind[link format_kind.md]
++* range_format[link range_format.md]
++* formattable[link formattable.md]
++* ranges::range_reference_t[link /reference/ranges/range_reference_t.md]
++* range-default-formatter[link range-default-formatter.md.nolink]
+ 
+ ## 概要
+ フォーマット引数の個々の型に対応する書式文字列の解析と値のフォーマットを担うクラス。
+ 
+-`charT`を`char`または`wchar_t`とすると、標準で以下の特殊化が利用できる。
++- (1) : デフォルトのフォーマット
++- (2) : Range用のフォーマット。実装は[`range-default-formatter`](range-default-formatter.md.nolink)クラスが行う
++- (3) : [`std::pair`](/reference/utility/pair.md)と[`std::tuple`](/reference/tuple/tuple.md)に対する特殊化
++
++(1)は、`charT`を`char`または`wchar_t`とすると、標準で以下の特殊化が利用できる。
+ 
+ - 1 以下のもの。
+     ```cpp
+@@ -46,43 +65,67 @@ namespace std {
+ 
+ ワイド文字列とマルチバイト文字列を相互に変換するような特殊化は意図的に用意されていないが、ユーザーが用意することは禁止していない。
+ 
+-## Formatter要件
++## ユーザーの型で`formatter`を特殊化する場合の要件
+ 
+ `formatter`の有効な特殊化はFormatter要件を満たす必要がある。
+ 
+ 型`F`がFormatter要件を満たすとは、次のことをいう。
+ 
+-* `F`は`Cpp17DefaultConstructible`、`Cpp17CopyConstructible`、`Cpp17CopyAssignable`、`Cpp17Destructible`であること
++- `F`は`Cpp17DefaultConstructible`、`Cpp17CopyConstructible`、`Cpp17CopyAssignable`、`Cpp17Destructible`であること
+ 
+ さらに、以下の条件を満たすこと
+ 
+ 1. 式 `f.parse(pc)` が有効であり、
+-    * 戻り値の型が`PC::iterator`である
+-    * イテレータ範囲`[pc.begin(), pc.end())`を解析して`format_error`を投げるか、解析が終わった位置を指すイテレータを返す
++    - 戻り値の型が`PC::iterator`である
++    - イテレータ範囲`[pc.begin(), pc.end())`を解析して`format_error`を投げるか、解析が終わった位置を指すイテレータを返す
+ 2. 式 `f.format(t, fc)` が有効であり、
+-    * 戻り値の型が`FC::iterator`である
+-    * フォーマット結果を`fc.out()`へ出力し、出力後のイテレータを返す
+-    * 出力は`t`、`fc.locale()`、最後に呼び出された`f.parse(pc)`のイテレータ範囲`[pc.begin(), pc.end())`以外に依存しない
++    - 戻り値の型が`FC::iterator`である
++    - フォーマット結果を`fc.out()`へ出力し、出力後のイテレータを返す
++    - 出力は`t`、`fc.locale()`、最後に呼び出された`f.parse(pc)`のイテレータ範囲`[pc.begin(), pc.end())`以外に依存しない
+ 3. 式 `f.format(u, fc)` が有効であり、
+-    * 戻り値が`FC::iterator`である
+-    * フォーマット結果を`fc.out()`へ出力し、出力後のイテレータを返す
+-    * 出力は`u`、`fc.locale()`、最後に呼び出された`f.parse(pc)`のイテレータ範囲`[pc.begin(), pc.end())`以外に依存しない
+-    * `u`を変更しない
++    - 戻り値が`FC::iterator`である
++    - フォーマット結果を`fc.out()`へ出力し、出力後のイテレータを返す
++    - 出力は`u`、`fc.locale()`、最後に呼び出された`f.parse(pc)`のイテレータ範囲`[pc.begin(), pc.end())`以外に依存しない
++    - `u`を変更しない
+ 
+ 条件内の各要素を、以下のように定義する
+ 
+-* 文字の型を`charT`
+-* 出力イテレータの型を`Out`
+-* フォーマット引数の型を`T`
+-* `f`を`F`のオブジェクト
+-* `u`を`T`のlvalue
+-* `t`を`T`または`const T`へ変換できる型のオブジェクト
+-* `PC`を`basic_format_parse_context&amp;lt;charT&amp;gt;`
+-* `FC`を`basic_format_context&amp;lt;Out, charT&amp;gt;`
+-* `pc`を`PC`のlvalue
+-* `fc`を`FC`のlvalue
+-* `pc.begin()`は書式文字列中の対応する置換フィールドのオプションの先頭を指す
+-* オプションが空なら、`pc.begin() == pc.end()`または`*pc.begin() == &amp;#39;}&amp;#39;`である
++- 文字の型を`charT`
++- 出力イテレータの型を`Out`
++- フォーマット引数の型を`T`
++- `f`を`F`のオブジェクト
++- `u`を`T`のlvalue
++- `t`を`T`または`const T`へ変換できる型のオブジェクト
++- `PC`を[`basic_format_parse_context`](basic_format_parse_context.md)`&amp;lt;charT&amp;gt;`
++- `FC`を[`basic_format_context`](basic_format_context.md)`&amp;lt;Out, charT&amp;gt;`
++- `pc`を`PC`のlvalue
++- `fc`を`FC`のlvalue
++- `pc.begin()`は書式文字列中の対応する置換フィールドのオプションの先頭を指す
++- オプションが空なら、`pc.begin() == pc.end()`または`*pc.begin() == &amp;#39;}&amp;#39;`である
++
++
++## メンバ関数
++
++| メンバ関数 | 説明 | 対応バージョン |
++|------------|------|----------------|
++| [`parse`](formatter/parse.md.nolink)   | 書式の解析を行う | C++20 |
++| [`format`](formatter/format.md.nolink) | 書式化を行う | C++20 |
++
++
++### 文字・文字列に対する特殊化
++
++| メンバ関数 | 説明 | 対応バージョン |
++|------------|------|----------------|
++| [`set_debug_format`](formatter/set_debug_format.md.nolink) | デバッグ書式を有効にする | C++23 |
++
++
++### pair / tuple向けの特殊化
++
++| メンバ関数 | 説明 | 対応バージョン |
++|------------|------|----------------|
++| [`set_separator`](formatter/set_separator.md.nolink) | 要素の区切り文字を設定する | C++23 |
++| [`set_brackets`](formatter/set_brackets.md.nolink)   | 全体の囲み文字を設定する | C++23 |
++
+ 
+ ## 例
+ ```cpp example
+@@ -93,15 +136,15 @@ enum color { red, green, blue };
+ 
+ const char* color_names[] = { &amp;#34;red&amp;#34;, &amp;#34;green&amp;#34;, &amp;#34;blue&amp;#34; };
+ 
+-template&amp;lt;&amp;gt; struct std::formatter&amp;lt;color&amp;gt; : std::formatter&amp;lt;const char*&amp;gt; {
+-  auto format(color c, format_context&amp;amp; ctx) {
+-    return formatter&amp;lt;const char*&amp;gt;::format(color_names[c], ctx);
++template&amp;lt;&amp;gt;
++struct std::formatter&amp;lt;color&amp;gt; : std::formatter&amp;lt;const char*&amp;gt; {
++  auto format(color c, std::format_context&amp;amp; ctx) const {
++    return std::formatter&amp;lt;const char*&amp;gt;::format(color_names[c], ctx);
+   }
+ };
+ 
+ int main()
+ {
+-  int variable = 0;
+   std::cout &amp;lt;&amp;lt; std::format(&amp;#34;{}&amp;#34;, red) &amp;lt;&amp;lt; std::endl;
+ }
+ ```
+@@ -117,11 +160,13 @@ red
+ 
+ ### 処理系
+ - [Clang](/implementation.md#clang): ??
+-- [GCC](/implementation.md#gcc): ??
++- [GCC](/implementation.md#gcc): 13
+ - [ICC](/implementation.md#icc): ??
+ - [Visual C++](/implementation.md#visual_cpp): ??
+ 
+ ## 参照
+-
+-* [P0645R10 Text Formatting](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0645r10.html)
+-* [{fmt}](https://github.com/fmtlib/fmt)
++- [P0645R10 Text Formatting](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0645r10.html)
++- [{fmt}](https://github.com/fmtlib/fmt)
++- [P2286R8 Formatting Ranges](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2286r8.html)
++- [P2585R1 Improve default container formatting](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2585r1.html)
++    - C++23から、Range・コンテナ、`pair`、`tuple`のフォーマット出力、および文字・文字列のデバッグ指定 (`&amp;#34;?&amp;#34;`) が追加された
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>iterator -- Fix typo</title>
@@ -417,33 +602,6 @@ index 913238ea8..2d16ae931 100644
       <author>
         <name>onihusube</name>
         <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>format_kind -- format_kind : 見出しミスを修正</title>
-      <link href="https://cpprefjp.github.io/reference/format/format_kind.html"/>
-      <id>61cbf011ad1acf7aecc4eab5853ea65edb6a4e80:reference/format/format_kind.md</id>
-      <updated>2023-01-19T17:11:16+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/format_kind.md b/reference/format/format_kind.md
-index be59a73ce..84295fbb9 100644
---- a/reference/format/format_kind.md
-+++ b/reference/format/format_kind.md
-@@ -24,7 +24,7 @@ Rangeの書式種別を取得する変数テンプレート。
- - (2) 入力Rangeの型`R`に応じて、書式種別を取得する
- 
- 
--## 適格要件
-+## テンプレートパラメータ制約
- - (2) : 入力Rangeの型`R`は、const/volatileおよび参照で修飾されていないこと
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
       </author>
     </entry>
   
