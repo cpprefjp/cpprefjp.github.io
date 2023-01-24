@@ -2,9 +2,269 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2023-01-23T15:53:35.724929</updated>
-  <id>19f4d753-e051-4998-b179-9d4af7be1fe4</id>
+  <updated>2023-01-24T06:11:24.676093</updated>
+  <id>f481469c-81d2-40b2-9cc7-947422548eca</id>
 
+  
+    <entry>
+      <title>move_only_function -- move_only_function: 従来functionと対比した例示コードを拡充(#1056)</title>
+      <link href="https://cpprefjp.github.io/reference/functional/move_only_function.html"/>
+      <id>f85391077c46ea79afc2a1a5792bf3d7ac44b4e6:reference/functional/move_only_function.md</id>
+      <updated>2023-01-24T15:06:24+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/functional/move_only_function.md b/reference/functional/move_only_function.md
+index ebd0db201..3e189c013 100644
+--- a/reference/functional/move_only_function.md
++++ b/reference/functional/move_only_function.md
+@@ -16,12 +16,21 @@ namespace std {
+ ## 概要
+ `move_only_function`クラステンプレートは、パラメータの型リスト`ArgTypes...`、戻り値の型`R`に合致する、あらゆる関数ポインタ、関数オブジェクト、メンバ関数ポインタ、メンバ変数ポインタを保持できるクラスである。
+ 
+-下記全ての組み合わせ（12種類）についてクラステンプレートの部分特殊化が提供される。
++下記全ての組み合わせ（12種類）に対して、クラステンプレートの部分特殊化が提供される。
+ 
+ - CV修飾子 *cv* : `const`, CV修飾無し
+ - 参照修飾子 *ref* : `&amp;amp;`, `&amp;amp;&amp;amp;`, 参照修飾無し
+ - noexcept例外指定 *noex* : `true`, `false`
+ 
++### `function`との比較
++[`std::function`](function.md)と比べて、`std::move_only_function`は下記の特徴をもつ。
++
++- ムーブのみ対応。コピー不可。
++- const性を正しく伝搬する。
++- 関数型のCV修飾／参照修飾／noexcept例外指定をサポートする。
++- [`target_type`](function/target_type.md)型と[`target()`](function/target.md)を提供しない。
++- [関数呼び出し](move_only_function/op_call.md)は強い前提条件を持つ。
++
+ 
+ ## メンバ関数
+ ### 構築・破棄
+@@ -52,9 +61,10 @@ namespace std {
+ 
+ 
+ ## 例
++### 例1: 基本の使い方
+ ```cpp example
+-#include &amp;lt;iostream&amp;gt;
+ #include &amp;lt;functional&amp;gt;
++#include &amp;lt;iostream&amp;gt;
+ 
+ int add(int x) { return x + 1; }
+ 
+@@ -74,9 +84,139 @@ int main()
+ * std::move_only_function[color ff0000]
+ * f(1)[link move_only_function/op_call.md]
+ 
+-### 出力
++#### 出力
++```
++2
++```
++
++### 例2: const性の伝搬
++```cpp
++#include &amp;lt;functional&amp;gt;
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;string&amp;gt;
++#include &amp;lt;utility&amp;gt;
++
++struct Functor {
++  std::string operator()() {
++    return &amp;#34;non-const&amp;#34;;
++  }
++  std::string operator()() const {
++    return &amp;#34;const&amp;#34;;
++  }
++};
++
++int main()
++{
++  std::cout &amp;lt;&amp;lt; &amp;#34;-- move_only_function&amp;#34; &amp;lt;&amp;lt; std::endl;
++        std::move_only_function&amp;lt;std::string(void)&amp;gt;       mof1 = Functor{};
++  const std::move_only_function&amp;lt;std::string(void)&amp;gt;       mof2 = Functor{}; // (呼び出し時に不適格)
++        std::move_only_function&amp;lt;std::string(void) const&amp;gt; mof3 = Functor{};
++  const std::move_only_function&amp;lt;std::string(void) const&amp;gt; mof4 = Functor{};
++  std::cout &amp;lt;&amp;lt; &amp;#34;mof1: &amp;#34; &amp;lt;&amp;lt; mof1() &amp;lt;&amp;lt; std::endl;
++//std::cout &amp;lt;&amp;lt; &amp;#34;mof2: &amp;#34; &amp;lt;&amp;lt; mof2() &amp;lt;&amp;lt; std::endl; // 不適格
++  std::cout &amp;lt;&amp;lt; &amp;#34;mof3: &amp;#34; &amp;lt;&amp;lt; mof3() &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; &amp;#34;mof4: &amp;#34; &amp;lt;&amp;lt; mof4() &amp;lt;&amp;lt; std::endl;
++
++  std::cout &amp;lt;&amp;lt; &amp;#34;-- function&amp;#34; &amp;lt;&amp;lt; std::endl;
++        std::function&amp;lt;std::string(void)&amp;gt;       fn1 = Functor{};
++  const std::function&amp;lt;std::string(void)&amp;gt;       fn2 = Functor{};
++//      std::function&amp;lt;std::string(void) const&amp;gt; fn3 = Functor{}; // 不適格
++//const std::function&amp;lt;std::string(void) const&amp;gt; fn4 = Functor{}; // 不適格
++  std::cout &amp;lt;&amp;lt; &amp;#34;fn1: &amp;#34; &amp;lt;&amp;lt; fn1() &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; &amp;#34;fn2: &amp;#34; &amp;lt;&amp;lt; fn2() &amp;lt;&amp;lt; std::endl;
++}
++```
++* std::move_only_function[color ff0000]
++* std::function[link function.md]
++
++#### 出力
++```
++-- move_only_function
++mof1: non-const
++mof3: const
++mof4: const
++-- function
++fn1: non-const
++fn2: non-const
++```
++
++### 例3: 左辺値/右辺値の伝搬
++```cpp example
++#include &amp;lt;functional&amp;gt;
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;string&amp;gt;
++#include &amp;lt;utility&amp;gt;
++
++struct Functor {
++  std::string operator()() &amp;amp; {
++    return &amp;#34;L-val&amp;#34;;
++  }
++  std::string operator()() &amp;amp;&amp;amp; {
++    return &amp;#34;R-val&amp;#34;;
++  }
++};
++
++int main()
++{
++  std::cout &amp;lt;&amp;lt; &amp;#34;-- move_only_function&amp;#34; &amp;lt;&amp;lt; std::endl;
++  std::move_only_function&amp;lt;std::string(void)&amp;gt;    mof1 = Functor{};
++  std::move_only_function&amp;lt;std::string(void) &amp;amp;&amp;amp;&amp;gt; mof2 = Functor{};
++  std::cout &amp;lt;&amp;lt; &amp;#34;mof1/L-val: &amp;#34; &amp;lt;&amp;lt; mof1()            &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; &amp;#34;mof1/R-val: &amp;#34; &amp;lt;&amp;lt; std::move(mof1)() &amp;lt;&amp;lt; std::endl;
++//std::cout &amp;lt;&amp;lt; &amp;#34;mof2/L-val: &amp;#34; &amp;lt;&amp;lt; mof2()            &amp;lt;&amp;lt; std::endl; // 不適格
++  std::cout &amp;lt;&amp;lt; &amp;#34;mof2/R-val: &amp;#34; &amp;lt;&amp;lt; std::move(mof2)() &amp;lt;&amp;lt; std::endl;
++
++  std::cout &amp;lt;&amp;lt; &amp;#34;-- function&amp;#34; &amp;lt;&amp;lt; std::endl;
++  std::function&amp;lt;std::string(void)&amp;gt;    fn1 = Functor{};
++//std::function&amp;lt;std::string(void) &amp;amp;&amp;amp;&amp;gt; fn2 = Functor{}; // 不適格
++  std::cout &amp;lt;&amp;lt; &amp;#34;fn1/L-val: &amp;#34; &amp;lt;&amp;lt; fn1()            &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; &amp;#34;fn1/R-val: &amp;#34; &amp;lt;&amp;lt; std::move(fn1)() &amp;lt;&amp;lt; std::endl;
++}
++```
++* std::move_only_function[color ff0000]
++* std::function[link function.md]
++
++#### 出力
++```
++-- move_only_function
++mof1/L-val: L-val
++mof1/R-val: L-val
++mof2/R-val: R-val
++-- function
++fn1/L-val: L-val
++fn1/R-val: L-val
++```
++
++### 例4: noexcept指定の伝搬
++```cpp example
++#include &amp;lt;functional&amp;gt;
++
++void func() {}
++void func_noex() noexcept {}
++
++int main()
++{
++  std::move_only_function&amp;lt;void(void)&amp;gt;          mof1 = func;
++  std::move_only_function&amp;lt;void(void)&amp;gt;          mof2 = func_noex;
++//std::move_only_function&amp;lt;void(void) noexcept&amp;gt; mof3 = func; // 不適格
++  std::move_only_function&amp;lt;void(void) noexcept&amp;gt; mof4 = func_noex;
++  static_assert(not noexcept(mof1()));
++  static_assert(not noexcept(mof2()));
++  static_assert(    noexcept(mof4()));
++
++  std::function&amp;lt;void(void)&amp;gt;          fn1 = func;
++  std::function&amp;lt;void(void)&amp;gt;          fn2 = func_noex;
++//std::function&amp;lt;void(void) noexcept&amp;gt; fn3 = func;      // 不適格
++//std::function&amp;lt;void(void) noexcept&amp;gt; fn4 = func_noex; // 不適格
++  static_assert(not noexcept(fn1()));
++  static_assert(not noexcept(fn2()));
++}
++```
++* std::move_only_function[color ff0000]
++* std::function[link function.md]
++
++#### 出力
+ ```
+-1
+ ```
+ 
+ 
+@@ -86,7 +226,7 @@ int main()
+ 
+ ### 処理系
+ - [Clang](/implementation.md#clang): ??
+-- [GCC](/implementation.md#gcc): ??
++- [GCC](/implementation.md#gcc): 12.1
+ - [ICC](/implementation.md#icc): ??
+ - [Visual C++](/implementation.md#visual_cpp): ??
+ 
+@@ -97,3 +237,5 @@ int main()
+ 
+ ## 参照
+ - [P0288R9 move_only_function](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p0288r9.html)
++- [N4348 Making `std::function` safe for concurrency](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4348.html)
++    - `std::function`のconst性伝搬に関して、スレッドセーフ保証の観点からの問題指摘。
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator() -- move_only_function: 従来functionと対比した例示コードを拡充(#1056)</title>
+      <link href="https://cpprefjp.github.io/reference/functional/move_only_function/op_call.html"/>
+      <id>f85391077c46ea79afc2a1a5792bf3d7ac44b4e6:reference/functional/move_only_function/op_call.md</id>
+      <updated>2023-01-24T15:06:24+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/functional/move_only_function/op_call.md b/reference/functional/move_only_function/op_call.md
+index e72ca0069..fcc09a5ff 100644
+--- a/reference/functional/move_only_function/op_call.md
++++ b/reference/functional/move_only_function/op_call.md
+@@ -12,7 +12,12 @@ R operator()(ArgTypes... args) /*cv*/ /*ref*/ noexcept(/*noex*/);
+ ## 概要
+ 関数を呼び出す。
+ 
+-CV修飾子 *cv*, 参照修飾子 *ref*, noexcept例外指定 *noex* は[`move_only_function`](../move_only_function.md)に指定するテンプレートパラメータ`R(ArgTypes...)`部と等しい。
++`operator()`のCV修飾子 *cv*, 参照修飾子 *ref*, noexcept例外指定 *noex* は、[`move_only_function`](../move_only_function.md)に指定するテンプレートパラメータ`R(ArgTypes...)`部のものと等しい。
++
++説明用のプレースホルダ *inv-quals* を次のように定義する :
++
++- *ref* が空（参照修飾無し）ならば、*cv*`&amp;amp;`
++- そうでなければ、*cv* *ref*
+ 
+ 
+ ## 事前条件
+@@ -20,7 +25,7 @@ CV修飾子 *cv*, 参照修飾子 *ref*, noexcept例外指定 *noex* は[`move_o
+ 
+ 
+ ## 効果
+-`*this`が保持している`F`型の関数ポインタまたは関数オブジェクト`f`に対して、[`INVOKE&amp;lt;R&amp;gt;`](/reference/concepts/Invoke.md)`(static_cast&amp;lt;F inv-quals&amp;gt;(f),` [`std::forward`](/reference/utility/forward.md)`&amp;lt;ArgTypes&amp;gt;(args)...)`を行う。
++`*this`が保持している`F`型の関数ポインタまたは関数オブジェクト`f`に対して、[`INVOKE&amp;lt;R&amp;gt;`](/reference/concepts/Invoke.md)`(static_cast&amp;lt;F /*inv-quals*/&amp;gt;(f),` [`std::forward`](/reference/utility/forward.md)`&amp;lt;ArgTypes&amp;gt;(args)...)`を行う。
+ 
+ 
+ ## 戻り値
+@@ -58,7 +63,7 @@ int main()
+ 
+ ### 処理系
+ - [Clang](/implementation.md#clang): ??
+-- [GCC](/implementation.md#gcc): ??
++- [GCC](/implementation.md#gcc): 12.1
+ - [ICC](/implementation.md#icc): ??
+ - [Visual C++](/implementation.md#visual_cpp): ??
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>convertible_to -- 訳語表: &#34;program-defiend type&#34;を追加</title>
@@ -876,42 +1136,6 @@ index 000000000..d54d732a9
 +- [P2286R8 Formatting Ranges](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2286r8.html)
 +- [P2585R1 Improve default container formatting](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2585r1.html)
 +    - C++23から、Range・コンテナ、`pair`、`tuple`のフォーマット出力、および文字・文字列のデバッグ指定 (`&amp;#34;?&amp;#34;`) が追加された
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>advance_to -- basic_format_parse_context::advance_to : 説明見直し</title>
-      <link href="https://cpprefjp.github.io/reference/format/basic_format_parse_context/advance_to.html"/>
-      <id>d1ac632cff8ca15c520099a205d3039e6b7111c1:reference/format/basic_format_parse_context/advance_to.md</id>
-      <updated>2023-01-23T22:37:02+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/basic_format_parse_context/advance_to.md b/reference/format/basic_format_parse_context/advance_to.md
-index 5f490afd7..8d2967bf9 100644
---- a/reference/format/basic_format_parse_context/advance_to.md
-+++ b/reference/format/basic_format_parse_context/advance_to.md
-@@ -12,11 +12,15 @@ constexpr void advance_to(const_iterator it);
- ## 概要
- 指定したイテレータを先頭イテレータとして設定する。
- 
--この関数は、書式文字列の全体を解析する処理において、[`formatter`](/reference/format/formatter.md)`::`[`parse()`](/reference/format/formatter/parse.md)の戻り値を、次の解析の初期位置として設定するために使用する。
-+この関数は、書式文字列の全体を解析する処理において、[`formatter`](/reference/format/formatter.md)`::`[`parse()`](/reference/format/formatter/parse.md)の戻り値から、次の解析を始めるために使用する。
- 
- ```cpp
- while (…) {
--  next_parse_ctx.advance_to(f.parse(parse_ctx));
-+  auto it = f.parse(parse_ctx);
-+
-+  /* 次の書式指定までitを進める… */
-+
-+  next_parse_ctx.advance_to(it);
- }
- ```
- * parse[link /reference/format/formatter/parse.md]
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
