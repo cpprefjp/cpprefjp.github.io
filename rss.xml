@@ -2,9 +2,83 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2023-01-25T02:34:04.259840</updated>
-  <id>58be858c-4683-4939-8afe-c1afb92e5ee9</id>
+  <updated>2023-01-25T03:00:46.354837</updated>
+  <id>64c59b8e-d050-47de-887a-a98d42b15eab</id>
 
+  
+    <entry>
+      <title>range_formatter -- range_formatter : サンプルコードのコンパイルが通らなさそうなので見直し</title>
+      <link href="https://cpprefjp.github.io/reference/format/range_formatter.html"/>
+      <id>373f49da92fb9c34115279a210f29067b6259e35:reference/format/range_formatter.md</id>
+      <updated>2023-01-25T11:56:38+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/range_formatter.md b/reference/format/range_formatter.md
+index 5b0cec189..7f3190b22 100644
+--- a/reference/format/range_formatter.md
++++ b/reference/format/range_formatter.md
+@@ -41,7 +41,31 @@ namespace std {
+ #include &amp;lt;vector&amp;gt;
+ 
+ template &amp;lt;class T&amp;gt;
+-class std::range_formatter&amp;lt;std::vector&amp;lt;T&amp;gt;&amp;gt; : public std::range_formatter&amp;lt;std::vector&amp;lt;T&amp;gt;&amp;gt; {
++class MyVector {
++  std::vector&amp;lt;T&amp;gt; v_;
++public:
++  using base_type = std::vector&amp;lt;T&amp;gt;;
++  using iterator = typename base_type::iterator;
++  using const_iterator = typename base_type::iterator;
++  using value_type = typename base_type::value_type;
++  using reference = typename base_type::reference;
++  using const_reference = typename base_type::const_reference;
++
++  MyVector() = default;
++  MyVector(std::initializer_list&amp;lt;T&amp;gt; init)
++      : v_(init.begin(), init.end()) {}
++
++  iterator begin() { v_.begin(); }
++  const_iterator begin() const { v_.begin(); }
++
++  iterator end() { v_.end(); }
++  const_iterator end() const { v_.end(); }
++
++  const std::vector&amp;lt;T&amp;gt;&amp;amp; base() const { return v_; }
++};
++
++template &amp;lt;class T&amp;gt;
++class std::range_formatter&amp;lt;MyVector&amp;lt;T&amp;gt;&amp;gt; : public std::range_formatter&amp;lt;std::vector&amp;lt;T&amp;gt;&amp;gt; {
+   bool is_colon = false;
+   using base_type = std::range_formatter&amp;lt;std::vector&amp;lt;T&amp;gt;&amp;gt;;
+ public:
+@@ -63,7 +87,7 @@ public:
+   // format()関数は書式の情報をもたない。
+   // parse()関数で解析した書式をメンバ変数で保持しておいて、
+   // それをもとに書式化する
+-  auto format(const std::vector&amp;lt;T&amp;gt;&amp;amp; v, std::format_context&amp;amp; fctx) const {
++  auto format(const MyVector&amp;lt;T&amp;gt;&amp;amp; v, std::format_context&amp;amp; fctx) const {
+     if (is_colon) {
+       auto out = fctx.out();
+       bool is_first = true;
+@@ -80,10 +104,12 @@ public:
+       }
+       return out;
+     }
+-    return base_type::format(v, fctx);
++    return base_type::format(v.base(), fctx);
+   }
+ };
+ 
++#include &amp;lt;cstdint&amp;gt;
++
+ int main()
+ {
+   std::vector&amp;lt;std::uint8_t&amp;gt; v = {0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>コンストラクタ -- move_only_function/op_constructor: 全オーバーロードの例示コード追加</title>
@@ -301,83 +375,6 @@ index 258c75156..5b0cec189 100644
  * fctx.out()[link basic_format_context/out.md]
 -* fctx.advance_to()[link basic_format_context/advance_to.md]
 +* fctx.advance_to[link basic_format_context/advance_to.md]
- * std::format_to[link format_to.md]
- * std::format[link format.md]
- * underlying()[link range_formatter/underlying.md.nolink]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>range_formatter -- range_formatter : コード修飾を追加</title>
-      <link href="https://cpprefjp.github.io/reference/format/range_formatter.html"/>
-      <id>1b70d4969c37657769dcef952082534252dba460:reference/format/range_formatter.md</id>
-      <updated>2023-01-24T19:40:00+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/range_formatter.md b/reference/format/range_formatter.md
-index 5bd98668a..258c75156 100644
---- a/reference/format/range_formatter.md
-+++ b/reference/format/range_formatter.md
-@@ -50,22 +50,22 @@ public:
-   // constexprにする必要がある。
-   // この関数に渡されるパラメータは、{:%j}の%以降。
-   // 解析がおわった場所を指すイテレータを返す。
--  constexpr auto parse(std::format_parse_context&amp;amp; ctx) {
--    auto it = ctx.begin();
-+  constexpr auto parse(std::format_parse_context&amp;amp; pctx) {
-+    auto it = pctx.begin();
-     if (*it == &amp;#39;c&amp;#39;) {
-       is_colon = true;
-       ++it;
-     }
--    ctx.advance_to(it);
--    return base_type::parse(ctx);
-+    pctx.advance_to(it);
-+    return base_type::parse(pctx);
-   }
- 
-   // format()関数は書式の情報をもたない。
-   // parse()関数で解析した書式をメンバ変数で保持しておいて、
-   // それをもとに書式化する
--  auto format(const std::vector&amp;lt;T&amp;gt;&amp;amp; v, std::format_context&amp;amp; ctx) const {
-+  auto format(const std::vector&amp;lt;T&amp;gt;&amp;amp; v, std::format_context&amp;amp; fctx) const {
-     if (is_colon) {
--      auto out = ctx.out();
-+      auto out = fctx.out();
-       bool is_first = true;
-       for (const T&amp;amp; x : v) {
-         if (is_first) {
-@@ -75,12 +75,12 @@ public:
-           *out = &amp;#39;:&amp;#39;;
-           ++out;
-         }
--        ctx.advance_to(out);
--        out = underlying().format(x, ctx);
-+        fctx.advance_to(out);
-+        out = underlying().format(x, fctx);
-       }
-       return out;
-     }
--    return base_type::format(v, ctx);
-+    return base_type::format(v, fctx);
-   }
- };
- 
-@@ -91,9 +91,11 @@ int main()
- }
- ```
- * std::format_parse_context[link basic_format_parse_context.md]
--* ctx.begin()[link basic_format_parse_context/begin.md]
-+* pctx.begin()[link basic_format_parse_context/begin.md]
-+* pctx.advance_to()[link basic_format_parse_context/advance_to.md]
- * std::format_context[link basic_format_context.md]
--* ctx.out()[link basic_format_context/out.md]
-+* fctx.out()[link basic_format_context/out.md]
-+* fctx.advance_to()[link basic_format_context/advance_to.md]
  * std::format_to[link format_to.md]
  * std::format[link format.md]
  * underlying()[link range_formatter/underlying.md.nolink]
