@@ -2,9 +2,236 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2023-01-25T01:20:07.065372</updated>
-  <id>ac769bb5-d473-41f1-9187-0c6e9d85eabc</id>
+  <updated>2023-01-25T02:34:04.259840</updated>
+  <id>58be858c-4683-4939-8afe-c1afb92e5ee9</id>
 
+  
+    <entry>
+      <title>コンストラクタ -- move_only_function/op_constructor: 全オーバーロードの例示コード追加</title>
+      <link href="https://cpprefjp.github.io/reference/functional/move_only_function/op_constructor.html"/>
+      <id>63e429d33d1a3e2f10ecbfe657d31a3c5b0eb41e:reference/functional/move_only_function/op_constructor.md</id>
+      <updated>2023-01-25T11:29:10+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/functional/move_only_function/op_constructor.md b/reference/functional/move_only_function/op_constructor.md
+index 1635fa0f5..d5bd1e25b 100644
+--- a/reference/functional/move_only_function/op_constructor.md
++++ b/reference/functional/move_only_function/op_constructor.md
+@@ -24,7 +24,12 @@ explicit move_only_function(in_place_type_t&amp;lt;T&amp;gt;, initializer_list&amp;lt;U&amp;gt;, Args&amp;amp;&amp;amp;...);
+ `move_only_function`オブジェクトを構築する。
+ 
+ 
+-`move_only_function`クラステンプレートパラメータのnoexcept例外指定 *noex* 特殊化に応じて、説明用の`bool`型テンプレート定数`is-callable-from&amp;lt;VT&amp;gt;`を下記のように定義する :
++`move_only_function`クラステンプレートパラメータのCV修飾子 *cv*, 参照修飾子 *ref*, noexcept例外指定 *noex* に応じて、説明用のプレースホルダ *inv-quals* を次のように定義する :
++
++- *ref* が空（参照修飾無し）ならば、*cv*`&amp;amp;`
++- そうでなければ、*cv* *ref*
++
++また、説明用の`bool`型テンプレート定数`is-callable-from&amp;lt;VT&amp;gt;`を下記のように定義する :
+ 
+ - *noex* が`true`のとき : [`is_nothrow_invocable_r_v`](/reference/type_traits/is_nothrow_invocable_r.md)`&amp;lt;R, VT /*cv*/ /*ref*/, ArgTypes...&amp;gt; &amp;amp;&amp;amp;` [`is_nothrow_invocable_r_v`](/reference/type_traits/is_nothrow_invocable_r.md)`&amp;lt;R, VT /*inv-quals*/, ArgTypes...&amp;gt;`
+ - *noex* が`false`のとき : [`is_invocable_r_v`](/reference/type_traits/is_invocable_r.md)`&amp;lt;R, VT /*cv*/ /*ref*/, ArgTypes...&amp;gt; &amp;amp;&amp;amp;` [`is_invocable_r_v`](/reference/type_traits/is_invocable_r.md)`&amp;lt;R, VT /*inv-quals*/, ArgTypes...&amp;gt;`
+@@ -76,8 +81,10 @@ explicit move_only_function(in_place_type_t&amp;lt;T&amp;gt;, initializer_list&amp;lt;U&amp;gt;, Args&amp;amp;&amp;amp;...);
+ ## 例
+ ```cpp example
+ #include &amp;lt;cassert&amp;gt;
+-#include &amp;lt;iostream&amp;gt;
+ #include &amp;lt;functional&amp;gt;
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;numeric&amp;gt;
++#include &amp;lt;utility&amp;gt;
+ 
+ struct ident_functor {
+   int operator()(int x) const
+@@ -89,77 +96,88 @@ int ident_func(int x)
+ 
+ struct X {
+   int value;
+-  X() : value(3) {}
+ 
+-  int ident_member_func(int x) const
+-  { return x; }
++  int add_member_func(int x) const
++  { return value + x; }
+ };
+ 
++struct add_functor {
++  int value;
++
++  add_functor(int v) : value(v) {}
++  add_functor(std::initializer_list&amp;lt;int&amp;gt; lst, int iv)
++    : value(std::accumulate(lst.begin(), lst.end(), iv)) {}
++
++  int operator()(int x) const
++  { return value + x; }
++};
++
++
+ int main()
+ {
+-  // (1)
+-  // デフォルトコンストラクタ
++  // (1) デフォルトコンストラクタ
++  // (2) ヌルポインタを受け取るコンストラクタ
+   // 空のmove_only_functionオブジェクトを作る
+   {
+-    std::move_only_function&amp;lt;int(int)&amp;gt; f;
+-    assert(!f);
+-  }
+-
+-  // (2)
+-  // ヌルポインタを受け取るコンストラクタ
+-  // デフォルトコンストラクタと同様、空のmove_only_functionオブジェクトを作る
+-  {
+-    std::move_only_function&amp;lt;int(int)&amp;gt; f = nullptr;
+-    assert(!f);
++    std::move_only_function&amp;lt;int(int)&amp;gt; f1;
++    assert(!f1);
++    std::move_only_function&amp;lt;int(int)&amp;gt; f2 = nullptr;
++    assert(!f2);
+   }
+ 
+-  // (3)
+-  // ムーブ構築
++  // (3) ムーブ構築
+   {
+     std::move_only_function&amp;lt;int(int)&amp;gt; f = ident_functor();
+     std::move_only_function&amp;lt;int(int)&amp;gt; g = std::move(f);
++    assert(g &amp;amp;&amp;amp; !f);
+ 
+     int result = g(1);
+     std::cout &amp;lt;&amp;lt; &amp;#34;(3) : &amp;#34; &amp;lt;&amp;lt; result &amp;lt;&amp;lt; std::endl;
+   }
+ 
+-  // (4)
+-  // 関数ポインタを受け取って構築
++  // (4) 関数ポインタを受け取って構築
+   {
+     std::function&amp;lt;int(int)&amp;gt; f = ident_func;
+ 
+     int result = f(1);
+     std::cout &amp;lt;&amp;lt; &amp;#34;(4) function pointer : &amp;#34; &amp;lt;&amp;lt; result &amp;lt;&amp;lt; std::endl;
+   }
+-
+-  // (4)
+-  // 関数オブジェクトを受け取って構築
++  // (4) 関数オブジェクトを受け取って構築
+   {
+     std::function&amp;lt;int(int)&amp;gt; f = ident_functor();
+ 
+     int result = f(1);
+     std::cout &amp;lt;&amp;lt; &amp;#34;(4) function object : &amp;#34; &amp;lt;&amp;lt; result &amp;lt;&amp;lt; std::endl;
+   }
+-
+-  // (4)
+-  // メンバ関数ポインタを受け取った構築
++  // (4) メンバ関数ポインタを受け取った構築
+   {
+-    std::function&amp;lt;int(const X&amp;amp;, int)&amp;gt; f = &amp;amp;X::ident_member_func;
++    std::function&amp;lt;int(const X&amp;amp;, int)&amp;gt; f = &amp;amp;X::add_member_func;
+ 
+-    X x;
++    X x{2};
+     int result = f(x, 1);
+     std::cout &amp;lt;&amp;lt; &amp;#34;(4) member function pointer : &amp;#34; &amp;lt;&amp;lt; result &amp;lt;&amp;lt; std::endl;
+   }
+-
+-  // (4)
+-  // メンバ変数ポインタを受け取った構築
++  // (4) メンバ変数ポインタを受け取った構築
+   {
+     std::function&amp;lt;int(const X&amp;amp;)&amp;gt; f = &amp;amp;X::value;
+-
+-    X x;
++    X x{2};
+     int result = f(x);
+     std::cout &amp;lt;&amp;lt; &amp;#34;(4) member variable pointer : &amp;#34; &amp;lt;&amp;lt; result &amp;lt;&amp;lt; std::endl;
+   }
++
++  // (5) 引数リストによる直接構築コンストラクタ
++  {
++    std::move_only_function&amp;lt;int(int)&amp;gt; f(std::in_place_type&amp;lt;add_functor&amp;gt;, 2);
++    int result = f(1);
++    std::cout &amp;lt;&amp;lt; &amp;#34;(5) : &amp;#34; &amp;lt;&amp;lt; result &amp;lt;&amp;lt; std::endl;
++  }
++
++  // (6) initializer_list＋引数リストによる直接構築コンストラクタ
++  {
++    std::move_only_function&amp;lt;int(int)&amp;gt; f(std::in_place_type&amp;lt;add_functor&amp;gt;, std::initializer_list&amp;lt;int&amp;gt;{1, 2, 3}, 4);
++    int result = f(5);
++    std::cout &amp;lt;&amp;lt; &amp;#34;(6) : &amp;#34; &amp;lt;&amp;lt; result &amp;lt;&amp;lt; std::endl;
++  }
+ }
+ ```
+ * std::move[link /reference/utility/move.md]
+@@ -169,8 +187,10 @@ int main()
+ (3) : 1
+ (4) function pointer : 1
+ (4) function object : 1
+-(4) member function pointer : 1
+-(4) member variable pointer : 3
++(4) member function pointer : 3
++(4) member variable pointer : 2
++(5) : 3
++(6) : 15
+ ```
+ 
+ 
+@@ -180,7 +200,7 @@ int main()
+ 
+ ### 処理系
+ - [Clang](/implementation.md#clang): ??
+-- [GCC](/implementation.md#gcc): ??
++- [GCC](/implementation.md#gcc): 12.1
+ - [ICC](/implementation.md#icc): ??
+ - [Visual C++](/implementation.md#visual_cpp): ??
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>unreachable -- utility/unreachable: 微調整</title>
+      <link href="https://cpprefjp.github.io/reference/utility/unreachable.html"/>
+      <id>da6808523e7c9835d8383ecb2480e4368a26fccb:reference/utility/unreachable.md</id>
+      <updated>2023-01-25T10:47:49+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/utility/unreachable.md b/reference/utility/unreachable.md
+index 9ba4c982d..90ea2d775 100644
+--- a/reference/utility/unreachable.md
++++ b/reference/utility/unreachable.md
+@@ -15,7 +15,7 @@ namespace std {
+ 
+ 
+ ## 事前条件
+-`true`==`false`
++`false`==`true`
+ 
+ 
+ ## 備考
+@@ -44,9 +44,9 @@ int flip(int x)
+ 
+ int main()
+ {
+-  std::cout &amp;lt;&amp;lt; f(0) &amp;lt;&amp;lt; std::endl;
+-  std::cout &amp;lt;&amp;lt; f(1) &amp;lt;&amp;lt; std::endl;
+-  // f(2)呼び出しは未定義動作
++  std::cout &amp;lt;&amp;lt; flip(0) &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; flip(1) &amp;lt;&amp;lt; std::endl;
++  // 例えば f(2) 呼び出しは未定義動作となる。
+ }
+ ```
+ * std::unreachable[color ff0000]
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>move_only_function -- move_only_function: 推論補助を定義しない旨を明記</title>
@@ -159,396 +386,6 @@ index 5bd98668a..258c75156 100644
       <author>
         <name>Akira Takahashi</name>
         <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>format -- &lt;format&gt; : range_formatterクラスページを追加 #1085</title>
-      <link href="https://cpprefjp.github.io/reference/format.html"/>
-      <id>f3d46e161ef521b57aeb7cc2b254859daedae89f:reference/format.md</id>
-      <updated>2023-01-24T19:08:33+09:00</updated>
-      
-        <content type="html">&lt;div class=&#34;header&#34;&gt;&amp;lt;format&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;token&#34;&gt;format&lt;/span&gt;&lt;span class=&#34;cpp cpp20&#34; title=&#34;C++20で追加&#34;&gt;(C++20)&lt;/span&gt;&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;&lt;code&gt;&amp;lt;format&amp;gt;&lt;/code&gt;ヘッダでは、書式文字列を使って引数をフォーマットする、いわゆる&lt;code&gt;printf&lt;/code&gt;スタイルのフォーマット関数を提供する。
-このフォーマット関数は型安全であり、ユーザー定義型への拡張も可能である。&lt;/p&gt;
-&lt;p&gt;書式文字列については&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/format.html&#34;&gt;format&lt;/a&gt;&lt;/code&gt;を参照。&lt;/p&gt;
-&lt;h2&gt;フォーマット関数&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/format.html&#34;&gt;format&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;書式文字列を使って引数をフォーマットした文字列を返す (function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/format_to.html&#34;&gt;format_to&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;書式文字列を使って引数をフォーマットし、出力イテレータに出力する (function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/format_to_n.html&#34;&gt;format_to_n&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;書式文字列を使って引数をフォーマットし、指定した文字数を超えないように出力イテレータに出力する (function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/format_to_n_result.html&#34;&gt;format_to_n_result&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;format_to_n&lt;/code&gt;の結果を表す (class template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/formatted_size.html&#34;&gt;formatted_size&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;書式文字列を使って引数をフォーマットした文字列を保存するのに必要な文字数を返す (function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/vformat.html&#34;&gt;vformat&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/format.html&#34;&gt;format&lt;/a&gt;&lt;/code&gt;の非テンプレート版 (function)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/vformat_to.html&#34;&gt;vformat_to&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/format_to.html&#34;&gt;format_to&lt;/a&gt;&lt;/code&gt;の非テンプレート版 (function)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;フォーマッター&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/formattable.html&#34;&gt;formattable&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;文字列フォーマット可能 (concept)&lt;/td&gt;
-&lt;td&gt;C++23&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/formatter.html&#34;&gt;formatter&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;引数の型に対応する書式文字列の解析、値のフォーマットを担う (class template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/basic_format_parse_context.html&#34;&gt;basic_format_parse_context&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;書式文字列の解析のコンテキスト (class template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/basic_format_parse_context.html&#34;&gt;format_parse_context&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;basic_format_parse_context&lt;/code&gt;のマルチバイト文字列版 (type-alias)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/basic_format_parse_context.html&#34;&gt;wformat_parse_context&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;basic_format_parse_context&lt;/code&gt;のワイド文字列版 (type-alias)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/basic_format_context.html&#34;&gt;basic_format_context&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;引数のフォーマットのコンテキスト (class template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/basic_format_context.html&#34;&gt;format_context&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;basic_format_context&lt;/code&gt;のマルチバイト文字列版 (type-alias)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/basic_format_context.html&#34;&gt;wformat_context&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;basic_format_context&lt;/code&gt;のワイド文字列版 (type-alias)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/range_format.html&#34;&gt;range_format&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;Rangeの書式種別 (enum)&lt;/td&gt;
-&lt;td&gt;C++23&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/format_kind.html&#34;&gt;format_kind&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;指定したRangeの書式種別を取得する (variable)&lt;/td&gt;
-&lt;td&gt;C++23&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/range_formatter.html&#34;&gt;range_formatter&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;Rangeに対する書式文字列の解析、値のフォーマットを行う (class template)&lt;/td&gt;
-&lt;td&gt;C++23&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/range-default-formatter.md.nolink&#34;&gt;range-default-formatter&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;Rangeに対する共通の書式文字列の解析、値のフォーマットを行う説明専用クラス (class template)&lt;/td&gt;
-&lt;td&gt;C++23&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;引数&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/basic_format_arg.html&#34;&gt;basic_format_arg&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;引数1つへのアクセスを提供する (class template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/visit_format_arg.html&#34;&gt;visit_format_arg&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;basic_format_arg&lt;/code&gt;オブジェクトが現在保持している型に対応する関数を呼び出す (function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/make_format_args.html&#34;&gt;make_format_args&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;可変長引数から&lt;code&gt;basic_format_arg&lt;/code&gt;の列を構築する (function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/make_format_args.html&#34;&gt;make_wformat_args&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;make_wformat_args&lt;/code&gt;のワイド文字列版 (function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/basic_format_args.html&#34;&gt;basic_format_args&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;引数列へのアクセスを提供する (class template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/basic_format_args.html&#34;&gt;format_args&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;basic_format_args&lt;/code&gt;のマルチバイト文字列版 (type-alias)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/basic_format_args.html&#34;&gt;wformat_args&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;basic_format_args&lt;/code&gt;のワイド文字列版 (type-alias)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;例外&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/format_error.html&#34;&gt;format_error&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;フォーマットの失敗を表す例外クラス (class)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;バージョン&lt;/h2&gt;
-&lt;h3&gt;言語&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;C++20&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;処理系&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang&lt;/a&gt;: ??&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC&lt;/a&gt;: ??&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#icc&#34;&gt;ICC&lt;/a&gt;: ??&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt;: ??&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;参照&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://timsong-cpp.github.io/cppwp/format&#34; target=&#34;_blank&#34;&gt;Working Draft, Standard for Programming Language C++ [format]&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0645r10.html&#34; target=&#34;_blank&#34;&gt;P0645R10 Text Formatting&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>range_formatter -- &lt;format&gt; : range_formatterクラスページを追加 #1085</title>
-      <link href="https://cpprefjp.github.io/reference/format/range_formatter.html"/>
-      <id>f3d46e161ef521b57aeb7cc2b254859daedae89f:reference/format/range_formatter.md</id>
-      <updated>2023-01-24T19:08:33+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/range_formatter.md b/reference/format/range_formatter.md
-new file mode 100644
-index 000000000..5bd98668a
---- /dev/null
-+++ b/reference/format/range_formatter.md
-@@ -0,0 +1,127 @@
-+# range_formatter
-+* format[meta header]
-+* class template[meta id-type]
-+* std[meta namespace]
-+* cpp23[meta cpp]
-+
-+```cpp
-+namespace std {
-+  template &amp;lt;class T, class charT = char&amp;gt;
-+    requires same_as&amp;lt;remove_cvref_t&amp;lt;T&amp;gt;, T&amp;gt; &amp;amp;&amp;amp; formattable&amp;lt;T, charT&amp;gt;
-+  class range_formatter;
-+}
-+```
-+* formattable[link formattable.md]
-+
-+## 概要
-+`range_formatter`は、Range・コンテナに対する[`formatter`](formatter.md)クラスの特殊化を実装するためのユーティリティクラスである。
-+
-+ユーザー定義のコンテナ・RangeをRange書式に対応する場合は、以下のようにする：
-+
-+- オリジナル書式を定義しないのであれば、このクラスではなく、[`format_kind`](format_kind.md)を特殊化する
-+- オリジナル書式を定義するのであれば、このクラスおよび[`format_kind`](format_kind.md)を特殊化して[`parse()`](range_formatter/parse.md.nolink)メンバ関数と[`format()`](range_formatter/format.md.nolink)メンバ関数を実装する
-+
-+
-+## メンバ関数
-+
-+| メンバ関数 | 説明 | 対応バージョン |
-+|------------|------|----------------|
-+| [`set_separator`](range_formatter/set_separator.md.nolink) | 要素の区切り文字を設定する | C++23 |
-+| [`set_brackets`](range_formatter/set_brackets.md.nolink)   | 全体の囲み文字を設定する | C++23 |
-+| [`underlying`](range_formatter/underlying.md.nolink)       | 要素型の`formatter`を取得する | C++23 |
-+| [`parse`](range_formatter/parse.md.nolink)                 | 書式の解析を行う | C++23 |
-+| [`format`](range_formatter/format.md.nolink)               | 書式化を行う | C++23 |
-+
-+
-+## 例
-+### オリジナル書式を定義する例
-+```cpp example
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;format&amp;gt;
-+#include &amp;lt;vector&amp;gt;
-+
-+template &amp;lt;class T&amp;gt;
-+class std::range_formatter&amp;lt;std::vector&amp;lt;T&amp;gt;&amp;gt; : public std::range_formatter&amp;lt;std::vector&amp;lt;T&amp;gt;&amp;gt; {
-+  bool is_colon = false;
-+  using base_type = std::range_formatter&amp;lt;std::vector&amp;lt;T&amp;gt;&amp;gt;;
-+public:
-+
-+  // コンパイル時の書式文字列の解析があるため、
-+  // constexprにする必要がある。
-+  // この関数に渡されるパラメータは、{:%j}の%以降。
-+  // 解析がおわった場所を指すイテレータを返す。
-+  constexpr auto parse(std::format_parse_context&amp;amp; ctx) {
-+    auto it = ctx.begin();
-+    if (*it == &amp;#39;c&amp;#39;) {
-+      is_colon = true;
-+      ++it;
-+    }
-+    ctx.advance_to(it);
-+    return base_type::parse(ctx);
-+  }
-+
-+  // format()関数は書式の情報をもたない。
-+  // parse()関数で解析した書式をメンバ変数で保持しておいて、
-+  // それをもとに書式化する
-+  auto format(const std::vector&amp;lt;T&amp;gt;&amp;amp; v, std::format_context&amp;amp; ctx) const {
-+    if (is_colon) {
-+      auto out = ctx.out();
-+      bool is_first = true;
-+      for (const T&amp;amp; x : v) {
-+        if (is_first) {
-+          is_first = false;
-+        }
-+        else {
-+          *out = &amp;#39;:&amp;#39;;
-+          ++out;
-+        }
-+        ctx.advance_to(out);
-+        out = underlying().format(x, ctx);
-+      }
-+      return out;
-+    }
-+    return base_type::format(v, ctx);
-+  }
-+};
-+
-+int main()
-+{
-+  std::vector&amp;lt;std::uint8_t&amp;gt; v = {0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
-+  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;{:c:02x}&amp;#34;, v) &amp;lt;&amp;lt; std::endl;
-+}
-+```
-+* std::format_parse_context[link basic_format_parse_context.md]
-+* ctx.begin()[link basic_format_parse_context/begin.md]
-+* std::format_context[link basic_format_context.md]
-+* ctx.out()[link basic_format_context/out.md]
-+* std::format_to[link format_to.md]
-+* std::format[link format.md]
-+* underlying()[link range_formatter/underlying.md.nolink]
-+
-+
-+#### 出力
-+```
-+aa:bb:cc:dd:ee:ff
-+```
-+
-+(動作確認はできていない)
-+
-+## バージョン
-+### 言語
-+- C++23
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): ??
-+- [ICC](/implementation.md#icc): ??
-+- [Visual C++](/implementation.md#visual_cpp): ??
-+
-+## 関連項目
-+- [`range-default-formatter`](range-default-formatter.md.nolink)
-+- [`formatter`](formatter.md)
-+
-+
-+## 参照
-+- [P2286R8 Formatting Ranges](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2286r8.html)
-+- [P2585R1 Improve default container formatting](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2585r1.html)
-+    - C++23から、Range・コンテナ、`pair`、`tuple`のフォーマット出力、および文字・文字列のデバッグ指定 (`&amp;#34;?&amp;#34;`) が追加された
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>コンストラクタ -- move_only_function/op_constructor: fix markup</title>
-      <link href="https://cpprefjp.github.io/reference/functional/move_only_function/op_constructor.html"/>
-      <id>01eb3487685c392456dcec2c6bc85b06fcc5b8bf:reference/functional/move_only_function/op_constructor.md</id>
-      <updated>2023-01-24T17:52:47+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/functional/move_only_function/op_constructor.md b/reference/functional/move_only_function/op_constructor.md
-index 5a13d4bcd..1635fa0f5 100644
---- a/reference/functional/move_only_function/op_constructor.md
-+++ b/reference/functional/move_only_function/op_constructor.md
-@@ -25,6 +25,7 @@ explicit move_only_function(in_place_type_t&amp;lt;T&amp;gt;, initializer_list&amp;lt;U&amp;gt;, Args&amp;amp;&amp;amp;...);
- 
- 
- `move_only_function`クラステンプレートパラメータのnoexcept例外指定 *noex* 特殊化に応じて、説明用の`bool`型テンプレート定数`is-callable-from&amp;lt;VT&amp;gt;`を下記のように定義する :
-+
- - *noex* が`true`のとき : [`is_nothrow_invocable_r_v`](/reference/type_traits/is_nothrow_invocable_r.md)`&amp;lt;R, VT /*cv*/ /*ref*/, ArgTypes...&amp;gt; &amp;amp;&amp;amp;` [`is_nothrow_invocable_r_v`](/reference/type_traits/is_nothrow_invocable_r.md)`&amp;lt;R, VT /*inv-quals*/, ArgTypes...&amp;gt;`
- - *noex* が`false`のとき : [`is_invocable_r_v`](/reference/type_traits/is_invocable_r.md)`&amp;lt;R, VT /*cv*/ /*ref*/, ArgTypes...&amp;gt; &amp;amp;&amp;amp;` [`is_invocable_r_v`](/reference/type_traits/is_invocable_r.md)`&amp;lt;R, VT /*inv-quals*/, ArgTypes...&amp;gt;`
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
       </author>
     </entry>
   
