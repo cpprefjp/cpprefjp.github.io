@@ -2,9 +2,91 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2023-01-28T14:04:22.205972</updated>
-  <id>80599a89-abeb-4640-8fa9-5b26bd6bd55b</id>
+  <updated>2023-01-28T14:14:34.021111</updated>
+  <id>5502a73c-cf5e-4cbd-8d8f-5464557fb4cc</id>
 
+  
+    <entry>
+      <title>or_else -- optional.or_else: メソッドチェインとしての使い方を追加</title>
+      <link href="https://cpprefjp.github.io/reference/optional/optional/or_else.html"/>
+      <id>fb277307e6e97f3406fcdfcc957b6c77cb11fb45:reference/optional/optional/or_else.md</id>
+      <updated>2023-01-28T23:09:38+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/optional/optional/or_else.md b/reference/optional/optional/or_else.md
+index b9d10ea86..78af379f9 100644
+--- a/reference/optional/optional/or_else.md
++++ b/reference/optional/optional/or_else.md
+@@ -63,6 +63,7 @@ class optional {
+ 
+ 
+ ## 例
++### 基本的な使い方
+ ```cpp example
+ #include &amp;lt;cassert&amp;gt;
+ #include &amp;lt;optional&amp;gt;
+@@ -86,10 +87,54 @@ int main()
+ * value()[link value.md]
+ 
+ 
+-### 出力
++#### 出力
+ ```
+ ```
+ 
++### メソッドチェインとしての使い方
++```cpp example
++#include &amp;lt;cassert&amp;gt;
++#include &amp;lt;charconv&amp;gt;
++#include &amp;lt;optional&amp;gt;
++#include &amp;lt;string_view&amp;gt;
++
++std::optional&amp;lt;int&amp;gt; parse(std::string_view sv, int base, std::string_view prefix = &amp;#34;&amp;#34;)
++{
++  if (!prefix.empty() &amp;amp;&amp;amp; !sv.starts_with(prefix))
++    return std::nullopt;
++  int n{};
++  auto [ptr, ec] = std::from_chars(sv.data() + prefix.size(), sv.data() + sv.size(), n, base);
++  if (ec == std::errc{} &amp;amp;&amp;amp; ptr == sv.data() + sv.size())
++    return n;
++  else
++    return std::nullopt;
++}
++
++std::optional&amp;lt;int&amp;gt; parse_digit(std::string_view sv)
++{
++  return parse(sv, 2, &amp;#34;0b&amp;#34;)
++    .or_else([sv] { return parse(sv, 10); })
++    .or_else([sv] { return parse(sv, 16, &amp;#34;0x&amp;#34;); });
++}
++
++int main()
++{
++  assert(parse_digit(&amp;#34;0b11&amp;#34;) == std::optional(3));
++  assert(parse_digit(&amp;#34;11&amp;#34;) == std::optional(11));
++  assert(parse_digit(&amp;#34;0x11&amp;#34;) == std::optional(17));
++  assert(parse_digit(&amp;#34;x&amp;#34;) == std::nullopt);
++}
++```
++* or_else[color ff0000]
++* std::nullopt[link ../nullopt_t.md]
++* std::string_view[link ../string_view/basic_string_view.md]
++* std::from_chars[link ../charconv/from_chars.md]
++* std::errc[link ../system_error/errc.md]
++
++
++#### 出力
++```
++```
+ 
+ ## バージョン
+ ### 言語
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>acd1034</name>
+        <email>48613285+acd1034@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>expected -- expected/expected: コンストラクタ,デストラクタ(#1066)</title>
@@ -673,420 +755,6 @@ index 97f124410..d29357f07 100644
 -
 +- [P2286R8 Formatting Ranges](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2286r8.html)
 +    - C++23から、Range・コンテナ、`pair`、`tuple`のフォーマット出力、および文字・文字列のデバッグ指定 (`&amp;#34;?&amp;#34;`) が追加された
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>format -- &lt;format&gt; : range-default-formatterを追加 #1085</title>
-      <link href="https://cpprefjp.github.io/reference/format.html"/>
-      <id>2513346aaefb6f93d4740367084d9f30d30a05aa:reference/format.md</id>
-      <updated>2023-01-27T16:28:04+09:00</updated>
-      
-        <content type="html">&lt;div class=&#34;header&#34;&gt;&amp;lt;format&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;token&#34;&gt;format&lt;/span&gt;&lt;span class=&#34;cpp cpp20&#34; title=&#34;C++20で追加&#34;&gt;(C++20)&lt;/span&gt;&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;&lt;code&gt;&amp;lt;format&amp;gt;&lt;/code&gt;ヘッダでは、書式文字列を使って引数をフォーマットする、いわゆる&lt;code&gt;printf&lt;/code&gt;スタイルのフォーマット関数を提供する。
-このフォーマット関数は型安全であり、ユーザー定義型への拡張も可能である。&lt;/p&gt;
-&lt;p&gt;書式文字列については&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/format.html&#34;&gt;format&lt;/a&gt;&lt;/code&gt;を参照。&lt;/p&gt;
-&lt;h2&gt;フォーマット関数&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/format.html&#34;&gt;format&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;書式文字列を使って引数をフォーマットした文字列を返す (function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/format_to.html&#34;&gt;format_to&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;書式文字列を使って引数をフォーマットし、出力イテレータに出力する (function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/format_to_n.html&#34;&gt;format_to_n&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;書式文字列を使って引数をフォーマットし、指定した文字数を超えないように出力イテレータに出力する (function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/format_to_n_result.html&#34;&gt;format_to_n_result&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;format_to_n&lt;/code&gt;の結果を表す (class template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/formatted_size.html&#34;&gt;formatted_size&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;書式文字列を使って引数をフォーマットした文字列を保存するのに必要な文字数を返す (function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/vformat.html&#34;&gt;vformat&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/format.html&#34;&gt;format&lt;/a&gt;&lt;/code&gt;の非テンプレート版 (function)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/vformat_to.html&#34;&gt;vformat_to&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/format_to.html&#34;&gt;format_to&lt;/a&gt;&lt;/code&gt;の非テンプレート版 (function)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;フォーマッター&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/formattable.html&#34;&gt;formattable&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;文字列フォーマット可能 (concept)&lt;/td&gt;
-&lt;td&gt;C++23&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/formatter.html&#34;&gt;formatter&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;引数の型に対応する書式文字列の解析、値のフォーマットを担う (class template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/basic_format_parse_context.html&#34;&gt;basic_format_parse_context&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;書式文字列の解析のコンテキスト (class template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/basic_format_parse_context.html&#34;&gt;format_parse_context&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;basic_format_parse_context&lt;/code&gt;のマルチバイト文字列版 (type-alias)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/basic_format_parse_context.html&#34;&gt;wformat_parse_context&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;basic_format_parse_context&lt;/code&gt;のワイド文字列版 (type-alias)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/basic_format_context.html&#34;&gt;basic_format_context&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;引数のフォーマットのコンテキスト (class template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/basic_format_context.html&#34;&gt;format_context&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;basic_format_context&lt;/code&gt;のマルチバイト文字列版 (type-alias)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/basic_format_context.html&#34;&gt;wformat_context&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;basic_format_context&lt;/code&gt;のワイド文字列版 (type-alias)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/range_format.html&#34;&gt;range_format&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;Rangeの書式種別 (enum)&lt;/td&gt;
-&lt;td&gt;C++23&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/format_kind.html&#34;&gt;format_kind&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;指定したRangeの書式種別を取得する (variable)&lt;/td&gt;
-&lt;td&gt;C++23&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/const-formattable-range.html&#34;&gt;const-formattable-range&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;const Range&lt;/code&gt;の要素型が文字列フォーマット可能 (concept)&lt;/td&gt;
-&lt;td&gt;C++23&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/fmt-maybe-const.html&#34;&gt;fmt-maybe-const&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;formatter::format()&lt;/code&gt;関数のパラメータ型として使用するための(const) Range型を取得 (type-alias)&lt;/td&gt;
-&lt;td&gt;C++23&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/range_formatter.html&#34;&gt;range_formatter&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;Rangeに対する書式文字列の解析、値のフォーマットを行う (class template)&lt;/td&gt;
-&lt;td&gt;C++23&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/range-default-formatter.html&#34;&gt;range-default-formatter&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;Rangeに対する共通の書式文字列の解析、値のフォーマットを行う説明専用クラス (class template)&lt;/td&gt;
-&lt;td&gt;C++23&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;引数&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/basic_format_arg.html&#34;&gt;basic_format_arg&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;引数1つへのアクセスを提供する (class template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/visit_format_arg.html&#34;&gt;visit_format_arg&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;basic_format_arg&lt;/code&gt;オブジェクトが現在保持している型に対応する関数を呼び出す (function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/make_format_args.html&#34;&gt;make_format_args&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;可変長引数から&lt;code&gt;basic_format_arg&lt;/code&gt;の列を構築する (function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/make_format_args.html&#34;&gt;make_wformat_args&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;make_wformat_args&lt;/code&gt;のワイド文字列版 (function template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/basic_format_args.html&#34;&gt;basic_format_args&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;引数列へのアクセスを提供する (class template)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/basic_format_args.html&#34;&gt;format_args&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;basic_format_args&lt;/code&gt;のマルチバイト文字列版 (type-alias)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/basic_format_args.html&#34;&gt;wformat_args&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;basic_format_args&lt;/code&gt;のワイド文字列版 (type-alias)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;例外&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/format_error.html&#34;&gt;format_error&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;フォーマットの失敗を表す例外クラス (class)&lt;/td&gt;
-&lt;td&gt;C++20&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;バージョン&lt;/h2&gt;
-&lt;h3&gt;言語&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;C++20&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;処理系&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang&lt;/a&gt;: ??&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC&lt;/a&gt;: ??&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#icc&#34;&gt;ICC&lt;/a&gt;: ??&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt;: ??&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;参照&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://timsong-cpp.github.io/cppwp/format&#34; target=&#34;_blank&#34;&gt;Working Draft, Standard for Programming Language C++ [format]&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0645r10.html&#34; target=&#34;_blank&#34;&gt;P0645R10 Text Formatting&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>formatter -- &lt;format&gt; : range-default-formatterを追加 #1085</title>
-      <link href="https://cpprefjp.github.io/reference/format/formatter.html"/>
-      <id>2513346aaefb6f93d4740367084d9f30d30a05aa:reference/format/formatter.md</id>
-      <updated>2023-01-27T16:28:04+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/formatter.md b/reference/format/formatter.md
-index 053e1069f..0106bb135 100644
---- a/reference/format/formatter.md
-+++ b/reference/format/formatter.md
-@@ -31,13 +31,13 @@ namespace std {
- * range_format[link range_format.md]
- * formattable[link formattable.md]
- * ranges::range_reference_t[link /reference/ranges/range_reference_t.md]
--* range-default-formatter[link range-default-formatter.md.nolink]
-+* range-default-formatter[link range-default-formatter.md]
- 
- ## 概要
- フォーマット引数の個々の型に対応する書式文字列の解析と値のフォーマットを担うクラス。
- 
- - (1) : デフォルトのフォーマット
--- (2) : Range用のフォーマット。実装は[`range-default-formatter`](range-default-formatter.md.nolink)クラスが行う
-+- (2) : Range用のフォーマット。実装は[`range-default-formatter`](range-default-formatter.md)クラスが行う
- - (3) : [`std::pair`](/reference/utility/pair.md)と[`std::tuple`](/reference/tuple/tuple.md)に対する特殊化
- - (4) : コンテナアダプタである[`std::queue`](/reference/queue/queue.md)、[`std::priority_queue`](/reference/queue/priority_queue.md)、[`std::stack`](/reference/stack/stack.md)に対する特殊化
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>range-default-formatter -- &lt;format&gt; : range-default-formatterを追加 #1085</title>
-      <link href="https://cpprefjp.github.io/reference/format/range-default-formatter.html"/>
-      <id>2513346aaefb6f93d4740367084d9f30d30a05aa:reference/format/range-default-formatter.md</id>
-      <updated>2023-01-27T16:28:04+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/range-default-formatter.md b/reference/format/range-default-formatter.md
-new file mode 100644
-index 000000000..3d5c97b1e
---- /dev/null
-+++ b/reference/format/range-default-formatter.md
-@@ -0,0 +1,97 @@
-+# range-default-formatter
-+* format[meta header]
-+* class template[meta id-type]
-+* std[meta namespace]
-+* cpp23[meta cpp]
-+
-+```cpp
-+namespace std {
-+  template &amp;lt;range_format K, ranges::input_range R, class charT&amp;gt;
-+  struct range-default-formatter;      // (1) C++23
-+
-+  template &amp;lt;ranges::input_range R, class charT&amp;gt;
-+  struct range-default-formatter&amp;lt;
-+    range_format::sequence, R, charT&amp;gt;; // (2) C++23
-+
-+  template &amp;lt;ranges::input_range R, class charT&amp;gt;
-+  struct range-default-formatter&amp;lt;
-+    range_format::map, R, charT&amp;gt;;      // (3) C++23
-+
-+  template &amp;lt;ranges::input_range R, class charT&amp;gt;
-+  struct range-default-formatter&amp;lt;
-+    range_format::set, R, charT&amp;gt;;      // (4) C++23
-+
-+  template &amp;lt;range_format K, ranges::input_range R, class charT&amp;gt;
-+    requires (K == range_format::string || K == range_format::debug_string)
-+  struct range-default-formatter&amp;lt;
-+    K, R, charT&amp;gt;;                      // (5) C++23
-+}
-+```
-+* range_format[link range_format.md]
-+* ranges::input_range[link /reference/ranges/input_range.md]
-+
-+## 概要
-+`range-default-formatter`は、Range・コンテナに対するデフォルトの書式解析と書式文字列化を行う説明専用クラスである。
-+
-+このクラスは、[`formatter`](formatter.md)クラスのRange・コンテナに対する特殊化実装として標準ライブラリの内部で使用される。
-+
-+このクラスの内部実装として[`range_formatter`](range_formatter.md)が使用される。
-+
-+
-+- (1) : プライマリテンプレート。宣言のみ
-+- (2) : Range・シーケンスコンテナに対する特殊化。デバッグ出力の有効化と、`[a, b, c]`形式の出力を行う
-+- (3) : [`std::map`](/reference/map/map.md)や[`std::flat_map`](/reference/flat_map/flat_map.md.nolink)などの連想コンテナに対する特殊化。デバッグ出力の有効化と、`{1: a, 2: b}`形式での出力を行う
-+- (4) : [`std::set`](/reference/set/set.md)や[`std::flat_set`](/reference/flat_set/flat_set.md.nolink)などの集合コンテナに対する特殊化。デバッグ出力の有効化と、`{a, b, c}`形式の出力を行う
-+- (5) : 文字列形式の出力を行うRangeに対する特殊化。Rangeを文字列として出力し、[`range_format::debug_string`](range_format.md)指定であればデバッグ文字列として出力する
-+
-+
-+## 備考
-+- (5) : この特殊化は規格上、標準ライブラリ内では使用されないが ([`formatter`](formatter.md)`&amp;lt;`[`string`](/reference/string/basic_string.md)`, charT&amp;gt;`がすでにある)、以下のような用途が考えられる
-+    - ユーザー定義の文字列クラスを定義する場合に、[`format_kind`](format_kind.md)で値として[`range_format::string`](range_format.md)もしくは[`range_format::debug_string`](range_format.md)をもつよう特殊化するか ([`formatter`](formatter.md)`&amp;lt;`[`string`](/reference/string/basic_string.md)`, charT&amp;gt;`をラップする方がかんたんではある)
-+    - [`std::vector&amp;lt;char&amp;gt;`](/reference/vector/vector.md)のような文字を要素とするシーケンスコンテナで、文字列形式で出力する書式オプション ([`s`や`?s`](format.md#range-format-options)) を指定した際に`range-default-formatter&amp;lt;range_format::sequence, R, charT&amp;gt;`の内部で使用される
-+
-+
-+## メンバ関数
-+
-+| メンバ関数 | 説明 | 対応バージョン |
-+|------------|------|----------------|
-+| `parse`    | 書式の解析を行う | C++23 |
-+| `format`   | 書式化を行う | C++23 |
-+
-+
-+### sequenceに対する特殊化
-+
-+| メンバ関数 | 説明 | 対応バージョン |
-+|------------|------|----------------|
-+| `constexpr void set_separator(basic_string_view&amp;lt;charT&amp;gt; sep);` | 要素の区切り文字を設定する | C++23 |
-+| `constexpr void set_brackets(basic_string_view&amp;lt;charT&amp;gt; opening, basic_string_view&amp;lt;charT&amp;gt; closing);` | 全体の囲み文字を設定する | C++23 |
-+
-+
-+### mapに対する特殊化
-+
-+| メンバ関数 | 説明 | 対応バージョン |
-+|------------|------|----------------|
-+| `constexpr range-default-formatter();` | 全体の囲み文字を`{}`、要素の囲み文字を空、要素同士の区切り文字を`&amp;#34;: &amp;#34;`に設定する | C++23 |
-+
-+### setに対する特殊化
-+
-+| メンバ関数 | 説明 | 対応バージョン |
-+|------------|------|----------------|
-+| `constexpr range-default-formatter();` | 全体の囲み文字を`{}`に設定する | C++23 |
-+
-+
-+## バージョン
-+### 言語
-+- C++23
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): ??
-+- [ICC](/implementation.md#icc): ??
-+- [Visual C++](/implementation.md#visual_cpp): ??
-+
-+
-+## 参照
-+- [P2286R8 Formatting Ranges](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2286r8.html)
-+- [P2585R1 Improve default container formatting](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2585r1.html)
-+    - C++23から、Range・コンテナ、`pair`、`tuple`のフォーマット出力、および文字・文字列のデバッグ指定 (`&amp;#34;?&amp;#34;`) が追加された
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>range_formatter -- &lt;format&gt; : range-default-formatterを追加 #1085</title>
-      <link href="https://cpprefjp.github.io/reference/format/range_formatter.html"/>
-      <id>2513346aaefb6f93d4740367084d9f30d30a05aa:reference/format/range_formatter.md</id>
-      <updated>2023-01-27T16:28:04+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/range_formatter.md b/reference/format/range_formatter.md
-index c2d5c38f5..71ff8a66f 100644
---- a/reference/format/range_formatter.md
-+++ b/reference/format/range_formatter.md
-@@ -16,6 +16,8 @@ namespace std {
- ## 概要
- `range_formatter`は、Range・コンテナに対する[`formatter`](formatter.md)クラスの特殊化を実装するためのユーティリティクラスである。
- 
-+このクラスは、説明専用クラス[`range-default-formatter`](range-default-formatter.md)の内部実装として使用される。
-+
- ユーザー定義のコンテナ・RangeをRange書式に対応する場合は、以下のようにする：
- 
- - オリジナル書式を定義しないのであれば、このクラスではなく、[`format_kind`](format_kind.md)を特殊化する
-@@ -148,7 +150,7 @@ aa:bb:cc:dd:ee:ff
- - [Visual C++](/implementation.md#visual_cpp): ??
- 
- ## 関連項目
--- [`range-default-formatter`](range-default-formatter.md.nolink)
-+- [`range-default-formatter`](range-default-formatter.md)
- - [`formatter`](formatter.md)
- 
- 
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
