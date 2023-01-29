@@ -2,9 +2,301 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2023-01-29T14:39:24.747404</updated>
-  <id>ea9240ae-3e6f-4502-a776-515b003bef76</id>
+  <updated>2023-01-29T14:49:03.249554</updated>
+  <id>6bcd96e2-3561-4723-8fc0-d326d803d0ab</id>
 
+  
+    <entry>
+      <title>expected -- expected/expected: operator=(#1066)</title>
+      <link href="https://cpprefjp.github.io/reference/expected/expected.html"/>
+      <id>724b29c83cfdd8bddf4cdc1bb3c657b6c9e17d4c:reference/expected/expected.md</id>
+      <updated>2023-01-29T23:29:20+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/expected/expected.md b/reference/expected/expected.md
+index be2612602..60b59f6af 100644
+--- a/reference/expected/expected.md
++++ b/reference/expected/expected.md
+@@ -38,7 +38,7 @@ namespace std {
+ 
+ | 名前            | 説明           | 対応バージョン |
+ |-----------------|----------------|-------|
+-| [`operator=`](expected/op_assign.md.nolink) | 代入演算子     | C++23 |
++| [`operator=`](expected/op_assign.md) | 代入演算子 | C++23 |
+ | [`emplace`](expected/emplace.md.nolink) | 正常値型のコンストラクタ引数から直接構築する | C++23 |
+ | [`swap`](expected/swap.md.nolink) | 他の`expected`オブジェクトとデータを入れ替える | C++23 |
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator= -- expected/expected: operator=(#1066)</title>
+      <link href="https://cpprefjp.github.io/reference/expected/expected/op_assign.html"/>
+      <id>724b29c83cfdd8bddf4cdc1bb3c657b6c9e17d4c:reference/expected/expected/op_assign.md</id>
+      <updated>2023-01-29T23:29:20+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/expected/expected/op_assign.md b/reference/expected/expected/op_assign.md
+new file mode 100644
+index 000000000..103e901f9
+--- /dev/null
++++ b/reference/expected/expected/op_assign.md
+@@ -0,0 +1,245 @@
++# operator=
++* expected[meta header]
++* function[meta id-type]
++* std[meta namespace]
++* expected[meta class]
++* cpp23[meta cpp]
++
++```cpp
++constexpr expected&amp;amp; operator=(const expected&amp;amp;);      // (1)
++
++constexpr expected&amp;amp; operator=(expected&amp;amp;&amp;amp;) noexcept(see below); // (2)
++
++template&amp;lt;class U = T&amp;gt;
++constexpr expected&amp;amp; operator=(U&amp;amp;&amp;amp;);                  // (3)
++
++template&amp;lt;class G&amp;gt;
++constexpr expected&amp;amp; operator=(const unexpected&amp;lt;G&amp;gt;&amp;amp;); // (4)
++
++template&amp;lt;class G&amp;gt;
++constexpr expected&amp;amp; operator=(unexpected&amp;lt;G&amp;gt;&amp;amp;&amp;amp;);      // (5)
++```
++* see below[italic]
++* unexpected[link ../unexpected.md]
++
++## 概要
++- (1) : コピー代入。
++- (2) : ムーブ代入。
++- (3) : 要素型`T`に変換可能な値を、正常値としてコピー代入またはムーブ代入。
++- (4) : 変換可能な[`unexpected`](../unexpected.md)オブジェクトから、エラー値としてコピー代入。
++- (5) : 変換可能な[`unexpected`](../unexpected.md)オブジェクトから、エラー値としてムーブ代入。
++
++
++動作説明用の`expected`クラスメンバ変数として、下記を導入する。
++
++- `val` : `T`型の正常値。
++- `unex` : `E`型のエラー値。
++- `has_val` : `bool`型のフラグ変数。正常値を保持する場合は`true`に、エラー値を保持する場合は`false`となる。
++
++また、説明用のテンプレート関数`reinit-expected`を次の通り定義する。
++
++```cpp
++template&amp;lt;class T, class U, class... Args&amp;gt;
++constexpr void reinit-expected(T&amp;amp; newval, U&amp;amp; oldval, Args&amp;amp;&amp;amp;... args) {
++  if constexpr (is_nothrow_constructible_v&amp;lt;T, Args...&amp;gt;) {
++    destroy_at(addressof(oldval));
++    construct_at(addressof(newval), std::forward&amp;lt;Args&amp;gt;(args)...);
++  } else if constexpr (is_nothrow_move_constructible_v&amp;lt;T&amp;gt;) {
++    T tmp(std::forward&amp;lt;Args&amp;gt;(args)...);
++    destroy_at(addressof(oldval));
++    construct_at(addressof(newval), std::move(tmp));
++  } else {
++    U tmp(std::move(oldval));
++    destroy_at(addressof(oldval));
++    try {
++      construct_at(addressof(newval), std::forward&amp;lt;Args&amp;gt;(args)...);
++    } catch (...) {
++      construct_at(addressof(oldval), std::move(tmp));
++      throw;
++    }
++  }
++}
++```
++* addressof[link /reference/memory/addressof.md]
++* construct_at[link /reference/memory/construct_at.md]
++* destroy_at[link /reference/memory/destroy_at.md]
++* is_nothrow_constructible_v[link /reference/type_traits/is_nothrow_constructible.md]
++* is_nothrow_move_constructible_v[link /reference/type_traits/is_nothrow_move_constructible.md]
++
++
++## テンプレートパラメータ制約
++- (2) : 下記を全て満たすこと
++    - [`is_move_constructible_v`](/reference/type_traits/is_move_constructible.md)`&amp;lt;T&amp;gt; == true`
++    - [`is_move_assignable_v`](/reference/type_traits/is_move_assignable.md)`&amp;lt;T&amp;gt; == true`
++    - [`is_move_constructible_v`](/reference/type_traits/is_move_constructible.md)`&amp;lt;E&amp;gt; == true`
++    - [`is_move_assignable_v`](/reference/type_traits/is_move_assignable.md)`&amp;lt;E&amp;gt; == true`
++    - `(`[`is_nothrow_move_constructible_v`](/reference/type_traits/is_nothrow_move_constructible.md)`&amp;lt;T&amp;gt; ||` [`is_nothrow_move_constructible_v`](/reference/type_traits/is_nothrow_move_constructible.md)`&amp;lt;E&amp;gt;) == true`
++- (3) : 下記を全て満たすこと
++    - [`is_same_v`](/reference/type_traits/is_same.md)`&amp;lt;expected,` [`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;U&amp;gt;&amp;gt; == false`
++    - [`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;U&amp;gt;`が[`unexpected`](../unexpected.md)の特殊化ではない
++    - [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;T, U&amp;gt; == true`
++    - [`is_assignable_v`](/reference/type_traits/is_assignable.md)`&amp;lt;T&amp;amp;, U&amp;gt; == true`
++    - `(`[`is_nothrow_constructible_v`](/reference/type_traits/is_nothrow_constructible.md)`&amp;lt;T, U&amp;gt; ||` [`is_nothrow_move_constructible_v`](/reference/type_traits/is_nothrow_move_constructible.md)`&amp;lt;T&amp;gt; ||` [`is_nothrow_move_constructible_v`](/reference/type_traits/is_nothrow_move_constructible.md)`&amp;lt;E&amp;gt;) == true`
++- (4) : 下記を全て満たすこと
++    - [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;E, const G&amp;amp;&amp;gt; == true`
++    - [`is_assignable_v`](/reference/type_traits/is_assignable.md)`&amp;lt;E&amp;amp;, const G&amp;amp;&amp;gt; == true`
++    - `(`[`is_nothrow_constructible_v`](/reference/type_traits/is_nothrow_constructible.md)`&amp;lt;E, const G&amp;amp;&amp;gt; ||` [`is_nothrow_move_constructible_v`](/reference/type_traits/is_nothrow_move_constructible.md)`&amp;lt;T&amp;gt; ||
++`[`is_nothrow_move_constructible_v`](/reference/type_traits/is_nothrow_move_constructible.md)`&amp;lt;E&amp;gt;) == true`
++- (5) : 下記を全て満たすこと
++    - [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;E, G&amp;gt; == true`
++    - [`is_assignable_v`](/reference/type_traits/is_assignable.md)`&amp;lt;E&amp;amp;, G&amp;gt; == true`
++    - `(`[`is_nothrow_constructible_v`](/reference/type_traits/is_nothrow_constructible.md)`&amp;lt;E, G&amp;gt; ||` [`is_nothrow_move_constructible_v`](/reference/type_traits/is_nothrow_move_constructible.md)`&amp;lt;T&amp;gt; ||` [`is_nothrow_move_constructible_v`](/reference/type_traits/is_nothrow_move_constructible.md)`&amp;lt;E&amp;gt;) == true`
++
++
++## 効果
++- (1) : 次の処理を行ったのち、例外が送出されなければ、`has_val = rhs.`[`has_value()`](has_value.md.nolink)`; return *this;`
++    - `this`と`rhs`が共に正常値を保持していたら、`val = *rhs`
++    - `this`が正常値を保持し、`rhs`がエラー値を保持していたら、`reinit-expected(unex, val, rhs.`[`error()`](error.md.nolink)`)`
++    - `this`がエラーを保持し、`rhs`が正常値を保持していたら、`reinit-expected(val, unex, *rhs)`
++    - `this`と`rhs`が共にエラー値を保持していたら、`unex = rhs.`[`error()`](error.md.nolink)
++- (2) : 次の処理を行ったのち、例外が送出されなければ、`has_val = rhs.`[`has_value()`](has_value.md.nolink)`; return *this;`
++    - `this`と`rhs`が共に正常値を保持していたら、`val = std::move(*rhs)`
++    - `this`が正常値を保持し、`rhs`がエラー値を保持していたら、`reinit-expected(unex, val, std::move(rhs.`[`error()`](error.md.nolink)`))`
++    - `this`がエラーを保持し、`rhs`が正常値を保持していたら、`reinit-expected(val, unex, std::move(*rhs))`
++    - `this`と`rhs`が共にエラー値を保持していたら、`unex = std::move(rhs.`[`error()`](error.md.nolink)`)`
++- (3) : 次の処理と等価
++    - `this`が正常値を保持していたら、`val = std::forward&amp;lt;U&amp;gt;(v)`
++    - `this`がエラー値を保持していたら、`reinit-expected(val, unex, std::forward&amp;lt;U&amp;gt;(v)); has_val = true;`
++- (4) : 次の処理と等価
++    - `this`が正常値を保持していたら、`reinit-expected(unex, val, std::forward&amp;lt;const G&amp;amp;&amp;gt;(e.`[`error()`](error.md.nolink)`));
++has_val = false;`
++    - `this`がエラー値を保持していたら、`unex = std::forward&amp;lt;const G&amp;amp;&amp;gt;(e.`[`error()`](error.md.nolink)`);`
++- (5) : 次の処理と等価
++    - `this`が正常値を保持していたら、`reinit-expected(unex, val, std::forward&amp;lt;G&amp;gt;(e.`[`error()`](error.md.nolink)`));
++has_val = false;`
++    - `this`がエラー値を保持していたら、`unex = std::forward&amp;lt;G&amp;gt;(e.`[`error()`](error.md.nolink)`);`
++
++
++## 戻り値
++`*this`
++
++
++## 例外
++- (2) : ムーブ代入演算子のnoexcept例外指定は、次の式に従う
++    - [`is_nothrow_move_assignable_v`](/reference/type_traits/is_nothrow_move_assignable.md)`&amp;lt;T&amp;gt; &amp;amp;&amp;amp;` [`is_nothrow_move_constructible_v`](/reference/type_traits/is_nothrow_move_constructible.md)`&amp;lt;T&amp;gt; &amp;amp;&amp;amp;` [`is_nothrow_move_assignable_v`](/reference/type_traits/is_nothrow_move_assignable.md)`&amp;lt;E&amp;gt; &amp;amp;&amp;amp;` [`is_nothrow_move_constructible_v`](/reference/type_traits/is_nothrow_move_constructible.md)`&amp;lt;E&amp;gt;`
++
++
++## delete定義される条件
++- (1) : 下記いずれか1つでも満たされないとき、コピー代入演算子はdelete定義される。
++    - [`is_copy_assignable_v`](/reference/type_traits/is_copy_assignable.md)`&amp;lt;T&amp;gt; == true`
++    - [`is_copy_constructible_v`](/reference/type_traits/is_copy_constructible.md)`&amp;lt;T&amp;gt; == true`
++    - [`is_copy_assignable_v`](/reference/type_traits/is_copy_assignable.md)`&amp;lt;E&amp;gt; == true`
++    - [`is_copy_constructible_v`](/reference/type_traits/is_copy_constructible.md)`&amp;lt;E&amp;gt; == true`
++    - `(`[`is_nothrow_move_constructible_v`](/reference/type_traits/is_nothrow_move_constructible.md)`&amp;lt;T&amp;gt; ||` [`is_nothrow_move_constructible_v`](/reference/type_traits/is_nothrow_move_constructible.md)`&amp;lt;E&amp;gt;) == true`
++
++
++## 例
++```cpp example
++#include &amp;lt;cassert&amp;gt;
++#include &amp;lt;expected&amp;gt;
++#include &amp;lt;memory&amp;gt;
++#include &amp;lt;string&amp;gt;
++#include &amp;lt;tuple&amp;gt;
++#include &amp;lt;utility&amp;gt;
++
++// std::pair型から2要素std::tuple型へはコピー代入可能
++using IntPair  = std::pair&amp;lt;int, int&amp;gt;;
++using IntTuple = std::tuple&amp;lt;int, int&amp;gt;;
++
++// std::unique_ptr型からstd::shared_ptr型へはムーブ代入可能
++using UniquePtr = std::unique_ptr&amp;lt;int&amp;gt;;
++using SharedPtr = std::shared_ptr&amp;lt;int&amp;gt;;
++
++int main()
++{
++  // (1) コピー代入
++  {
++    std::expected&amp;lt;int, std::string&amp;gt; srcV = 42;
++    std::expected&amp;lt;int, std::string&amp;gt; dstV;
++    dstV = srcV;
++    assert(srcV.has_value() &amp;amp;&amp;amp; dstV.has_value());
++    assert(srcV.value() == 42 &amp;amp;&amp;amp; dstV.value() == 42);
++
++    std::expected&amp;lt;int, std::string&amp;gt; srcE = std::unexpected{&amp;#34;Oops&amp;#34;};
++    std::expected&amp;lt;int, std::string&amp;gt; dstE;
++    dstE = srcE;
++    assert(!srcE.has_value() &amp;amp;&amp;amp; !dstE.has_value());
++    assert(srcE.error() == &amp;#34;Oops&amp;#34; &amp;amp;&amp;amp; dstE.error() == &amp;#34;Oops&amp;#34;);
++  }
++
++  // (2) ムーブ代入
++  {
++    std::expected&amp;lt;std::string, int&amp;gt; srcV = &amp;#34;ok&amp;#34;;
++    std::expected&amp;lt;std::string, int&amp;gt; dstV;
++    dstV = std::move(srcV);
++    assert(srcV.has_value() &amp;amp;&amp;amp; dstV.has_value());
++    assert(dstV.value() == &amp;#34;ok&amp;#34;);
++    // srcV.value()はstd::stringムーブ後の未規定の値
++
++    std::expected&amp;lt;int, std::string&amp;gt; srcE = std::unexpected{&amp;#34;ng&amp;#34;};
++    std::expected&amp;lt;int, std::string&amp;gt; dstE;
++    dstE = std::move(srcE);
++    assert(!srcE.has_value() &amp;amp;&amp;amp; !dstE.has_value());
++    assert(dstE.error() == &amp;#34;ng&amp;#34;);
++    // srcE.error()はstd::stringムーブ後の未規定の値
++  }
++
++  // (3) 正常値の変換コピー代入
++  {
++    IntPair src = IntPair{1, 2};
++    std::expected&amp;lt;IntTuple, int&amp;gt; dst;
++    dst = src;
++    assert(dst.has_value());
++    assert((dst.value() == IntTuple{1, 2}));
++  }
++  // (3) 正常値の変換ムーブ代入
++  {
++    UniquePtr src = std::make_unique&amp;lt;int&amp;gt;(42);
++    std::expected&amp;lt;SharedPtr, int&amp;gt; dst;
++    dst = std::move(src);
++    assert(dst.has_value());
++    assert(*dst.value() == 42);
++  }
++
++  // (4) エラー値の変換コピー代入
++  {
++    std::unexpected&amp;lt;IntPair&amp;gt; src{IntPair{1, 2}};
++    std::expected&amp;lt;int, IntTuple&amp;gt; dst;
++    dst = src;
++    assert(not dst.has_value());
++    assert((dst.error() == IntTuple{1, 2}));
++  }
++
++  // (5) エラー値の変換ムーブ代入
++  {
++    std::unexpected&amp;lt;UniquePtr&amp;gt; src{std::make_unique&amp;lt;int&amp;gt;(42)};
++    std::expected&amp;lt;int, SharedPtr&amp;gt; dst;
++    dst = std::move(src);
++    assert(not dst.has_value());
++    assert(*dst.error() == 42);
++  }
++}
++```
++* has_value[link has_value.md.nolink]
++* value[link value.md.nolink]
++* error[link error.md.nolink]
++* std::unexpected[link ../unexpected.md]
++
++### 出力
++```
++```
++
++
++## バージョン
++### 言語
++- C++23
++
++### 処理系
++- [Clang](/implementation.md#clang): 16.0
++- [GCC](/implementation.md#gcc): 12.1
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 参照
++- [P0323R12 std::expected](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p0323r12.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>barrier -- &#34;see below&#34;をitalic表記</title>
@@ -1704,457 +1996,6 @@ index b9d10ea86..78af379f9 100644
       <author>
         <name>acd1034</name>
         <email>48613285+acd1034@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>expected -- expected/expected: コンストラクタ,デストラクタ(#1066)</title>
-      <link href="https://cpprefjp.github.io/reference/expected/expected.html"/>
-      <id>7e9e00dcdfb90c4507302201a4b8a69b8dbab683:reference/expected/expected.md</id>
-      <updated>2023-01-28T22:58:55+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/expected/expected.md b/reference/expected/expected.md
-index 3984d89de..be2612602 100644
---- a/reference/expected/expected.md
-+++ b/reference/expected/expected.md
-@@ -31,8 +31,8 @@ namespace std {
- 
- | 名前            | 説明           | 対応バージョン |
- |-----------------|----------------|-------|
--| [`(constructor)`](expected/op_constructor.md.nolink) | コンストラクタ | C++23 |
--| [`(destructor)`](expected/op_destructor.md.nolink)   | デストラクタ | C++23 |
-+| [`(constructor)`](expected/op_constructor.md) | コンストラクタ | C++23 |
-+| [`(destructor)`](expected/op_destructor.md)   | デストラクタ | C++23 |
- 
- ### 代入
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>コンストラクタ -- expected/expected: コンストラクタ,デストラクタ(#1066)</title>
-      <link href="https://cpprefjp.github.io/reference/expected/expected/op_constructor.html"/>
-      <id>7e9e00dcdfb90c4507302201a4b8a69b8dbab683:reference/expected/expected/op_constructor.md</id>
-      <updated>2023-01-28T22:58:55+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/expected/expected/op_constructor.md b/reference/expected/expected/op_constructor.md
-new file mode 100644
-index 000000000..98779f478
---- /dev/null
-+++ b/reference/expected/expected/op_constructor.md
-@@ -0,0 +1,318 @@
-+# コンストラクタ
-+* expected[meta header]
-+* function[meta id-type]
-+* std[meta namespace]
-+* expected[meta class]
-+* cpp23[meta cpp]
-+
-+```cpp
-+constexpr expected();                               // (1)
-+constexpr expected(const expected&amp;amp;);                // (2)
-+constexpr expected(expected&amp;amp;&amp;amp;) noexcept(see below); // (3)
-+
-+template&amp;lt;class U, class G&amp;gt;
-+constexpr explicit(see below) expected(const expected&amp;lt;U, G&amp;gt;&amp;amp;); // (4)
-+template&amp;lt;class U, class G&amp;gt;
-+constexpr explicit(see below) expected(expected&amp;lt;U, G&amp;gt;&amp;amp;&amp;amp;);      // (5)
-+
-+template&amp;lt;class U = T&amp;gt;
-+constexpr explicit(see below) expected(U&amp;amp;&amp;amp; v);      // (6)
-+
-+template&amp;lt;class G&amp;gt;
-+constexpr explicit(see below) expected(const unexpected&amp;lt;G&amp;gt;&amp;amp;); // (7)
-+template&amp;lt;class G&amp;gt;
-+constexpr explicit(see below) expected(unexpected&amp;lt;G&amp;gt;&amp;amp;&amp;amp;);      // (8)
-+
-+template&amp;lt;class... Args&amp;gt;
-+constexpr explicit expected(in_place_t, Args&amp;amp;&amp;amp;...); // (9)
-+template&amp;lt;class U, class... Args&amp;gt;
-+constexpr explicit expected(in_place_t, initializer_list&amp;lt;U&amp;gt;, Args&amp;amp;&amp;amp;...); // (10)
-+
-+template&amp;lt;class... Args&amp;gt;
-+constexpr explicit expected(unexpect_t, Args&amp;amp;&amp;amp;...); // (11)
-+template&amp;lt;class U, class... Args&amp;gt;
-+constexpr explicit expected(unexpect_t, initializer_list&amp;lt;U&amp;gt;, Args&amp;amp;&amp;amp;...); // (12)
-+```
-+* see below[italic]
-+* unexpected[link ../unexpected.md]
-+* unexpect_t[link ../unexpect_t.md]
-+* in_place_t[link /reference/utility/in_place_t.md]
-+
-+## 概要
-+- (1) : 正常値型`T`を値初期化して保持する。
-+- (2) : コピーコンストラクタ。
-+- (3) : ムーブコンストラクタ。
-+- (4) : 変換可能な`expected`オブジェクトからコピー構築する。
-+- (5) : 変換可能な`expected`オブジェクトからムーブ構築する。
-+- (6) : 正常値型`T`に変換可能な型`U`の値を正常値として受け取り、コピーまたはムーブして保持する。
-+- (7) : 変換可能な[`unexpected`](../unexpected.md)オブジェクトかエラー値をコピー構築する。
-+- (8) : 変換可能な[`unexpected`](../unexpected.md)オブジェクトからエラー値をムーブ構築する。
-+- (9) : 正常値型`T`のコンストラクタ引数として任意個の引数を受け取って、コンストラクタ内で型`T`のオブジェクトを有効値として生成し、保持する。
-+- (10) : 正常値型`T`のコンストラクタ引数として初期化子リストと任意個の引数を受け取って、コンストラクタ内で型`T`のオブジェクトを有効値として生成し、保持する。
-+- (11) : エラー値型`E`のコンストラクタ引数として任意個の引数を受け取って、コンストラクタ内で型`E`のオブジェクトを有効値として生成し、保持する。
-+- (12) : エラー値型`E`のコンストラクタ引数として初期化子リストと任意個の引数を受け取って、コンストラクタ内で型`E`のオブジェクトを有効値として生成し、保持する。
-+
-+
-+説明用のテンプレート変数`converts-from-any-cvref`を次の通り定義する。
-+
-+```cpp
-+template&amp;lt;class T, class W&amp;gt;
-+constexpr bool converts-from-any-cvref =
-+  disjunction_v&amp;lt;is_constructible&amp;lt;T, W&amp;amp;&amp;gt;, is_convertible&amp;lt;W&amp;amp;, T&amp;gt;,
-+                is_constructible&amp;lt;T, W&amp;gt;, is_convertible&amp;lt;W, T&amp;gt;,
-+                is_constructible&amp;lt;T, const W&amp;amp;&amp;gt;, is_convertible&amp;lt;const W&amp;amp;, T&amp;gt;,
-+                is_constructible&amp;lt;T, const W&amp;gt;, is_convertible&amp;lt;const W, T&amp;gt;&amp;gt;;
-+```
-+* disjunction_v[link /reference/type_traits/disjunction.md]
-+* is_constructible[link /reference/type_traits/is_constructible.md]
-+* is_convertible[link /reference/type_traits/is_convertible.md]
-+
-+
-+## テンプレートパラメータ制約
-+- (1) : [`is_default_constructible_v`](/reference/type_traits/is_default_constructible.md)`&amp;lt;T&amp;gt; == true`
-+- (3) : [`is_move_constructible_v`](/reference/type_traits/is_move_constructible.md)`&amp;lt;T&amp;gt; == true`[`is_move_constructible_v`](/reference/type_traits/is_move_constructible.md)`&amp;lt;E&amp;gt; == true`
-+- (4) : 次の制約を全て満たすこと
-+    - [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;T, const U&amp;amp;&amp;gt; == true`
-+    - [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;E, const G&amp;amp;&amp;gt; == true`
-+    - `converts-from-any-cvref&amp;lt;T, expected&amp;lt;U, G&amp;gt;&amp;gt; == false`
-+    - [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;`[`unexpected`](../unexpected.md)`&amp;lt;E&amp;gt;, expected&amp;lt;U, G&amp;gt;&amp;amp;&amp;gt; == false`
-+    - [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;`[`unexpected`](../unexpected.md)`&amp;lt;E&amp;gt;, expected&amp;lt;U, G&amp;gt;&amp;gt; == false`
-+    - [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;`[`unexpected`](../unexpected.md)`&amp;lt;E&amp;gt;, const expected&amp;lt;U, G&amp;gt;&amp;amp;&amp;gt; == false`
-+    - [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;`[`unexpected`](../unexpected.md)`&amp;lt;E&amp;gt;, const expected&amp;lt;U, G&amp;gt;&amp;gt; == false`
-+- (5) : 次の制約を全て満たすこと
-+    - [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;T, U&amp;gt; == true`
-+    - [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;E, G&amp;gt; == true`
-+    - `converts-from-any-cvref&amp;lt;T, expected&amp;lt;U, G&amp;gt;&amp;gt; == false`
-+    - [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;`[`unexpected`](../unexpected.md)`&amp;lt;E&amp;gt;, expected&amp;lt;U, G&amp;gt;&amp;amp;&amp;gt; == false`
-+    - [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;`[`unexpected`](../unexpected.md)`&amp;lt;E&amp;gt;, expected&amp;lt;U, G&amp;gt;&amp;gt; == false`
-+    - [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;`[`unexpected`](../unexpected.md)`&amp;lt;E&amp;gt;, const expected&amp;lt;U, G&amp;gt;&amp;amp;&amp;gt; == false`
-+    - [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;`[`unexpected`](../unexpected.md)`&amp;lt;E&amp;gt;, const expected&amp;lt;U, G&amp;gt;&amp;gt; == false`
-+- (6) : 次の制約を全て満たすこと
-+    - [`is_same_v`](/reference/type_traits/is_same.md)`&amp;lt;`[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;U&amp;gt;,` [`in_place_t`](/reference/utility/in_place_t.md)`&amp;gt; == false`
-+    - [`is_same_v`](/reference/type_traits/is_same.md)`&amp;lt;expected,` [`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;U&amp;gt;&amp;gt; == false`
-+    - [`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;U&amp;gt;`は[`unexpected`](../unexpected.md)の特殊化でない
-+    - [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;T, U&amp;gt; == true`
-+- (7) : [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;E, const G&amp;amp;&amp;gt; == true`
-+- (8) : [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;E, G&amp;gt; == true`
-+- (9) : [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;T, Args...&amp;gt; == true`
-+- (10) : [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;T, initializer_list&amp;lt;U&amp;gt;&amp;amp;, Args...&amp;gt; == true`
-+- (11) : [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;E, Args...&amp;gt; == true`
-+- (12) : [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;E, initializer_list&amp;lt;U&amp;gt;&amp;amp;, Args...&amp;gt; == true`
-+
-+
-+## 効果
-+- (1) : 正常値を値初期化して保持する。
-+- (2) : `rhs`が正常値を保持していれば、[`*rhs`](op_deref.md.nolink)で正常値を直接非リスト初期化する。そうでなければ、`rhs.`[`error()`](error.md.nolink)でエラー値を直接非リスト初期化する。
-+- (3) : `rhs`が正常値を保持していれば、[`std::move`](/reference/utility/move.md)`(`[`*rhs`](op_deref.md.nolink)`)`で正常値を直接非リスト初期化する。そうでなければ、[`std::move`](/reference/utility/move.md)`(rhs.`[`error()`](error.md.nolink)`)`でエラー値を直接非リスト初期化する。
-+- (4) : `rhs`が正常値を保持していれば、[`std::forward`](/reference/utility/forward.md)`&amp;lt;const U&amp;amp;&amp;gt;(`[`*rhs`](op_deref.md.nolink)`)`で正常値を直接非リスト初期化する。そうでなければ、[`std::forward`](/reference/utility/forward.md)`&amp;lt;const G&amp;amp;&amp;gt;(rhs.`[`error()`](error.md.nolink)`)`でエラー値を直接非リスト初期化する。
-+- (5) : `rhs`が正常値を保持していれば、[`std::forward`](/reference/utility/forward.md)`&amp;lt;U&amp;gt;(`[`*rhs`](op_deref.md.nolink)`)`で正常値を直接非リスト初期化する。そうでなければ、[`std::forward`](/reference/utility/forward.md)`&amp;lt;G&amp;gt;(rhs.`[`error()`](error.md.nolink)`)`でエラー値を直接非リスト初期化する。
-+- (6) : [`std::forward`](/reference/utility/forward.md)`&amp;lt;U&amp;gt;(v)`で正常値を直接非リスト初期化する。
-+- (7) : [`std::forward`](/reference/utility/forward.md)`&amp;lt;const G&amp;amp;&amp;gt;(rhs.`[`error()`](error.md.nolink)`)`でエラー値を直接非リスト初期化する。
-+- (8) : [`std::forward`](/reference/utility/forward.md)`&amp;lt;G&amp;gt;(rhs.`[`error()`](error.md.nolink)`)`でエラー値を直接非リスト初期化する。
-+- (9) : [`std::forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...`で正常値を直接非リスト初期化する。
-+- (10) : `il,` [`std::forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...`で正常値を直接非リスト初期化する。
-+- (11) : [`std::forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...`でエラー値を直接非リスト初期化する。
-+- (12) : `il,` [`std::forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...`でエラー値を直接非リスト初期化する。
-+
-+
-+## 事後条件
-+- (1) : 有効値を保持している。
-+- (2) : `rhs`が有効値を保持する場合は`*this`も有効値を保持し、`rhs`がエラー値を保持する場合は`*this`もエラー値を保持する。
-+- (3) : `rhs`が有効値を保持する場合は`*this`も有効値を保持し、`rhs`がエラー値を保持する場合は`*this`もエラー値を保持する。`rhs.`[`has_value()`](has_value.md.nolink)は変化しない。
-+- (4), (5) : `rhs`が有効値を保持する場合は`*this`も有効値を保持し、`rhs`がエラー値を保持する場合は`*this`もエラー値を保持する。`rhs.`[`has_value()`](has_value.md.nolink)は変化しない。
-+- (6) : 有効値を保持している。
-+- (7), (8) : エラー値を保持している。
-+- (9), (10) : 有効値を保持している。
-+- (11), (12) : エラー値を保持している。
-+
-+
-+## 例外
-+- (1) : 正常値型の初期化から送出される例外。
-+- (2) : 正常値型またはエラー値型の初期化から送出される例外。
-+- (3) : 正常値型またはエラー値型の初期化から送出される例外。
-+    - [`is_nothrow_move_constructible_v`](/reference/type_traits/is_nothrow_move_constructible.md)`&amp;lt;T&amp;gt;`かつ[`is_nothrow_move_constructible_v`](/reference/type_traits/is_nothrow_move_constructible.md)`&amp;lt;E&amp;gt;`であれば、ムーブコンストラクタはnoexpcet指定される。
-+- (4), (5) : 正常値型またはエラー値型の初期化から送出される例外。
-+- (6) : 正常値型の初期化から送出される例外。
-+- (7), (8) : エラー値型の初期化から送出される例外。
-+- (9), (10) : 正常値型の初期化から送出される例外。
-+- (11), (12) : エラー値型の初期化から送出される例外。
-+
-+
-+## delete定義される条件
-+- (2) : `!`[`is_copy_constructible_v`](/reference/type_traits/is_copy_constructible.md)`&amp;lt;T&amp;gt; || !`[`is_copy_constructible_v`](/reference/type_traits/is_copy_constructible.md)`&amp;lt;E&amp;gt;`
-+
-+
-+## トリビアルに定義される条件
-+- (2) : [`is_trivially_copy_constructible_v`](/reference/type_traits/is_trivially_copy_constructible.md)`&amp;lt;T&amp;gt; &amp;amp;&amp;amp;` [`is_trivially_copy_constructible_v`](/reference/type_traits/is_trivially_copy_constructible.md)`&amp;lt;E&amp;gt;`
-+- (3) : [`is_trivially_move_constructible_v`](/reference/type_traits/is_trivially_move_constructible.md)`&amp;lt;T&amp;gt; &amp;amp;&amp;amp;` [`is_trivially_move_constructible_v`](/reference/type_traits/is_trivially_move_constructible.md)`&amp;lt;E&amp;gt;`
-+
-+
-+## explicitになる条件
-+- (4) : `!`[`is_convertible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;const U&amp;amp;, T&amp;gt; || !`[`is_convertible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;const G&amp;amp;, E&amp;gt;`
-+- (5) : `!`[`is_convertible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;U, T&amp;gt; || !`[`is_convertible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;G, E&amp;gt;`
-+- (6) : `!`[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;U, T&amp;gt;`
-+- (7) : `!`[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;const G&amp;amp;, E&amp;gt;`
-+- (8) : `!`[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;G, E&amp;gt;`
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;cassert&amp;gt;
-+#include &amp;lt;expected&amp;gt;
-+#include &amp;lt;memory&amp;gt;
-+#include &amp;lt;string&amp;gt;
-+#include &amp;lt;tuple&amp;gt;
-+#include &amp;lt;utility&amp;gt;
-+#include &amp;lt;vector&amp;gt;
-+
-+// std::pair型から2要素std::tuple型へはコピー変換可能
-+using IntPair  = std::pair&amp;lt;int, int&amp;gt;;
-+using IntTuple = std::tuple&amp;lt;int, int&amp;gt;;
-+
-+// std::unique_ptr型からstd::shared_ptr型へはムーブ変換可能
-+using UniquePtr = std::unique_ptr&amp;lt;int&amp;gt;;
-+using SharedPtr = std::shared_ptr&amp;lt;int&amp;gt;;
-+
-+// 引数リスト または initializer_list＋引数リスト から構築可能な型
-+struct ComplexType {
-+  std::string data;
-+  std::vector&amp;lt;int&amp;gt; seq;
-+
-+  ComplexType(const char* ptr, size_t len)
-+    : data(ptr, len) {}
-+  ComplexType(std::initializer_list&amp;lt;int&amp;gt; il, std::string_view sv)
-+    : data(sv), seq(il) {} 
-+};
-+
-+int main()
-+{
-+  // (1) デフォルトコンストラクタ
-+  {
-+    std::expected&amp;lt;int, std::string&amp;gt; x;
-+    assert(x.has_value());
-+    assert(x.value() == 0);
-+    // int型の値初期化{}は値0
-+  }
-+
-+  // (2) コピーコンストラクタ
-+  {
-+    std::expected&amp;lt;int, std::string&amp;gt; srcV = 42;
-+    std::expected&amp;lt;int, std::string&amp;gt; dstV = srcV;
-+    assert(srcV.has_value() &amp;amp;&amp;amp; dstV.has_value());
-+    assert(srcV.value() == 42 &amp;amp;&amp;amp; dstV.value() == 42);
-+
-+    std::expected&amp;lt;int, std::string&amp;gt; srcE = std::unexpected{&amp;#34;Oops&amp;#34;};
-+    std::expected&amp;lt;int, std::string&amp;gt; dstE = srcE;
-+    assert(!srcE.has_value() &amp;amp;&amp;amp; !dstE.has_value());
-+    assert(srcE.error() == &amp;#34;Oops&amp;#34; &amp;amp;&amp;amp; dstE.error() == &amp;#34;Oops&amp;#34;);
-+  }
-+
-+  // (3) ムーブコンストラクタ
-+  {
-+    std::expected&amp;lt;std::string, int&amp;gt; srcV = &amp;#34;ok&amp;#34;;
-+    std::expected&amp;lt;std::string, int&amp;gt; dstV = std::move(srcV);
-+    assert(srcV.has_value() &amp;amp;&amp;amp; dstV.has_value());
-+    assert(dstV.value() == &amp;#34;ok&amp;#34;);
-+    // srcV.value()はstd::stringムーブ後の未規定の値
-+
-+    std::expected&amp;lt;int, std::string&amp;gt; srcE = std::unexpected{&amp;#34;ng&amp;#34;};
-+    std::expected&amp;lt;int, std::string&amp;gt; dstE = std::move(srcE);
-+    assert(!srcE.has_value() &amp;amp;&amp;amp; !dstE.has_value());
-+    assert(dstE.error() == &amp;#34;ng&amp;#34;);
-+    // srcE.error()はstd::stringムーブ後の未規定の値
-+  }
-+
-+  // (4) 変換コピー構築
-+  {
-+    std::expected&amp;lt;IntPair,  int&amp;gt; src = IntPair{1, 2};
-+    std::expected&amp;lt;IntTuple, int&amp;gt; dst = src;
-+    assert(src.has_value() &amp;amp;&amp;amp; dst.has_value());
-+    assert((dst.value() == IntTuple{1, 2}));
-+  }
-+
-+  // (5) 変換ムーブ構築
-+  {
-+    std::expected&amp;lt;UniquePtr, int&amp;gt; src = std::make_unique&amp;lt;int&amp;gt;(42);
-+    std::expected&amp;lt;SharedPtr, int&amp;gt; dst = std::move(src);
-+    assert(src.has_value() &amp;amp;&amp;amp; dst.has_value());
-+    assert(*dst.value() == 42);
-+    assert(src.value() == nullptr);
-+    // ムーブ後のstd::unique_ptr型はnullptrが保証される
-+  }
-+
-+  // (6) 正常値の変換コピー／ムーブ構築
-+  {
-+    IntPair src1{1, 2};
-+    std::expected&amp;lt;IntTuple, int&amp;gt; dst1 = src1;
-+    assert(dst1.has_value());
-+    assert((dst1.value() == IntTuple{1, 2}));
-+
-+    UniquePtr src2 = std::make_unique&amp;lt;int&amp;gt;(42);
-+    std::expected&amp;lt;SharedPtr, int&amp;gt; dst2 = std::move(src2);
-+    assert(dst2.has_value());
-+    assert(*dst2.value() == 42);
-+  }
-+
-+  // (7),(8) エラー値の変換コピー／ムーブ構築
-+  {
-+    std::unexpected&amp;lt;IntPair&amp;gt; src1{std::in_place, 1, 2};
-+    std::expected&amp;lt;int, IntTuple&amp;gt; dst1 = src1;
-+    assert(not dst1.has_value());
-+    assert((dst1.error() == IntTuple{1, 2}));
-+
-+    UniquePtr src2 = std::make_unique&amp;lt;int&amp;gt;(42);
-+    std::expected&amp;lt;int, SharedPtr&amp;gt; dst2 = std::unexpected{std::move(src2)};
-+    assert(not dst2.has_value());
-+    assert(*dst2.error() == 42);
-+  }
-+
-+  // (9),(10) 引数リストから正常値を直接構築
-+  {
-+    std::expected&amp;lt;ComplexType, int&amp;gt; x1{std::in_place, &amp;#34;C++&amp;#34;, 1};
-+    assert(x1.has_value());
-+    assert(x1.value().data == &amp;#34;C&amp;#34;);
-+    // &amp;#34;C++&amp;#34;より長さ1の文字列が構築されている
-+
-+    std::expected&amp;lt;ComplexType, int&amp;gt; x2{std::in_place, {5, 6, 7, 8}, &amp;#34;Steps&amp;#34;};
-+    assert(x2.has_value());
-+    assert(x2.value().data == &amp;#34;Steps&amp;#34;);
-+    assert((x2.value().seq == std::vector&amp;lt;int&amp;gt;{5, 6, 7, 8}));
-+  }
-+
-+  // (11),(12) 引数リストからエラー値を直接構築
-+  {
-+    std::expected&amp;lt;int, ComplexType&amp;gt; x1{std::unexpect, &amp;#34;Hello!&amp;#34;, 4};
-+    assert(not x1.has_value());
-+    assert(x1.error().data == &amp;#34;Hell&amp;#34;);
-+    // &amp;#34;Hello!&amp;#34;より長さ4の文字列が構築されている
-+
-+    std::expected&amp;lt;int, ComplexType&amp;gt; x2{std::unexpect, {1, 2, 3}, &amp;#34;Lotus&amp;#34;};
-+    assert(not x2.has_value());
-+    assert(x2.error().data == &amp;#34;Lotus&amp;#34;);
-+    assert((x2.error().seq == std::vector&amp;lt;int&amp;gt;{1, 2, 3}));
-+  }
-+}
-+```
-+* has_value[link has_value.md.nolink]
-+* value[link value.md.nolink]
-+* error[link error.md.nolink]
-+* std::unexpected[link ../unexpected.md]
-+
-+### 出力
-+```
-+```
-+
-+
-+## バージョン
-+### 言語
-+- C++23
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): 16.0
-+- [GCC](/implementation.md#gcc): 12.1
-+- [ICC](/implementation.md#icc): ??
-+- [Visual C++](/implementation.md#visual_cpp): ??
-+
-+
-+## 参照
-+- [P0323R12 std::expected](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p0323r12.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>デストラクタ -- expected/expected: コンストラクタ,デストラクタ(#1066)</title>
-      <link href="https://cpprefjp.github.io/reference/expected/expected/op_destructor.html"/>
-      <id>7e9e00dcdfb90c4507302201a4b8a69b8dbab683:reference/expected/expected/op_destructor.md</id>
-      <updated>2023-01-28T22:58:55+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/expected/expected/op_destructor.md b/reference/expected/expected/op_destructor.md
-new file mode 100644
-index 000000000..23add4ea4
---- /dev/null
-+++ b/reference/expected/expected/op_destructor.md
-@@ -0,0 +1,37 @@
-+# デストラクタ
-+* expected[meta header]
-+* function[meta id-type]
-+* std[meta namespace]
-+* expected[meta class]
-+* cpp23[meta cpp]
-+
-+```cpp
-+constexpr ~expected();
-+```
-+
-+## 概要
-+`expected`オブジェクトを破棄する。
-+
-+
-+## 効果
-+正常値を保持している場合は、正常値オブジェクトのデストラクタを呼び出す。
-+エラー値を保持している場合は、エラー値オブジェクトのデストラクタを呼び出す。
-+
-+
-+## トリビアルに定義される条件
-+[`is_trivially_destructible_v`](/reference/type_traits/is_trivially_destructible.md)`&amp;lt;T&amp;gt; &amp;amp;&amp;amp;` [`is_trivially_destructible_v`](/reference/type_traits/is_trivially_destructible.md)`&amp;lt;E&amp;gt;`
-+
-+
-+## バージョン
-+### 言語
-+- C++23
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): 16.0
-+- [GCC](/implementation.md#gcc): 12.1
-+- [ICC](/implementation.md#icc): ??
-+- [Visual C++](/implementation.md#visual_cpp): ??
-+
-+
-+## 参照
-+- [P0323R12 std::expected](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p0323r12.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>unexpect_t -- expected/expected: コンストラクタ,デストラクタ(#1066)</title>
-      <link href="https://cpprefjp.github.io/reference/expected/unexpect_t.html"/>
-      <id>7e9e00dcdfb90c4507302201a4b8a69b8dbab683:reference/expected/unexpect_t.md</id>
-      <updated>2023-01-28T22:58:55+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/expected/unexpect_t.md b/reference/expected/unexpect_t.md
-index 03ee4f5c6..5ef532035 100644
---- a/reference/expected/unexpect_t.md
-+++ b/reference/expected/unexpect_t.md
-@@ -15,7 +15,7 @@ namespace std {
- ```
- 
- ## 概要
--`unexpected_t`は、[`expected`コンストラクタ](expected/op_constructor.md.nolink)において、エラー値型のコンストラクタ引数を受け取って構築するためのタグ型である。
-+`unexpected_t`は、[`expected`コンストラクタ](expected/op_constructor.md)において、エラー値型のコンストラクタ引数を受け取って構築するためのタグ型である。
- 
- `unexpected_t`型の定数`unexpect`が提供される。
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
       </author>
     </entry>
   
