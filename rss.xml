@@ -2,9 +2,137 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2023-01-31T04:51:05.931607</updated>
-  <id>449f2a65-26eb-4a6d-96d1-aa96eab9b242</id>
+  <updated>2023-01-31T05:16:20.730220</updated>
+  <id>588f9de6-66ae-476d-9adb-e3d10a77314b</id>
 
+  
+    <entry>
+      <title>operator= -- expected/expected: operator=調整(#1066)</title>
+      <link href="https://cpprefjp.github.io/reference/expected/expected/op_assign.html"/>
+      <id>44e51113a40fd217b00231ee404f8e42649a0666:reference/expected/expected/op_assign.md</id>
+      <updated>2023-01-31T14:11:27+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/expected/expected/op_assign.md b/reference/expected/expected/op_assign.md
+index 103e901f9..0f9011829 100644
+--- a/reference/expected/expected/op_assign.md
++++ b/reference/expected/expected/op_assign.md
+@@ -6,18 +6,18 @@
+ * cpp23[meta cpp]
+ 
+ ```cpp
+-constexpr expected&amp;amp; operator=(const expected&amp;amp;);      // (1)
++constexpr expected&amp;amp; operator=(const expected&amp;amp; rhs);    // (1)
+ 
+-constexpr expected&amp;amp; operator=(expected&amp;amp;&amp;amp;) noexcept(see below); // (2)
++constexpr expected&amp;amp; operator=(expected&amp;amp;&amp;amp; rhs) noexcept(see below); // (2)
+ 
+ template&amp;lt;class U = T&amp;gt;
+-constexpr expected&amp;amp; operator=(U&amp;amp;&amp;amp;);                  // (3)
++constexpr expected&amp;amp; operator=(U&amp;amp;&amp;amp; v);                  // (3)
+ 
+ template&amp;lt;class G&amp;gt;
+-constexpr expected&amp;amp; operator=(const unexpected&amp;lt;G&amp;gt;&amp;amp;); // (4)
++constexpr expected&amp;amp; operator=(const unexpected&amp;lt;G&amp;gt;&amp;amp; e); // (4)
+ 
+ template&amp;lt;class G&amp;gt;
+-constexpr expected&amp;amp; operator=(unexpected&amp;lt;G&amp;gt;&amp;amp;&amp;amp;);      // (5)
++constexpr expected&amp;amp; operator=(unexpected&amp;lt;G&amp;gt;&amp;amp;&amp;amp; e);      // (5)
+ ```
+ * see below[italic]
+ * unexpected[link ../unexpected.md]
+@@ -65,7 +65,8 @@ constexpr void reinit-expected(T&amp;amp; newval, U&amp;amp; oldval, Args&amp;amp;&amp;amp;... args) {
+ * destroy_at[link /reference/memory/destroy_at.md]
+ * is_nothrow_constructible_v[link /reference/type_traits/is_nothrow_constructible.md]
+ * is_nothrow_move_constructible_v[link /reference/type_traits/is_nothrow_move_constructible.md]
+-
++* std::forward[link /reference/utility/forward.md]
++* std::move[link /reference/utility/move.md]
+ 
+ ## テンプレートパラメータ制約
+ - (2) : 下記を全て満たすこと
+@@ -93,26 +94,26 @@ constexpr void reinit-expected(T&amp;amp; newval, U&amp;amp; oldval, Args&amp;amp;&amp;amp;... args) {
+ 
+ ## 効果
+ - (1) : 次の処理を行ったのち、例外が送出されなければ、`has_val = rhs.`[`has_value()`](has_value.md.nolink)`; return *this;`
+-    - `this`と`rhs`が共に正常値を保持していたら、`val = *rhs`
++    - `this`と`rhs`が共に正常値を保持していたら、`val =` [`*rhs`](op_deref.md)
+     - `this`が正常値を保持し、`rhs`がエラー値を保持していたら、`reinit-expected(unex, val, rhs.`[`error()`](error.md.nolink)`)`
+-    - `this`がエラーを保持し、`rhs`が正常値を保持していたら、`reinit-expected(val, unex, *rhs)`
++    - `this`がエラーを保持し、`rhs`が正常値を保持していたら、`reinit-expected(val, unex,` [`*rhs`](op_deref.md)`)`
+     - `this`と`rhs`が共にエラー値を保持していたら、`unex = rhs.`[`error()`](error.md.nolink)
+ - (2) : 次の処理を行ったのち、例外が送出されなければ、`has_val = rhs.`[`has_value()`](has_value.md.nolink)`; return *this;`
+-    - `this`と`rhs`が共に正常値を保持していたら、`val = std::move(*rhs)`
+-    - `this`が正常値を保持し、`rhs`がエラー値を保持していたら、`reinit-expected(unex, val, std::move(rhs.`[`error()`](error.md.nolink)`))`
+-    - `this`がエラーを保持し、`rhs`が正常値を保持していたら、`reinit-expected(val, unex, std::move(*rhs))`
+-    - `this`と`rhs`が共にエラー値を保持していたら、`unex = std::move(rhs.`[`error()`](error.md.nolink)`)`
++    - `this`と`rhs`が共に正常値を保持していたら、`val =` [`std::move`](/reference/utility/move.md)`(`[`*rhs`](op_deref.md)`)`
++    - `this`が正常値を保持し、`rhs`がエラー値を保持していたら、`reinit-expected(unex, val,` [`std::move`](/reference/utility/move.md)`(rhs.`[`error()`](error.md.nolink)`))`
++    - `this`がエラーを保持し、`rhs`が正常値を保持していたら、`reinit-expected(val, unex,` [`std::move`](/reference/utility/move.md)`(`[`*rhs`](op_deref.md)`))`
++    - `this`と`rhs`が共にエラー値を保持していたら、`unex` [`std::move`](/reference/utility/move.md)`(rhs.`[`error()`](error.md.nolink)`)`
+ - (3) : 次の処理と等価
+-    - `this`が正常値を保持していたら、`val = std::forward&amp;lt;U&amp;gt;(v)`
+-    - `this`がエラー値を保持していたら、`reinit-expected(val, unex, std::forward&amp;lt;U&amp;gt;(v)); has_val = true;`
++    - `this`が正常値を保持していたら、`val =` [`std::forward`](/reference/utility/forward.md)`&amp;lt;U&amp;gt;(v)`
++    - `this`がエラー値を保持していたら、`reinit-expected(val, unex,` [`std::forward`](/reference/utility/forward.md)`&amp;lt;U&amp;gt;(v)); has_val = true;`
+ - (4) : 次の処理と等価
+-    - `this`が正常値を保持していたら、`reinit-expected(unex, val, std::forward&amp;lt;const G&amp;amp;&amp;gt;(e.`[`error()`](error.md.nolink)`));
++    - `this`が正常値を保持していたら、`reinit-expected(unex, val,` [`std::forward`](/reference/utility/forward.md)`&amp;lt;const G&amp;amp;&amp;gt;(e.`[`error()`](../unexpectederror.md.nolink)`));
+ has_val = false;`
+-    - `this`がエラー値を保持していたら、`unex = std::forward&amp;lt;const G&amp;amp;&amp;gt;(e.`[`error()`](error.md.nolink)`);`
++    - `this`がエラー値を保持していたら、`unex =` [`std::forward`](/reference/utility/forward.md)`&amp;lt;const G&amp;amp;&amp;gt;(e.`[`error()`](../unexpected/error.md.nolink)`);`
+ - (5) : 次の処理と等価
+-    - `this`が正常値を保持していたら、`reinit-expected(unex, val, std::forward&amp;lt;G&amp;gt;(e.`[`error()`](error.md.nolink)`));
++    - `this`が正常値を保持していたら、`reinit-expected(unex, val,` [`std::forward`](/reference/utility/forward.md)`&amp;lt;G&amp;gt;(e.`[`error()`](../unexpectederror.md.nolink)`));
+ has_val = false;`
+-    - `this`がエラー値を保持していたら、`unex = std::forward&amp;lt;G&amp;gt;(e.`[`error()`](error.md.nolink)`);`
++    - `this`がエラー値を保持していたら、`unex =` [`std::forward`](/reference/utility/forward.md)`&amp;lt;G&amp;gt;(e.`[`error()`](../unexpectederror.md.nolink)`);`
+ 
+ 
+ ## 戻り値
+@@ -224,6 +225,7 @@ int main()
+ * value[link value.md.nolink]
+ * error[link error.md.nolink]
+ * std::unexpected[link ../unexpected.md]
++* std::make_unique[link /reference/memory/make_unique.md]
+ 
+ ### 出力
+ ```
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- expected/expected: operator=調整(#1066)</title>
+      <link href="https://cpprefjp.github.io/reference/expected/expected/op_constructor.html"/>
+      <id>44e51113a40fd217b00231ee404f8e42649a0666:reference/expected/expected/op_constructor.md</id>
+      <updated>2023-01-31T14:11:27+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/expected/expected/op_constructor.md b/reference/expected/expected/op_constructor.md
+index d5e086445..b2994975d 100644
+--- a/reference/expected/expected/op_constructor.md
++++ b/reference/expected/expected/op_constructor.md
+@@ -108,8 +108,8 @@ constexpr bool converts-from-any-cvref =
+ - (4) : `rhs`が正常値を保持していれば、[`std::forward`](/reference/utility/forward.md)`&amp;lt;const U&amp;amp;&amp;gt;(`[`*rhs`](op_deref.md)`)`で正常値を直接非リスト初期化する。そうでなければ、[`std::forward`](/reference/utility/forward.md)`&amp;lt;const G&amp;amp;&amp;gt;(rhs.`[`error()`](error.md.nolink)`)`でエラー値を直接非リスト初期化する。
+ - (5) : `rhs`が正常値を保持していれば、[`std::forward`](/reference/utility/forward.md)`&amp;lt;U&amp;gt;(`[`*rhs`](op_deref.md)`)`で正常値を直接非リスト初期化する。そうでなければ、[`std::forward`](/reference/utility/forward.md)`&amp;lt;G&amp;gt;(rhs.`[`error()`](error.md.nolink)`)`でエラー値を直接非リスト初期化する。
+ - (6) : [`std::forward`](/reference/utility/forward.md)`&amp;lt;U&amp;gt;(v)`で正常値を直接非リスト初期化する。
+-- (7) : [`std::forward`](/reference/utility/forward.md)`&amp;lt;const G&amp;amp;&amp;gt;(rhs.`[`error()`](error.md.nolink)`)`でエラー値を直接非リスト初期化する。
+-- (8) : [`std::forward`](/reference/utility/forward.md)`&amp;lt;G&amp;gt;(rhs.`[`error()`](error.md.nolink)`)`でエラー値を直接非リスト初期化する。
++- (7) : [`std::forward`](/reference/utility/forward.md)`&amp;lt;const G&amp;amp;&amp;gt;(e.`[`error()`](../unexpected/error.md.nolink)`)`でエラー値を直接非リスト初期化する。
++- (8) : [`std::forward`](/reference/utility/forward.md)`&amp;lt;G&amp;gt;(e.`[`error()`](../unexpected/error.md.nolink)`)`でエラー値を直接非リスト初期化する。
+ - (9) : [`std::forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...`で正常値を直接非リスト初期化する。
+ - (10) : `il,` [`std::forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...`で正常値を直接非リスト初期化する。
+ - (11) : [`std::forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...`でエラー値を直接非リスト初期化する。
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>コンストラクタ -- expected/expected: コンストラクタ調整(#1066)</title>
@@ -441,310 +569,6 @@ index cac2cb3e8..5b94a42d8 100644
  ## 参照
  - [Working Draft, Standard for Programming Language C++ [format]](https://timsong-cpp.github.io/cppwp/format)
  - [P0645R10 Text Formatting](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0645r10.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>print -- &lt;print&gt; : vprint_(non)unicodeを追加 #1082</title>
-      <link href="https://cpprefjp.github.io/reference/print.html"/>
-      <id>a235d11124e9da535c0af2a90407538d283fb260:reference/print.md</id>
-      <updated>2023-01-30T22:35:29+09:00</updated>
-      
-        <content type="html">&lt;div class=&#34;header&#34;&gt;&amp;lt;print&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;token&#34;&gt;print&lt;/span&gt;&lt;span class=&#34;cpp cpp23&#34; title=&#34;C++23で追加&#34;&gt;(C++23)&lt;/span&gt;&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;&lt;code&gt;&amp;lt;print&amp;gt;&lt;/code&gt;ヘッダでは、書式指定で出力する機能を定義する。&lt;/p&gt;
-&lt;p&gt;このヘッダでは、デフォルトの出力先、および&lt;code&gt;FILE*&lt;/code&gt;指定のオーバーロードが定義される。&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/ostream/basic_ostream.html&#34;&gt;std::ostream&lt;/a&gt;&lt;/code&gt;指定のオーバーロードは&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/ostream.html&#34;&gt;&amp;lt;ostream&amp;gt;&lt;/a&gt;&lt;/code&gt;で定義される。&lt;/p&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/print/print.html&#34;&gt;print&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;書式指定で出力する (function template)&lt;/td&gt;
-&lt;td&gt;C++23&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/print/println.html&#34;&gt;println&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;書式指定で出力する。末尾改行付き (function template)&lt;/td&gt;
-&lt;td&gt;C++23&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/print/vprint_unicode.html&#34;&gt;vprint_unicode&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;書式指定でUnicode出力する (function)&lt;/td&gt;
-&lt;td&gt;C++23&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/print/vprint_nonunicode.html&#34;&gt;vprint_nonunicode&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;書式指定で非Unicode出力する (function)&lt;/td&gt;
-&lt;td&gt;C++23&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;バージョン&lt;/h2&gt;
-&lt;h3&gt;言語&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;C++23&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;処理系&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#clang&#34;&gt;Clang&lt;/a&gt;: ??&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#gcc&#34;&gt;GCC&lt;/a&gt;: ??&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#icc&#34;&gt;ICC&lt;/a&gt;: ??&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/implementation.html#visual_cpp&#34;&gt;Visual C++&lt;/a&gt;: ??&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;関連項目&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/ostream.html&#34;&gt;&amp;lt;ostream&amp;gt;&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;参照&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2093r14.html&#34; target=&#34;_blank&#34;&gt;P2093R14 Formatted output&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>print -- &lt;print&gt; : vprint_(non)unicodeを追加 #1082</title>
-      <link href="https://cpprefjp.github.io/reference/print/print.html"/>
-      <id>a235d11124e9da535c0af2a90407538d283fb260:reference/print/print.md</id>
-      <updated>2023-01-30T22:35:29+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/print/print.md b/reference/print/print.md
-index bb5108a04..dfa7d6707 100644
---- a/reference/print/print.md
-+++ b/reference/print/print.md
-@@ -46,7 +46,7 @@ namespace std {
-     ```cpp
-     vprint_unicode(stream, fmt.get(), make_format_args(std::forward&amp;lt;Args&amp;gt;(args)...));
-     ```
--    * vprint_unicode[link vprint_unicode.md.nolink]
-+    * vprint_unicode[link vprint_unicode.md]
-     * fmt.get()[link /reference/format/format_string/get.md.nolink]
-     * make_format_args[link /reference/format/make_format_args.md]
-     * std::forward[link /reference/utility/forward.md]
-@@ -55,7 +55,7 @@ namespace std {
-     ```cpp
-     vprint_nonunicode(stream, fmt.get(), make_format_args(std::forward&amp;lt;Args&amp;gt;(args)...));
-     ```
--    * vprint_nonunicode[link vprint_nonunicode.md.nolink]
-+    * vprint_nonunicode[link vprint_nonunicode.md]
-     * fmt.get()[link /reference/format/format_string/get.md.nolink]
-     * make_format_args[link /reference/format/make_format_args.md]
-     * std::forward[link /reference/utility/forward.md]
-@@ -79,8 +79,8 @@ namespace std {
-         vprint_nonunicode(fmt, make_format_args(args...));
-     }
-     ```
--    * vprint_unicode[link vprint_unicode.md.nolink]
--    * vprint_nonunicode[link vprint_nonunicode.md.nolink]
-+    * vprint_unicode[link vprint_unicode.md]
-+    * vprint_nonunicode[link vprint_nonunicode.md]
- 
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>vprint_nonunicode -- &lt;print&gt; : vprint_(non)unicodeを追加 #1082</title>
-      <link href="https://cpprefjp.github.io/reference/print/vprint_nonunicode.html"/>
-      <id>a235d11124e9da535c0af2a90407538d283fb260:reference/print/vprint_nonunicode.md</id>
-      <updated>2023-01-30T22:35:29+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/print/vprint_nonunicode.md b/reference/print/vprint_nonunicode.md
-new file mode 100644
-index 000000000..22f5842c1
---- /dev/null
-+++ b/reference/print/vprint_nonunicode.md
-@@ -0,0 +1,67 @@
-+# vprint_nonunicode
-+* print[meta header]
-+* std[meta namespace]
-+* function[meta id-type]
-+* cpp23[meta cpp]
-+
-+```cpp
-+namespace std {
-+  void vprint_nonunicode(string_view fmt,
-+                         format_args args); // (1) C++23
-+
-+  void vprint_nonunicode(FILE* stream,
-+                         string_view fmt,
-+                         format_args args); // (2) C++23
-+}
-+```
-+* FILE[link /reference/cstdio/file.md.nolink]
-+* format_args[link /reference/format/basic_format_args.md]
-+
-+## 概要
-+書式指定で非Unicode出力する。
-+
-+- (1) : 標準出力に、書式指定で非Unicode出力する
-+- (2) : 指定された[`FILE`](/reference/cstdio/file.md.nolink)に、書式指定で非Unicode出力する
-+
-+[`std::ostream`](/reference/ostream/basic_ostream.md)から派生したクラスオブジェクトに対して出力したい場合は、[`&amp;lt;ostream&amp;gt;`](/reference/ostream.md)ヘッダの[`std::vprint_nonunicode()`](/reference/ostream/vprint_nonunicode.md.nolink)関数を使用すること。
-+
-+
-+## 事前条件
-+- (2) : `stream`が有効な出力Cストリームを指していること
-+
-+
-+## 効果
-+- (1) : 以下と等価：
-+    ```cpp
-+    vprint_unicode(stdout, fmt, args);
-+    ```
-+    * stdout[link /reference/cstdio/stdout.md.nolink]
-+
-+- (2) : [`vformat`](/reference/format/vformat.md)`(fmt, args)`の結果を`stream`に書き出す
-+
-+
-+## 例外
-+- [`vformat()`](/reference/format/vformat.md)関数がなんらかの例外を送出する可能性がある
-+- 端末かストリームへの書き込みに失敗した場合、[`system_error`](/reference/system_error/system_error.md)を送出する
-+- [`bad_alloc`](/reference/new/bad_alloc.md)を送出する可能性がある
-+
-+
-+## バージョン
-+### 言語
-+- C++23
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): ??
-+- [ICC](/implementation.md#icc): ??
-+- [Visual C++](/implementation.md#visual_cpp): ??
-+
-+
-+## 関連項目
-+- [`std::print()`](print.md)
-+- [`std::println()`](println.md)
-+- [`std::vprint_unicode()`](vprint_nonunicode.md)
-+
-+
-+## 参照
-+- [P2093R14 Formatted output](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2093r14.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>vprint_unicode -- &lt;print&gt; : vprint_(non)unicodeを追加 #1082</title>
-      <link href="https://cpprefjp.github.io/reference/print/vprint_unicode.html"/>
-      <id>a235d11124e9da535c0af2a90407538d283fb260:reference/print/vprint_unicode.md</id>
-      <updated>2023-01-30T22:35:29+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/print/vprint_unicode.md b/reference/print/vprint_unicode.md
-new file mode 100644
-index 000000000..ed2ae9e2b
---- /dev/null
-+++ b/reference/print/vprint_unicode.md
-@@ -0,0 +1,83 @@
-+# vprint_unicode
-+* print[meta header]
-+* std[meta namespace]
-+* function[meta id-type]
-+* cpp23[meta cpp]
-+
-+```cpp
-+namespace std {
-+  void vprint_unicode(string_view fmt,
-+                      format_args args); // (1) C++23
-+
-+  void vprint_unicode(FILE* stream,
-+                      string_view fmt,
-+                      format_args args); // (2) C++23
-+}
-+```
-+* FILE[link /reference/cstdio/file.md.nolink]
-+* format_args[link /reference/format/basic_format_args.md]
-+
-+## 概要
-+書式指定でUnicode出力する。
-+
-+- (1) : 標準出力に、書式指定でUnicode出力する
-+- (2) : 指定された[`FILE`](/reference/cstdio/file.md.nolink)に、書式指定でUnicode出力する
-+
-+[`std::ostream`](/reference/ostream/basic_ostream.md)から派生したクラスオブジェクトに対して出力したい場合は、[`&amp;lt;ostream&amp;gt;`](/reference/ostream.md)ヘッダの[`std::vprint_unicode()`](/reference/ostream/vprint_unicode.md.nolink)関数を使用すること。
-+
-+
-+## 事前条件
-+- (2) `stream`が有効な出力Cストリームを指していること
-+
-+
-+## 効果
-+- (1) : 以下と等価：
-+    ```cpp
-+    vprint_unicode(stdout, fmt, args);
-+    ```
-+    * stdout[link /reference/cstdio/stdout.md.nolink]
-+
-+- (2) : 以下の方法で自動変数を初期化する：
-+    ```cpp
-+    string out = vformat(fmt, args);
-+    ```
-+    * string[link /reference/string/basic_string.md]
-+    * vformat[link /reference/format/vformat.md]
-+
-+    - `stream`がUnicodeを表示できる端末を参照している場合、ネイティブのUnicode APIを使用して端末に書き出す。`out`が無効なコードユニットを含んでいる場合、その動作は未定義であり、実装はそれを診断することが望まれる。
-+    - `out`に無効なコードユニットが含まれる場合、その動作は未定義であり，実装者はそれを診断することが推奨される。それ以外の場合は、変更せずにストリームに書き出します。そうでなければ、変更せず`stream`に`out`を書き出す。
-+    - ネイティブのUnicode APIを使用する場合、この関数は`out`に書き出す前にフラッシュする
-+
-+
-+## 例外
-+- [`vformat()`](/reference/format/vformat.md)関数がなんらかの例外を送出する可能性がある
-+- 端末かストリームへの書き込みに失敗した場合、[`system_error`](/reference/system_error/system_error.md)を送出する
-+- [`bad_alloc`](/reference/new/bad_alloc.md)を送出する可能性がある
-+
-+
-+## 備考
-+- POSIXおよびWindowsにおいて、「`stream`が端末を参照している」とは、それぞれ、`isatty(fileno(stream))`、および`GetConsoleMode(_get_osfhandle(_fileno(stream)), ...) != 0`を意味する
-+- Windowsにおいて、ネイティブなUnicode APIとは`WriteConsoleW()`である
-+- 推奨の方式：ネイティブのUnicode APIを呼び出す際に文字コード変換が必要な場合、実装はUnicode標準 (Unicode Standard Version 14.0 - Core Specification, Chapter 3.9) に従って無効なコードユニットを「U+FFFD REPLACEMENT CHARACTER」で置き換える必要がある
-+
-+
-+## バージョン
-+### 言語
-+- C++23
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): ??
-+- [ICC](/implementation.md#icc): ??
-+- [Visual C++](/implementation.md#visual_cpp): ??
-+
-+
-+## 関連項目
-+- [`std::print()`](print.md)
-+- [`std::println()`](println.md)
-+- [`std::vprint_nonunicode()`](vprint_nonunicode.md)
-+
-+
-+## 参照
-+- [P2093R14 Formatted output](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2093r14.html)
-+- [P2539R4 Should the output of `std::print` to a terminal be synchronized with the underlying stream?](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2539r4.html)
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
