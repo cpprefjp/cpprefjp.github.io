@@ -2,9 +2,618 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2023-02-01T00:22:38.720064</updated>
-  <id>c8666e7d-1cf7-4712-a8e0-e016d0bd2426</id>
+  <updated>2023-02-01T01:01:20.841749</updated>
+  <id>f5843eff-7ce0-4d1a-81ec-f77a15dc0640</id>
 
+  
+    <entry>
+      <title>INVOKE -- ソフトハイフン除去</title>
+      <link href="https://cpprefjp.github.io/reference/concepts/Invoke.html"/>
+      <id>8cc4361ae1ba943d065a624d866ae3f526a48894:reference/concepts/Invoke.md</id>
+      <updated>2023-02-01T09:56:41+09:00</updated>
+      
+        <content type="html">&lt;div class=&#34;identifier-type&#34;&gt;named requirement&lt;/div&gt;&lt;div class=&#34;header&#34;&gt;&amp;lt;concepts&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;namespace&#34; title=&#34;namespace &#34;&gt;::&lt;/span&gt;&lt;span class=&#34;token&#34;&gt;INVOKE&lt;/span&gt;&lt;span class=&#34;cpp cpp11&#34; title=&#34;C++11で追加&#34;&gt;(C++11)&lt;/span&gt;&lt;/h1&gt;
+&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;C++における関数呼び出しという性質を抽象化しまとめた、仮想操作 &lt;em&gt;INVOKE&lt;/em&gt; を定義する。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;C++17からは、仮想操作 &lt;em&gt;INVOKE&lt;/em&gt; を実体化した&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/invoke.html&#34;&gt;std::invoke&lt;/a&gt;&lt;/code&gt;関数テンプレートが提供される。&lt;/li&gt;
+&lt;li&gt;C++23からは、仮想操作 &lt;em&gt;INVOKE&lt;/em&gt;&lt;code&gt;&amp;lt;R&amp;gt;&lt;/code&gt; を実体化した&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/invoke_r.html&#34;&gt;std::invoke_r&lt;/a&gt;&lt;/code&gt;関数テンプレートが提供される。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;用語定義&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;em&gt;call-signature&lt;/em&gt; とは、戻り値型に続けて丸括弧の中に0個以上の引数型を並べたものである。 &lt;em&gt;cf.&lt;/em&gt; &lt;code&gt;int ( std::string, int )&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;callable-type&lt;/em&gt; とは、関数呼び出し演算子を適用できる型 ( 関数、関数への参照、関数へのポインタ、&lt;code&gt;operator ()&lt;/code&gt; をオーバーロードした型もしくはそれを(直接または間接的に) &lt;code&gt;public&lt;/code&gt; 継承した型 ) もしくはメンバへのポインタ型を指す。&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;callable-object&lt;/em&gt; は、 &lt;em&gt;callable-type&lt;/em&gt; 型のオブジェクトである。&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;call-wrapper-type&lt;/em&gt; は、 &lt;em&gt;callable-object&lt;/em&gt; を保持し、自身に対する関数呼び出し操作が行われたとき、保持しているオブジェクトに委譲する。&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;call-wrapper&lt;/em&gt; は、 &lt;em&gt;call-wrapper-type&lt;/em&gt; 型のオブジェクトである。&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;target-object&lt;/em&gt; とは、 &lt;em&gt;callable-object&lt;/em&gt; に保持されているオブジェクトのことである。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;要件（C++14まで）&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;仮想操作 &lt;em&gt;INVOKE&lt;/em&gt;&lt;code&gt;(f, t1, t2, ..., tN)&lt;/code&gt; を次のように定義する。&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバ関数へのポインタであり、 &lt;code&gt;t1&lt;/code&gt; が T 型のオブジェクトあるいは &lt;code&gt;T&lt;/code&gt; または &lt;code&gt;T&lt;/code&gt; を継承した型への参照であるとき、 &lt;code&gt;(t1.*f)(t2, ..., tN)&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバ関数へのポインタであり、 &lt;code&gt;t1&lt;/code&gt; が上記の条件に当てはまらない場合、&lt;code&gt;((*t1).*f)(t2, ..., tN)&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;N == 1&lt;/code&gt; で、&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバオブジェクトへのポインタであり、&lt;code&gt;t1&lt;/code&gt; が &lt;code&gt;T&lt;/code&gt; 型のオブジェクトあるいは &lt;code&gt;T&lt;/code&gt; または &lt;code&gt;T&lt;/code&gt; を継承した型への参照であるとき、 &lt;code&gt;t1.*f&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;N == 1&lt;/code&gt; で、&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバオブジェクトへのポインタであり、&lt;code&gt;t1&lt;/code&gt; が上記の条件に当てはまらない場合、 &lt;code&gt;(*t1).*f&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
+&lt;li&gt;上記の条件のどれにも当てはまらない場合、 &lt;code&gt;f(t1, t2, ..., tN)&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;INVOKE&lt;/em&gt;&lt;code&gt;(f, t1, t2, ..., tN, R)&lt;/code&gt; を、 &lt;em&gt;INVOKE&lt;/em&gt;&lt;code&gt;(f, t1, t2, ..., tN)&lt;/code&gt; の実行結果の戻り値が型 &lt;code&gt;R&lt;/code&gt; に暗黙的に変換されること、と定義する。&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;call-wrapper&lt;/em&gt; が &lt;em&gt;weak-result-type&lt;/em&gt; を用意している場合、メンバ型 &lt;code&gt;result_type&lt;/code&gt; は&lt;em&gt;target-object&lt;/em&gt; の型 &lt;code&gt;T&lt;/code&gt; に応じて次のように定義される。&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;T&lt;/code&gt; が関数へのポインタ型であるとき、 &lt;code&gt;result_type&lt;/code&gt; は &lt;code&gt;T&lt;/code&gt; の戻り値型と等しい。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;T&lt;/code&gt; がメンバ関数へのポインタ型であるとき、 &lt;code&gt;result_type&lt;/code&gt; は &lt;code&gt;T&lt;/code&gt; の戻り値型と等しい。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;T&lt;/code&gt; が &lt;code&gt;result_type&lt;/code&gt; という名前のメンバ型を持つとき、 &lt;code&gt;result_type&lt;/code&gt; は &lt;code&gt;T::result_type&lt;/code&gt; と等しい。&lt;/li&gt;
+&lt;li&gt;どの条件にも当てはまらない場合、 &lt;code&gt;result_type&lt;/code&gt; は定義されない。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;すべての &lt;em&gt;call-wrapper&lt;/em&gt; は、&lt;em&gt;MoveAssignable&lt;/em&gt; でなければならない。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2&gt;要件（C++17）&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;仮想操作 &lt;em&gt;INVOKE&lt;/em&gt;&lt;code&gt;(f, t1, t2, ..., tN)&lt;/code&gt; を次のように定義する。&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバ関数へのポインタであり、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/is_base_of.html&#34;&gt;is_baseof_v&lt;/a&gt;&amp;lt;T,&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/decay.html&#34;&gt;decay_t&lt;/a&gt;&amp;lt;decltype(t1)&amp;gt;&amp;gt; == true&lt;/code&gt;（&lt;code&gt;t1&lt;/code&gt; が &lt;code&gt;T&lt;/code&gt; または &lt;code&gt;T&lt;/code&gt; を継承した型のオブジェクト/参照）であるとき、 &lt;code&gt;(t1.*f)(t2, ..., tN)&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバ関数へのポインタであり、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/decay.html&#34;&gt;decay_t&lt;/a&gt;&amp;lt;decltype(t1)&amp;gt;&lt;/code&gt;が&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/reference_wrapper.html&#34;&gt;reference_wrapper&amp;lt;T&amp;gt;&lt;/a&gt;&lt;/code&gt;（&lt;code&gt;t1&lt;/code&gt;が&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/reference_wrapper.html&#34;&gt;reference_wrapper&lt;/a&gt;&lt;/code&gt;の特殊化）であるとき、 &lt;code&gt;(t1.get().*f)(t2, ..., tN)&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバ関数へのポインタであり、 &lt;code&gt;t1&lt;/code&gt; が上記の条件に当てはまらない場合（例えば、t1が&lt;code&gt;T&lt;/code&gt;のポインタ）、&lt;code&gt;((*t1).*f)(t2, ..., tN)&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;N == 1&lt;/code&gt; で、&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバオブジェクトへのポインタであり、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/is_base_of.html&#34;&gt;is_baseof_v&lt;/a&gt;&amp;lt;T,&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/decay.html&#34;&gt;decay_t&lt;/a&gt;&amp;lt;decltype(t1)&amp;gt;&amp;gt; == true&lt;/code&gt;（&lt;code&gt;t1&lt;/code&gt; が &lt;code&gt;T&lt;/code&gt; または &lt;code&gt;T&lt;/code&gt; を継承した型のオブジェクト/参照）であるとき、 &lt;code&gt;t1.*f&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;N == 1&lt;/code&gt; で、&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバオブジェクトへのポインタであり、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/decay.html&#34;&gt;decay_t&lt;/a&gt;&amp;lt;decltype(t1)&amp;gt;&lt;/code&gt;が&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/reference_wrapper.html&#34;&gt;reference_wrapper&amp;lt;T&amp;gt;&lt;/a&gt;&lt;/code&gt;（&lt;code&gt;t1&lt;/code&gt;が&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/reference_wrapper.html&#34;&gt;reference_wrapper&lt;/a&gt;&lt;/code&gt;の特殊化）であるとき、 &lt;code&gt;t1.get().*f&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;N == 1&lt;/code&gt; で、&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバオブジェクトへのポインタであり、&lt;code&gt;t1&lt;/code&gt; が上記の条件に当てはまらない場合（例えば、t1が&lt;code&gt;T&lt;/code&gt;のポインタ）、 &lt;code&gt;(*t1).*f&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
+&lt;li&gt;上記の条件のどれにも当てはまらない場合、 &lt;code&gt;f(t1, t2, ..., tN)&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;INVOKE&lt;/em&gt;&lt;code&gt;&amp;lt;R&amp;gt;(f, t1, t2, ..., tN)&lt;/code&gt; を次のように定義する。&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;R&lt;/code&gt;が&lt;code&gt;void&lt;/code&gt;かそのcv修飾の場合は、&lt;code&gt;static_cast&amp;lt;void&amp;gt;(&lt;/code&gt;&lt;em&gt;INVOKE&lt;/em&gt;&lt;code&gt;(f, t1, t2, ..., tN))&lt;/code&gt;。&lt;/li&gt;
+&lt;li&gt;それ以外の場合は、&lt;em&gt;INVOKE&lt;/em&gt;&lt;code&gt;(f, t1, t2, ..., tN)&lt;/code&gt; の実行結果の戻り値が型 &lt;code&gt;R&lt;/code&gt; に暗黙的に変換されること。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;すべての &lt;em&gt;call-wrapper&lt;/em&gt; は、&lt;em&gt;MoveConstructible&lt;/em&gt; でなければならない。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2&gt;要件（C++20）&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;仮想操作 &lt;em&gt;INVOKE&lt;/em&gt;&lt;code&gt;(f, t1, t2, ..., tN)&lt;/code&gt; を次のように定義する。&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバ関数へのポインタであり、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/is_base_of.html&#34;&gt;is_baseof_v&lt;/a&gt;&amp;lt;T,&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/remove_cvref.html&#34;&gt;remove_cvref_t&lt;/a&gt;&amp;lt;decltype(t1)&amp;gt;&amp;gt; == true&lt;/code&gt;（&lt;code&gt;t1&lt;/code&gt; が &lt;code&gt;T&lt;/code&gt; または &lt;code&gt;T&lt;/code&gt; を継承した型のオブジェクト/参照）であるとき、 &lt;code&gt;(t1.*f)(t2, ..., tN)&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバ関数へのポインタであり、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/remove_cvref.html&#34;&gt;remove_cvref_t&lt;/a&gt;&amp;lt;decltype(t1)&amp;gt;&lt;/code&gt;が&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/reference_wrapper.html&#34;&gt;reference_wrapper&amp;lt;T&amp;gt;&lt;/a&gt;&lt;/code&gt;（&lt;code&gt;t1&lt;/code&gt;が&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/reference_wrapper.html&#34;&gt;reference_wrapper&lt;/a&gt;&lt;/code&gt;の特殊化）であるとき、 &lt;code&gt;(t1.get().*f)(t2, ..., tN)&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバ関数へのポインタであり、 &lt;code&gt;t1&lt;/code&gt; が上記の条件に当てはまらない場合（例えば、t1が&lt;code&gt;T&lt;/code&gt;のポインタ）、&lt;code&gt;((*t1).*f)(t2, ..., tN)&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;N == 1&lt;/code&gt; で、&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバオブジェクトへのポインタであり、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/is_base_of.html&#34;&gt;is_baseof_v&lt;/a&gt;&amp;lt;T,&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/remove_cvref.html&#34;&gt;remove_cvref_t&lt;/a&gt;&amp;lt;decltype(t1)&amp;gt;&amp;gt; == true&lt;/code&gt;（&lt;code&gt;t1&lt;/code&gt; が &lt;code&gt;T&lt;/code&gt; または &lt;code&gt;T&lt;/code&gt; を継承した型のオブジェクト/参照）であるとき、 &lt;code&gt;t1.*f&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;N == 1&lt;/code&gt; で、&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバオブジェクトへのポインタであり、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/remove_cvref.html&#34;&gt;remove_cvref_t&lt;/a&gt;&amp;lt;decltype(t1)&amp;gt;&lt;/code&gt;が&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/reference_wrapper.html&#34;&gt;reference_wrapper&amp;lt;T&amp;gt;&lt;/a&gt;&lt;/code&gt;（&lt;code&gt;t1&lt;/code&gt;が&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/reference_wrapper.html&#34;&gt;reference_wrapper&lt;/a&gt;&lt;/code&gt;の特殊化）であるとき、 &lt;code&gt;t1.get().*f&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;N == 1&lt;/code&gt; で、&lt;code&gt;f&lt;/code&gt; が型 &lt;code&gt;T&lt;/code&gt; のメンバオブジェクトへのポインタであり、&lt;code&gt;t1&lt;/code&gt; が上記の条件に当てはまらない場合（例えば、t1が&lt;code&gt;T&lt;/code&gt;のポインタ）、 &lt;code&gt;(*t1).*f&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
+&lt;li&gt;上記の条件のどれにも当てはまらない場合、 &lt;code&gt;f(t1, t2, ..., tN)&lt;/code&gt; と同じ効果を持つ。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;INVOKE&lt;/em&gt;&lt;code&gt;&amp;lt;R&amp;gt;(f, t1, t2, ..., tN)&lt;/code&gt; を次のように定義する。&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;R&lt;/code&gt;が&lt;code&gt;void&lt;/code&gt;かそのcv修飾の場合は、&lt;code&gt;static_cast&amp;lt;void&amp;gt;(&lt;/code&gt;&lt;em&gt;INVOKE&lt;/em&gt;&lt;code&gt;(f, t1, t2, ..., tN))&lt;/code&gt;。&lt;/li&gt;
+&lt;li&gt;それ以外の場合は、&lt;em&gt;INVOKE&lt;/em&gt;&lt;code&gt;(f, t1, t2, ..., tN)&lt;/code&gt; の実行結果の戻り値が型 &lt;code&gt;R&lt;/code&gt; に暗黙的に変換されること。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;すべての &lt;em&gt;call-wrapper&lt;/em&gt; は、&lt;em&gt;Cpp17MoveConstructible&lt;/em&gt; かつ &lt;em&gt;Cpp17Destructible&lt;/em&gt; でなければならない。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2&gt;要件（C++23差分）&lt;/h2&gt;
+&lt;p&gt;C++20 における 2. について、次の文言を項目の最後に追加する。この変更は、&lt;code&gt;R&lt;/code&gt;が参照かつ&lt;em&gt;INVOKE&lt;/em&gt;の実行結果が&lt;code&gt;R&lt;/code&gt;に束縛されることで寿命が延長される場合にダングリング参照が作成されてしまう事例を検出するための要件である。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/reference_converts_from_temporary.html&#34;&gt;reference_converts_from_temporary_v&lt;/a&gt;&amp;lt;R, decltype(&lt;/code&gt;&lt;em&gt;INVOKE&lt;/em&gt;&lt;code&gt;(f, t1, t2, …, tN))&amp;gt; == true&lt;/code&gt;の場合、&lt;em&gt;INVOKE&lt;/em&gt;&lt;code&gt;&amp;lt;R&amp;gt;(f, t1, t2, …, tN)&lt;/code&gt;は&lt;a class=&#34;cpprefjp-defined-word&#34;&gt;不適格&lt;/a&gt;。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;まとめ&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;https://twitter.com/Cryolite/status/216814363221303296&#34; target=&#34;_blank&#34;&gt;第1引数がメンバ関数へのポインタの場合でも非静的メンバデータへのポインタの場合でも，第2引数がクラスオブジェクトへの参照の場合でもポインタの場合でもポインタっぽいものの場合でも，なんか知らんけどそれっぽく上手くいく&lt;/a&gt; ように取り計らった操作のことである。&lt;/p&gt;
+&lt;h2&gt;関連項目&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/function.html&#34;&gt;function&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/reference_wrapper.html&#34;&gt;reference_wrapper&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/bind.html&#34;&gt;bind&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/mem_fn.html&#34;&gt;mem_fn&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/not_fn.html&#34;&gt;not_fn&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/thread/thread.html&#34;&gt;thread&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/future/async.html&#34;&gt;async&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/future/packaged_task.html&#34;&gt;packaged_task&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/mutex/call_once.html&#34;&gt;call_once&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;参照&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0777r1.pdf&#34; target=&#34;_blank&#34;&gt;P0777R1 Treating Unnecessary &lt;code&gt;decay&lt;/code&gt;&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;C++20から&lt;code&gt;decay_t&lt;/code&gt;を&lt;code&gt;remove_cvref_t&lt;/code&gt;へ変更。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2136r3.html&#34; target=&#34;_blank&#34;&gt;P2136R3 &lt;code&gt;invoke_r&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/div&gt;</content>
+      
+      <author>
+        <name>tomolatoon</name>
+        <email>tomo2000tomo170@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>simple-view -- ソフトハイフン除去</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/simple-view.html"/>
+      <id>8cc4361ae1ba943d065a624d866ae3f526a48894:reference/ranges/simple-view.md</id>
+      <updated>2023-02-01T09:56:41+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/simple-view.md b/reference/ranges/simple-view.md
+index 7b2c01bbd..d31987cb2 100644
+--- a/reference/ranges/simple-view.md
++++ b/reference/ranges/simple-view.md
+@@ -7,8 +7,8 @@
+ template&amp;lt;class R&amp;gt;
+   concept simple-view = // 説明専用コンセプト
+     view&amp;lt;R&amp;gt; &amp;amp;&amp;amp; range&amp;lt;const R&amp;gt; &amp;amp;&amp;amp;
+-    same_­as&amp;lt;iterator_t&amp;lt;R&amp;gt;, iterator_t&amp;lt;const R&amp;gt;&amp;gt; &amp;amp;&amp;amp;
+-    same_­as&amp;lt;sentinel_t&amp;lt;R&amp;gt;, sentinel_t&amp;lt;const R&amp;gt;&amp;gt;;
++    same_as&amp;lt;iterator_t&amp;lt;R&amp;gt;, iterator_t&amp;lt;const R&amp;gt;&amp;gt; &amp;amp;&amp;amp;
++    same_as&amp;lt;sentinel_t&amp;lt;R&amp;gt;, sentinel_t&amp;lt;const R&amp;gt;&amp;gt;;
+ ```
+ * same-as[link /reference/concepts/same_as.md]
+ * view[link view.md]
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>tomolatoon</name>
+        <email>tomo2000tomo170@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>make_from_tuple -- ソフトハイフン除去</title>
+      <link href="https://cpprefjp.github.io/reference/tuple/make_from_tuple.html"/>
+      <id>8cc4361ae1ba943d065a624d866ae3f526a48894:reference/tuple/make_from_tuple.md</id>
+      <updated>2023-02-01T09:56:41+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/tuple/make_from_tuple.md b/reference/tuple/make_from_tuple.md
+index e175fecd8..f4028bfcf 100644
+--- a/reference/tuple/make_from_tuple.md
++++ b/reference/tuple/make_from_tuple.md
+@@ -26,7 +26,7 @@ namespace std {
+ また、型`T`の初期化はそのコンストラクタで行われ集成体初期化は考慮されない。つまり、`Tuple`に含まれる型が空かただ一つの`T`でない場合、型`T`は集成体（aggregate）であってはならない（C++17のみ、C++20以降はok）。
+ 
+ 更に、C++23以降は`make_from_tuple`の返り値が参照である場合でダングリング参照を生成しないために、`make_from_tuple`の内部で`T`が構築される際に、`Tuple`から取得されるオブジェクト（参照の初期化であるので、`Tuple`のサイズは1である必要がある）の寿命が延長されないことも要求され、これを満たさない場合はコンパイルエラーとなる。
+-正確には、[`tuple_­size_­v`](tuple_size.md)`&amp;lt;`[`remove_­reference_­t`](/reference/type_traits/remove_reference.md)`&amp;lt;Tuple&amp;gt;&amp;gt; == 1`である場合、[`reference_­constructs_­from_­temporary_­v`](/reference/type_traits/reference_constructs_from_temporary.md)`&amp;lt;T, decltype(get&amp;lt;0&amp;gt;(`[`declval`](/reference/utility/declval.md)`&amp;lt;Tuple&amp;gt;()))&amp;gt; == false`であること。
++正確には、[`tuple_size_v`](tuple_size.md)`&amp;lt;`[`remove_reference_t`](/reference/type_traits/remove_reference.md)`&amp;lt;Tuple&amp;gt;&amp;gt; == 1`である場合、[`reference_constructs_from_temporary_v`](/reference/type_traits/reference_constructs_from_temporary.md)`&amp;lt;T, decltype(get&amp;lt;0&amp;gt;(`[`declval`](/reference/utility/declval.md)`&amp;lt;Tuple&amp;gt;()))&amp;gt; == false`であること。
+ 
+ ## 引数
+ - `t` -- [`tuple-like`](tuple-like.md)な型`Tuple`のオブジェクト
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>tomolatoon</name>
+        <email>tomo2000tomo170@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>pair-like -- ソフトハイフン除去</title>
+      <link href="https://cpprefjp.github.io/reference/tuple/pair-like.html"/>
+      <id>8cc4361ae1ba943d065a624d866ae3f526a48894:reference/tuple/pair-like.md</id>
+      <updated>2023-02-01T09:56:41+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/tuple/pair-like.md b/reference/tuple/pair-like.md
+index 7a15efbca..3cf2baf92 100644
+--- a/reference/tuple/pair-like.md
++++ b/reference/tuple/pair-like.md
+@@ -11,7 +11,7 @@ namespace std {
+     template&amp;lt;class T&amp;gt;
+     concept pair-like = // 説明専用コンセプト
+       !is_reference_v&amp;lt;T&amp;gt; &amp;amp;&amp;amp; requires(T t) {
+-        typename tuple_size&amp;lt;T&amp;gt;::type; // tuple_­size&amp;lt;T&amp;gt; が完全型であることを明確にする
++        typename tuple_size&amp;lt;T&amp;gt;::type; // tuple_size&amp;lt;T&amp;gt; が完全型であることを明確にする
+         requires derived_from&amp;lt;tuple_size&amp;lt;T&amp;gt;, integral_constant&amp;lt;size_t, 2&amp;gt;&amp;gt;;
+         typename tuple_element_t&amp;lt;0, remove_const_t&amp;lt;T&amp;gt;&amp;gt;;
+         typename tuple_element_t&amp;lt;1, remove_const_t&amp;lt;T&amp;gt;&amp;gt;;
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>tomolatoon</name>
+        <email>tomo2000tomo170@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>basic_common_reference -- ソフトハイフン除去</title>
+      <link href="https://cpprefjp.github.io/reference/tuple/tuple/basic_common_reference.html"/>
+      <id>8cc4361ae1ba943d065a624d866ae3f526a48894:reference/tuple/tuple/basic_common_reference.md</id>
+      <updated>2023-02-01T09:56:41+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/tuple/tuple/basic_common_reference.md b/reference/tuple/tuple/basic_common_reference.md
+index 637303d80..8d0fd167b 100644
+--- a/reference/tuple/tuple/basic_common_reference.md
++++ b/reference/tuple/tuple/basic_common_reference.md
+@@ -21,16 +21,16 @@ template&amp;lt;tuple-like TTuple, tuple-like UTuple,
+ 
+ 
+ ## 効果
+-[`tuple`](../tuple.md)`&amp;lt;`[`common_­reference_­t`](/reference/type_traits/common_reference.md)`&amp;lt;TQual&amp;lt;TTypes&amp;gt;, UQual&amp;lt;UTypes&amp;gt;&amp;gt;...&amp;gt;`によって得られた型をメンバ型`type`として定義する。
++[`tuple`](../tuple.md)`&amp;lt;`[`common_reference_t`](/reference/type_traits/common_reference.md)`&amp;lt;TQual&amp;lt;TTypes&amp;gt;, UQual&amp;lt;UTypes&amp;gt;&amp;gt;...&amp;gt;`によって得られた型をメンバ型`type`として定義する。
+ 
+ 
+ ## 要件
+ - `TTuple`か`UTuple`のどちらかが[`tuple`](../tuple.md)の特殊化であること。
+-- `TTuple`と`UTuple`のそれぞれについて、（次の`T`を置き換える形で）[`is_­same_­v`](/reference/type_traits/is_same.md)`&amp;lt;T, `[`decay_­t`](/reference/type_traits/decay.md)`&amp;lt;T&amp;gt;&amp;gt;`であること。
++- `TTuple`と`UTuple`のそれぞれについて、（次の`T`を置き換える形で）[`is_same_v`](/reference/type_traits/is_same.md)`&amp;lt;T, `[`decay_t`](/reference/type_traits/decay.md)`&amp;lt;T&amp;gt;&amp;gt;`であること。
+     - 実質的には`TTuple`と`Utuple`について、参照型ではなく、最上位の`const`/`volatile`修飾も持っていないこと要求する。
+ - `TTuple`と`UTuple`の要素数が一致していること。
+-    - 具体的には、[`tuple_­size_­v`](../tuple_size.md)`&amp;lt;TTuple&amp;gt; ==` [`tuple_­size_­v`](../tuple_size.md)`&amp;lt;UTuple&amp;gt;`であること。
+-- [`tuple`](../tuple.md)`&amp;lt;`[`common_­reference_­t`](/reference/type_traits/common_reference.md)`&amp;lt;TQual&amp;lt;TTypes&amp;gt;, UQual&amp;lt;UTypes&amp;gt;&amp;gt;...&amp;gt;`が正しく型を表すこと。
++    - 具体的には、[`tuple_size_v`](../tuple_size.md)`&amp;lt;TTuple&amp;gt; ==` [`tuple_size_v`](../tuple_size.md)`&amp;lt;UTuple&amp;gt;`であること。
++- [`tuple`](../tuple.md)`&amp;lt;`[`common_reference_t`](/reference/type_traits/common_reference.md)`&amp;lt;TQual&amp;lt;TTypes&amp;gt;, UQual&amp;lt;UTypes&amp;gt;&amp;gt;...&amp;gt;`が正しく型を表すこと。
+ 
+ 
+ ## バージョン
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>tomolatoon</name>
+        <email>tomo2000tomo170@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>common_type -- ソフトハイフン除去</title>
+      <link href="https://cpprefjp.github.io/reference/tuple/tuple/common_type.html"/>
+      <id>8cc4361ae1ba943d065a624d866ae3f526a48894:reference/tuple/tuple/common_type.md</id>
+      <updated>2023-02-01T09:56:41+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/tuple/tuple/common_type.md b/reference/tuple/tuple/common_type.md
+index b8ffd1e73..f6d8d8902 100644
+--- a/reference/tuple/tuple/common_type.md
++++ b/reference/tuple/tuple/common_type.md
+@@ -18,16 +18,16 @@ namespace std {
+ 
+ 
+ ## 効果
+-[`tuple`](../tuple.md)`&amp;lt;`[`common_­type_­t`](/reference/type_traits/common_type.md)`&amp;lt;TTypes, UTypes&amp;gt;...&amp;gt;`によって得られた型をメンバ型`type`として定義する。
++[`tuple`](../tuple.md)`&amp;lt;`[`common_type_t`](/reference/type_traits/common_type.md)`&amp;lt;TTypes, UTypes&amp;gt;...&amp;gt;`によって得られた型をメンバ型`type`として定義する。
+ 
+ 
+ ## 備考
+ - `TTuple`か`UTuple`のどちらかが[`tuple`](../tuple.md)の特殊化であること。
+-- `TTuple`と`UTuple`のそれぞれについて、（次の`T`を置き換える形で）[`is_­same_­v`](/reference/type_traits/is_same.md)`&amp;lt;T,` [`decay_­t`](/reference/type_traits/decay.md)`&amp;lt;T&amp;gt;&amp;gt;`であること。
++- `TTuple`と`UTuple`のそれぞれについて、（次の`T`を置き換える形で）[`is_same_v`](/reference/type_traits/is_same.md)`&amp;lt;T,` [`decay_t`](/reference/type_traits/decay.md)`&amp;lt;T&amp;gt;&amp;gt;`であること。
+     - 実質的には`TTuple`と`Utuple`について、参照型ではなく、最上位の`const`/`volatile`修飾も持っていないこと要求する。
+ - `TTuple`と`UTuple`の要素数が一致していること。
+-    - 具体的には、[`tuple_­size_­v`](../tuple_size.md)`&amp;lt;TTuple&amp;gt; ==` [`tuple_­size_­v`](../tuple_size.md)`&amp;lt;UTuple&amp;gt;`であること。
+-- [`tuple`](../tuple.md)`&amp;lt;`[`common_­type_­t`](/reference/type_traits/common_type.md)`&amp;lt;TTypes, UTypes&amp;gt;...&amp;gt;`が正しく型を表すこと。
++    - 具体的には、[`tuple_size_v`](../tuple_size.md)`&amp;lt;TTuple&amp;gt; ==` [`tuple_size_v`](../tuple_size.md)`&amp;lt;UTuple&amp;gt;`であること。
++- [`tuple`](../tuple.md)`&amp;lt;`[`common_type_t`](/reference/type_traits/common_type.md)`&amp;lt;TTypes, UTypes&amp;gt;...&amp;gt;`が正しく型を表すこと。
+ 
+ 
+ ## バージョン
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>tomolatoon</name>
+        <email>tomo2000tomo170@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator= -- ソフトハイフン除去</title>
+      <link href="https://cpprefjp.github.io/reference/tuple/tuple/op_assign.html"/>
+      <id>8cc4361ae1ba943d065a624d866ae3f526a48894:reference/tuple/tuple/op_assign.md</id>
+      <updated>2023-02-01T09:56:41+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/tuple/tuple/op_assign.md b/reference/tuple/tuple/op_assign.md
+index 67c8ba00a..23b54f8aa 100644
+--- a/reference/tuple/tuple/op_assign.md
++++ b/reference/tuple/tuple/op_assign.md
+@@ -84,23 +84,23 @@ constexpr const tuple&amp;amp; operator=(UTuple&amp;amp;&amp;amp;) const;        // (14) C++23
+ - (1) : 全ての`i`について、[`is_copy_assignable`](/reference/type_traits/is_copy_assignable.md)`&amp;lt;Ti&amp;gt;::value == true`であること
+ - (2) : C++23 : 全ての`i`について、[`is_copy_assignable_v`](/reference/type_traits/is_copy_assignable.md)`&amp;lt;const Ti&amp;gt; == true`であること
+ - (3) : 全ての`i`について、[`is_move_assignable`](/reference/type_traits/is_move_assignable.md)`&amp;lt;Ti&amp;gt;::value == true`であること
+-- (4) : C++23 : 全ての`i`について、[`is_­assignable_­v`](/reference/type_traits/is_assignable.md)`&amp;lt;const Ti&amp;amp;, Ti&amp;gt; == true`であること
++- (4) : C++23 : 全ての`i`について、[`is_assignable_v`](/reference/type_traits/is_assignable.md)`&amp;lt;const Ti&amp;amp;, Ti&amp;gt; == true`であること
+ - (5) : 要素数が同じかつ、パラメータの[`tuple`](../tuple.md)の全ての要素型が、元の[`tuple`](../tuple.md)の全ての要素型にコピー代入可能であること
+-- (6) : C++23 : 要素数が同じかつ、全ての`i`について、[`is_­assignable_­v`](/reference/type_traits/is_assignable.md)`&amp;lt;const Ti&amp;amp;, const Ui&amp;amp;&amp;gt; == true`であること
++- (6) : C++23 : 要素数が同じかつ、全ての`i`について、[`is_assignable_v`](/reference/type_traits/is_assignable.md)`&amp;lt;const Ti&amp;amp;, const Ui&amp;amp;&amp;gt; == true`であること
+ - (7) : 要素数が同じかつ、パラメータの[`tuple`](../tuple.md)の全ての要素型が、元の[`tuple`](../tuple.md)の全ての要素型にムーブ代入可能であること
+-- (8) : C++23 : 要素数が同じかつ、全ての`i`について、[`is_­assignable_­v`](/reference/type_traits/is_assignable.md)`&amp;lt;const Ti&amp;amp;, Ui&amp;gt; = true`であること
++- (8) : C++23 : 要素数が同じかつ、全ての`i`について、[`is_assignable_v`](/reference/type_traits/is_assignable.md)`&amp;lt;const Ti&amp;amp;, Ui&amp;gt; = true`であること
+ - (9) : 元の[`tuple`](../tuple.md)の要素数が2であり、パラメータの[`pair`](/reference/utility/pair.md)の全ての要素型が元の[`tuple`](../tuple.md)の全ての要素型にコピー代入可能であること
+-- (10) : C++23 : 元の[`tuple`](../tuple.md)の要素数が2であり、[`is_­assignable_­v`](/reference/type_traits/is_assignable.md)`&amp;lt;const T0&amp;amp;, U1&amp;gt; &amp;amp;&amp;amp;` [`is_­assignable_­v`](/reference/type_traits/is_assignable.md)`&amp;lt;const T1&amp;amp;, U2&amp;gt;`であること
++- (10) : C++23 : 元の[`tuple`](../tuple.md)の要素数が2であり、[`is_assignable_v`](/reference/type_traits/is_assignable.md)`&amp;lt;const T0&amp;amp;, U1&amp;gt; &amp;amp;&amp;amp;` [`is_assignable_v`](/reference/type_traits/is_assignable.md)`&amp;lt;const T1&amp;amp;, U2&amp;gt;`であること
+ - (11) : 元の[`tuple`](../tuple.md)の要素型が2であり、パラメータの[`pair`](/reference/utility/pair.md)の全ての要素型が元の[`tuple`](../tuple.md)の全ての要素型にムーブ代入可能であること
+-- (12) : C++23 : 元の[`tuple`](../tuple.md)の要素数が2であり、[`is_­assignable_­v`](/reference/type_traits/is_assignable.md)`&amp;lt;const T0&amp;amp;, U1&amp;gt; &amp;amp;&amp;amp;` [`is_­assignable_­v`](/reference/type_traits/is_assignable.md)`&amp;lt;const T1&amp;amp;, U2&amp;gt;`であること
++- (12) : C++23 : 元の[`tuple`](../tuple.md)の要素数が2であり、[`is_assignable_v`](/reference/type_traits/is_assignable.md)`&amp;lt;const T0&amp;amp;, U1&amp;gt; &amp;amp;&amp;amp;` [`is_assignable_v`](/reference/type_traits/is_assignable.md)`&amp;lt;const T1&amp;amp;, U2&amp;gt;`であること
+ - (13) : 要素数が同じかつ、次を全て満たすこと
+     - C++23 : [`different-from`](/reference/ranges/different-from.md)`&amp;lt;UTuple, tuple&amp;gt;`
+-    - C++23 : [`remove_­cvref_­t`](/reference/type_traits/remove_cvref.md)`&amp;lt;UTuple&amp;gt;`が[`ranges::subrange`](/reference/ranges/subrange.md)の特殊化でないこと
+-    - C++23 : 全ての`i`について、[`is_­assignable_­v`](/reference/type_traits/is_assignable.md)`&amp;lt;Ti&amp;amp;, decltype(get&amp;lt;i&amp;gt;(`[`std​::​forward`](/reference/utility/forward.md)`&amp;lt;UTuple&amp;gt;(u)))&amp;gt;`
++    - C++23 : [`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;UTuple&amp;gt;`が[`ranges::subrange`](/reference/ranges/subrange.md)の特殊化でないこと
++    - C++23 : 全ての`i`について、[`is_assignable_v`](/reference/type_traits/is_assignable.md)`&amp;lt;Ti&amp;amp;, decltype(get&amp;lt;i&amp;gt;(`[`std​::​forward`](/reference/utility/forward.md)`&amp;lt;UTuple&amp;gt;(u)))&amp;gt;`
+ - (14) : 要素数が同じかつ、次をすべて満たすこと
+     - C++23 : [`different-from`](/reference/ranges/different-from.md)`&amp;lt;UTuple, tuple&amp;gt;`
+-    - C++23 : [`remove_­cvref_­t`](/reference/type_traits/remove_cvref.md)`&amp;lt;UTuple&amp;gt;`が[`ranges::subrange`](/reference/ranges/subrange.md)の特殊化でないこと
+-    - C++23 : [`is_­assignable_­v`](/reference/type_traits/is_assignable.md)`&amp;lt;const Ti&amp;amp;, decltype(get&amp;lt;i&amp;gt;(`[`std​::​forward`](/reference/utility/forward.md)`&amp;lt;UTuple&amp;gt;(u)))&amp;gt;`
++    - C++23 : [`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;UTuple&amp;gt;`が[`ranges::subrange`](/reference/ranges/subrange.md)の特殊化でないこと
++    - C++23 : [`is_assignable_v`](/reference/type_traits/is_assignable.md)`&amp;lt;const Ti&amp;amp;, decltype(get&amp;lt;i&amp;gt;(`[`std​::​forward`](/reference/utility/forward.md)`&amp;lt;UTuple&amp;gt;(u)))&amp;gt;`
+ 
+ 
+ ## 例外
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>tomolatoon</name>
+        <email>tomo2000tomo170@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator&lt;=&gt; -- ソフトハイフン除去</title>
+      <link href="https://cpprefjp.github.io/reference/tuple/tuple/op_compare_3way.html"/>
+      <id>8cc4361ae1ba943d065a624d866ae3f526a48894:reference/tuple/tuple/op_compare_3way.md</id>
+      <updated>2023-02-01T09:56:41+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/tuple/tuple/op_compare_3way.md b/reference/tuple/tuple/op_compare_3way.md
+index 91e768b7e..1a6c4b76a 100644
+--- a/reference/tuple/tuple/op_compare_3way.md
++++ b/reference/tuple/tuple/op_compare_3way.md
+@@ -15,8 +15,8 @@ namespace std {
+     operator&amp;lt;=&amp;gt;(const tuple&amp;lt;TTypes...&amp;gt;&amp;amp; t, const UTuple&amp;amp; u);           // (2) C++23
+   
+   // (2) の Elems は 型パラメータパック 
+-  //   tuple_­element_­t&amp;lt;0, UTuple&amp;gt;, tuple_­element_­t&amp;lt;1, UTuple&amp;gt;, ...,
+-  //   tuple_­element_­t&amp;lt;tuple_­size_­v&amp;lt;UTuple&amp;gt; - 1, UTuple&amp;gt;
++  //   tuple_element_t&amp;lt;0, UTuple&amp;gt;, tuple_element_t&amp;lt;1, UTuple&amp;gt;, ...,
++  //   tuple_element_t&amp;lt;tuple_size_v&amp;lt;UTuple&amp;gt; - 1, UTuple&amp;gt;
+   // を表す。
+ }
+ ```
+@@ -24,8 +24,8 @@ namespace std {
+ * common_comparison_category_t[link /reference/compare/common_comparison_category.md]
+ * synth-three-way-result[link /reference/exposition-only/synth-three-way-result.md]
+ * tuple-like[link ../tuple-like.md]
+-* tuple_­element_­t[link ../tuple_element.md]
+-* tuple_­size_­v[link ../tuple_size.md]
++* tuple_element_t[link ../tuple_element.md]
++* tuple_size_v[link ../tuple_size.md]
+ 
+ ## 概要
+ 2つの[`tuple`](../tuple.md)オブジェクトの三方比較を行う。また、[`tuple-like`](../tuple-like.md)なオブジェクトとの三方比較を行う。（C++23以降）
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>tomolatoon</name>
+        <email>tomo2000tomo170@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- ソフトハイフン除去</title>
+      <link href="https://cpprefjp.github.io/reference/tuple/tuple/op_constructor.html"/>
+      <id>8cc4361ae1ba943d065a624d866ae3f526a48894:reference/tuple/tuple/op_constructor.md</id>
+      <updated>2023-02-01T09:56:41+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/tuple/tuple/op_constructor.md b/reference/tuple/tuple/op_constructor.md
+index 69b191ee4..2bf4e9eeb 100644
+--- a/reference/tuple/tuple/op_constructor.md
++++ b/reference/tuple/tuple/op_constructor.md
+@@ -260,18 +260,18 @@ explicit(see below) constexpr
+     - C++20まで : `Types...`の全ての型`Ti`と、`UTypes...`の全ての型`Ui`について、[`is_constructible`](/reference/type_traits/is_constructible.md)`&amp;lt;Ti, Ui&amp;amp;&amp;amp;&amp;gt;::value == true`であること
+     - C++17 : `sizeof...(Types) &amp;gt;= 1`であること
+     - C++23 : `disambiguating-constraint`を次のように定義して、
+-        - `sizeof...(Types) == 1`の時、[`negation`](/reference/type_traits/negation.md)`&amp;lt;`[`is_­same`](/reference/type_traits/is_same.md)`&amp;lt;`[`remove_­cvref_­t`](/reference/type_traits/remove_cvref.md)`&amp;lt;U0&amp;gt;,` [`tuple`](../tuple.md)`&amp;gt;&amp;gt;`
+-        - `sizeof...(Types) == 2 || sizeof...(Types) == 3`の時、[`bool_­constant`](/reference/type_traits/bool_constant.md)`&amp;lt;!`[`is_­same_­v`](/reference/type_traits/is_same.md)`&amp;lt;`[`remove_­cvref_­t`](/reference/type_traits/remove_cvref.md)`&amp;lt;U0&amp;gt;,` [`allocator_­arg_­t`](/reference/memory/allocator_arg_t.md)`&amp;gt; ||` [`is_­same_­v`](/reference/type_traits/is_same.md)`&amp;lt;`[`remove_­cvref_­t`](/reference/type_traits/remove_cvref.md)`&amp;lt;T0&amp;gt;,` [`allocator_­arg_­t`](/reference/memory/allocator_arg_t.md)`&amp;gt;&amp;gt;`
++        - `sizeof...(Types) == 1`の時、[`negation`](/reference/type_traits/negation.md)`&amp;lt;`[`is_same`](/reference/type_traits/is_same.md)`&amp;lt;`[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;U0&amp;gt;,` [`tuple`](../tuple.md)`&amp;gt;&amp;gt;`
++        - `sizeof...(Types) == 2 || sizeof...(Types) == 3`の時、[`bool_constant`](/reference/type_traits/bool_constant.md)`&amp;lt;!`[`is_same_v`](/reference/type_traits/is_same.md)`&amp;lt;`[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;U0&amp;gt;,` [`allocator_arg_t`](/reference/memory/allocator_arg_t.md)`&amp;gt; ||` [`is_same_v`](/reference/type_traits/is_same.md)`&amp;lt;`[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;T0&amp;gt;,` [`allocator_arg_t`](/reference/memory/allocator_arg_t.md)`&amp;gt;&amp;gt;`
+         - 以上に該当しなければ、[`true_type`](/reference/type_traits/true_type.md)
+-    - C++23 : [`conjunction_­v`](/reference/type_traits/conjunction.md)`&amp;lt;disambiguating-constraint,` [`is_­constructible`](/reference/type_traits/is_constructible.md)`&amp;lt;Types, UTypes&amp;gt;...&amp;gt;`であること
++    - C++23 : [`conjunction_v`](/reference/type_traits/conjunction.md)`&amp;lt;disambiguating-constraint,` [`is_constructible`](/reference/type_traits/is_constructible.md)`&amp;lt;Types, UTypes&amp;gt;...&amp;gt;`であること
+ - (4), (18) :
+     - `Types...`の全ての型`Ti`について、[`is_copy_constructible`](/reference/type_traits/is_copy_constructible.md)`&amp;lt;Ti&amp;gt;::value == true`であること
+ - (5), (19) :
+     - `Types...`の全ての型`Ti`について、[`is_move_constructible`](/reference/type_traits/is_move_constructible.md)`&amp;lt;Ti&amp;gt;::value == true`であること
+ - (6)-(9), (20)-(23) :
+-    - `I`をパラメータパック`0, 1, ..., (sizeof...(Types) - 1)`、`FWD(u)`を`static_­cast&amp;lt;decltype(u)&amp;gt;(u)`、`sizeof...(Types) == 1`の場合は、`Types...`を`T`へ、`UTypes...`を`U`へ展開したと定義して
+-    - C++23 : `sizeof...(Types) == sizeof...(UTypes) &amp;amp;&amp;amp; (`[`is_­constructible_­v`](/reference/type_traits/is_constructible.md)`&amp;lt;Types, decltype(`[`get`](/reference/tuple/tuple/get.md)`&amp;lt;I&amp;gt;(FWD(u)))&amp;gt; &amp;amp;&amp;amp; ...) == true`であること
+-    - C++23 : 更に、`sizeof...(Types) != 1`または、[`is_­convertible_v­`](/reference/type_traits/is_convertible.md)`&amp;lt;decltype(u), T&amp;gt; == false &amp;amp;&amp;amp;` [`is_­constructible_­v`](/reference/type_traits/is_constructible.md)`&amp;lt;T, decltype(u)&amp;gt; == false &amp;amp;&amp;amp;` [`is_­same_­v`](/reference/type_traits/is_same.md)`&amp;lt;T, U&amp;gt; == false`であること
++    - `I`をパラメータパック`0, 1, ..., (sizeof...(Types) - 1)`、`FWD(u)`を`static_cast&amp;lt;decltype(u)&amp;gt;(u)`、`sizeof...(Types) == 1`の場合は、`Types...`を`T`へ、`UTypes...`を`U`へ展開したと定義して
++    - C++23 : `sizeof...(Types) == sizeof...(UTypes) &amp;amp;&amp;amp; (`[`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;Types, decltype(`[`get`](/reference/tuple/tuple/get.md)`&amp;lt;I&amp;gt;(FWD(u)))&amp;gt; &amp;amp;&amp;amp; ...) == true`であること
++    - C++23 : 更に、`sizeof...(Types) != 1`または、[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;decltype(u), T&amp;gt; == false &amp;amp;&amp;amp;` [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;T, decltype(u)&amp;gt; == false &amp;amp;&amp;amp;` [`is_same_v`](/reference/type_traits/is_same.md)`&amp;lt;T, U&amp;gt; == false`であること
+ - (7), (21) :
+     - `sizeof...(Types) == sizeof...(UTypes)`であること
+     - `Types...`の全ての型`Ti`と、`UTypes...`の全ての型`Ui`について、[`is_constructible`](/reference/type_traits/is_constructible.md)`&amp;lt;Ti, const Ui&amp;amp;&amp;gt;::value == true`であること
+@@ -285,7 +285,7 @@ explicit(see below) constexpr
+         - ムーブコンストラクタとのオーバーロードが成立することを意図している
+     - C++23 : (6)-(9), (20)-(23) の定義参照
+ - (10)-(13), (24)-(27) :
+-    - `FWD(u)`を`static_­cast&amp;lt;decltype(u)&amp;gt;(u)`、`Types...`の0番目の型を`T0`、1番目の型を`T1`であるとして、
++    - `FWD(u)`を`static_cast&amp;lt;decltype(u)&amp;gt;(u)`、`Types...`の0番目の型を`T0`、1番目の型を`T1`であるとして、
+     - C++23 : `sizeof...(Types) == 2`であること
+     - C++23 : [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;T0, decltype(get&amp;lt;0&amp;gt;(FWD(u))) == true`であること
+     - C++23 : [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;T1, decltype(get&amp;lt;1&amp;gt;(FWD(u))) == true`であること
+@@ -304,8 +304,8 @@ explicit(see below) constexpr
+     - C++23 : [`different-from`](/reference/ranges/different-from.md)`&amp;lt;UTuple, tuple&amp;gt;`であること
+     - C++23 : [`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;UTuple&amp;gt;`が[`ranges::subrange`](/reference/ranges/subrange.md)の特殊化でないこと
+     - C++23 : `sizeof...(Types) ==` [`tuple_size_v`](../tuple_size.md)`&amp;lt;`[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;UTuple&amp;gt;&amp;gt;`であること
+-    - C++23 : `(`[`is_­constructible_­v`](/reference/type_traits/is_constructible.md)`&amp;lt;Types, decltype(get&amp;lt;I&amp;gt;(`[`std​::​forward`](/reference/utility/forward.md)`&amp;lt;UTuple&amp;gt;(u)))&amp;gt; &amp;amp;&amp;amp; ...) == true`であること
+-    - C++23 : `sizeof...(Types) != 1`であるか、または`Types...`を`T`に展開したとして[`is_­convertible_­v`](/reference/type_traits/is_convertible.md)`&amp;lt;UTuple, T&amp;gt; == false &amp;amp;&amp;amp;` [`is_­constructible_­v`](/reference/type_traits/is_constructible.md)`&amp;lt;T, UTuple&amp;gt; == false`であること
++    - C++23 : `(`[`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;Types, decltype(get&amp;lt;I&amp;gt;(`[`std​::​forward`](/reference/utility/forward.md)`&amp;lt;UTuple&amp;gt;(u)))&amp;gt; &amp;amp;&amp;amp; ...) == true`であること
++    - C++23 : `sizeof...(Types) != 1`であるか、または`Types...`を`T`に展開したとして[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;UTuple, T&amp;gt; == false &amp;amp;&amp;amp;` [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;T, UTuple&amp;gt; == false`であること
+ 
+ 
+ ## 備考
+@@ -319,7 +319,7 @@ explicit(see below) constexpr
+     - C++17から : `!`[`conjunction_v`](/reference/type_traits/conjunction.md)`&amp;lt;`[`is_convertible`](/reference/type_traits/is_convertible.md)`&amp;lt;UTypes, Types&amp;gt;...&amp;gt;`である場合、この関数は`explicit`となる
+     - C++23から : `(`[`reference_constructs_from_temporary_v`](/reference/type_traits/reference_constructs_from_temporary.md)`&amp;lt;Types, UTypes&amp;amp;&amp;amp;&amp;gt; || ...)`である場合、この関数は削除定義される
+ - (6)-(9) :
+-    - `I`をパラメータパック`0, 1, ..., (sizeof...(Types) - 1)`、`FWD(u)`を`static_­cast&amp;lt;decltype(u)&amp;gt;(u)`と定義して、
++    - `I`をパラメータパック`0, 1, ..., (sizeof...(Types) - 1)`、`FWD(u)`を`static_cast&amp;lt;decltype(u)&amp;gt;(u)`と定義して、
+     - C++23 : `!(`[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;decltype(`[`get`](../tuple/get.md)`&amp;lt;I&amp;gt;(FWD(u))), Types&amp;gt; &amp;amp;&amp;amp; ...)`である場合、この関数は`explicit`となる
+     - C++23 : `(`[`reference_constructs_from_temporary_v`](/reference/type_traits/reference_constructs_from_temporary.md)`&amp;lt;Types, decltype(`[`get`](../tuple/get.md)`&amp;lt;I&amp;gt;(FWD(u)))&amp;gt; || ...)`である場合、この関数は削除定義される
+ - (7) :
+@@ -329,7 +329,7 @@ explicit(see below) constexpr
+     - C++17 : `!`[`conjunction_v`](/reference/type_traits/conjunction.md)`&amp;lt;`[`is_convertible`](/reference/type_traits/is_convertible.md)`&amp;lt;UTypes&amp;amp;&amp;amp;, Types&amp;gt;...&amp;gt;`である場合、この関数は`explicit`となる
+     - C++23 : (6)-(9) の定義参照
+ - (10)-(13) :
+-    - `FWD(u)`を`static_­cast&amp;lt;decltype(u)&amp;gt;(u)`、`Types...`の0番目の型を`T0`、1番目の型を`T1`であるとして、
++    - `FWD(u)`を`static_cast&amp;lt;decltype(u)&amp;gt;(u)`、`Types...`の0番目の型を`T0`、1番目の型を`T1`であるとして、
+     - C++23 : `!`[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;decltype(`[`get`](/reference/utility/pair/get.md)`&amp;lt;0&amp;gt;(FWD(u))), T0&amp;gt; ||!`[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;decltype(`[`get`](/reference/utility/pair/get.md)`&amp;lt;1&amp;gt;(FWD(u))), T1&amp;gt;`である場合、この関数は`explicit`となる
+     - C++23 : [`reference_constructs_from_temporary_v`](/reference/type_traits/reference_constructs_from_temporary.md)`&amp;lt;T0, decltype(`[`get`](/reference/utility/pair/get.md)`&amp;lt;0&amp;gt;(FWD(u)))&amp;gt; ||` [`reference_constructs_from_temporary_v`](/reference/type_traits/reference_constructs_from_temporary.md)`&amp;lt;T1, decltype(`[`get`](/reference/utility/pair/get.md)`&amp;lt;1&amp;gt;(FWD(u)))&amp;gt;`である場合、この関数は削除定義される
+ - (11) :
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>tomolatoon</name>
+        <email>tomo2000tomo170@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator== -- ソフトハイフン除去</title>
+      <link href="https://cpprefjp.github.io/reference/tuple/tuple/op_equal.html"/>
+      <id>8cc4361ae1ba943d065a624d866ae3f526a48894:reference/tuple/tuple/op_equal.md</id>
+      <updated>2023-02-01T09:56:41+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/tuple/tuple/op_equal.md b/reference/tuple/tuple/op_equal.md
+index b0cb55f2f..567726a2b 100644
+--- a/reference/tuple/tuple/op_equal.md
++++ b/reference/tuple/tuple/op_equal.md
+@@ -31,7 +31,7 @@ namespace std {
+     - 2つの[`tuple`](../tuple.md)オブジェクトの要素数が同じであること。（具体的には`sizeof...(TTypes) == sizeof...(UTypes)`であること。）
+     - [`tuple`](../tuple.md)の要素`std::`[`get`](get.md)`&amp;lt;i&amp;gt;(t)`と`std::`[`get`](get.md)`&amp;lt;i&amp;gt;(u)`において、すべての要素の比較 `std::`[`get`](get.md)`&amp;lt;i&amp;gt;(t) == std::`[`get`](get.md)`&amp;lt;i&amp;gt;(u)` の比較結果が`bool`に変換可能な型（C++23 以降は[`boolean-testable`](/reference/concepts/boolean-testable.md)を満たせばよい）であること。
+ - (2) :
+-    - C++23 : 2つの[`tuple-like`](../tuple-like.md)なオブジェクトの要素数が同じであること。（正確には、`sizeof...(TTypes) ==` [`tuple_­size_­v`](../tuple_size.md)`&amp;lt;UTuple&amp;gt;`であること。）
++    - C++23 : 2つの[`tuple-like`](../tuple-like.md)なオブジェクトの要素数が同じであること。（正確には、`sizeof...(TTypes) ==` [`tuple_size_v`](../tuple_size.md)`&amp;lt;UTuple&amp;gt;`であること。）
+     - C++23 : [`tuple`](../tuple.md)の要素`std::`[`get`](get.md)`&amp;lt;i&amp;gt;(t)`と[`tuple-like`](../tuple-like.md)なオブジェクトの要素`std::get&amp;lt;i&amp;gt;(u)`において、すべての要素の比較 `std::`[`get`](get.md)`&amp;lt;i&amp;gt;(t) == std::`[`get`](get.md)`&amp;lt;i&amp;gt;(u)` の比較結果が[`boolean-testable`](/reference/concepts/boolean-testable.md)を満たす型（`bool`へ変換可能な型）であること。
+ 
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>tomolatoon</name>
+        <email>tomo2000tomo170@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>tuple_cat -- ソフトハイフン除去</title>
+      <link href="https://cpprefjp.github.io/reference/tuple/tuple_cat.html"/>
+      <id>8cc4361ae1ba943d065a624d866ae3f526a48894:reference/tuple/tuple_cat.md</id>
+      <updated>2023-02-01T09:56:41+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/tuple/tuple_cat.md b/reference/tuple/tuple_cat.md
+index 1f7f18b28..5827bea6e 100644
+--- a/reference/tuple/tuple_cat.md
++++ b/reference/tuple/tuple_cat.md
+@@ -29,7 +29,7 @@ namespace std {
+     - `Args...`の各型が左辺値参照であればコピー構築可能、そうでなければムーブ構築可能であること。
+ - C++23から :
+     - 本関数の返り値の[`tuple`](tuple.md)のテンプレートパラメーターパックを`Ctypes`とし、`Ctypes`の全ての要素について、引数`tpls`において対応する要素の型から構築可能であること。
+-    - より厳密には、次のように定義を行い、`(`[`is_­constructible_v­`](/reference/type_traits/is_constructible.md)`&amp;lt;CTypes, decltype(celems)&amp;gt; &amp;amp;&amp;amp; ...) == true`であること。
++    - より厳密には、次のように定義を行い、`(`[`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;CTypes, decltype(celems)&amp;gt; &amp;amp;&amp;amp; ...) == true`であること。
+         - `n`を`sizeof...(Tuples)`とし、`i`を範囲`[0, n)`における整数値とする
+         - `T(i)`を`Tuples`の`i`番目とする
+         - `U(i)`を[`remove_cvref_t&amp;lt;T(i)&amp;gt;`](/reference/type_traits/remove_cvref.md) とする
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>tomolatoon</name>
+        <email>tomo2000tomo170@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>is_invocable_r -- ソフトハイフン除去</title>
+      <link href="https://cpprefjp.github.io/reference/type_traits/is_invocable_r.html"/>
+      <id>8cc4361ae1ba943d065a624d866ae3f526a48894:reference/type_traits/is_invocable_r.md</id>
+      <updated>2023-02-01T09:56:41+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/type_traits/is_invocable_r.md b/reference/type_traits/is_invocable_r.md
+index a5b907ce7..f32c28aba 100644
+--- a/reference/type_traits/is_invocable_r.md
++++ b/reference/type_traits/is_invocable_r.md
+@@ -35,11 +35,11 @@ std::is_convertible_v&amp;lt;std::invoke_result_t&amp;lt;F, ArgsTypes...&amp;gt;, R&amp;gt;
+ 
+ // C++23
+ std::is_convertible_v&amp;lt;std::invoke_result_t&amp;lt;F, ArgsTypes...&amp;gt;, R&amp;gt; &amp;amp;&amp;amp; 
+-std::reference_­converts_­from_­temporary_­v&amp;lt;R, std::invoke_result_t&amp;lt;F, ArgsTypes...&amp;gt;&amp;gt; == false
++std::reference_converts_from_temporary_v&amp;lt;R, std::invoke_result_t&amp;lt;F, ArgsTypes...&amp;gt;&amp;gt; == false
+ ```
+ * std::is_convertible_v[link is_convertible.md]
+ * std::invoke_result_t[link invoke_result.md]
+-* std::reference_­converts_­from_­temporary_­v[link /reference/type_traits/reference_converts_from_temporary.md]
++* std::reference_converts_from_temporary_v[link /reference/type_traits/reference_converts_from_temporary.md]
+ 
+ 
+ ## 寿命の延長とダングリング参照
+@@ -49,7 +49,7 @@ std::reference_­converts_­from_­temporary_­v&amp;lt;R, std::invoke_result_t&amp;lt;F, Args
+ 
+ `R`が`const T&amp;amp;`または`T&amp;amp;&amp;amp;`で、かつ`S`が`rvalue`であれば、`S`を`R`へ暗黙変換する際に`S`の寿命は`R`の寿命に合わせて延長されることがある。しかしこの場合、`R`は[*INVOKE*](/reference/concepts/Invoke.md)が行われる文を寿命とするので、`S`も同様に[*INVOKE*](/reference/concepts/Invoke.md)が行われる文が終了すると同時に寿命が終了する。参照による寿命の延長は2度適用されることはないため、このような場合には常にダングリング参照が生じてしまう。
+ 
+-これを検出し、不適格とするために[`reference_­converts_­from_­temporary_­v`](/reference/type_traits/reference_converts_from_temporary.md)を使用しているというわけなのである。
++これを検出し、不適格とするために[`reference_converts_from_temporary_v`](/reference/type_traits/reference_converts_from_temporary.md)を使用しているというわけなのである。
+ 
+ ```cpp example
+ #include &amp;lt;iostream&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>tomolatoon</name>
+        <email>tomo2000tomo170@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator= -- ソフトハイフン除去</title>
+      <link href="https://cpprefjp.github.io/reference/utility/pair/op_assign.html"/>
+      <id>8cc4361ae1ba943d065a624d866ae3f526a48894:reference/utility/pair/op_assign.md</id>
+      <updated>2023-02-01T09:56:41+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/utility/pair/op_assign.md b/reference/utility/pair/op_assign.md
+index b7ec890c1..9c1e43341 100644
+--- a/reference/utility/pair/op_assign.md
++++ b/reference/utility/pair/op_assign.md
+@@ -66,13 +66,13 @@ template&amp;lt;pair-like P&amp;gt;
+ - (9) : 次を全て満たすこと
+     - C++23 : [`different-from`](/reference/ranges/different-from.md)`&amp;lt;P, pair&amp;gt;`
+     - C++23 : [`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;P&amp;gt;`が[`ranges::subrange`](/reference/ranges/subrange.md)の特殊化でないこと
+-    - C++23 : [`is_­assignable_­v`](/reference/type_traits/is_assignable.md)`&amp;lt;T1&amp;amp;, decltype(get&amp;lt;0&amp;gt;(`[`std​::​forward`](/reference/utility/forward.md)`&amp;lt;P&amp;gt;(p)))&amp;gt;`
+-    - C++23 : [`is_­assignable_­v`](/reference/type_traits/is_assignable.md)`&amp;lt;T2&amp;amp;, decltype(get&amp;lt;1&amp;gt;(`[`std​::​forward`](/reference/utility/forward.md)`&amp;lt;P&amp;gt;(p)))&amp;gt;`
++    - C++23 : [`is_assignable_v`](/reference/type_traits/is_assignable.md)`&amp;lt;T1&amp;amp;, decltype(get&amp;lt;0&amp;gt;(`[`std​::​forward`](/reference/utility/forward.md)`&amp;lt;P&amp;gt;(p)))&amp;gt;`
++    - C++23 : [`is_assignable_v`](/reference/type_traits/is_assignable.md)`&amp;lt;T2&amp;amp;, decltype(get&amp;lt;1&amp;gt;(`[`std​::​forward`](/reference/utility/forward.md)`&amp;lt;P&amp;gt;(p)))&amp;gt;`
+ - (10) : 次を全て満たすこと
+     - C++23 : [`different-from`](/reference/ranges/different-from.md)`&amp;lt;P, pair&amp;gt;`
+     - C++23 : [`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;P&amp;gt;`が[`ranges::subrange`](/reference/ranges/subrange.md)の特殊化でないこと
+-    - C++23 : [`is_­assignable_­v`](/reference/type_traits/is_assignable.md)`&amp;lt;const T1&amp;amp;, decltype(get&amp;lt;0&amp;gt;(`[`std​::​forward`](/reference/utility/forward.md)`&amp;lt;P&amp;gt;(p)))&amp;gt;`
+-    - C++23 : [`is_­assignable_­v`](/reference/type_traits/is_assignable.md)`&amp;lt;const T2&amp;amp;, decltype(get&amp;lt;1&amp;gt;(`[`std​::​forward`](/reference/utility/forward.md)`&amp;lt;P&amp;gt;(p)))&amp;gt;`
++    - C++23 : [`is_assignable_v`](/reference/type_traits/is_assignable.md)`&amp;lt;const T1&amp;amp;, decltype(get&amp;lt;0&amp;gt;(`[`std​::​forward`](/reference/utility/forward.md)`&amp;lt;P&amp;gt;(p)))&amp;gt;`
++    - C++23 : [`is_assignable_v`](/reference/type_traits/is_assignable.md)`&amp;lt;const T2&amp;amp;, decltype(get&amp;lt;1&amp;gt;(`[`std​::​forward`](/reference/utility/forward.md)`&amp;lt;P&amp;gt;(p)))&amp;gt;`
+ 
+ 
+ ## 効果
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>tomolatoon</name>
+        <email>tomo2000tomo170@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- ソフトハイフン除去</title>
+      <link href="https://cpprefjp.github.io/reference/utility/pair/op_constructor.html"/>
+      <id>8cc4361ae1ba943d065a624d866ae3f526a48894:reference/utility/pair/op_constructor.md</id>
+      <updated>2023-02-01T09:56:41+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/utility/pair/op_constructor.md b/reference/utility/pair/op_constructor.md
+index ad0ad1de4..84bb25ebc 100644
+--- a/reference/utility/pair/op_constructor.md
++++ b/reference/utility/pair/op_constructor.md
+@@ -116,11 +116,11 @@ constexpr pair(piecewise_construct_t,
+     - C++17 : `!`[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;const first_type&amp;amp;, first_type&amp;gt; || !`[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;const second_type&amp;amp;, second_type&amp;gt;`である場合、`explicit`指定される
+ - (5) :
+     - C++17 : `!`[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;U1, first_type&amp;gt; || !`[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;U2, second_type&amp;gt;`である場合、`explicit`指定される
+-    - C++23 : [`reference_­constructs_­from_­temporary_­v`](/reference/type_traits/reference_constructs_from_temporary.md)`&amp;lt;first_­type, U1&amp;amp;&amp;amp;&amp;gt; ||` [`reference_­constructs_­from_­temporary_­v`](/reference/type_traits/reference_constructs_from_temporary.md)`&amp;lt;second_­type, U2&amp;amp;&amp;amp;&amp;gt;`である場合、このコンストラクタは削除定義される
++    - C++23 : [`reference_constructs_from_temporary_v`](/reference/type_traits/reference_constructs_from_temporary.md)`&amp;lt;first_type, U1&amp;amp;&amp;amp;&amp;gt; ||` [`reference_constructs_from_temporary_v`](/reference/type_traits/reference_constructs_from_temporary.md)`&amp;lt;second_type, U2&amp;amp;&amp;amp;&amp;gt;`である場合、このコンストラクタは削除定義される
+ - (6)-(10) :
+     - `FWD(u)`を`static_cast&amp;lt;deccltype(u)&amp;gt;(u)`と定義して
+     - C++23 : `!`[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;decltype(`[`get`](/reference/utility/pair/get.md)`&amp;lt;0&amp;gt;(FWD(p))), T1&amp;gt; || !`[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;decltype(`[`get`](/reference/utility/pair/get.md)`&amp;lt;1&amp;gt;(FWD(p))), T2&amp;gt;`である場合、`explicit`指定される
+-    - C++23 : [`reference_­constructs_­from_­temporary_­v`](/reference/type_traits/reference_constructs_from_temporary.md)`&amp;lt;first_­type, decltype(`[`get`](/reference/utility/pair/get.md)`&amp;lt;0&amp;gt;(FWD(p)))&amp;gt; ||` [`reference_­constructs_­from_­temporary_­v`](/reference/type_traits/reference_constructs_from_temporary.md)`&amp;lt;second_­type, decltype(`[`get`](/reference/utility/pair/get.md)`&amp;lt;1&amp;gt;(FWD(p)))&amp;gt;`である場合、このコンストラクタは削除定義される
++    - C++23 : [`reference_constructs_from_temporary_v`](/reference/type_traits/reference_constructs_from_temporary.md)`&amp;lt;first_type, decltype(`[`get`](/reference/utility/pair/get.md)`&amp;lt;0&amp;gt;(FWD(p)))&amp;gt; ||` [`reference_constructs_from_temporary_v`](/reference/type_traits/reference_constructs_from_temporary.md)`&amp;lt;second_type, decltype(`[`get`](/reference/utility/pair/get.md)`&amp;lt;1&amp;gt;(FWD(p)))&amp;gt;`である場合、このコンストラクタは削除定義される
+ - (7) :
+     - C++17 : `!`[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;const U1&amp;amp;, first_type&amp;gt; || !`[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;const U2&amp;amp;, second_type&amp;gt;`である場合、`explicit`指定される
+     - C++23 : (6)-(10) での定義参照
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>tomolatoon</name>
+        <email>tomo2000tomo170@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>basic_common_reference -- リンク修正など - リンク修正 - ハイライト修正 - 何故か消してしまったものを復帰</title>
@@ -6392,134 +7001,6 @@ index ed2ae9e2b..a231b83ec 100644
       <author>
         <name>Akira Takahashi</name>
         <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator= -- expected/expected: operator=調整(#1066)</title>
-      <link href="https://cpprefjp.github.io/reference/expected/expected/op_assign.html"/>
-      <id>44e51113a40fd217b00231ee404f8e42649a0666:reference/expected/expected/op_assign.md</id>
-      <updated>2023-01-31T14:11:27+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/expected/expected/op_assign.md b/reference/expected/expected/op_assign.md
-index 103e901f9..0f9011829 100644
---- a/reference/expected/expected/op_assign.md
-+++ b/reference/expected/expected/op_assign.md
-@@ -6,18 +6,18 @@
- * cpp23[meta cpp]
- 
- ```cpp
--constexpr expected&amp;amp; operator=(const expected&amp;amp;);      // (1)
-+constexpr expected&amp;amp; operator=(const expected&amp;amp; rhs);    // (1)
- 
--constexpr expected&amp;amp; operator=(expected&amp;amp;&amp;amp;) noexcept(see below); // (2)
-+constexpr expected&amp;amp; operator=(expected&amp;amp;&amp;amp; rhs) noexcept(see below); // (2)
- 
- template&amp;lt;class U = T&amp;gt;
--constexpr expected&amp;amp; operator=(U&amp;amp;&amp;amp;);                  // (3)
-+constexpr expected&amp;amp; operator=(U&amp;amp;&amp;amp; v);                  // (3)
- 
- template&amp;lt;class G&amp;gt;
--constexpr expected&amp;amp; operator=(const unexpected&amp;lt;G&amp;gt;&amp;amp;); // (4)
-+constexpr expected&amp;amp; operator=(const unexpected&amp;lt;G&amp;gt;&amp;amp; e); // (4)
- 
- template&amp;lt;class G&amp;gt;
--constexpr expected&amp;amp; operator=(unexpected&amp;lt;G&amp;gt;&amp;amp;&amp;amp;);      // (5)
-+constexpr expected&amp;amp; operator=(unexpected&amp;lt;G&amp;gt;&amp;amp;&amp;amp; e);      // (5)
- ```
- * see below[italic]
- * unexpected[link ../unexpected.md]
-@@ -65,7 +65,8 @@ constexpr void reinit-expected(T&amp;amp; newval, U&amp;amp; oldval, Args&amp;amp;&amp;amp;... args) {
- * destroy_at[link /reference/memory/destroy_at.md]
- * is_nothrow_constructible_v[link /reference/type_traits/is_nothrow_constructible.md]
- * is_nothrow_move_constructible_v[link /reference/type_traits/is_nothrow_move_constructible.md]
--
-+* std::forward[link /reference/utility/forward.md]
-+* std::move[link /reference/utility/move.md]
- 
- ## テンプレートパラメータ制約
- - (2) : 下記を全て満たすこと
-@@ -93,26 +94,26 @@ constexpr void reinit-expected(T&amp;amp; newval, U&amp;amp; oldval, Args&amp;amp;&amp;amp;... args) {
- 
- ## 効果
- - (1) : 次の処理を行ったのち、例外が送出されなければ、`has_val = rhs.`[`has_value()`](has_value.md.nolink)`; return *this;`
--    - `this`と`rhs`が共に正常値を保持していたら、`val = *rhs`
-+    - `this`と`rhs`が共に正常値を保持していたら、`val =` [`*rhs`](op_deref.md)
-     - `this`が正常値を保持し、`rhs`がエラー値を保持していたら、`reinit-expected(unex, val, rhs.`[`error()`](error.md.nolink)`)`
--    - `this`がエラーを保持し、`rhs`が正常値を保持していたら、`reinit-expected(val, unex, *rhs)`
-+    - `this`がエラーを保持し、`rhs`が正常値を保持していたら、`reinit-expected(val, unex,` [`*rhs`](op_deref.md)`)`
-     - `this`と`rhs`が共にエラー値を保持していたら、`unex = rhs.`[`error()`](error.md.nolink)
- - (2) : 次の処理を行ったのち、例外が送出されなければ、`has_val = rhs.`[`has_value()`](has_value.md.nolink)`; return *this;`
--    - `this`と`rhs`が共に正常値を保持していたら、`val = std::move(*rhs)`
--    - `this`が正常値を保持し、`rhs`がエラー値を保持していたら、`reinit-expected(unex, val, std::move(rhs.`[`error()`](error.md.nolink)`))`
--    - `this`がエラーを保持し、`rhs`が正常値を保持していたら、`reinit-expected(val, unex, std::move(*rhs))`
--    - `this`と`rhs`が共にエラー値を保持していたら、`unex = std::move(rhs.`[`error()`](error.md.nolink)`)`
-+    - `this`と`rhs`が共に正常値を保持していたら、`val =` [`std::move`](/reference/utility/move.md)`(`[`*rhs`](op_deref.md)`)`
-+    - `this`が正常値を保持し、`rhs`がエラー値を保持していたら、`reinit-expected(unex, val,` [`std::move`](/reference/utility/move.md)`(rhs.`[`error()`](error.md.nolink)`))`
-+    - `this`がエラーを保持し、`rhs`が正常値を保持していたら、`reinit-expected(val, unex,` [`std::move`](/reference/utility/move.md)`(`[`*rhs`](op_deref.md)`))`
-+    - `this`と`rhs`が共にエラー値を保持していたら、`unex` [`std::move`](/reference/utility/move.md)`(rhs.`[`error()`](error.md.nolink)`)`
- - (3) : 次の処理と等価
--    - `this`が正常値を保持していたら、`val = std::forward&amp;lt;U&amp;gt;(v)`
--    - `this`がエラー値を保持していたら、`reinit-expected(val, unex, std::forward&amp;lt;U&amp;gt;(v)); has_val = true;`
-+    - `this`が正常値を保持していたら、`val =` [`std::forward`](/reference/utility/forward.md)`&amp;lt;U&amp;gt;(v)`
-+    - `this`がエラー値を保持していたら、`reinit-expected(val, unex,` [`std::forward`](/reference/utility/forward.md)`&amp;lt;U&amp;gt;(v)); has_val = true;`
- - (4) : 次の処理と等価
--    - `this`が正常値を保持していたら、`reinit-expected(unex, val, std::forward&amp;lt;const G&amp;amp;&amp;gt;(e.`[`error()`](error.md.nolink)`));
-+    - `this`が正常値を保持していたら、`reinit-expected(unex, val,` [`std::forward`](/reference/utility/forward.md)`&amp;lt;const G&amp;amp;&amp;gt;(e.`[`error()`](../unexpectederror.md.nolink)`));
- has_val = false;`
--    - `this`がエラー値を保持していたら、`unex = std::forward&amp;lt;const G&amp;amp;&amp;gt;(e.`[`error()`](error.md.nolink)`);`
-+    - `this`がエラー値を保持していたら、`unex =` [`std::forward`](/reference/utility/forward.md)`&amp;lt;const G&amp;amp;&amp;gt;(e.`[`error()`](../unexpected/error.md.nolink)`);`
- - (5) : 次の処理と等価
--    - `this`が正常値を保持していたら、`reinit-expected(unex, val, std::forward&amp;lt;G&amp;gt;(e.`[`error()`](error.md.nolink)`));
-+    - `this`が正常値を保持していたら、`reinit-expected(unex, val,` [`std::forward`](/reference/utility/forward.md)`&amp;lt;G&amp;gt;(e.`[`error()`](../unexpectederror.md.nolink)`));
- has_val = false;`
--    - `this`がエラー値を保持していたら、`unex = std::forward&amp;lt;G&amp;gt;(e.`[`error()`](error.md.nolink)`);`
-+    - `this`がエラー値を保持していたら、`unex =` [`std::forward`](/reference/utility/forward.md)`&amp;lt;G&amp;gt;(e.`[`error()`](../unexpectederror.md.nolink)`);`
- 
- 
- ## 戻り値
-@@ -224,6 +225,7 @@ int main()
- * value[link value.md.nolink]
- * error[link error.md.nolink]
- * std::unexpected[link ../unexpected.md]
-+* std::make_unique[link /reference/memory/make_unique.md]
- 
- ### 出力
- ```
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>コンストラクタ -- expected/expected: operator=調整(#1066)</title>
-      <link href="https://cpprefjp.github.io/reference/expected/expected/op_constructor.html"/>
-      <id>44e51113a40fd217b00231ee404f8e42649a0666:reference/expected/expected/op_constructor.md</id>
-      <updated>2023-01-31T14:11:27+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/expected/expected/op_constructor.md b/reference/expected/expected/op_constructor.md
-index d5e086445..b2994975d 100644
---- a/reference/expected/expected/op_constructor.md
-+++ b/reference/expected/expected/op_constructor.md
-@@ -108,8 +108,8 @@ constexpr bool converts-from-any-cvref =
- - (4) : `rhs`が正常値を保持していれば、[`std::forward`](/reference/utility/forward.md)`&amp;lt;const U&amp;amp;&amp;gt;(`[`*rhs`](op_deref.md)`)`で正常値を直接非リスト初期化する。そうでなければ、[`std::forward`](/reference/utility/forward.md)`&amp;lt;const G&amp;amp;&amp;gt;(rhs.`[`error()`](error.md.nolink)`)`でエラー値を直接非リスト初期化する。
- - (5) : `rhs`が正常値を保持していれば、[`std::forward`](/reference/utility/forward.md)`&amp;lt;U&amp;gt;(`[`*rhs`](op_deref.md)`)`で正常値を直接非リスト初期化する。そうでなければ、[`std::forward`](/reference/utility/forward.md)`&amp;lt;G&amp;gt;(rhs.`[`error()`](error.md.nolink)`)`でエラー値を直接非リスト初期化する。
- - (6) : [`std::forward`](/reference/utility/forward.md)`&amp;lt;U&amp;gt;(v)`で正常値を直接非リスト初期化する。
--- (7) : [`std::forward`](/reference/utility/forward.md)`&amp;lt;const G&amp;amp;&amp;gt;(rhs.`[`error()`](error.md.nolink)`)`でエラー値を直接非リスト初期化する。
--- (8) : [`std::forward`](/reference/utility/forward.md)`&amp;lt;G&amp;gt;(rhs.`[`error()`](error.md.nolink)`)`でエラー値を直接非リスト初期化する。
-+- (7) : [`std::forward`](/reference/utility/forward.md)`&amp;lt;const G&amp;amp;&amp;gt;(e.`[`error()`](../unexpected/error.md.nolink)`)`でエラー値を直接非リスト初期化する。
-+- (8) : [`std::forward`](/reference/utility/forward.md)`&amp;lt;G&amp;gt;(e.`[`error()`](../unexpected/error.md.nolink)`)`でエラー値を直接非リスト初期化する。
- - (9) : [`std::forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...`で正常値を直接非リスト初期化する。
- - (10) : `il,` [`std::forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...`で正常値を直接非リスト初期化する。
- - (11) : [`std::forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...`でエラー値を直接非リスト初期化する。
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
       </author>
     </entry>
   
