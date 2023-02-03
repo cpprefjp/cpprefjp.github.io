@@ -2,9 +2,187 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2023-02-03T13:28:37.066414</updated>
-  <id>19f74e37-72ba-4749-bbc3-a4e2abd6fd34</id>
+  <updated>2023-02-03T13:59:58.475382</updated>
+  <id>57be69ab-95b5-408c-825c-bc71168e4f76</id>
 
+  
+    <entry>
+      <title>expected -- expected/expected: swap(#1066)</title>
+      <link href="https://cpprefjp.github.io/reference/expected/expected.html"/>
+      <id>b79bb56d63ecdfa3568ca85fa5568d1ecb355d53:reference/expected/expected.md</id>
+      <updated>2023-02-03T22:55:42+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/expected/expected.md b/reference/expected/expected.md
+index bcb33b6ab..ecb45517a 100644
+--- a/reference/expected/expected.md
++++ b/reference/expected/expected.md
+@@ -41,7 +41,7 @@ namespace std {
+ |-----------------|----------------|-------|
+ | [`operator=`](expected/op_assign.md) | 代入演算子 | C++23 |
+ | [`emplace`](expected/emplace.md) | 正常値型のコンストラクタ引数から直接構築する | C++23 |
+-| [`swap`](expected/swap.md.nolink) | 他の`expected`オブジェクトとデータを入れ替える | C++23 |
++| [`swap`](expected/swap.md) | 他の`expected`オブジェクトとデータを入れ替える | C++23 |
+ 
+ ### 値の観測
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>swap -- expected/expected: swap(#1066)</title>
+      <link href="https://cpprefjp.github.io/reference/expected/expected/swap.html"/>
+      <id>b79bb56d63ecdfa3568ca85fa5568d1ecb355d53:reference/expected/expected/swap.md</id>
+      <updated>2023-02-03T22:55:42+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/expected/expected/swap.md b/reference/expected/expected/swap.md
+new file mode 100644
+index 000000000..7a270c1f4
+--- /dev/null
++++ b/reference/expected/expected/swap.md
+@@ -0,0 +1,131 @@
++# swap
++* expected[meta header]
++* function[meta id-type]
++* std[meta namespace]
++* expected[meta class]
++* cpp23[meta cpp]
++
++```cpp
++constexpr void swap(expected&amp;amp; rhs) noexcept(see below);
++```
++* see below[italic]
++
++## 概要
++他の`expected`オブジェクトとデータを入れ替える。
++
++動作説明用の`expected`クラスメンバ変数として、下記を導入する。
++
++- `val` : `T`型の正常値。
++- `unex` : `E`型のエラー値。
++- `has_val` : `bool`型のフラグ変数。正常値を保持する場合は`true`に、エラー値を保持する場合は`false`となる。
++
++
++## テンプレートパラメータ制約
++次の制約を全て満たすこと
++
++- [`is_swappable_v`](/reference/type_traits/is_swappable.md)`&amp;lt;T&amp;gt; == true`
++- [`is_swappable_v`](/reference/type_traits/is_swappable.md)`&amp;lt;E&amp;gt; == true`
++- `(`[`is_move_constructible_v`](/reference/type_traits/is_move_constructible.md)`&amp;lt;E&amp;gt; &amp;amp;&amp;amp;` [`is_move_constructible_v`](/reference/type_traits/is_move_constructible.md)`&amp;lt;E&amp;gt;) == true`
++- `(`[`is_nothrow_move_constructible_v`](/reference/type_traits/is_nothrow_move_constructible.md)`&amp;lt;E&amp;gt; &amp;amp;&amp;amp;` [`is_nothrow_move_constructible_v`](/reference/type_traits/is_nothrow_move_constructible.md)`&amp;lt;E&amp;gt;) == true`
++
++
++## 効果
++`*this`と`rhs`それぞれが正常値／エラー値いずれを保持しているかに応じて、以下の効果を持つ。
++
++- `*this`と`rhs`ともに正常値を保持していれば、次と等価 : `using std::swap;` [`swap`](/reference/utility/swap.md)`(val, rhs.val);`
++- `*this`と`rhs`ともにエラー値を保持していれば、次と等価 : `using std::swap;` [`swap`](/reference/utility/swap.md)`(unex, rhs.unex);`
++- `*this`がエラー値を`rhs`が正常値を保持していれば、次と等価 : `rhs.swap(*this);`
++- `*this`が正常値を`rhs`がエラー値を保持していれば、次と等価 :
++    ```cpp
++    if constexpr (is_nothrow_move_constructible_v&amp;lt;E&amp;gt;) {
++      E tmp(std::move(rhs.unex));
++      destroy_at(addressof(rhs.unex));
++      try {
++        construct_at(addressof(rhs.val), std::move(val));
++        destroy_at(addressof(val));
++        construct_at(addressof(unex), std::move(tmp));
++      } catch(...) {
++        construct_at(addressof(rhs.unex), std::move(tmp));
++        throw;
++      }
++    } else {
++      T tmp(std::move(val));
++      destroy_at(addressof(val));
++      try {
++        construct_at(addressof(unex), std::move(rhs.unex));
++        destroy_at(addressof(rhs.unex));
++        construct_at(addressof(rhs.val), std::move(tmp));
++      } catch (...) {
++        construct_at(addressof(val), std::move(tmp));
++        throw;
++      }
++    }
++    has_val = false;
++    rhs.has_val = true;
++    ```
++    * addressof[link /reference/memory/addressof.md]
++    * construct_at[link /reference/memory/construct_at.md]
++    * destroy_at[link /reference/memory/destroy_at.md]
++    * std::move[link /reference/utility/move.md]
++    * is_nothrow_move_constructible_v[link /reference/type_traits/is_nothrow_move_constructible.md]
++
++
++## 戻り値
++なし
++
++
++## 例外
++noexcept例外指定は次の式に従う :
++
++[`is_nothrow_move_constructible_v`](/reference/type_traits/is_nothrow_move_constructible.md)`&amp;lt;T&amp;gt; &amp;amp;&amp;amp;` [`is_nothrow_swappable_v`](/reference/type_traits/is_nothrow_swappable.md)`&amp;lt;T&amp;gt; &amp;amp;&amp;amp;` [`is_nothrow_move_constructible_v`](/reference/type_traits/is_nothrow_move_constructible.md)`&amp;lt;E&amp;gt; &amp;amp;&amp;amp;` [`is_nothrow_swappable_v`](/reference/type_traits/is_nothrow_swappable.md)`&amp;lt;E&amp;gt;`
++
++noexcept例外指定が`false`の場合、上記の「効果」による処理からの例外がスローされる。
++
++
++## 例
++```cpp example
++#include &amp;lt;cassert&amp;gt;
++#include &amp;lt;expected&amp;gt;
++#include &amp;lt;string&amp;gt;
++
++int main()
++{
++  std::expected&amp;lt;int, std::string&amp;gt; x = 42;
++  std::expected&amp;lt;int, std::string&amp;gt; y = std::unexpected{&amp;#34;ERR&amp;#34;};
++  assert(x.value() == 42 &amp;amp;&amp;amp; y.error() == &amp;#34;ERR&amp;#34;);
++
++  x.swap(y);
++  assert(x.error() == &amp;#34;ERR&amp;#34; &amp;amp;&amp;amp; y.value() == 42);
++}
++```
++* swap[color ff0000]
++* value()[link value.md]
++* error()[link error.md]
++* std::unexpected[link ../unexpected.md]
++
++### 出力
++```
++42
++0
++```
++
++
++## バージョン
++### 言語
++- C++23
++
++### 処理系
++- [Clang](/implementation.md#clang): 16.0
++- [GCC](/implementation.md#gcc): 12.1
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 関連項目
++- [`operator-&amp;gt;`](op_arrow.md)
++- [`operator*`](op_deref.md)
++- [`value()`](value.md)
++
++
++## 参照
++- [P0323R12 std::expected](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p0323r12.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>expected -- expected/expected: value_or,error_or(#1066)</title>
@@ -641,33 +819,6 @@ index ffc7e4cc5..1f5ec0f3a 100644
       <author>
         <name>Akira Takahashi</name>
         <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>constexpr ラムダ -- fix typo in constexpr_lambda.md</title>
-      <link href="https://cpprefjp.github.io/lang/cpp17/constexpr_lambda.html"/>
-      <id>40638a63cdf1948f5f77277d07f504a34e7f7974:lang/cpp17/constexpr_lambda.md</id>
-      <updated>2023-02-02T17:52:37+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp17/constexpr_lambda.md b/lang/cpp17/constexpr_lambda.md
-index ffc7e4cc5..1f5ec0f3a 100644
---- a/lang/cpp17/constexpr_lambda.md
-+++ b/lang/cpp17/constexpr_lambda.md
-@@ -86,7 +86,7 @@ int main(){
- 
- constexpr lambdaはSFINAEの文脈で用いる事はできない。
- 
--以下のような記述を許可してしまうとあらゆる文や式が実体化に成功するかをチェックでてしまうため、禁止されている。
-+以下のような記述を許可してしまうとあらゆる文や式が実体化に成功するかをチェックできてしまうため、禁止されている。
- 
- ```cpp
- // エラー、SFINAEの文脈でconstexprラムダが使われている
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Kotaro Yoshimoto</name>
-        <email>pythagora.yoshimoto@gmail.com</email>
       </author>
     </entry>
   
