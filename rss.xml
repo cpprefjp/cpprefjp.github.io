@@ -2,9 +2,570 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2023-02-04T14:39:56.705011</updated>
-  <id>73f492d8-c0bd-40f3-a2ea-b466d6b5f1de</id>
+  <updated>2023-02-04T14:48:21.417330</updated>
+  <id>8058a582-8b5b-468a-b8fd-433da73c1377</id>
 
+  
+    <entry>
+      <title>expected -- expected/expected: and_then,or_else,transform,transform_error(#1066)</title>
+      <link href="https://cpprefjp.github.io/reference/expected/expected.html"/>
+      <id>7a5214d449873dbd48f51bb2a022775430b6aa89:reference/expected/expected.md</id>
+      <updated>2023-02-04T23:35:54+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/expected/expected.md b/reference/expected/expected.md
+index ecb45517a..018ba2380 100644
+--- a/reference/expected/expected.md
++++ b/reference/expected/expected.md
+@@ -60,10 +60,10 @@ namespace std {
+ 
+ | 名前 | 説明 | 対応バージョン |
+ |------|------|----------------|
+-| [`and_then`](expected/and_then.md.nolink)   | 正常値に対して関数を適用する | C++23 |
+-| [`or_else`](expected/or_else.md.nolink)     | エラー値に対して関数を適用する | C++23 |
+-| [`transform`](expected/transform.md.nolink) | 正常値を変換する | C++23 |
+-| [`transform_error`](expected/transform_error.md.nolink) | エラー値を変換する | C++23 |
++| [`and_then`](expected/and_then.md) | 正常値に対して関数を適用する | C++23 |
++| [`or_else`](expected/or_else.md) | エラー値に対して関数を適用する | C++23 |
++| [`transform`](expected/transform.md) | 正常値を変換する | C++23 |
++| [`transform_error`](expected/transform_error.md) | エラー値を変換する | C++23 |
+ 
+ ### 比較
+ 
+@@ -120,6 +120,8 @@ int main()
+ ```
+ * std::expected[color ff0000]
+ * std::unexpected[link unexpected.md]
++* *v[link expected/op_deref.md]
++* v.error()[link expected/error.md]
+ * std::quoted[link ../iomanip/quoted.md]
+ 
+ ### 出力
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>and_then -- expected/expected: and_then,or_else,transform,transform_error(#1066)</title>
+      <link href="https://cpprefjp.github.io/reference/expected/expected/and_then.html"/>
+      <id>7a5214d449873dbd48f51bb2a022775430b6aa89:reference/expected/expected/and_then.md</id>
+      <updated>2023-02-04T23:35:54+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/expected/expected/and_then.md b/reference/expected/expected/and_then.md
+new file mode 100644
+index 000000000..4f0062460
+--- /dev/null
++++ b/reference/expected/expected/and_then.md
+@@ -0,0 +1,121 @@
++# and_then
++* expected[meta header]
++* function template[meta id-type]
++* std[meta namespace]
++* expected[meta class]
++* cpp23[meta cpp]
++
++```cpp
++template&amp;lt;class F&amp;gt; constexpr auto and_then(F&amp;amp;&amp;amp; f) &amp;amp;;        // (1)
++template&amp;lt;class F&amp;gt; constexpr auto and_then(F&amp;amp;&amp;amp; f) const &amp;amp;;  // (2)
++template&amp;lt;class F&amp;gt; constexpr auto and_then(F&amp;amp;&amp;amp; f) &amp;amp;&amp;amp;;       // (3)
++template&amp;lt;class F&amp;gt; constexpr auto and_then(F&amp;amp;&amp;amp; f) const &amp;amp;&amp;amp;; // (4)
++```
++
++## 概要
++正常値を保持していれば、正常値に対して`f`を適用した結果を`expected`として返す。
++エラー値を保持していれば、そのまま返す。
++
++
++## テンプレートパラメータ制約
++- (1), (2) : [`is_copy_constructible_v`](/reference/type_traits/is_copy_constructible.md)`&amp;lt;E&amp;gt; == true`
++- (3), (4) : [`is_move_constructible_v`](/reference/type_traits/is_move_constructible.md)`&amp;lt;E&amp;gt; == true`
++
++
++## 適格要件
++- (1), (2) : 型`U`を[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;`[`invoke_result_t`](/reference/type_traits/invoke_result.md)`&amp;lt;F, decltype(`[`value()`](value.md)`)&amp;gt;&amp;gt;`としたとき、次を全て満たすこと
++    - `U`が`expected`の特殊化である
++    - [`is_same_v`](/reference/type_traits/is_same.md)`&amp;lt;U::error_type, E&amp;gt; == true`
++- (3), (4) : 型`U`を[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;`[`invoke_result_t`](/reference/type_traits/invoke_result.md)`&amp;lt;F, decltype(`[`std::move`](/reference/utility/move.md)`(`[`value()`](value.md)`))&amp;gt;&amp;gt;`としたとき、次を全て満たすこと
++    - `U`が`expected`の特殊化である
++    - [`is_same_v`](/reference/type_traits/is_same.md)`&amp;lt;U::error_type, E&amp;gt; == true`
++
++
++## 効果
++- (1), (2) : 次の処理と等価
++    ```cpp
++    if (has_value())
++      return invoke(std::forward&amp;lt;F&amp;gt;(f), value());
++    else
++      return U(unexpect, error());
++    ```
++    * has_value[link has_value.md]
++    * value()[link value.md]
++    * error()[link error.md]
++    * unexpect[link ../unexpect_t.md]
++    * invoke[link /reference/functional/invoke.md]
++    * std::forward[link /reference/utility/forward.md]
++
++- (3), (4) : 次の処理と等価
++    ```cpp
++    if (has_value())
++      return invoke(std::forward&amp;lt;F&amp;gt;(f), std::move(value()));
++    else
++      return U(unexpect, std::move(error()));
++    ```
++    * has_value[link has_value.md]
++    * value()[link value.md]
++    * error()[link error.md]
++    * unexpect[link ../unexpect_t.md]
++    * invoke[link /reference/functional/invoke.md]
++    * std::forward[link /reference/utility/forward.md]
++    * std::move[link /reference/utility/move.md]
++
++
++## 例
++```cpp example
++#include &amp;lt;cassert&amp;gt;
++#include &amp;lt;expected&amp;gt;
++#include &amp;lt;string&amp;gt;
++
++// 正数なら2倍／それ以外はエラー値を返す関数
++std::expected&amp;lt;int, std::string&amp;gt; twice(int n)
++{
++  if (0 &amp;lt; n) {
++    return n * 2;
++  } else {
++    return std::unexpected{&amp;#34;out of domain&amp;#34;};
++  }
++}
++
++int main()
++{
++  std::expected&amp;lt;int, std::string&amp;gt; v1 = 1;
++  assert(v1.and_then(twice).value() == 2);
++
++  std::expected&amp;lt;int, std::string&amp;gt; v2 = 0;
++  assert(v2.and_then(twice).error() == &amp;#34;out of domain&amp;#34;);
++
++  std::expected&amp;lt;int, std::string&amp;gt; e1 = std::unexpected{&amp;#34;NaN&amp;#34;};
++  assert(e1.and_then(twice).error() == &amp;#34;NaN&amp;#34;);
++}
++```
++* and_then[color ff0000]
++* value()[link value.md]
++* error()[link error.md]
++* std::unexpected[link ../unexpected.md]
++
++### 出力
++```
++```
++
++
++## バージョン
++### 言語
++- C++23
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): 13.0
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 関連項目
++- [`or_else()`](or_else.md)
++- [`transform()`](transform.md)
++- [`transform_error()`](transform_error.md)
++
++
++## 参照
++- [P2505R5 Monadic Functions for `std::expected`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2505r5.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>or_else -- expected/expected: and_then,or_else,transform,transform_error(#1066)</title>
+      <link href="https://cpprefjp.github.io/reference/expected/expected/or_else.html"/>
+      <id>7a5214d449873dbd48f51bb2a022775430b6aa89:reference/expected/expected/or_else.md</id>
+      <updated>2023-02-04T23:35:54+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/expected/expected/or_else.md b/reference/expected/expected/or_else.md
+new file mode 100644
+index 000000000..9cac72496
+--- /dev/null
++++ b/reference/expected/expected/or_else.md
+@@ -0,0 +1,125 @@
++# or_else
++* expected[meta header]
++* function template[meta id-type]
++* std[meta namespace]
++* expected[meta class]
++* cpp23[meta cpp]
++
++```cpp
++template&amp;lt;class F&amp;gt; constexpr auto or_else(F&amp;amp;&amp;amp; f) &amp;amp;;        // (1)
++template&amp;lt;class F&amp;gt; constexpr auto or_else(F&amp;amp;&amp;amp; f) const &amp;amp;;  // (2)
++template&amp;lt;class F&amp;gt; constexpr auto or_else(F&amp;amp;&amp;amp; f) &amp;amp;&amp;amp;;       // (3)
++template&amp;lt;class F&amp;gt; constexpr auto or_else(F&amp;amp;&amp;amp; f) const &amp;amp;&amp;amp;; // (4)
++```
++
++## 概要
++エラー値を保持していれば、エラー値に対して`f`を適用した結果を`expected`として返す。
++正常値を保持していれば、そのまま返す。
++
++
++## テンプレートパラメータ制約
++- (1), (2) : [`is_copy_constructible_v`](/reference/type_traits/is_copy_constructible.md)`&amp;lt;T&amp;gt; == true`
++- (3), (4) : [`is_move_constructible_v`](/reference/type_traits/is_move_constructible.md)`&amp;lt;T&amp;gt; == true`
++
++
++## 適格要件
++- (1), (2) : 型`G`を[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;`[`invoke_result_t`](/reference/type_traits/invoke_result.md)`&amp;lt;F, decltype(`[`value()`](value.md)`)&amp;gt;&amp;gt;`としたとき、次を全て満たすこと
++    - `G`が`expected`の特殊化である
++    - [`is_same_v`](/reference/type_traits/is_same.md)`&amp;lt;G::value_type, T&amp;gt; == true`
++- (3), (4) : 型`G`を[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;`[`invoke_result_t`](/reference/type_traits/invoke_result.md)`&amp;lt;F, decltype(`[`std::move`](/reference/utility/move.md)`(`[`value()`](value.md)`))&amp;gt;&amp;gt;`としたとき、次を全て満たすこと
++    - `G`が`expected`の特殊化である
++    - [`is_same_v`](/reference/type_traits/is_same.md)`&amp;lt;G::value_type, T&amp;gt; == true`
++
++
++## 効果
++- (1), (2) : 次の処理と等価
++    ```cpp
++    if (has_value())
++      return G(in_place, value());
++    else
++      return invoke(std::forward&amp;lt;F&amp;gt;(f), error());
++    ```
++    * has_value()[link has_value.md]
++    * value()[link value.md]
++    * error()[link error.md]
++    * invoke[link /reference/functional/invoke.md]
++    * in_place[link /reference/utility/in_place_t.md]
++    * std::forward[link /reference/utility/forward.md]
++
++- (3), (4) : 次の処理と等価
++    ```cpp
++    if (has_value())
++      return G(in_place, std::move(value()));
++    else
++      return invoke(std::forward&amp;lt;F&amp;gt;(f), std::move(error()));
++    ```
++    * has_value()[link has_value.md]
++    * value()[link value.md]
++    * error()[link error.md]
++    * invoke[link /reference/functional/invoke.md]
++    * in_place[link /reference/utility/in_place_t.md]
++    * std::forward[link /reference/utility/forward.md]
++    * std::move[link /reference/utility/move.md]
++
++
++## 例
++```cpp example
++#include &amp;lt;cassert&amp;gt;
++#include &amp;lt;charconv&amp;gt;
++#include &amp;lt;expected&amp;gt;
++#include &amp;lt;string&amp;gt;
++#include &amp;lt;string_view&amp;gt;
++
++// 文字列を正常値(数値)として再解釈する関数
++std::expected&amp;lt;int, std::string&amp;gt; parse(std::string_view s)
++{
++  int val{};
++  auto [ptr, ec] = std::from_chars(s.begin(), s.end(), val);
++  if (ec == std::errc{} &amp;amp;&amp;amp; ptr == s.end()) {
++    return val;
++  } else {
++    return std::unexpected&amp;lt;std::string&amp;gt;{s};
++  }
++}
++
++int main()
++{
++  std::expected&amp;lt;int, std::string&amp;gt; v1 = 1;
++  assert(v1.or_else(parse).value() == 1);
++
++  std::expected&amp;lt;int, std::string&amp;gt; e1 = std::unexpected{&amp;#34;123&amp;#34;};
++  assert(e1.or_else(parse) == 123);
++
++  std::expected&amp;lt;int, std::string&amp;gt; e2 = std::unexpected{&amp;#34;bad&amp;#34;};
++  assert(e2.or_else(parse).error() == &amp;#34;bad&amp;#34;);
++}
++```
++* or_else[color ff0000]
++* value()[link value.md]
++* error()[link error.md]
++* std::unexpected[link ../unexpected.md]
++
++### 出力
++```
++```
++
++
++## バージョン
++### 言語
++- C++23
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): 13.0
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 関連項目
++- [`and_then()`](and_then.md)
++- [`transform()`](transform.md)
++- [`transform_error()`](transform_error.md)
++
++
++## 参照
++- [P2505R5 Monadic Functions for `std::expected`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2505r5.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>transform -- expected/expected: and_then,or_else,transform,transform_error(#1066)</title>
+      <link href="https://cpprefjp.github.io/reference/expected/expected/transform.html"/>
+      <id>7a5214d449873dbd48f51bb2a022775430b6aa89:reference/expected/expected/transform.md</id>
+      <updated>2023-02-04T23:35:54+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/expected/expected/transform.md b/reference/expected/expected/transform.md
+new file mode 100644
+index 000000000..13f65dfbd
+--- /dev/null
++++ b/reference/expected/expected/transform.md
+@@ -0,0 +1,99 @@
++# transform
++* expected[meta header]
++* function template[meta id-type]
++* std[meta namespace]
++* expected[meta class]
++* cpp23[meta cpp]
++
++```cpp
++template&amp;lt;class F&amp;gt; constexpr auto transform(F&amp;amp;&amp;amp; f) &amp;amp;;        // (1)
++template&amp;lt;class F&amp;gt; constexpr auto transform(F&amp;amp;&amp;amp; f) const &amp;amp;;  // (2)
++template&amp;lt;class F&amp;gt; constexpr auto transform(F&amp;amp;&amp;amp; f) &amp;amp;&amp;amp;;       // (3)
++template&amp;lt;class F&amp;gt; constexpr auto transform(F&amp;amp;&amp;amp; f) const &amp;amp;&amp;amp;; // (4)
++```
++
++## 概要
++正常値を保持していれば、正常値に対して`f`を適用した結果を`expected`の正常値として格納して返す。
++エラー値を保持していれば、そのまま返す。
++
++
++## テンプレートパラメータ制約
++- (1), (2) : [`is_copy_constructible_v`](/reference/type_traits/is_copy_constructible.md)`&amp;lt;E&amp;gt; == true`
++- (3), (4) : [`is_move_constructible_v`](/reference/type_traits/is_move_constructible.md)`&amp;lt;E&amp;gt; == true`
++
++
++## 適格要件
++- (1), (2) : 型`U`を[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;`[`invoke_result_t`](/reference/type_traits/invoke_result.md)`&amp;lt;F, decltype(`[`value()`](value.md)`)&amp;gt;&amp;gt;`としたとき、次を全て満たすこと
++    - `U`が`expected`の有効な正常値型である
++    - [`is_void_t`](/reference/type_traits/is_void.md)`&amp;lt;U&amp;gt; == false`のとき、宣言`U u(`[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f),` [`value()`](value.md)`));`が妥当である
++- (3), (4) : 型`U`を[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;`[`invoke_result_t`](/reference/type_traits/invoke_result.md)`&amp;lt;F, decltype(`[`std::move`](/reference/utility/move.md)`(`[`value()`](value.md)`))&amp;gt;&amp;gt;`としたとき、次を全て満たすこと
++    - `U`が`expected`の有効な正常値型である
++    - [`is_void_t`](/reference/type_traits/is_void.md)`&amp;lt;U&amp;gt; == false`のとき、宣言`U u(`[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f),` [`std::move`](/reference/utility/move.md)`(`[`value()`](value.md)`)));`が妥当である
++
++
++## 効果
++- (1), (2) : 次の効果をもつ
++    - エラー値を保持していたら、`expected&amp;lt;U, E&amp;gt;(`[`unexpect`](../unexpect_t.md)`,` [`error()`](error.md)`)`を返す。
++    - 型`U`が（CV修飾された）`void`でなければ、正常値を[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f),` [`value()`](value.md)`)`で非直接リスト初期化した`expected&amp;lt;U, E&amp;gt;`オブジェクトを返す。
++    - そうでなければ、[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f),` [`value()`](value.md)`)`を評価し、`expected&amp;lt;U, E&amp;gt;()`を返す。
++
++- (3), (4) : 次の効果をもつ
++    - エラー値を保持していたら、`expected&amp;lt;U, E&amp;gt;(`[`unexpect`](../unexpect_t.md)`,` [`std::move`](/reference/utility/move.md)`(`[`error()`](error.md)`))`を返す。
++    - 型`U`が（CV修飾された）`void`でなければ、正常値を[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f),` [`std::move`](/reference/utility/move.md)`(`[`value()`](value.md)`))`で非直接リスト初期化した`expected&amp;lt;U, E&amp;gt;`オブジェクトを返す。
++    - そうでなければ、[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f),` [`std::move`](/reference/utility/move.md)`(`[`value()`](value.md)`))`を評価し、`expected&amp;lt;U, E&amp;gt;()`を返す。
++
++
++## 例
++```cpp example
++#include &amp;lt;cassert&amp;gt;
++#include &amp;lt;expected&amp;gt;
++#include &amp;lt;numeric&amp;gt;
++#include &amp;lt;string&amp;gt;
++#include &amp;lt;vector&amp;gt;
++
++// 1..N数列を生成する関数
++std::vector&amp;lt;int&amp;gt; make_seq(int n)
++{
++  std::vector&amp;lt;int&amp;gt; seq(n, 0);
++  std::iota(seq.begin(), seq.end(), 1);
++  return seq;
++}
++
++int main()
++{
++  std::expected&amp;lt;int, std::string&amp;gt; v1 = 3;
++  assert((v1.transform(make_seq).value() == std::vector&amp;lt;int&amp;gt;{1,2,3}));
++
++  std::expected&amp;lt;int, std::string&amp;gt; e1 = std::unexpected{&amp;#34;NaN&amp;#34;};
++  assert(e1.transform(make_seq).error() == &amp;#34;NaN&amp;#34;);
++}
++```
++* transform[color ff0000]
++* value()[link value.md]
++* error()[link error.md]
++* std::unexpected[link ../unexpected.md]
++
++### 出力
++```
++```
++
++
++## バージョン
++### 言語
++- C++23
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): 13.0
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 関連項目
++- [`and_then()`](and_then.md)
++- [`or_else()`](or_else.md)
++- [`transform_error()`](transform_error.md)
++
++
++## 参照
++- [P2505R5 Monadic Functions for `std::expected`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2505r5.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>transform_error -- expected/expected: and_then,or_else,transform,transform_error(#1066)</title>
+      <link href="https://cpprefjp.github.io/reference/expected/expected/transform_error.html"/>
+      <id>7a5214d449873dbd48f51bb2a022775430b6aa89:reference/expected/expected/transform_error.md</id>
+      <updated>2023-02-04T23:35:54+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/expected/expected/transform_error.md b/reference/expected/expected/transform_error.md
+new file mode 100644
+index 000000000..160c97d4b
+--- /dev/null
++++ b/reference/expected/expected/transform_error.md
+@@ -0,0 +1,94 @@
++# transform_error
++* expected[meta header]
++* function template[meta id-type]
++* std[meta namespace]
++* expected[meta class]
++* cpp23[meta cpp]
++
++```cpp
++template&amp;lt;class F&amp;gt; constexpr auto transform_error(F&amp;amp;&amp;amp; f) &amp;amp;;        // (1)
++template&amp;lt;class F&amp;gt; constexpr auto transform_error(F&amp;amp;&amp;amp; f) const &amp;amp;;  // (2)
++template&amp;lt;class F&amp;gt; constexpr auto transform_error(F&amp;amp;&amp;amp; f) &amp;amp;&amp;amp;;       // (3)
++template&amp;lt;class F&amp;gt; constexpr auto transform_error(F&amp;amp;&amp;amp; f) const &amp;amp;&amp;amp;; // (4)
++```
++
++## 概要
++エラー値を保持していれば、エラー値に対して`f`を適用した結果を`expected`のエラー値として格納して返す。
++正常値を保持していれば、そのまま返す。
++
++
++## テンプレートパラメータ制約
++- (1), (2) : [`is_copy_constructible_v`](/reference/type_traits/is_copy_constructible.md)`&amp;lt;T&amp;gt; == true`
++- (3), (4) : [`is_move_constructible_v`](/reference/type_traits/is_move_constructible.md)`&amp;lt;T&amp;gt; == true`
++
++
++## 適格要件
++- (1), (2) : 型`G`を[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;`[`invoke_result_t`](/reference/type_traits/invoke_result.md)`&amp;lt;F, decltype(`[`error()`](error.md)`)&amp;gt;&amp;gt;`としたとき、次を全て満たすこと
++    - `G`が`expected`の有効な値型である
++    - 宣言`G g(`[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f),` [`error()`](error.md)`));`が妥当である
++- (3), (4) : 型`G`を[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;`[`invoke_result_t`](/reference/type_traits/invoke_result.md)`&amp;lt;F, decltype(`[`std::move`](/reference/utility/move.md)`(`[`error()`](error.md)`))&amp;gt;&amp;gt;`としたとき、次を全て満たすこと
++    - `G`が`expected`の有効な値型である
++    - 宣言`G g(`[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f),` [`std::move`](/reference/utility/move.md)`(`[`error()`](error.md)`)));`が妥当である
++
++
++## 効果
++- (1), (2) : 次の効果をもつ
++    - 正常値を保持していたら、`expected&amp;lt;T, G&amp;gt;(`[`in_place`](/reference/utility/in_place_t.md)`,` [`value()`](value.md)`)`を返す。
++    - エラー値を[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f),` [`error()`](error.md)`)`で非直接リスト初期化した`expected&amp;lt;T, G&amp;gt;`オブジェクトを返す。
++- (3), (4) : 次の効果をもつ
++    - エラー値を保持していたら、`expected&amp;lt;U, E&amp;gt;(`[`unexpect`](../unexpect_t.md)`,` [`std::move`](/reference/utility/move.md)`(`[`error()`](error.md)`))`を返す。
++    - 正常値を[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f),` [`std::move`](/reference/utility/move.md)`(`[`error()`](error.md)`))`で非直接リスト初期化した`expected&amp;lt;T, G&amp;gt;`オブジェクトを返す。
++
++
++## 例
++```cpp example
++#include &amp;lt;cassert&amp;gt;
++#include &amp;lt;algorithm&amp;gt;
++#include &amp;lt;expected&amp;gt;
++#include &amp;lt;string&amp;gt;
++
++// 文字列を逆順に並べ替える関数
++std::string revstr(std::string str)
++{
++  std::reverse(str.begin(), str.end());
++  return str;
++}
++
++int main()
++{
++  std::expected&amp;lt;int, std::string&amp;gt; v1 = 42;
++  assert(v1.transform_error(revstr).value() == 42);
++
++  std::expected&amp;lt;int, std::string&amp;gt; e1 = std::unexpected{&amp;#34;Oops&amp;#34;};
++  assert(e1.transform_error(revstr).error() == &amp;#34;spoO&amp;#34;);
++}
++```
++* transform_error[color ff0000]
++* value()[link value.md]
++* error()[link error.md]
++* std::unexpected[link ../unexpected.md]
++
++### 出力
++```
++```
++
++
++## バージョン
++### 言語
++- C++23
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): 13.0
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 関連項目
++- [`and_then()`](and_then.md)
++- [`or_else()`](or_else.md)
++- [`transform()`](transform.md)
++
++
++## 参照
++- [P2505R5 Monadic Functions for `std::expected`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2505r5.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>swap -- expected/expected: swap修正(#1066)</title>
@@ -765,71 +1326,6 @@ index 642235b50..5a6ca5754 100644
       <author>
         <name>onihusube</name>
         <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>bind -- Merge pull request #1118 from cpprefjp/yumetodo-patch-1</title>
-      <link href="https://cpprefjp.github.io/reference/functional/bind.html"/>
-      <id>4adfa0ae5a303944a0218f0f04f5f8e526157e18:reference/functional/bind.md</id>
-      <updated>2023-02-02T18:29:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/functional/bind.md b/reference/functional/bind.md
-index 0201f3493..9808b53cc 100644
---- a/reference/functional/bind.md
-+++ b/reference/functional/bind.md
-@@ -66,16 +66,34 @@ int add(int a, int b, int c)
-   return a + b + c;
- }
- 
-+class Foo {
-+public:
-+  int n;
-+  Foo(int n) : n(n) {}
-+  Foo add(int n2) const
-+  {
-+    return this-&amp;gt;n + n2;
-+  }
-+};
-+
- int main()
- {
-   // 第1引数のみを先に渡す
-   using namespace std::placeholders;
--  std::function&amp;lt;int(int, int)&amp;gt; f = std::bind(add, 2, _1, _2);
-+  std::function&amp;lt;int(int, int)&amp;gt; f1 = std::bind(add, 2, _1, _2);
-+
-+  // 残りの引数を渡して関数を呼び出す
-+  const int result1 = f1(3, 4);
-+
-+  Foo foo{2};
-+
-+  // thisにするもののみを先に渡す
-+  std::function&amp;lt;Foo(int)&amp;gt; f2 = std::bind(&amp;amp;Foo::add, foo, _1);
- 
-   // 残りの引数を渡して関数を呼び出す
--  const int result = f(3, 4);
-+  const auto result2 = f2(3);
- 
--  std::cout &amp;lt;&amp;lt; result &amp;lt;&amp;lt; std::endl;
-+  std::cout &amp;lt;&amp;lt; result1 &amp;lt;&amp;lt; &amp;#39;,&amp;#39; &amp;lt;&amp;lt; result2.n &amp;lt;&amp;lt; std::endl;
- }
- ```
- * std::bind[color ff0000]
-@@ -84,7 +102,7 @@ int main()
- 
- ### 出力
- ```
--9
-+9,5
- ```
- 
- ## バージョン
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
       </author>
     </entry>
   
