@@ -2,9 +2,145 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2023-02-06T14:39:33.414069</updated>
-  <id>179f03a6-e710-4670-9553-41a8fe64d3e1</id>
+  <updated>2023-02-07T06:31:15.267222</updated>
+  <id>0163bb5b-9e24-4cd3-bc25-74fccd63bd45</id>
 
+  
+    <entry>
+      <title>from_chars -- from_chars : to_addressを使用する例を追加</title>
+      <link href="https://cpprefjp.github.io/reference/charconv/from_chars.html"/>
+      <id>318a70e4d2307d898ab08bd12c9f40258aa0a004:reference/charconv/from_chars.md</id>
+      <updated>2023-02-07T15:26:44+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/charconv/from_chars.md b/reference/charconv/from_chars.md
+index 3c0106a9b..32e8a8975 100644
+--- a/reference/charconv/from_chars.md
++++ b/reference/charconv/from_chars.md
+@@ -31,7 +31,7 @@ namespace std {
+ C++標準はこれら関数の実装の詳細について何も規定しない。これは、各実装において可能な最も高速なアルゴリズムが選択されることを意図しての事である。
+ 
+ ## 要件
+-- 全て : 出力イテレータ範囲`[first, last)`は有効な範囲であること（charのオブジェクトが構築済みであり、連続していること）。
++- 全て : 入力イテレータ範囲`[first, last)`は有効な範囲であること（charのオブジェクトが構築済みであり、連続していること）。
+ - (1) : `base`は2～36までの値であること。
+ - (2)～(4)  : `fmt`は[`chars_format`](../charconv/chars_format.md)の列挙値のうちの一つであること。
+ 
+@@ -87,6 +87,8 @@ C++標準はこれら関数の実装の詳細について何も規定しない
+ 
+ ## 例
+ 
++### 基本の使用例
++
+ ```cpp example
+ #include &amp;lt;iostream&amp;gt;
+ #include &amp;lt;charconv&amp;gt;
+@@ -228,7 +230,7 @@ int main()
+ ```
+ * std::from_chars[color ff0000]
+ 
+-### 出力例（VS2019 preview4.1）
++#### 出力例（VS2019 preview4.1）
+ ```
+ 123456789
+ 65535
+@@ -242,6 +244,90 @@ nan
+ -inf
+ ```
+ 
++### イテレータ範囲からの変換（C++20）
++
++入力文字列はポインタによる範囲で指定する必要があるが、`std::string`等のイテレータは必ずしもポインタとは限らず、そのままでは使いづらいことがある。その様なとき、C++20の[`std::to_address`](/reference/memory/to_address.md)を使用すると安全かつ簡易にこの関数でイテレータを使用できる。
++
++```cpp
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;ranges&amp;gt;
++#include &amp;lt;memory&amp;gt;
++#include &amp;lt;optional&amp;gt;
++#include &amp;lt;format&amp;gt;
++#include &amp;lt;vector&amp;gt;
++#include &amp;lt;string&amp;gt;
++#include &amp;lt;charconv&amp;gt;
++
++// contiguousな文字列範囲内の数値をdoubleへ変換する
++template&amp;lt;std::ranges::contiguous_range R&amp;gt;
++  requires std::same_as&amp;lt;char, std::ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;
++auto str_to_double(R&amp;amp;&amp;amp; r) -&amp;gt; std::optional&amp;lt;double&amp;gt; {
++  double out;
++
++  // 範囲のイテレータ（ポインタではない場合がある）
++  auto it = std::ranges::begin(r);
++  auto end = std::ranges::end(r);
++
++  // to_addressでイテレータをポインタへ変換して渡す
++  if (auto [ptr, ec] = std::from_chars(std::to_address(it), std::to_address(end), out, std::chars_format::general); ec != std::errc{}) {
++    return std::nullopt;
++  }
++
++  return out;
++}
++
++int main() {
++  std::string str = &amp;#34;3.1415926535897932384626433832795 is pi&amp;#34;;
++  
++  if (auto opt = str_to_double(str); opt) {
++    std::cout &amp;lt;&amp;lt; std::format(&amp;#34;{:.15f}\n&amp;#34;, *opt);
++  } else {
++    std::cout &amp;lt;&amp;lt; &amp;#34;conversion failed.\n&amp;#34;;
++  }
++
++  std::string_view strview = &amp;#34;2.7182818284590452353602874 is e&amp;#34;;
++  
++  if (auto opt = str_to_double(strview); opt) {
++    std::cout &amp;lt;&amp;lt; std::format(&amp;#34;{:.15f}\n&amp;#34;, *opt);
++  } else {
++    std::cout &amp;lt;&amp;lt; &amp;#34;conversion failed.\n&amp;#34;;
++  }
++
++  const char cstr[] = &amp;#34;1.10001e-01 is Liouville number&amp;#34;;
++  std::vector&amp;lt;char&amp;gt; strvec(cstr, std::ranges::end(cstr));
++  
++  if (auto opt = str_to_double(strvec); opt) {
++    std::cout &amp;lt;&amp;lt; std::format(&amp;#34;{:.15f}\n&amp;#34;, *opt);
++  } else {
++    std::cout &amp;lt;&amp;lt; &amp;#34;conversion failed.\n&amp;#34;;
++  }
++
++  std::span sp{cstr};
++  
++  if (auto opt = str_to_double(sp); opt) {
++    std::cout &amp;lt;&amp;lt; std::format(&amp;#34;{:.15f}\n&amp;#34;, *opt);
++  } else {
++    std::cout &amp;lt;&amp;lt; &amp;#34;conversion failed.\n&amp;#34;;
++  }
++}
++```
++* std::from_chars[color ff0000]
++* enable_view[link /reference/ranges/contiguous_range.md]
++* enable_view[link /reference/ranges/range_value_t.md]
++* enable_view[link /reference/ranges/begin.md]
++* enable_view[link /reference/ranges/end.md]
++* enable_view[link /reference/memory/to_address.md]
++* enable_view[link /reference/format/format.md]
++
++#### 出力
++
++```
++3.141592653589793
++2.718281828459045
++0.110001000000000
++0.110001000000000
++```
++
+ ## バージョン
+ ### 言語
+ - C++17
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>クラステンプレートのテンプレート引数推論 -- Merge pull request #1120 from cpprefjp/code_qualify_check</title>
@@ -10983,32 +11119,6 @@ index a301c42f8..98a1321d3 100644
       <author>
         <name>onihusube</name>
         <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>basic_format_string -- basic_format_string : コード修飾を追加</title>
-      <link href="https://cpprefjp.github.io/reference/format/basic_format_string.html"/>
-      <id>6a2ea7cae4b614ea47552d81e31eeae5b35c9b03:reference/format/basic_format_string.md</id>
-      <updated>2023-02-06T14:32:20+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/basic_format_string.md b/reference/format/basic_format_string.md
-index 38475c010..35af1c5af 100644
---- a/reference/format/basic_format_string.md
-+++ b/reference/format/basic_format_string.md
-@@ -95,6 +95,7 @@ int main()
- * chrono::seconds[link /reference/chrono/duration_aliases.md]
- * chrono::zoned_time[link /reference/chrono/zoned_time.md]
- * std::forward[link /reference/utility/forward.md]
-+* std::format[link /reference/format/format.md]
- 
- ### 出力
- ```
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
       </author>
     </entry>
   
