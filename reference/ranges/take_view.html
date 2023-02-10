@@ -188,12 +188,12 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2022-11-29T10:27:24">
-        2022年11月29日 10時27分24秒
+      <span itemprop="datePublished" content="2023-02-10T08:58:27">
+        2023年02月10日 08時58分27秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">Akira Takahashi</span>
+        <span itemprop="name">onihusube</span>
       </span>
       が更新
     </small></p>
@@ -383,6 +383,63 @@
 </tr>
 </tbody>
 </table>
+<h2>使用上の注意</h2>
+<p>この<code>view</code>（及びRangeアダプタ）は、入力が<code><a href="https://cpprefjp.github.io/reference/ranges/random_access_range.html">random_access_range</a></code>ではない場合に意図しない無限ループに陥ることがある</p>
+<p><div class="codehilite"><pre><span></span><code><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="nl">i</span>  <span class="p">:</span> <span class="n">std</span><span class="o">::</span><span class="n">views</span><span class="o">::</span><span class="n">iota</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+               <span class="o">|</span> <span class="n">std</span><span class="o">::</span><span class="n">views</span><span class="o">::</span><span class="n">filter</span><span class="p">([](</span><span class="k">auto</span> <span class="n">i</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="p">})</span>
+               <span class="o">|</span> <span class="n">std</span><span class="o">::</span><span class="n">views</span><span class="o">::</span><span class="n">take</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+  <span class="p">{</span>
+    <span class="n"><a href="https://cpprefjp.github.io/reference/iostream/cout.html">std::cout</a></span> <span class="o">&lt;&lt;</span> <span class="n">i</span> <span class="o">&lt;&lt;</span> <span class="sc">'\n'</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<p>このコードは0から9までの数字を出力するだけのループに見えるが、実行すると無限ループに陥るか完了までに多大な時間を要する。</p>
+<p>範囲<code>for</code>文は内部でイテレータを用いた通常<code>for</code>文に展開されており、1つのループの終わりでは次の様な順番でループのための処理が行われている</p>
+<ol>
+<li>イテレータのインクリメント</li>
+<li>イテレータの終端チェック</li>
+<li>ループ本体実行</li>
+</ol>
+<p>この例における1では、次の様なことが起きている</p>
+<ol>
+<li><code>take_view</code>イテレータのインクリメント<ol>
+<li><code>take_view</code>内部カウンタの減算</li>
+<li><code><a href="https://cpprefjp.github.io/reference/ranges/filter_view.html">filter_view</a></code>のイテレータのインクリメント</li>
+<li>条件を満たす次の要素の探索<ul>
+<li>条件を満たす要素が見つかるまで、<code>iota_view</code>イテレータをインクリメントする</li>
+<li><code>iota_view</code>イテレータのインクリメント<ul>
+<li>増分1で整数値を生成、この場合は終端がない</li>
+</ul>
+</li>
+<li><code>iota_view</code>生成値の読み取りと条件チェック</li>
+</ul>
+</li>
+</ol>
+</li>
+</ol>
+<p><code>views::iota(0)</code>によるシーケンスは0始まりの整数の無限列であり、<code>filter_view</code>のフィルタ条件（<code>return i &lt; 10</code>）は10未満の整数値のみを取り出すものである。したがってこの場合、<code>iota_view</code>が10を生成して以降は<code>filter_view</code>で条件を満たす要素は存在しなくなる。</p>
+<p>ループの最終端、本体処理が9を出力した後のループ終了直前には、<code>take_view</code>の内部カウンタが0になり<code>take_view</code>の終了条件が満たされるものの、その直後に内部イテレータ（<code>filter_view</code>のイテレータ）をインクリメントしてしまう。<code>filter_view</code>のイテレータはインクリメントによって10未満の次の要素を探索するために<code>iota_view</code>のイテレータをインクリメントし、<code>iota_view</code>は10以降の整数値をひたすら生成し続ける。</p>
+<p>この例の<code>iota_view</code>の要素型は符号付き整数型であるため、そのオーバーフローは<a class="cpprefjp-defined-word" data-desc="未定義の動作。処理系は予期せぬ動作をする可能性がある。要するに動作保証対象外" href="https://cpprefjp.github.io/implementation-compliance.html#dfn-undefined-behavior">未定義動作</a>となり、このループが終了するかどうかは保証されない。</p>
+<p>入力に対して<code>filter_view</code>の条件の与え方が悪いという見方もできるが、これは<code>take_view</code>イテレータのインクリメント時に起こることに問題があり、<code>take_view</code>のイテレータは入力が<code><a href="https://cpprefjp.github.io/reference/ranges/random_access_range.html">random_access_range</a></code>ではない場合は<code><a href="https://cpprefjp.github.io/reference/iterator/counted_iterator.html">counted_iterator</a></code>を使用するため、本質的には<code>counted_iterator</code>の問題である。</p>
+<p><code>counted_iterator</code>はインクリメント時にカウンタ値を減算してからラップしているイテレータをインクリメントするが、カウンタ値を考慮せず常にインクリメントを行うため<code>counted_iterator</code>の内部カウンタが0になりその終了条件が満たされた時でもラップするイテレータをインクリメントしてしまう。そのため、<code>filter_view</code>イテレータのようにそのイテレータ取得時点で終端が確定していないイテレータを入力として使用すると、その終端でこのような問題が起こりうる。</p>
+<p>特に、<code>input_iterator</code>では、イテレータがその範囲の終端に達した後でインクリメントしてしまうと何が起こるかわからないため、この問題はより複雑な形で顕在化する可能性がある。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+  <span class="c1">// 入力ストリームには整数値1つしかない</span>
+  <span class="k">auto</span> <span class="n">iss</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">istringstream</span><span class="p">(</span><span class="s">"0"</span><span class="p">);</span>
+
+  <span class="c1">// 0を読んだ後、takeイテレータが進行するが、istream_viewが次のストリーム入力を待機するために終了しない</span>
+  <span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="nl">i</span> <span class="p">:</span> <span class="n">std</span><span class="o">::</span><span class="n">ranges</span><span class="o">::</span><span class="n">istream_view</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">iss</span><span class="p">)</span>
+              <span class="o">|</span> <span class="n">std</span><span class="o">::</span><span class="n">views</span><span class="o">::</span><span class="n">take</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+  <span class="p">{</span>
+    <span class="n"><a href="https://cpprefjp.github.io/reference/iostream/cout.html">std::cout</a></span> <span class="o">&lt;&lt;</span> <span class="n">i</span> <span class="o">&lt;&lt;</span> <span class="sc">'\n'</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<p>この例では、<code>istream_view</code>の基底のストリームに追加の要素が入力されるか、ストリームが閉じられるまで<code>istream_view</code>のイテレータはインクリメント時に次の要素の入力を待機し続けてしまう。より一般的な<code>input_iterator</code>ではどうなるかわからない。</p>
+<p>ただし、<code>take_view</code>は入力範囲が<code>random_access_range</code>の場合は<code>counted_iterator</code>を使用しないため、<code>random_access_range</code>に対して使用する場合はこの問題は起こらない。</p>
 <h2>例</h2>
 <p><div class="yata" id="3cd3216e97aa91284403b9d618c5e7829ea62455"><div class="codehilite"><pre><span></span><code><span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/ranges.html">&lt;ranges&gt;</a></span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/iostream.html">&lt;iostream&gt;</a></span><span class="cp"></span>
@@ -416,6 +473,7 @@
 <li><a href="https://timsong-cpp.github.io/cppwp/n4861/ranges" target="_blank">N4861 24 Ranges library</a></li>
 <li><a href="https://techbookfest.org/product/5134506308665344" target="_blank">C++20 ranges</a></li>
 <li><a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2367r0.html" target="_blank">P2367R0 Remove misuses of list-initialization from Clause 24</a> (本提案文書はC++20に遡って適用されている)</li>
+<li><a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2406r2.html" target="_blank">P2406R2 Add <code>lazy_counted_iterator</code></a></li>
 </ul></div>
 
       </div>
