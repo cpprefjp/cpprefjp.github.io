@@ -176,12 +176,12 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2020-05-25T07:35:17">
-        2020年05月25日 07時35分17秒
+      <span itemprop="datePublished" content="2023-02-16T03:40:39">
+        2023年02月16日 03時40分39秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">Jumpaku</span>
+        <span itemprop="name">Akira Takahashi</span>
       </span>
       が更新
     </small></p>
@@ -276,6 +276,28 @@
 </p>
 </li>
 </ul>
+<h3>C++23での差異</h3>
+<h4>constexpr対応</h4>
+<p>C++23では、多くの数学関数が<code>constexpr</code>に対応し、定数式内で使用できるようになった。C++23時点では、コンパイラベンダの負担が低い機能を<code>constexpr</code>対応した。</p>
+<p>C++23で<code>constexpr</code>対応する関数の条件は以下：</p>
+<ol>
+<li>有理数の集合、または実数のどこにも密でない部分集合に作用すると見なされ、関数が閉じていること</li>
+<li>関数が丸めモードに強く依存しないこと</li>
+</ol>
+<p><code><a href="https://cpprefjp.github.io/reference/cmath/exp.html">exp()</a></code>、<code><a href="https://cpprefjp.github.io/reference/cmath/sqrt.html">sqrt()</a></code>、<code><a href="https://cpprefjp.github.io/reference/cmath/cos.html">cos()</a></code>、<code><a href="https://cpprefjp.github.io/reference/cmath/sin.html">sin()</a></code>は1. の条件を満たさないため、C++23では<code>constexpr</code>に対応しない。</p>
+<p><code><a href="https://cpprefjp.github.io/reference/cmath/nearbyint.html">nearbyint</a></code>は2. の条件を満たさないため、C++23では<code>constexpr</code>に対応しない。</p>
+<p>なお、C++20では<code><a href="https://cpprefjp.github.io/reference/cmath/lerp.html">lerp()</a></code>のみ<code>constexpr</code>に対応している。これはC標準ライブラリからの移植ではなく、C++で標準化された関数だからである。</p>
+<h4>拡張浮動小数点数型への対応</h4>
+<p>C++23では<code><span href="https://cpprefjp.github.io/reference/stdfloat.md.nolink">&lt;stdfloat&gt;</span></code>に拡張浮動小数点数型が追加された。その対応として、以下のような<code>float</code>、<code>double</code>、<code>long double</code>に対するオーバーロードは、</p>
+<p><div class="codehilite"><pre><span></span><code><span class="kt">float</span> <span class="nf">abs</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">);</span>
+<span class="kt">double</span> <span class="nf">abs</span><span class="p">(</span><span class="kt">double</span> <span class="n">x</span><span class="p">);</span>
+<span class="kt">long</span> <span class="kt">double</span> <span class="nf">abs</span><span class="p">(</span><span class="kt">long</span> <span class="kt">double</span> <span class="n">x</span><span class="p">);</span>
+</code></pre></div>
+</p>
+<p>以下のように<code>floating-point-type</code>へのオーバーロードに統合され、拡張浮動小数点数型も扱えるようになった。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="n"><i>floating-point-type</i></span> <span class="nf">abs</span><span class="p">(</span><span class="n"><i>floating-point-type</i></span> <span class="n">x</span><span class="p">);</span>
+</code></pre></div>
+</p>
 <h2><a href="https://cpprefjp.github.io/reference/cmath.html#error-handling" id="error-handling">エラーの扱い</a></h2>
 <p><code>&lt;cmath&gt;</code> で提供される各関数は、特に明記されていない限り、引数の型が表現できる全ての値についての挙動が定義されている。
 なお、ここで言う「挙動が定義されている」とは、<a class="cpprefjp-defined-word" data-desc="未定義の動作。処理系は予期せぬ動作をする可能性がある。要するに動作保証対象外" href="https://cpprefjp.github.io/implementation-compliance.html#dfn-undefined-behavior">未定義動作</a>を引き起こさないというだけで、エラーが発生したり、実装依存の挙動となる場合がある事に注意。</p>
@@ -338,6 +360,18 @@ C++03 までの場合、<code><a href="https://cpprefjp.github.io/reference/cerr
 </ul>
 <p>不正確エラーが発生した場合、関数の戻り値は真の値を丸めた値となるが、その際の丸め方式は<a class="cpprefjp-defined-word" data-desc="処理系定義の動作。処理系によって事前に定めた動作をする" href="https://cpprefjp.github.io/implementation-compliance.html#dfn-implementation-defined-behavior">処理系定義</a>である。（関数に特別に規定がある場合を除く）<br />
 特に、<code><a href="https://cpprefjp.github.io/reference/cfenv/fesetround.html">fesetround</a></code> で設定した丸め方式に従うとは限らないため、注意が必要である。</p>
+<h2>定数式になる条件</h2>
+<p><code>constexpr</code>対応する数学関数において、以下のいずれかの条件に合致する場合、定数式とならない (引数によってコンパイルエラーになる)</p>
+<ul>
+<li><code><a href="https://cpprefjp.github.io/reference/cfenv/fe_inexact.html">FE_INEXACT</a></code>以外の、以下の浮動小数点例外が発生した場合：<ul>
+<li><code><a href="https://cpprefjp.github.io/reference/cfenv/fe_divbyzero.html">FE_DIVBYZERO</a></code> (ゼロ除算)</li>
+<li><code><a href="https://cpprefjp.github.io/reference/cfenv/fe_invalid.html">FE_INVALID</a></code> (不正な演算)</li>
+<li><code><a href="https://cpprefjp.github.io/reference/cfenv/fe_overflow.html">FE_OVERFLOW</a></code> (オーバーフロー)</li>
+<li><code><a href="https://cpprefjp.github.io/reference/cfenv/fe_underflow.html">FE_UNDERFLOW</a></code> (アンダーフロー)</li>
+</ul>
+</li>
+<li><code><a href="https://cpprefjp.github.io/reference/cmath/math_errhandling.html">math_errhandling</a> &amp; <a href="https://cpprefjp.github.io/reference/cmath/math_errno.html">MATH_ERRNO</a></code>が真で、<code><a href="https://cpprefjp.github.io/reference/cerrno/errno.html">errno</a></code>が設定された場合</li>
+</ul>
 <h2><a href="https://cpprefjp.github.io/reference/cmath.html#trigonometric-functions" id="trigonometric-functions">三角関数</a></h2>
 <table border="1" bordercolor="#888" style="border-collapse:collapse">
 <thead>
@@ -1159,6 +1193,10 @@ NaN を返さなければならないが定義域エラーを報告してはな�
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1568.htm" target="_blank">N1568 Proposed additions to TR-1 to improve compatibility with C99</a></li>
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0175r0.html" target="_blank">P00175R0 Synopses for the C library</a><ul>
 <li>C++17 から<code>f</code>、<code>l</code>サフィックス付きのC関数を導入</li>
+</ul>
+</li>
+<li><a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p0533r9.pdf" target="_blank">P0533R9 constexpr for <code>&lt;cmath&gt;</code> and <code>&lt;cstdlib&gt;</code></a><ul>
+<li>C++23での、一部関数の<code>constexpr</code>対応</li>
 </ul>
 </li>
 </ul></div>
