@@ -1,0 +1,470 @@
+<!doctype html>
+<html class="cpprefjp" lang="ja" itemscope="" itemtype="http://schema.org/WebPage">
+    <head>
+        
+  
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-56896607-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-56896607-1');
+</script>
+
+
+        <meta charset="UTF-8">
+
+        <title>未初期化領域への暗黙的なオブジェクト構築 - cpprefjp C++日本語リファレンス</title>
+
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <meta name="keywords" content="
+  C++,標準ライブラリ,リファレンス,ドキュメント,STL,std,cpp20
+">
+        <meta name="title" content="未初期化領域への暗黙的なオブジェクト構築 - cpprefjp C++日本語リファレンス" />
+        <meta itemprop="name" content="未初期化領域への暗黙的なオブジェクト構築 - cpprefjp C++日本語リファレンス" />
+        <meta property="og:title" content="未初期化領域への暗黙的なオブジェクト構築 - cpprefjp C++日本語リファレンス" />
+        <meta property="og:url" content="https://cpprefjp.github.io//lang/cpp20/implicit_creation_of_objects_for_low-level_object_manipulation.html" />
+        <meta property="og:site_name" content="cpprefjp - C++日本語リファレンス" />
+        <meta property="og:type" content="article" />
+        <meta property="og:description" content="" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="未初期化領域への暗黙的なオブジェクト構築 - cpprefjp C++日本語リファレンス" />
+        <meta name="twitter:url" content="https://cpprefjp.github.io//lang/cpp20/implicit_creation_of_objects_for_low-level_object_manipulation.html" />
+        <meta name="twitter:description" content="" />
+
+        
+  <link rel="alternate" type="application/atom+xml" title="Atom" href="https://cpprefjp.github.io/rss.xml" />
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/static/favicons/apple-touch-icon.png?cachebust=863b2d65fad1e754aff403bdb5e6b2701d807eeb">
+<link rel="icon" type="image/png" sizes="32x32" href="/static/favicons/favicon-32x32.png?cachebust=863b2d65fad1e754aff403bdb5e6b2701d807eeb">
+<link rel="icon" type="image/png" sizes="16x16" href="/static/favicons/favicon-16x16.png?cachebust=863b2d65fad1e754aff403bdb5e6b2701d807eeb">
+<link rel="manifest" href="/static/favicons/manifest.json?cachebust=863b2d65fad1e754aff403bdb5e6b2701d807eeb">
+<link rel="mask-icon" href="/static/favicons/safari-pinned-tab.svg?cachebust=863b2d65fad1e754aff403bdb5e6b2701d807eeb" color="#f5f8fc">
+<meta name="theme-color" content="#f5f8fc">
+
+<link rel="stylesheet" href="/static/pygments/default.css?cachebust=863b2d65fad1e754aff403bdb5e6b2701d807eeb">
+<!-- <link rel="stylesheet" href="/static/css/root.css"> -->
+
+        
+  
+
+
+<link href="/static/kunai/css/kunai-stage-0.css?cachebust=863b2d65fad1e754aff403bdb5e6b2701d807eeb" rel="stylesheet">
+<link href="/static/kunai/css/kunai-stage-1.css?cachebust=863b2d65fad1e754aff403bdb5e6b2701d807eeb" rel="stylesheet">
+<link href="/static/kunai/css/kunai-stage-2.css?cachebust=863b2d65fad1e754aff403bdb5e6b2701d807eeb" rel="stylesheet">
+<link href="/static/kunai/css/kunai-stage-3.css?cachebust=863b2d65fad1e754aff403bdb5e6b2701d807eeb" rel="stylesheet">
+
+<script type="text/javascript" src="/static/kunai/js/kunai-vendor.js?cachebust=863b2d65fad1e754aff403bdb5e6b2701d807eeb"></script>
+<script type="text/javascript" src="/static/kunai/js/kunai.js?cachebust=863b2d65fad1e754aff403bdb5e6b2701d807eeb"></script>
+
+<script type="text/javascript">
+  document.addEventListener('DOMContentLoaded', function() {
+    var kn = new Kunai;
+    kn.cpprefjp();
+  });
+</script>
+
+    </head>
+    <body>
+<header data-kunai-mdinfo="{&#34;meta&#34;: {&#34;cpp&#34;: [&#34;cpp20&#34;]}, &#34;sources&#34;: [{&#34;id&#34;: &#34;f13c43f217dd0de2a102f881250a84a7c361e710&#34;, &#34;source&#34;: &#34;// (\u3053\u3053\u306b\u306f\u3001\u8a00\u8a9e\u6a5f\u80fd\u306e\u4f7f\u3044\u65b9\u3092\u89e3\u8aac\u3059\u308b\u305f\u3081\u306e\u3001\u30b5\u30f3\u30d7\u30eb\u30b3\u30fc\u30c9\u3092\u8a18\u8ff0\u3057\u307e\u3059\u3002)\n// (\u30a4\u30f3\u30af\u30eb\u30fc\u30c9\u3068main()\u95a2\u6570\u3092\u542b\u3080\u3001\u5b9f\u884c\u53ef\u80fd\u306a\u30b5\u30f3\u30d7\u30eb\u30b3\u30fc\u30c9\u3092\u8a18\u8ff0\u3057\u3066\u304f\u3060\u3055\u3044\u3002\u305d\u306e\u3088\u3046\u306a\u30b3\u30fc\u30c9\u30d6\u30ed\u30c3\u30af\u306b\u306fexample\u30bf\u30b0\u3092\u4ed8\u3051\u307e\u3059\u3002)\n\n#include &lt;iostream&gt;\n\nint main()\n{\n  int variable = 0;\n  std::cout &lt;&lt; variable &lt;&lt; std::endl;\n}\n&#34;}], &#34;page_id&#34;: [&#34;lang&#34;, &#34;cpp20&#34;, &#34;implicit_creation_of_objects_for_low-level_object_manipulation&#34;]}">
+  <nav class="navbar navbar-default" role="navigation">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="/">
+          <div class="title-wrapper clearfix">
+            <div class="title">cpprefjp - C++日本語リファレンス</div>
+          </div>
+        </a>
+      </div>
+
+      <div class="collapse navbar-collapse" id="navbar-collapse">
+        <ul class="nav navbar-nav navbar-right">
+          <li>
+            <div class="google-search">
+              
+  
+<script>
+  (function() {
+    var cx = '013316413321391058734:ji_u66hl7hq';
+    var gcse = document.createElement('script');
+    gcse.type = 'text/javascript';
+    gcse.async = true;
+    gcse.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') +
+        '//www.google.com/cse/cse.js?cx=' + cx;
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(gcse, s);
+  })();
+</script>
+<div class="gcse-search"></div>
+
+
+            </div>
+          </li>
+          <li>
+  <a href="https://github.com/cpprefjp/site">GitHub Project</a>
+</li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+</header>
+
+        <main id="main" role="main">
+            <div class="container-fluid">
+<div class="row">
+  <div class="col-sm-9 col-sm-push-3" itemscope itemtype="http://schema.org/Article">
+    <div class="row">
+      <div class="col-sm-12 google-search-result">
+        <gcse:searchresults></gcse:searchresults>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-12 content-header">
+        
+  <ol class="breadcrumb">
+    
+      <li  itemscope itemtype="http://www.schema.org/SiteNavigationElement">
+        <span>
+          
+            <a href="/index.html" itemprop="url">
+              
+                <i class="fa fa-fw fa-home"></i>
+              
+            </a>
+          
+        </span>
+      </li>
+    
+      <li  itemscope itemtype="http://www.schema.org/SiteNavigationElement">
+        <span>
+          
+            <a href="/lang.html" itemprop="url">
+              
+                <span itemprop="name">言語機能</span>
+              
+            </a>
+          
+        </span>
+      </li>
+    
+      <li  itemscope itemtype="http://www.schema.org/SiteNavigationElement">
+        <span>
+          
+            <a href="/lang/cpp20.html" itemprop="url">
+              
+                <span itemprop="name">C++20</span>
+              
+            </a>
+          
+        </span>
+      </li>
+    
+      <li class="active" itemscope itemtype="http://www.schema.org/SiteNavigationElement">
+        <span>
+          
+            
+              <span itemprop="name">未初期化領域への暗黙的なオブジェクト構築</span>
+            
+          
+        </span>
+      </li>
+    
+  </ol>
+  <div class="crsearch"></div>
+
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-12 edit-button">
+        
+  
+    <p class="text-right"><small>
+      最終更新日時(UTC):
+      <span itemprop="datePublished" content="2023-02-17T09:09:21">
+        2023年02月17日 09時09分21秒
+      </span>
+      <br/>
+      <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">onihusube</span>
+      </span>
+      が更新
+    </small></p>
+  
+
+        <p class="text-right">
+          <a class="history" target="_blank" href="https://github.com/cpprefjp/site/commits/master/lang/cpp20/implicit_creation_of_objects_for_low-level_object_manipulation.md">
+            <span class="fa fa-fw fa-clock-o fa-flip-horizontal"></span>履歴
+          </a>
+          <a class="edit" target="_blank" href="https://github.com/cpprefjp/site/edit/master/lang/cpp20/implicit_creation_of_objects_for_low-level_object_manipulation.md">
+            <span class="fa fa-fw fa-pencil"></span>編集
+          </a>
+        </p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-12 content-body">
+        
+  <h1 itemprop="name"><span class="token">未初期化領域への暗黙的なオブジェクト構築</span><span class="cpp cpp20" title="C++20で追加">(C++20)</span></h1>
+<div itemprop="articleBody"><h2>概要</h2>
+<p><code>new</code>式ではなく<code>malloc()</code>等他の方法で確保されたメモリ領域には、明示的にオブジェクトの構築を行うまで想定する型のオブジェクトは生存期間内になく、そのアクセス（読み書き）は<a class="cpprefjp-defined-word" data-desc="未定義の動作。処理系は予期せぬ動作をする可能性がある。要するに動作保証対象外" href="https://cpprefjp.github.io/implementation-compliance.html#dfn-undefined-behavior">未定義動作</a>となる。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">struct</span> <span class="n">X</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">a</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">b</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="n">X</span> <span class="o">*</span><span class="nf">make_x</span><span class="p">()</span> <span class="p">{</span>
+  <span class="c1">// malloc()はメモリの確保だけを行う</span>
+  <span class="n">X</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="n">X</span><span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span> <span class="n">X</span><span class="p">));</span>
+
+  <span class="c1">// pの領域にはオブジェクトが構築されていない</span>
+  <span class="n">p</span><span class="o">-&gt;</span><span class="n">a</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">// 💀 UB</span>
+  <span class="n">p</span><span class="o">-&gt;</span><span class="n">b</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span> <span class="c1">// 💀 UB</span>
+
+  <span class="k">return</span> <span class="n">p</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<p>この様なコードは純粋なC++コードでは<code>new</code>式を用いることになるため、その場合は問題ない。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="c1">// new式を使用する場合</span>
+<span class="n">X</span> <span class="o">*</span><span class="nf">make_x</span><span class="p">()</span> <span class="p">{</span>
+  <span class="c1">// new式はメモリの確保とオブジェクト構築を行う</span>
+  <span class="n">X</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="k">new</span> <span class="n">X</span><span class="p">;</span>
+
+  <span class="c1">// pの領域にはオブジェクトが構築済</span>
+  <span class="n">p</span><span class="o">-&gt;</span><span class="n">a</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">// ✅ ok</span>
+  <span class="n">p</span><span class="o">-&gt;</span><span class="n">b</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span> <span class="c1">// ✅ ok</span>
+
+  <span class="k">return</span> <span class="n">p</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<p>一番最初の<code>malloc()</code>を用いるコードは主にCのコードと共有する部分で現れることがあり、Cでは問題ないもののC++コードとしてコンパイルした場合にのみ<a class="cpprefjp-defined-word" data-desc="未定義の動作。処理系は予期せぬ動作をする可能性がある。要するに動作保証対象外" href="https://cpprefjp.github.io/implementation-compliance.html#dfn-undefined-behavior">未定義動作</a>となる。C++20からは、この様なコードのC/C++相互運用性向上のために、明示的にオブジェクトを構築する必要がないとみなすことのできる一部の型（<em>implicit-lifetime types</em>）に限って、未初期化領域へのアクセス時に暗黙的に（自動的に）オブジェクトが構築される様になり、<a class="cpprefjp-defined-word" data-desc="未定義の動作。処理系は予期せぬ動作をする可能性がある。要するに動作保証対象外" href="https://cpprefjp.github.io/implementation-compliance.html#dfn-undefined-behavior">未定義動作</a>を回避できる様になる。</p>
+<h2>問題となる他の例</h2>
+<p>以下の例はこの変更によって解決される例であり、C++17以前は<a class="cpprefjp-defined-word" data-desc="未定義の動作。処理系は予期せぬ動作をする可能性がある。要するに動作保証対象外" href="https://cpprefjp.github.io/implementation-compliance.html#dfn-undefined-behavior">未定義動作</a>となるものである。</p>
+<h3><code>operator new</code></h3>
+<p><code>new</code>式ではなく<code>operator new()</code>を直接使用する場合は同様の問題がある。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="c1">// new式を使用する場合</span>
+<span class="n">X</span> <span class="o">*</span><span class="nf">make_x</span><span class="p">()</span> <span class="p">{</span>
+  <span class="c1">// operator new()はメモリの確保だけを行う</span>
+  <span class="n">X</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="n">X</span><span class="o">*</span><span class="p">)</span><span class="o">::</span><span class="k">operator</span> <span class="k">new</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span> <span class="n">X</span><span class="p">));</span>
+
+  <span class="c1">// pの領域にはオブジェクトが構築されていない</span>
+  <span class="n">p</span><span class="o">-&gt;</span><span class="n">a</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">// 💀 UB</span>
+  <span class="n">p</span><span class="o">-&gt;</span><span class="n">b</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span> <span class="c1">// 💀 UB</span>
+
+  <span class="k">return</span> <span class="n">p</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<h3>共用体のコピー</h3>
+<p><div class="codehilite"><pre><span></span><code><span class="k">union</span> <span class="n">U</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">n</span><span class="p">;</span>
+  <span class="kt">float</span> <span class="n">f</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="kt">float</span> <span class="nf">pun</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// U::nの生存期間が開始</span>
+  <span class="n">U</span> <span class="n">u</span> <span class="o">=</span> <span class="p">{.</span><span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="p">};</span>
+
+  <span class="c1">// このコピーではunオブジェクト表現がコピーされるものの、メンバの生存期間は開始されない</span>
+  <span class="c1">// そのため、アクティブメンバが無い状態となる</span>
+  <span class="n">U</span> <span class="n">u2</span> <span class="o">=</span> <span class="n">u</span><span class="p">;</span>
+
+  <span class="c1">// u2.fは非アクティブ</span>
+  <span class="k">return</span> <span class="n">u2</span><span class="p">.</span><span class="n">f</span><span class="p">;</span> <span class="c1">// 💀 UB</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<h3>バイト配列の読み込み</h3>
+<p><div class="codehilite"><pre><span></span><code><span class="c1">// 何かバイト列ストリームを受け取って処理する関数とする</span>
+<span class="kt">void</span> <span class="nf">process</span><span class="p">(</span><span class="n">Stream</span> <span class="o">*</span><span class="n">stream</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// バイト配列の読み出し</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/memory/unique_ptr.html">std::unique_ptr</a></span><span class="o">&lt;</span><span class="kt">char</span><span class="p">[]</span><span class="o">&gt;</span> <span class="n">buffer</span> <span class="o">=</span> <span class="n">stream</span><span class="o">-&gt;</span><span class="n">read</span><span class="p">();</span>
+
+  <span class="c1">// 先頭バイトの状態によって分岐</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">buffer</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">FOO</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">process_foo</span><span class="p">(</span><span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">Foo</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">buffer</span><span class="p">.</span><span class="n">get</span><span class="p">()));</span> <span class="c1">// #1</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="n">process_bar</span><span class="p">(</span><span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">Bar</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">buffer</span><span class="p">.</span><span class="n">get</span><span class="p">()));</span> <span class="c1">// #2</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<p>1つの領域に複数の型のオブジェクトが同時に生存期間内にあることはないため、<code>stream-&gt;read()</code>が内部で<code>Foo, Bar</code>どちらかのオブジェクトを構築していたとしても、<code>#1</code>と<code>#2</code>のどちらかのパスは<a class="cpprefjp-defined-word" data-desc="未定義の動作。処理系は予期せぬ動作をする可能性がある。要するに動作保証対象外" href="https://cpprefjp.github.io/implementation-compliance.html#dfn-undefined-behavior">未定義動作</a>となる。そして、この様なコードでは多くの場合、明示的にオブジェクトが構築されることはない。</p>
+<h3>動的配列の実装</h3>
+<p><div class="codehilite"><pre><span></span><code><span class="c1">// <a href="https://cpprefjp.github.io/reference/vector/vector.html">std::vector</a>の様な動的配列型を実装したい</span>
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
+<span class="k">struct</span> <span class="n">Vec</span> <span class="p">{</span>
+  <span class="kt">char</span> <span class="o">*</span><span class="n">buf</span> <span class="o">=</span> <span class="k">nullptr</span><span class="p">;</span>
+  <span class="kt">char</span> <span class="o">*</span><span class="n">buf_end_size</span> <span class="o">=</span> <span class="k">nullptr</span><span class="p">;</span>
+  <span class="kt">char</span> <span class="o">*</span><span class="n">buf_end_capacity</span> <span class="o">=</span> <span class="k">nullptr</span><span class="p">;</span>
+
+  <span class="kt">void</span> <span class="nf">reserve</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/cstddef/size_t.html">std::size_t</a></span> <span class="n">n</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">char</span> <span class="o">*</span><span class="n">newbuf</span> <span class="o">=</span> <span class="p">(</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span><span class="o">::</span><span class="k">operator</span> <span class="k">new</span><span class="p">(</span><span class="n">n</span> <span class="o">*</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">T</span><span class="p">),</span> <span class="n">std</span><span class="o">::</span><span class="n">align_val_t</span><span class="p">(</span><span class="k">alignof</span><span class="p">(</span><span class="n">T</span><span class="p">)));</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">uninitialized_copy</span><span class="p">(</span><span class="n">begin</span><span class="p">(),</span> <span class="n">end</span><span class="p">(),</span> <span class="p">(</span><span class="n">T</span><span class="o">*</span><span class="p">)</span><span class="n">newbuf</span><span class="p">);</span> <span class="c1">// #a 💀 UB</span>
+
+    <span class="o">::</span><span class="k">operator</span> <span class="k">delete</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">align_val_t</span><span class="p">(</span><span class="k">alignof</span><span class="p">(</span><span class="n">T</span><span class="p">)));</span>
+    <span class="n">buf_end_size</span> <span class="o">=</span> <span class="n">newbuf</span> <span class="o">+</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">T</span><span class="p">)</span> <span class="o">*</span> <span class="n">size</span><span class="p">();</span> <span class="c1">// #b 💀 UB</span>
+    <span class="n">buf_end_capacity</span> <span class="o">=</span> <span class="n">newbuf</span> <span class="o">+</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">T</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span><span class="p">;</span>  <span class="c1">// #c 💀 UB</span>
+    <span class="n">buf</span> <span class="o">=</span> <span class="n">newbuf</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="kt">void</span> <span class="nf">push_back</span><span class="p">(</span><span class="n">T</span> <span class="n">t</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">buf_end_size</span> <span class="o">==</span> <span class="n">buf_end_capacity</span><span class="p">)</span>
+      <span class="n">reserve</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">max</span><span class="o">&lt;</span><span class="n"><a href="https://cpprefjp.github.io/reference/cstddef/size_t.html">std::size_t</a></span><span class="o">&gt;</span><span class="p">(</span><span class="n">size</span><span class="p">()</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">));</span>
+    <span class="k">new</span> <span class="p">(</span><span class="n">buf_end_size</span><span class="p">)</span> <span class="n">T</span><span class="p">(</span><span class="n">t</span><span class="p">);</span>
+    <span class="n">buf_end_size</span> <span class="o">+=</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">T</span><span class="p">);</span> <span class="c1">// #d 💀 UB</span>
+  <span class="p">}</span>
+
+  <span class="n">T</span> <span class="o">*</span><span class="nf">begin</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="p">(</span><span class="n">T</span><span class="o">*</span><span class="p">)</span><span class="n">buf</span><span class="p">;</span> <span class="p">}</span>
+
+  <span class="n">T</span> <span class="o">*</span><span class="nf">end</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="p">(</span><span class="n">T</span><span class="o">*</span><span class="p">)</span><span class="n">buf_end_size</span><span class="p">;</span> <span class="p">}</span>
+
+  <span class="n"><a href="https://cpprefjp.github.io/reference/cstddef/size_t.html">std::size_t</a></span> <span class="nf">size</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="n">end</span><span class="p">()</span> <span class="o">-</span> <span class="n">begin</span><span class="p">();</span> <span class="p">}</span> <span class="c1">// #e 💀 UB</span>
+<span class="p">};</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">Vec</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">v</span><span class="p">;</span>
+  <span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+  <span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+  <span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
+  <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="nl">n</span> <span class="p">:</span> <span class="n">v</span><span class="p">)</span> <span class="p">{</span> <span class="cm">/*...*/</span> <span class="p">}</span> <span class="c1">// #f 💀 UB</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<p>C++においては、ポインタに対する演算（<code>+ -</code>など）はそのポインタが配列オブジェクトを指している場合にのみ有効となるが、例中の<code>#a #b #c #d #e #f</code>で使用されるポインタの指す領域にはいずれも配列オブジェクトが生存期間にない（正確には、非配列オブジェクトのポインタの場合は要素数1の配列として扱われるが、この例の場合はそれを満たすことはほぼなく、満たさないものとする）。そのため、そのポインタをイテレータの様に使用することは<a class="cpprefjp-defined-word" data-desc="未定義の動作。処理系は予期せぬ動作をする可能性がある。要するに動作保証対象外" href="https://cpprefjp.github.io/implementation-compliance.html#dfn-undefined-behavior">未定義動作</a>となる。</p>
+<h2>仕様</h2>
+<h3>implicit-lifetime types</h3>
+<p>明示的にオブジェクトを構築する必要がないとみなすことのできる一部の型は<em>implicit-lifetime types</em>と呼ばれる次のいずれかに該当する型である</p>
+<ol>
+<li><a href="https://cpprefjp.github.io/reference/type_traits/is_scalar.html">スカラ型</a></li>
+<li>配列型<ul>
+<li>要素型は問わない</li>
+</ul>
+</li>
+<li><em>implicit-lifetime class types</em><ul>
+<li>デストラクタがユーザー定義されていない集成体型、もしくは</li>
+<li>少なくとも1つの資格のあるトリビアルコンストラクタと、トリビアルで削除されていないデストラクタを持つ型</li>
+</ul>
+</li>
+<li>1~3のCV修飾された型</li>
+</ol>
+<h3>オブジェクトを暗黙的に構築する操作</h3>
+<p>標準ライブラリ中の次の関数は、<em>implicit-lifetime types</em>に対して使用した場合に、その振る舞いの一環としてそのオブジェクトを暗黙的に構築する</p>
+<ul>
+<li><code>new</code>演算子<ul>
+<li><code>opreator new</code></li>
+<li><code>opreator new[]</code></li>
+</ul>
+</li>
+<li>アロケータ<ul>
+<li><code><a href="https://cpprefjp.github.io/reference/memory/allocator/allocate.html">std::allocator::allocate</a></code></li>
+</ul>
+</li>
+<li>Cライブラリ関数<ul>
+<li><code>std::aligned_alloc</code></li>
+<li><code>std::calloc</code></li>
+<li><code>std::malloc</code></li>
+<li><code>std::realloc</code></li>
+<li><code>std::memcpy</code></li>
+<li><code>std::memmove</code></li>
+</ul>
+</li>
+<li><code><a href="https://cpprefjp.github.io/reference/bit/bit_cast.html">std::bit_cast</a></code></li>
+</ul>
+<p>これらの操作はそれぞれ、次のようにオブジェクトを暗黙的に構築する</p>
+<ul>
+<li><code>new</code>演算子とCのメモリ確保関数<ul>
+<li>返された領域にオブジェクトを構築し、構築された適切なオブジェクトへのポインタを返す<ul>
+<li><code>calloc/realloc</code>の場合、暗黙的なオブジェクト構築はゼロ埋め/コピーが行われる前に行われる</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code><a href="https://cpprefjp.github.io/reference/memory/allocator/allocate.html">std::allocator::allocate</a></code><ul>
+<li>返された配列型の領域にその配列型のオブジェクトを構築するが、配列要素は構築されない</li>
+</ul>
+</li>
+<li><code>std::memcpy/std::memmove</code><ul>
+<li>コピー先領域への暗黙的なオブジェクト構築は、コピー先領域にコピーをする前に行われる</li>
+</ul>
+</li>
+<li><code><a href="https://cpprefjp.github.io/reference/bit/bit_cast.html">std::bit_cast</a></code><ul>
+<li>ネストしたものも含めて、結果領域に暗黙にオブジェクトを構築する<ul>
+<li>ネストしたもの、とは例えばクラスメンバや配列の要素のこと</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3>デストラクタ呼び出しによる生存期間の終了</h3>
+<p>(執筆中)</p>
+<h2>例</h2>
+<p>(執筆中)</p>
+<p><div class="yata" id="f13c43f217dd0de2a102f881250a84a7c361e710"><div class="codehilite"><pre><span></span><code><span class="c1">// (ここには、言語機能の使い方を解説するための、サンプルコードを記述します。)</span>
+<span class="c1">// (インクルードとmain()関数を含む、実行可能なサンプルコードを記述してください。そのようなコードブロックにはexampleタグを付けます。)</span>
+
+<span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/iostream.html">&lt;iostream&gt;</a></span><span class="cp"></span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="kt">int</span> <span class="n"><span style="color:#ff0000">variable</span></span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/iostream/cout.html">std::cout</a></span> <span class="o">&lt;&lt;</span> <span class="n"><span style="color:#ff0000">variable</span></span> <span class="o">&lt;&lt;</span> <span class="n"><a href="https://cpprefjp.github.io/reference/ostream/endl.html">std::endl</a></span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+</div></p>
+<p>(コードブロック中の識別子に、文字色を付ける例です。)</p>
+<h3>出力</h3>
+<p><pre><code>0
+</code></pre></p>
+<p>(ここには、サンプルコードの実行結果を記述します。何も出力がない場合は、項目を削除せず、空の出力にしてください。)<br />
+(実行結果が処理系・実行環境によって異なる場合は、項目名を「出力例」に変更し、可能であればその理由も併記してください。)</p>
+<h2>この機能が必要になった背景・経緯</h2>
+<p>(執筆中)</p>
+<h2>検討されたほかの選択肢</h2>
+<p>(執筆中)</p>
+<h2>関連項目</h2>
+<ul>
+<li><code><span href="https://cpprefjp.github.io/reference/memory/start_lifetime_as.md.nolink">start_lifetime_as()</span></code></li>
+<li><code><span href="https://cpprefjp.github.io/reference/memory/start_lifetime_as_array.md.nolink">start_lifetime_as_array()</span></code></li>
+<li><code><span href="https://cpprefjp.github.io/reference/type_traits/is_implicit_lifetime.md.nolink">is_implicit_lifetime</span></code></li>
+</ul>
+<h2>参照</h2>
+<ul>
+<li><a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0593r6.html" target="_blank">P0593R6 Implicit creation of objects for low-level object manipulation</a></li>
+<li><a href="https://cplusplus.github.io/CWG/issues/2325.html" target="_blank">CWG Issue 2325. <code>std::launder</code> and reuse of character buffers</a></li>
+<li><a href="https://cplusplus.github.io/CWG/issues/2605.html" target="_blank">CWG Issue 2605. Implicit-lifetime aggregates</a></li>
+<li><a href="https://wg21.link/p1839r5" target="_blank">P1839R5 Accessing Object Representations</a></li>
+</ul></div>
+
+      </div>
+    </div>
+  </div>
+  
+  
+    <div id="sidebar" class="col-sm-3 col-sm-pull-9">
+    </div>
+  
+
+</div>
+            </div>
+        </main>
+<footer class="footer navbar navbar-default">
+  <div class="container-fluid">
+    <p><small>
+      本サイトの情報は、
+        <a href="https://creativecommons.org/licenses/by/3.0/deed.ja" rel="nofollow">クリエイティブ・コモンズ 表示 3.0 非移植 ライセンス(CC BY)</a>
+      の下に提供されています。
+    </small></p>
+  </div>
+</footer>
+    </body>
+</html>
