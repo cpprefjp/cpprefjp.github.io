@@ -2,9 +2,59 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2023-02-21T05:09:58.634880</updated>
-  <id>7b3b663a-ddf5-41fc-9e28-16f3ad761764</id>
+  <updated>2023-02-21T05:34:04.943499</updated>
+  <id>d195891e-6fbc-446d-a85c-e062db815e82</id>
 
+  
+    <entry>
+      <title>未初期化領域への暗黙的なオブジェクト構築 -- 擬似デストラクタ呼び出しの例を追記</title>
+      <link href="https://cpprefjp.github.io/lang/cpp20/implicit_creation_of_objects_for_low-level_object_manipulation.html"/>
+      <id>cf2f9aca8e91c46b6f5c05b6152d5533279b356a:lang/cpp20/implicit_creation_of_objects_for_low-level_object_manipulation.md</id>
+      <updated>2023-02-21T14:29:57+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/implicit_creation_of_objects_for_low-level_object_manipulation.md b/lang/cpp20/implicit_creation_of_objects_for_low-level_object_manipulation.md
+index 7186111c5..ed4a4415f 100644
+--- a/lang/cpp20/implicit_creation_of_objects_for_low-level_object_manipulation.md
++++ b/lang/cpp20/implicit_creation_of_objects_for_low-level_object_manipulation.md
+@@ -213,13 +213,29 @@ C++においては、ポインタに対する演算（`+ -`など）はそのポ
+ 
+ C++17まで、擬似デストラクタ呼び出しには何の効果もなかった（テンプレートの文脈でクラス型との構文上の互換性を取るためのものでしかなかった）が、C++20からは擬似デストラクタ呼び出しはそのスカラー型オブジェクトの生存期間を終了させることが規定される。
+ 
++```cpp
++constexpr int f() {
++  int a = 123;
++  using T = int;
++
++  // 擬似デストラクタ呼び出し
++  // C++20からはaの生存期間を終了させる
++  // C++17までは何も効果がない
++  a.~T();
++
++  return a;  // C++20からはUB、C++17までは123を返す
++}
++
++static_assert(f() == 123);  // C++20からはUBが起こるため不適格、C++17以前は適格
++```
++
+ これに伴い、[`destroy_at()`](/reference/memory/destroy_at.md)などの擬似デストラクタ呼び出しと等価のことを行うライブラリ機能においても、スカラ型のオブジェクトの生存期間を終了させるようになる。
+ 
+ ### これらの変更の影響
+ 
+-これらの変更はあくまでオブジェクト生存期間に関する規則を変更しただけに過ぎず、その影響はコンパイラ等の実装のオブジェクト生存期間の認識が変わるだけである。それによって、今まで未定義動作となっていたコードが未定義動作ではなくなり、未定義動作をトリガーとする最適化を受ける可能性が将来にわたって取り除かれることになる。
++これらの変更はあくまでオブジェクト生存期間に関する規則を変更しただけに過ぎず、その影響はコンパイラ等の実装のオブジェクト生存期間の認識が変わるだけである。それによって、今まで未定義動作となっていたコードが未定義動作ではなくなり、未定義動作をトリガーとする最適化を受ける可能性が将来にわたって取り除かれることになる（ただし、擬似デストラクタ呼び出し周りの変更だけは、未定義動作ではなかったコードを未定義動作にしうる）。
+ 
+-したがって、これらの変更によって最適化によるもの以外の実行時の振る舞いが変化することはなく、暗黙的なオブジェクト構築は実際にコンストラクタを呼んだり何か初期化を行うものではない。
++したがって、擬似デストラクタ呼び出しを除いて、これらの変更によって最適化によるもの以外の実行時の振る舞いが変化することはなく、暗黙的なオブジェクト構築は実際にコンストラクタを呼んだり何か初期化を行うものではない。
+ 
+ ## 例
+ (執筆中)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>C++23 -- &lt;stdfloat&gt;とfloat16_tを追加。書きかけ #1022</title>
@@ -1612,62 +1662,6 @@ index 5f47b4578..12002f080 100644
  ## 参照
 -- [std::remquo purpose and usage? - Stack Overflow](https://stackoverflow.com/q/11074865/684921)
 +- [std::remquo purpose and usage? - Stack Overflow](https://stackoverflow.com/questions/11074865/stdremquo-purpose-and-usage)
- - [P0533R9 constexpr for `&amp;lt;cmath&amp;gt;` and `&amp;lt;cstdlib&amp;gt;`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p0533r9.pdf)
-     - C++23での、一部関数の`constexpr`対応
- - [P1467R9 Extended floating-point types and standard names](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1467r9.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>remquo -- cmath/remquo: 関数の利用目的を追記</title>
-      <link href="https://cpprefjp.github.io/reference/cmath/remquo.html"/>
-      <id>9fc8d7418c4c64c443038637e34578e7a9428c4c:reference/cmath/remquo.md</id>
-      <updated>2023-02-20T21:23:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/cmath/remquo.md b/reference/cmath/remquo.md
-index 1dd97d8b8..5f47b4578 100644
---- a/reference/cmath/remquo.md
-+++ b/reference/cmath/remquo.md
-@@ -55,9 +55,9 @@ namespace std {
- * Integral[italic]
- 
- ## 概要
--浮動小数点数の剰余と商を求める。remquoは、「remainder (剰余)」と「quotient (商)」と意味する。
-+浮動小数点数の剰余と、商の一部を求める。remquoは、「remainder (剰余)」と「quotient (商)」と意味する。
- 
--この関数は、浮動小数点数に対して除算を行い、除算の結果(商)と、その余り(剰余)を同時に求める。戻り値として剰余が返され、ポインタ引数`quo`に商の値が書き込まれる。
-+この関数は、浮動小数点数に対して除算を行い、除算の結果(商)の一部と、その余り(剰余)を同時に求める。戻り値として剰余が返され、ポインタ引数`quo`に商の値の一部が書き込まれる。
- 
- - (1) : `float`に対するオーバーロード
- - (2) : `double`に対するオーバーロード
-@@ -70,12 +70,16 @@ namespace std {
- 
- ## 戻り値
- - [`remainder()`](remainder.md)関数と同じ方法で剰余を求めて、戻り値として返す。
--- `quo`が指す値は、`x/y`で得られた商と同じ大きさを持ち、`x/y`で得られた符号と同じ符号を持つ
-+- `quo`が指す値は、`x/y`で得られる商と下位数ビットが等しく、`x/y`で得られた符号と同じ符号を持つ。
-+    - 商と等しくなる有効なビット数nは、少なくとも3以上の処理系定義の値とされる。
- 
- `y`がゼロである場合、`quo`が指す値は未規定となる。またその際、定義域エラーを発生させるかゼロを返すかは、実装定義となる。定義域エラーが発生した際の挙動については、[`&amp;lt;cmath&amp;gt;`](../cmath.md) を参照。
- 
- 
- ## 備考
-+`remquo`関数では`x/y`の厳密な商を求めることはできない。
-+三角関数のような周期性をもつ数学関数の内部実装において、商の低次ビットを利用した引数の還元(argument reduction)操作で利用する。
-+
- - C++23では、(1)、(2)、(3)が(4)に統合され、拡張浮動小数点数型を含む浮動小数点数型へのオーバーロードとして定義された
- 
- 
-@@ -131,6 +135,7 @@ remquo(6, 2) = quotient:3 remainder:0
- 
- 
- ## 参照
-+- [std::remquo purpose and usage? - Stack Overflow](https://stackoverflow.com/q/11074865/684921)
  - [P0533R9 constexpr for `&amp;lt;cmath&amp;gt;` and `&amp;lt;cstdlib&amp;gt;`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p0533r9.pdf)
      - C++23での、一部関数の`constexpr`対応
  - [P1467R9 Extended floating-point types and standard names](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1467r9.html)
