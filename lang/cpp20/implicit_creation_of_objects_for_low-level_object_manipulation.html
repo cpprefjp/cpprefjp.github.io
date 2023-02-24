@@ -188,8 +188,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2023-02-22T09:12:25">
-        2023年02月22日 09時12分25秒
+      <span itemprop="datePublished" content="2023-02-24T09:03:12">
+        2023年02月24日 09時03分12秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -312,9 +312,9 @@
     <span class="n">std</span><span class="o">::</span><span class="n">uninitialized_copy</span><span class="p">(</span><span class="n">begin</span><span class="p">(),</span> <span class="n">end</span><span class="p">(),</span> <span class="p">(</span><span class="n">T</span><span class="o">*</span><span class="p">)</span><span class="n">newbuf</span><span class="p">);</span> <span class="c1">// #a 💀 UB</span>
 
     <span class="o">::</span><span class="k">operator</span> <span class="k">delete</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">align_val_t</span><span class="p">(</span><span class="k">alignof</span><span class="p">(</span><span class="n">T</span><span class="p">)));</span>
+    <span class="n">buf</span> <span class="o">=</span> <span class="n">newbuf</span><span class="p">;</span>
     <span class="n">buf_end_size</span> <span class="o">=</span> <span class="n">newbuf</span> <span class="o">+</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">T</span><span class="p">)</span> <span class="o">*</span> <span class="n">size</span><span class="p">();</span> <span class="c1">// #b 💀 UB</span>
     <span class="n">buf_end_capacity</span> <span class="o">=</span> <span class="n">newbuf</span> <span class="o">+</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">T</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span><span class="p">;</span>  <span class="c1">// #c 💀 UB</span>
-    <span class="n">buf</span> <span class="o">=</span> <span class="n">newbuf</span><span class="p">;</span>
   <span class="p">}</span>
 
   <span class="kt">void</span> <span class="nf">push_back</span><span class="p">(</span><span class="n">T</span> <span class="n">t</span><span class="p">)</span> <span class="p">{</span>
@@ -553,14 +553,16 @@
   <span class="n"><a href="https://cpprefjp.github.io/reference/memory/unique_ptr.html">std::unique_ptr</a></span><span class="o">&lt;</span><span class="kt">char</span><span class="p">[]</span><span class="o">&gt;</span> <span class="n">buffer</span> <span class="o">=</span> <span class="n">stream</span><span class="o">-&gt;</span><span class="n">read</span><span class="p">();</span>
 
   <span class="c1">// 先頭バイトの状態によって適切なオブジェクトがStream::read()内で構築されている</span>
+  <span class="c1">// ただし、reinterpret_castの代わりに<a href="https://cpprefjp.github.io/reference/new/launder.html">std::launder</a>()を使用する必要がある</span>
   <span class="k">if</span> <span class="p">(</span><span class="n">buffer</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">FOO</span><span class="p">)</span> <span class="p">{</span>
-    <span class="n">process_foo</span><span class="p">(</span><span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">Foo</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">buffer</span><span class="p">.</span><span class="n">get</span><span class="p">()));</span> <span class="c1">// ✅ ok</span>
+    <span class="n">process_foo</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/new/launder.html">std::launder</a></span><span class="o">&lt;</span><span class="n">Foo</span><span class="o">&gt;</span><span class="p">(</span><span class="n">buffer</span><span class="p">.</span><span class="n">get</span><span class="p">()));</span> <span class="c1">// ✅ ok</span>
   <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-    <span class="n">process_bar</span><span class="p">(</span><span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">Bar</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">buffer</span><span class="p">.</span><span class="n">get</span><span class="p">()));</span> <span class="c1">// ✅ ok</span>
+    <span class="n">process_bar</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/new/launder.html">std::launder</a></span><span class="o">&lt;</span><span class="n">Bar</span><span class="o">&gt;</span><span class="p">(</span><span class="n">buffer</span><span class="p">.</span><span class="n">get</span><span class="p">()));</span> <span class="c1">// ✅ ok</span>
   <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
 </p>
+<p>追加で、各分岐においては返された<code>buffer</code>ポインタ（<code>char(*)[]</code>）から、それぞれの場合で適切なオブジェクト（<code>Foo</code>/<code>Bar</code>）へのポインタを<code><a href="https://cpprefjp.github.io/reference/new/launder.html">std::launder()</a></code>によって取得する必要がある。<code>reinterpret_cast</code>はポインタの変換のみを行うため、この場合に</p>
 <h3>動的配列の実装</h3>
 <p><div class="codehilite"><pre><span></span><code><span class="c1">// <a href="https://cpprefjp.github.io/reference/vector/vector.html">std::vector</a>の様な動的配列型を実装したい</span>
 <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
@@ -577,14 +579,14 @@
 
     <span class="c1">// newbufにはT[]のオブジェクトが生存期間内にあるため、ポインタT*をイテレータとして使用可能となる</span>
     <span class="c1">// ここで、T[]の要素のTのオブジェクトが構築される（明示的）</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">uninitialized_copy</span><span class="p">(</span><span class="n">begin</span><span class="p">(),</span> <span class="n">end</span><span class="p">(),</span> <span class="p">(</span><span class="n">T</span><span class="o">*</span><span class="p">)</span><span class="n">newbuf</span><span class="p">);</span> <span class="c1">// #a ✅ ok</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">uninitialized_copy</span><span class="p">(</span><span class="n">begin</span><span class="p">(),</span> <span class="n">end</span><span class="p">(),</span> <span class="n">std</span><span class="o">::</span><span class="n">launder</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">newbuf</span><span class="p">));</span> <span class="c1">// #a ✅ ok</span>
 
     <span class="o">::</span><span class="k">operator</span> <span class="k">delete</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">align_val_t</span><span class="p">(</span><span class="k">alignof</span><span class="p">(</span><span class="n">T</span><span class="p">)));</span>
 
+    <span class="n">buf</span> <span class="o">=</span> <span class="n">newbuf</span><span class="p">;</span>
     <span class="c1">// newbufにはchar[]のオブジェクトが生存期間内にあるため、newbuf(char*)をイテレータとして使用可能となる</span>
     <span class="n">buf_end_size</span> <span class="o">=</span> <span class="n">newbuf</span> <span class="o">+</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">T</span><span class="p">)</span> <span class="o">*</span> <span class="n">size</span><span class="p">();</span> <span class="c1">// #b ✅ ok</span>
     <span class="n">buf_end_capacity</span> <span class="o">=</span> <span class="n">newbuf</span> <span class="o">+</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">T</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span><span class="p">;</span>  <span class="c1">// #c ✅ ok</span>
-    <span class="n">buf</span> <span class="o">=</span> <span class="n">newbuf</span><span class="p">;</span>
   <span class="p">}</span>
 
   <span class="kt">void</span> <span class="nf">push_back</span><span class="p">(</span><span class="n">T</span> <span class="n">t</span><span class="p">)</span> <span class="p">{</span>
@@ -596,9 +598,9 @@
     <span class="n">buf_end_size</span> <span class="o">+=</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">T</span><span class="p">);</span> <span class="c1">// #d ✅ ok</span>
   <span class="p">}</span>
 
-  <span class="n">T</span> <span class="o">*</span><span class="nf">begin</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="p">(</span><span class="n">T</span><span class="o">*</span><span class="p">)</span><span class="n">buf</span><span class="p">;</span> <span class="p">}</span>
+  <span class="n">T</span> <span class="o">*</span><span class="nf">begin</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">launder</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">buf</span><span class="p">);</span> <span class="p">}</span>
 
-  <span class="n">T</span> <span class="o">*</span><span class="nf">end</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="p">(</span><span class="n">T</span><span class="o">*</span><span class="p">)</span><span class="n">buf_end_size</span><span class="p">;</span> <span class="p">}</span>
+  <span class="n">T</span> <span class="o">*</span><span class="nf">end</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">launder</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">buf_end_size</span><span class="p">);</span> <span class="p">}</span>
 
   <span class="c1">// buf及びbuf_end_sizeの指す領域にはT[]のオブジェクトが生存期間内にあるため、ポインタをイテレータとして使用可能</span>
   <span class="n"><a href="https://cpprefjp.github.io/reference/cstddef/size_t.html">std::size_t</a></span> <span class="nf">size</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="n">end</span><span class="p">()</span> <span class="o">-</span> <span class="n">begin</span><span class="p">();</span> <span class="p">}</span> <span class="c1">// #e ✅ ok</span>
@@ -616,6 +618,7 @@
 </code></pre></div>
 </p>
 <p>この例では、<code>reserve()</code>内<code>newbuf</code>及びそれを保存している<code>Vec::buf</code>の領域に<code>T[]</code>（<code>T</code>の配列型）と<code>char[]</code>のオブジェクトが暗黙的に構築され、同時に生存期間内にあることで、問題（配列オブジェクトを指さないポインタのイテレータとしての使用）が解消され、すべての箇所で定義された振る舞いをもたらしている。</p>
+<p>ここでも同様に、<code>newbuf</code>及び<code>Vec::buf</code>から都度適切なオブジェクトへのポインタを得るのに<code><a href="https://cpprefjp.github.io/reference/new/launder.html">std::launder()</a></code>を使用する必要がある。</p>
 <h2>この機能が必要になった背景・経緯</h2>
 <p>(執筆中)</p>
 <h2>検討されたほかの選択肢</h2>
