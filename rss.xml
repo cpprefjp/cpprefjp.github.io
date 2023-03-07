@@ -2,9 +2,400 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2023-03-07T02:49:16.764008</updated>
-  <id>c467d352-dc10-477a-a920-8e115c546da4</id>
+  <updated>2023-03-07T03:51:18.932665</updated>
+  <id>09df44ed-5614-479a-af6a-68cb93a4b57e</id>
 
+  
+    <entry>
+      <title>to_chars -- to_chars : 拡張浮動小数点数型に対応 #1022</title>
+      <link href="https://cpprefjp.github.io/reference/charconv/to_chars.html"/>
+      <id>985d49c758e7d255f694e0357e289c7484c47cf8:reference/charconv/to_chars.md</id>
+      <updated>2023-03-07T12:46:45+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/charconv/to_chars.md b/reference/charconv/to_chars.md
+index bfb3df034..aeb75e232 100644
+--- a/reference/charconv/to_chars.md
++++ b/reference/charconv/to_chars.md
+@@ -7,35 +7,93 @@
+ ```cpp
+ namespace std {
+   //整数型用
+-  to_chars_result to_chars(char* first, char* last, /*see below*/ value,  int base = 10);           // (1) C++17
+-  constexpr to_chars_result to_chars(char* first, char* last, /*see below*/ value,  int base = 10); // (1) C++23
++  to_chars_result
++    to_chars(char* first,
++             char* last,
++             /*see below*/ value,
++             int base = 10);        // (1) C++17
++  constexpr to_chars_result
++    to_chars(char* first,
++             char* last,
++             integer-type value,
++             int base = 10);        // (1) C++23
+ 
+   //boolの変換は禁止
+-  to_chars_result to_chars(char* first, char* last, bool value,  int base = 10) = delete; // C++20
++  to_chars_result
++    to_chars(char* first,
++             char* last,
++             bool value,
++             int base = 10) = delete; // C++20
+ 
+   //精度、フォーマット指定なし
+-  to_chars_result to_chars(char* first, char* last, float value);        // (2)
+-  to_chars_result to_chars(char* first, char* last, double value);       // (3)
+-  to_chars_result to_chars(char* first, char* last, long double value);  // (4)
++  to_chars_result
++    to_chars(char* first,
++             char* last,
++             float value);               // (2) C++17からC++20まで
++  to_chars_result
++    to_chars(char* first,
++             char* last,
++             double value);              // (3) C++17からC++20まで
++  to_chars_result
++    to_chars(char* first,
++             char* last,
++             long double value);         // (4) C++17からC++20まで
++  to_chars_result
++    to_chars(char* first,
++             char* last,
++             floating-point-type value); // (5) C++23
+ 
+   //精度指定なし
+-  to_chars_result to_chars(char* first, char* last, float value,
+-                           chars_format fmt);                            // (5)
+-  to_chars_result to_chars(char* first, char* last, double value,
+-                           chars_format fmt);                            // (6)
+-  to_chars_result to_chars(char* first, char* last, long double value,
+-                           chars_format fmt);                            // (7)
++  to_chars_result
++    to_chars(char* first,
++             char* last,
++             float value,
++             chars_format fmt);          // (6) C++17からC++20まで
++  to_chars_result
++    to_chars(char* first,
++             char* last,
++             double value,
++             chars_format fmt);          // (7) C++17からC++20まで
++  to_chars_result
++    to_chars(char* first,
++             char* last,
++             long double value,
++             chars_format fmt);          // (8) C++17からC++20まで
++  to_chars_result
++    to_chars(char* first,
++             char* last,
++             floating-point-type value,
++             chars_format fmt);          // (9) C++23
+ 
+   //精度とフォーマットを指定
+-  to_chars_result to_chars(char* first, char* last, float value,
+-                           chars_format fmt, int precision);             // (8)
+-  to_chars_result to_chars(char* first, char* last, double value,
+-                           chars_format fmt, int precision);             // (9)
+-  to_chars_result to_chars(char* first, char* last, long double value,
+-                           chars_format fmt, int precision);             // (10)
++  to_chars_result
++    to_chars(char* first,
++             char* last,
++             float value,
++             chars_format fmt,
++             int precision);             // (10) C++17からC++20まで
++  to_chars_result
++    to_chars(char* first,
++             char* last,
++             double value,
++             chars_format fmt,
++             int precision);             // (11) C++17からC++20まで
++  to_chars_result
++    to_chars(char* first,
++             char* last,
++             long double value,
++             chars_format fmt,
++             int precision);             // (12) C++17からC++20まで
++  to_chars_result
++    to_chars(char* first,
++             char* last,
++             floating-point-type value,
++             chars_format fmt,
++             int precision);             // (13) C++23
+ }
+ ```
+ * see below[italic]
++* integer-type[italic]
+ 
+ ## 概要
+ 与えられた数値（`value`）を文字列へ変換し、`[first, last)`内へ出力する。  
+@@ -43,10 +101,24 @@ namespace std {
+ 
+ C++標準はこれら関数の実装の詳細について何も規定しない。これは、各実装において可能な最も高速なアルゴリズムが選択されることを意図しての事である。
+ 
++- (1) : 整数型に対するオーバーロード
++- (2) : `float`に対するオーバーロード (精度・フォーマット指定なし)
++- (3) : `double`に対するオーバーロード (精度・フォーマット指定なし)
++- (4) : `long double`に対するオーバーロード (精度・フォーマット指定なし)
++- (5) : 浮動小数点数型に対するオーバーロード (精度・フォーマット指定なし)
++- (6) : `float`に対するオーバーロード (精度指定なし)
++- (7) : `double`に対するオーバーロード (精度指定なし)
++- (8) : `long double`に対するオーバーロード (精度指定なし)
++- (9) : 浮動小数点数型に対するオーバーロード (精度指定なし)
++- (10) : `float`に対するオーバーロード (精度・フォーマット指定)
++- (11) : `double`に対するオーバーロード (精度・フォーマット指定)
++- (12) : `long double`に対するオーバーロード (精度・フォーマット指定)
++- (13) : 浮動小数点数型に対するオーバーロード (精度・フォーマット指定)
++
+ ## 要件
+ - 全て : 出力イテレータ範囲`[first, last)`は有効な範囲であること（charのオブジェクトが構築済みであり、連続していること）。
+ - (1) : `base`は2～36までの値であること。
+-- (5)～(10)  : `fmt`は[`chars_format`](../charconv/chars_format.md)の列挙値のうちの一つであること。
++- (6)～(13)  : `fmt`は[`chars_format`](../charconv/chars_format.md)の列挙値のうちの一つであること。
+ 
+ ## 引数
+ - `first` -- 変換結果の文字列を出力する範囲の先頭ポインタ。
+@@ -64,14 +136,14 @@ C++標準はこれら関数の実装の詳細について何も規定しない
+     10 &amp;lt; nの場合、10～35の値はアルファベットの小文字a～zがあてられる。  
+     桁数を合わせるために左側を0をパディングすること（0埋め）は行われない。
+     
+-- (2)(3)(4) : Cロケールで`printf`によって行われたかのように浮動小数点数を文字列へ変換する。  
++- (2)(3)(4)(5) : Cロケールで`printf`によって行われたかのように浮動小数点数を文字列へ変換する。  
+     フォーマット指定子は`%f,%e`どちらかを出力文字列が最も短くなるように（両者が同じなら`%f`が優先）選択する。
+     
+-- (5)(6)(7) : `fmt`によって指定されたフォーマット指定子を用いて、Cロケールで`printf`によって行われたかのように浮動小数点数を文字列へ変換する。  
++- (6)(7)(8)(9) : `fmt`によって指定されたフォーマット指定子を用いて、Cロケールで`printf`によって行われたかのように浮動小数点数を文字列へ変換する。  
+     出力文字列が最も短くなるように変換される。  
+-    `chars_format::general`が指定された場合は(2)(3)(4)と同等。
++    `chars_format::general`が指定された場合は(2)(3)(4)(5)と同等。
+     
+-- (8)(9)(10) : `fmt`と`precision`によって指定されたフォーマット指定子と精度を用いて、Cロケールで`printf`によって行われたかのように浮動小数点数を文字列へ変換する。
++- (10)(11)(12)(13) : `fmt`と`precision`によって指定されたフォーマット指定子と精度を用いて、Cロケールで`printf`によって行われたかのように浮動小数点数を文字列へ変換する。
+ 
+ 出力文字列が最も短くなるようにとは、小数点の前に少なくとも1桁あり、対応する[`from_chars`](../charconv/from_chars.md)関数によって値を正確に復元できるような最小の文字数、になることである。  
+ そのような文字列表現が複数ある場合、`value`の値との差が最も小さくなる物が選ばれ、それも複数あるときは[`std::round_to_nearest`](/reference/limits/float_round_style.md)に従った丸めによって一つを選択する。
+@@ -96,9 +168,10 @@ C++標準はこれら関数の実装の詳細について何も規定しない
+ 投げない。
+ 
+ ## 備考
+-(1)の関数は実装によって全ての整数型（符号付、無し）および`char`のオーバーロードが提供される。
++- MSVCでは浮動小数点数→10進文字列変換の実装に[Ryu](https://github.com/ulfjack/ryu)というアルゴリズムを利用している。
++- (1) : 実装によって全ての整数型（符号付、無し）および`char`のオーバーロードが提供される
++- (5)(9)(13) : 浮動小数点数型は拡張浮動小数点数型を含む
+ 
+-MSVCでは浮動小数点数→10進文字列変換の実装に[Ryu](https://github.com/ulfjack/ryu)というアルゴリズムを利用している。
+ 
+ ## 例
+ 
+@@ -145,21 +218,21 @@ int main()
+     std::cout &amp;lt;&amp;lt; &amp;#34;conversion failed.&amp;#34; &amp;lt;&amp;lt; std::endl;
+   }
+ 
+-  //(6) 精度指定なしの浮動小数点数変換、指数表記
++  //(7) 精度指定なしの浮動小数点数変換、指数表記
+   if (auto [ptr, ec] = std::to_chars(begin, end, l, std::chars_format::scientific); ec == std::errc{}) {
+     std::cout &amp;lt;&amp;lt; std::string_view(begin, ptr - begin) &amp;lt;&amp;lt; std::endl;
+   }
+   else {
+     std::cout &amp;lt;&amp;lt; &amp;#34;conversion failed.&amp;#34; &amp;lt;&amp;lt; std::endl;
+   }
+-  //(6) 精度指定なしの浮動小数点数変換、固定小数表記
++  //(7) 精度指定なしの浮動小数点数変換、固定小数表記
+   if (auto [ptr, ec] = std::to_chars(begin, end, l, std::chars_format::fixed); ec == std::errc{}) {
+     std::cout &amp;lt;&amp;lt; std::string_view(begin, ptr - begin) &amp;lt;&amp;lt; std::endl;
+   }
+   else {
+     std::cout &amp;lt;&amp;lt; &amp;#34;conversion failed.&amp;#34; &amp;lt;&amp;lt; std::endl;
+   }
+-  //(6) 精度指定なしの浮動小数点数変換、16進指数表記
++  //(7) 精度指定なしの浮動小数点数変換、16進指数表記
+   if (auto [ptr, ec] = std::to_chars(begin, end, l, std::chars_format::hex); ec == std::errc{}) {
+     std::cout &amp;lt;&amp;lt; std::string_view(begin, ptr - begin) &amp;lt;&amp;lt; std::endl;
+   }
+@@ -167,21 +240,21 @@ int main()
+     std::cout &amp;lt;&amp;lt; &amp;#34;conversion failed.&amp;#34; &amp;lt;&amp;lt; std::endl;
+   }
+ 
+-  //(9) 精度指定ありの浮動小数点数変換、指数表記
++  //(11) 精度指定ありの浮動小数点数変換、指数表記
+   if (auto [ptr, ec] = std::to_chars(begin, end, l, std::chars_format::scientific, 16); ec == std::errc{}) {
+     std::cout &amp;lt;&amp;lt; std::string_view(begin, ptr - begin) &amp;lt;&amp;lt; std::endl;
+   }
+   else {
+     std::cout &amp;lt;&amp;lt; &amp;#34;conversion failed.&amp;#34; &amp;lt;&amp;lt; std::endl;
+   }
+-  //(9) 精度指定ありの浮動小数点数変換、固定小数表記
++  //(11) 精度指定ありの浮動小数点数変換、固定小数表記
+   if (auto [ptr, ec] = std::to_chars(begin, end, l, std::chars_format::fixed, 16); ec == std::errc{}) {
+     std::cout &amp;lt;&amp;lt; std::string_view(begin, ptr - begin) &amp;lt;&amp;lt; std::endl;
+   }
+   else {
+     std::cout &amp;lt;&amp;lt; &amp;#34;conversion failed.&amp;#34; &amp;lt;&amp;lt; std::endl;
+   }
+-  //(9) 精度指定ありの浮動小数点数変換、16進指数表記
++  //(11) 精度指定ありの浮動小数点数変換、16進指数表記
+   if (auto [ptr, ec] = std::to_chars(begin, end, l, std::chars_format::hex, 16); ec == std::errc{}) {
+     std::cout &amp;lt;&amp;lt; std::string_view(begin, ptr - begin) &amp;lt;&amp;lt; std::endl;
+   }
+@@ -227,3 +300,5 @@ z
+ - [Visual Studio 2017 version 15.9.0 - Visual Studio 2017 version 15.9 Release Notes](https://docs.microsoft.com/en-us/visualstudio/releasenotes/vs2017-relnotes#-c)
+ - [P2291R3: Add Constexpr Modifiers to Functions to_chars and from_chars for Integral Types in `&amp;lt;charconv&amp;gt;` Header](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2291r3.pdf)
+     - C++23での(1)constexpr指定
++- [P1467R9 Extended floating-point types and standard names](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1467r9.html)
++    - C++23で拡張浮動小数点数型に対応した
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>from_chars -- from_chars : 拡張浮動小数点数型に対応 #1022</title>
+      <link href="https://cpprefjp.github.io/reference/charconv/from_chars.html"/>
+      <id>f447758159921653e9e3346942620c9c7bf074b8:reference/charconv/from_chars.md</id>
+      <updated>2023-03-07T12:46:13+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/charconv/from_chars.md b/reference/charconv/from_chars.md
+index 8a4ff6a9a..fe8be9296 100644
+--- a/reference/charconv/from_chars.md
++++ b/reference/charconv/from_chars.md
+@@ -7,21 +7,42 @@
+ ```cpp
+ namespace std {
+   //整数型用
+-  from_chars_result from_chars(const char* first, const char* last,
+-                               /*see below*/&amp;amp; value, int base = 10);      // (1) C++17
+-  constexpr from_chars_result from_chars(const char* first, const char* last,
+-                               /*see below*/&amp;amp; value, int base = 10);      // (1) C++23
++  from_chars_result
++    from_chars(const char* first,
++               const char* last,
++               /*see below*/&amp;amp; value,
++               int base = 10);      // (1) C++17
++  constexpr from_chars_result
++    from_chars(const char* first,
++               const char* last,
++               integer-type&amp;amp; value,
++               int base = 10);      // (1) C++23
+ 
+   //浮動小数点型用
+-  from_chars_result from_chars(const char* first, const char* last, float&amp;amp; value,
+-                               chars_format fmt = chars_format::general); // (2)
+-  from_chars_result from_chars(const char* first, const char* last, double&amp;amp; value,
+-                               chars_format fmt = chars_format::general); // (3)
+-  from_chars_result from_chars(const char* first, const char* last, long double&amp;amp; value,
+-                               chars_format fmt = chars_format::general); // (4)
++  from_chars_result
++    from_chars(const char* first,
++               const char* last,
++               float&amp;amp; value,
++               chars_format fmt = chars_format::general); // (2) C++17からC++20まで
++  from_chars_result
++    from_chars(const char* first,
++               const char* last,
++               double&amp;amp; value,
++               chars_format fmt = chars_format::general); // (3) C++17からC++20まで
++  from_chars_result
++    from_chars(const char* first,
++               const char* last,
++               long double&amp;amp; value,
++               chars_format fmt = chars_format::general); // (4) C++17からC++20まで
++  from_chars_result
++    from_chars(const char* first,
++               const char* last,
++               floating-point-type&amp;amp; value,
++               chars_format fmt = chars_format::general); // (5) C++23
+ }
+ ```
+ * see below[italic]
++* integer-type[italic]
+ 
+ 
+ ## 概要
+@@ -30,6 +51,13 @@ namespace std {
+ 
+ C++標準はこれら関数の実装の詳細について何も規定しない。これは、各実装において可能な最も高速なアルゴリズムが選択されることを意図しての事である。
+ 
++- (1) : 整数型に対するオーバーロード
++- (2) : `float`型に対するオーバーロード
++- (3) : `double`型に対するオーバーロード
++- (4) : `long double`型に対するオーバーロード
++- (5) : 浮動小数点数型に対するオーバーロード
++
++
+ ## 要件
+ - 全て : 入力イテレータ範囲`[first, last)`は有効な範囲であること（charのオブジェクトが構築済みであり、連続していること）。
+ - (1) : `base`は2～36までの値であること。
+@@ -51,7 +79,7 @@ C++標準はこれら関数の実装の詳細について何も規定しない
+     nを基数としたCロケールによる`strtol`で変換する際と同様のパターンを用いる。  
+     ただし、`value`の型が符号付である場合にのみ`-`は考慮され、`+`や16進数の`0x`等の他の記号は考慮されない。
+     
+-- (2)～(4) : 浮動小数点数字列を浮動小数点数へ変換する。  
++- (2)～(5) : 浮動小数点数字列を浮動小数点数へ変換する。  
+     Cロケールによる`strtod`で変換する際と同様のパターンを用いる。ただし、以下の違いがある。  
+     数字の先頭の符号は`-`のみが考慮され、`+`等は考慮されない。  
+     また、`fmt`に`chars_format::general`が設定されておらず（`scientific`と`fixed`が同時に設定されておらず）
+@@ -83,7 +111,9 @@ C++標準はこれら関数の実装の詳細について何も規定しない
+ 投げない。
+ 
+ ## 備考
+-(1)の関数は実装によって全ての整数型（符号付、無し）および`char`の参照型のオーバーロードが提供される。
++- (1) : 実装によって全ての整数型（符号付、無し）および`char`の参照型のオーバーロードが提供される
++- (5) : 浮動小数点数型は、拡張浮動小数点数型を含む
++
+ 
+ ## 例
+ 
+@@ -278,7 +308,7 @@ auto str_to_double(R&amp;amp;&amp;amp; r) -&amp;gt; std::optional&amp;lt;double&amp;gt; {
+ 
+ int main() {
+   std::string str = &amp;#34;3.1415926535897932384626433832795 is pi&amp;#34;;
+-  
++
+   if (auto opt = str_to_double(str); opt) {
+     std::cout &amp;lt;&amp;lt; std::format(&amp;#34;{:.15f}\n&amp;#34;, *opt);
+   } else {
+@@ -286,7 +316,7 @@ int main() {
+   }
+ 
+   std::string_view strview = &amp;#34;2.7182818284590452353602874 is e&amp;#34;;
+-  
++
+   if (auto opt = str_to_double(strview); opt) {
+     std::cout &amp;lt;&amp;lt; std::format(&amp;#34;{:.15f}\n&amp;#34;, *opt);
+   } else {
+@@ -295,7 +325,7 @@ int main() {
+ 
+   const char cstr[] = &amp;#34;1.10001e-01 is Liouville number&amp;#34;;
+   std::vector&amp;lt;char&amp;gt; strvec(cstr, std::ranges::end(cstr));
+-  
++
+   if (auto opt = str_to_double(strvec); opt) {
+     std::cout &amp;lt;&amp;lt; std::format(&amp;#34;{:.15f}\n&amp;#34;, *opt);
+   } else {
+@@ -303,7 +333,7 @@ int main() {
+   }
+ 
+   std::span sp{cstr};
+-  
++
+   if (auto opt = str_to_double(sp); opt) {
+     std::cout &amp;lt;&amp;lt; std::format(&amp;#34;{:.15f}\n&amp;#34;, *opt);
+   } else {
+@@ -349,3 +379,5 @@ int main() {
+ - [How to Use The Newest C++ String Conversion Routines - std::from_chars - Bartek&amp;#39;s coding blog ](https://www.bfilipek.com/2018/12/fromchars.html)
+ - [P2291R3: Add Constexpr Modifiers to Functions to_chars and from_chars for Integral Types in `&amp;lt;charconv&amp;gt;` Header](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2291r3.pdf)
+     - C++23での(1)constexpr指定
++- [P1467R9 Extended floating-point types and standard names](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1467r9.html)
++    - C++23で拡張浮動小数点数型に対応した
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>コンストラクタ -- string_view コンストラクタ : LWG Issue 3857対応</title>
@@ -35,648 +426,6 @@ index 1fe145265..87c4e8378 100644
       <author>
         <name>onihusube</name>
         <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>pow -- 不要なコード修飾を削除</title>
-      <link href="https://cpprefjp.github.io/reference/complex/complex/pow.html"/>
-      <id>d00a2e8f0da78ce5910d58817306a2a05e2f97ba:reference/complex/complex/pow.md</id>
-      <updated>2023-03-03T19:25:15+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/complex/complex/pow.md b/reference/complex/complex/pow.md
-index e8ca273d5..ada29ac86 100644
---- a/reference/complex/complex/pow.md
-+++ b/reference/complex/complex/pow.md
-@@ -33,7 +33,6 @@ namespace std {
- * Promoted[italic]
- * ArithmeticOrComplex1[italic]
- * ArithmeticOrComplex2[italic]
--* common_type_t[link /reference/type_traits/common_type.md]
- 
- ## 概要
- 複素数値の累乗を得る。pow は power（累乗、指数）の略。
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>complex -- complex : C++23の拡張浮動小数点数型に対応 #1022</title>
-      <link href="https://cpprefjp.github.io/reference/complex/complex.html"/>
-      <id>f5a4bdcc87ea89099b2112d27cb67ca68af26546:reference/complex/complex.md</id>
-      <updated>2023-03-03T19:21:37+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/complex/complex.md b/reference/complex/complex.md
-index 036b851a8..153a5c090 100644
---- a/reference/complex/complex.md
-+++ b/reference/complex/complex.md
-@@ -15,11 +15,7 @@ namespace std {
- 
- `complex`クラステンプレートは、複素数を表すクラスである。このクラスは、実部(real part)と虚部(imaginary part)を、それぞれ型`T`の値として保持し、演算に使用する。
- 
--`complex`クラステンプレートは以下の型で特殊化され、特化した実装が行われる：
--
--- `float`
--- `double`
--- `long double`
-+`complex`クラステンプレートはCV修飾されていない浮動小数点数型 (C++23以降は拡張浮動小数点数型を含む) で特殊化され、特化した実装が行われる：
- 
- これ以外の型がテンプレート引数として与えられた場合、その動作は未規定である。
- 
-@@ -190,4 +186,5 @@ polar : (-1.62921e-07,1)
- - [LWG Issue 387. `std::complex` over-encapsulated](http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#387)
-     - C++11で、`std::complex`型のメモリレイアウトが規定された経緯のレポート
- - [N1568 Proposed additions to TR-1 to improve compatibility with C99](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1568.htm)
--
-+- [P1467R9 Extended floating-point types and standard names](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1467r9.html)
-+    - C++23で拡張浮動小数点数型に対応した
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>arg -- complex : C++23の拡張浮動小数点数型に対応 #1022</title>
-      <link href="https://cpprefjp.github.io/reference/complex/complex/arg.html"/>
-      <id>f5a4bdcc87ea89099b2112d27cb67ca68af26546:reference/complex/complex/arg.md</id>
-      <updated>2023-03-03T19:21:37+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/complex/complex/arg.md b/reference/complex/complex/arg.md
-index 9928a2e94..b02461bf7 100644
---- a/reference/complex/complex/arg.md
-+++ b/reference/complex/complex/arg.md
-@@ -6,9 +6,9 @@
- ```cpp
- namespace std {
-   template &amp;lt;class T&amp;gt;
--  T arg(const complex&amp;lt;T&amp;gt;&amp;amp; x);
-+  T arg(const complex&amp;lt;T&amp;gt;&amp;amp; x);          // (1) C++03
- 
--  Promoted arg(Arithmetic x);	// 追加のオーバーロード：C++11 から
-+  complex&amp;lt;Promoted&amp;gt; arg(Arithmetic x); // (2) C++11 追加のオーバーロード
- }
- ```
- * Promoted[italic]
-@@ -17,11 +17,13 @@ namespace std {
- ## 概要
- 複素数値の偏角を得る。arg は argument（偏角）の略。
- 
--なお、C++11 で追加されたオーバーロードは、以下のように規定されている。
-+- (1) : `complex&amp;lt;T&amp;gt;`に対するオーバーロード
-+- (2) : 算術型に対する追加のオーバーロード
- 
--- 実引数の型が `long double` の場合、`complex&amp;lt;long double&amp;gt;` にキャストされているかのように振る舞う。
--- そうでなくて、実引数の型が `double` か整数型の場合、`complex&amp;lt;double&amp;gt;` にキャストされているかのように振る舞う。
--- そうでなくて、実引数の型が `float` の場合、`complex&amp;lt;float&amp;gt;` にキャストされているかのように振る舞う。
-+(2)は、以下のように振る舞う：
-+
-+- 実引数の型が浮動小数点数型 `T` の場合、`complex&amp;lt;T&amp;gt;` にキャストされているかのように振る舞う
-+- そうでなくて、実引数が整数型の場合、`complex&amp;lt;double&amp;gt;` にキャストされているかのように振る舞う (C++23)
- 
- また、これらの追加のオーバーロードが関数テンプレートなのか否か、あるいは、引数が参照型なのか否かなどについては、規格では何も言及されていない。
- 
-@@ -81,3 +83,8 @@ arg( (1,2) ) = 1.10715
- | [`conj`](conj.md)                  | 共役複素数を得る。                     |
- | [`proj`](proj.md)                  | リーマン球面への射影を得る。           |
- | [`polar`](polar.md)                | 指定した絶対値と偏角の複素数値を得る。 |
-+
-+
-+## 参照
-+- [P1467R9 Extended floating-point types and standard names](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1467r9.html)
-+    - C++23で拡張浮動小数点数型への対応が行われ、整数型も考慮されるようになった
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>conj -- complex : C++23の拡張浮動小数点数型に対応 #1022</title>
-      <link href="https://cpprefjp.github.io/reference/complex/complex/conj.html"/>
-      <id>f5a4bdcc87ea89099b2112d27cb67ca68af26546:reference/complex/complex/conj.md</id>
-      <updated>2023-03-03T19:21:37+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/complex/complex/conj.md b/reference/complex/complex/conj.md
-index 0a96f4df6..6f3502a6e 100644
---- a/reference/complex/complex/conj.md
-+++ b/reference/complex/complex/conj.md
-@@ -11,7 +11,7 @@ namespace std {
-   template &amp;lt;class T&amp;gt;
-   constexpr complex&amp;lt;T&amp;gt; conj(const complex&amp;lt;T&amp;gt;&amp;amp; x); // (1) C++20
- 
--  std::complex&amp;lt;Promoted&amp;gt; conj(Arithmetic x);      // (2) C++11 追加のオーバーロード
-+  complex&amp;lt;Promoted&amp;gt; conj(Arithmetic x);           // (2) C++11 追加のオーバーロード
- }
- ```
- * Promoted[italic]
-@@ -20,11 +20,13 @@ namespace std {
- ## 概要
- 共役複素数を得る。conj は conjugate（共役）の略。
- 
--なお、C++11 で追加されたオーバーロードは、以下のように規定されている。
-+- (1) : `complex&amp;lt;T&amp;gt;`に対するオーバーロード
-+- (2) : 算術型に対する追加のオーバーロード
- 
--- 実引数の型が `long double` の場合、`complex&amp;lt;long double&amp;gt;` にキャストされているかのように振る舞う。
--- そうでなくて、実引数の型が `double` か整数型の場合、`complex&amp;lt;double&amp;gt;` にキャストされているかのように振る舞う。
--- そうでなくて、実引数の型が `float` の場合、`complex&amp;lt;float&amp;gt;` にキャストされているかのように振る舞う。
-+(2)は、以下のように振る舞う：
-+
-+- 実引数の型が浮動小数点数型 `T` の場合、`complex&amp;lt;T&amp;gt;` にキャストされているかのように振る舞う
-+- そうでなくて、実引数が整数型の場合、`complex&amp;lt;double&amp;gt;` にキャストされているかのように振る舞う (C++23)
- 
- また、これらの追加のオーバーロードが関数テンプレートなのか否か、あるいは、引数が参照型なのか否かなどについては、規格では何も言及されていない。
- 
-@@ -80,3 +82,5 @@ conj( (1,2) ) = (1,-2)
- 
- ## 参照
- - [P0415R1 Constexpr for `std::complex`](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0415r1.html)
-+- [P1467R9 Extended floating-point types and standard names](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1467r9.html)
-+    - C++23で拡張浮動小数点数型への対応が行われ、整数型も考慮されるようになった
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>imag (非メンバ関数) -- complex : C++23の拡張浮動小数点数型に対応 #1022</title>
-      <link href="https://cpprefjp.github.io/reference/complex/complex/imag_free.html"/>
-      <id>f5a4bdcc87ea89099b2112d27cb67ca68af26546:reference/complex/complex/imag_free.md</id>
-      <updated>2023-03-03T19:21:37+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/complex/complex/imag_free.md b/reference/complex/complex/imag_free.md
-index cf3b8699c..98a3e498b 100644
---- a/reference/complex/complex/imag_free.md
-+++ b/reference/complex/complex/imag_free.md
-@@ -6,14 +6,14 @@
- ```cpp
- namespace std {
-   template &amp;lt;class T&amp;gt;
--  T imag(const complex&amp;lt;T&amp;gt;&amp;amp; x);				// C++11 まで
--
-+  T imag(const complex&amp;lt;T&amp;gt;&amp;amp; x);           // (1) C++03
-   template &amp;lt;class T&amp;gt;
--  constexpr T imag(const complex&amp;lt;T&amp;gt;&amp;amp; x);	// C++14 から
--
--  Promoted imag(Arithmetic x);				// 追加のオーバーロード：C++11
-+  constexpr T imag(const complex&amp;lt;T&amp;gt;&amp;amp; x); // (1) C++14
- 
--  constexpr Promoted imag(Arithmetic x);	// 追加のオーバーロード：C++14 から
-+  complex&amp;lt;Promoted&amp;gt;
-+    imag(Arithmetic x);                 // (2) C++11 追加のオーバーロード
-+  constexpr complex&amp;lt;Promoted&amp;gt;
-+    imag(Arithmetic x);                 // (2) C++14 追加のオーバーロード
- }
- ```
- * Promoted[italic]
-@@ -22,11 +22,13 @@ namespace std {
- ## 概要
- 複素数の虚部を取得する。
- 
--なお、C++11 で追加されたオーバーロードは、以下のように規定されている。
-+- (1) : `complex&amp;lt;T&amp;gt;`に対するオーバーロード
-+- (2) : 算術型に対する追加のオーバーロード
-+
-+(2)は、以下のように振る舞う：
- 
--- 実引数の型が `long double` の場合、`complex&amp;lt;long double&amp;gt;` にキャストされているかのように振る舞う。
--- そうでなくて、実引数の型が `double` か整数型の場合、`complex&amp;lt;double&amp;gt;` にキャストされているかのように振る舞う。
--- そうでなくて、実引数の型が `float` の場合、`complex&amp;lt;float&amp;gt;` にキャストされているかのように振る舞う。
-+- 実引数の型が浮動小数点数型 `T` の場合、`complex&amp;lt;T&amp;gt;` にキャストされているかのように振る舞う
-+- そうでなくて、実引数が整数型の場合、`complex&amp;lt;double&amp;gt;` にキャストされているかのように振る舞う (C++23)
- 
- また、これらの追加のオーバーロードが関数テンプレートなのか否か、あるいは、引数が参照型なのか否かなどについては、規格では何も言及されていない。
- 
-@@ -78,10 +80,6 @@ int main()
- 	なお、libstdc++ では追加のオーバーロードが constexpr になっていないが、これはバグであるものと思われる。
- 
- 
--## 参照
--- [N3302 Constexpr Library Additions: complex, v2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2011/n3302.html)
--
--
- ## 関連項目
- 
- | 名前                   | 説明                                           |
-@@ -96,3 +94,8 @@ int main()
- | [`proj`](proj.md)      | リーマン球面への射影を得る。                   |
- | [`polar`](polar.md)    | 指定した絶対値と偏角の複素数値を得る。         |
- 
-+
-+## 参照
-+- [N3302 Constexpr Library Additions: complex, v2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2011/n3302.html)
-+- [P1467R9 Extended floating-point types and standard names](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1467r9.html)
-+    - C++23で拡張浮動小数点数型への対応が行われ、整数型も考慮されるようになった
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>norm -- complex : C++23の拡張浮動小数点数型に対応 #1022</title>
-      <link href="https://cpprefjp.github.io/reference/complex/complex/norm.html"/>
-      <id>f5a4bdcc87ea89099b2112d27cb67ca68af26546:reference/complex/complex/norm.md</id>
-      <updated>2023-03-03T19:21:37+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/complex/complex/norm.md b/reference/complex/complex/norm.md
-index aa1f3b68d..6406d40f8 100644
---- a/reference/complex/complex/norm.md
-+++ b/reference/complex/complex/norm.md
-@@ -11,7 +11,7 @@ namespace std {
-   template &amp;lt;class T&amp;gt;
-   constexpr T norm(const complex&amp;lt;T&amp;gt;&amp;amp; x); // (1) C++20
- 
--  Promoted norm(Arithmetic x);           // (2) C++11 追加のオーバーロード
-+  complex&amp;lt;Promoted&amp;gt; norm(Arithmetic x);  // (2) C++11 追加のオーバーロード
- }
- ```
- * Promoted[italic]
-@@ -20,11 +20,13 @@ namespace std {
- ## 概要
- 複素数体のノルム（field norm。絶対値の 2 乗）を得る。
- 
--なお、C++11 で追加されたオーバーロードは、以下のように規定されている。
-+- (1) : `complex&amp;lt;T&amp;gt;`に対するオーバーロード
-+- (2) : 算術型に対する追加のオーバーロード
- 
--- 実引数の型が `long double` の場合、`complex&amp;lt;long double&amp;gt;` にキャストされているかのように振る舞う。
--- そうでなくて、実引数の型が `double` か整数型の場合、`complex&amp;lt;double&amp;gt;` にキャストされているかのように振る舞う。
--- そうでなくて、実引数の型が `float` の場合、`complex&amp;lt;float&amp;gt;` にキャストされているかのように振る舞う。
-+(2)は、以下のように振る舞う：
-+
-+- 実引数の型が浮動小数点数型 `T` の場合、`complex&amp;lt;T&amp;gt;` にキャストされているかのように振る舞う
-+- そうでなくて、実引数が整数型の場合、`complex&amp;lt;double&amp;gt;` にキャストされているかのように振る舞う (C++23)
- 
- また、これらの追加のオーバーロードが関数テンプレートなのか否か、あるいは、引数が参照型なのか否かなどについては、規格では何も言及されていない。
- 
-@@ -87,3 +89,5 @@ norm( (1,2) ) = 5
- - [ノルム (体論) - Wikipedia](https://ja.wikipedia.org/wiki/%E3%83%8E%E3%83%AB%E3%83%A0_(%E4%BD%93%E8%AB%96))
- - [ノルム - Wikipedia](https://ja.wikipedia.org/wiki/%E3%83%8E%E3%83%AB%E3%83%A0)
- - [P0415R1 Constexpr for `std::complex`](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0415r1.html)
-+- [P1467R9 Extended floating-point types and standard names](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1467r9.html)
-+    - C++23で拡張浮動小数点数型への対応が行われ、整数型も考慮されるようになった
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>コンストラクタ -- complex : C++23の拡張浮動小数点数型に対応 #1022</title>
-      <link href="https://cpprefjp.github.io/reference/complex/complex/op_constructor.html"/>
-      <id>f5a4bdcc87ea89099b2112d27cb67ca68af26546:reference/complex/complex/op_constructor.md</id>
-      <updated>2023-03-03T19:21:37+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/complex/complex/op_constructor.md b/reference/complex/complex/op_constructor.md
-index 78394e525..452b98966 100644
---- a/reference/complex/complex/op_constructor.md
-+++ b/reference/complex/complex/op_constructor.md
-@@ -10,51 +10,18 @@ constexpr complex(const T&amp;amp; re = T(), const T&amp;amp; im = T());  // (1) C++14
- 
- complex(const complex&amp;amp; other);                            // (2) C++03
- constexpr complex(const complex&amp;amp; other);                  // (2) C++14
-+constexpr complex(const complex&amp;amp; other) = default;        // (2) C++23
- 
- template &amp;lt;class X&amp;gt;
- complex(const complex&amp;lt;X&amp;gt;&amp;amp; other);                         // (3) C++03
--
- template &amp;lt;class X&amp;gt;
- constexpr complex(const complex&amp;lt;X&amp;gt;&amp;amp; other);               // (3) C++14
-+template &amp;lt;class X&amp;gt;
-+constexpr explicit(see below)
-+  complex(const complex&amp;lt;X&amp;gt;&amp;amp; other);                       // (3) C++23
- ```
- 
--### float 特殊化
--```cpp
--complex(const float&amp;amp; re = 0.0f, const float&amp;amp; im = 0.0f);			// (1) C++03
--constexpr complex(const float&amp;amp; re = 0.0f, const float&amp;amp; im = 0.0f);	// (1) C++14
--
--explicit complex(const complex&amp;lt;double&amp;gt;&amp;amp; other);						// (3)&amp;#39; C++03
--explicit constexpr complex(const complex&amp;lt;double&amp;gt;&amp;amp; other);			// (3)&amp;#39; C++14
--
--explicit complex(const complex&amp;lt;long double&amp;gt;&amp;amp; other);				// (3)&amp;#39; C++03
--explicit constexpr complex(const complex&amp;lt;long double&amp;gt;&amp;amp; other);		// (3)&amp;#39; C++14
--```
--
--### double 特殊化
--```cpp
--complex(const double&amp;amp; re = 0.0, const double&amp;amp; im = 0.0);			// (1) C++03
--constexpr complex(const double&amp;amp; re = 0.0, const double&amp;amp; im = 0.0);	// (1) C++14
--
--complex(const complex&amp;lt;float&amp;gt;&amp;amp; other);								// (3)&amp;#39; C++03
--constexpr complex(const complex&amp;lt;float&amp;gt;&amp;amp; other);						// (3)&amp;#39; C++14
--
--explicit complex(const complex&amp;lt;long double&amp;gt;&amp;amp; other);				// (3)&amp;#39; C++03
--explicit constexpr complex(const complex&amp;lt;long double&amp;gt;&amp;amp; other);		// (3)&amp;#39; C++14
--```
--
--### long double 特殊化
--```cpp
--complex(const long double&amp;amp; re = 0.0L, const long double&amp;amp; im = 0.0L);			// (1) C++03
--constexpr complex(const long double&amp;amp; re = 0.0L, const long double&amp;amp; im = 0.0L);	// (1) C++14
--
--complex(const complex&amp;lt;float&amp;gt;&amp;amp; other);											// (3)&amp;#39; C++03
--constexpr complex(const complex&amp;lt;float&amp;gt;&amp;amp; other);									// (3)&amp;#39; C++14
--
--complex(const complex&amp;lt;double&amp;gt;&amp;amp; other);											// (3)&amp;#39; C++03
--constexpr complex(const complex&amp;lt;double&amp;gt;&amp;amp; other);								// (3)&amp;#39; C++14
--```
--
--## complexオブジェクトの構築
-+## 概要
- - (1) : 実部(`re`)と虚部(`im`)の値をそれぞれ受け取って構築
- - (2) : コピーコンストラクタ
- - (3) : 変換可能な要素型の`complex`オブジェクトからのコピー
-@@ -66,9 +33,7 @@ constexpr complex(const complex&amp;lt;double&amp;gt;&amp;amp; other);								// (3)&amp;#39; C++14
- 
- 
- ## 備考
--各浮動小数点型の特殊化では、変換コンストラクタとして (3) の関数テンプレート形式ではなく、(3)&amp;#39; のように個別の関数群を提供している。  
--これらのうち、各要素が縮小変換となるものは `explicit` と宣言されているため、暗黙の型変換には使用されない。  
--また、テンプレート形式ではないため、浮動小数点型以外の特殊化からの変換は（たとえ要素型同士での型変換ができたとしても）行うことができない。
-+- (3) : 浮動小数点数型として縮小変換となるものは `explicit` と宣言されているため、暗黙の型変換には使用されない
- 
- 
- ## 例
-@@ -86,11 +51,11 @@ int main()
-   // コピー構築
-   std::complex&amp;lt;float&amp;gt; c2 = c1;
- 
--  // (3)&amp;#39;
-+  // (3)
-   // 変換可能なcomplexオブジェクトからコピー
-   std::complex&amp;lt;double&amp;gt; c3 = c2;
- 
--  // (3)&amp;#39;
-+  // (3)
-   // 縮小変換となるコンストラクタは explicit
-   // std::complex&amp;lt;float&amp;gt; c4 = c3; // エラー
-   std::complex&amp;lt;float&amp;gt; c4(c3);     // 直接初期化なら OK
-@@ -111,13 +76,15 @@ c4 : (1,2)
- ```
- 
- 
--## 参照
--- [N3302 Constexpr Library Additions: complex, v2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2011/n3302.html)
--
--
- ## 関連項目
- 
- | 名前             | 説明                             |
- |------------------|----------------------------------|
- |[`real`](real.md) | 実部を取得、あるいは、設定する。 |
- |[`imag`](imag.md) | 虚部を取得、あるいは、設定する。 |
-+
-+
-+## 参照
-+- [N3302 Constexpr Library Additions: complex, v2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2011/n3302.html)
-+- [P1467R9 Extended floating-point types and standard names](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1467r9.html)
-+    - C++23で拡張浮動小数点数型に対応した
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>pow -- complex : C++23の拡張浮動小数点数型に対応 #1022</title>
-      <link href="https://cpprefjp.github.io/reference/complex/complex/pow.html"/>
-      <id>f5a4bdcc87ea89099b2112d27cb67ca68af26546:reference/complex/complex/pow.md</id>
-      <updated>2023-03-03T19:21:37+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/complex/complex/pow.md b/reference/complex/complex/pow.md
-index 97fa0aa26..e8ca273d5 100644
---- a/reference/complex/complex/pow.md
-+++ b/reference/complex/complex/pow.md
-@@ -6,34 +6,49 @@
- ```cpp
- namespace std {
-   template &amp;lt;class T&amp;gt;
--  complex&amp;lt;T&amp;gt; pow(const complex&amp;lt;T&amp;gt;&amp;amp; x, const complex&amp;lt;T&amp;gt;&amp;amp; y);		// (1)
-+  complex&amp;lt;T&amp;gt;
-+    pow(const complex&amp;lt;T&amp;gt;&amp;amp; x,
-+        const complex&amp;lt;T&amp;gt;&amp;amp; y);    // (1) C++03
- 
-   template &amp;lt;class T&amp;gt;
--  complex&amp;lt;T&amp;gt; pow(const complex&amp;lt;T&amp;gt;&amp;amp; x, const T&amp;amp; y);				// (2)
-+  complex&amp;lt;T&amp;gt;
-+    pow(const complex&amp;lt;T&amp;gt;&amp;amp; x,
-+        const T&amp;amp; y);             // (2) C++03
- 
-   template &amp;lt;class T&amp;gt;
--  complex&amp;lt;T&amp;gt; pow(const T&amp;amp; x, const complex&amp;lt;T&amp;gt;&amp;amp; y);				// (3)
-+  complex&amp;lt;T&amp;gt;
-+    pow(const T&amp;amp; x,
-+        const complex&amp;lt;T&amp;gt;&amp;amp; y);    // (3) C++03
- 
-   template &amp;lt;class T&amp;gt;
--  complex&amp;lt;T&amp;gt; pow(const complex&amp;lt;T&amp;gt;&amp;amp; x, int y);					// (4) C++03 まで
-+  complex&amp;lt;T&amp;gt;
-+    pow(const complex&amp;lt;T&amp;gt;&amp;amp; x,
-+        int y);                  // (4) C++03 まで
- 
--  Promoted pow(ArithmeticOrComplex1 x, ArithmeticOrComplex2 y);	// (5) 追加のオーバーロード：C++11 から
-+  complex&amp;lt;Promoted&amp;gt;
-+    pow(ArithmeticOrComplex1 x,
-+        ArithmeticOrComplex2 y); // (5) C++11 追加のオーバーロード
- }
- ```
- * Promoted[italic]
- * ArithmeticOrComplex1[italic]
- * ArithmeticOrComplex2[italic]
-+* common_type_t[link /reference/type_traits/common_type.md]
- 
- ## 概要
- 複素数値の累乗を得る。pow は power（累乗、指数）の略。
- 
--なお、C++11 で追加されたオーバーロード (5) は、少なくとも 1 つの実引数が `complex&amp;lt;T&amp;gt;` の場合にオーバーロード解決の際に考慮され、以下のように規定されている。
--
--- いずれかの実引数の型が `complex&amp;lt;long double&amp;gt;` か `long double` の場合、両方の引数が `complex&amp;lt;long double&amp;gt;` にキャストされているかのように振る舞う。
--- そうでなくて、いずれかの実引数の型が `complex&amp;lt;double&amp;gt;` か `double` か整数型の場合、両方の引数が `complex&amp;lt;double&amp;gt;` にキャストされているかのように振る舞う。
--- そうでなくて、いずれかの実引数の型が `complex&amp;lt;float&amp;gt;` か `float` の場合、両方の引数が `complex&amp;lt;float&amp;gt;` にキャストされているかのように振る舞う。
--
--また、これらの追加のオーバーロードが関数テンプレートなのか否か、あるいは、引数が参照型なのか否かなどについては、規格では何も言及されていない。
-+- (1) : `complex&amp;lt;T&amp;gt;`同士に対するオーバーロード
-+- (2) : `complex&amp;lt;T&amp;gt;`と`T`の組み合わせでのオーバーロード
-+- (3) : `T`と`complex&amp;lt;T&amp;gt;`の組み合わせでのオーバーロード
-+- (3) : `complex&amp;lt;T&amp;gt;`と`int`の組み合わせでのオーバーロード
-+- (5) : `complex&amp;lt;T&amp;gt;`と任意の算術型、およびその逆の組み合わせに対する追加のオーバーロード
-+    - C++11 : 少なくとも 1 つの実引数が `complex&amp;lt;T&amp;gt;` の場合にオーバーロード解決の際に考慮され、以下のように規定されている
-+        - いずれかの実引数の型が `complex&amp;lt;long double&amp;gt;` か `long double` の場合、両方の引数が `complex&amp;lt;long double&amp;gt;` にキャストされているかのように振る舞う
-+        - そうでなくて、いずれかの実引数の型が `complex&amp;lt;double&amp;gt;` か `double` か整数型の場合、両方の引数が `complex&amp;lt;double&amp;gt;` にキャストされているかのように振る舞う
-+        - そうでなくて、いずれかの実引数の型が `complex&amp;lt;float&amp;gt;` か `float` の場合、両方の引数が `complex&amp;lt;float&amp;gt;` にキャストされているかのように振る舞う
-+        - また、これらの追加のオーバーロードが関数テンプレートなのか否か、あるいは、引数が参照型なのか否かなどについては、規格では何も言及されていない
-+    - C++23 : `complex&amp;lt;T1&amp;gt;`と、`T2`もしくは`complex&amp;lt;T2&amp;gt;`の組み合わせ、およびその逆の組み合わせに対するオーバーロードとなり、戻り値はその共通の型`complex&amp;lt;`[`common_type_t`](/reference/type_traits/common_type.md)`&amp;lt;T1, T2&amp;gt;&amp;gt;`となった
- 
- 
- ## 戻り値
-@@ -119,3 +134,8 @@ pow( (1,2), (3,4) ) = (0.12901,0.0339241)
- | [`tan`](tan.md)                    | 複素数の正接を求める。                    |
- | [`tanh`](tanh.md)                  | 複素数の双曲線正接を求める。              |
- | [`pow`](/reference/cmath/pow.md)   | 実数の累乗を求める。                      |
-+
-+
-+## 参照
-+- [P1467R9 Extended floating-point types and standard names](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1467r9.html)
-+    - C++23で拡張浮動小数点数型への対応が行われた
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>proj -- complex : C++23の拡張浮動小数点数型に対応 #1022</title>
-      <link href="https://cpprefjp.github.io/reference/complex/complex/proj.html"/>
-      <id>f5a4bdcc87ea89099b2112d27cb67ca68af26546:reference/complex/complex/proj.md</id>
-      <updated>2023-03-03T19:21:37+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/complex/complex/proj.md b/reference/complex/complex/proj.md
-index 4cd739a86..e2d811944 100644
---- a/reference/complex/complex/proj.md
-+++ b/reference/complex/complex/proj.md
-@@ -7,9 +7,9 @@
- ```cpp
- namespace std {
-   template &amp;lt;class T&amp;gt;
--  complex&amp;lt;T&amp;gt; proj(const complex&amp;lt;T&amp;gt;&amp;amp; x);
-+  complex&amp;lt;T&amp;gt; proj(const complex&amp;lt;T&amp;gt;&amp;amp; x); // (1) C++11
- 
--  complex&amp;lt;Promoted&amp;gt; proj(Arithmetic x);	// 追加のオーバーロード：C++11 から
-+  complex&amp;lt;Promoted&amp;gt; proj(Arithmetic x); // (2) C++11 追加のオーバーロード
- }
- ```
- * Promoted[italic]
-@@ -18,11 +18,13 @@ namespace std {
- ## 概要
- リーマン球面への射影（備考参照）を得る。proj は projection（射影、投射）の略。
- 
--なお、C++11 で追加されたオーバーロードは、以下のように規定されている。
-+- (1) : `complex&amp;lt;T&amp;gt;`に対するオーバーロード
-+- (2) : 算術型に対する追加のオーバーロード
- 
--- 実引数の型が `long double` の場合、`complex&amp;lt;long double&amp;gt;` にキャストされているかのように振る舞う。
--- そうでなくて、実引数の型が `double` か整数型の場合、`complex&amp;lt;double&amp;gt;` にキャストされているかのように振る舞う。
--- そうでなくて、実引数の型が `float` の場合、`complex&amp;lt;float&amp;gt;` にキャストされているかのように振る舞う。
-+(2)は、以下のように振る舞う：
-+
-+- 実引数の型が浮動小数点数型 `T` の場合、`complex&amp;lt;T&amp;gt;` にキャストされているかのように振る舞う
-+- そうでなくて、実引数が整数型の場合、`complex&amp;lt;double&amp;gt;` にキャストされているかのように振る舞う (C++23)
- 
- また、これらの追加のオーバーロードが関数テンプレートなのか否か、あるいは、引数が参照型なのか否かなどについては、規格では何も言及されていない。
- 
-@@ -115,4 +117,5 @@ proj( (nan,-inf) ) = (inf,-0)
- 
- ## 参照
- - [LWG Issue 781. `std::complex` should add missing C99 functions](http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#781)
--
-+- [P1467R9 Extended floating-point types and standard names](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1467r9.html)
-+    - C++23で拡張浮動小数点数型への対応が行われ、整数型も考慮されるようになった
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>real (非メンバ関数) -- complex : C++23の拡張浮動小数点数型に対応 #1022</title>
-      <link href="https://cpprefjp.github.io/reference/complex/complex/real_free.html"/>
-      <id>f5a4bdcc87ea89099b2112d27cb67ca68af26546:reference/complex/complex/real_free.md</id>
-      <updated>2023-03-03T19:21:37+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/complex/complex/real_free.md b/reference/complex/complex/real_free.md
-index 1a04c7332..bd5f8876c 100644
---- a/reference/complex/complex/real_free.md
-+++ b/reference/complex/complex/real_free.md
-@@ -6,14 +6,14 @@
- ```cpp
- namespace std {
-   template &amp;lt;class T&amp;gt;
--  T real(const complex&amp;lt;T&amp;gt;&amp;amp; x);				// C++11 まで
--
-+  T real(const complex&amp;lt;T&amp;gt;&amp;amp; x);           // (1) C++03
-   template &amp;lt;class T&amp;gt;
--  constexpr T real(const complex&amp;lt;T&amp;gt;&amp;amp; x);	// C++14 から
--
--  Promoted real(Arithmetic x);				// 追加のオーバーロード：C++11
-+  constexpr T real(const complex&amp;lt;T&amp;gt;&amp;amp; x); // (1) C++14
- 
--  constexpr Promoted real(Arithmetic x);	// 追加のオーバーロード：C++14 から
-+  complex&amp;lt;Promoted&amp;gt;
-+    real(Arithmetic x);           // (2) C++11 追加のオーバーロード
-+  constexpr complex&amp;lt;Promoted&amp;gt;
-+    real(Arithmetic x);           // (2) C++14 追加のオーバーロード
- }
- ```
- * Promoted[italic]
-@@ -22,11 +22,13 @@ namespace std {
- ## 概要
- 複素数の実部を取得する。
- 
--なお、C++11 で追加されたオーバーロードは、以下のように規定されている。
-+- (1) : `complex&amp;lt;T&amp;gt;`に対するオーバーロード
-+- (2) : 算術型に対する追加のオーバーロード
-+
-+(2)は、以下のように振る舞う：
- 
--- 実引数の型が `long double` の場合、`complex&amp;lt;long double&amp;gt;` にキャストされているかのように振る舞う。
--- そうでなくて、実引数の型が `double` か整数型の場合、`complex&amp;lt;double&amp;gt;` にキャストされているかのように振る舞う。
--- そうでなくて、実引数の型が `float` の場合、`complex&amp;lt;float&amp;gt;` にキャストされているかのように振る舞う。
-+- 実引数の型が浮動小数点数型 `T` の場合、`complex&amp;lt;T&amp;gt;` にキャストされているかのように振る舞う
-+- そうでなくて、実引数が整数型の場合、`complex&amp;lt;double&amp;gt;` にキャストされているかのように振る舞う (C++23)
- 
- また、これらの追加のオーバーロードが関数テンプレートなのか否か、あるいは、引数が参照型なのか否かなどについては、規格では何も言及されていない。
- 
-@@ -78,10 +80,6 @@ int main()
- 	なお、libstdc++ では追加のオーバーロードが constexpr になっていないが、これはバグであるものと思われる。
- 
- 
--## 参照
--- [N3302 Constexpr Library Additions: complex, v2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2011/n3302.html)
--
--
- ## 関連項目
- 
- | 名前                   | 説明                                           |
-@@ -95,3 +93,9 @@ int main()
- | [`conj`](conj.md)      | 共役複素数を得る。                             |
- | [`proj`](proj.md)      | リーマン球面への射影を得る。                   |
- | [`polar`](polar.md)    | 指定した絶対値と偏角の複素数値を得る。         |
-+
-+
-+## 参照
-+- [N3302 Constexpr Library Additions: complex, v2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2011/n3302.html)
-+- [P1467R9 Extended floating-point types and standard names](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1467r9.html)
-+    - C++23で拡張浮動小数点数型への対応が行われ、整数型も考慮されるようになった
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
       </author>
     </entry>
   
