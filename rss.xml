@@ -2,9 +2,115 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2023-04-18T14:45:37.209214</updated>
-  <id>1ff1c9ec-1805-4d31-a152-36c9ff755fc6</id>
+  <updated>2023-04-19T08:25:16.637016</updated>
+  <id>f0a0c11a-a026-4c82-94cb-a22d35ff1aad</id>
 
+  
+    <entry>
+      <title>未初期化領域への暗黙的なオブジェクト構築 -- launder()が必要になる場合の解決コードを削除 #1117</title>
+      <link href="https://cpprefjp.github.io/lang/cpp20/implicit_creation_of_objects_for_low-level_object_manipulation.html"/>
+      <id>45cd04b0f7f0abbdb7cfbc314a9354f0bf85b154:lang/cpp20/implicit_creation_of_objects_for_low-level_object_manipulation.md</id>
+      <updated>2023-04-19T17:18:32+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/implicit_creation_of_objects_for_low-level_object_manipulation.md b/lang/cpp20/implicit_creation_of_objects_for_low-level_object_manipulation.md
+index 5d41421f9..a2e04f066 100644
+--- a/lang/cpp20/implicit_creation_of_objects_for_low-level_object_manipulation.md
++++ b/lang/cpp20/implicit_creation_of_objects_for_low-level_object_manipulation.md
+@@ -361,83 +361,15 @@ unique_ptr&amp;lt;char[]&amp;gt; Stream::read() {
+ 
+ この`read()`内の`new char[N]`によって呼ばれる`operator new[]`によって`Foo`/`Bar`のオブジェクトが暗黙的に構築される。この場合、`buffer[0] == FOO`による分岐によってプログラムに定義された振る舞いをもたらすオブジェクトは、`Foo`と`Bar`のオブジェクトとして2つ存在する。したがって、ここでは先頭バイトの状態に応じて適切なオブジェクトが構築される（そうすることでプログラムに定義された振る舞いをもたらす）ため、`process()`内では未定義動作は回避される。
+ 
+-```cpp
+-void process(Stream *stream) {
+-  // バイト配列の読み出し
+-  std::unique_ptr&amp;lt;char[]&amp;gt; buffer = stream-&amp;gt;read();
+-
+-  // 先頭バイトの状態によって適切なオブジェクトがStream::read()内で構築されている
+-  // ただし、reinterpret_castの代わりにstd::launder()を使用する必要がある
+-  if (buffer[0] == FOO) {
+-    process_foo(std::launder&amp;lt;Foo&amp;gt;(buffer.get())); // ✅ ok
+-  } else {
+-    process_bar(std::launder&amp;lt;Bar&amp;gt;(buffer.get())); // ✅ ok
+-  }
+-}
+-```
+-* std::launder[link /reference/new/launder.md]
++ただし、`process()`内の各分岐においては、返された`buffer`ポインタ（`char(*)[]`）からそれぞれの場合で適切なオブジェクト（`Foo`/`Bar`）へのポインタを、[`std::launder()`](/reference/new/launder.md)を用いて取得する必要がある。
+ 
+-追加で、各分岐においては返された`buffer`ポインタ（`char(*)[]`）から、それぞれの場合で適切なオブジェクト（`Foo`/`Bar`）へのポインタを[`std::launder()`](/reference/new/launder.md)によって取得する必要がある。`reinterpret_cast`はポインタの変換のみを行うため、この場合に
++`reinterpret_cast`はポインタ型の変換のみを行うが、型変換だけではそのポインタはその領域に生存期間内にあるオブジェクトと必ずしもリンクしない。`std::launder()`は、渡されたポインタの領域で生存期間内にあるオブジェクトへのポインタを生成して返す関数であり、これを用いることで暗黙的に構築されたオブジェクトへの適切なポインタを得ることができる。
+ 
+ ### 動的配列の実装
+ 
+-```cpp
+-// std::vectorの様な動的配列型を実装したい
+-template&amp;lt;typename T&amp;gt;
+-struct Vec {
+-  char *buf = nullptr;
+-  char *buf_end_size = nullptr;
+-  char *buf_end_capacity = nullptr;
+-
+-  void reserve(std::size_t n) {
+-    // 後続の操作を適格にするためのオブジェクトを暗黙的に構築する
+-    // ここでは、Tの配列型T[]のオブジェクトが暗黙的に構築される（要素のオブジェクトは構築されない）
+-    // 同時に、char[]のオブジェクトも暗黙的に構築される
+-    char *newbuf = (char*)::operator new(n * sizeof(T), std::align_val_t(alignof(T)));
+-
+-    // newbufにはT[]のオブジェクトが生存期間内にあるため、ポインタT*をイテレータとして使用可能となる
+-    // ここで、T[]の要素のTのオブジェクトが構築される（明示的）
+-    std::uninitialized_copy(begin(), end(), std::launder&amp;lt;T&amp;gt;(newbuf)); // #a ✅ ok
+-
+-    ::operator delete(buf, std::align_val_t(alignof(T)));
+-    
+-    buf = newbuf;
+-    // newbufにはchar[]のオブジェクトが生存期間内にあるため、newbuf(char*)をイテレータとして使用可能となる
+-    buf_end_size = newbuf + sizeof(T) * size(); // #b ✅ ok
+-    buf_end_capacity = newbuf + sizeof(T) * n;  // #c ✅ ok
+-  }
+-
+-  void push_back(T t) {
+-    if (buf_end_size == buf_end_capacity)
+-      reserve(std::max&amp;lt;std::size_t&amp;gt;(size() * 2, 1));
+-    new (buf_end_size) T(t);
+-
+-    // buf_end_sizeの指す領域にはchar[]のオブジェクトが生存期間内にあるため、ポインタをイテレータとして使用可能
+-    buf_end_size += sizeof(T); // #d ✅ ok
+-  }
+-
+-  T *begin() { return std::launder&amp;lt;T&amp;gt;(buf); }
+-
+-  T *end() { return std::launder&amp;lt;T&amp;gt;(buf_end_size); }
+-
+-  // buf及びbuf_end_sizeの指す領域にはT[]のオブジェクトが生存期間内にあるため、ポインタをイテレータとして使用可能
+-  std::size_t size() { return end() - begin(); } // #e ✅ ok
+-};
+-
+-int main() {
+-  Vec&amp;lt;int&amp;gt; v;
+-  v.push_back(1);
+-  v.push_back(2);
+-  v.push_back(3);
+-
+-  // 実装内部で暗黙的に配列オブジェクトが構築されることでUBが回避される
+-  for (int n : v) { /*...*/ } // #f ✅ ok
+-}
+-```
+-
+-この例では、`reserve()`内`newbuf`及びそれを保存している`Vec::buf`の領域に`T[]`（`T`の配列型）と`char[]`のオブジェクトが暗黙的に構築され、同時に生存期間内にあることで、問題（配列オブジェクトを指さないポインタのイテレータとしての使用）が解消され、すべての箇所で定義された振る舞いをもたらしている。
++この例では、`reserve()`内`newbuf`及びそれを保存している`Vec::buf`の領域に`T[]`（`T`の配列型）と`char[]`のオブジェクトが暗黙的に構築され、同時に生存期間内にあることで、問題（配列オブジェクトを指さないポインタのイテレータとしての使用）は解消される。
+ 
+-ここでも同様に、`newbuf`及び`Vec::buf`から都度適切なオブジェクトへのポインタを得るのに[`std::launder()`](/reference/new/launder.md)を使用する必要がある。
++ただし、`newbuf`及び`Vec::buf`から都度適切なオブジェクトへのポインタを得るのに[`std::launder()`](/reference/new/launder.md)を適切使用する必要がある。
+ 
+ ## この機能が必要になった背景・経緯
+ (執筆中)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>flat_map -- flat_map : 比較演算子とswapを非メンバ (Hidden Friends) 関数に分類 #1142</title>
@@ -456,114 +562,6 @@ index eca360a27..be68bcd91 100644
  | `set`          | [`std::set`](/reference/set/set.md)や[`std::flat_set`](/reference/flat_set/flat_set.md.nolink)向けの書式。`{v1, v2}` |
  | `sequence`     | [`std::vector`](/reference/vector/vector.md)や[`std::array`](/reference/array/array.md)向けの書式。`[v1, v2]`|
  | `string`       | 文字列向けの書式。`abc` |
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>map -- (multi)map, (multi)set : s/const pointer/const_pointer/</title>
-      <link href="https://cpprefjp.github.io/reference/map/map.html"/>
-      <id>15e87dfd566db42845f47158e941032b9e0a2de0:reference/map/map.md</id>
-      <updated>2023-04-17T17:15:49+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/map/map.md b/reference/map/map.md
-index a3fc5f03c..3ced8970a 100644
---- a/reference/map/map.md
-+++ b/reference/map/map.md
-@@ -140,7 +140,7 @@ namespace std {
- | `size_type`                             | 要素数を表す符号なし整数型。`difference_type` で表現可能な非負整数（0以上の整数）を表すことが可能。(通常は [`size_t`](/reference/cstddef/size_t.md))                                                                                                                                                                                         |                |
- | `difference_type`                       | 同一のコンテナを指す `iterator` の差を表す符号付き整数型(通常は [`ptrdiff_t`](/reference/cstddef/ptrdiff_t.md)) &amp;lt;br/&amp;gt;`std::`[`iterator_traits`](/reference/iterator/iterator_traits.md)`&amp;lt;iterator&amp;gt;::difference_type`、および、`std::`[`iterator_traits`](/reference/iterator/iterator_traits.md)`&amp;lt;const_iterator&amp;gt;::difference_type` と同じ。 |                |
- | `pointer`                               | 要素 `value_type`へのポインタ。&amp;lt;br/&amp;gt; C++03 : `typename Allocator::pointer`。&amp;lt;br/&amp;gt; C++11以降 : `typename` [`allocator_traits`](/reference/memory/allocator_traits.md)`&amp;lt;Allocator&amp;gt;::pointer`。                                                                                                                                                 |                |
--| `const pointer`                         | 要素 `value_type`への`const`ポインタ。&amp;lt;br/&amp;gt; C++03 : `typename Allocator::const_pointer`。&amp;lt;br/&amp;gt; C++11以降 : `typename` [`allocator_traits`](/reference/memory/allocator_traits.md)`&amp;lt;Allocator&amp;gt;::const_pointer`。                                                                                                                              |                |
-+| `const_pointer`                         | 要素 `value_type`への`const`ポインタ。&amp;lt;br/&amp;gt; C++03 : `typename Allocator::const_pointer`。&amp;lt;br/&amp;gt; C++11以降 : `typename` [`allocator_traits`](/reference/memory/allocator_traits.md)`&amp;lt;Allocator&amp;gt;::const_pointer`。                                                                                                                              |                |
- | `reverse_iterator`                      | 逆順双方向イテレータ。`std::`[`reverse_iterator`](/reference/iterator/reverse_iterator.md)`&amp;lt;iterator&amp;gt;`。                                                                                                                                                                                                                                     |                |
- | `const_reverse_iterator`                | 読み取り専用逆順双方向イテレータ。`std::`[`reverse_iterator`](/reference/iterator/reverse_iterator.md)`&amp;lt;const_iterator&amp;gt;`。                                                                                                                                                                                                                   |                |
- | `node_type`                             | [`node_handle`](/reference/node_handle/node_handle.md)クラステンプレートの特殊化。                                                                                                                                                                                                                   | C++17          |
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>multimap -- (multi)map, (multi)set : s/const pointer/const_pointer/</title>
-      <link href="https://cpprefjp.github.io/reference/map/multimap.html"/>
-      <id>15e87dfd566db42845f47158e941032b9e0a2de0:reference/map/multimap.md</id>
-      <updated>2023-04-17T17:15:49+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/map/multimap.md b/reference/map/multimap.md
-index b5381dce8..8cf3d751d 100644
---- a/reference/map/multimap.md
-+++ b/reference/map/multimap.md
-@@ -135,7 +135,7 @@ namespace std {
- | `size_type`       | 要素数を表す符号なし整数型。`difference_type` で表現可能な非負整数（0以上の整数）を表すことが可能。(通常は [`size_t`](/reference/cstddef/size_t.md)) | |
- | `difference_type` | 同一のコンテナを指す `iterator` の差を表す符号付き整数型(通常は [`ptrdiff_t`](/reference/cstddef/ptrdiff_t.md)) &amp;lt;br/&amp;gt;`std::`[`iterator_traits`](/reference/iterator/iterator_traits.md)`&amp;lt;iterator&amp;gt;::difference_type`、および、`std::`[`iterator_traits`](/reference/iterator/iterator_traits.md)`&amp;lt;const_iterator&amp;gt;::difference_type` と同じ。 | |
- | `pointer`         | 要素 `value_type`へのポインタ。&amp;lt;br/&amp;gt; C++03 : `typename Allocator::pointer`。&amp;lt;br/&amp;gt; C++11以降 : `typename` [`allocator_traits`](/reference/memory/allocator_traits.md)`&amp;lt;Allocator&amp;gt;::pointer`。 | |
--| `const pointer`         | 要素 `value_type`への`const`ポインタ。&amp;lt;br/&amp;gt; C++03 : `typename Allocator::const_pointer`。&amp;lt;br/&amp;gt; C++11以降 : `typename` [`allocator_traits`](/reference/memory/allocator_traits.md)`&amp;lt;Allocator&amp;gt;::const_pointer`。 | |
-+| `const_pointer`         | 要素 `value_type`への`const`ポインタ。&amp;lt;br/&amp;gt; C++03 : `typename Allocator::const_pointer`。&amp;lt;br/&amp;gt; C++11以降 : `typename` [`allocator_traits`](/reference/memory/allocator_traits.md)`&amp;lt;Allocator&amp;gt;::const_pointer`。 | |
- | `reverse_iterator` | 逆順双方向イテレータ。`std::`[`reverse_iterator`](/reference/iterator/reverse_iterator.md)`&amp;lt;iterator&amp;gt;`。 | |
- | `const_reverse_iterator` | 読み取り専用逆順双方向イテレータ。`std::`[`reverse_iterator`](/reference/iterator/reverse_iterator.md)`&amp;lt;const_iterator&amp;gt;`。 | |
- | `node_type`       | [`node_handle`](/reference/node_handle/node_handle.md)クラステンプレートの特殊化。  | C++17          |
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>multiset -- (multi)map, (multi)set : s/const pointer/const_pointer/</title>
-      <link href="https://cpprefjp.github.io/reference/set/multiset.html"/>
-      <id>15e87dfd566db42845f47158e941032b9e0a2de0:reference/set/multiset.md</id>
-      <updated>2023-04-17T17:15:49+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/set/multiset.md b/reference/set/multiset.md
-index e8d765498..36892db95 100644
---- a/reference/set/multiset.md
-+++ b/reference/set/multiset.md
-@@ -124,7 +124,7 @@ namespace std {
- | `size_type`              | 要素数を表す符号なし整数型。`difference_type` で表現可能な非負整数（0以上の整数）を表すことが可能。(通常は [`size_t`](/reference/cstddef/size_t.md)) | |
- | `difference_type`        | 同一のコンテナを指す `iterator` の差を表す符号付き整数型(通常は [`ptrdiff_t`](/reference/cstddef/ptrdiff_t.md)) &amp;lt;br/&amp;gt;`std::`[`iterator_traits`](/reference/iterator/iterator_traits.md)`&amp;lt;iterator&amp;gt;::difference_type`、および、`std::`[`iterator_traits`](/reference/iterator/iterator_traits.md)`&amp;lt;const_iterator&amp;gt;::difference_type` と同じ。 | |
- | `pointer`                | 要素 `value_type`へのポインタ。&amp;lt;br/&amp;gt; C++03 : `typename Allocator::pointer`。&amp;lt;br/&amp;gt; C++11以降 : `typename` [`allocator_traits`](/reference/memory/allocator_traits.md)`&amp;lt;Allocator&amp;gt;::pointer`。 | |
--| `const pointer`          | 要素 `value_type`への`const`ポインタ。&amp;lt;br/&amp;gt; C++03 : `typename Allocator::const_pointer`。&amp;lt;br/&amp;gt; C++11以降 : `typename` [`allocator_traits`](/reference/memory/allocator_traits.md)`&amp;lt;Allocator&amp;gt;::const_pointer`。 | |
-+| `const_pointer`          | 要素 `value_type`への`const`ポインタ。&amp;lt;br/&amp;gt; C++03 : `typename Allocator::const_pointer`。&amp;lt;br/&amp;gt; C++11以降 : `typename` [`allocator_traits`](/reference/memory/allocator_traits.md)`&amp;lt;Allocator&amp;gt;::const_pointer`。 | |
- | `reverse_iterator` | 逆順双方向イテレータ。`std::`[`reverse_iterator`](/reference/iterator/reverse_iterator.md)`&amp;lt;iterator&amp;gt;`。 | |
- | `const_reverse_iterator` | 読み取り専用逆順双方向イテレータ。`std::`[`reverse_iterator`](/reference/iterator/reverse_iterator.md)`&amp;lt;const_iterator&amp;gt;`。 | |
- | `node_type`              | [`node_handle`](/reference/node_handle/node_handle.md)クラステンプレートの特殊化。 | C++17 |
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>set -- (multi)map, (multi)set : s/const pointer/const_pointer/</title>
-      <link href="https://cpprefjp.github.io/reference/set/set.html"/>
-      <id>15e87dfd566db42845f47158e941032b9e0a2de0:reference/set/set.md</id>
-      <updated>2023-04-17T17:15:49+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/set/set.md b/reference/set/set.md
-index ad6b0a5df..2b94af98d 100644
---- a/reference/set/set.md
-+++ b/reference/set/set.md
-@@ -125,7 +125,7 @@ namespace std {
- | `size_type`              | 要素数を表す符号なし整数型。`difference_type` で表現可能な非負整数（0以上の整数）を表すことが可能。(通常は [`size_t`](/reference/cstddef/size_t.md)) | |
- | `difference_type`        | 同一のコンテナを指す `iterator` の差を表す符号付き整数型(通常は [`ptrdiff_t`](/reference/cstddef/ptrdiff_t.md)) &amp;lt;br/&amp;gt;`std::`[`iterator_traits`](/reference/iterator/iterator_traits.md)`&amp;lt;iterator&amp;gt;::difference_type`、および、`std::`[`iterator_traits`](/reference/iterator/iterator_traits.md)`&amp;lt;const_iterator&amp;gt;::difference_type` と同じ。 | |
- | `pointer`                | 要素 `value_type`へのポインタ。&amp;lt;br/&amp;gt; C++03 : `typename Allocator::pointer`。&amp;lt;br/&amp;gt; C++11以降 : `typename` [`allocator_traits`](/reference/memory/allocator_traits.md)`&amp;lt;Allocator&amp;gt;::pointer`。 | |
--| `const pointer`          | 要素 `value_type`への`const`ポインタ。&amp;lt;br/&amp;gt; C++03 : `typename Allocator::const_pointer`。&amp;lt;br/&amp;gt; C++11以降 : `typename` [`allocator_traits`](/reference/memory/allocator_traits.md)`&amp;lt;Allocator&amp;gt;::const_pointer`。 | |
-+| `const_pointer`          | 要素 `value_type`への`const`ポインタ。&amp;lt;br/&amp;gt; C++03 : `typename Allocator::const_pointer`。&amp;lt;br/&amp;gt; C++11以降 : `typename` [`allocator_traits`](/reference/memory/allocator_traits.md)`&amp;lt;Allocator&amp;gt;::const_pointer`。 | |
- | `reverse_iterator` | 逆順双方向イテレータ。`std::`[`reverse_iterator`](/reference/iterator/reverse_iterator.md)`&amp;lt;iterator&amp;gt;`。 | |
- | `const_reverse_iterator` | 読み取り専用逆順双方向イテレータ。`std::`[`reverse_iterator`](/reference/iterator/reverse_iterator.md)`&amp;lt;const_iterator&amp;gt;`。 | |
- | `node_type`              | [`node_handle`](/reference/node_handle/node_handle.md)クラステンプレートの特殊化。 | C++17          |
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
