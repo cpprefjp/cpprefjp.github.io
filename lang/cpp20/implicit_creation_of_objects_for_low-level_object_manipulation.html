@@ -188,8 +188,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2023-04-19T08:18:32">
-        2023年04月19日 08時18分32秒
+      <span itemprop="datePublished" content="2023-04-19T09:02:51">
+        2023年04月19日 09時02分51秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -552,11 +552,21 @@
 <p><code>reinterpret_cast</code>はポインタ型の変換のみを行うが、型変換だけではそのポインタはその領域に生存期間内にあるオブジェクトと必ずしもリンクしない。<code>std::launder()</code>は、渡されたポインタの領域で生存期間内にあるオブジェクトへのポインタを生成して返す関数であり、これを用いることで暗黙的に構築されたオブジェクトへの適切なポインタを得ることができる。</p>
 <h3>動的配列の実装</h3>
 <p>この例では、<code>reserve()</code>内<code>newbuf</code>及びそれを保存している<code>Vec::buf</code>の領域に<code>T[]</code>（<code>T</code>の配列型）と<code>char[]</code>のオブジェクトが暗黙的に構築され、同時に生存期間内にあることで、問題（配列オブジェクトを指さないポインタのイテレータとしての使用）は解消される。</p>
-<p>ただし、<code>newbuf</code>及び<code>Vec::buf</code>から都度適切なオブジェクトへのポインタを得るのに<code><a href="https://cpprefjp.github.io/reference/new/launder.html">std::launder()</a></code>を適切使用する必要がある。</p>
+<p>ただし、<code>newbuf</code>及び<code>Vec::buf</code>から都度適切なオブジェクトへのポインタを得るのに<code><a href="https://cpprefjp.github.io/reference/new/launder.html">std::launder()</a></code>を適切に使用する必要がある。</p>
 <h2>この機能が必要になった背景・経緯</h2>
-<p>(執筆中)</p>
+<p>例に上がっているようなコードはC言語では一般的な操作であり、Cでは問題がない。このようなコードはCとC++のコード共有部分でC++コードとして現れる可能性があり、その場合には<a class="cpprefjp-defined-word" data-desc="未定義の動作。処理系は予期せぬ動作をする可能性がある。要するに動作保証対象外" href="https://cpprefjp.github.io/implementation-compliance.html#dfn-undefined-behavior">未定義動作</a>となる。</p>
+<p>また、動的配列の例などは、<code>std::vector</code>の実装において問題となることで、そこは完全にC++のコードでありながらC++がサポートしてないことを行うことになってしまう。</p>
+<p>これらの問題は、影響を受けるコードが多すぎるため実装はこれを最適化に用いたりはしないと考えられるため、実際には問題とならない可能性が高かった。しかし、これらのよく書かれているコードをC++がサポートしていないという奇妙な状況を改善するため、暗黙的なオブジェクト構築という仕様が導入された。</p>
 <h2>検討されたほかの選択肢</h2>
-<p>(執筆中)</p>
+<p>上記の問題を解決するための方法として、暗黙的なオブジェクト構築以外に</p>
+<ul>
+<li>問題となる操作を無条件で合法化</li>
+<li>ライブラリ関数を追加して、それを介してコンパイラに意図を伝達</li>
+<li><code>std::span</code>を特別扱いして、関連する操作を合法化</li>
+</ul>
+<p>などが考案されていた。</p>
+<p>最終的には、暗黙的なオブジェクト構築のように、C++のオブジェクトモデルを修正する形でこの問題を解消することになった。</p>
+<p>ただし、２番目の特殊なライブラリ関数もC++23で<code>std::start_lifetime_as()</code>として追加されている。</p>
 <h2>関連項目</h2>
 <ul>
 <li><code><span href="https://cpprefjp.github.io/reference/memory/start_lifetime_as.md.nolink">start_lifetime_as()</span></code></li>
@@ -566,6 +576,7 @@
 <h2>参照</h2>
 <ul>
 <li><a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0593r6.html" target="_blank">P0593R6 Implicit creation of objects for low-level object manipulation</a></li>
+<li><a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0593r0.html" target="_blank">P0593R０ What to do with buffers that are not arrays, and undefined behavior thereof?</a></li>
 <li><a href="https://cplusplus.github.io/CWG/issues/2325.html" target="_blank">CWG Issue 2325. <code>std::launder</code> and reuse of character buffers</a></li>
 <li><a href="https://cplusplus.github.io/CWG/issues/2605.html" target="_blank">CWG Issue 2605. Implicit-lifetime aggregates</a></li>
 <li><a href="https://wg21.link/p1839r5" target="_blank">P1839R5 Accessing Object Representations</a></li>
