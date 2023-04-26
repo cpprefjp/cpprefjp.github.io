@@ -188,8 +188,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2023-04-19T09:02:51">
-        2023年04月19日 09時02分51秒
+      <span itemprop="datePublished" content="2023-04-26T08:29:03">
+        2023年04月26日 08時29分03秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -538,7 +538,7 @@
 <span class="p">}</span>
 </code></pre></div>
 </p>
-<p><code>Foo</code>も<code>Bar</code>も<em>implicit-lifetime types</em>だとして、以前のこのコードに対して<code>Stream::read()</code>が次のように実装されている場合</p>
+<p><code>Foo</code>も<code>Bar</code>も<em>implicit-lifetime types</em>だとして、このコードに対して<code>Stream::read()</code>が次のように実装されている場合</p>
 <p><div class="codehilite"><pre><span></span><code><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">[]</span><span class="o">&gt;</span> <span class="n">Stream</span><span class="o">::</span><span class="n">read</span><span class="p">()</span> <span class="p">{</span>
   <span class="c1">// ... determine data size ...</span>
   <span class="n">unique_ptr</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">[]</span><span class="o">&gt;</span> <span class="n">buffer</span><span class="p">(</span><span class="k">new</span> <span class="kt">char</span><span class="p">[</span><span class="n">N</span><span class="p">]);</span>
@@ -549,7 +549,7 @@
 </p>
 <p>この<code>read()</code>内の<code>new char[N]</code>によって呼ばれる<code>operator new[]</code>によって<code>Foo</code>/<code>Bar</code>のオブジェクトが暗黙的に構築される。この場合、<code>buffer[0] == FOO</code>による分岐によってプログラムに定義された振る舞いをもたらすオブジェクトは、<code>Foo</code>と<code>Bar</code>のオブジェクトとして2つ存在する。したがって、ここでは先頭バイトの状態に応じて適切なオブジェクトが構築される（そうすることでプログラムに定義された振る舞いをもたらす）ため、<code>process()</code>内では<a class="cpprefjp-defined-word" data-desc="未定義の動作。処理系は予期せぬ動作をする可能性がある。要するに動作保証対象外" href="https://cpprefjp.github.io/implementation-compliance.html#dfn-undefined-behavior">未定義動作</a>は回避される。</p>
 <p>ただし、<code>process()</code>内の各分岐においては、返された<code>buffer</code>ポインタ（<code>char(*)[]</code>）からそれぞれの場合で適切なオブジェクト（<code>Foo</code>/<code>Bar</code>）へのポインタを、<code><a href="https://cpprefjp.github.io/reference/new/launder.html">std::launder()</a></code>を用いて取得する必要がある。</p>
-<p><code>reinterpret_cast</code>はポインタ型の変換のみを行うが、型変換だけではそのポインタはその領域に生存期間内にあるオブジェクトと必ずしもリンクしない。<code>std::launder()</code>は、渡されたポインタの領域で生存期間内にあるオブジェクトへのポインタを生成して返す関数であり、これを用いることで暗黙的に構築されたオブジェクトへの適切なポインタを得ることができる。</p>
+<p><code>reinterpret_cast</code>はポインタ型の変換のみを行うが、型変換だけではそのポインタはその領域で生存期間内にあるオブジェクトと必ずしもリンクしない。<code>std::launder()</code>は、渡されたポインタの領域で生存期間内にあるオブジェクトへのポインタを生成して返す関数であり、これを用いることで暗黙的に構築されたオブジェクトへの適切なポインタを得ることができる。</p>
 <h3>動的配列の実装</h3>
 <p>この例では、<code>reserve()</code>内<code>newbuf</code>及びそれを保存している<code>Vec::buf</code>の領域に<code>T[]</code>（<code>T</code>の配列型）と<code>char[]</code>のオブジェクトが暗黙的に構築され、同時に生存期間内にあることで、問題（配列オブジェクトを指さないポインタのイテレータとしての使用）は解消される。</p>
 <p>ただし、<code>newbuf</code>及び<code>Vec::buf</code>から都度適切なオブジェクトへのポインタを得るのに<code><a href="https://cpprefjp.github.io/reference/new/launder.html">std::launder()</a></code>を適切に使用する必要がある。</p>
@@ -565,8 +565,8 @@
 <li><code>std::span</code>を特別扱いして、関連する操作を合法化</li>
 </ul>
 <p>などが考案されていた。</p>
-<p>最終的には、暗黙的なオブジェクト構築のように、C++のオブジェクトモデルを修正する形でこの問題を解消することになった。</p>
-<p>ただし、２番目の特殊なライブラリ関数もC++23で<code>std::start_lifetime_as()</code>として追加されている。</p>
+<p>最終的には、C++のオブジェクトモデルを修正する暗黙的なオブジェクト構築によってこの問題を解消することになった。</p>
+<p>なお、2番目の特殊なライブラリ関数もC++23で<code>std::start_lifetime_as()</code>として追加されている。</p>
 <h2>関連項目</h2>
 <ul>
 <li><code><span href="https://cpprefjp.github.io/reference/memory/start_lifetime_as.md.nolink">start_lifetime_as()</span></code></li>
