@@ -2,9 +2,182 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2023-05-15T04:49:15.268557</updated>
-  <id>c6edc801-6169-4465-bae0-a46a432cc5c9</id>
+  <updated>2023-05-15T05:30:50.775354</updated>
+  <id>8e2d208a-3ea4-4254-a17f-86375a888c78</id>
 
+  
+    <entry>
+      <title>flat_map -- flat_map : クラスページのサンプルコードを追加 #1078</title>
+      <link href="https://cpprefjp.github.io/reference/flat_map/flat_map.html"/>
+      <id>9d64bb3992e4f626b57dc749cb4fc05e36dad532:reference/flat_map/flat_map.md</id>
+      <updated>2023-05-15T14:25:41+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_map/flat_map.md b/reference/flat_map/flat_map.md
+index ac96b9be4..191a70e6c 100644
+--- a/reference/flat_map/flat_map.md
++++ b/reference/flat_map/flat_map.md
+@@ -151,18 +151,154 @@ namespace std {
+ 
+ ## 例
+ ### 基本的な使い方
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;string&amp;gt;
++#include &amp;lt;flat_map&amp;gt;
++
++int main()
++{
++  // stringをキー、intを値として扱う連想配列
++  std::flat_map&amp;lt;std::string, int&amp;gt; fm = {
++    {&amp;#34;Carol&amp;#34;, 4},
++    {&amp;#34;Alice&amp;#34;, 3},
++    {&amp;#34;Bob&amp;#34;, 1}
++  };
++
++  // 検索 : キー(string)を指定し、値(int)を得る
++  int r = fm.at(&amp;#34;Alice&amp;#34;);
++  std::cout &amp;lt;&amp;lt; r &amp;lt;&amp;lt; std::endl;
++
++  // 全体を出力する
++  for (const auto&amp;amp; [key, value] : fm) {
++    std::cout &amp;lt;&amp;lt; key &amp;lt;&amp;lt; &amp;#34; : &amp;#34; &amp;lt;&amp;lt; value &amp;lt;&amp;lt; std::endl;
++  }
++}
++```
++* fm.at[link flat_map/at.md.nolink]
+ 
+ #### 出力
++```
++3
++Alice : 3
++Bob : 1
++Carol : 4
++```
+ 
+ 
+ 
+ ### ユーザー定義型をキーとして使用する (`operator&amp;lt;=&amp;gt;`を定義)
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;string&amp;gt;
++#include &amp;lt;flat_map&amp;gt;
++
++// 要素がひとつの場合
++struct MyInt {
++  int value;
++
++  friend auto operator&amp;lt;=&amp;gt;(const MyInt&amp;amp; a, const MyInt&amp;amp; b) noexcept {
++    return a.value &amp;lt;=&amp;gt; b.value;
++  }
++};
++
++// 要素が複数の場合
++struct Person {
++  int id;
++  int age;
++  std::string name;
++
++  friend auto operator&amp;lt;=&amp;gt;(const Person&amp;amp; a, const Person&amp;amp; b) noexcept {
++    if (auto comp = a.id &amp;lt;=&amp;gt; b.id; comp != 0) {
++      return comp;
++    }
++    if (auto comp = a.age &amp;lt;=&amp;gt; b.age; comp != 0) {
++      return comp;
++    }
++    return a.name &amp;lt;=&amp;gt; b.name;
++  }
++};
++
++int main()
++{
++  std::flat_map&amp;lt;MyInt, int&amp;gt; fm1 {
++    {MyInt{1}, 3},
++    {MyInt{2}, 1},
++    {MyInt{3}, 4},
++  };
++  std::cout &amp;lt;&amp;lt; fm1[MyInt{2}] &amp;lt;&amp;lt; std::endl;
++
++  std::flat_map&amp;lt;Person, int&amp;gt; fm2 {
++    {Person{1, 18, &amp;#34;Alice&amp;#34;}, 3},
++    {Person{2, 30, &amp;#34;Bob&amp;#34;}, 1},
++    {Person{3, 30, &amp;#34;Carol&amp;#34;}, 4},
++  };
++  std::cout &amp;lt;&amp;lt; fm2[Person{2, 30, &amp;#34;Bob&amp;#34;}] &amp;lt;&amp;lt; std::endl;
++}
++```
+ 
+ #### 出力
++```
++1
++1
++```
+ 
+ 
+ ### ユーザー定義型をキーとして使用する (大小比較の関数オブジェクトを定義)
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;string&amp;gt;
++#include &amp;lt;tuple&amp;gt;
++#include &amp;lt;flat_map&amp;gt;
++
++// 要素がひとつの場合
++struct MyInt {
++  int value;
++};
++
++struct MyIntLess {
++  bool operator()(const MyInt&amp;amp; a, const MyInt&amp;amp; b) const noexcept {
++    return a.value &amp;lt; b.value;
++  }
++};
++
++// 要素が複数の場合
++struct Person {
++  int id;
++  int age;
++  std::string name;
++};
++
++struct PersonLess {
++  bool operator()(const Person&amp;amp; a, const Person&amp;amp; b) const noexcept {
++    // キーとして比較したい要素を列挙する
++    return std::tie(a.id, a.age, a.name) &amp;lt; std::tie(b.id, b.age, b.name);
++  }
++};
++
++int main()
++{
++  std::flat_map&amp;lt;MyInt, int, MyIntLess&amp;gt; fm1 {
++    {MyInt{1}, 3},
++    {MyInt{2}, 1},
++    {MyInt{3}, 4},
++  };
++  std::cout &amp;lt;&amp;lt; fm1[MyInt{2}] &amp;lt;&amp;lt; std::endl;
++
++  std::flat_map&amp;lt;Person, int, PersonLess&amp;gt; fm2 {
++    {Person{1, 18, &amp;#34;Alice&amp;#34;}, 3},
++    {Person{2, 30, &amp;#34;Bob&amp;#34;}, 1},
++    {Person{3, 30, &amp;#34;Carol&amp;#34;}, 4},
++  };
++  std::cout &amp;lt;&amp;lt; fm2[Person{2, 30, &amp;#34;Bob&amp;#34;}] &amp;lt;&amp;lt; std::endl;
++}
++```
++
+ #### 出力
++```
++1
++1
++```
+ 
+ 
+ ## 参照
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>コンストラクタ -- Merge pull request #1148 from cpprefjp/ngword_check</title>
@@ -240,113 +413,6 @@ index 6f5012924..0d71bf481 100644
       <author>
         <name>Toru Fukaya</name>
         <email>toru.fukaya@fixstars.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>コンストラクタ -- NGワードのチェックCIを追加</title>
-      <link href="https://cpprefjp.github.io/reference/expected/expected.void/op_constructor.html"/>
-      <id>058df357fc5857506ee46f8fc179485c0ee759ec:reference/expected/expected.void/op_constructor.md</id>
-      <updated>2023-05-10T15:16:13+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/expected/expected.void/op_constructor.md b/reference/expected/expected.void/op_constructor.md
-index 25fe4b799..760c12b56 100644
---- a/reference/expected/expected.void/op_constructor.md
-+++ b/reference/expected/expected.void/op_constructor.md
-@@ -94,7 +94,7 @@ constexpr explicit expected(unexpect_t, initializer_list&amp;lt;U&amp;gt; il, Args&amp;amp;&amp;amp;... args);
- ## 例外
- - (2) : エラー値型の初期化から送出される例外。
- - (3) : エラー値型の初期化から送出される例外。
--    - [`is_nothrow_move_constructible_v`](/reference/type_traits/is_nothrow_move_constructible.md)`&amp;lt;E&amp;gt;`であれば、ムーブコンストラクタはnoexpcet指定される。
-+    - [`is_nothrow_move_constructible_v`](/reference/type_traits/is_nothrow_move_constructible.md)`&amp;lt;E&amp;gt;`であれば、ムーブコンストラクタはnoexcept指定される。
- - (4), (5) : エラー値型の初期化から送出される例外。
- - (6), (7) : エラー値型の初期化から送出される例外。
- - (8) : 投げない。
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>コンストラクタ -- NGワードのチェックCIを追加</title>
-      <link href="https://cpprefjp.github.io/reference/expected/expected/op_constructor.html"/>
-      <id>058df357fc5857506ee46f8fc179485c0ee759ec:reference/expected/expected/op_constructor.md</id>
-      <updated>2023-05-10T15:16:13+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/expected/expected/op_constructor.md b/reference/expected/expected/op_constructor.md
-index 650fce154..4daa20aab 100644
---- a/reference/expected/expected/op_constructor.md
-+++ b/reference/expected/expected/op_constructor.md
-@@ -131,7 +131,7 @@ constexpr bool converts-from-any-cvref =
- - (1) : 正常値型の初期化から送出される例外。
- - (2) : 正常値型またはエラー値型の初期化から送出される例外。
- - (3) : 正常値型またはエラー値型の初期化から送出される例外。
--    - [`is_nothrow_move_constructible_v`](/reference/type_traits/is_nothrow_move_constructible.md)`&amp;lt;T&amp;gt;`かつ[`is_nothrow_move_constructible_v`](/reference/type_traits/is_nothrow_move_constructible.md)`&amp;lt;E&amp;gt;`であれば、ムーブコンストラクタはnoexpcet指定される。
-+    - [`is_nothrow_move_constructible_v`](/reference/type_traits/is_nothrow_move_constructible.md)`&amp;lt;T&amp;gt;`かつ[`is_nothrow_move_constructible_v`](/reference/type_traits/is_nothrow_move_constructible.md)`&amp;lt;E&amp;gt;`であれば、ムーブコンストラクタはnoexcept指定される。
- - (4), (5) : 正常値型またはエラー値型の初期化から送出される例外。
- - (6) : 正常値型の初期化から送出される例外。
- - (7), (8) : エラー値型の初期化から送出される例外。
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>io_errc -- NGワードのチェックCIを追加</title>
-      <link href="https://cpprefjp.github.io/reference/ios/io_errc.html"/>
-      <id>058df357fc5857506ee46f8fc179485c0ee759ec:reference/ios/io_errc.md</id>
-      <updated>2023-05-10T15:16:13+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ios/io_errc.md b/reference/ios/io_errc.md
-index 232097925..dbfc4e84c 100644
---- a/reference/ios/io_errc.md
-+++ b/reference/ios/io_errc.md
-@@ -15,7 +15,7 @@ namespace std {
- ## 概要
- 入出力操作に関するエラーの種別を表す列挙型。エラーのカテゴリは [`iostream_category`](iostream_category.md)`()` で取得できる。  
- [`is_error_code_enum`](is_error_code_enum.md) の特殊化がされていることからわかるように、本列挙型は [`error_code`](../system_error/error_code.md) として使うことを意図しており、暗黙的に [`error_code`](../system_error/error_code.md) への変換が可能である。  
--なお、[`is_error_condition_enum`](../system_error/is_error_condition_enum.md) の特殊化はされていないため、本列挙型から [`error_condition`](../system_error/error_condition.md) に暗黙的に変換する事は出来ないが、[`make_eror_condition`](make_error_condition.md)`()` の呼び出し、および、一旦 [`error_code`](../system_error/error_code.md) に変換してから [`error_code`](../system_error/error_code.md)`::`[`default_error_condition`](../system_error/error_code/default_error_condition.md) を使用して変換する、などが可能である。
-+なお、[`is_error_condition_enum`](../system_error/is_error_condition_enum.md) の特殊化はされていないため、本列挙型から [`error_condition`](../system_error/error_condition.md) に暗黙的に変換する事は出来ないが、[`make_error_condition`](make_error_condition.md)`()` の呼び出し、および、一旦 [`error_code`](../system_error/error_code.md) に変換してから [`error_code`](../system_error/error_code.md)`::`[`default_error_condition`](../system_error/error_code/default_error_condition.md) を使用して変換する、などが可能である。
- 
- 
- 列挙値は唯一 `stream` のみが定義されている。
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>random_device -- NGワードのチェックCIを追加</title>
-      <link href="https://cpprefjp.github.io/reference/random/random_device.html"/>
-      <id>058df357fc5857506ee46f8fc179485c0ee759ec:reference/random/random_device.md</id>
-      <updated>2023-05-10T15:16:13+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/random/random_device.md b/reference/random/random_device.md
-index f5cea2f71..7b7c4644b 100644
---- a/reference/random/random_device.md
-+++ b/reference/random/random_device.md
-@@ -328,6 +328,6 @@ int main()
- - [random_deviceの実装（再訪） - 煙人計画](http://vaporoid.hateblo.jp/entry/2014/07/25/154852)
- - [Replacing `/dev/urandom` May 4, 2016 - Security](https://lwn.net/Articles/685371/)
- - [gccをwindowsで使うならstd::random_deviceを使ってはいけない - Qiita](http://qiita.com/nanashi/items/f94b78398a6c79d939e1)
--- [MSC30-C. 疑似乱数の生成に rand() 関数を使用しない](https://www.jpcert.or.jp/sc-rules/c-msc30-c.html)
-+- [MSC30-C. 擬似乱数の生成に rand() 関数を使用しない](https://www.jpcert.or.jp/sc-rules/c-msc30-c.html)
- - `CryptGenRandom`のエントロピー源(2005年時点): [Cryptographically Secure Random number on Windows without using CryptoAPI – Michael Howard&amp;#39;s Web Log](https://blogs.msdn.microsoft.com/michael_howard/2005/01/14/cryptographically-secure-random-number-on-windows-without-using-cryptoapi/#div-comment-5543)
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
       </author>
     </entry>
   
