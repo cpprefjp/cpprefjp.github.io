@@ -200,8 +200,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2023-05-18T02:57:47">
-        2023年05月18日 02時57分47秒
+      <span itemprop="datePublished" content="2023-06-05T07:55:04">
+        2023年06月05日 07時55分04秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -227,14 +227,56 @@
   <div class="identifier-type">function</div><div class="header">&lt;flat_map&gt;</div><h1 itemprop="name"><span class="namespace" title="namespace std">std::</span><span class="class" title="class flat_map">flat_map::</span><span class="token">operator[]</span><span class="cpp cpp23" title="C++23で追加">(C++23)</span></h1>
 <div itemprop="articleBody"><p><div class="codehilite"><pre><span></span><code><span class="n">mapped_type</span><span class="o">&amp;</span> <span class="k">operator</span><span class="p">[](</span><span class="k">const</span> <span class="n">key_type</span><span class="o">&amp;</span> <span class="n">x</span><span class="p">);</span> <span class="c1">// (1) C++23</span>
 <span class="n">mapped_type</span><span class="o">&amp;</span> <span class="k">operator</span><span class="p">[](</span><span class="n">key_type</span><span class="o">&amp;&amp;</span> <span class="n">x</span><span class="p">);</span>      <span class="c1">// (2) C++23</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">K</span><span class="o">&gt;</span>
+<span class="n">mapped_type</span><span class="o">&amp;</span> <span class="k">operator</span><span class="p">[](</span><span class="n">K</span><span class="o">&amp;&amp;</span> <span class="n">x</span><span class="p">);</span>             <span class="c1">// (3) C++23</span>
 </code></pre></div>
 </p>
 <h2>概要</h2>
 <p>指定したキーを持つ要素を取得する。対応する要素が存在しない場合は生成して返す。</p>
+<ul>
+<li>(1) : 左辺値のキーを受け取る</li>
+<li>(2) : 一時オブジェクトのキーを受け取る</li>
+<li>(3) : <code>key_type</code>と比較可能なキーを受け取る</li>
+</ul>
+<h2><a class="cpprefjp-defined-word" data-desc="関数であればオーバーロード解決に参加するための条件、それ以外であれば受け付ける型の条件">テンプレートパラメータ制約</a></h2>
+<ul>
+<li>(3) : <code>key_compare::is_transparent</code>が妥当な式であること</li>
+</ul>
 <h2>戻り値</h2>
-<p>キー<code>x</code>に対応する値を返す。対応する要素が存在しない場合は、要素を<a class="cpprefjp-defined-word" data-desc="デフォルト初期化。`T x;`構文での初期化。トリビアルにデフォルト構築可能な型の場合は初期化されず（オブジェクトのlifetimeは開始される）、そうではないクラス型はデフォルトコンストラクタで初期化する。配列型の場合は各要素が再帰的にデフォルト初期化される">デフォルト構築</a>して参照を返す。</p>
+<ul>
+<li>
+<p>(1) : 以下と等価
+  <br />
+<div class="codehilite"><pre><span></span><code><span class="k">return</span> <span class="nf"><span href="https://cpprefjp.github.io/reference/flat_map/flat_map/try_emplace.md.nolink">try_emplace</span></span><span class="p">(</span><span class="n">x</span><span class="p">).</span><span class="n">first</span><span class="o">-&gt;</span><span class="n">second</span><span class="p">;</span>
+</code></pre></div>
+</p>
+</li>
+<li>
+<p>(2) : 以下と等価
+  <br />
+<div class="codehilite"><pre><span></span><code><span class="k">return</span> <span class="nf"><span href="https://cpprefjp.github.io/reference/flat_map/flat_map/try_emplace.md.nolink">try_emplace</span></span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/utility/move.html">std::move</a></span><span class="p">(</span><span class="n">x</span><span class="p">)).</span><span class="n">first</span><span class="o">-&gt;</span><span class="n">second</span><span class="p">;</span>
+</code></pre></div>
+</p>
+</li>
+<li>
+<p>(3) : 以下と等価
+  <br />
+<div class="codehilite"><pre><span></span><code><span class="k">return</span> <span class="nf"><span href="https://cpprefjp.github.io/reference/flat_map/flat_map/try_emplace.md.nolink">try_emplace</span></span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/utility/forward.html">std::forward</a></span><span class="p">(</span><span class="n">x</span><span class="p">)).</span><span class="n">first</span><span class="o">-&gt;</span><span class="n">second</span><span class="p">;</span>
+</code></pre></div>
+</p>
+</li>
+</ul>
 <h2>計算量</h2>
 <p>要素数に対して対数時間</p>
+<h2>備考</h2>
+<ul>
+<li>(3) :<ul>
+<li><code>is_transparent</code>は、標準ライブラリの<code><a href="https://cpprefjp.github.io/reference/functional/less.html">std::less</a></code>、<code><a href="https://cpprefjp.github.io/reference/functional/greater.html">std::greater</a></code>といった関数オブジェクトの、<code>void</code>に対する特殊化で定義される。それ以外のテンプレートパラメータで<code>is_transparent</code>が定義されないのは、互換性のためである。</li>
+<li>これらのオーバーロードは、<code>flat_map&lt;string, int&gt;</code>のようなコンテナに対し、検索操作で文字列リテラルを渡した際に、キー型の一時オブジェクトが生成されるコストを減らすためにある。</li>
+</ul>
+</li>
+</ul>
 <h2>例</h2>
 <p><div class="yata" id="a9336d6d53cd85b021b4289e12d47a3a400d50f1"><div class="codehilite"><pre><span></span><code><span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/iostream.html">&lt;iostream&gt;</a></span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/flat_map.html">&lt;flat_map&gt;</a></span><span class="cp"></span>
