@@ -2,9 +2,388 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2023-06-21T14:39:35.799477</updated>
-  <id>563da8a2-54d0-4ece-a5e0-0d8df0d74e9f</id>
+  <updated>2023-06-22T07:10:23.269100</updated>
+  <id>d33788e2-3bb5-4e73-a1c9-b56a6cafda7a</id>
 
+  
+    <entry>
+      <title>erase -- map / setのerase : オーバーロード仕様が古くなっていたのを修正</title>
+      <link href="https://cpprefjp.github.io/reference/map/map/erase.html"/>
+      <id>6251e4abe9d90fab42621ba97fea3a0b4a3c94aa:reference/map/map/erase.md</id>
+      <updated>2023-06-22T16:06:07+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/map/map/erase.md b/reference/map/map/erase.md
+index 868c9e440..84fe25a4f 100644
+--- a/reference/map/map/erase.md
++++ b/reference/map/map/erase.md
+@@ -5,13 +5,18 @@
+ * function[meta id-type]
+ 
+ ```cpp
+-void erase(iterator position);                             // (1) C++03
+-iterator erase(const_iterator position);                   // (1) C++11
++void erase(iterator position);                             // (1) C++03 (C++11で一旦削除)
++iterator erase(iterator position);                         // (1) C++17
+ 
+-size_type erase(const key_type&amp;amp; x);                        // (2)
++iterator erase(const_iterator position);                   // (2) C++11
+ 
+-void erase(iterator first, iterator last);                 // (3) C++03
+-iterator erase(const_iterator first, const_iterator last); // (3) C++11
++size_type erase(const key_type&amp;amp; x);                        // (3) C++03
++
++template &amp;lt;class K&amp;gt;
++size_type erase(K&amp;amp;&amp;amp; x);                                    // (4) C++23
++
++void erase(iterator first, iterator last);                 // (5) C++03
++iterator erase(const_iterator first, const_iterator last); // (5) C++11
+ ```
+ 
+ ## 概要
+@@ -20,8 +25,10 @@ iterator erase(const_iterator first, const_iterator last); // (3) C++11
+ これは削除された要素の数だけコンテナの `size` を減らし、それぞれの要素のデストラクタを呼び出す。
+ 
+ - (1) : 指定されたイテレータが指す要素を削除する
+-- (2) : 指定されたキーをもつ要素を削除する
+-- (3) : 指定されたイテレータ範囲の要素をすべて削除する
++- (2) : 指定された読み取り専用イテレータが指す要素を削除する
++- (3) : 指定されたキーをもつ要素を削除する
++- (4) : `key_type`と比較可能な`K`型のキーを受け取って要素を削除する
++- (5) : 指定されたイテレータ範囲の要素をすべて削除する
+ 
+ 
+ ## パラメータ
+@@ -31,16 +38,20 @@ iterator erase(const_iterator first, const_iterator last); // (3) C++11
+ 
+ 
+ ## 戻り値
+-- (1), (3)
++- (1) :
++    - C++03 : 戻り値なし
++    - C++17 : 削除された要素の次を指すイテレータを返す。そのような要素がない場合、[`end()`](end.md)を返す (要素を削除した結果としてコンテナが空になった場合)
++- (2) : 削除された要素の次を指すイテレータを返す。そのような要素がない場合、[`end()`](end.md)を返す (要素を削除した結果としてコンテナが空になった場合)
++- (3), (4) : 削除された要素の数を返す
++- (5) :
+     - C++03 : 戻り値なし
+     - C++11 : 削除された要素の次を指すイテレータを返す。そのような要素がない場合、[`end()`](end.md)を返す (要素を削除した結果としてコンテナが空になった場合)
+-- (2) 削除された要素の数を返す。
+ 
+ 
+ ## 計算量
+-- (1) 定数時間。
+-- (2) コンテナの [`size()`](/reference/map/map/size.md) について対数時間。
+-- (3) コンテナの [`size()`](/reference/map/map/size.md) について対数時間、それに加えて `first` と `last` の間の距離に対する線形時間。
++- (1), (2) : 定数時間
++- (3), (4) : コンテナの [`size()`](/reference/map/map/size.md) について対数時間
++- (5) : コンテナの [`size()`](/reference/map/map/size.md) について対数時間、それに加えて `first` と `last` の間の距離に対する線形時間
+ 
+ 
+ ## 備考
+@@ -174,7 +185,11 @@ int main()
+ 
+ ## 参照
+ - [N2350 Container insert/erase and iterator constness (Revision 1)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2350.pdf)
++    - C++11で、`erase(iterator)`を`erase(const_iterator)`に変更
+ - [LWG Issue 2258. `a.erase(q1, q2)` unable to directly return `q2`](http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#2258)
+     - C++11では、「`a.erase(q1, q2)`の結果として`q2`が返る」という仕様だったが、`const_iterator`型が渡された場合に`iterator`型を返せない問題があった。そのためC++14では、`q2`が指す要素を指すイテレータが返る、ということが明記された
+-
++- [LWG Issue 2059. C++0x ambiguity problem with `map::erase`](https://cplusplus.github.io/LWG/issue2059)
++    - C++17で、`erase(iterator)`を再追加
++- [P2077R3 Heterogeneous erasure overloads for associative containers](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2077r3.html)
++    - C++23で、`template &amp;lt;class K&amp;gt; erase(K&amp;amp;&amp;amp; x)`のオーバーロードが追加された
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>erase -- map / setのerase : オーバーロード仕様が古くなっていたのを修正</title>
+      <link href="https://cpprefjp.github.io/reference/map/multimap/erase.html"/>
+      <id>6251e4abe9d90fab42621ba97fea3a0b4a3c94aa:reference/map/multimap/erase.md</id>
+      <updated>2023-06-22T16:06:07+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/map/multimap/erase.md b/reference/map/multimap/erase.md
+index 2f45485d8..f52bcb6cf 100644
+--- a/reference/map/multimap/erase.md
++++ b/reference/map/multimap/erase.md
+@@ -5,13 +5,18 @@
+ * function[meta id-type]
+ 
+ ```cpp
+-void erase(iterator position);                             // (1) C++03
+-iterator erase(const_iterator position);                   // (1) C++11
++void erase(iterator position);                             // (1) C++03 (C++11で一旦削除)
++iterator erase(iterator position);                         // (1) C++17
+ 
+-size_type erase(const key_type&amp;amp; x);                        // (2)
++iterator erase(const_iterator position);                   // (2) C++11
+ 
+-void erase(iterator first, iterator last);                 // (3) C++03
+-iterator erase(const_iterator first, const_iterator last); // (3) C++11
++size_type erase(const key_type&amp;amp; x);                        // (3) C++03
++
++template &amp;lt;class K&amp;gt;
++size_type erase(K&amp;amp;&amp;amp; x);                                    // (4) C++23
++
++void erase(iterator first, iterator last);                 // (5) C++03
++iterator erase(const_iterator first, const_iterator last); // (5) C++11
+ ```
+ 
+ 
+@@ -21,9 +26,10 @@ iterator erase(const_iterator first, const_iterator last); // (3) C++11
+ これは削除された要素の数だけコンテナの `size` を減らし、それぞれの要素のデストラクタを呼び出す。
+ 
+ - (1) : 指定されたイテレータが指す要素を削除する
+-- (2) : 指定されたキーをもつ要素をすべて削除する
+-- (3) : 指定されたイテレータ範囲の要素をすべて削除する
+-
++- (2) : 指定された読み取り専用イテレータが指す要素を削除する
++- (3) : 指定されたキーをもつ要素をすべて削除する
++- (4) : `key_type`と比較可能な`K`型のキーを受け取って要素をすべて削除する
++- (5) : 指定されたイテレータ範囲の要素をすべて削除する
+ 
+ ## パラメータ
+ - `position` : `multimap` から削除する単一要素を指すイテレータ。`iterator` はメンバ型であり、双方向イテレータとして定義される。
+@@ -32,16 +38,20 @@ iterator erase(const_iterator first, const_iterator last); // (3) C++11
+ 
+ 
+ ## 戻り値
+-- (1), (3)
++- (1) :
++    - C++03 : 戻り値なし
++    - C++17 : 削除された要素の次を指すイテレータを返す。そのような要素がない場合、[`end()`](end.md)を返す (要素を削除した結果としてコンテナが空になった場合)
++- (2) : 削除された要素の次を指すイテレータを返す。そのような要素がない場合、[`end()`](end.md)を返す (要素を削除した結果としてコンテナが空になった場合)
++- (3), (4) : 削除された要素の数を返す
++- (5) :
+     - C++03 : 戻り値なし
+     - C++11 : 削除された要素の次を指すイテレータを返す。そのような要素がない場合、[`end()`](end.md)を返す (要素を削除した結果としてコンテナが空になった場合)
+-- (2) 削除された要素の数を返す。
+ 
+ 
+ ## 計算量
+-- (1) 定数時間。
+-- (2) コンテナの [`size()`](/reference/map/map/size.md) について対数時間。
+-- (3) コンテナの [`size()`](/reference/map/map/size.md) について対数時間、それに加えて `first` と `last` の間の距離に対する線形時間。
++- (1), (2) : 定数時間
++- (3), (4) : コンテナの [`size()`](/reference/map/map/size.md) について対数時間
++- (5) : コンテナの [`size()`](/reference/map/map/size.md) について対数時間、それに加えて `first` と `last` の間の距離に対する線形時間
+ 
+ 
+ ## 備考
+@@ -164,7 +174,10 @@ int main()
+ 
+ ## 参照
+ - [N2350 Container insert/erase and iterator constness (Revision 1)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2350.pdf)
++    - C++11で、`erase(iterator)`を`erase(const_iterator)`に変更
+ - [LWG Issue 2258. `a.erase(q1, q2)` unable to directly return `q2`](http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#2258)
+     - C++11では、「`a.erase(q1, q2)`の結果として`q2`が返る」という仕様だったが、`const_iterator`型が渡された場合に`iterator`型を返せない問題があった。そのためC++14では、`q2`が指す要素を指すイテレータが返る、ということが明記された
+-
+-
++- [LWG Issue 2059. C++0x ambiguity problem with `map::erase`](https://cplusplus.github.io/LWG/issue2059)
++    - C++17で、`erase(iterator)`を再追加
++- [P2077R3 Heterogeneous erasure overloads for associative containers](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2077r3.html)
++    - C++23で、`template &amp;lt;class K&amp;gt; erase(K&amp;amp;&amp;amp; x)`のオーバーロードが追加された
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>erase -- map / setのerase : オーバーロード仕様が古くなっていたのを修正</title>
+      <link href="https://cpprefjp.github.io/reference/set/multiset/erase.html"/>
+      <id>6251e4abe9d90fab42621ba97fea3a0b4a3c94aa:reference/set/multiset/erase.md</id>
+      <updated>2023-06-22T16:06:07+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/set/multiset/erase.md b/reference/set/multiset/erase.md
+index 4aed5f014..f8cd9641c 100644
+--- a/reference/set/multiset/erase.md
++++ b/reference/set/multiset/erase.md
+@@ -5,13 +5,18 @@
+ * function[meta id-type]
+ 
+ ```cpp
+-void erase(iterator position);                             // (1) C++03 まで
+-iterator erase(const_iterator position);                   // (1) C++11 から
++void erase(iterator position);                             // (1) C++03 (C++11で一旦削除)
++iterator erase(iterator position);                         // (1) C++17
+ 
+-void erase(iterator first, iterator last);                 // (2) C++03 まで
+-iterator erase(const_iterator first, const_iterator last); // (2) C++11 から
++iterator erase(const_iterator position);                   // (2) C++11
+ 
+-size_type erase(const key_type&amp;amp; x);                        // (3)
++size_type erase(const key_type&amp;amp; x);                        // (3) C++03
++
++template &amp;lt;class K&amp;gt;
++size_type erase(K&amp;amp;&amp;amp; x);                                    // (4) C++23
++
++void erase(iterator first, iterator last);                 // (5) C++03
++iterator erase(const_iterator first, const_iterator last); // (5) C++11
+ ```
+ 
+ 
+@@ -20,8 +25,10 @@ size_type erase(const key_type&amp;amp; x);                        // (3)
+ これは削除された要素の数だけコンテナの [`size`](size.md)`()` を減らし、それぞれの要素のデストラクタを呼び出す。
+ 
+ - (1) : 指定されたイテレータが指す要素を削除する
+-- (2) : 指定されたキーをもつ要素をすべて削除する
+-- (3) : 指定されたイテレータ範囲の要素をすべて削除する
++- (2) : 指定された読み取り専用イテレータが指す要素を削除する
++- (3) : 指定されたキーをもつ要素をすべて削除する
++- (4) : `key_type`と比較可能な`K`型のキーを受け取って要素をすべて削除する
++- (5) : 指定されたイテレータ範囲の要素をすべて削除する
+ 
+ 
+ ## パラメータ
+@@ -31,16 +38,20 @@ size_type erase(const key_type&amp;amp; x);                        // (3)
+ 
+ 
+ ## 戻り値
+-- (1), (2) :
+-    - C++03 まで : なし
++- (1) :
++    - C++03 : 戻り値なし
++    - C++17 : 削除された要素の次を指すイテレータを返す。そのような要素がない場合、[`end()`](end.md)を返す (要素を削除した結果としてコンテナが空になった場合)
++- (2) : 削除された要素の次を指すイテレータを返す。そのような要素がない場合、[`end()`](end.md)を返す (要素を削除した結果としてコンテナが空になった場合)
++- (3), (4) : 削除された要素の数を返す
++- (5) :
++    - C++03 : 戻り値なし
+     - C++11 : 削除された要素の次を指すイテレータを返す。そのような要素がない場合、[`end()`](end.md)を返す (要素を削除した結果としてコンテナが空になった場合)
+-- (3) : 削除された要素の数を返す。
+ 
+ 
+ ## 計算量
+-- (1) : 定数時間
+-- (2) : コンテナの [`size()`](size.md) についての対数時間と、それに加えて `first` と `last` の間の距離に対する線形時間。
+-- (3) : コンテナの [`size()`](size.md) についての対数時間と、それに加えて `x` と等価なキーの要素数に対する線形時間。
++- (1), (2) : 定数時間
++- (3), (4) : コンテナの [`size()`](/reference/map/map/size.md) について対数時間
++- (5) : コンテナの [`size()`](/reference/map/map/size.md) について対数時間、それに加えて `first` と `last` の間の距離に対する線形時間
+ 
+ 
+ ## 備考
+@@ -157,7 +168,10 @@ int main()
+ 
+ ## 参照
+ - [N2350 Container insert/erase and iterator constness (Revision 1)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2350.pdf)
++    - C++11で、`erase(iterator)`を`erase(const_iterator)`に変更
+ - [LWG Issue 2258. `a.erase(q1, q2)` unable to directly return `q2`](http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#2258)
+     - C++11では、「`a.erase(q1, q2)`の結果として`q2`が返る」という仕様だったが、`const_iterator`型が渡された場合に`iterator`型を返せない問題があった。そのためC++14では、`q2`が指す要素を指すイテレータが返る、ということが明記された
+-
+-
++- [LWG Issue 2059. C++0x ambiguity problem with `map::erase`](https://cplusplus.github.io/LWG/issue2059)
++    - C++17で、`erase(iterator)`を再追加
++- [P2077R3 Heterogeneous erasure overloads for associative containers](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2077r3.html)
++    - C++23で、`template &amp;lt;class K&amp;gt; erase(K&amp;amp;&amp;amp; x)`のオーバーロードが追加された
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>erase -- map / setのerase : オーバーロード仕様が古くなっていたのを修正</title>
+      <link href="https://cpprefjp.github.io/reference/set/set/erase.html"/>
+      <id>6251e4abe9d90fab42621ba97fea3a0b4a3c94aa:reference/set/set/erase.md</id>
+      <updated>2023-06-22T16:06:07+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/set/set/erase.md b/reference/set/set/erase.md
+index 1138910f9..683180d57 100644
+--- a/reference/set/set/erase.md
++++ b/reference/set/set/erase.md
+@@ -5,13 +5,18 @@
+ * function[meta id-type]
+ 
+ ```cpp
+-void erase(iterator position);                             // (1) C++03 まで
+-iterator erase(const_iterator position);                   // (1) C++11 から
++void erase(iterator position);                             // (1) C++03 (C++11で一旦削除)
++iterator erase(iterator position);                         // (1) C++17
+ 
+-void erase(iterator first, iterator last);                 // (2) C++03 まで
+-iterator erase(const_iterator first, const_iterator last); // (2) C++11 から
++iterator erase(const_iterator position);                   // (2) C++11
+ 
+-size_type erase(const key_type&amp;amp; x);                        // (3)
++size_type erase(const key_type&amp;amp; x);                        // (3) C++03
++
++template &amp;lt;class K&amp;gt;
++size_type erase(K&amp;amp;&amp;amp; x);                                    // (4) C++23
++
++void erase(iterator first, iterator last);                 // (5) C++03
++iterator erase(const_iterator first, const_iterator last); // (5) C++11
+ ```
+ 
+ 
+@@ -20,8 +25,10 @@ size_type erase(const key_type&amp;amp; x);                        // (3)
+ これは削除された要素の数だけコンテナの [`size`](size.md)`()` を減らし、それぞれの要素のデストラクタを呼び出す。
+ 
+ - (1) : 指定されたイテレータが指す要素を削除する
+-- (2) : 指定されたキーをもつ要素を削除する
+-- (3) : 指定されたイテレータ範囲の要素をすべて削除する
++- (2) : 指定された読み取り専用イテレータが指す要素を削除する
++- (3) : 指定されたキーをもつ要素を削除する
++- (4) : `key_type`と比較可能な`K`型のキーを受け取って要素を削除する
++- (5) : 指定されたイテレータ範囲の要素をすべて削除する
+ 
+ 
+ ## パラメータ
+@@ -31,16 +38,20 @@ size_type erase(const key_type&amp;amp; x);                        // (3)
+ 
+ 
+ ## 戻り値
+-- (1), (2) :
+-    - C++03 まで : なし
++- (1) :
++    - C++03 : 戻り値なし
++    - C++17 : 削除された要素の次を指すイテレータを返す。そのような要素がない場合、[`end()`](end.md)を返す (要素を削除した結果としてコンテナが空になった場合)
++- (2) : 削除された要素の次を指すイテレータを返す。そのような要素がない場合、[`end()`](end.md)を返す (要素を削除した結果としてコンテナが空になった場合)
++- (3), (4) : 削除された要素の数を返す
++- (5) :
++    - C++03 : 戻り値なし
+     - C++11 : 削除された要素の次を指すイテレータを返す。そのような要素がない場合、[`end()`](end.md)を返す (要素を削除した結果としてコンテナが空になった場合)
+-- (3) : 削除された要素の数を返す。
+ 
+ 
+ ## 計算量
+-- (1) : 定数時間
+-- (2) : コンテナの [`size()`](size.md) についての対数時間と、それに加えて `first` と `last` の間の距離に対する線形時間。
+-- (3) : コンテナの [`size()`](size.md) について対数時間。
++- (1), (2) : 定数時間
++- (3), (4) : コンテナの [`size()`](/reference/map/map/size.md) について対数時間
++- (5) : コンテナの [`size()`](/reference/map/map/size.md) について対数時間、それに加えて `first` と `last` の間の距離に対する線形時間
+ 
+ 
+ ## 備考
+@@ -158,7 +169,11 @@ int main()
+ 
+ ## 参照
+ - [N2350 Container insert/erase and iterator constness (Revision 1)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2350.pdf)
++    - C++11で、`erase(iterator)`を`erase(const_iterator)`に変更
+ - [LWG Issue 2258. `a.erase(q1, q2)` unable to directly return `q2`](http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#2258)
+     - C++11では、「`a.erase(q1, q2)`の結果として`q2`が返る」という仕様だったが、`const_iterator`型が渡された場合に`iterator`型を返せない問題があった。そのためC++14では、`q2`が指す要素を指すイテレータが返る、ということが明記された
+-
++- [LWG Issue 2059. C++0x ambiguity problem with `map::erase`](https://cplusplus.github.io/LWG/issue2059)
++    - C++17で、`erase(iterator)`を再追加
++- [P2077R3 Heterogeneous erasure overloads for associative containers](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2077r3.html)
++    - C++23で、`template &amp;lt;class K&amp;gt; erase(K&amp;amp;&amp;amp; x)`のオーバーロードが追加された
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>erase -- map / setのerase : endが返る条件の文章がわかりにくかったので修正</title>
@@ -378,962 +757,6 @@ index 5067466c2..a725c6695 100644
  ## 参照
  - [Constant Initialization - 雑貨&amp;#39;s tumblr](https://zakkas783-blog-blog.tumblr.com/post/25490513807/constant-initialization)
  - [mutexのconstexprコンストラクタ - yohhoyの日記](http://d.hatena.ne.jp/yohhoy/20120621/p1)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>flat_map -- flat_map : begin, end系を追加 #1078</title>
-      <link href="https://cpprefjp.github.io/reference/flat_map/flat_map.html"/>
-      <id>0376f471268c8f124984b4911a40bf6dec84eefc:reference/flat_map/flat_map.md</id>
-      <updated>2023-06-14T18:17:25+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_map/flat_map.md b/reference/flat_map/flat_map.md
-index 779e4536b..c699ae3a3 100644
---- a/reference/flat_map/flat_map.md
-+++ b/reference/flat_map/flat_map.md
-@@ -33,15 +33,15 @@ namespace std {
- ### イテレータ
- 
- | 名前 | 説明 | 対応バージョン |
--|------------------------------|----------------------------------------------|-------|
--| [`begin`](flat_map/begin.md.nolink)     | 先頭を指すイテレータを取得する               | C++23 |
--| [`cbegin`](flat_map/cbegin.md.nolink)   | 先頭を指す読み取り専用イテレータを取得する   | C++23 |
--| [`end`](flat_map/end.md.nolink)         | 末尾を指すイテレータを取得する               | C++23 |
--| [`cend`](flat_map/cend.md.nolink)       | 末尾を指す読み取り専用イテレータを取得する   | C++23 |
--| [`rbegin`](flat_map/rbegin.md.nolink)   | 末尾を指す逆イテレータを取得する             | C++23 |
--| [`crbegin`](flat_map/crbegin.md.nolink) | 末尾を指す読み取り専用逆イテレータを取得する | C++23 |
--| [`rend`](flat_map/rend.md.nolink)       | 先頭を指す逆イテレータを取得する             | C++23 |
--| [`crend`](flat_map/crend.md.nolink)     | 先頭を指す読み取り専用逆イテレータを取得する | C++23 |
-+|----------------------------------|--------------------------------------------------|-------|
-+| [`begin`](flat_map/begin.md)     | 先頭を指すイテレータを取得する                   | C++23 |
-+| [`cbegin`](flat_map/cbegin.md)   | 先頭を指す読み取り専用イテレータを取得する       | C++23 |
-+| [`end`](flat_map/end.md)         | 末尾の次を指すイテレータを取得する               | C++23 |
-+| [`cend`](flat_map/cend.md)       | 末尾の次を指す読み取り専用イテレータを取得する   | C++23 |
-+| [`rbegin`](flat_map/rbegin.md)   | 末尾を指す逆イテレータを取得する                 | C++23 |
-+| [`crbegin`](flat_map/crbegin.md) | 末尾を指す読み取り専用逆イテレータを取得する     | C++23 |
-+| [`rend`](flat_map/rend.md)       | 先頭の前を指す逆イテレータを取得する             | C++23 |
-+| [`crend`](flat_map/crend.md)     | 先頭の前を指す読み取り専用逆イテレータを取得する | C++23 |
- 
- 
- ### 領域
-@@ -106,10 +106,10 @@ namespace std {
- | `const_reference` | 要素への`const`参照型。[`std::pair`](/reference/utility/pair.md)`&amp;lt;const key_type&amp;amp;, const mapped_type&amp;amp;&amp;gt;` | C++23 |
- | `size_type` | 要素数を表す符号なし整数型 [`size_t`](/reference/cstddef/size_t.md) | C++23 |
- | `difference_type` | 同一のコンテナを指す `iterator` の差を表す符号付き整数型 [`ptrdiff_t`](/reference/cstddef/ptrdiff_t.md) | C++23 |
--| `iterator` | 双方向イテレータ | C++23 |
--| `const_iterator` | 読み取り専用双方向イテレータ | C++23 |
--| `reverse_iterator` | 逆順双方向イテレータ。[`std::reverse_iterator`](/reference/iterator/reverse_iterator.md)`&amp;lt;iterator&amp;gt;` | C++23 |
--| `const_reverse_iterator` | 読み取り専用逆順双方向イテレータ。[`std::reverse_iterator`](/reference/iterator/reverse_iterator.md)`&amp;lt;const_iterator&amp;gt;` | C++23 |
-+| `iterator` | ランダムアクセスイテレータ | C++23 |
-+| `const_iterator` | 読み取り専用ランダムアクセスイテレータ | C++23 |
-+| `reverse_iterator` | 逆順ランダムアクセスイテレータ。[`std::reverse_iterator`](/reference/iterator/reverse_iterator.md)`&amp;lt;iterator&amp;gt;` | C++23 |
-+| `const_reverse_iterator` | 読み取り専用逆順ランダムアクセスイテレータ。[`std::reverse_iterator`](/reference/iterator/reverse_iterator.md)`&amp;lt;const_iterator&amp;gt;` | C++23 |
- | `key_container_type` | キーを格納するコンテナ型 `KeyContainer` | C++23 |
- | `mapped_container_type` | 値を格納するコンテナ型 `MappedContainer` | C++23 |
- | [`containers`](flat_map/containers.md) | キーのコンテナと値のコンテナを保持する型 | C++23 |
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>begin -- flat_map : begin, end系を追加 #1078</title>
-      <link href="https://cpprefjp.github.io/reference/flat_map/flat_map/begin.html"/>
-      <id>0376f471268c8f124984b4911a40bf6dec84eefc:reference/flat_map/flat_map/begin.md</id>
-      <updated>2023-06-14T18:17:25+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_map/flat_map/begin.md b/reference/flat_map/flat_map/begin.md
-new file mode 100644
-index 000000000..53f04ff97
---- /dev/null
-+++ b/reference/flat_map/flat_map/begin.md
-@@ -0,0 +1,88 @@
-+# begin
-+* flat_map[meta header]
-+* std[meta namespace]
-+* flat_map[meta class]
-+* function[meta id-type]
-+* cpp23[meta cpp]
-+
-+```cpp
-+iterator begin() noexcept;
-+const_iterator begin() const noexcept;
-+```
-+
-+
-+## 概要
-+コンテナの先頭のキーと要素のpairを参照するイテレータを取得する。
-+
-+内部的に、コンテナは要素を下位から上位へと並べており、従って`begin()`はコンテナ内の最下位のキーにあたるpairへのイテレータを返す。
-+
-+
-+## 戻り値
-+コンテナの先頭要素へのイテレータ。
-+`iterator` と `const_iterator` はともにメンバ型である。このクラステンプレートにおいて、これらはランダムアクセスイテレータである。
-+
-+
-+## 計算量
-+定数時間。
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;flat_map&amp;gt;
-+
-+int main()
-+{
-+  std::flat_map&amp;lt;int, char&amp;gt; fm;
-+  fm[3] = &amp;#39;C&amp;#39;;
-+  fm[7] = &amp;#39;G&amp;#39;;
-+  fm[8] = &amp;#39;H&amp;#39;;
-+  fm[4] = &amp;#39;D&amp;#39;;
-+  fm[5] = &amp;#39;E&amp;#39;;
-+  fm[1] = &amp;#39;A&amp;#39;;
-+  fm[2] = &amp;#39;B&amp;#39;;
-+  fm[6] = &amp;#39;F&amp;#39;;
-+
-+  for (auto i = fm.begin(); i != fm.end(); ++i) {
-+      std::cout &amp;lt;&amp;lt; i-&amp;gt;first &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; i-&amp;gt;second &amp;lt;&amp;lt; &amp;#34;\n&amp;#34;;
-+  }
-+}
-+```
-+* begin()[color ff0000]
-+* fm.end()[link end.md]
-+
-+### 出力
-+```
-+1 A
-+2 B
-+3 C
-+4 D
-+5 E
-+6 F
-+7 G
-+8 H
-+```
-+
-+## バージョン
-+### 言語
-+- C++23
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): ??
-+- [Visual C++](/implementation.md#visual_cpp): ??
-+
-+
-+## 関連項目
-+
-+| 名前 | 説明 |
-+|-----------------------------------|--------------------------------|
-+| [`flat_map::end`](end.md)         | 末尾の次を指すイテレータを取得する |
-+| [`flat_map::cbegin`](cbegin.md)   | 先頭を指すconstイテレータを取得する |
-+| [`flat_map::cend`](cend.md)       | 末尾の次を指すconstイテレータを取得する |
-+| [`flat_map::rbegin`](rbegin.md)   | 末尾を指す逆イテレータを取得する |
-+| [`flat_map::rend`](rend.md)       | 先頭の前を指す逆イテレータを取得する |
-+| [`flat_map::crbegin`](crbegin.md) | 末尾を指す逆constイテレータを取得する |
-+| [`flat_map::crend`](crend.md)     | 先頭の前を指す逆constイテレータを取得する |
-+
-+
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>cbegin -- flat_map : begin, end系を追加 #1078</title>
-      <link href="https://cpprefjp.github.io/reference/flat_map/flat_map/cbegin.html"/>
-      <id>0376f471268c8f124984b4911a40bf6dec84eefc:reference/flat_map/flat_map/cbegin.md</id>
-      <updated>2023-06-14T18:17:25+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_map/flat_map/cbegin.md b/reference/flat_map/flat_map/cbegin.md
-new file mode 100644
-index 000000000..b128c228b
---- /dev/null
-+++ b/reference/flat_map/flat_map/cbegin.md
-@@ -0,0 +1,83 @@
-+# cbegin
-+* flat_map[meta header]
-+* std[meta namespace]
-+* flat_map[meta class]
-+* function[meta id-type]
-+* cpp23[meta cpp]
-+
-+```cpp
-+const_iterator cbegin() const noexcept;
-+```
-+
-+
-+## 概要
-+コンテナの先頭のキーと要素のpairを参照するイテレータを取得する。
-+
-+内部的に、このコンテナは要素を下位から上位へと並べており、従って `cbegin()` はコンテナ内の最下位のキーにあたるpairへのイテレータを返す。
-+
-+
-+## 戻り値
-+コンテナの先頭要素へのイテレータ。
-+`const_iterator` はメンバ型である。このクラステンプレートにおいて、これらはランダムアクセスイテレータである。
-+
-+
-+## 計算量
-+定数時間。
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;flat_map&amp;gt;
-+
-+int main()
-+{
-+  std::flat_map&amp;lt;int, char&amp;gt; fm;
-+  fm[3] = &amp;#39;C&amp;#39;;
-+  fm[7] = &amp;#39;G&amp;#39;;
-+  fm[8] = &amp;#39;H&amp;#39;;
-+  fm[4] = &amp;#39;D&amp;#39;;
-+  fm[5] = &amp;#39;E&amp;#39;;
-+  fm[1] = &amp;#39;A&amp;#39;;
-+  fm[2] = &amp;#39;B&amp;#39;;
-+  fm[6] = &amp;#39;F&amp;#39;;
-+
-+  for (auto i = fm.cbegin(); i != fm.cend(); ++i) {
-+      std::cout &amp;lt;&amp;lt; i-&amp;gt;first &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; i-&amp;gt;second &amp;lt;&amp;lt; &amp;#34;\n&amp;#34;;
-+  }
-+}
-+```
-+* cbegin()[color ff0000]
-+* fm.cend()[link cend.md]
-+
-+### 出力
-+```
-+1 A
-+2 B
-+3 C
-+4 D
-+5 E
-+6 F
-+7 G
-+8 H
-+```
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): ??
-+- [ICC](/implementation.md#icc): ??
-+- [Visual C++](/implementation.md#visual_cpp): ??
-+
-+
-+## 関連項目
-+
-+| 名前 | 説明 |
-+|-----------------------------------|--------------------------------|
-+| [`flat_map::begin`](begin.md)     | 先頭を指すイテレータを取得する |
-+| [`flat_map::end`](end.md)         | 末尾の次を指すイテレータを取得する |
-+| [`flat_map::cend`](cend.md)       | 末尾の次を指すconstイテレータを取得する |
-+| [`flat_map::rbegin`]rbegin.md)    | 末尾を指す逆イテレータを取得する |
-+| [`flat_map::rend`](rend.md)       | 先頭の前を指す逆イテレータを取得する |
-+| [`flat_map::crbegin`](crbegin.md) | 末尾を指す逆constイテレータを取得する |
-+| [`flat_map::crend`](crend.md)     | 先頭の前を指す逆constイテレータを取得する |
-+
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>cend -- flat_map : begin, end系を追加 #1078</title>
-      <link href="https://cpprefjp.github.io/reference/flat_map/flat_map/cend.html"/>
-      <id>0376f471268c8f124984b4911a40bf6dec84eefc:reference/flat_map/flat_map/cend.md</id>
-      <updated>2023-06-14T18:17:25+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_map/flat_map/cend.md b/reference/flat_map/flat_map/cend.md
-new file mode 100644
-index 000000000..ff0377cb5
---- /dev/null
-+++ b/reference/flat_map/flat_map/cend.md
-@@ -0,0 +1,86 @@
-+# cend
-+* flat_map[meta header]
-+* std[meta namespace]
-+* flat_map[meta class]
-+* function[meta id-type]
-+* cpp23[meta cpp]
-+
-+```cpp
-+const_iterator cend() const noexcept;
-+```
-+
-+## 概要
-+コンテナの末尾の次を参照するイテレータを取得する。
-+
-+
-+## 戻り値
-+コンテナの末尾の次を参照するイテレータ。 
-+`const_iterator` はいずれもメンバ型である。このクラステンプレートにおいて、これらはランダムアクセスイテレータである。
-+
-+
-+## 計算量
-+定数時間
-+
-+
-+## 備考
-+- この関数によって返されるイテレータは、`*this`が保持するいずれの要素も参照しない。その指す先は、不正な範囲となるだろう
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;flat_map&amp;gt;
-+
-+int main()
-+{
-+  std::flat_map&amp;lt;int, char&amp;gt; fm;
-+  fm[3] = &amp;#39;C&amp;#39;;
-+  fm[7] = &amp;#39;G&amp;#39;;
-+  fm[8] = &amp;#39;H&amp;#39;;
-+  fm[4] = &amp;#39;D&amp;#39;;
-+  fm[5] = &amp;#39;E&amp;#39;;
-+  fm[1] = &amp;#39;A&amp;#39;;
-+  fm[2] = &amp;#39;B&amp;#39;;
-+  fm[6] = &amp;#39;F&amp;#39;;
-+
-+  for (auto i = fm.cbegin(); i != fm.cend(); ++i) {
-+      std::cout &amp;lt;&amp;lt; i-&amp;gt;first &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; i-&amp;gt;second &amp;lt;&amp;lt; &amp;#34;\n&amp;#34;;
-+  }
-+}
-+```
-+* cend()[color ff0000]
-+* fm.cbegin()[link cbegin.md]
-+
-+### 出力
-+```
-+1 A
-+2 B
-+3 C
-+4 D
-+5 E
-+6 F
-+7 G
-+8 H
-+```
-+
-+## バージョン
-+### 言語
-+- C++23
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): ??
-+- [Visual C++](/implementation.md#visual_cpp): ??
-+
-+## 関連項目
-+
-+| 名前 | 説明 |
-+|------------------------------|-------------------------------------------|
-+| [`flat_map::begin`](begin.md)     | 先頭を指すイテレータを取得する |
-+| [`flat_map::end`](end.md)         | 末尾の次を指すイテレータを取得する |
-+| [`flat_map::cbegin`](cbegin.md)   | 先頭を指すconstイテレータを取得する |
-+| [`flat_map::rbegin`](rbegin.md)   | 末尾を指す逆イテレータを取得する |
-+| [`flat_map::rend`](rend.md)       | 先頭の前を指す逆イテレータを取得する |
-+| [`flat_map::crbegin`](crbegin.md) | 末尾を指す逆constイテレータを取得する |
-+| [`flat_map::crend`](crend.md)     | 先頭の前を指す逆constイテレータを取得する |
-+
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>contains -- flat_map : begin, end系を追加 #1078</title>
-      <link href="https://cpprefjp.github.io/reference/flat_map/flat_map/contains.html"/>
-      <id>0376f471268c8f124984b4911a40bf6dec84eefc:reference/flat_map/flat_map/contains.md</id>
-      <updated>2023-06-14T18:17:25+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_map/flat_map/contains.md b/reference/flat_map/flat_map/contains.md
-index 8f2f27ae0..93009ba93 100644
---- a/reference/flat_map/flat_map/contains.md
-+++ b/reference/flat_map/flat_map/contains.md
-@@ -31,7 +31,7 @@ bool contains(const K&amp;amp; x) const;        // (2) C++23
- return find(x) != end();
- ```
- * find[link find.md]
--* end()[link end.md.nolink]
-+* end()[link end.md]
- 
- 
- ## 計算量
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>crbegin -- flat_map : begin, end系を追加 #1078</title>
-      <link href="https://cpprefjp.github.io/reference/flat_map/flat_map/crbegin.html"/>
-      <id>0376f471268c8f124984b4911a40bf6dec84eefc:reference/flat_map/flat_map/crbegin.md</id>
-      <updated>2023-06-14T18:17:25+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_map/flat_map/crbegin.md b/reference/flat_map/flat_map/crbegin.md
-new file mode 100644
-index 000000000..a1d900a90
---- /dev/null
-+++ b/reference/flat_map/flat_map/crbegin.md
-@@ -0,0 +1,78 @@
-+# crbegin
-+* flat_map[meta header]
-+* std[meta namespace]
-+* flat_map[meta class]
-+* function[meta id-type]
-+* cpp23[meta cpp]
-+
-+```cpp
-+const_reverse_iterator crbegin() const noexcept;
-+```
-+
-+## 概要
-+コンテナ内の末尾を指す逆イテレータを取得する。 
-+内部的に、このコンテナは各要素をキーの値に従って下位から上位へと並べており、従って `crbegin()` は最上位のキーにあたる値へのイテレータを返す。 
-+`crbegin()` は [`end()`](end.md) と同じ要素を指すわけではなく、その前の要素を指すことに注意。
-+
-+
-+## 戻り値
-+反転したシーケンスの先頭を指す逆イテレータ。 
-+`const_reverse_iterator` はメンバ型である。このクラステンプレートにおいて、これらは逆ランダムアクセスイテレータであり、`reverse_iterator&amp;lt;const_iterator&amp;gt;` と定義される。
-+
-+
-+## 計算量
-+定数時間。
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;flat_map&amp;gt;
-+
-+int main()
-+{
-+  std::flat_map&amp;lt;int, char&amp;gt; fm {
-+    {5, &amp;#39;e&amp;#39;},
-+    {2, &amp;#39;b&amp;#39;},
-+    {4, &amp;#39;d&amp;#39;},
-+    {1, &amp;#39;a&amp;#39;},
-+    {1, &amp;#39;a&amp;#39;}
-+  };
-+
-+  std::flat_map&amp;lt;int, char&amp;gt;::const_reverse_iterator i = fm.crbegin();
-+  for (; i != fm.crend() ; ++i) {
-+    std::cout &amp;lt;&amp;lt; i-&amp;gt;first &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; i-&amp;gt;second &amp;lt;&amp;lt; std::endl;
-+  }
-+}
-+```
-+* crbegin()[color ff0000]
-+* fm.crend()[link crend.md]
-+
-+### 出力
-+```
-+5 e
-+4 d
-+2 b
-+1 a
-+```
-+
-+## バージョン
-+### 言語
-+- C++23
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): ??
-+- [Visual C++](/implementation.md#visual_cpp): ??
-+
-+
-+## 関連項目
-+| 名前 | 説明 |
-+-----------------------------|-------------------------------------------|
-+| [`flat_map::begin`](begin.md)   | 先頭を指すイテレータを取得する |
-+| [`flat_map::end`](end.md)       | 末尾の次を指すイテレータを取得する |
-+| [`flat_map::cbegin`](cbegin.md) | 先頭を指すconstイテレータを取得する |
-+| [`flat_map::cend`](cend.md)     | 末尾の次を指すconstイテレータを取得する |
-+| [`flat_map::rbegin`](rbegin.md) | 末尾を指す逆イテレータを取得する |
-+| [`flat_map::rend`](rend.md)     | 先頭の前を指す逆イテレータを取得する |
-+| [`flat_map::crend`](crend.md)   | 先頭の前を指す逆constイテレータを取得する |
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>crend -- flat_map : begin, end系を追加 #1078</title>
-      <link href="https://cpprefjp.github.io/reference/flat_map/flat_map/crend.html"/>
-      <id>0376f471268c8f124984b4911a40bf6dec84eefc:reference/flat_map/flat_map/crend.md</id>
-      <updated>2023-06-14T18:17:25+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_map/flat_map/crend.md b/reference/flat_map/flat_map/crend.md
-new file mode 100644
-index 000000000..ed608420b
---- /dev/null
-+++ b/reference/flat_map/flat_map/crend.md
-@@ -0,0 +1,76 @@
-+# crend
-+* flat_map[meta header]
-+* std[meta namespace]
-+* flat_map[meta class]
-+* function[meta id-type]
-+* cpp23[meta cpp]
-+
-+```cpp
-+const_reverse_iterator crend() const noexcept;
-+```
-+
-+
-+## 概要
-+コンテナの先頭要素の前（これは反転シーケンスの末尾にあたる）を指す逆イテレータを取得する。 
-+`crend()` は [`begin()`](begin.md) と同じ要素を指すわけではなく、その前の要素を指すことに注意。
-+
-+
-+## 戻り値
-+反転シーケンスの終端を指す逆イテレータ。 
-+`const_reverse_iterator` はメンバ型である。`map` クラステンプレートにおいて、これらは逆ランダムアクセスイテレータであり、`reverse_iterator&amp;lt;const_iterator&amp;gt;` と定義される。
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;flat_map&amp;gt;
-+
-+int main()
-+{
-+  std::flat_map&amp;lt;int, char&amp;gt; fm {
-+    {5, &amp;#39;e&amp;#39;},
-+    {2, &amp;#39;b&amp;#39;},
-+    {4, &amp;#39;d&amp;#39;},
-+    {1, &amp;#39;a&amp;#39;},
-+    {1, &amp;#39;a&amp;#39;}
-+  };
-+
-+  std::flat_map&amp;lt;int, char&amp;gt;::const_reverse_iterator i = fm.crbegin();
-+  for (; i != fm.crend() ; ++i) {
-+    std::cout &amp;lt;&amp;lt; i-&amp;gt;first &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; i-&amp;gt;second &amp;lt;&amp;lt; std::endl;
-+  }
-+}
-+```
-+* crend()[color ff0000]
-+* fm.crbegin()[link crbegin.md]
-+
-+### 出力
-+```
-+5 e
-+4 d
-+2 b
-+1 a
-+```
-+
-+## バージョン
-+### 言語
-+- C++23
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): ??
-+- [Visual C++](/implementation.md#visual_cpp): ??
-+
-+
-+
-+## 関連項目
-+
-+| 名前 | 説明 |
-+|------------------------------|-----------------------------------------|
-+| [`flat_map::begin`](begin.md)     | 先頭を指すイテレータを取得する |
-+| [`flat_map::end`](end.md)         | 末尾の次を指すイテレータを取得する |
-+| [`flat_map::cbegin`](cbegin.md)   | 先頭を指すconstイテレータを取得する |
-+| [`flat_map::cend`](cend.md)       | 末尾の次を指すconstイテレータを取得する |
-+| [`flat_map::rbegin`](rbegin.md)   | 末尾を指す逆イテレータを取得する |
-+| [`flat_map::rend`](rend.md)       | 先頭の前を指す逆イテレータを取得する |
-+| [`flat_map::crbegin`](crbegin.md) | 末尾を指す逆constイテレータを取得する |
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>emplace_hint -- flat_map : begin, end系を追加 #1078</title>
-      <link href="https://cpprefjp.github.io/reference/flat_map/flat_map/emplace_hint.html"/>
-      <id>0376f471268c8f124984b4911a40bf6dec84eefc:reference/flat_map/flat_map/emplace_hint.md</id>
-      <updated>2023-06-14T18:17:25+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_map/flat_map/emplace_hint.md b/reference/flat_map/flat_map/emplace_hint.md
-index 113abdf27..c9516eae4 100644
---- a/reference/flat_map/flat_map/emplace_hint.md
-+++ b/reference/flat_map/flat_map/emplace_hint.md
-@@ -52,7 +52,7 @@ int main()
- ```
- * emplace_hint[color ff0000]
- * fm.emplace[link emplace.md]
--* fm.end()[link end.md.nolink]
-+* fm.end()[link end.md]
- 
- ### 出力
- ```
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>end -- flat_map : begin, end系を追加 #1078</title>
-      <link href="https://cpprefjp.github.io/reference/flat_map/flat_map/end.html"/>
-      <id>0376f471268c8f124984b4911a40bf6dec84eefc:reference/flat_map/flat_map/end.md</id>
-      <updated>2023-06-14T18:17:25+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_map/flat_map/end.md b/reference/flat_map/flat_map/end.md
-new file mode 100644
-index 000000000..a892c0acc
---- /dev/null
-+++ b/reference/flat_map/flat_map/end.md
-@@ -0,0 +1,87 @@
-+# end
-+* flat_map[meta header]
-+* std[meta namespace]
-+* flat_map[meta class]
-+* function[meta id-type]
-+* cpp23[meta cpp]
-+
-+```cpp
-+iterator end() noexcept;
-+const_iterator end() const noexcept;
-+```
-+
-+## 概要
-+コンテナの末尾の次を参照するイテレータを取得する。
-+
-+
-+## 戻り値
-+コンテナの最後の要素の次を参照するイテレータ。 
-+`iterator` と `const_iterator` はいずれもメンバ型である。`map` クラステンプレートにおいて、これらはランダムアクセスイテレータである。
-+
-+
-+## 計算量
-+定数時間
-+
-+
-+## 備考
-+- この関数によって返されるイテレータは、`*this`が保持するいずれの要素も参照しない。その指す先は、不正な範囲となるだろう
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;flat_map&amp;gt;
-+
-+int main()
-+{
-+  std::flat_map&amp;lt;int, char&amp;gt; fm;
-+  fm[3] = &amp;#39;C&amp;#39;;
-+  fm[7] = &amp;#39;G&amp;#39;;
-+  fm[8] = &amp;#39;H&amp;#39;;
-+  fm[4] = &amp;#39;D&amp;#39;;
-+  fm[5] = &amp;#39;E&amp;#39;;
-+  fm[1] = &amp;#39;A&amp;#39;;
-+  fm[2] = &amp;#39;B&amp;#39;;
-+  fm[6] = &amp;#39;F&amp;#39;;
-+
-+  for (auto i = fm.begin(); i != fm.end(); ++i) {
-+      std::cout &amp;lt;&amp;lt; i-&amp;gt;first &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; i-&amp;gt;second &amp;lt;&amp;lt; &amp;#34;\n&amp;#34;;
-+  }
-+}
-+```
-+* end()[color ff0000]
-+* fm.begin()[link begin.md]
-+
-+### 出力
-+```
-+1 A
-+2 B
-+3 C
-+4 D
-+5 E
-+6 F
-+7 G
-+8 H
-+```
-+
-+## バージョン
-+### 言語
-+- C++23
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): ??
-+- [Visual C++](/implementation.md#visual_cpp): ??
-+
-+
-+## 関連項目
-+
-+| 名前 | 説明 |
-+|-----------------------------------|-------------------------------------------|
-+| [`flat_map::begin`](begin.md)     | 先頭を指すイテレータを取得する |
-+| [`flat_map::cbegin`](cbegin.md)   | 先頭を指すconstイテレータを取得する |
-+| [`flat_map::cend`](cend.md)       | 末尾の次を指すconstイテレータを取得する |
-+| [`flat_map::rbegin`](rbegin.md)   | 末尾の次を指す逆イテレータを取得する |
-+| [`flat_map::rend`](rend.md)       | 先頭の前を指す逆イテレータを取得する |
-+| [`flat_map::crbegin`](crbegin.md) | 末尾を指す逆constイテレータを取得する |
-+| [`flat_map::crend`](crend.md)     | 先頭の前を指す逆constイテレータを取得する |
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>find -- flat_map : begin, end系を追加 #1078</title>
-      <link href="https://cpprefjp.github.io/reference/flat_map/flat_map/find.html"/>
-      <id>0376f471268c8f124984b4911a40bf6dec84eefc:reference/flat_map/flat_map/find.md</id>
-      <updated>2023-06-14T18:17:25+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_map/flat_map/find.md b/reference/flat_map/flat_map/find.md
-index 820727e59..5dcb21d11 100644
---- a/reference/flat_map/flat_map/find.md
-+++ b/reference/flat_map/flat_map/find.md
-@@ -29,8 +29,8 @@ const_iterator find(const K&amp;amp; x) const;        // (4) C++23
- 
- 
- ## 戻り値
--- (1), (3) : `x`と等価なキーの要素が見つかった場合は、見つかった要素へのイテレータを返す。そうでない場合は、 [`end()`](end.md.nolink) を返す。
--- (2), (4) : `key_compare`型の関数オブジェクトを`c`、コンテナ内の各要素が持つキーを`k`として、キーが等価か判定する式`!c(k, x) &amp;amp;&amp;amp; !c(x, k)`が`true`となる要素へのイテレータを返す。そのような要素がない場合は、[`end()`](end.md.nolink) を返す。
-+- (1), (3) : `x`と等価なキーの要素が見つかった場合は、見つかった要素へのイテレータを返す。そうでない場合は、 [`end()`](end.md) を返す。
-+- (2), (4) : `key_compare`型の関数オブジェクトを`c`、コンテナ内の各要素が持つキーを`k`として、キーが等価か判定する式`!c(k, x) &amp;amp;&amp;amp; !c(x, k)`が`true`となる要素へのイテレータを返す。そのような要素がない場合は、[`end()`](end.md) を返す。
- 
- 
- ## 計算量
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>rbegin -- flat_map : begin, end系を追加 #1078</title>
-      <link href="https://cpprefjp.github.io/reference/flat_map/flat_map/rbegin.html"/>
-      <id>0376f471268c8f124984b4911a40bf6dec84eefc:reference/flat_map/flat_map/rbegin.md</id>
-      <updated>2023-06-14T18:17:25+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_map/flat_map/rbegin.md b/reference/flat_map/flat_map/rbegin.md
-new file mode 100644
-index 000000000..983534d7a
---- /dev/null
-+++ b/reference/flat_map/flat_map/rbegin.md
-@@ -0,0 +1,82 @@
-+# rbegin
-+* flat_map[meta header]
-+* std[meta namespace]
-+* flat_map[meta class]
-+* function[meta id-type]
-+* cpp23[meta cpp]
-+
-+```cpp
-+reverse_iterator rbegin() noexcept;
-+const_reverse_iterator rbegin() const noexcept;
-+```
-+
-+## 概要
-+コンテナ内の末尾を指す逆イテレータを取得する。
-+
-+内部的に、このコンテナは各要素をキーの値に従って下位から上位へと並べており、従って `rbegin()` は最上位のキーにあたる値を指すイテレータを返す。 
-+`rbegin()` は [`end()`](end.md) と同じ要素を指すわけではなく、その前の要素を指すことに注意。
-+
-+
-+## 戻り値
-+反転したシーケンスの先頭を指す逆イテレータ。 
-+`reverse_iterator` と `const_reverse_iterator` はともにメンバ型である。このクラステンプレートにおいて、これらは逆ランダムアクセスイテレータであり、それぞれ `reverse_iterator&amp;lt;iterator&amp;gt;`, `reverse_iterator&amp;lt;const_iterator&amp;gt;` と定義される。
-+
-+
-+## 計算量
-+定数時間。
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;flat_map&amp;gt;
-+
-+int main()
-+{
-+  std::flat_map&amp;lt;int, char&amp;gt; fm {
-+    {5, &amp;#39;e&amp;#39;},
-+    {2, &amp;#39;b&amp;#39;},
-+    {4, &amp;#39;d&amp;#39;},
-+    {1, &amp;#39;a&amp;#39;},
-+    {1, &amp;#39;a&amp;#39;}
-+  };
-+
-+  std::flat_map&amp;lt;int, char&amp;gt;::reverse_iterator i = fm.rbegin();
-+  for (; i != fm.rend() ; ++i) {
-+    std::cout &amp;lt;&amp;lt; i-&amp;gt;first &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; i-&amp;gt;second &amp;lt;&amp;lt; std::endl;
-+  }
-+}
-+```
-+* rbegin()[color ff0000]
-+* fm.rend()[link rend.md]
-+
-+### 出力
-+```
-+5 e
-+4 d
-+2 b
-+1 a
-+```
-+
-+## バージョン
-+### 言語
-+- C++23
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): ??
-+- [Visual C++](/implementation.md#visual_cpp): ??
-+
-+
-+## 関連項目
-+
-+| 名前 | 説明 |
-+-------------------------------|-----------------------------------------|
-+| [`flat_map::begin`](begin.md)     | 先頭を指すイテレータを取得する |
-+| [`flat_map::end`](end.md)         | 末尾の次を指すイテレータを取得する |
-+| [`flat_map::cbegin`](cbegin.md)   | 先頭を指すconstイテレータを取得する |
-+| [`flat_map::cend`](cend.md)       | 末尾の次を指すconstイテレータを取得する |
-+| [`flat_map::rend`](rend.md)       | 先頭の前を指す逆イテレータを取得する |
-+| [`flat_map::crbegin`](crbegin.md) | 末尾を指す逆constイテレータを取得する |
-+| [`flat_map::crend`](crend.md)     | 先頭の前を指す逆constイテレータを取得する |
-+
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>rend -- flat_map : begin, end系を追加 #1078</title>
-      <link href="https://cpprefjp.github.io/reference/flat_map/flat_map/rend.html"/>
-      <id>0376f471268c8f124984b4911a40bf6dec84eefc:reference/flat_map/flat_map/rend.md</id>
-      <updated>2023-06-14T18:17:25+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_map/flat_map/rend.md b/reference/flat_map/flat_map/rend.md
-new file mode 100644
-index 000000000..206000a68
---- /dev/null
-+++ b/reference/flat_map/flat_map/rend.md
-@@ -0,0 +1,75 @@
-+# rend
-+* flat_map[meta header]
-+* std[meta namespace]
-+* flat_map[meta class]
-+* function[meta id-type]
-+* cpp23[meta cpp]
-+
-+```cpp
-+reverse_iterator rend() noexcept;
-+const_reverse_iterator rend() const noexcept;
-+```
-+
-+## 概要
-+コンテナの先頭要素の前（これは反転シーケンスの末尾にあたる）を指す逆イテレータを取得する。 
-+`rend()` は [`begin()`](begin.md) と同じ要素を指すわけではなく、その前の要素を指すことに注意。
-+
-+## 戻り値
-+反転シーケンスの終端を指す逆イテレータ。 
-+`reverse_iterator` と `const_reverse_iterator` はメンバ型である。このクラステンプレートにおいて、これらは逆ランダムアクセスイテレータであり、それぞれ `reverse_iterator&amp;lt;iterator&amp;gt;`, `reverse_iterator&amp;lt;const_iterator&amp;gt;` と定義される。
-+
-+## 例
-+```cpp example
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;flat_map&amp;gt;
-+
-+int main()
-+{
-+  std::flat_map&amp;lt;int, char&amp;gt; fm {
-+    {5, &amp;#39;e&amp;#39;},
-+    {2, &amp;#39;b&amp;#39;},
-+    {4, &amp;#39;d&amp;#39;},
-+    {1, &amp;#39;a&amp;#39;},
-+    {1, &amp;#39;a&amp;#39;}
-+  };
-+
-+  std::flat_map&amp;lt;int, char&amp;gt;::reverse_iterator i = fm.rbegin();
-+  for (; i != fm.rend() ; ++i) {
-+    std::cout &amp;lt;&amp;lt; i-&amp;gt;first &amp;lt;&amp;lt; &amp;#34; &amp;#34; &amp;lt;&amp;lt; i-&amp;gt;second &amp;lt;&amp;lt; std::endl;
-+  }
-+}
-+```
-+* rend()[color ff0000]
-+* fm.rbegin()[link rbegin.md]
-+
-+### 出力
-+```
-+5 e
-+4 d
-+2 b
-+1 a
-+```
-+
-+## バージョン
-+### 言語
-+- C++23
-+
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): ??
-+- [Visual C++](/implementation.md#visual_cpp): ??
-+
-+
-+## 関連項目
-+
-+| 名前 | 説明　|
-+|------------------------------|--------------------------------------------|
-+| [`flat_map::begin`](begin.md)     | 先頭を指すイテレータを取得する |
-+| [`flat_map::end`](end.md)         | 末尾の次を指すイテレータを取得する |
-+| [`flat_map::cbegin`](cbegin.md)   | 先頭を指すconstイテレータを取得する |
-+| [`flat_map::cend`](cend.md)       | 末尾の次を指すconstイテレータを取得する |
-+| [`flat_map::rbegin`](rbegin.md)   | 末尾を指す逆イテレータを取得する |
-+| [`flat_map::crbegin`](crbegin.md) | 末尾を指す逆constイテレータを取得する |
-+| [`flat_map::crend`](crend.md)     | 先頭の前を指す逆constイテレータを取得する |
-+
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
