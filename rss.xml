@@ -2,9 +2,291 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2023-08-03T14:40:16.826165</updated>
-  <id>fba65014-2f97-42e2-a958-ceab06f49c84</id>
+  <updated>2023-08-04T06:12:36.071811</updated>
+  <id>aed983f6-671b-4614-bc69-782b0f0f3e46</id>
 
+  
+    <entry>
+      <title>basic_const_iterator -- basic_const_iterator : == &lt;=&gt;追加 #1084</title>
+      <link href="https://cpprefjp.github.io/reference/iterator/basic_const_iterator.html"/>
+      <id>09c1ad78bd5be675d94afdc1e49adcaa6ff7ca4d:reference/iterator/basic_const_iterator.md</id>
+      <updated>2023-08-04T15:07:04+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/basic_const_iterator.md b/reference/iterator/basic_const_iterator.md
+index 1a27d9853..a6d62a285 100644
+--- a/reference/iterator/basic_const_iterator.md
++++ b/reference/iterator/basic_const_iterator.md
+@@ -30,13 +30,13 @@ namespace std {
+ | [`operator-=`](basic_const_iterator/op_minus_assign.md)   | イテレータ自身を逆に進める | C++23 |
+ | [`operator-`](basic_const_iterator/op_minus.md)          | 2つの`basic_const_iterator`の差を求める | C++23 |
+ | [`operator[]`](basic_const_iterator/op_at.md)             | 任意の位置にランダムアクセスする | C++23 |
+-| [`operator==`](basic_const_iterator/op_equal.md.nolink)         | 等値比較 | C++23 |
+-| [`operator!=`](basic_const_iterator/op_equal.md.nolink)     | 非等値比較 | C++23 |
++| [`operator==`](basic_const_iterator/op_equal.md)         | 等値比較 | C++23 |
++| `operator!=`     | 非等値比較 ([`==`](basic_const_iterator/op_equal.md)により使用可能) | C++23 |
+ | [`operator&amp;lt;`](basic_const_iterator/op_less.md.nolink)           | 左辺が右辺より小さいかの判定を行う | C++23 |
+ | [`operator&amp;lt;=`](basic_const_iterator/op_less_equal.md.nolink)    | 左辺が右辺以下かの判定を行う | C++23 |
+ | [`operator&amp;gt;`](basic_const_iterator/op_greater.md.nolink)        | 左辺が右辺より大きいかの判定を行う | C++23 |
+ | [`operator&amp;gt;=`](basic_const_iterator/op_greater_equal.md.nolink) | 左辺が右辺以上かの判定を行う | C++23 |
+-| [`operator&amp;lt;=&amp;gt;`](basic_const_iterator/op_compare_3way.md.nolink)           | 三方比較を行う | C++23 |
++| [`operator&amp;lt;=&amp;gt;`](basic_const_iterator/op_compare_3way.md)           | 三方比較を行う | C++23 |
+ 
+ 
+ ## メンバ型
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator&lt;=&gt; -- basic_const_iterator : == &lt;=&gt;追加 #1084</title>
+      <link href="https://cpprefjp.github.io/reference/iterator/basic_const_iterator/op_compare_3way.html"/>
+      <id>09c1ad78bd5be675d94afdc1e49adcaa6ff7ca4d:reference/iterator/basic_const_iterator/op_compare_3way.md</id>
+      <updated>2023-08-04T15:07:04+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/basic_const_iterator/op_compare_3way.md b/reference/iterator/basic_const_iterator/op_compare_3way.md
+new file mode 100644
+index 000000000..7ab85c95e
+--- /dev/null
++++ b/reference/iterator/basic_const_iterator/op_compare_3way.md
+@@ -0,0 +1,103 @@
++# operator&amp;lt;=&amp;gt;
++* iterator[meta header]
++* std[meta namespace]
++* basic_const_iterator[meta class]
++* function[meta id-type]
++* cpp23[meta cpp]
++
++```cpp
++constexpr auto operator&amp;lt;=&amp;gt;(const basic_const_iterator&amp;amp; y) const
++  requires random_access_iterator&amp;lt;Iterator&amp;gt; &amp;amp;&amp;amp; three_way_comparable&amp;lt;Iterator&amp;gt;;          // (1)
++
++template&amp;lt;different-from&amp;lt;basic_const_iterator&amp;gt; I&amp;gt;
++constexpr auto operator&amp;lt;=&amp;gt;(const I&amp;amp; y) const
++  requires random_access_iterator&amp;lt;Iterator&amp;gt; &amp;amp;&amp;amp; totally_ordered_with&amp;lt;Iterator, I&amp;gt; &amp;amp;&amp;amp;
++           three_way_comparable_with&amp;lt;Iterator, I&amp;gt;;                                      // (2)
++```
++* different-from[link /reference/ranges/different-from.md]
++* random_access_iterator[link /reference/iterator/random_access_iterator.md]
++* three_way_comparable[link /reference/compare/three_way_comparable.md]
++* totally_ordered_with[link /reference/concepts/totally_ordered_with.md]
++
++## 概要
++
++
++`basic_const_iterator&amp;lt;Iterator&amp;gt;`オブジェクトと別のイテレータ（`basic_const_iterator&amp;lt;Iterator&amp;gt;`か`Iterator`、`Iterator`と比較可能なオブジェクト）の三方比較を行う。
++
++- (1) : `basic_const_iterator`同士の比較を行う
++- (2) : ラップしているイテレータ（`Iterator`）と直接比較可能な型との間で比較を行う
++
++## 効果
++
++ラップするイテレータを`current_`というメンバに保持するとして
++
++- (1) : 以下と等価  
++    ```cpp
++    return current_ &amp;lt;=&amp;gt; y.current_;
++    ```
++
++- (2) : 以下と等価  
++    ```cpp
++    return current_ &amp;lt;=&amp;gt; y;
++    ```
++
++## 備考
++
++(2)の演算子により以下の演算子が使用可能になる（制約は同じものが適用される）。
++
++```cpp
++// 逆順
++template&amp;lt;different-from&amp;lt;basic_const_iterator&amp;gt; I&amp;gt;
++friend constexpr auto operator&amp;lt;=&amp;gt;(const I&amp;amp;, const basic_const_iterator&amp;amp;);
++```
++
++## 例
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;iterator&amp;gt;
++#include &amp;lt;vector&amp;gt;
++#include &amp;lt;compare&amp;gt;
++
++int main() {
++  std::vector vec = {1, 2, 3, 4, 5};
++
++  std::basic_const_iterator cit = vec.begin();
++  auto se = vec.end();
++  std::basic_const_iterator cse = se;
++
++
++  std::cout &amp;lt;&amp;lt; std::boolalpha;
++
++  // (1) basic_const_iterator同士の比較
++  std::cout &amp;lt;&amp;lt; std::is_lt(cit &amp;lt;=&amp;gt; cse) &amp;lt;&amp;lt; &amp;#39;\n&amp;#39;;
++  std::cout &amp;lt;&amp;lt; std::is_lt(cse &amp;lt;=&amp;gt; cit) &amp;lt;&amp;lt; &amp;#39;\n&amp;#39;;
++
++  // (2) 元のイテレータとの比較
++  std::cout &amp;lt;&amp;lt; std::is_lt(cit &amp;lt;=&amp;gt; se) &amp;lt;&amp;lt; &amp;#39;\n&amp;#39;;
++  std::cout &amp;lt;&amp;lt; std::is_lt(se &amp;lt;=&amp;gt; cit) &amp;lt;&amp;lt; &amp;#39;\n&amp;#39;;
++}
++```
++* &amp;lt;=&amp;gt;[color ff0000]
++* is_lt[link /reference/compare/named_comparison_functions.md]
++
++### 出力
++
++```
++true
++false
++true
++false
++```
++
++## バージョン
++### 言語
++- C++23
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): 13.1
++- [Visual C++](/implementation.md#visual_cpp): 2022 Update 6
++
++## 参照
++
++- [P2278R4 `cbegin` should always return a constant iterator](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2278r4.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator== -- basic_const_iterator : == &lt;=&gt;追加 #1084</title>
+      <link href="https://cpprefjp.github.io/reference/iterator/basic_const_iterator/op_equal.html"/>
+      <id>09c1ad78bd5be675d94afdc1e49adcaa6ff7ca4d:reference/iterator/basic_const_iterator/op_equal.md</id>
+      <updated>2023-08-04T15:07:04+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/basic_const_iterator/op_equal.md b/reference/iterator/basic_const_iterator/op_equal.md
+new file mode 100644
+index 000000000..d9bfd98ec
+--- /dev/null
++++ b/reference/iterator/basic_const_iterator/op_equal.md
+@@ -0,0 +1,104 @@
++# operator==
++* iterator[meta header]
++* std[meta namespace]
++* basic_const_iterator[meta class]
++* function[meta id-type]
++* cpp23[meta cpp]
++
++```cpp
++template&amp;lt;sentinel_for&amp;lt;Iterator&amp;gt; S&amp;gt;
++constexpr bool operator==(const S&amp;amp; s) const;
++```
++* sentinel_for[link /reference/iterator/sentinel_for.md]
++
++## 概要
++
++`basic_const_iterator&amp;lt;Iterator&amp;gt;`オブジェクトと別のイテレータ（`basic_const_iterator&amp;lt;Iterator&amp;gt;`か`Iterator`のオブジェクト）が同じ要素を指しているかを判定する。
++
++## 効果
++
++ラップしているイテレータを`current_`メンバ変数に保持するとして、以下と等価
++
++```cpp
++return current_ == s;
++```
++
++## 戻り値
++
++2つのイテレータが同じ要素を指している場合に`true`を返す。
++
++
++## 備考
++
++この演算子により以下の演算子が使用可能になる。
++
++```cpp
++// !=
++template&amp;lt;sentinel_for&amp;lt;Iterator&amp;gt; S&amp;gt;
++constexpr bool operator!=(const S&amp;amp;) const;
++
++// 逆順
++template&amp;lt;sentinel_for&amp;lt;Iterator&amp;gt; S&amp;gt;
++friend constexpr bool operator==(const S&amp;amp;, const basic_const_iterator&amp;lt;Iterator&amp;gt;&amp;amp;);
++
++template&amp;lt;sentinel_for&amp;lt;Iterator&amp;gt; S&amp;gt;
++friend constexpr bool operator!=(const S&amp;amp;, const basic_const_iterator&amp;lt;Iterator&amp;gt;&amp;amp;);
++```
++
++## 例
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;iterator&amp;gt;
++#include &amp;lt;vector&amp;gt;
++
++int main() {
++  std::vector vec = {1, 2, 3, 4, 5};
++
++  std::basic_const_iterator cit = vec.begin();
++  auto se = vec.end();
++
++  std::cout &amp;lt;&amp;lt; std::boolalpha;
++
++  // 元のイテレータとの比較
++  std::cout &amp;lt;&amp;lt; (cit == se) &amp;lt;&amp;lt; &amp;#39;\n&amp;#39;;
++  std::cout &amp;lt;&amp;lt; (se == cit) &amp;lt;&amp;lt; &amp;#39;\n&amp;#39;;
++
++  std::basic_const_iterator cse = se;
++
++  // basic_const_iterator同士の比較
++  std::cout &amp;lt;&amp;lt; (cit == cse) &amp;lt;&amp;lt; &amp;#39;\n&amp;#39;;
++  std::cout &amp;lt;&amp;lt; (cse == cit) &amp;lt;&amp;lt; &amp;#39;\n&amp;#39;;
++
++  // !=の導出
++  std::cout &amp;lt;&amp;lt; (cit != se) &amp;lt;&amp;lt; &amp;#39;\n&amp;#39;;
++  std::cout &amp;lt;&amp;lt; (se != cit) &amp;lt;&amp;lt; &amp;#39;\n&amp;#39;;
++  std::cout &amp;lt;&amp;lt; (cit != cse) &amp;lt;&amp;lt; &amp;#39;\n&amp;#39;;
++  std::cout &amp;lt;&amp;lt; (cse != cit) &amp;lt;&amp;lt; &amp;#39;\n&amp;#39;;
++}
++```
++* ==[color ff0000]
++
++### 出力
++```
++false
++false
++false
++false
++true
++true
++true
++true
++```
++
++## バージョン
++### 言語
++- C++23
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): 13.1
++- [Visual C++](/implementation.md#visual_cpp): 2022 Update 6
++
++## 参照
++
++- [P2278R4 `cbegin` should always return a constant iterator](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2278r4.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>basic_const_iterator -- basic_const_iterator : [] - + 追加 #1084</title>
@@ -732,71 +1014,6 @@ index 211858abc..b8b852c5c 100644
  
  * [P0645R10 Text Formatting](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0645r10.html)
 +* [P2418R2 Add support for `std::generator`-like types to `std::format`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2418r2.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator-- -- 表示の調整</title>
-      <link href="https://cpprefjp.github.io/reference/iterator/basic_const_iterator/op_decrement.html"/>
-      <id>4e2bdcd9d523a6f4c59fd4bdb762e19da36c8cc0:reference/iterator/basic_const_iterator/op_decrement.md</id>
-      <updated>2023-08-02T13:20:43+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/basic_const_iterator/op_decrement.md b/reference/iterator/basic_const_iterator/op_decrement.md
-index e0e0c24df..d53aef4f5 100644
---- a/reference/iterator/basic_const_iterator/op_decrement.md
-+++ b/reference/iterator/basic_const_iterator/op_decrement.md
-@@ -28,6 +28,7 @@ constexpr basic_const_iterator operator--(int) requires bidirectional_iterator&amp;lt;I
-     --current_;
-     return *this;
-     ```
-+
- - (2) : 以下と等価  
-     ```cpp
-     auto tmp = *this;
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator++ -- 表示の調整</title>
-      <link href="https://cpprefjp.github.io/reference/iterator/basic_const_iterator/op_increment.html"/>
-      <id>4e2bdcd9d523a6f4c59fd4bdb762e19da36c8cc0:reference/iterator/basic_const_iterator/op_increment.md</id>
-      <updated>2023-08-02T13:20:43+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/basic_const_iterator/op_increment.md b/reference/iterator/basic_const_iterator/op_increment.md
-index 635fcaf4f..6a67cbc7e 100644
---- a/reference/iterator/basic_const_iterator/op_increment.md
-+++ b/reference/iterator/basic_const_iterator/op_increment.md
-@@ -17,8 +17,8 @@ constexpr basic_const_iterator operator++(int) requires forward_iterator&amp;lt;Iterato
- 
- イテレータをインクリメントする。
- 
--- (1) : 前置デクリメント
--- (2)(3) : 後置デクリメント
-+- (1) : 前置インクリメント
-+- (2)(3) : 後置インクリメント
- 
- ## 効果
- 
-@@ -29,7 +29,9 @@ constexpr basic_const_iterator operator++(int) requires forward_iterator&amp;lt;Iterato
-     ++current_;
-     return *this;
-     ```
-+
- - (2) : `++current_;`
-+
- - (3) : 以下と等価  
-     ```cpp
-     auto tmp = *this;
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
