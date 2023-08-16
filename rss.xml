@@ -2,9 +2,173 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2023-08-16T11:00:33.063279</updated>
-  <id>97d5db47-d503-4eed-adbf-d7820c42f99d</id>
+  <updated>2023-08-16T11:16:07.690370</updated>
+  <id>fff1cf44-8db8-4bed-8497-ea1dd0690ea6</id>
 
+  
+    <entry>
+      <title>insert -- map::insert : P&amp;&amp;とvalue_type&amp;&amp;は両方存在するのでオーバーロード番号を分け、概要文章を追加</title>
+      <link href="https://cpprefjp.github.io/reference/map/map/insert.html"/>
+      <id>2dd6e26bcbdb1a1faebd702ca4e0be505acb9668:reference/map/map/insert.md</id>
+      <updated>2023-08-16T20:11:12+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/map/map/insert.md b/reference/map/map/insert.md
+index db4b32347..259a068cb 100644
+--- a/reference/map/map/insert.md
++++ b/reference/map/map/insert.md
+@@ -8,23 +8,25 @@
+ pair&amp;lt;iterator, bool&amp;gt; insert(const value_type&amp;amp; x);               // (1)
+ 
+ template &amp;lt;class P&amp;gt;
+-pair&amp;lt;iterator, bool&amp;gt; insert(P&amp;amp;&amp;amp; x);                             // (2) C++11から
+-pair&amp;lt;iterator, bool&amp;gt; insert(value_type&amp;amp;&amp;amp; x);                    // (2) C++17から
++pair&amp;lt;iterator, bool&amp;gt; insert(P&amp;amp;&amp;amp; x);                             // (2) C++11
+ 
+-iterator insert(iterator position, const value_type&amp;amp; x);        // (3) C++11まで
+-iterator insert(const_iterator position, const value_type&amp;amp; x);  // (3) C++11から
++pair&amp;lt;iterator, bool&amp;gt; insert(value_type&amp;amp;&amp;amp; x);                    // (3) C++17
++
++iterator insert(iterator position, const value_type&amp;amp; x);        // (4) C++03まで
++iterator insert(const_iterator position, const value_type&amp;amp; x);  // (4) C++11から
+ 
+ template &amp;lt;class P&amp;gt;
+-iterator insert(const_iterator position, P&amp;amp;&amp;amp; x);                // (4) C++11から
+-iterator insert(const_iterator position, value_type&amp;amp;&amp;amp; x);       // (4) C++17から
++iterator insert(const_iterator position, P&amp;amp;&amp;amp; x);                // (5) C++11
++
++iterator insert(const_iterator position, value_type&amp;amp;&amp;amp; x);       // (6) C++17
+ 
+ template &amp;lt;class InputIterator&amp;gt;
+-void insert(InputIterator first, InputIterator last);           // (5)
++void insert(InputIterator first, InputIterator last);           // (7)
+ 
+-void insert(initializer_list&amp;lt;value_type&amp;gt; init);                 // (6) C++11から
++void insert(initializer_list&amp;lt;value_type&amp;gt; init);                 // (8) C++11
+ 
+-insert_return_type insert(node_type&amp;amp;&amp;amp; nh);                      // (7) C++17から
+-iterator           insert(const_iterator hint, node_type&amp;amp;&amp;amp; nh); // (8) C++17から
++insert_return_type insert(node_type&amp;amp;&amp;amp; nh);                      // (9) C++17
++iterator           insert(const_iterator hint, node_type&amp;amp;&amp;amp; nh); // (10) C++17
+ ```
+ * pair[link /reference/utility/pair.md]
+ * initializer_list[link /reference/initializer_list/initializer_list.md]
+@@ -43,64 +45,75 @@ iterator           insert(const_iterator hint, node_type&amp;amp;&amp;amp; nh); // (8) C++17か
+ この操作は、適切な引数 `position` を提供することで効率を飛躍的に改善することができる。
+ 
+ 
+-## 要件
+-- (1) : `value_type` は、コンテナに対してコピー挿入可能でなければならない。
+-- (2) : `value_type` は、コンテナに対してムーブ挿入可能でなければならない。
+-- (3) : `value_type` は、コンテナに対してコピー挿入可能でなければならない。
+-- (4) : `value_type` は、コンテナに対してムーブ挿入可能でなければならない。
+-- (5) : イテレータ範囲`[first, last)`の各イテレータが、`*this`の要素を指さないこと。
+-- (6) : (5)の要件と同じである。
+-- (7) : `nh` は空である、または、`(*this).get_allocator() == nh.get_allocator()`である。
+-- (8) : `nh` は空である、または、`(*this).get_allocator() == nh.get_allocator()`である。
++- (1) : 単一要素を挿入する
++- (2) : 単一要素として要素型`value_type`のコンストラクタ引数を受け取って挿入する
++- (3) : 単一要素の一時オブジェクトを挿入する
++- (4) : 指定された位置に、単一要素を挿入する
++- (5) : 指定された位置に、要素型`value_type`のコンストラクタ引数を受け取って挿入する
++- (6) : 指定された位置に、単一要素の一時オブジェクトを挿入する
++- (7) : イテレータ範囲`[first, last)`を挿入する
++- (8) : 初期化子リストを挿入する
++- (9) : [ノードハンドル](/reference/node_handle/node_handle.md)を挿入する
++- (10) : 指定された位置に、[ノードハンドル](/reference/node_handle/node_handle.md)を挿入する
++
++
++## テンプレートパラメータ制約
++- (1) : `value_type` は、コンテナに対してコピー挿入可能であること
++- (2) : [`std::is_constructible`](/reference/type_traits/is_constructible.md)`&amp;lt;value_type, P&amp;amp;&amp;amp;&amp;gt;::value == true`であること
++- (3) : `value_type` は、コンテナに対してムーブ挿入可能であること
++- (4) : `value_type` は、コンテナに対してコピー挿入可能であること
++- (5) : [`std::is_constructible`](/reference/type_traits/is_constructible.md)`&amp;lt;value_type, P&amp;amp;&amp;amp;&amp;gt;::value == true`であること
++- (6) : `value_type` は、コンテナに対してムーブ挿入可能であること
++
++
++## 事前条件
++- (7), (8) : イテレータ範囲`[first, last)`の各イテレータが、`*this`の要素を指さないこと
++- (9), (10) : `nh` は空である、または、`(*this).get_allocator() == nh.get_allocator()`であること
+ 
+ 
+ ## 効果
+ - (1) : `x`を`*this`の要素としてコピー挿入する。ただし、`x`のキーと等価のキーを持つ要素が`*this`に存在する場合には、挿入されない。
+ - (2) : [`emplace`](emplace.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;P&amp;gt;(x))`と等価。
+-- (3) : `x`を`*this`の要素としてコピー挿入する。ただし、`x`のキーと等価のキーを持つ要素が`*this`に存在する場合には、挿入されない。可能であれば、挿入位置のヒントを表すイテレータ`position`のすぐ前に挿入する。
+-- (4) : [`emplace_hint`](emplace_hint.md)`(position,` [`std::forward`](/reference/utility/forward.md)`&amp;lt;P&amp;gt;(x))`と等価。
+-- (5) : イテレータ範囲`[first, last)`の各要素を`*this`の要素として挿入する。ただし、`*this`にすでに存在するキーと等価なキーを持つ要素については、挿入されない。
+-- (6) : `insert(init.begin(), init.end())`と等価。
+-- (7) : `nh`が空の場合、効果はない。
++- (3) : `x`を`*this`の要素としてムーブ挿入する。ただし、`x`のキーと等価のキーを持つ要素が`*this`に存在する場合には、挿入されない。
++- (4) : `x`を`*this`の要素としてコピー挿入する。ただし、`x`のキーと等価のキーを持つ要素が`*this`に存在する場合には、挿入されない。可能であれば、挿入位置のヒントを表すイテレータ`position`のすぐ前に挿入する。
++- (5) : [`emplace_hint`](emplace_hint.md)`(position,` [`std::forward`](/reference/utility/forward.md)`&amp;lt;P&amp;gt;(x))`と等価。
++- (6) : `x`を`*this`の要素としてムーブ挿入する。ただし、`x`のキーと等価のキーを持つ要素が`*this`に存在する場合には、挿入されない。可能であれば、挿入位置のヒントを表すイテレータ`position`のすぐ前に挿入する。
++- (7) : イテレータ範囲`[first, last)`の各要素を`*this`の要素として挿入する。ただし、`*this`にすでに存在するキーと等価なキーを持つ要素については、挿入されない。
++- (8) : `insert(init.begin(), init.end())`と等価。
++- (9) : `nh`が空の場合、効果はない。
+ それ以外の場合、`nh.key()`と等価のキーを持つ要素がコンテナにない場合に限り、`nh`が所有する要素を挿入する。
+-- (8) : `nh`が空の場合、効果はなく、`(*this).end()`を返す。
+-それ以外の場合、`nh.key()`と等価のキーを持つ要素がコンテナにない場合に限り、`nh`が所有する要素を挿入する。`nh.key()`と等価のキーの要素を指すイテレータを常に返す。
+-要素は、`p`の直前の位置のできるだけ近くに挿入される。
++- (10) : `nh`が空の場合、効果はなく、`(*this).end()`を返す。それ以外の場合、`nh.key()`と等価のキーを持つ要素がコンテナにない場合に限り、`nh`が所有する要素を挿入する。`nh.key()`と等価のキーの要素を指すイテレータを常に返す。要素は、`p`の直前の位置のできるだけ近くに挿入される。
+ 
+ 
+ ## 戻り値
+-- (1), (2) : 戻り値としては、イテレータと`bool`値の組を返す。
++- (1), (2), (3) : 戻り値としては、イテレータと`bool`値の組を返す。
+     - 挿入された場合には、`first` に挿入された要素へのイテレータ、 `second` に `true` が設定される。
+     - 挿入されなかった場合には、 `first` に `x` と等価のキーを持つ要素へのイテレータ、 `second` に `false` が設定される。
+-- (3), (4) :
++- (4), (5), (6) :
+     - 挿入された場合には、新しく挿入された要素を指すイテレータを返す。
+     - 挿入されなかった場合には、`x`のキーと等価のキーを持つ要素へのイテレータを返す。
+-- (5), (6) : なし
+-- (7) : 戻り値としては、[`insert_return_type`](/reference/map/map.md)を返す。`insert_return_type`のイテレータ型メンバ変数`position`、`bool`型メンバ変数`inserted`に格納される値は(1), (2)のものと同じ情報である。`nh`が空の場合は、`position`は終端イテレータである。`node_type`型メンバ変数`node`には、
++- (7), (8) : なし
++- (9) : 戻り値としては、[`insert_return_type`](/reference/map/map.md)を返す。`insert_return_type`のイテレータ型メンバ変数`position`、`bool`型メンバ変数`inserted`に格納される値は(1), (2)のものと同じ情報である。`nh`が空の場合は、`position`は終端イテレータである。`node_type`型メンバ変数`node`には、
+     - 挿入された場合には、空の[ノードハンドル](/reference/node_handle/node_handle.md)。
+     - 挿入されなかった場合には、`nh`の値である。 
+-- (8) : `nh`が空の場合、`(*this).end()`を返す。そうではない場合、`nh`と等価のキーの要素を指すイテレータを常に返す。
++- (10) : `nh`が空の場合、`(*this).end()`を返す。そうではない場合、`nh`と等価のキーの要素を指すイテレータを常に返す。
+ 
+ 
+ ## 計算量
+-- (1), (2) : 対数時間
+-- (3), (4) : 一般に対数時間だが、指定された新たな要素が `position` が指す要素の直前に挿入された場合は償却定数時間。（ただし、備考も参照）
+-- (5), (6) : 一般に N log(size + N)。（ただし、備考も参照）
++- (1), (2), (3) : 対数時間
++- (4), (5), (6) : 一般に対数時間だが、指定された新たな要素が `position` が指す要素の直前に挿入された場合は償却定数時間。（ただし、備考も参照）
++- (7), (8) : 一般に N log(size + N)。（ただし、備考も参照）
+     - ここで、 `N` は `first` と `last` の間の距離であり `size` は挿入前のコンテナの [`size()`](size.md) を表す。
+-- (7) : 対数時間
+-- (8) : 一般に対数時間だが、指定された新たな要素が `position` が指す要素の直前に挿入された場合は償却定数時間。
++- (9) : 対数時間
++- (10) : 一般に対数時間だが、指定された新たな要素が `position` が指す要素の直前に挿入された場合は償却定数時間。
+ 
+ 
+ ## 備考
+ - これらの関数が呼ばれた後も、当該コンテナ内の要素を指す参照やイテレータは無効にはならない。  
+ 	なお、規格書に明確な記載は無いが、当該コンテナ内の要素を指すポインタも無効にはならない。
+-- (3), (4) : C++03 までの仕様では、計算量が償却定数時間となる条件は、「`position` が指す要素の**後ろ**に挿入された場合」となっているが、主要な実装はC++03時点から `position` が指す**前**に挿入する場合に償却定数時間となっていた。これは、`position` の後ろでは、適切な位置が先頭の場合に指定する方法がないこと、`vector::insert` の場合、`position` の前に挿入されること、STL のオリジナルである HP 社の実装が `position` の前に挿入する場合に償却定数時間であったことなどによる。
+-
+-- (5) : C++03 までの仕様では、`first` と `last` の間が昇順にソートされていた場合、計算量が線形時間となっていたが、この仕様は実現性がないため C++11 では削除された。（例えば、コンテナの既存の要素が 2 から 100 の偶数のみの場合に、1 から 99 のソートされた奇数の範囲を挿入する場合を考えてみよ）
+-
+-- (2), (4) : [`std::is_constructible`](/reference/type_traits/is_constructible.md)`&amp;lt;value_type, P&amp;amp;&amp;amp;&amp;gt;::value == true`である場合のみ、これらの関数はオーバーロード解決に参加する。
+-
+-- (7), (8) : 要素は、コピーもムーブもされない。
++- (4), (5), (6): C++03 までの仕様では、計算量が償却定数時間となる条件は、「`position` が指す要素の**後ろ**に挿入された場合」となっているが、主要な実装はC++03時点から `position` が指す**前**に挿入する場合に償却定数時間となっていた。これは、`position` の後ろでは、適切な位置が先頭の場合に指定する方法がないこと、`vector::insert` の場合、`position` の前に挿入されること、STL のオリジナルである HP 社の実装が `position` の前に挿入する場合に償却定数時間であったことなどによる。
++- (7) : C++03 までの仕様では、`first` と `last` の間が昇順にソートされていた場合、計算量が線形時間となっていたが、この仕様は実現性がないため C++11 では削除された。（例えば、コンテナの既存の要素が 2 から 100 の偶数のみの場合に、1 から 99 のソートされた奇数の範囲を挿入する場合を考えてみよ）
++- (9), (10) : 要素は、コピーもムーブもされない。
+ 
+ 
+ ## 例
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>flat_map -- flat_map : insertを追加 #1078</title>
@@ -2008,33 +2172,6 @@ index 000000000..63462148a
 +## 参照
 +
 +- [P2278R4 `cbegin` should always return a constant iterator](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2278r4.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>make_const_sentinel -- リンク修正</title>
-      <link href="https://cpprefjp.github.io/reference/iterator/make_const_sentinel.html"/>
-      <id>ebae6b70f005143b4edd3d6003270bf4c2f2328a:reference/iterator/make_const_sentinel.md</id>
-      <updated>2023-08-10T16:49:19+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/make_const_sentinel.md b/reference/iterator/make_const_sentinel.md
-index c79805188..c7f4bddb6 100644
---- a/reference/iterator/make_const_sentinel.md
-+++ b/reference/iterator/make_const_sentinel.md
-@@ -10,7 +10,7 @@ namespace std {
-   constexpr const_sentinel&amp;lt;S&amp;gt; make_const_sentinel(S s);
- }
- ```
--* semiregular[link semiregular.md]
-+* semiregular[link /reference/concepts/semiregular.md]
- * const_sentinel[link const_sentinel.md.nolink]
- 
- ## 概要
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
