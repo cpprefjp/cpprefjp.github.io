@@ -2,9 +2,214 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2023-08-23T14:40:51.886302</updated>
-  <id>fee398a0-17c8-4be9-be61-ba49bb6cf560</id>
+  <updated>2023-08-24T06:54:19.114169</updated>
+  <id>603f1e7e-f599-4d85-b346-972238dce91b</id>
 
+  
+    <entry>
+      <title>cbegin -- ranges::cbegin : P2278R4適用 #1084</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/cbegin.html"/>
+      <id>99a88c1134be17442149de2b693a93f654af17c9:reference/ranges/cbegin.md</id>
+      <updated>2023-08-24T15:48:59+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/cbegin.md b/reference/ranges/cbegin.md
+index be8218130..0953d768e 100644
+--- a/reference/ranges/cbegin.md
++++ b/reference/ranges/cbegin.md
+@@ -16,10 +16,14 @@ namespace std::ranges {
+ Rangeから先頭要素への読み取り専用イテレータを取得する関数オブジェクト。
+ 
+ ## 効果
+-部分式`E`の型を`T`とする。このとき、式`ranges::cbegin(E)`の効果は以下の式と等しい。
++部分式`E`の型を`T`、`E`の評価結果オブジェクトを示す左辺値を`t`とする。このとき、式`ranges::cbegin(E)`の効果は以下の式と等しい。
+ 
+-1. `E`がlvalueであれば、[`ranges::begin`](begin.md)`(static_cast&amp;lt;const T&amp;amp;&amp;gt;(E))`
+-2. それ以外の場合、[`ranges::begin`](begin.md)`(static_cast&amp;lt;const T&amp;amp;&amp;amp;&amp;gt;(E))`
++- C++20まで
++    1. `E`がlvalueであれば、[`ranges::begin`](begin.md)`(static_cast&amp;lt;const T&amp;amp;&amp;gt;(E))`
++    2. それ以外の場合、[`ranges::begin`](begin.md)`(static_cast&amp;lt;const T&amp;amp;&amp;amp;&amp;gt;(E))`
++- C++23から
++    1. `E`が右辺値であり、[`enable_borrowed_range`](./enable_borrowed_range.md)`&amp;lt;remove_cv_t&amp;lt;T&amp;gt;&amp;gt;`が`false`となる場合、`ranges::cbegin(E)`は不適格
++    2. それ以外の場合、式`U`を[`ranges::begin`](begin.md)`(`[`possibly-const-range`](./possibly-const-range.md)`(t))`とすると、[`const_iterator`](/reference/iterator/const_iterator.md)`&amp;lt;decltype(U)&amp;gt;(U)`
+ 
+ ## 戻り値
+ 先頭要素への読み取り専用イテレータ。
+@@ -28,7 +32,9 @@ Rangeから先頭要素への読み取り専用イテレータを取得する関
+ Rangeが`const`な場合について[`ranges::begin`](begin.md)をカスタマイズすることで、`ranges::cbegin`をカスタマイズできる。
+ 
+ ## 備考
+-`ranges::cbegin`の呼び出しが有効な式であるとき、その型は[`input_or_output_iterator`](/reference/iterator/input_or_output_iterator.md)のモデルである。
++`ranges::cbegin`の呼び出しが有効な式であるとき、その型は[`input_or_output_iterator`](/reference/iterator/input_or_output_iterator.md)のモデルであり、C++23以降はさらに[`constant-iterator`](/reference/iterator/constant-iterator.md)のモデルである。
++
++C++20までは`range`型`R`の`begin()`の`const`オーバーロードを呼び出してていたため得られたイテレータは必ずしも定数イテレータではない場合があったが、C++23からはそこから定数イテレータが得られない場合に[`basic_const_iterator`](/reference/iterator/basic_const_iterator.md)を使用することで確実に定数イテレータを取得する。
+ 
+ ## 例
+ ```cpp example
+@@ -75,3 +81,4 @@ int main()
+ ## 参照
+ - [N4861 24 Ranges library](https://timsong-cpp.github.io/cppwp/n4861/ranges)
+ - [C++20 ranges](https://techbookfest.org/product/5134506308665344)
++- [P2278R4 `cbegin` should always return a constant iterator](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2278r4.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>ranges -- constant_rangeとpossibly-const-range追加 #1084</title>
+      <link href="https://cpprefjp.github.io/reference/ranges.html"/>
+      <id>bf5c611427dcc7915ec8a49a6d6cdd962eadcd55:reference/ranges.md</id>
+      <updated>2023-08-24T15:48:22+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges.md b/reference/ranges.md
+index adda7dbb9..e61744fe2 100644
+--- a/reference/ranges.md
++++ b/reference/ranges.md
+@@ -90,7 +90,7 @@ C++20では関数によるカスタマイゼーションポイントの問題点
+ | [`contiguous_range`](ranges/contiguous_range.md)       | イテレータが隣接イテレータであるRange (concept)             | C++20          |
+ | [`common_range`](ranges/common_range.md)               | イテレータと番兵の型が等しいRange (concept)                 | C++20          |
+ | [`viewable_range`](ranges/viewable_range.md)           | ビューに変換できるRange (concept)                           | C++20          |
+-| [`constant_range`](ranges/constant_range.md.nolink)    | 要素が定数なRange (concept)                           | C++23          |
++| [`constant_range`](ranges/constant_range.md)           | 要素が定数なRange (concept)                           | C++23          |
+ 
+ ## カスタマイゼーションポイント
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>constant_range -- constant_rangeとpossibly-const-range追加 #1084</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/constant_range.html"/>
+      <id>bf5c611427dcc7915ec8a49a6d6cdd962eadcd55:reference/ranges/constant_range.md</id>
+      <updated>2023-08-24T15:48:22+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/constant_range.md b/reference/ranges/constant_range.md
+new file mode 100644
+index 000000000..4843aa153
+--- /dev/null
++++ b/reference/ranges/constant_range.md
+@@ -0,0 +1,51 @@
++# constant_range
++* ranges[meta header]
++* concept[meta id-type]
++* std::ranges[meta namespace]
++* cpp23[meta cpp]
++
++```cpp
++namespace std::ranges {
++  template&amp;lt;class T&amp;gt;
++  concept constant_range = input_range&amp;lt;T&amp;gt; &amp;amp;&amp;amp; constant-iterator&amp;lt;iterator_t&amp;lt;T&amp;gt;&amp;gt;;
++}
++```
++* input_range[link input_range.md]
++* constant-iterator[link /reference/iterator/constant-iterator.md]
++* iterator_t[link iterator_t.md]
++
++## 概要
++
++`constant_range`は、その要素が変更不可能な`range`を表すコンセプトである。
++
++## 例
++
++```cpp example
++#include &amp;lt;ranges&amp;gt;
++#include &amp;lt;vector&amp;gt;
++
++int main() {
++  static_assert(not std::ranges::constant_range&amp;lt;      std::vector&amp;lt;int&amp;gt;&amp;gt;);
++  static_assert(    std::ranges::constant_range&amp;lt;const std::vector&amp;lt;int&amp;gt;&amp;gt;);
++
++  static_assert(std::ranges::constant_range&amp;lt;std::ranges::iota_view&amp;lt;int&amp;gt;&amp;gt;);
++}
++```
++
++### 出力
++
++```
++```
++
++## バージョン
++### 言語
++- C++23
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): 13.1
++- [Visual C++](/implementation.md#visual_cpp): 2022 Update 6
++
++## 参照
++
++- [P2278R4 `cbegin` should always return a constant iterator](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2278r4.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>possibly-const-range -- constant_rangeとpossibly-const-range追加 #1084</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/possibly-const-range.html"/>
+      <id>bf5c611427dcc7915ec8a49a6d6cdd962eadcd55:reference/ranges/possibly-const-range.md</id>
+      <updated>2023-08-24T15:48:22+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/possibly-const-range.md b/reference/ranges/possibly-const-range.md
+new file mode 100644
+index 000000000..8a921c7fd
+--- /dev/null
++++ b/reference/ranges/possibly-const-range.md
+@@ -0,0 +1,35 @@
++# possibly-const-range
++* ranges[meta header]
++* std::ranges[meta namespace]
++* function[meta id-type]
++* cpp23[meta cpp]
++
++```cpp
++namespace std::ranges {
++  template&amp;lt;input_range R&amp;gt;
++  constexpr auto&amp;amp; possibly-const-range(R&amp;amp; r) {
++    if constexpr (constant_range&amp;lt;const R&amp;gt; &amp;amp;&amp;amp; !constant_range&amp;lt;R&amp;gt;) {
++      return const_cast&amp;lt;const R&amp;amp;&amp;gt;(r);
++    } else {
++      return r;
++    }
++  }
++}
++```
++* input_range[link /reference/ranges/input_range.md]
++* constant_range[link /reference/ranges/constant_range.md]
++
++## 概要
++
++`possibly-const-range`は入力の`input_range`オブジェクト`r`を、可能なら要素が定数化された`range`へ変換するものである。
++
++主に、`ranges::cbegin()`など定数イテレータを取得したい場所で、イテレータ取得前の段階で`range`型の簡単な変換のみで定数イテレータを取得できるかを試行するのに使用される。
++
++
++## バージョン
++### 言語
++- C++23
++
++## 参照
++
++- [P2278R4 `cbegin` should always return a constant iterator](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2278r4.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>is_constant_evaluated -- is_constant_evaluated : C++23 if constevalへのリンクを追加</title>
@@ -245,75 +450,6 @@ index cbe100bf3..44737cf70 100644
       <author>
         <name>onihusube</name>
         <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator- -- chrono/time_point/op_minusのコメントを修正</title>
-      <link href="https://cpprefjp.github.io/reference/chrono/time_point/op_minus.html"/>
-      <id>6366c71c487dcdf10bbf224db35a5b3bbc4d3c3f:reference/chrono/time_point/op_minus.md</id>
-      <updated>2023-08-23T14:50:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/time_point/op_minus.md b/reference/chrono/time_point/op_minus.md
-index 5ee318618..b38628c53 100644
---- a/reference/chrono/time_point/op_minus.md
-+++ b/reference/chrono/time_point/op_minus.md
-@@ -7,6 +7,7 @@
- ```cpp
- namespace std {
- namespace chrono {
-+  // time_point - duration = time_point
-   template &amp;lt;class Clock, class Duration1, class Rep2, class Period2&amp;gt;
-   time_point&amp;lt;Clock, typename common_type&amp;lt;Duration1, duration&amp;lt;Rep2, Period2&amp;gt;&amp;gt;::type&amp;gt;
-     operator-(const time_point&amp;lt;Clock, Duration1&amp;gt;&amp;amp; lhs,
-@@ -18,13 +19,13 @@ namespace chrono {
-     operator-(const time_point&amp;lt;Clock, Duration1&amp;gt;&amp;amp; lhs,
-               const duration&amp;lt;Rep2, Period2&amp;gt;&amp;amp; rhs);      // (1) C++14
- 
--  // time_point - time_point - duration
-+  // time_point - time_point = duration
-   template &amp;lt;class Clock, class Duration1, class Duration2&amp;gt;
-   typename common_type&amp;lt;Duration1, Duration2&amp;gt;::type
-     operator-(const time_point&amp;lt;Clock, Duration1&amp;gt;&amp;amp; lhs,
-               const time_point&amp;lt;Clock, Duration2&amp;gt;&amp;amp; rhs); // (2) C++11
- 
--  // time_point - time_point - duration
-+  // time_point - time_point = duration
-   template &amp;lt;class Clock, class Duration1, class Duration2&amp;gt;
-   constexpr typename common_type&amp;lt;Duration1, Duration2&amp;gt;::type
-     operator-(const time_point&amp;lt;Clock, Duration1&amp;gt;&amp;amp; lhs,
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>OGAWA KenIchi</name>
-        <email>kenichi@ice.email.ne.jp</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>コンストラクタ -- コメントの誤りを修正</title>
-      <link href="https://cpprefjp.github.io/reference/chrono/duration/op_constructor.html"/>
-      <id>86bab47aa01fce293636c43725a8d0d017f47c06:reference/chrono/duration/op_constructor.md</id>
-      <updated>2023-08-23T10:02:01+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/duration/op_constructor.md b/reference/chrono/duration/op_constructor.md
-index acb831b61..95afebbee 100644
---- a/reference/chrono/duration/op_constructor.md
-+++ b/reference/chrono/duration/op_constructor.md
-@@ -45,7 +45,7 @@ using std::chrono::duration;
- int main()
- {
-   duration&amp;lt;int, std::milli&amp;gt; d1;        // デフォルト構築 d1.count()は未初期化の値
--  duration&amp;lt;int, std::milli&amp;gt; d2 {};     // デフォルト構築 d1.count()の値は0
-+  duration&amp;lt;int, std::milli&amp;gt; d2 {};     // デフォルト構築 d2.count()の値は0
- 
-   duration&amp;lt;int, std::milli&amp;gt; d3(3);     // 値を指定して構築(ミリ秒)
-   duration&amp;lt;int, std::micro&amp;gt; d4 = d3;   // ミリ秒からマイクロ秒に変換
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>OGAWA KenIchi</name>
-        <email>kenichi@ice.email.ne.jp</email>
       </author>
     </entry>
   
