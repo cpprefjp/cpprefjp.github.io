@@ -2,9 +2,356 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2023-08-24T14:39:50.291509</updated>
-  <id>ecaf5b38-7672-40d4-aea5-fe4a07af0be9</id>
+  <updated>2023-08-25T03:37:30.828076</updated>
+  <id>33ce11e6-cf99-4de5-8a86-7da6f9803180</id>
 
+  
+    <entry>
+      <title>cdata -- 範囲アクセス関数のP2278R4対応 #1084</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/cdata.html"/>
+      <id>e37ef9b695f6bb5e02f5153a9fa4281980f60e22:reference/ranges/cdata.md</id>
+      <updated>2023-08-25T12:32:57+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/cdata.md b/reference/ranges/cdata.md
+index 34ca0ed78..4bf0e27bf 100644
+--- a/reference/ranges/cdata.md
++++ b/reference/ranges/cdata.md
+@@ -16,10 +16,19 @@ namespace std::ranges {
+ Rangeの要素が格納されたメモリ領域へのポインタを取得する関数オブジェクト。
+ 
+ ## 効果
+-部分式`E`の型を`T`とする。このとき、式`ranges::cdata(E)`の効果は以下の式と等しい。
++部分式`E`の型を`T`、`E`の評価結果オブジェクトを示す左辺値を`t`とする。このとき、式`ranges::cdata(E)`の効果は以下の式と等しい。
+ 
+-1. `E`がlvalueであれば、[`ranges::data`](data.md)`(static_cast&amp;lt;const T&amp;amp;&amp;gt;(E))`
+-2. それ以外の場合、[`ranges::data`](data.md)`(static_cast&amp;lt;const T&amp;amp;&amp;amp;&amp;gt;(E))`
++- C++20まで
++    1. `E`がlvalueであれば、[`ranges::data`](data.md)`(static_cast&amp;lt;const T&amp;amp;&amp;gt;(E))`
++    2. それ以外の場合、[`ranges::data`](data.md)`(static_cast&amp;lt;const T&amp;amp;&amp;amp;&amp;gt;(E))`
++- C++23から
++    1. `E`が右辺値であり、[`enable_borrowed_range`](./enable_borrowed_range.md)`&amp;lt;remove_cv_t&amp;lt;T&amp;gt;&amp;gt;`が`false`となる場合、`ranges::cdata(E)`は不適格
++    2. それ以外の場合、`as-const-pointer(`[`ranges::data`](data.md)`(`[`possibly-const-range`](./possibly-const-range.md)`(t)))`
++        - `as-const-pointer`は次のような説明専用関数テンプレートである
++          ```cpp
++          template&amp;lt;class T&amp;gt;
++          constexpr auto as-const-pointer(const T* p) { return p; }
++          ```
+ 
+ ## 戻り値
+ Rangeの要素が格納されたメモリ領域へのポインタ。
+@@ -28,7 +37,7 @@ Rangeの要素が格納されたメモリ領域へのポインタ。
+ Rangeが`const`な場合について[`ranges::data`](data.md)をカスタマイズすることで、`ranges::cdata`をカスタマイズできる。
+ 
+ ## 備考
+-`ranges::cdata(E)`が有効な式であるとき、その型はオブジェクトへのポインタである。
++`ranges::cdata(E)`が有効な式であるとき、その型はオブジェクトへのポインタである（C++23以降、このポインタは定数ポインタである）。
+ 
+ ## 例
+ ```cpp example
+@@ -71,3 +80,4 @@ array size:1 at 0x556ec23ba2b0
+ ## 参照
+ - [N4861 24 Ranges library](https://timsong-cpp.github.io/cppwp/n4861/ranges)
+ - [C++20 ranges](https://techbookfest.org/product/5134506308665344)
++- [P2278R4 `cbegin` should always return a constant iterator](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2278r4.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>cend -- 範囲アクセス関数のP2278R4対応 #1084</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/cend.html"/>
+      <id>e37ef9b695f6bb5e02f5153a9fa4281980f60e22:reference/ranges/cend.md</id>
+      <updated>2023-08-25T12:32:57+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/cend.md b/reference/ranges/cend.md
+index 355272484..dbbcbe1d1 100644
+--- a/reference/ranges/cend.md
++++ b/reference/ranges/cend.md
+@@ -16,10 +16,14 @@ namespace std::ranges {
+ Rangeから、最後尾要素の次を指す読み取り専用イテレータもしくは番兵を取得する関数オブジェクト。
+ 
+ ## 効果
+-部分式`E`の型を`T`とする。このとき、式`ranges::cend(E)`の効果は以下の式と等しい。
++部分式`E`の型を`T`、`E`の評価結果オブジェクトを示す左辺値を`t`とする。このとき、式`ranges::cend(E)`の効果は以下の式と等しい。
+ 
+-1. `E`がlvalueであれば、[`ranges::end`](end.md)`(static_cast&amp;lt;const T&amp;amp;&amp;gt;(E))`
+-2. それ以外の場合、[`ranges::end`](end.md)`(static_cast&amp;lt;const T&amp;amp;&amp;amp;&amp;gt;(E))`
++- C++20まで
++    1. `E`がlvalueであれば、[`ranges::end`](end.md)`(static_cast&amp;lt;const T&amp;amp;&amp;gt;(E))`
++    2. それ以外の場合、[`ranges::end`](end.md)`(static_cast&amp;lt;const T&amp;amp;&amp;amp;&amp;gt;(E))`
++- C++23から
++    1. `E`が右辺値であり、[`enable_borrowed_range`](./enable_borrowed_range.md)`&amp;lt;remove_cv_t&amp;lt;T&amp;gt;&amp;gt;`が`false`となる場合、`ranges::cend(E)`は不適格
++    2. それ以外の場合、式`U`を[`ranges::end`](end.md)`(`[`possibly-const-range`](./possibly-const-range.md)`(t))`とすると、[`const_sentinel`](/reference/iterator/const_sentinel.md)`&amp;lt;decltype(U)&amp;gt;(U)`
+ 
+ ## 戻り値
+ 最後尾要素の次を指す読み取り専用イテレータもしくは番兵。
+@@ -28,7 +32,7 @@ Rangeから、最後尾要素の次を指す読み取り専用イテレータも
+ Rangeが`const`な場合について[`ranges::end`](end.md)をカスタマイズすることで、`ranges::cend`をカスタマイズできる。
+ 
+ ## 備考
+-`ranges::cend(E)`が有効な式であるとき、`ranges::cend(E)`の型`S`、[`ranges::cbegin`](cbegin.md)`(E)`の型`I`は[`sentinel_for`](/reference/iterator/sentinel_for.md)`&amp;lt;S, I&amp;gt;`のモデルである。
++`ranges::cend(E)`が有効な式であるとき、`ranges::cend(E)`の型`S`、[`ranges::cbegin`](cbegin.md)`(E)`の型`I`は[`sentinel_for`](/reference/iterator/sentinel_for.md)`&amp;lt;S, I&amp;gt;`のモデルである。C++23以降はさらに、`S`が`input_iterator`のモデルならば`S`は[`constant-iterator`](/reference/iterator/constant-iterator.md)のモデルである。
+ 
+ ## 例
+ ```cpp example
+@@ -75,3 +79,4 @@ int main()
+ ## 参照
+ - [N4861 24 Ranges library](https://timsong-cpp.github.io/cppwp/n4861/ranges)
+ - [C++20 ranges](https://techbookfest.org/product/5134506308665344)
++- [P2278R4 `cbegin` should always return a constant iterator](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2278r4.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>crbegin -- 範囲アクセス関数のP2278R4対応 #1084</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/crbegin.html"/>
+      <id>e37ef9b695f6bb5e02f5153a9fa4281980f60e22:reference/ranges/crbegin.md</id>
+      <updated>2023-08-25T12:32:57+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/crbegin.md b/reference/ranges/crbegin.md
+index 650f0632b..fe119a51d 100644
+--- a/reference/ranges/crbegin.md
++++ b/reference/ranges/crbegin.md
+@@ -16,10 +16,14 @@ namespace std::ranges {
+ Rangeの末尾を指す読み取り専用逆イテレータを取得する関数オブジェクト。
+ 
+ ## 効果
+-部分式`E`の型を`T`とする。このとき、式`ranges::crbegin(E)`の効果は以下の式と等しい。
++部分式`E`の型を`T`、`E`の評価結果オブジェクトを示す左辺値を`t`とする。このとき、式`ranges::crbegin(E)`の効果は以下の式と等しい。
+ 
+-1. `E`がlvalueであれば、[`ranges::rbegin`](rbegin.md)`(static_cast&amp;lt;const T&amp;amp;&amp;gt;(E))`
+-2. それ以外の場合、[`ranges::rbegin`](rbegin.md)`(static_cast&amp;lt;const T&amp;amp;&amp;amp;&amp;gt;(E))`
++- C++20まで
++    1. `E`がlvalueであれば、[`ranges::rbegin`](rbegin.md)`(static_cast&amp;lt;const T&amp;amp;&amp;gt;(E))`
++    2. それ以外の場合、[`ranges::rbegin`](rbegin.md)`(static_cast&amp;lt;const T&amp;amp;&amp;amp;&amp;gt;(E))`
++- C++23から
++    1. `E`が右辺値であり、[`enable_borrowed_range`](./enable_borrowed_range.md)`&amp;lt;remove_cv_t&amp;lt;T&amp;gt;&amp;gt;`が`false`となる場合、`ranges::crbegin(E)`は不適格
++    2. それ以外の場合、式`U`を[`ranges::rbegin`](rbegin.md)`(`[`possibly-const-range`](./possibly-const-range.md)`(t))`とすると、[`const_iterator`](/reference/iterator/const_iterator.md)`&amp;lt;decltype(U)&amp;gt;(U)`
+ 
+ ## 戻り値
+ Rangeの末尾を指す読み取り専用逆イテレータ。
+@@ -27,6 +31,9 @@ Rangeの末尾を指す読み取り専用逆イテレータ。
+ ## カスタマイゼーションポイント
+ Rangeが`const`な場合について[`ranges::rbegin`](rbegin.md)をカスタマイズすることで、`ranges::crbegin`をカスタマイズできる。
+ 
++## 備考
++`ranges::crbegin`の呼び出しが有効な式であるとき、その型は[`input_or_output_iterator`](/reference/iterator/input_or_output_iterator.md)のモデルであり、C++23以降はさらに[`constant-iterator`](/reference/iterator/constant-iterator.md)のモデルである。
++
+ ## 例
+ ```cpp example
+ #include &amp;lt;iostream&amp;gt;
+@@ -101,3 +108,4 @@ int main()
+ ## 参照
+ - [N4861 24 Ranges library](https://timsong-cpp.github.io/cppwp/n4861/ranges)
+ - [C++20 ranges](https://techbookfest.org/product/5134506308665344)
++- [P2278R4 `cbegin` should always return a constant iterator](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2278r4.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>crend -- 範囲アクセス関数のP2278R4対応 #1084</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/crend.html"/>
+      <id>e37ef9b695f6bb5e02f5153a9fa4281980f60e22:reference/ranges/crend.md</id>
+      <updated>2023-08-25T12:32:57+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/crend.md b/reference/ranges/crend.md
+index e96891978..bd3393e11 100644
+--- a/reference/ranges/crend.md
++++ b/reference/ranges/crend.md
+@@ -16,10 +16,14 @@ namespace std::ranges {
+ Rangeの先頭の前を指す、読み取り専用逆イテレータもしくは番兵を取得する関数オブジェクト。
+ 
+ ## 効果
+-部分式`E`の型を`T`とする。このとき、式`ranges::crend(E)`の効果は以下の式と等しい。
++部分式`E`の型を`T`、`E`の評価結果オブジェクトを示す左辺値を`t`とする。このとき、式`ranges::crend(E)`の効果は以下の式と等しい。
+ 
+-1. `E`がlvalueであれば、[`ranges::rend`](rend.md)`(static_cast&amp;lt;const T&amp;amp;&amp;gt;(E))`
+-2. それ以外の場合、[`ranges::rend`](rend.md)`(static_cast&amp;lt;const T&amp;amp;&amp;amp;&amp;gt;(E))`
++- C++20まで
++    1. `E`がlvalueであれば、[`ranges::rend`](rend.md)`(static_cast&amp;lt;const T&amp;amp;&amp;gt;(E))`
++    2. それ以外の場合、[`ranges::rend`](rend.md)`(static_cast&amp;lt;const T&amp;amp;&amp;amp;&amp;gt;(E))`
++- C++23から
++    1. `E`が右辺値であり、[`enable_borrowed_range`](./enable_borrowed_range.md)`&amp;lt;remove_cv_t&amp;lt;T&amp;gt;&amp;gt;`が`false`となる場合、`ranges::crend(E)`は不適格
++    2. それ以外の場合、式`U`を[`ranges::rend`](rend.md)`(`[`possibly-const-range`](./possibly-const-range.md)`(t))`とすると、[`const_sentinel`](/reference/iterator/const_sentinel.md)`&amp;lt;decltype(U)&amp;gt;(U)`
+ 
+ ## 戻り値
+ Rangeの先頭の前を指す、読み取り専用逆イテレータもしくは番兵。
+@@ -28,7 +32,7 @@ Rangeの先頭の前を指す、読み取り専用逆イテレータもしくは
+ Rangeが`const`な場合について[`ranges::rend`](rend.md)をカスタマイズすることで、`ranges::crend`をカスタマイズできる。
+ 
+ ## 備考
+-`ranges::crend(E)`が有効な式であるとき、`ranges::crend(E)`の型`S`、[`ranges::crbegin`](crbegin.md)`(E)`の型`I`は[`sentinel_for`](/reference/iterator/sentinel_for.md)`&amp;lt;S, I&amp;gt;`のモデルである。
++`ranges::crend(E)`が有効な式であるとき、`ranges::crend(E)`の型`S`、[`ranges::crbegin`](crbegin.md)`(E)`の型`I`は[`sentinel_for`](/reference/iterator/sentinel_for.md)`&amp;lt;S, I&amp;gt;`のモデルである。C++23以降はさらに、`S`が`input_iterator`のモデルならば`S`は[`constant-iterator`](/reference/iterator/constant-iterator.md)のモデルである。
+ 
+ ## 例
+ ```cpp example
+@@ -104,3 +108,4 @@ int main()
+ ## 参照
+ - [N4861 24 Ranges library](https://timsong-cpp.github.io/cppwp/n4861/ranges)
+ - [C++20 ranges](https://techbookfest.org/product/5134506308665344)
++- [P2278R4 `cbegin` should always return a constant iterator](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2278r4.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>iter_const_reference_t -- range_const_reference_t追加 #1084</title>
+      <link href="https://cpprefjp.github.io/reference/iterator/iter_const_reference_t.html"/>
+      <id>4e3f803c205c62d5f0d09e3684e12536eaa58704:reference/iterator/iter_const_reference_t.md</id>
+      <updated>2023-08-25T11:49:22+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/iter_const_reference_t.md b/reference/iterator/iter_const_reference_t.md
+index 47a79a25f..459eb5016 100644
+--- a/reference/iterator/iter_const_reference_t.md
++++ b/reference/iterator/iter_const_reference_t.md
+@@ -21,9 +21,9 @@ namespace std {
+ 
+ ## 型の決定
+ 
+-`iter_value_t&amp;lt;It&amp;gt;`が非参照型であり`iter_reference_t&amp;lt;It&amp;gt;`から修飾を除いた型であるとすると、`iter_reference_t&amp;lt;It&amp;gt;`に対して`iter_const_reference_t&amp;lt;It&amp;gt;`は基本的には次のようになる
++`iter_value_t&amp;lt;It&amp;gt;`が非参照型であり`iter_reference_t&amp;lt;It&amp;gt;`から修飾を除いた型であるとすると、`iter_reference_t&amp;lt;It&amp;gt;`に対して`iter_const_reference_t&amp;lt;It&amp;gt;`は基本的には次のようになる（`T`を任意の修飾なしの型とする）
+ 
+-|`iter_reference_t`|`iter_const_reference_t&amp;lt;It&amp;gt;`|
++|`iter_reference_t&amp;lt;It&amp;gt;`|`iter_const_reference_t&amp;lt;It&amp;gt;`|
+ |---|---|
+ |`T&amp;amp;`|`const T&amp;amp;`|
+ |`T&amp;amp;&amp;amp;`|`const T&amp;amp;&amp;amp;`|
+@@ -32,7 +32,7 @@ namespace std {
+ |`T`|`T`|
+ |`const T`|`T`|
+ 
+-`It`に対して`iterator_traits`の特殊化が存在する場合や、`const iter_value_t&amp;lt;It&amp;gt;&amp;amp;&amp;amp;`と`iter_reference_t&amp;lt;It&amp;gt;`について`common_reference`が特殊化されている場合はこれと異なる結果となりうる。標準ライブラリにあるそのようなイテレータ型を持つものについて一部例を示すと、次のようになる
++`iter_value_t&amp;lt;It&amp;gt;`に対して`iter_reference_t&amp;lt;It&amp;gt;`が修飾以外も異なる型となる場合や、`It`に対して`iterator_traits`の特殊化が存在する場合、`const iter_value_t&amp;lt;It&amp;gt;&amp;amp;&amp;amp;`と`iter_reference_t&amp;lt;It&amp;gt;`について`common_reference`が特殊化されている場合などはこれと異なる結果となりうる。標準ライブラリにあるそのようなイテレータ型を持つものについて一部例を示すと、次のようになる
+ 
+ |`It`の取得元の範囲|`iter_value_t&amp;lt;It&amp;gt;`|`iter_reference_t&amp;lt;It&amp;gt;`|`iter_const_reference_t&amp;lt;It&amp;gt;`|
+ |---|---|---|---|
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>ranges -- range_const_reference_t追加 #1084</title>
+      <link href="https://cpprefjp.github.io/reference/ranges.html"/>
+      <id>4e3f803c205c62d5f0d09e3684e12536eaa58704:reference/ranges.md</id>
+      <updated>2023-08-25T11:49:22+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges.md b/reference/ranges.md
+index e61744fe2..c7b99a06f 100644
+--- a/reference/ranges.md
++++ b/reference/ranges.md
+@@ -66,12 +66,12 @@ C++20では関数によるカスタマイゼーションポイントの問題点
+ | [`iterator_t`](ranges/iterator_t.md)                             | イテレータ型を取得する (alias template)        | C++20          |
+ | [`sentinel_t`](ranges/sentinel_t.md)                             | 番兵型を取得する (alias template)              | C++20          |
+ | [`const_iterator_t`](ranges/const_iterator_t.md)                 | 定数イテレータ型を取得する (alias template)        | C++23          |
+-| [`const_sentinel_t`](ranges/const_sentinel_t.md)          | 定数番兵型を取得する (alias template)        | C++23          |
++| [`const_sentinel_t`](ranges/const_sentinel_t.md)                 | 定数番兵型を取得する (alias template)        | C++23          |
+ | [`range_difference_t`](ranges/range_difference_t.md)             | イテレータの差の型を取得する (alias template)  | C++20          |
+ | [`range_size_t`](ranges/range_size_t.md)                         | サイズの型を取得する(alias template)           | C++20          |
+ | [`range_value_t`](ranges/range_value_t.md)                       | 要素の型を取得する (alias template)            | C++20          |
+ | [`range_reference_t`](ranges/range_reference_t.md)               | 要素の参照型を取得する (alias template)        | C++20          |
+-| [`range_const_reference_t`](ranges/range_const_reference_t.md.nolink)| 要素の定数参照型を取得する (alias template) | C++23          |
++| [`range_const_reference_t`](ranges/range_const_reference_t.md)   | 要素の定数参照型を取得する (alias template)    | C++23          |
+ | [`range_rvalue_reference_t`](ranges/range_rvalue_reference_t.md) | 要素の右辺値参照型を取得する (alias template)  | C++20          |
+ 
+ ## Rangeコンセプト
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>range_const_reference_t -- range_const_reference_t追加 #1084</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/range_const_reference_t.html"/>
+      <id>4e3f803c205c62d5f0d09e3684e12536eaa58704:reference/ranges/range_const_reference_t.md</id>
+      <updated>2023-08-25T11:49:22+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/range_const_reference_t.md b/reference/ranges/range_const_reference_t.md
+new file mode 100644
+index 000000000..ae2fe2e01
+--- /dev/null
++++ b/reference/ranges/range_const_reference_t.md
+@@ -0,0 +1,49 @@
++# range_const_reference_t
++* ranges[meta header]
++* std::ranges[meta namespace]
++* type-alias[meta id-type]
++* cpp23[meta cpp]
++
++```cpp
++namespace std::ranges {
++  template&amp;lt;range R&amp;gt;
++  using range_const_reference_t = iter_const_reference_t&amp;lt;iterator_t&amp;lt;R&amp;gt;&amp;gt;;
++}
++```
++* range[link range.md]
++* iter_const_reference_t[link /reference/iterator/iter_const_reference_t.md]
++* iterator_t[link iterator_t.md]
++
++## 概要
++
++任意のRange型`R`から、そのRangeの要素への`const`参照型を取得する。
++
++## 例
++
++```cpp example
++#include &amp;lt;ranges&amp;gt;
++#include &amp;lt;vector&amp;gt;
++
++int main() {
++  static_assert(std::same_as&amp;lt;std::ranges::range_const_reference_t&amp;lt;std::vector&amp;lt;int&amp;gt;&amp;gt; , const int&amp;amp;&amp;gt;);
++  static_assert(std::same_as&amp;lt;std::ranges::range_const_reference_t&amp;lt;std::vector&amp;lt;bool&amp;gt;&amp;gt;, bool&amp;gt;);
++}
++```
++* std::ranges::range_const_reference_t[color ff0000]
++
++### 出力
++```
++```
++
++## バージョン
++### 言語
++- C++23
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): 13.1
++- [Visual C++](/implementation.md#visual_cpp): 2022 Update 6
++
++## 参照
++
++- [P2278R4 `cbegin` should always return a constant iterator](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2278r4.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>cbegin -- ranges::cbegin : P2278R4適用 #1084</title>
@@ -234,222 +581,6 @@ index 1cd386e9a..09482f82d 100644
       <author>
         <name>Akira Takahashi</name>
         <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>ranges -- const_iterator_t/const_sentinel_t追加 #1084</title>
-      <link href="https://cpprefjp.github.io/reference/ranges.html"/>
-      <id>a3c830c711a9f273eb85e397f730bc40063289c8:reference/ranges.md</id>
-      <updated>2023-08-23T16:10:46+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges.md b/reference/ranges.md
-index 44737cf70..adda7dbb9 100644
---- a/reference/ranges.md
-+++ b/reference/ranges.md
-@@ -65,8 +65,8 @@ C++20では関数によるカスタマイゼーションポイントの問題点
- |------------------------------------------------------------------|------------------------------------------------|----------------|
- | [`iterator_t`](ranges/iterator_t.md)                             | イテレータ型を取得する (alias template)        | C++20          |
- | [`sentinel_t`](ranges/sentinel_t.md)                             | 番兵型を取得する (alias template)              | C++20          |
--| [`const_iterator_t`](ranges/const_iterator_t.md.nolink)          | 定数イテレータ型を取得する (alias template)        | C++23          |
--| [`const_sentinel_t`](ranges/const_sentinel_t.md.nolink)          | 定数番兵型を取得する (alias template)        | C++23          |
-+| [`const_iterator_t`](ranges/const_iterator_t.md)                 | 定数イテレータ型を取得する (alias template)        | C++23          |
-+| [`const_sentinel_t`](ranges/const_sentinel_t.md)          | 定数番兵型を取得する (alias template)        | C++23          |
- | [`range_difference_t`](ranges/range_difference_t.md)             | イテレータの差の型を取得する (alias template)  | C++20          |
- | [`range_size_t`](ranges/range_size_t.md)                         | サイズの型を取得する(alias template)           | C++20          |
- | [`range_value_t`](ranges/range_value_t.md)                       | 要素の型を取得する (alias template)            | C++20          |
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>const_iterator_t -- const_iterator_t/const_sentinel_t追加 #1084</title>
-      <link href="https://cpprefjp.github.io/reference/ranges/const_iterator_t.html"/>
-      <id>a3c830c711a9f273eb85e397f730bc40063289c8:reference/ranges/const_iterator_t.md</id>
-      <updated>2023-08-23T16:10:46+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/const_iterator_t.md b/reference/ranges/const_iterator_t.md
-new file mode 100644
-index 000000000..d2ecc3fd7
---- /dev/null
-+++ b/reference/ranges/const_iterator_t.md
-@@ -0,0 +1,49 @@
-+# const_iterator_t
-+* ranges[meta header]
-+* std::ranges[meta namespace]
-+* type-alias[meta id-type]
-+* cpp23[meta cpp]
-+
-+```cpp
-+namespace std::ranges {
-+  template&amp;lt;range R&amp;gt;
-+  using const_iterator_t = const_iterator&amp;lt;iterator_t&amp;lt;R&amp;gt;&amp;gt;;
-+}
-+```
-+* range[link range.md]
-+* const_iterator[link /reference/iterator/const_iterator.md]
-+* iterator_t[link iterator_t.md]
-+
-+## 概要
-+
-+任意のRange型`R`の定数イテレータの型を取得する。
-+
-+## 例
-+
-+```cpp example
-+#include &amp;lt;ranges&amp;gt;
-+#include &amp;lt;vector&amp;gt;
-+
-+int main() {
-+  static_assert(std::same_as&amp;lt;std::ranges::const_iterator_t&amp;lt;      std::vector&amp;lt;int&amp;gt;&amp;gt;, std::basic_const_iterator&amp;lt;std::vector&amp;lt;int&amp;gt;::iterator&amp;gt;&amp;gt;);
-+  static_assert(std::same_as&amp;lt;std::ranges::const_iterator_t&amp;lt;const std::vector&amp;lt;int&amp;gt;&amp;gt;, std::vector&amp;lt;int&amp;gt;::const_iterator&amp;gt;);
-+}
-+```
-+* std::ranges::const_iterator_t[color ff0000]
-+
-+### 出力
-+```
-+```
-+
-+## バージョン
-+### 言語
-+- C++23
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): 13.1
-+- [Visual C++](/implementation.md#visual_cpp): 2022 Update 6
-+
-+## 参照
-+
-+- [P2278R4 `cbegin` should always return a constant iterator](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2278r4.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>const_sentinel_t -- const_iterator_t/const_sentinel_t追加 #1084</title>
-      <link href="https://cpprefjp.github.io/reference/ranges/const_sentinel_t.html"/>
-      <id>a3c830c711a9f273eb85e397f730bc40063289c8:reference/ranges/const_sentinel_t.md</id>
-      <updated>2023-08-23T16:10:46+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/const_sentinel_t.md b/reference/ranges/const_sentinel_t.md
-new file mode 100644
-index 000000000..086fe5e1b
---- /dev/null
-+++ b/reference/ranges/const_sentinel_t.md
-@@ -0,0 +1,53 @@
-+# const_sentinel_t
-+* ranges[meta header]
-+* std::ranges[meta namespace]
-+* type-alias[meta id-type]
-+* cpp23[meta cpp]
-+
-+```cpp
-+namespace std::ranges {
-+  template&amp;lt;range R&amp;gt;
-+  using const_sentinel_t = const_sentinel&amp;lt;sentinel_t&amp;lt;R&amp;gt;&amp;gt;;
-+}
-+```
-+* range[link range.md]
-+* const_sentinel[link /reference/iterator/const_sentinel.md]
-+* sentinel_t[link sentinel_t.md]
-+
-+## 概要
-+
-+任意のRange型`R`の定数イテレータ（[`const_iterator_t`](const_iterator_t.md)`&amp;lt;R&amp;gt;`）に対応する番兵の型を取得する。
-+
-+## 例
-+
-+```cpp example
-+#include &amp;lt;ranges&amp;gt;
-+#include &amp;lt;vector&amp;gt;
-+
-+int main() {
-+  static_assert(std::same_as&amp;lt;std::ranges::const_sentinel_t&amp;lt;      std::vector&amp;lt;int&amp;gt;&amp;gt;, std::basic_const_iterator&amp;lt;std::vector&amp;lt;int&amp;gt;::iterator&amp;gt;&amp;gt;);
-+  static_assert(std::same_as&amp;lt;std::ranges::const_sentinel_t&amp;lt;const std::vector&amp;lt;int&amp;gt;&amp;gt;, std::vector&amp;lt;int&amp;gt;::const_iterator&amp;gt;);
-+
-+  static_assert(std::same_as&amp;lt;std::ranges::const_sentinel_t&amp;lt;std::ranges::repeat_view&amp;lt;int&amp;gt;&amp;gt;, std::unreachable_sentinel_t&amp;gt;);
-+}
-+```
-+* std::ranges::const_sentinel_t[color ff0000]
-+* repeat_view[link repeat_view.md]
-+* std::unreachable_sentinel_t[link /reference/iterator/unreachable_sentinel_t.md]
-+
-+### 出力
-+```
-+```
-+
-+## バージョン
-+### 言語
-+- C++23
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): 13.1
-+- [Visual C++](/implementation.md#visual_cpp): 2022 Update 6
-+
-+## 参照
-+
-+- [P2278R4 `cbegin` should always return a constant iterator](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2278r4.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>ranges -- &lt;ranges&gt; : P2278R4関連を追加 #1084</title>
-      <link href="https://cpprefjp.github.io/reference/ranges.html"/>
-      <id>f2eb44725d784a0b8cb1d2f343178ffe04c392d8:reference/ranges.md</id>
-      <updated>2023-08-23T15:52:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges.md b/reference/ranges.md
-index cbe100bf3..44737cf70 100644
---- a/reference/ranges.md
-+++ b/reference/ranges.md
-@@ -65,10 +65,13 @@ C++20では関数によるカスタマイゼーションポイントの問題点
- |------------------------------------------------------------------|------------------------------------------------|----------------|
- | [`iterator_t`](ranges/iterator_t.md)                             | イテレータ型を取得する (alias template)        | C++20          |
- | [`sentinel_t`](ranges/sentinel_t.md)                             | 番兵型を取得する (alias template)              | C++20          |
-+| [`const_iterator_t`](ranges/const_iterator_t.md.nolink)          | 定数イテレータ型を取得する (alias template)        | C++23          |
-+| [`const_sentinel_t`](ranges/const_sentinel_t.md.nolink)          | 定数番兵型を取得する (alias template)        | C++23          |
- | [`range_difference_t`](ranges/range_difference_t.md)             | イテレータの差の型を取得する (alias template)  | C++20          |
- | [`range_size_t`](ranges/range_size_t.md)                         | サイズの型を取得する(alias template)           | C++20          |
- | [`range_value_t`](ranges/range_value_t.md)                       | 要素の型を取得する (alias template)            | C++20          |
- | [`range_reference_t`](ranges/range_reference_t.md)               | 要素の参照型を取得する (alias template)        | C++20          |
-+| [`range_const_reference_t`](ranges/range_const_reference_t.md.nolink)| 要素の定数参照型を取得する (alias template) | C++23          |
- | [`range_rvalue_reference_t`](ranges/range_rvalue_reference_t.md) | 要素の右辺値参照型を取得する (alias template)  | C++20          |
- 
- ## Rangeコンセプト
-@@ -87,6 +90,7 @@ C++20では関数によるカスタマイゼーションポイントの問題点
- | [`contiguous_range`](ranges/contiguous_range.md)       | イテレータが隣接イテレータであるRange (concept)             | C++20          |
- | [`common_range`](ranges/common_range.md)               | イテレータと番兵の型が等しいRange (concept)                 | C++20          |
- | [`viewable_range`](ranges/viewable_range.md)           | ビューに変換できるRange (concept)                           | C++20          |
-+| [`constant_range`](ranges/constant_range.md.nolink)    | 要素が定数なRange (concept)                           | C++23          |
- 
- ## カスタマイゼーションポイント
- 
-@@ -424,3 +428,4 @@ range | adaptor(args...)
- ## 参照
- - [N4861 24 Ranges library](https://timsong-cpp.github.io/cppwp/n4861/ranges)
- - [C++20 ranges](https://techbookfest.org/product/5134506308665344)
-+- [P2278R4 `cbegin` should always return a constant iterator](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2278r4.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
       </author>
     </entry>
   
