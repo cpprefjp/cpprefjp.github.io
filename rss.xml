@@ -2,9 +2,196 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2023-09-05T14:40:37.027717</updated>
-  <id>6f5497ba-3aa2-416d-ba37-1999df9bbaba</id>
+  <updated>2023-09-06T05:50:24.747657</updated>
+  <id>cc567a16-d58e-4dd0-944a-32769ff070c4</id>
 
+  
+    <entry>
+      <title>as_const_view -- as_const_view : サンプルコードの修正</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/as_const_view.html"/>
+      <id>f1b46a11655c1b1b27faa245f5732a4fd5dd5c81:reference/ranges/as_const_view.md</id>
+      <updated>2023-09-06T14:45:32+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/as_const_view.md b/reference/ranges/as_const_view.md
+index f335682fb..2cac9fe1c 100644
+--- a/reference/ranges/as_const_view.md
++++ b/reference/ranges/as_const_view.md
+@@ -77,11 +77,11 @@ namespace std::ranges {
+ int main() {
+   std::vector&amp;lt;int&amp;gt; vec = {1, 2, 3, 4};
+ 
+-  for (const int&amp;amp; i : vec | std::views::as_const) {
++  for (auto&amp;amp; i : vec | std::views::as_const) {
+     std::cout &amp;lt;&amp;lt; i &amp;lt;&amp;lt; &amp;#39; &amp;#39;;
+ 
+     // 変更不可
+-    //*i = 0
++    //i = 0
+   }
+ }
+ ```
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>ranges -- views::as_const追加 #1084</title>
+      <link href="https://cpprefjp.github.io/reference/ranges.html"/>
+      <id>953efe6f14e067f5c4d51fa0f30e6ff175859d02:reference/ranges.md</id>
+      <updated>2023-09-06T14:41:56+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges.md b/reference/ranges.md
+index c7b99a06f..41b8b7b19 100644
+--- a/reference/ranges.md
++++ b/reference/ranges.md
+@@ -321,8 +321,8 @@ range | adaptor(args...)
+ 
+ | 名前                                          | 説明                                                         | 対応バージョン |
+ |-----------------------------------------------|--------------------------------------------------------------|----------------|
+-| [`as_const_view`](ranges/as_const_view.md.nolink)    | 各要素をconstにするビュー (class template)                   | C++23          |
+-| [`views::as_const`](ranges/as_const.md.nolink)       | `as_const_view`を生成する (customization point object)       | C++23          |
++| [`as_const_view`](ranges/as_const_view.md)    | 各要素をconstにするビュー (class template)                       | C++23          |
++| [`views::as_const`](ranges/as_const_view.md)  | `as_const_view`を生成する (customization point object)         | C++23          |
+ 
+ ### elements view
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>as_const_view -- views::as_const追加 #1084</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/as_const_view.html"/>
+      <id>953efe6f14e067f5c4d51fa0f30e6ff175859d02:reference/ranges/as_const_view.md</id>
+      <updated>2023-09-06T14:41:56+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/as_const_view.md b/reference/ranges/as_const_view.md
+new file mode 100644
+index 000000000..f335682fb
+--- /dev/null
++++ b/reference/ranges/as_const_view.md
+@@ -0,0 +1,106 @@
++# as_const_view
++* ranges[meta header]
++* std::ranges[meta namespace]
++* class template[meta id-type]
++* cpp23[meta cpp]
++
++```cpp
++namespace std::ranges {
++  template&amp;lt;view V&amp;gt;
++    requires input_range&amp;lt;V&amp;gt;
++  class as_const_view : public view_interface&amp;lt;as_const_view&amp;lt;V&amp;gt;&amp;gt; { …… }; // (1)
++
++  namespace views {
++    inline constexpr /*unspecified*/ as_const = /*unspecified*/;        // (2)
++  }
++}
++```
++* input_range[link input_range.md]
++* view[link view.md]
++* view_interface[link view_interface.md]
++
++## 概要
++- (1): 各要素を定数化したRangeとして振る舞う[`view`](view.md)
++- (2): `as_const_view`を生成するRangeアダプタオブジェクト
++
++### Rangeコンセプト
++
++| borrowed | sized | output | input | forward | bidirectional | random_access | contiguous | common | viewable | view |
++|----------|-------|--------|-------|---------|---------------|---------------|------------|--------|----------|------|
++| (1)      | (1)   |        | ○     | (1)     | (1)           | (1)           | (1)        | (1)    | ○        | ○    |
++
++- (1): `V`に従う
++
++## 効果
++
++- (2): 式`views::as_const(E)`の効果は次のいずれか（`T = decltype((E))`、`U = remove_cvref_t&amp;lt;T&amp;gt;`とする）
++    - `views::all_t&amp;lt;T&amp;gt;`が`constant_range`のモデルとなる場合 : `views::all(E)`
++    - 任意の型`X`に対して、`U`が`empty_view&amp;lt;X&amp;gt;`である場合 : `auto(views::empty&amp;lt;const X&amp;gt;)`
++    - 任意の型`X`と整数値`Extent`に対して、`U`が`span&amp;lt;X, Extent&amp;gt;`である場合 : `span&amp;lt;const X, Extent&amp;gt;(E)`
++    - 任意の型`X`に対して、`U`が`ref_view&amp;lt;X&amp;gt;`であり、`const X`が`constant_range`のモデルとなる場合 : `ref_view(static_cast&amp;lt;const X&amp;amp;&amp;gt;(E.base()))`
++    - `E`が左辺値であり、`const U`が`constant_range`のモデルとなり、かつ`U`は`view`のモデルとならない場合 : `ref_view(static_cast&amp;lt;const U&amp;amp;&amp;gt;(E))`
++    - それ以外の場合 : `as_const_view(E)`
++
++## メンバ関数
++
++| 名前                                             | 説明                             | 対応バージョン |
++|--------------------------------------------------|----------------------------------|----------------|
++| [`(constructor)`](as_const_view/op_constructor.md.nolink)  | コンストラクタ                   | C++23          |
++| [`base`](as_const_view/base.md.nolink)                     | `V`の参照を取得する              | C++23          |
++| [`begin`](as_const_view/begin.md.nolink)                   | 先頭を指すイテレータを取得する   | C++23          |
++| [`end`](as_const_view/end.md.nolink)                       | 番兵を取得する                   | C++23          |
++| [`size`](as_const_view/size.md.nolink)                     | 要素数を取得する                 | C++23          |
++
++## 継承しているメンバ関数
++
++| 名前                                         | 説明                              | 対応バージョン |
++|----------------------------------------------|----------------------------------|----------------|
++| [`empty`](view_interface/empty.md)           | Rangeが空かどうかを判定する         | C++23          |
++| [`operator bool`](view_interface/op_bool.md) | Rangeが空でないかどうかを判定する    | C++23          |
++| [`front`](view_interface/front.md)           | 先頭要素への参照を取得する           | C++23          |
++| [`back`](view_interface/back.md)             | 末尾要素への参照を取得する           | C++23          |
++| [`operator[]`](view_interface/op_at.md)      | 要素へアクセスする                  | C++23          |
++| [`cbegin`](view_interface/cbegin.md)         | 定数イテレータを取得する             | C++23          |
++| [`cend`](view_interface/cend.md)             | 定数イテレータ（番兵）を取得する      | C++23          |
++
++## 推論補助
++
++| 名前                                                  | 説明                         | 対応バージョン |
++|-------------------------------------------------------|------------------------------|----------------|
++| [`(deduction_guide)`](as_const_view/op_deduction_guide.md.nolink) | クラステンプレートの推論補助 | C++23          |
++
++## 例
++```cpp example
++#include &amp;lt;ranges&amp;gt;
++#include &amp;lt;iostream&amp;gt;
++
++int main() {
++  std::vector&amp;lt;int&amp;gt; vec = {1, 2, 3, 4};
++
++  for (const int&amp;amp; i : vec | std::views::as_const) {
++    std::cout &amp;lt;&amp;lt; i &amp;lt;&amp;lt; &amp;#39; &amp;#39;;
++
++    // 変更不可
++    //*i = 0
++  }
++}
++```
++* views::as_const[color ff0000]
++
++### 出力
++```
++1 2 3 4 
++```
++
++## バージョン
++### 言語
++- C++23
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): 13.1
++- [Visual C++](/implementation.md#visual_cpp): 2022 Update 6
++
++## 参照
++
++- [P2278R4 `cbegin` should always return a constant iterator](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2278r4.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>view_interface -- view_interface : P2278R4対応 #1084</title>
@@ -503,211 +690,6 @@ index 000000000..ae2fe2e01
 +- [Clang](/implementation.md#clang): ??
 +- [GCC](/implementation.md#gcc): 13.1
 +- [Visual C++](/implementation.md#visual_cpp): 2022 Update 6
-+
-+## 参照
-+
-+- [P2278R4 `cbegin` should always return a constant iterator](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2278r4.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>cbegin -- ranges::cbegin : P2278R4適用 #1084</title>
-      <link href="https://cpprefjp.github.io/reference/ranges/cbegin.html"/>
-      <id>99a88c1134be17442149de2b693a93f654af17c9:reference/ranges/cbegin.md</id>
-      <updated>2023-08-24T15:48:59+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/cbegin.md b/reference/ranges/cbegin.md
-index be8218130..0953d768e 100644
---- a/reference/ranges/cbegin.md
-+++ b/reference/ranges/cbegin.md
-@@ -16,10 +16,14 @@ namespace std::ranges {
- Rangeから先頭要素への読み取り専用イテレータを取得する関数オブジェクト。
- 
- ## 効果
--部分式`E`の型を`T`とする。このとき、式`ranges::cbegin(E)`の効果は以下の式と等しい。
-+部分式`E`の型を`T`、`E`の評価結果オブジェクトを示す左辺値を`t`とする。このとき、式`ranges::cbegin(E)`の効果は以下の式と等しい。
- 
--1. `E`がlvalueであれば、[`ranges::begin`](begin.md)`(static_cast&amp;lt;const T&amp;amp;&amp;gt;(E))`
--2. それ以外の場合、[`ranges::begin`](begin.md)`(static_cast&amp;lt;const T&amp;amp;&amp;amp;&amp;gt;(E))`
-+- C++20まで
-+    1. `E`がlvalueであれば、[`ranges::begin`](begin.md)`(static_cast&amp;lt;const T&amp;amp;&amp;gt;(E))`
-+    2. それ以外の場合、[`ranges::begin`](begin.md)`(static_cast&amp;lt;const T&amp;amp;&amp;amp;&amp;gt;(E))`
-+- C++23から
-+    1. `E`が右辺値であり、[`enable_borrowed_range`](./enable_borrowed_range.md)`&amp;lt;remove_cv_t&amp;lt;T&amp;gt;&amp;gt;`が`false`となる場合、`ranges::cbegin(E)`は不適格
-+    2. それ以外の場合、式`U`を[`ranges::begin`](begin.md)`(`[`possibly-const-range`](./possibly-const-range.md)`(t))`とすると、[`const_iterator`](/reference/iterator/const_iterator.md)`&amp;lt;decltype(U)&amp;gt;(U)`
- 
- ## 戻り値
- 先頭要素への読み取り専用イテレータ。
-@@ -28,7 +32,9 @@ Rangeから先頭要素への読み取り専用イテレータを取得する関
- Rangeが`const`な場合について[`ranges::begin`](begin.md)をカスタマイズすることで、`ranges::cbegin`をカスタマイズできる。
- 
- ## 備考
--`ranges::cbegin`の呼び出しが有効な式であるとき、その型は[`input_or_output_iterator`](/reference/iterator/input_or_output_iterator.md)のモデルである。
-+`ranges::cbegin`の呼び出しが有効な式であるとき、その型は[`input_or_output_iterator`](/reference/iterator/input_or_output_iterator.md)のモデルであり、C++23以降はさらに[`constant-iterator`](/reference/iterator/constant-iterator.md)のモデルである。
-+
-+C++20までは`range`型`R`の`begin()`の`const`オーバーロードを呼び出してていたため得られたイテレータは必ずしも定数イテレータではない場合があったが、C++23からはそこから定数イテレータが得られない場合に[`basic_const_iterator`](/reference/iterator/basic_const_iterator.md)を使用することで確実に定数イテレータを取得する。
- 
- ## 例
- ```cpp example
-@@ -75,3 +81,4 @@ int main()
- ## 参照
- - [N4861 24 Ranges library](https://timsong-cpp.github.io/cppwp/n4861/ranges)
- - [C++20 ranges](https://techbookfest.org/product/5134506308665344)
-+- [P2278R4 `cbegin` should always return a constant iterator](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2278r4.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>ranges -- constant_rangeとpossibly-const-range追加 #1084</title>
-      <link href="https://cpprefjp.github.io/reference/ranges.html"/>
-      <id>bf5c611427dcc7915ec8a49a6d6cdd962eadcd55:reference/ranges.md</id>
-      <updated>2023-08-24T15:48:22+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges.md b/reference/ranges.md
-index adda7dbb9..e61744fe2 100644
---- a/reference/ranges.md
-+++ b/reference/ranges.md
-@@ -90,7 +90,7 @@ C++20では関数によるカスタマイゼーションポイントの問題点
- | [`contiguous_range`](ranges/contiguous_range.md)       | イテレータが隣接イテレータであるRange (concept)             | C++20          |
- | [`common_range`](ranges/common_range.md)               | イテレータと番兵の型が等しいRange (concept)                 | C++20          |
- | [`viewable_range`](ranges/viewable_range.md)           | ビューに変換できるRange (concept)                           | C++20          |
--| [`constant_range`](ranges/constant_range.md.nolink)    | 要素が定数なRange (concept)                           | C++23          |
-+| [`constant_range`](ranges/constant_range.md)           | 要素が定数なRange (concept)                           | C++23          |
- 
- ## カスタマイゼーションポイント
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>constant_range -- constant_rangeとpossibly-const-range追加 #1084</title>
-      <link href="https://cpprefjp.github.io/reference/ranges/constant_range.html"/>
-      <id>bf5c611427dcc7915ec8a49a6d6cdd962eadcd55:reference/ranges/constant_range.md</id>
-      <updated>2023-08-24T15:48:22+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/constant_range.md b/reference/ranges/constant_range.md
-new file mode 100644
-index 000000000..4843aa153
---- /dev/null
-+++ b/reference/ranges/constant_range.md
-@@ -0,0 +1,51 @@
-+# constant_range
-+* ranges[meta header]
-+* concept[meta id-type]
-+* std::ranges[meta namespace]
-+* cpp23[meta cpp]
-+
-+```cpp
-+namespace std::ranges {
-+  template&amp;lt;class T&amp;gt;
-+  concept constant_range = input_range&amp;lt;T&amp;gt; &amp;amp;&amp;amp; constant-iterator&amp;lt;iterator_t&amp;lt;T&amp;gt;&amp;gt;;
-+}
-+```
-+* input_range[link input_range.md]
-+* constant-iterator[link /reference/iterator/constant-iterator.md]
-+* iterator_t[link iterator_t.md]
-+
-+## 概要
-+
-+`constant_range`は、その要素が変更不可能な`range`を表すコンセプトである。
-+
-+## 例
-+
-+```cpp example
-+#include &amp;lt;ranges&amp;gt;
-+#include &amp;lt;vector&amp;gt;
-+
-+int main() {
-+  static_assert(not std::ranges::constant_range&amp;lt;      std::vector&amp;lt;int&amp;gt;&amp;gt;);
-+  static_assert(    std::ranges::constant_range&amp;lt;const std::vector&amp;lt;int&amp;gt;&amp;gt;);
-+
-+  static_assert(std::ranges::constant_range&amp;lt;std::ranges::iota_view&amp;lt;int&amp;gt;&amp;gt;);
-+}
-+```
-+
-+### 出力
-+
-+```
-+```
-+
-+## バージョン
-+### 言語
-+- C++23
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): 13.1
-+- [Visual C++](/implementation.md#visual_cpp): 2022 Update 6
-+
-+## 参照
-+
-+- [P2278R4 `cbegin` should always return a constant iterator](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2278r4.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>possibly-const-range -- constant_rangeとpossibly-const-range追加 #1084</title>
-      <link href="https://cpprefjp.github.io/reference/ranges/possibly-const-range.html"/>
-      <id>bf5c611427dcc7915ec8a49a6d6cdd962eadcd55:reference/ranges/possibly-const-range.md</id>
-      <updated>2023-08-24T15:48:22+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/possibly-const-range.md b/reference/ranges/possibly-const-range.md
-new file mode 100644
-index 000000000..8a921c7fd
---- /dev/null
-+++ b/reference/ranges/possibly-const-range.md
-@@ -0,0 +1,35 @@
-+# possibly-const-range
-+* ranges[meta header]
-+* std::ranges[meta namespace]
-+* function[meta id-type]
-+* cpp23[meta cpp]
-+
-+```cpp
-+namespace std::ranges {
-+  template&amp;lt;input_range R&amp;gt;
-+  constexpr auto&amp;amp; possibly-const-range(R&amp;amp; r) {
-+    if constexpr (constant_range&amp;lt;const R&amp;gt; &amp;amp;&amp;amp; !constant_range&amp;lt;R&amp;gt;) {
-+      return const_cast&amp;lt;const R&amp;amp;&amp;gt;(r);
-+    } else {
-+      return r;
-+    }
-+  }
-+}
-+```
-+* input_range[link /reference/ranges/input_range.md]
-+* constant_range[link /reference/ranges/constant_range.md]
-+
-+## 概要
-+
-+`possibly-const-range`は入力の`input_range`オブジェクト`r`を、可能なら要素が定数化された`range`へ変換するものである。
-+
-+主に、`ranges::cbegin()`など定数イテレータを取得したい場所で、イテレータ取得前の段階で`range`型の簡単な変換のみで定数イテレータを取得できるかを試行するのに使用される。
-+
-+
-+## バージョン
-+### 言語
-+- C++23
 +
 +## 参照
 +
