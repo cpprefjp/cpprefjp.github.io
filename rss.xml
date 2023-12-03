@@ -2,9 +2,243 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2023-12-03T14:38:22.254438</updated>
-  <id>dee81385-e63b-4e68-8115-68960cf9503d</id>
+  <updated>2023-12-03T18:02:21.540248</updated>
+  <id>3a95a8ea-1d21-4597-acd9-2386ffccb615</id>
 
+  
+    <entry>
+      <title>ranges -- as_rvalue_viewの解説を追加</title>
+      <link href="https://cpprefjp.github.io/reference/ranges.html"/>
+      <id>1736ad68bc5288f5e341cac9eeef887830f0e3ed:reference/ranges.md</id>
+      <updated>2023-12-04T02:58:43+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges.md b/reference/ranges.md
+index 37cae2700..dc86669e7 100644
+--- a/reference/ranges.md
++++ b/reference/ranges.md
+@@ -224,8 +224,8 @@ range | adaptor(args...)
+ 
+ | 名前                                           | 説明                                                         | 対応バージョン |
+ |------------------------------------------------|--------------------------------------------------------------|----------------|
+-| [`as_rvalue_view`](ranges/as_rvalue_view.md.nolink)   | 各要素をrvalueにするビュー (class template)                  | C++23          |
+-| [`views::as_rvalue`](ranges/as_rvalue.md.nolink)      | `as_rvalue_view`を生成する (customization point object)      | C++23          |
++| [`as_rvalue_view`](ranges/as_rvalue_view.md)   | 各要素をrvalueにするビュー (class template)                  | C++23          |
++| [`views::as_rvalue`](ranges/as_rvalue_view.md) | `as_rvalue_view`を生成する (customization point object)      | C++23          |
+ 
+ ### filter view
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>as_rvalue_view -- as_rvalue_viewの解説を追加</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/as_rvalue_view.html"/>
+      <id>1736ad68bc5288f5e341cac9eeef887830f0e3ed:reference/ranges/as_rvalue_view.md</id>
+      <updated>2023-12-04T02:58:43+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/as_rvalue_view.md b/reference/ranges/as_rvalue_view.md
+new file mode 100644
+index 000000000..fb731ee54
+--- /dev/null
++++ b/reference/ranges/as_rvalue_view.md
+@@ -0,0 +1,185 @@
++# as_rvalue_view
++* ranges[meta header]
++* std::ranges[meta namespace]
++* class template[meta id-type]
++* cpp23[meta cpp]
++
++```cpp
++namespace std::ranges {
++  template&amp;lt;view V&amp;gt;
++    requires (input_range&amp;lt;V&amp;gt;)
++  class as_rvalue_view : public view_interface&amp;lt;as_rvalue_view&amp;lt;V&amp;gt;&amp;gt; { …… }; // (1)
++
++  namespace views {
++    inline constexpr /*unspecified*/ as_rvalue = /*unspecified*/;      // (2)
++  }
++}
++```
++* view[link view.md]
++* view_interface[link view_interface.md]
++* input_range[link input_range.md]
++
++## 概要
++
++- (1): 要素をrvalueにする[`view`](view.md)
++- (2): `as_rvalue_view`または同じ効果を実現する[`view`](view.md)を生成するRangeアダプタオブジェクト
++
++この[`view`](view.md)は、あるRangeの要素をムーブして別のコンテナに挿入する場合などに利用できる。
++
++```cpp
++vector&amp;lt;string&amp;gt; words = {&amp;#34;the&amp;#34;, &amp;#34;quick&amp;#34;, &amp;#34;brown&amp;#34;, &amp;#34;fox&amp;#34;, &amp;#34;ate&amp;#34;, &amp;#34;a&amp;#34;, &amp;#34;pterodactyl&amp;#34;};
++vector&amp;lt;string&amp;gt; new_words;
++ranges::copy(words | views::as_rvalue, back_inserter(new_words));
++```
++
++### Rangeコンセプト
++
++| borrowed | sized | output | input | forward | bidirectional | random_access | contiguous | common | viewable | view |
++|----------|-------|--------|-------|---------|---------------|---------------|------------|--------|----------|------|
++| ※       | ※    | ※     | ※    | ※      | ※            | ※            | ※         | ※     | ○       | ○   |
++
++※ 参照先のRangeに従う
++
++## テンプレートパラメータ制約
++
++- [`view`](view.md)`&amp;lt;V&amp;gt;`
++- `!`[`common_range`](common_range.md)`&amp;lt;V&amp;gt;`
++- [`copyable`](/reference/concepts/copyable.md)`&amp;lt;`[`iterator_t`](iterator_t.md)`&amp;lt;V&amp;gt;&amp;gt;`
++
++## 効果
++
++- (2): 式`views::as_rvalue(E)`はRangeアダプタオブジェクトを表し、その効果は次の通り
++    - 要素がすでに右辺値参照であれば([`same_as`](/reference/concepts/same_as.md)`&amp;lt;`[`range_rvalue_reference_t`](range_rvalue_reference_t.md)`&amp;lt;T&amp;gt;, `[`range_reference_t`](range_reference_t.md)`&amp;lt;T&amp;gt;&amp;gt;`)、[`views::all`](all.md)`(E)`と等しい
++    - それ以外のとき、`as_rvalue_view{E}`と等しい
++
++## メンバ関数
++
++| 名前                                             | 説明                              | 対応バージョン |
++|--------------------------------------------------|-----------------------------------|----------------|
++| [`(constructor)`](as_rvalue_view/op_constructor.md.nolink)  | コンストラクタ                    | C++20          |
++| [`base`](as_rvalue_view/base.md.nolink)                     | `R`の参照を取得する               | C++20          |
++| [`begin`](as_rvalue_view/begin.md.nolink)                   | 先頭を指すイテレータを取得する    | C++20          |
++| [`end`](as_rvalue_view/end.md.nolink)                       | 番兵を取得する                    | C++20          |
++| [`size`](as_rvalue_view/size.md.nolink)                     | 要素数を取得する                  | C++20          |
++
++`r`を参照先のRangeとする。`size`は、[`ranges::size`](size.md)`(r)`が有効な式であるときに定義される。
++
++## 継承しているメンバ関数
++
++| 名前                                         | 説明                              | 対応バージョン |
++|----------------------------------------------|-----------------------------------|----------------|
++| [`empty`](view_interface/empty.md)           | Rangeが空かどうかを判定する       | C++20          |
++| [`operator bool`](view_interface/op_bool.md) | Rangeが空でないかどうかを判定する | C++20          |
++| [`data`](view_interface/data.md)             | Rangeの先頭へのポインタを取得する | C++20          |
++| [`front`](view_interface/front.md)           | 先頭要素への参照を取得する        | C++20          |
++| [`back`](view_interface/back.md)             | 末尾要素への参照を取得する        | C++20          |
++| [`operator[]`](view_interface/op_at.md)      | 要素へアクセスする                | C++20          |
++| [`cbegin`](view_interface/cbegin.md)         | 定数イテレータを取得する          | C++23          |
++| [`cend`](view_interface/cend.md)             | 定数イテレータ（番兵）を取得する  | C++23          |
++
++## 推論補助
++
++| 名前                                                  | 説明                         | 対応バージョン |
++|-------------------------------------------------------|------------------------------|----------------|
++| [`(deduction_guide)`](as_rvalue_view/op_deduction_guide.md.nolink) | クラステンプレートの推論補助 | C++20          |
++
++## 例
++```cpp example
++#include &amp;lt;ranges&amp;gt;
++#include &amp;lt;vector&amp;gt;
++#include &amp;lt;iterator&amp;gt;
++#include &amp;lt;print&amp;gt;
++
++int main() {
++  using namespace std;
++
++  vector&amp;lt;string&amp;gt; words = {&amp;#34;the&amp;#34;, &amp;#34;quick&amp;#34;, &amp;#34;brown&amp;#34;, &amp;#34;fox&amp;#34;, &amp;#34;ate&amp;#34;, &amp;#34;a&amp;#34;, &amp;#34;pterodactyl&amp;#34;};
++  vector&amp;lt;string&amp;gt; new_words;
++  ranges::copy(words | views::as_rvalue, back_inserter(new_words));
++  print(&amp;#34;{}&amp;#34;, new_words);
++}
++```
++* views::as_rvalue[color ff0000]
++* print[link /reference/print/print.md]
++
++### 出力
++```
++[&amp;#34;the&amp;#34;, &amp;#34;quick&amp;#34;, &amp;#34;brown&amp;#34;, &amp;#34;fox&amp;#34;, &amp;#34;ate&amp;#34;, &amp;#34;a&amp;#34;, &amp;#34;pterodactyl&amp;#34;]
++```
++
++## 実装例
++```cpp
++namespace std::ranges {
++  template&amp;lt;view V&amp;gt;
++    requires input_range&amp;lt;V&amp;gt;
++  class as_rvalue_view : public view_interface&amp;lt;as_rvalue_view&amp;lt;V&amp;gt;&amp;gt; {
++    V base_ = V();      // exposition only
++
++  public:
++    as_rvalue_view() requires default_initializable&amp;lt;V&amp;gt; = default;
++    constexpr explicit as_rvalue_view(V base);
++
++    constexpr V base() const &amp;amp; requires copy_constructible&amp;lt;V&amp;gt; { return base_; }
++    constexpr V base() &amp;amp;&amp;amp; { return std::move(base_); }
++
++    constexpr auto begin() requires (!simple-view&amp;lt;V&amp;gt;) {
++      return move_iterator(ranges::begin(base_));
++    }
++
++    constexpr auto begin() const requires range&amp;lt;const V&amp;gt; {
++      return move_iterator(ranges::begin(base_));
++    }
++
++    constexpr auto end() requires (!simple-view&amp;lt;V&amp;gt;) {
++      if constexpr (common_range&amp;lt;V&amp;gt;) {
++        return move_iterator(ranges::end(base_));
++      } else {
++        return move_sentinel(ranges::end(base_));
++      }
++    }
++
++    constexpr auto end() const requires range&amp;lt;const V&amp;gt; {
++      if constexpr (common_range&amp;lt;const V&amp;gt;) {
++        return move_iterator(ranges::end(base_));
++      } else {
++        return move_sentinel(ranges::end(base_));
++      }
++    }
++
++    constexpr auto size() requires sized_range&amp;lt;V&amp;gt; { return ranges::size(base_); }
++    constexpr auto size() const requires sized_range&amp;lt;const V&amp;gt; { return ranges::size(base_); }
++  };
++
++  template&amp;lt;class R&amp;gt;
++    as_rvalue_view(R&amp;amp;&amp;amp;) -&amp;gt; as_rvalue_view&amp;lt;views::all_t&amp;lt;R&amp;gt;&amp;gt;;
++}
++
++constexpr explicit as_rvalue_view(V base);
++```
++* view[link view.md]
++* view_interface[link view_interface.md]
++* common_range[link common_range.md]
++* sized_range[link sized_range.md]
++* simple-view[link simple-view.md]
++* default_initializable[link /reference/concepts/default_initializable.md]
++* copy_constructible[link /reference/concepts/copy_constructible.md]
++* move_iterator[link /reference/iterator/move_iterator.md]
++* ranges::begin[link begin.md]
++* ranges::end[link end.md]
++* ranges::size[link size.md]
++* views::all_t[link all.md]
++
++## バージョン
++### 言語
++- C++23
++
++### 処理系
++- [Clang](/implementation.md#clang): ?
++- [GCC](/implementation.md#gcc): ?
++- [ICC](/implementation.md#icc): ?
++- [Visual C++](/implementation.md#visual_cpp): ?
++
++## 参照
++- [N4950 24 Ranges library](https://timsong-cpp.github.io/cppwp/n4861/ranges)
++- [C++20 ranges](https://techbookfest.org/product/5134506308665344)
++- [P2017R1 Conditionally borrowed ranges](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2017r1.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>iter_move -- fix a sample of atomic.</title>
@@ -319,874 +553,6 @@ index a3e6448f9..89c5c7583 100644
  
  
  ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>wait -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/atomic/atomic/wait.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/atomic/atomic/wait.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/atomic/atomic/wait.md b/reference/atomic/atomic/wait.md
-index 2aead94ab..52577ef45 100644
---- a/reference/atomic/atomic/wait.md
-+++ b/reference/atomic/atomic/wait.md
-@@ -45,7 +45,7 @@ void wait(T old,
- 
- 
- ## 備考
--- Windowsでは`WaitOnAddress()`関数、POSIXでは[`futex()`](https://linuxjm.osdn.jp/html/LDP_man-pages/man2/futex.2.html)関数が実装に使われる
-+- Windowsでは`WaitOnAddress()`関数、POSIXでは[`futex()`](https://web.archive.org/web/20230605025744/https://linuxjm.osdn.jp/html/LDP_man-pages/man2/futex.2.html)関数が実装に使われる
- 
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>wait -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/atomic/atomic_flag/wait.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/atomic/atomic_flag/wait.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/atomic/atomic_flag/wait.md b/reference/atomic/atomic_flag/wait.md
-index 7ec772b20..f4a550ebf 100644
---- a/reference/atomic/atomic_flag/wait.md
-+++ b/reference/atomic/atomic_flag/wait.md
-@@ -36,7 +36,7 @@ void wait(bool old, memory_order order = memory_order::seq_cst) const noexcept;
- 
- 
- ## 備考
--- Windowsでは`WaitOnAddress()`関数、POSIXでは[`futex()`](https://linuxjm.osdn.jp/html/LDP_man-pages/man2/futex.2.html)関数が実装に使われる
-+- Windowsでは`WaitOnAddress()`関数、POSIXでは[`futex()`](https://web.archive.org/web/20230605025744/https://linuxjm.osdn.jp/html/LDP_man-pages/man2/futex.2.html)関数が実装に使われる
- 
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>atomic_flag_wait -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/atomic/atomic_flag_wait.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/atomic/atomic_flag_wait.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/atomic/atomic_flag_wait.md b/reference/atomic/atomic_flag_wait.md
-index 00d4eef90..0ac06ba10 100644
---- a/reference/atomic/atomic_flag_wait.md
-+++ b/reference/atomic/atomic_flag_wait.md
-@@ -36,7 +36,7 @@ namespace std {
- 
- 
- ## 備考
--- Windowsでは`WaitOnAddress()`関数、POSIXでは[`futex()`](https://linuxjm.osdn.jp/html/LDP_man-pages/man2/futex.2.html)関数が実装に使われる
-+- Windowsでは`WaitOnAddress()`関数、POSIXでは[`futex()`](https://web.archive.org/web/20230605025744/https://linuxjm.osdn.jp/html/LDP_man-pages/man2/futex.2.html)関数が実装に使われる
- 
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>atomic_flag_wait_explicit -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/atomic/atomic_flag_wait_explicit.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/atomic/atomic_flag_wait_explicit.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/atomic/atomic_flag_wait_explicit.md b/reference/atomic/atomic_flag_wait_explicit.md
-index c97c3c193..6c5fd8f67 100644
---- a/reference/atomic/atomic_flag_wait_explicit.md
-+++ b/reference/atomic/atomic_flag_wait_explicit.md
-@@ -40,7 +40,7 @@ namespace std {
- 
- 
- ## 備考
--- Windowsでは`WaitOnAddress()`関数、POSIXでは[`futex()`](https://linuxjm.osdn.jp/html/LDP_man-pages/man2/futex.2.html)関数が実装に使われる
-+- Windowsでは`WaitOnAddress()`関数、POSIXでは[`futex()`](https://web.archive.org/web/20230605025744/https://linuxjm.osdn.jp/html/LDP_man-pages/man2/futex.2.html)関数が実装に使われる
- 
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>wait -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/atomic/atomic_ref/wait.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/atomic/atomic_ref/wait.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/atomic/atomic_ref/wait.md b/reference/atomic/atomic_ref/wait.md
-index 71ffb0317..7bc8a699d 100644
---- a/reference/atomic/atomic_ref/wait.md
-+++ b/reference/atomic/atomic_ref/wait.md
-@@ -35,7 +35,7 @@ void wait(T old, memory_order order = memory_order::seq_cst) const noexcept;
- 
- 
- ## 備考
--- Windowsでは`WaitOnAddress()`関数、POSIXでは[`futex()`](https://linuxjm.osdn.jp/html/LDP_man-pages/man2/futex.2.html)関数が実装に使われる
-+- Windowsでは`WaitOnAddress()`関数、POSIXでは[`futex()`](https://web.archive.org/web/20230605025744/https://linuxjm.osdn.jp/html/LDP_man-pages/man2/futex.2.html)関数が実装に使われる
- 
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>atomic_wait -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/atomic/atomic_wait.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/atomic/atomic_wait.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/atomic/atomic_wait.md b/reference/atomic/atomic_wait.md
-index abeb47c7a..3458917f5 100644
---- a/reference/atomic/atomic_wait.md
-+++ b/reference/atomic/atomic_wait.md
-@@ -45,7 +45,7 @@ namespace std {
- 
- 
- ## 備考
--- Windowsでは`WaitOnAddress()`関数、POSIXでは[`futex()`](https://linuxjm.osdn.jp/html/LDP_man-pages/man2/futex.2.html)関数が実装に使われる
-+- Windowsでは`WaitOnAddress()`関数、POSIXでは[`futex()`](https://web.archive.org/web/20230605025744/https://linuxjm.osdn.jp/html/LDP_man-pages/man2/futex.2.html)関数が実装に使われる
- 
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>atomic_wait_explicit -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/atomic/atomic_wait_explicit.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/atomic/atomic_wait_explicit.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/atomic/atomic_wait_explicit.md b/reference/atomic/atomic_wait_explicit.md
-index 985fcd69c..a276ab3aa 100644
---- a/reference/atomic/atomic_wait_explicit.md
-+++ b/reference/atomic/atomic_wait_explicit.md
-@@ -47,7 +47,7 @@ namespace std {
- 
- 
- ## 備考
--- Windowsでは`WaitOnAddress()`関数、POSIXでは[`futex()`](https://linuxjm.osdn.jp/html/LDP_man-pages/man2/futex.2.html)関数が実装に使われる
-+- Windowsでは`WaitOnAddress()`関数、POSIXでは[`futex()`](https://web.archive.org/web/20230605025744/https://linuxjm.osdn.jp/html/LDP_man-pages/man2/futex.2.html)関数が実装に使われる
- 
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>create_directory -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/filesystem/create_directory.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/filesystem/create_directory.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/filesystem/create_directory.md b/reference/filesystem/create_directory.md
-index 873563fa4..dca20f8a3 100644
---- a/reference/filesystem/create_directory.md
-+++ b/reference/filesystem/create_directory.md
-@@ -25,10 +25,10 @@ namespace std::filesystem {
- 
- ## 効果
- - (1), (2) : パス`p`のディレクトリを作成する
--    - POSIX環境では、[`mkdir()`](https://linuxjm.osdn.jp/html/LDP_man-pages/man2/mkdir.2.html)関数に、第2引数に権限として`static_cast&amp;lt;int&amp;gt;(`[`perms::all`](perms.md)`)`を指定して実行する
-+    - POSIX環境では、[`mkdir()`](https://web.archive.org/web/20231009095236/https://linuxjm.osdn.jp/html/LDP_man-pages/man2/mkdir.2.html)関数に、第2引数に権限として`static_cast&amp;lt;int&amp;gt;(`[`perms::all`](perms.md)`)`を指定して実行する
-     - (2) では、OSのファイルシステムAPIによってエラーが報告された場合、`ec`にエラー情報が設定される。そうでなければ、[`ec.clear()`](/reference/system_error/error_code/clear.md)を呼び出し、エラー情報をクリアする
- - (3), (4) : パス`existing_p`の属性を取得し、その属性を付加してパス`p`のディレクトリを作成する
--    - POSIX環境では、[`stat`](https://linuxjm.osdn.jp/html/LDP_man-pages/man2/stat.2.html)`(existing_p.c_str(), &amp;amp;attributes_stat)`の呼び出し後に、[`mkdir`](https://linuxjm.osdn.jp/html/LDP_man-pages/man2/mkdir.2.html)`(p.c_str(), attributes_stat.st_mode)`の呼び出しでディレクトリを作成する
-+    - POSIX環境では、[`stat`](https://web.archive.org/web/20230827123440/https://linuxjm.osdn.jp/html/LDP_man-pages/man2/stat.2.html)`(existing_p.c_str(), &amp;amp;attributes_stat)`の呼び出し後に、[`mkdir`](https://web.archive.org/web/20231009095236/https://linuxjm.osdn.jp/html/LDP_man-pages/man2/mkdir.2.html)`(p.c_str(), attributes_stat.st_mode)`の呼び出しでディレクトリを作成する
-     - Windows環境では、`CreateDirectoryExW(existing_p.c_str(), p.c_str(), 0)`を呼び出す
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>create_directory_symlink -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/filesystem/create_directory_symlink.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/filesystem/create_directory_symlink.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/filesystem/create_directory_symlink.md b/reference/filesystem/create_directory_symlink.md
-index b90860e22..ff42a0ac9 100644
---- a/reference/filesystem/create_directory_symlink.md
-+++ b/reference/filesystem/create_directory_symlink.md
-@@ -22,7 +22,7 @@ namespace std::filesystem {
- 
- 
- ## 効果
--- POSIX環境では、[`symlink()`](https://linuxjm.osdn.jp/html/LDP_man-pages/man2/symlink.2.html)関数を使用して、パス`to`のディレクトリに対するシンボリックリンクをパス`new_symlink`に作成する
-+- POSIX環境では、[`symlink()`](https://web.archive.org/web/20230205210429/http://linuxjm.osdn.jp/html/LDP_man-pages/man2/symlink.2.html)関数を使用して、パス`to`のディレクトリに対するシンボリックリンクをパス`new_symlink`に作成する
-     - パス`to`は、パス`new_symlink`からの相対パスであることに注意
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>create_hard_link -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/filesystem/create_hard_link.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/filesystem/create_hard_link.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/filesystem/create_hard_link.md b/reference/filesystem/create_hard_link.md
-index 447e72377..a27c65417 100644
---- a/reference/filesystem/create_hard_link.md
-+++ b/reference/filesystem/create_hard_link.md
-@@ -20,7 +20,7 @@ namespace std::filesystem {
- 
- 
- ## 効果
--- POSIX環境では、[`link()`](https://linuxjm.osdn.jp/html/LDP_man-pages/man2/link.2.html)関数を使用して、パス`to`のファイルと同じinodeを参照するハードリンクをパス`new_hard_link`に作成する
-+- POSIX環境では、[`link()`](https://web.archive.org/web/20230206201555/http://linuxjm.osdn.jp/html/LDP_man-pages/man2/link.2.html)関数を使用して、パス`to`のファイルと同じinodeを参照するハードリンクをパス`new_hard_link`に作成する
- 
- 
- ## 戻り値
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>create_symlink -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/filesystem/create_symlink.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/filesystem/create_symlink.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/filesystem/create_symlink.md b/reference/filesystem/create_symlink.md
-index 430d0cf52..cc23ce7ea 100644
---- a/reference/filesystem/create_symlink.md
-+++ b/reference/filesystem/create_symlink.md
-@@ -20,7 +20,7 @@ namespace std::filesystem {
- 
- 
- ## 効果
--- POSIX環境では、[`symlink()`](https://linuxjm.osdn.jp/html/LDP_man-pages/man2/symlink.2.html)関数を使用して、パス`to`のファイル・ディレクトリに対するシンボリックリンクをパス`new_symlink`に作成する
-+- POSIX環境では、[`symlink()`](https://web.archive.org/web/20230205210429/http://linuxjm.osdn.jp/html/LDP_man-pages/man2/symlink.2.html)関数を使用して、パス`to`のファイル・ディレクトリに対するシンボリックリンクをパス`new_symlink`に作成する
- 
- 
- ## 戻り値
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>current_path -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/filesystem/current_path.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/filesystem/current_path.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/filesystem/current_path.md b/reference/filesystem/current_path.md
-index fa7adeab4..e77285473 100644
---- a/reference/filesystem/current_path.md
-+++ b/reference/filesystem/current_path.md
-@@ -24,12 +24,12 @@ namespace std::filesystem {
- 
- ## 効果
- - (3), (4) : パス`p`を、現在の作業ディレクトリとして設定する
--    - POSIX環境では、[`chdir()`](https://linuxjm.osdn.jp/html/LDP_man-pages/man2/chdir.2.html)関数を使用する
-+    - POSIX環境では、[`chdir()`](https://web.archive.org/web/20230605001127/https://linuxjm.osdn.jp/html/LDP_man-pages/man2/chdir.2.html)関数を使用する
- 
- 
- ## 戻り値
- - (1), (2) : 現在の作業ディレクトリの絶対パスを、ネイティブフォーマットとして返す
--    - POSIX環境では、[`getcwd()`](https://linuxjm.osdn.jp/html/LDP_man-pages/man3/getcwd.3.html)関数を使用する
-+    - POSIX環境では、[`getcwd()`](https://web.archive.org/web/20230208075801/http://linuxjm.osdn.jp/html/LDP_man-pages/man3/getcwd.3.html)関数を使用する
-     - エラーが発生した場合、 (2) では`path()`が返る
- - (3), (4) : なし
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>file_size -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/filesystem/file_size.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/filesystem/file_size.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/filesystem/file_size.md b/reference/filesystem/file_size.md
-index f1f8965e2..07c94ab69 100644
---- a/reference/filesystem/file_size.md
-+++ b/reference/filesystem/file_size.md
-@@ -20,7 +20,7 @@ namespace std::filesystem {
- ## 戻り値
- - ファイルが存在しない、もしくはファイルシステムでエラーが発生した場合、 (1) では[`std::filesystem::filesystem_error`](filesystem_error.md)例外を送出し、 (2) では`ec`にエラー情報が設定されて`static_cast&amp;lt;`[`uintmax_t`](/reference/cstdint/uintmax_t.md)`&amp;gt;(-1)`が返る
- - `p`が通常ファイル、もしくは通常ファイルを指すシンボリックリンクである場合、ファイルサイズが返る
--    - POSIX環境では[`stat()`](https://linuxjm.osdn.jp/html/LDP_man-pages/man2/stat.2.html)関数の`st_size`メンバ変数を使用する
-+    - POSIX環境では[`stat()`](https://web.archive.org/web/20230827123440/https://linuxjm.osdn.jp/html/LDP_man-pages/man2/stat.2.html)関数の`st_size`メンバ変数を使用する
- - `p`がそれ以外のファイル種別である場合は、実装定義の動作をする
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>last_write_time -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/filesystem/last_write_time.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/filesystem/last_write_time.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/filesystem/last_write_time.md b/reference/filesystem/last_write_time.md
-index fc1a977b1..c5731d1d5 100644
---- a/reference/filesystem/last_write_time.md
-+++ b/reference/filesystem/last_write_time.md
-@@ -27,10 +27,10 @@ namespace std::filesystem {
- 
- ## 効果
- - (1), (2) : パス`p`が指すエンティティのデータが最後に変更された時間を返す
--    - POSIX環境では[`stat()`](https://linuxjm.osdn.jp/html/LDP_man-pages/man2/stat.2.html)関数によって返される`st_mtime`メンバを使用する
-+    - POSIX環境では[`stat()`](https://web.archive.org/web/20230827123440/https://linuxjm.osdn.jp/html/LDP_man-pages/man2/stat.2.html)関数によって返される`st_mtime`メンバを使用する
-     - (2) : エラーが発生した場合は、`ec`にエラー情報が設定され、`file_time_type::min()`が返る
- - (3), (4) : パス`p`のエンティティに、最終更新日時として`new_time`を設定する
--    - POSIX環境では[`futimens()`](https://linuxjm.osdn.jp/html/LDP_man-pages/man2/utimensat.2.html)関数を使用する
-+    - POSIX環境では[`futimens()`](https://web.archive.org/web/20230129193157/https://linuxjm.osdn.jp/html/LDP_man-pages/man2/utimensat.2.html)関数を使用する
-     - この関数を実行した結果として、`last_write_time(p) == new_time`となることは保証されない。これはOSのファイルシステムの制限による
-     - (4) : エラーが発生した場合は、`ec`にエラー情報が設定される
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>remove -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/filesystem/remove.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/filesystem/remove.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/filesystem/remove.md b/reference/filesystem/remove.md
-index 9a131678e..7b2cfa6f4 100644
---- a/reference/filesystem/remove.md
-+++ b/reference/filesystem/remove.md
-@@ -17,7 +17,7 @@ namespace std::filesystem {
- 
- 
- ## 効果
--- POSIX環境では、[`remove()`](https://linuxjm.osdn.jp/html/LDP_man-pages/man3/remove.3.html)関数を使用して、ファイル・ディレクトリを削除する。この環境では、ディレクトリを削除する場合、そのディレクトリは空でなければならない
-+- POSIX環境では、[`remove()`](https://web.archive.org/web/20230207183630/http://linuxjm.osdn.jp/html/LDP_man-pages/man3/remove.3.html)関数を使用して、ファイル・ディレクトリを削除する。この環境では、ディレクトリを削除する場合、そのディレクトリは空でなければならない
- 
- 
- ## 戻り値
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>remove_all -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/filesystem/remove_all.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/filesystem/remove_all.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/filesystem/remove_all.md b/reference/filesystem/remove_all.md
-index adf2db2ba..ac7f89e8d 100644
---- a/reference/filesystem/remove_all.md
-+++ b/reference/filesystem/remove_all.md
-@@ -21,7 +21,7 @@ namespace std::filesystem {
- 
- ## 効果
- - パス`p`のコンテンツを、再帰的に削除する
--- POSIX環境では、それぞれのコンテンツの削除に、[`remove()`](https://linuxjm.osdn.jp/html/LDP_man-pages/man3/remove.3.html)関数を使用する
-+- POSIX環境では、それぞれのコンテンツの削除に、[`remove()`](https://web.archive.org/web/20230207183630/http://linuxjm.osdn.jp/html/LDP_man-pages/man3/remove.3.html)関数を使用する
- 
- 
- ## 戻り値
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>rename -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/filesystem/rename.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/filesystem/rename.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/filesystem/rename.md b/reference/filesystem/rename.md
-index 26268f06d..f4d23b96b 100644
---- a/reference/filesystem/rename.md
-+++ b/reference/filesystem/rename.md
-@@ -21,7 +21,7 @@ namespace std::filesystem {
- 
- ## 効果
- - パス`old_p`のファイル・ディレクトリを、パス`new_p`に名称変更する
--    - POSIX環境では、[`rename()`](https://linuxjm.osdn.jp/html/LDP_man-pages/man2/rename.2.html)関数を使用する
-+    - POSIX環境では、[`rename()`](https://web.archive.org/web/20230207112323/http://linuxjm.osdn.jp/html/LDP_man-pages/man2/rename.2.html)関数を使用する
- - パス`old_p`とパス`new_p`が同じファイルに解決される場合、本関数はなにもしない
- - そうでない場合、名称変更操作には、以下のような効果も含む：
-     - `new_p`がすでに存在する非ディレクトリのファイルに解決される場合、すでに存在している`new_p`のファイルは削除される
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>resize_file -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/filesystem/resize_file.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/filesystem/resize_file.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/filesystem/resize_file.md b/reference/filesystem/resize_file.md
-index a80559102..acbc12041 100644
---- a/reference/filesystem/resize_file.md
-+++ b/reference/filesystem/resize_file.md
-@@ -19,7 +19,7 @@ namespace std::filesystem {
- 
- ## 効果
- - ファイル`p`の大きさを、`new_size`バイトに変更する。
--    - POSIX環境では、[`truncate()`](https://linuxjm.osdn.jp/html/LDP_man-pages/man2/truncate.2.html)関数を使用する
-+    - POSIX環境では、[`truncate()`](https://web.archive.org/web/20230605150743/https://linuxjm.osdn.jp/html/LDP_man-pages/man2/truncate.2.html)関数を使用する
- 
- 
- ## 例外
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>space -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/filesystem/space.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/filesystem/space.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/filesystem/space.md b/reference/filesystem/space.md
-index 64794c5d6..b0e0d5f31 100644
---- a/reference/filesystem/space.md
-+++ b/reference/filesystem/space.md
-@@ -18,7 +18,7 @@ namespace std::filesystem {
- 
- 
- ## 戻り値
--- POSIX環境であれば、[`statvfs()`](https://linuxjm.osdn.jp/html/LDP_man-pages/man3/statvfs.3.html)関数を使用して、残り容量を取得する。
-+- POSIX環境であれば、[`statvfs()`](https://web.archive.org/web/20230129184216/http://linuxjm.osdn.jp/html/LDP_man-pages/man3/statvfs.3.html)関数を使用して、残り容量を取得する。
-     - [`space_info::capacity`](space_info.md)の値は`statvfs::f_blocks * statvfs::f_frsize`
-     - [`space_info::free`](space_info.md)の値は`statvfs::f_bfree * statvfs::f_frsize`
-     - [`space_info::available`](space_info.md)の値は`statvfs::f_bavail * statvfs::f_frsize`
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>status -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/filesystem/status.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/filesystem/status.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/filesystem/status.md b/reference/filesystem/status.md
-index cfa32866e..c7f9f15e9 100644
---- a/reference/filesystem/status.md
-+++ b/reference/filesystem/status.md
-@@ -39,7 +39,7 @@ return result;
- 
- - (2) :
-     - 可能なら、ファイルパス`p`が指すファイルの属性を決定する
--        - POSIX環境であれば[`stat()`](https://linuxjm.osdn.jp/html/LDP_man-pages/man2/stat.2.html)関数を使用する
-+        - POSIX環境であれば[`stat()`](https://web.archive.org/web/20230827123440/https://linuxjm.osdn.jp/html/LDP_man-pages/man2/stat.2.html)関数を使用する
-     - OSのファイルシステムAPIによってエラーが報告された場合、`ec`にエラー情報が設定される。そうでなければ、[`ec.clear()`](/reference/system_error/error_code/clear.md)を呼び出し、エラー情報をクリアする
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>symlink_status -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/filesystem/symlink_status.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/filesystem/symlink_status.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/filesystem/symlink_status.md b/reference/filesystem/symlink_status.md
-index 2188b4d76..8be7a5d00 100644
---- a/reference/filesystem/symlink_status.md
-+++ b/reference/filesystem/symlink_status.md
-@@ -39,7 +39,7 @@ return result;
- 
- - (2) :
-     - 可能なら、ファイルパス`p`が指すファイルの属性を決定する。シンボリックリンクに対しては、シンボリックリンクが指すファイルではなく、シンボリックリンク自体のファイル属性を決定する
--        - POSIX環境であれば[`lstat()`](https://linuxjm.osdn.jp/html/LDP_man-pages/man2/stat.2.html)関数を使用する
-+        - POSIX環境であれば[`lstat()`](https://web.archive.org/web/20230827123440/https://linuxjm.osdn.jp/html/LDP_man-pages/man2/stat.2.html)関数を使用する
-     - OSのファイルシステムAPIによってエラーが報告された場合、`ec`にエラー情報が設定される。そうでなければ、[`ec.clear()`](/reference/system_error/error_code/clear.md)を呼び出し、エラー情報をクリアする
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>defaultfloat -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/ios/defaultfloat.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/ios/defaultfloat.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ios/defaultfloat.md b/reference/ios/defaultfloat.md
-index e59d170e0..07639a305 100644
---- a/reference/ios/defaultfloat.md
-+++ b/reference/ios/defaultfloat.md
-@@ -13,7 +13,7 @@ namespace std {
- ## 概要
- 浮動小数点数を初期状態の書式で出力することを指示するマニピュレータ。
- 
--この書式は、出力値や出力すべき精度により小数点数表記と指数表記が切り替わるものである（[`printf()`](http://linuxjm.osdn.jp/html/LDP_man-pages/man3/printf.3.html)関数の`%g`／`%G`相当）。
-+この書式は、出力値や出力すべき精度により小数点数表記と指数表記が切り替わるものである（[`printf()`](https://web.archive.org/web/20230605132525/https://linuxjm.osdn.jp/html/LDP_man-pages/man3/printf.3.html)関数の`%g`／`%G`相当）。
- 
- ## 効果
- `str.unsetf(ios_base::floatfield)`を実行する。
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>hexfloat -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/ios/hexfloat.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/ios/hexfloat.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ios/hexfloat.md b/reference/ios/hexfloat.md
-index 9eae0997d..7a0efd1f4 100644
---- a/reference/ios/hexfloat.md
-+++ b/reference/ios/hexfloat.md
-@@ -13,7 +13,7 @@ namespace std {
- ## 概要
- 浮動小数点数を十六進法で入出力することを指示するマニピュレータ。
- 
--[`printf()`](http://linuxjm.osdn.jp/html/LDP_man-pages/man3/printf.3.html)関数の`%a`／`%A`相当。
-+[`printf()`](https://web.archive.org/web/20230605132525/https://linuxjm.osdn.jp/html/LDP_man-pages/man3/printf.3.html)関数の`%a`／`%A`相当。
- 
- ## 効果
- `str.setf(ios_base::fixed | ios_base::scientific, ios_base::floatfield)`を実行する。
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>get_temporary_buffer -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/memory/get_temporary_buffer.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/memory/get_temporary_buffer.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/get_temporary_buffer.md b/reference/memory/get_temporary_buffer.md
-index a206697a7..85e435acf 100644
---- a/reference/memory/get_temporary_buffer.md
-+++ b/reference/memory/get_temporary_buffer.md
-@@ -17,7 +17,7 @@ pair&amp;lt;T*, ptrdiff_t&amp;gt; get_temporary_buffer(ptrdiff_t n) noexcept;
- * pair[link /reference/utility/pair.md]
- * ptrdiff_t[link /reference/cstddef/ptrdiff_t.md]
- 
--この機能は、C++17から非推奨となり、C++20で削除された。短期的な用途のメモリ領域確保には、[`alloca()`](https://linuxjm.osdn.jp/html/LDP_man-pages/man3/alloca.3.html)のようなスタックからメモリを確保するなど、他の機能を使用すること。
-+この機能は、C++17から非推奨となり、C++20で削除された。短期的な用途のメモリ領域確保には、[`alloca()`](https://web.archive.org/web/20230207110403/http://linuxjm.osdn.jp/html/LDP_man-pages/man3/alloca.3.html)のようなスタックからメモリを確保するなど、他の機能を使用すること。
- 
- 
- ## 概要
-@@ -51,7 +51,7 @@ pair&amp;lt;T*, ptrdiff_t&amp;gt; get_temporary_buffer(ptrdiff_t n) noexcept;
- 
- 将来的にスタックからメモリ確保をする仕組みが検討されているが、これらの関数は設計として例外安全性やRAIIといったものが考慮されていない。スタックからメモリ確保する機能が入ったとしても、これらの関数の内部を改善することはできないと判断され、非推奨となった。
- 
--スタックからメモリ確保する機能は、現在の標準ライブラリにはない。そのため、代わりとしては、配置new構文や、標準外の[`alloca()`](https://linuxjm.osdn.jp/html/LDP_man-pages/man3/alloca.3.html)関数のような機能を使用すること。
-+スタックからメモリ確保する機能は、現在の標準ライブラリにはない。そのため、代わりとしては、配置new構文や、標準外の[`alloca()`](https://web.archive.org/web/20230207110403/http://linuxjm.osdn.jp/html/LDP_man-pages/man3/alloca.3.html)関数のような機能を使用すること。
- 
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>random_device -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/random/random_device.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/random/random_device.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/random/random_device.md b/reference/random/random_device.md
-index 7b7c4644b..7a31d246f 100644
---- a/reference/random/random_device.md
-+++ b/reference/random/random_device.md
-@@ -13,7 +13,7 @@ namespace std {
- ## 概要
- `random_device`クラスは、非決定論的な乱数生成エンジンである。予測不能な乱数を生成することから、擬似乱数生成エンジンのシード初期化や、暗号化といった用途に使用できる。
- 
--`random_device`の実装は処理系定義だが、Windows環境では[`CryptGenRandom()`](https://docs.microsoft.com/ja-jp/windows/win32/api/wincrypt/nf-wincrypt-cryptgenrandom)関数のラッパーとして、UNIX系環境では[`/dev/random`](https://linuxjm.osdn.jp/html/LDP_man-pages/man4/random.4.html)や[`/dev/urandom`](https://linuxjm.osdn.jp/html/LDP_man-pages/man4/random.4.html)から値を読み取る形で定義される場合がある。
-+`random_device`の実装は処理系定義だが、Windows環境では[`CryptGenRandom()`](https://docs.microsoft.com/ja-jp/windows/win32/api/wincrypt/nf-wincrypt-cryptgenrandom)関数のラッパーとして、UNIX系環境では[`/dev/random`](https://web.archive.org/web/20230207121147/http://linuxjm.osdn.jp/html/LDP_man-pages/man4/random.4.html)や[`/dev/urandom`](https://web.archive.org/web/20230207121147/http://linuxjm.osdn.jp/html/LDP_man-pages/man4/random.4.html)から値を読み取る形で定義される場合がある。
- 実装の制限によって予測不能な乱数生成器を定義できない場合、このクラスは**擬似乱数生成器で定義される可能性がある**ため、特にクロスプラットフォームなコードを書く場合は注意すること。
- 
- 予測不能な乱数はソフトウェアでは実装できないため、これらはハードウェアのノイズやマウスの動きといった環境ノイズをエントロピープールとして乱数を生成する。
-@@ -323,7 +323,7 @@ int main()
- - GCC: [Implementation Status 26.5.6 [rand.device]](https://gcc.gnu.org/onlinedocs/libstdc++/manual/status.html#iso.2011.specific)
- - Microdoft Visual Studio 2017: [random\_device Class](https://docs.microsoft.com/en-us/cpp/standard-library/random-device-class)
- - [/dev/random - Wikipedia](https://ja.wikipedia.org/wiki//dev/random)
--- [Man page of RANDOM](https://linuxjm.osdn.jp/html/LDP_man-pages/man4/random.4.html)
-+- [Man page of RANDOM](https://web.archive.org/web/20230207121147/http://linuxjm.osdn.jp/html/LDP_man-pages/man4/random.4.html)
- - [CryptGenRandom function (wincrypt.h) - Win32 apps | Microsoft Docs](https://docs.microsoft.com/ja-jp/windows/win32/api/wincrypt/nf-wincrypt-cryptgenrandom)
- - [random_deviceの実装（再訪） - 煙人計画](http://vaporoid.hateblo.jp/entry/2014/07/25/154852)
- - [Replacing `/dev/urandom` May 4, 2016 - Security](https://lwn.net/Articles/685371/)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>counting_semaphore -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/semaphore/counting_semaphore.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/semaphore/counting_semaphore.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/semaphore/counting_semaphore.md b/reference/semaphore/counting_semaphore.md
-index ffc5544a2..fa107a488 100644
---- a/reference/semaphore/counting_semaphore.md
-+++ b/reference/semaphore/counting_semaphore.md
-@@ -142,7 +142,7 @@ int main()
- 
- 
- ## 参照
--- [semop, semtimedop - System V セマフォの操作](https://linuxjm.osdn.jp/html/LDP_man-pages/man2/semop.2.html)
--- [sem_overview - POSIX セマフォの概要](https://linuxjm.osdn.jp/html/LDP_man-pages/man7/sem_overview.7.html)
-+- [semop, semtimedop - System V セマフォの操作](https://web.archive.org/web/20230605023712/https://linuxjm.osdn.jp/html/LDP_man-pages/man2/semop.2.html)
-+- [sem_overview - POSIX セマフォの概要](https://web.archive.org/web/20230611015117/https://linuxjm.osdn.jp/html/LDP_man-pages/man7/sem_overview.7.html)
- - [Windows, Semaphore Objects](https://docs.microsoft.com/en-us/windows/win32/sync/semaphore-objects)
- - [macOS/iOS, Dispatch Semaphore](https://developer.apple.com/documentation/dispatch/dispatch_semaphore)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>acquire -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/semaphore/counting_semaphore/acquire.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/semaphore/counting_semaphore/acquire.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/semaphore/counting_semaphore/acquire.md b/reference/semaphore/counting_semaphore/acquire.md
-index b29a40b35..98a70413c 100644
---- a/reference/semaphore/counting_semaphore/acquire.md
-+++ b/reference/semaphore/counting_semaphore/acquire.md
-@@ -36,7 +36,7 @@ void acquire();
- ## 備考
- 「効果」欄では`acquire`メンバ関数の振る舞いを手続き的に説明しているが、実際の処理系においてはオペレーティングシステムが提供する効率的なセマフォ操作関数が利用されると期待される。
- 
--- POSIXセマフォでは[`sem_wait`関数](https://linuxjm.osdn.jp/html/LDP_man-pages/man3/sem_wait.3.html)が提供される。
-+- POSIXセマフォでは[`sem_wait`関数](https://web.archive.org/web/20230206231852/http://linuxjm.osdn.jp/html/LDP_man-pages/man3/sem_wait.3.html)が提供される。
- - Windowsセマフォでは[`WaitForSingleObject`関数](https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-waitforsingleobject)ファミリが提供される。
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>shared_mutex -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/shared_mutex/shared_mutex.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/shared_mutex/shared_mutex.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/shared_mutex/shared_mutex.md b/reference/shared_mutex/shared_mutex.md
-index 5c124a611..18e66ae31 100644
---- a/reference/shared_mutex/shared_mutex.md
-+++ b/reference/shared_mutex/shared_mutex.md
-@@ -29,7 +29,7 @@ namespace std {
- 
- ## 備考
- - このクラスは現状、書き込みロックと読み込みロックについてのスケジューリング戦略を規定せず、カスタマイズもできない。そのため、書き込みロックがなかなか取得できない、読み込みロックがなかなか取得できないというスタベーションの問題が発生した場合に、ユーザーの状況に合わせて戦略を変更することができない。POSIXのReaders-writer lockの実装では、スケジューリングのオプションを指定できる
--    - [`pthread_rwlockattr_setkind_np()`](https://linuxjm.osdn.jp/html/LDP_man-pages/man3/pthread_rwlockattr_setkind_np.3.html)
-+    - [`pthread_rwlockattr_setkind_np()`](https://web.archive.org/web/20230130174238/http://linuxjm.osdn.jp/html/LDP_man-pages/man3/pthread_rwlockattr_setkind_np.3.html)
- 
- 
- ## メンバ関数
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>shared_timed_mutex -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/shared_mutex/shared_timed_mutex.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/shared_mutex/shared_timed_mutex.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/shared_mutex/shared_timed_mutex.md b/reference/shared_mutex/shared_timed_mutex.md
-index 07aaa1a92..c80dfc9c0 100644
---- a/reference/shared_mutex/shared_timed_mutex.md
-+++ b/reference/shared_mutex/shared_timed_mutex.md
-@@ -31,7 +31,7 @@ namespace std {
- 
- ## 備考
- - このクラスは現状、書き込みロックと読み込みロックについてのスケジューリング戦略を規定せず、カスタマイズもできない。そのため、書き込みロックがなかなか取得できない、読み込みロックがなかなか取得できないというスタベーションの問題が発生した場合に、ユーザーの状況に合わせて戦略を変更することができない。POSIXのReaders-writer lockの実装では、スケジューリングのオプションを指定できる
--    - [`pthread_rwlockattr_setkind_np()`](https://linuxjm.osdn.jp/html/LDP_man-pages/man3/pthread_rwlockattr_setkind_np.3.html)
-+    - [`pthread_rwlockattr_setkind_np()`](https://web.archive.org/web/20230130174238/http://linuxjm.osdn.jp/html/LDP_man-pages/man3/pthread_rwlockattr_setkind_np.3.html)
- 
- 
- ## メンバ関数
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>errc -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/system_error/errc.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/system_error/errc.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/system_error/errc.md b/reference/system_error/errc.md
-index baf735a3d..0f11d1b59 100644
---- a/reference/system_error/errc.md
-+++ b/reference/system_error/errc.md
-@@ -99,5 +99,5 @@ namespace std {
- 非推奨とされているものは、対応する`errno`値がPOSIX規格において廃止されたことに対応している。
- 
- ## 参照
--- [Man page of ERRNO](http://linuxjm.osdn.jp/html/LDP_man-pages/man3/errno.3.html)
-+- [Man page of ERRNO](https://web.archive.org/web/20230205202552/http://linuxjm.osdn.jp/html/LDP_man-pages/man3/errno.3.html)
- - [LWG Issue 3869. Deprecate `std::errc` constants related to UNIX STREAMS](https://cplusplus.github.io/LWG/issue3869)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>yield -- osdn.jpのリンクをwebarchiveに差し替え #1214</title>
-      <link href="https://cpprefjp.github.io/reference/thread/this_thread/yield.html"/>
-      <id>4d5c0edfcd79661472afc00a695d017297e4d1d9:reference/thread/this_thread/yield.md</id>
-      <updated>2023-11-21T18:04:26+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/thread/this_thread/yield.md b/reference/thread/this_thread/yield.md
-index 2c765034f..ed9dccab9 100644
---- a/reference/thread/this_thread/yield.md
-+++ b/reference/thread/this_thread/yield.md
-@@ -28,7 +28,7 @@ namespace this_thread {
- 
- 
- ## 備考
--C++11標準の定義では処理系依存だが、その動作はPOSIXの[`sched_yield()`](https://linuxjm.osdn.jp/html/LDP_man-pages/man2/sched_yield.2.html)関数やWindows APIの[`SwitchToThread()`](https://docs.microsoft.com/ja-JP/windows/win32/api/processthreadsapi/nf-processthreadsapi-switchtothread)関数などを参考のこと。
-+C++11標準の定義では処理系依存だが、その動作はPOSIXの[`sched_yield()`](https://web.archive.org/web/20230205233555/http://linuxjm.osdn.jp/html/LDP_man-pages/man2/sched_yield.2.html)関数やWindows APIの[`SwitchToThread()`](https://docs.microsoft.com/ja-JP/windows/win32/api/processthreadsapi/nf-processthreadsapi-switchtothread)関数などを参考のこと。
- 
- Visual C++では、Windows APIの[`Sleep()`](https://docs.microsoft.com/ja-jp/windows/win32/api/synchapi/nf-synchapi-sleep)関数を使った実装となっている。ただし、12.0でWindowsストア向けアプリケーションを対象とする場合は、`Sleep()`関数が許可されていないため、`WaitForSingleObject()`関数のタイムアウト時間に最小値1ミリ秒を指定して呼び出す実装となっている。
- 
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
