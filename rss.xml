@@ -2,9 +2,53 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2024-01-23T06:20:00.670837</updated>
-  <id>eb29d622-a861-47c6-80f2-b64094f6b1f6</id>
+  <updated>2024-01-23T08:12:13.475934</updated>
+  <id>95390914-4681-4c17-93d6-3770af400194</id>
 
+  
+    <entry>
+      <title>any_cast -- LWG Issue 3305適用（P3040R0）</title>
+      <link href="https://cpprefjp.github.io/reference/any/any_cast.html"/>
+      <id>c44afe1f24b02b373dc591f64569073f61302882:reference/any/any_cast.md</id>
+      <updated>2024-01-23T17:09:00+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/any/any_cast.md b/reference/any/any_cast.md
+index 1ed3b6b12..74593c4b4 100644
+--- a/reference/any/any_cast.md
++++ b/reference/any/any_cast.md
+@@ -31,13 +31,14 @@ namespace std {
+ - (4), (5) : `std::any`オブジェクトが保持している型を指定して、その値を指すポインタを取得する。型の指定を間違った場合はヌルポインタが返る
+ 
+ 
+-## 要件
++## 適格要件
+ `using U =` [`remove_cv_t`](/reference/type_traits/remove_cv.md)`&amp;lt;`[`remove_reference_t`](/reference/type_traits/remove_reference.md)`&amp;lt;T&amp;gt;&amp;gt;;`であるとして、
+ 
+ - (1) : [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;T, const U&amp;amp;&amp;gt; == true`であること。そうでない場合、プログラムは不適格となる
+ - (2) : [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;T, U&amp;amp;&amp;gt; == true`であること。そうでない場合、プログラムは不適格となる
+ - (3) : [`is_constructible_v`](/reference/type_traits/is_constructible.md)`&amp;lt;T, U&amp;gt; == true`であること。そうでない場合、プログラムは不適格となる
+-
++- (4)(5) : [`is_void_v`](/reference/type_traits/is_void.md)`&amp;lt;T&amp;gt; == false`であること
++    - C++26から
+ 
+ ## 効果
+ `using U =` [`remove_cv_t`](/reference/type_traits/remove_cv.md)`&amp;lt;`[`remove_reference_t`](/reference/type_traits/remove_reference.md)`&amp;lt;T&amp;gt;&amp;gt;;`であるとして、
+@@ -148,3 +149,7 @@ int main()
+ - [Clang](/implementation.md#clang): 4.0.1
+ - [GCC](/implementation.md#gcc): 7.3
+ - [Visual C++](/implementation.md#visual_cpp): ??
++
++## 参照
++
++- [LWG Issue 3305. `any_cast&amp;lt;void&amp;gt;`](https://cplusplus.github.io/LWG/issue3305)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>C++26 -- &lt;cmath&gt;と&lt;complex&gt;のconstexpr対応 (close #1198)</title>
@@ -4097,61 +4141,6 @@ index fafe5223b..fd7340173 100644
       <author>
         <name>Akira Takahashi</name>
         <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>reserve -- basic_string/reserve: C++26 P2870R3対応 #1241</title>
-      <link href="https://cpprefjp.github.io/reference/string/basic_string/reserve.html"/>
-      <id>967d06055671f0abf021e727d7443ac9c573175d:reference/string/basic_string/reserve.md</id>
-      <updated>2024-01-22T21:20:18+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/basic_string/reserve.md b/reference/string/basic_string/reserve.md
-index 3c2533c2f..fafe5223b 100644
---- a/reference/string/basic_string/reserve.md
-+++ b/reference/string/basic_string/reserve.md
-@@ -5,7 +5,9 @@
- * function[meta id-type]
- 
- ```cpp
--void reserve(size_type res_arg = 0);       // (1) C++03 (C++20で非推奨化)
-+void reserve(size_type res_arg = 0);       // (1)+(2) C++03
-+
-+void reserve();  // (1) C++20で非推奨化, C++26で削除
- 
- constexpr void reserve(size_type res_arg); // (2) C++20
- ```
-@@ -29,12 +31,14 @@ constexpr void reserve(size_type res_arg); // (2) C++20
- 
- 
- ## 備考
--- C++03で`reserve`操作でのメモリの縮小ができたことは、以下の問題があった：
--    - パフォーマンスの罠となっていた。この関数に指定する引数の値を慎重に選ばなければ、予想外の動的な再確保によってパフォーマンスを低下させる原因となっていた
--    - 移植性の壁になっていた。メモリ縮小は実装に任せられたオプション機能であったため、環境による動作の違いがあった
--    - [`vector`](/reference/vector/vector.md)と`string`でのコードの汎用化がむずかしくなっていた。[`vector::reserve()`](/reference/vector/vector/reserve.md)はメモリ伸長のみをサポートしていたが、`string`側はメモリ縮小もサポートしていたため、引数の値を計算することが難しかった
--    - メモリ縮小のためには[`shrink_to_fit()`](shrink_to_fit.md)メンバ関数があるため、そちらと重複する機能をなくすこととした
--    - これらのことから、C++20では、メモリ縮小を許可しているように見えるデフォルト引数`0`を非推奨化し、メモリ縮小機能を効果から削除した
-+C++03で`reserve`操作でのメモリの縮小ができたことは、以下の問題があった：
-+
-+- パフォーマンスの罠となっていた。この関数に指定する引数の値を慎重に選ばなければ、予想外の動的な再確保によってパフォーマンスを低下させる原因となっていた
-+- 移植性の壁になっていた。メモリ縮小は実装に任せられたオプション機能であったため、環境による動作の違いがあった
-+- [`vector`](/reference/vector/vector.md)と`string`でのコードの汎用化がむずかしくなっていた。[`vector::reserve()`](/reference/vector/vector/reserve.md)はメモリ伸長のみをサポートしていたが、`string`側はメモリ縮小もサポートしていたため、引数の値を計算することが難しかった
-+- メモリ縮小のためには[`shrink_to_fit()`](shrink_to_fit.md)メンバ関数があるため、そちらと重複する機能であった
-+
-+これらのことから、C++20では、メモリ縮小を許可しているように見えるデフォルト引数`0`を非推奨化し、メモリ縮小機能を効果から削除した。
- 
- 
- ## 例
-@@ -70,3 +74,4 @@ int main()
- ## 参照
- - [P0966R1 `string::reserve` Should Not Shrink](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0966r1.html)
- - [P0980R1 Making `std::string` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0980r1.pdf)
-+- [P2870R3 Remove `basic_string::reserve()` From C++26](https://open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2870r3.pdf)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
       </author>
     </entry>
   
