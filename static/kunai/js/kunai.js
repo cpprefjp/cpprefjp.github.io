@@ -3169,8 +3169,8 @@ var Kunai = /*#__PURE__*/function () {
     this.opts = (0,esm_extends/* default */.Z)({}, Kunai.defaultOptions, opts); //this.log = new DefaultLogger()
 
     this.log = new ErrorLogger();
-    console.log("version ".concat({"version":"3.0.8","bugs_url":"https://github.com/cpprefjp/kunai/issues"}.version, " (https://github.com/cpprefjp/kunai/tree/v").concat({"version":"3.0.8","bugs_url":"https://github.com/cpprefjp/kunai/issues"}.version, ")"));
-    console.log("please report frontend bugs to: ".concat({"version":"3.0.8","bugs_url":"https://github.com/cpprefjp/kunai/issues"}.bugs_url));
+    console.log("version ".concat({"version":"3.0.9","bugs_url":"https://github.com/cpprefjp/kunai/issues"}.version, " (https://github.com/cpprefjp/kunai/tree/v").concat({"version":"3.0.9","bugs_url":"https://github.com/cpprefjp/kunai/issues"}.version, ")"));
+    console.log("please report frontend bugs to: ".concat({"version":"3.0.9","bugs_url":"https://github.com/cpprefjp/kunai/issues"}.bugs_url));
     this.ui = {
       navbar: null,
       sidebar: null,
