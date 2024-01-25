@@ -2,9 +2,50 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2024-01-25T03:58:42.656396</updated>
-  <id>695fa628-ea8f-4584-965e-8938c004fc68</id>
+  <updated>2024-01-25T04:10:22.012092</updated>
+  <id>012663ee-944a-4f5a-ba1e-5b05cb2cef21</id>
 
+  
+    <entry>
+      <title>thisポインタをもつ必要のない演算子をstaticとして宣言できるようにする -- C++23 static operator : 経緯とパフォーマンス効果を記載 #1029</title>
+      <link href="https://cpprefjp.github.io/lang/cpp23/static_operator.html"/>
+      <id>86e7cee1b8286f27dae89711ac474bc9affb2596:lang/cpp23/static_operator.md</id>
+      <updated>2024-01-25T13:07:02+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp23/static_operator.md b/lang/cpp23/static_operator.md
+index d7841cfb5..82da0f5a2 100644
+--- a/lang/cpp23/static_operator.md
++++ b/lang/cpp23/static_operator.md
+@@ -12,6 +12,8 @@
+ - `mutable`を同時に指定することはできない
+ - `const`メンバ関数ではなくなる
+ 
++これらを`static`として定義することで、演算子の呼び出しが高速化することを期待できる。
++
+ 
+ ## 例
+ ```cpp example
+@@ -40,6 +42,13 @@ int main()
+ 1
+ ```
+ 
++
++## この機能が必要になった背景・経緯
++関数オブジェクトは関数ポインタに比べてインライン化しやすいため、パフォーマンスで有利である。しかし、関数オブジェクトがなんらかの理由でインライン化されない場合に、`this`ポインタを渡すための余分なレジスタを使わなければならない。
++
++状態をもたない関数オブジェクトでは`this`ポインタの受け渡しは必要なく、無駄である。必要ないもののためにコストを支払わないという基本的な思想に反していたため、`this`ポインタの受け渡しをなくせる機能として、`static`指定の許可を導入した。
++
++
+ ## 関連項目
+ - [C++11 ラムダ式](/lang/cpp11/lambda_expressions.md)
+ - [`std::function::`推論補助](/reference/functional/function/op_deduction_guide.md)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>コンパイラの実装状況 -- C++23 : 「thisポインタをもつ必要のない演算子をstaticとして宣言できるようにする」を追加し関連ページを修正 (close #1029)</title>
@@ -9456,125 +9497,6 @@ index 000000000..2695381db
 +
 +## 参照
 +- [P2437R1 Support for `#warning`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2437r1.pdf)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator&lt;&lt; -- basic_ostream::operator&lt;&lt; : C++23対応として`const volatile void*`のオーバーロードを追加 (close #1059)</title>
-      <link href="https://cpprefjp.github.io/reference/ostream/basic_ostream/op_ostream.html"/>
-      <id>e189708950239c8c2374d1e56ea592644ef1aaab:reference/ostream/basic_ostream/op_ostream.md</id>
-      <updated>2024-01-24T15:22:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ostream/basic_ostream/op_ostream.md b/reference/ostream/basic_ostream/op_ostream.md
-index 6a1dfae91..80d49ad68 100644
---- a/reference/ostream/basic_ostream/op_ostream.md
-+++ b/reference/ostream/basic_ostream/op_ostream.md
-@@ -7,33 +7,33 @@
- ```cpp
- // マニピュレータの実行
- // 3つとも関数へのポインタを引数に取る。
-+basic_ostream&amp;amp;
-+  operator&amp;lt;&amp;lt;(basic_ostream&amp;amp; (*pf)(basic_ostream&amp;amp;));                       // (1) C++03
- basic_ostream&amp;lt;CharT, Traits&amp;gt;&amp;amp;
--  operator&amp;lt;&amp;lt;(basic_ostream&amp;lt;CharT, Traits&amp;gt;&amp;amp; (*pf)(basic_ostream&amp;lt;CharT, Traits&amp;gt;&amp;amp;)); // (1) C++03
-+  operator&amp;lt;&amp;lt;(basic_ios&amp;lt;CharT, Traits&amp;gt;&amp;amp; (*pf)(basic_ios&amp;lt;CharT, Traits&amp;gt;&amp;amp;)); // (2) C++03
- basic_ostream&amp;lt;CharT, Traits&amp;gt;&amp;amp;
--  operator&amp;lt;&amp;lt;(basic_ios&amp;lt;CharT, Traits&amp;gt;&amp;amp; (*pf)(basic_ios&amp;lt;CharT, Traits&amp;gt;&amp;amp;));         // (2) C++03
--basic_ostream&amp;lt;CharT, Traits&amp;gt;&amp;amp;
--  operator&amp;lt;&amp;lt;(ios_base&amp;amp; (*pf)(ios_base&amp;amp;));                                         // (3) C++03
-+  operator&amp;lt;&amp;lt;(ios_base&amp;amp; (*pf)(ios_base&amp;amp;));                                 // (3) C++03
- 
- // bool値・数値・ポインタの書式化出力
--basic_ostream&amp;lt;CharT, Traits&amp;gt;&amp;amp; operator&amp;lt;&amp;lt;(bool n);               // (4) C++03
--basic_ostream&amp;lt;CharT, Traits&amp;gt;&amp;amp; operator&amp;lt;&amp;lt;(short n);              // (5) C++03
--basic_ostream&amp;lt;CharT, Traits&amp;gt;&amp;amp; operator&amp;lt;&amp;lt;(unsigned short n);     // (6) C++03
--basic_ostream&amp;lt;CharT, Traits&amp;gt;&amp;amp; operator&amp;lt;&amp;lt;(int n);                // (7) C++03
--basic_ostream&amp;lt;CharT, Traits&amp;gt;&amp;amp; operator&amp;lt;&amp;lt;(unsigned int n);       // (8) C++03
--basic_ostream&amp;lt;CharT, Traits&amp;gt;&amp;amp; operator&amp;lt;&amp;lt;(long n);               // (9) C++03
--basic_ostream&amp;lt;CharT, Traits&amp;gt;&amp;amp; operator&amp;lt;&amp;lt;(unsigned long n);      // (10) C++03
--basic_ostream&amp;lt;CharT, Traits&amp;gt;&amp;amp; operator&amp;lt;&amp;lt;(long long n);          // (11) C++11
--basic_ostream&amp;lt;CharT, Traits&amp;gt;&amp;amp; operator&amp;lt;&amp;lt;(unsigned long long n); // (12) C++11
--basic_ostream&amp;lt;CharT, Traits&amp;gt;&amp;amp; operator&amp;lt;&amp;lt;(float f);              // (13) C++03
--basic_ostream&amp;lt;CharT, Traits&amp;gt;&amp;amp; operator&amp;lt;&amp;lt;(double f);             // (14) C++03
--basic_ostream&amp;lt;CharT, Traits&amp;gt;&amp;amp; operator&amp;lt;&amp;lt;(long double f);        // (15) C++03
--basic_ostream&amp;lt;CharT, Traits&amp;gt;&amp;amp;
--  operator&amp;lt;&amp;lt;(extended-floating-point-type f);                   // (16) C++23
--basic_ostream&amp;lt;CharT, Traits&amp;gt;&amp;amp; operator&amp;lt;&amp;lt;(const void* p);        // (17) C++03
--basic_ostream&amp;lt;charT, traits&amp;gt;&amp;amp; operator&amp;lt;&amp;lt;(nullptr_t);            // (18) C++17
-+basic_ostream&amp;amp; operator&amp;lt;&amp;lt;(bool n);                   // (4) C++03
-+basic_ostream&amp;amp; operator&amp;lt;&amp;lt;(short n);                  // (5) C++03
-+basic_ostream&amp;amp; operator&amp;lt;&amp;lt;(unsigned short n);         // (6) C++03
-+basic_ostream&amp;amp; operator&amp;lt;&amp;lt;(int n);                    // (7) C++03
-+basic_ostream&amp;amp; operator&amp;lt;&amp;lt;(unsigned int n);           // (8) C++03
-+basic_ostream&amp;amp; operator&amp;lt;&amp;lt;(long n);                   // (9) C++03
-+basic_ostream&amp;amp; operator&amp;lt;&amp;lt;(unsigned long n);          // (10) C++03
-+basic_ostream&amp;amp; operator&amp;lt;&amp;lt;(long long n);              // (11) C++11
-+basic_ostream&amp;amp; operator&amp;lt;&amp;lt;(unsigned long long n);     // (12) C++11
-+basic_ostream&amp;amp; operator&amp;lt;&amp;lt;(float f);                  // (13) C++03
-+basic_ostream&amp;amp; operator&amp;lt;&amp;lt;(double f);                 // (14) C++03
-+basic_ostream&amp;amp; operator&amp;lt;&amp;lt;(long double f);            // (15) C++03
-+basic_ostream&amp;amp; operator&amp;lt;&amp;lt;(extended-floating-point-type f); // (16) C++23
-+basic_ostream&amp;amp; operator&amp;lt;&amp;lt;(const void* p);            // (17) C++03
-+basic_ostream&amp;amp; operator&amp;lt;&amp;lt;(const volatile void* val); // (18) C++26
-+basic_ostream&amp;amp; operator&amp;lt;&amp;lt;(nullptr_t);                // (19) C++17
- 
- // ストリームバッファの非書式化出力
--basic_ostream&amp;lt;CharT, Traits&amp;gt;&amp;amp; operator&amp;lt;&amp;lt;(basic_streambuf&amp;lt;CharT, Traits&amp;gt;* sb); // (19) C++03
-+basic_ostream&amp;amp; operator&amp;lt;&amp;lt;(basic_streambuf&amp;lt;CharT, Traits&amp;gt;* sb); // (20) C++03
- ```
- * nullptr_t[link /reference/cstddef/nullptr_t.md]
- * extended-floating-point-type[link /reference/stdfloat.md]
-@@ -43,8 +43,8 @@ basic_ostream&amp;lt;CharT, Traits&amp;gt;&amp;amp; operator&amp;lt;&amp;lt;(basic_streambuf&amp;lt;CharT, Traits&amp;gt;* sb); //
- ストリームへの出力またはマニピュレータの実行を行う。
- 
- - (1)-(3) : マニピュレータを実行するオーバーロードそれ自体は、書式化出力関数・非書式化出力関数いずれにも該当しない
--- (4)-(18) : 数値型（`bool`も含む）とポインタに対するオーバーロードは、書式化出力関数である
--- (19) : `basic_streambuf`に対するオーバーロードは、非書式化出力関数である
-+- (4)-(19) : 数値型（`bool`も含む）とポインタに対するオーバーロードは、書式化出力関数である
-+- (20) : `basic_streambuf`に対するオーバーロードは、非書式化出力関数である
- 
- ## 効果
- 
-@@ -52,7 +52,7 @@ basic_ostream&amp;lt;CharT, Traits&amp;gt;&amp;amp; operator&amp;lt;&amp;lt;(basic_streambuf&amp;lt;CharT, Traits&amp;gt;* sb); //
- 
- 1. `pf(*this)`を呼び出す。
- 
--### (4)-(17) : bool値・数値・ポインタの書式化出力
-+### (4)-(18) : bool値・数値・ポインタの書式化出力
- 
- 1. `sentry`オブジェクトを構築する。`sentry`オブジェクトが失敗を示した場合、何もしない
- 1. `num_put::put`を使用して入力のパース・数値への変換を行う。実引数を渡すに際し、一部の型では以下のように型変換を行う
-@@ -69,15 +69,17 @@ basic_ostream&amp;lt;CharT, Traits&amp;gt;&amp;amp; operator&amp;lt;&amp;lt;(basic_streambuf&amp;lt;CharT, Traits&amp;gt;* sb); //
-         - 変換順位が`double`以下であれば、`static_cast&amp;lt;double&amp;gt;(f)`
-         - そうでなく変換順位が`long double`以下であれば、`static_cast&amp;lt;long double&amp;gt;(f)`
-         - そうでなければ実装定義の意味論を持ち、この演算子は条件付きサポートとなる
-+    - (18) `const volatile void*`:
-+        - `return operator&amp;lt;&amp;lt;(const_cast&amp;lt;const void*&amp;gt;(val));`
- 1. `num_put::put`から得られた`iostate`値を実引数にして`setstate`関数を呼び出す
- 
- 
--### (18) : `nullptr_t`の出力
-+### (19) : `nullptr_t`の出力
- 
- - C++17 : 実装定義の出力文字列`s`を、`return operator&amp;lt;&amp;lt;(s)`として渡した場合と等価である。
- 
- 
--### (19) : ストリームバッファの非書式化出力
-+### (20) : ストリームバッファの非書式化出力
- 
- 別のストリームバッファからの入力をストリームに出力する。
- 
-@@ -168,3 +170,5 @@ int main() {
- - [LWG Issue 2221. No formatted output operator for `nullptr`](https://wg21.cmeerw.net/lwg/issue2221)
- - [P1467R9 Extended floating-point types and standard names](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1467r9.html)
-     - C++23で拡張浮動小数点数型の`ostream`出力がサポートされた
-+- [P1147R1 Printing `volatile` Pointers](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p1147r1.html)
-+    - C++26で`const volatile void*`のオーバーロードが追加された
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
