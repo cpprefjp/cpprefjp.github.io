@@ -2,9 +2,64 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2024-01-30T08:25:28.987745</updated>
-  <id>8511476f-3f24-4d6e-8815-5c79238dbcb9</id>
+  <updated>2024-01-30T13:16:34.845788</updated>
+  <id>beb75c8d-0e04-4eb5-8fc1-fa4ee9a093ab</id>
 
+  
+    <entry>
+      <title>範囲for文が範囲初期化子内で生じた一時オブジェクトを延命することを規定 -- Update lifetime_extension_in_range_based_for_loop.md #1246</title>
+      <link href="https://cpprefjp.github.io/lang/cpp23/lifetime_extension_in_range_based_for_loop.html"/>
+      <id>6c5bf9be0d38330fdb3f611e9ac27894cab5e1a8:lang/cpp23/lifetime_extension_in_range_based_for_loop.md</id>
+      <updated>2024-01-30T22:13:14+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp23/lifetime_extension_in_range_based_for_loop.md b/lang/cpp23/lifetime_extension_in_range_based_for_loop.md
+index 7c8407e82..4265b36f1 100644
+--- a/lang/cpp23/lifetime_extension_in_range_based_for_loop.md
++++ b/lang/cpp23/lifetime_extension_in_range_based_for_loop.md
+@@ -45,21 +45,6 @@ U
+ B
+ ```
+ 
+-範囲for文の危険性を減らすだけではなく、この仕様はRAIIのためのオブジェクトを無名で作るのに使うことができる。
+-
+-```
+-// P2718R0より引用
+-void f() {
+-    std::vector&amp;lt;int&amp;gt; v = { 42, 17, 13 };
+-    std::mutex m;
+-    for (int x : static_cast&amp;lt;void&amp;gt;(std::lock_guard&amp;lt;std::mutex&amp;gt;(m)), v) {
+-        ...
+-    }
+-}
+-```
+-ここでは、カンマ演算子を活用して実際にイテレートする範囲とは別にロックを獲得している。
+-この一時オブジェクトは `for-range-initializer` の中で生じているから、範囲for文の終わりまでロックを維持できる。
+-
+ ## この機能が必要になった背景・経緯
+ 
+ 範囲for文をより安全に使えるように改善するために仕様が変更された。
+@@ -135,6 +120,9 @@ void foo() {
+ ここで未定義動作になることは範囲for文の危険性と無関係なので、寿命を延長するという解釈ができないようにこの例外規定が入った。
+ 
+ 議論:
++
++この例外規定の解釈は難解であり議論がある。
++
+ - この `t` は &amp;#34;一時オブジェクトの寿命が `for-range-initializer` 完全式の終わりではない場合&amp;#34; にも該当すると考えられる
+ - この `t` は、構文的に見ると `for-range-initializer` の中で生じたとは言えないという意見もある
+ - &amp;#34;`for-range-initializer` の中&amp;#34; を実行時のことだと解釈すると、そこから呼び出された関数の中なども含むことになるが、それを排除する規定が &amp;#34;一時オブジェクトの寿命が `for-range-initializer` 完全式の終わりではない場合&amp;#34; ではないか
+@@ -153,3 +141,4 @@ void foo() {
+ - [地に足のついた範囲for文 - 地面を見下ろす少年の足蹴にされる私](https://onihusube.hatenablog.com/entry/2022/12/05/000923)
+ - [範囲for文範囲初期化子内の一時オブジェクト延命の説明見直し
+  #1246](https://github.com/cpprefjp/site/issues/1246)
++- [Are function parameter objects temporary objects?](https://stackoverflow.com/questions/77676199/are-function-parameter-objects-temporary-objects/77676480)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>コンパイラの実装状況 -- C++23 : 「複合文の末尾へのラベルを許可」を追加 (close #1025)</title>
@@ -5095,188 +5150,6 @@ index 000000000..975f02e06
       <author>
         <name>Akira Takahashi</name>
         <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>transform -- 用語統一: 直接非リスト初期化(direct-non-list-initialization)</title>
-      <link href="https://cpprefjp.github.io/reference/expected/expected.void/transform.html"/>
-      <id>754290d816bc9ce131e4a3525b46ca68cd027be5:reference/expected/expected.void/transform.md</id>
-      <updated>2024-01-25T19:19:32+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/expected/expected.void/transform.md b/reference/expected/expected.void/transform.md
-index d8214747d..072960345 100644
---- a/reference/expected/expected.void/transform.md
-+++ b/reference/expected/expected.void/transform.md
-@@ -47,11 +47,11 @@ class expected {
- ## 効果
- - (1), (2) : 次の効果をもつ
-     - エラー値を保持していたら、`expected&amp;lt;U, E&amp;gt;(`[`unexpect`](../unexpect_t.md)`,` [`error()`](error.md)`)`を返す。
--    - 型`U`が（CV修飾された）`void`でなければ、正常値を[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f))`で非直接リスト初期化した`expected&amp;lt;U, E&amp;gt;`オブジェクトを返す。
-+    - 型`U`が（CV修飾された）`void`でなければ、正常値を[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f))`で直接非リスト初期化した`expected&amp;lt;U, E&amp;gt;`オブジェクトを返す。
-     - そうでなければ、[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f))`を評価し、`expected&amp;lt;U, E&amp;gt;()`を返す。
- - (3), (4) : 次の効果をもつ
-     - エラー値を保持していたら、`expected&amp;lt;U, E&amp;gt;(`[`unexpect`](../unexpect_t.md)`,` [`std::move`](/reference/utility/move.md)`(`[`error()`](error.md)`))`を返す。
--    - 型`U`が（CV修飾された）`void`でなければ、正常値を[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f))`で非直接リスト初期化した`expected&amp;lt;U, E&amp;gt;`オブジェクトを返す。
-+    - 型`U`が（CV修飾された）`void`でなければ、正常値を[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f))`で直接非リスト初期化した`expected&amp;lt;U, E&amp;gt;`オブジェクトを返す。
-     - そうでなければ、[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f))`を評価し、`expected&amp;lt;U, E&amp;gt;()`を返す。
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>transform_error -- 用語統一: 直接非リスト初期化(direct-non-list-initialization)</title>
-      <link href="https://cpprefjp.github.io/reference/expected/expected.void/transform_error.html"/>
-      <id>754290d816bc9ce131e4a3525b46ca68cd027be5:reference/expected/expected.void/transform_error.md</id>
-      <updated>2024-01-25T19:19:32+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/expected/expected.void/transform_error.md b/reference/expected/expected.void/transform_error.md
-index 07369cab1..5e9310a81 100644
---- a/reference/expected/expected.void/transform_error.md
-+++ b/reference/expected/expected.void/transform_error.md
-@@ -42,10 +42,10 @@ class expected {
- ## 効果
- - (1), (2) : 次の効果をもつ
-     - 正常値を保持していたら、`expected&amp;lt;T, G&amp;gt;()`を返す。
--    - そうでなければ、エラー値を[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f),` [`error()`](error.md)`)`で非直接リスト初期化した`expected&amp;lt;T, G&amp;gt;`オブジェクトを返す。
-+    - そうでなければ、エラー値を[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f),` [`error()`](error.md)`)`で直接非リスト初期化した`expected&amp;lt;T, G&amp;gt;`オブジェクトを返す。
- - (3), (4) : 次の効果をもつ
-     - 正常値を保持していたら、`expected&amp;lt;T, G&amp;gt;()`を返す。
--    - そうでなければ、エラー値を[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f),` [`std::move`](/reference/utility/move.md)`(`[`error()`](error.md)`))`で非直接リスト初期化した`expected&amp;lt;T, G&amp;gt;`オブジェクトを返す。
-+    - そうでなければ、エラー値を[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f),` [`std::move`](/reference/utility/move.md)`(`[`error()`](error.md)`))`で直接非リスト初期化した`expected&amp;lt;T, G&amp;gt;`オブジェクトを返す。
- 
- 
- ## 備考
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>transform -- 用語統一: 直接非リスト初期化(direct-non-list-initialization)</title>
-      <link href="https://cpprefjp.github.io/reference/expected/expected/transform.html"/>
-      <id>754290d816bc9ce131e4a3525b46ca68cd027be5:reference/expected/expected/transform.md</id>
-      <updated>2024-01-25T19:19:32+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/expected/expected/transform.md b/reference/expected/expected/transform.md
-index 74439250d..8a3259a49 100644
---- a/reference/expected/expected/transform.md
-+++ b/reference/expected/expected/transform.md
-@@ -46,11 +46,11 @@ class expected {
- ## 効果
- - (1), (2) : 次の効果をもつ
-     - エラー値を保持していたら、`expected&amp;lt;U, E&amp;gt;(`[`unexpect`](../unexpect_t.md)`,` [`error()`](error.md)`)`を返す。
--    - 型`U`が（CV修飾された）`void`でなければ、正常値を[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f),` [`value()`](value.md)`)`で非直接リスト初期化した`expected&amp;lt;U, E&amp;gt;`オブジェクトを返す。
-+    - 型`U`が（CV修飾された）`void`でなければ、正常値を[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f),` [`value()`](value.md)`)`で直接非リスト初期化した`expected&amp;lt;U, E&amp;gt;`オブジェクトを返す。
-     - そうでなければ、[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f),` [`value()`](value.md)`)`を評価し、`expected&amp;lt;U, E&amp;gt;()`を返す。
- - (3), (4) : 次の効果をもつ
-     - エラー値を保持していたら、`expected&amp;lt;U, E&amp;gt;(`[`unexpect`](../unexpect_t.md)`,` [`std::move`](/reference/utility/move.md)`(`[`error()`](error.md)`))`を返す。
--    - 型`U`が（CV修飾された）`void`でなければ、正常値を[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f),` [`std::move`](/reference/utility/move.md)`(`[`value()`](value.md)`))`で非直接リスト初期化した`expected&amp;lt;U, E&amp;gt;`オブジェクトを返す。
-+    - 型`U`が（CV修飾された）`void`でなければ、正常値を[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f),` [`std::move`](/reference/utility/move.md)`(`[`value()`](value.md)`))`で直接非リスト初期化した`expected&amp;lt;U, E&amp;gt;`オブジェクトを返す。
-     - そうでなければ、[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f),` [`std::move`](/reference/utility/move.md)`(`[`value()`](value.md)`))`を評価し、`expected&amp;lt;U, E&amp;gt;()`を返す。
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>transform_error -- 用語統一: 直接非リスト初期化(direct-non-list-initialization)</title>
-      <link href="https://cpprefjp.github.io/reference/expected/expected/transform_error.html"/>
-      <id>754290d816bc9ce131e4a3525b46ca68cd027be5:reference/expected/expected/transform_error.md</id>
-      <updated>2024-01-25T19:19:32+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/expected/expected/transform_error.md b/reference/expected/expected/transform_error.md
-index e9edfd948..d36c518c9 100644
---- a/reference/expected/expected/transform_error.md
-+++ b/reference/expected/expected/transform_error.md
-@@ -46,10 +46,10 @@ class expected {
- ## 効果
- - (1), (2) : 次の効果をもつ
-     - 正常値を保持していたら、`expected&amp;lt;T, G&amp;gt;(`[`in_place`](/reference/utility/in_place_t.md)`,` [`value()`](value.md)`)`を返す。
--    - そうでなければ、エラー値を[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f),` [`error()`](error.md)`)`で非直接リスト初期化した`expected&amp;lt;T, G&amp;gt;`オブジェクトを返す。
-+    - そうでなければ、エラー値を[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f),` [`error()`](error.md)`)`で直接非リスト初期化した`expected&amp;lt;T, G&amp;gt;`オブジェクトを返す。
- - (3), (4) : 次の効果をもつ
-     - 正常値を保持していたら、`expected&amp;lt;T, G&amp;gt;(`[`in_place`](/reference/utility/in_place_t.md)`,` [`std::move`](/reference/utility/move.md)`(`[`value()`](value.md)`))`を返す。
--    - そうでなければ、エラー値を[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f),` [`std::move`](/reference/utility/move.md)`(`[`error()`](error.md)`))`で非直接リスト初期化した`expected&amp;lt;T, G&amp;gt;`オブジェクトを返す。
-+    - そうでなければ、エラー値を[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f),` [`std::move`](/reference/utility/move.md)`(`[`error()`](error.md)`))`で直接非リスト初期化した`expected&amp;lt;T, G&amp;gt;`オブジェクトを返す。
- 
- 
- ## 備考
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>yield_value -- 用語統一: 直接非リスト初期化(direct-non-list-initialization)</title>
-      <link href="https://cpprefjp.github.io/reference/generator/generator/promise_type/yield_value.html"/>
-      <id>754290d816bc9ce131e4a3525b46ca68cd027be5:reference/generator/generator/promise_type/yield_value.md</id>
-      <updated>2024-01-25T19:19:32+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/generator/generator/promise_type/yield_value.md b/reference/generator/generator/promise_type/yield_value.md
-index 4befc49be..0bf6d5bff 100644
---- a/reference/generator/generator/promise_type/yield_value.md
-+++ b/reference/generator/generator/promise_type/yield_value.md
-@@ -79,7 +79,7 @@ return yield_value(ranges::elements_of(nested(
- 
- ## 戻り値
- - (1) : [`suspend_always{}`](/reference/coroutine/suspend_always.md)
--- (2) : `lval`を用いて直接非リスト初期化(direct-non-list-initialized)された[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;`[`yielded`](../../generator.md)`&amp;gt;`型オブジェクトを保持し、[説明専用メンバ`value_`](../promise_type.md)が保持されたオブジェクトを指してコルーチンを中断(suspend)するメンバ関数をもつ、未規定の型の[Awaitableオブジェクト](/lang/cpp20/coroutines.md)。
-+- (2) : `lval`を用いて直接非リスト初期化された[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;`[`yielded`](../../generator.md)`&amp;gt;`型オブジェクトを保持し、[説明専用メンバ`value_`](../promise_type.md)が保持されたオブジェクトを指してコルーチンを中断(suspend)するメンバ関数をもつ、未規定の型の[Awaitableオブジェクト](/lang/cpp20/coroutines.md)。
- - (3) : ジェネレータ`g.range`の所有権を受け取り、メンバ関数`await_ready`は`false`を返し、メンバ関数`await_suspend`は`x`のアクティブスタックに`g.range`に対応する[コルーチンハンドル](/reference/coroutine/coroutine_handle.md)をpushしてから`g.range`を再開(resume)し、メンバ関数`await_resume`は[説明専用メンバ`except_`](../promise_type.md)が例外を保持している場合に[`rethrow_exception`](/reference/exception/rethrow_exception.md)`(except_)`を行う、未規定の型の[Awaitableオブジェクト](/lang/cpp20/coroutines.md)。
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>transform -- 用語統一: 直接非リスト初期化(direct-non-list-initialization)</title>
-      <link href="https://cpprefjp.github.io/reference/optional/optional/transform.html"/>
-      <id>754290d816bc9ce131e4a3525b46ca68cd027be5:reference/optional/optional/transform.md</id>
-      <updated>2024-01-25T19:19:32+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/optional/optional/transform.md b/reference/optional/optional/transform.md
-index b6206e071..17ceb6323 100644
---- a/reference/optional/optional/transform.md
-+++ b/reference/optional/optional/transform.md
-@@ -45,8 +45,8 @@ class optional {
- 
- 
- ## 効果
--- (1), (3) : `*this`が有効値を保持するときは、[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f),` [`value()`](value.md)`)`で非リスト初期化した`optional&amp;lt;U&amp;gt;`オブジェクトを返す。有効値を保持しないときは、`optional&amp;lt;U&amp;gt;()`を返す。
--- (2), (4) : `*this`が有効値を保持するときは、[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f),` [`std::move`](/reference/utility/move.md)`(`[`value()`](value.md)`))`で非リスト初期化した`optional&amp;lt;U&amp;gt;`オブジェクトを返す。有効値を保持しないときは、`optional&amp;lt;U&amp;gt;()`を返す。
-+- (1), (3) : `*this`が有効値を保持するときは、[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f),` [`value()`](value.md)`)`で直接非リスト初期化した`optional&amp;lt;U&amp;gt;`オブジェクトを返す。有効値を保持しないときは、`optional&amp;lt;U&amp;gt;()`を返す。
-+- (2), (4) : `*this`が有効値を保持するときは、[`invoke`](/reference/functional/invoke.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;F&amp;gt;(f),` [`std::move`](/reference/utility/move.md)`(`[`value()`](value.md)`))`で直接非リスト初期化した`optional&amp;lt;U&amp;gt;`オブジェクトを返す。有効値を保持しないときは、`optional&amp;lt;U&amp;gt;()`を返す。
- 
- 
- ## 備考
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
       </author>
     </entry>
   
