@@ -2,9 +2,490 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2024-02-08T14:38:31.099448</updated>
-  <id>4950dd3f-3ef7-4a5d-bd8e-92513bf12268</id>
+  <updated>2024-02-08T15:30:43.184343</updated>
+  <id>161cce08-82a1-474a-a36d-c9fe36ae0f35</id>
 
+  
+    <entry>
+      <title>mapping -- mdspan: submdspan_mapping(#1201)</title>
+      <link href="https://cpprefjp.github.io/reference/mdspan/layout_left/mapping.html"/>
+      <id>e24da0372c3ec0575ea9cbfe339b496125eb398f:reference/mdspan/layout_left/mapping.md</id>
+      <updated>2024-02-09T00:27:13+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/mdspan/layout_left/mapping.md b/reference/mdspan/layout_left/mapping.md
+index 352ea08d4..eb1e7669a 100644
+--- a/reference/mdspan/layout_left/mapping.md
++++ b/reference/mdspan/layout_left/mapping.md
+@@ -76,7 +76,7 @@ namespace std {
+ 
+ | 名前 | 説明 | 対応バージョン |
+ |------|------|----------------|
+-| [`submdspan_mapping`](mapping/submdspan_mapping.md.nolink) | [`submdspan`](../submdspan.md)サポート | C++26 |
++| [`submdspan_mapping`](mapping/submdspan_mapping.md) | [`submdspan`](../submdspan.md)サポート | C++26 |
+ 
+ ### 比較演算子
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>submdspan_mapping -- mdspan: submdspan_mapping(#1201)</title>
+      <link href="https://cpprefjp.github.io/reference/mdspan/layout_left/mapping/submdspan_mapping.html"/>
+      <id>e24da0372c3ec0575ea9cbfe339b496125eb398f:reference/mdspan/layout_left/mapping/submdspan_mapping.md</id>
+      <updated>2024-02-09T00:27:13+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/mdspan/layout_left/mapping/submdspan_mapping.md b/reference/mdspan/layout_left/mapping/submdspan_mapping.md
+new file mode 100644
+index 000000000..874fe9b30
+--- /dev/null
++++ b/reference/mdspan/layout_left/mapping/submdspan_mapping.md
+@@ -0,0 +1,87 @@
++# submdspan_mapping
++* mdspan[meta header]
++* function template[meta id-type]
++* std[meta namespace]
++* layout_left::mapping[meta class]
++* cpp23[meta cpp]
++
++```cpp
++template&amp;lt;class... SliceSpecifiers&amp;gt;
++constexpr auto submdspan-mapping-impl(  // exposition only
++  SliceSpecifiers ... slices) const -&amp;gt; see below;
++
++template&amp;lt;class... SliceSpecifiers&amp;gt;
++friend constexpr auto submdspan_mapping(
++  const mapping&amp;amp; src, SliceSpecifiers... slices)
++{
++  return src.submdspan-mapping-impl(slices...);
++}
++```
++* see below[italic]
++* submdspan-mapping-impl[italic]
++
++## 概要
++[`submdspan`](../../submdspan.md)関数をサポートするためのカスタマイゼーションポイント。
++
++説明用の型`index_type`を[`Extents::index_type`](../../extents.md)、型`S_k`を`SliceSpecifiers`の`k`番目の型とする。
++
++
++## テンプレートパラメータ制約
++`sizeof...(slices)`が[`Extents::rank()`](../../extents/rank.md)と等しいこと。
++
++
++## 適格要件
++`extents()`の各次元インデクス`k`において、下記いずれかのうち1つだけを満たすこと。
++
++- 型`S_k`が[`convertible_to`](/reference/concepts/convertible_to.md)`&amp;lt;index_type&amp;gt;`のモデル
++- 型`S_k`が[`index-pair-like`](../../index-pair-like.md)`&amp;lt;index_type&amp;gt;`のモデル
++- [`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S_k,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`が`true`
++- 型`S_k`が[`strided_slice`](../../strided_slice.md)の特殊化
++
++
++## 事前条件
++`extents()`の各次元インデクス`k`において、`s_k`を`slices`の`k`番目の値としたとき、下記を全て満たすこと。
++
++- 型`S_k`が[`strided_slice`](../../strided_slice.md)の特殊化のとき
++    - `s_k.extent == 0`、または
++    - `s_k.stride &amp;gt; 0`
++- `0` ≤ [`first_`](../../first_.md)`&amp;lt;index_type, k&amp;gt;(slices...)` ≤ [`last_`](../../last_.md)`&amp;lt;k&amp;gt;(extents(), slices...)` ≤ `extents().`[`extent(k)`](../../extents/extent.md)
++
++
++## 戻り値
++説明用の値や型を次の通り定義する。
++
++- 値`sub_ext` : 式[`submdspan_extents`](../../submdspan_extents.md)`(extents(), slices...)`の結果
++- 型`SubExtents` : `decltype(sub_ext)`
++- 値`sub_strides` : `extents()`の各次元インデクス`k`において、[`map-rank[k]`](../../submdspan_extents.md)が[`dynamic_extent`](/reference/span/dynamic_extent.md)ではない`k`に対し`sub_strides[map-rank[k]]`が下記を満たす、[`array`](/reference/array/array.md)`&amp;lt;SubExtents::index_type,` [`SubExtents::rank()`](../../extents/rank.md)`&amp;gt;`型の配列値
++    - 型`S_k`が[`strided_slice`](../../strided_slice.md)の特殊化かつ`s_k.stride &amp;lt; s_k.extent`の場合、[`stride(k)`](stride.md) `*` [`de-ice`](../../de-ice.md)`(s_k.stride)`
++    - そうでなければ、[`stride(k)`](stride.md)
++- パラメータパック`P` : [`is_same_v`](/reference/type_traits/is_same.md)`&amp;lt;`[`make_index_sequence`](/reference/utility/make_index_sequence.md)`&amp;lt;rank()&amp;gt;,` [`index_sequence`](/reference/utility/index_sequence.md)`&amp;lt;P...&amp;gt;&amp;gt; == true`
++- 値`offset` : `size_t`型の値[`(*this)`](op_call.md)`(`[`first_`](../../first_.md)`&amp;lt;index_type, P&amp;gt;(slices...)...)`
++
++説明専用の`submdspan-mapping-impl`関数テンプレートは下記の値を返す。
++
++- [`Extents::rank()`](../../extents/rank.md) `== 0`のとき、[`submdspan_mapping_result`](../../submdspan_mapping_result.md)`{*this, 0}`
++- 以下を満たすとき、[`submdspan_mapping_result`](../../submdspan_mapping_result.md)`{`[`layout_left::mapping`](../../layout_left.md)`(sub_ext), offset}`
++    - 半開区間`[0, SubExtents::rank()-1)`の値`k`に対して、[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S_k,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`が`true`、かつ
++    - `SubExtents::rank()-1`に等しい値`k`に対して、型`S_k`が[`index-pair-like`](../../index-pair-like.md)`&amp;lt;index_type&amp;gt;`のモデルもしくは[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S_k,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`が`true`
++- [`submdspan_mapping_result`](../../submdspan_mapping_result.md)`{`[`layout_stride::mapping`](../../layout_stride.md)`(sub_ext, sub_strides), offset}`
++
++
++## バージョン
++### 言語
++- C++23
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): ??
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 関連項目
++- [`submdspan`](../../submdspan.md)
++
++
++## 参照
++- [P2630R4 Submdspan](https://open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2630r4.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>mapping -- mdspan: submdspan_mapping(#1201)</title>
+      <link href="https://cpprefjp.github.io/reference/mdspan/layout_right/mapping.html"/>
+      <id>e24da0372c3ec0575ea9cbfe339b496125eb398f:reference/mdspan/layout_right/mapping.md</id>
+      <updated>2024-02-09T00:27:13+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/mdspan/layout_right/mapping.md b/reference/mdspan/layout_right/mapping.md
+index 9106e58bf..e3c563a70 100644
+--- a/reference/mdspan/layout_right/mapping.md
++++ b/reference/mdspan/layout_right/mapping.md
+@@ -76,7 +76,7 @@ namespace std {
+ 
+ | 名前 | 説明 | 対応バージョン |
+ |------|------|----------------|
+-| [`submdspan_mapping`](mapping/submdspan_mapping.md.nolink) | [`submdspan`](../submdspan.md)サポート | C++26 |
++| [`submdspan_mapping`](mapping/submdspan_mapping.md) | [`submdspan`](../submdspan.md)サポート | C++26 |
+ 
+ ### 比較演算子
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>submdspan_mapping -- mdspan: submdspan_mapping(#1201)</title>
+      <link href="https://cpprefjp.github.io/reference/mdspan/layout_right/mapping/submdspan_mapping.html"/>
+      <id>e24da0372c3ec0575ea9cbfe339b496125eb398f:reference/mdspan/layout_right/mapping/submdspan_mapping.md</id>
+      <updated>2024-02-09T00:27:13+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/mdspan/layout_right/mapping/submdspan_mapping.md b/reference/mdspan/layout_right/mapping/submdspan_mapping.md
+new file mode 100644
+index 000000000..e7669a672
+--- /dev/null
++++ b/reference/mdspan/layout_right/mapping/submdspan_mapping.md
+@@ -0,0 +1,87 @@
++# submdspan_mapping
++* mdspan[meta header]
++* function template[meta id-type]
++* std[meta namespace]
++* layout_right::mapping[meta class]
++* cpp23[meta cpp]
++
++```cpp
++template&amp;lt;class... SliceSpecifiers&amp;gt;
++constexpr auto submdspan-mapping-impl(  // exposition only
++  SliceSpecifiers ... slices) const -&amp;gt; see below;
++
++template&amp;lt;class... SliceSpecifiers&amp;gt;
++friend constexpr auto submdspan_mapping(
++  const mapping&amp;amp; src, SliceSpecifiers... slices)
++{
++  return src.submdspan-mapping-impl(slices...);
++}
++```
++* see below[italic]
++* submdspan-mapping-impl[italic]
++
++## 概要
++[`submdspan`](../../submdspan.md)関数をサポートするためのカスタマイゼーションポイント。
++
++説明用の型`index_type`を[`Extents::index_type`](../../extents.md)、型`S_k`を`SliceSpecifiers`の`k`番目の型とする。
++
++
++## テンプレートパラメータ制約
++`sizeof...(slices)`が[`Extents::rank()`](../../extents/rank.md)と等しいこと。
++
++
++## 適格要件
++`extents()`の各次元インデクス`k`において、下記いずれかのうち1つだけを満たすこと。
++
++- 型`S_k`が[`convertible_to`](/reference/concepts/convertible_to.md)`&amp;lt;index_type&amp;gt;`のモデル
++- 型`S_k`が[`index-pair-like`](../../index-pair-like.md)`&amp;lt;index_type&amp;gt;`のモデル
++- [`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S_k,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`が`true`
++- 型`S_k`が[`strided_slice`](../../strided_slice.md)の特殊化
++
++
++## 事前条件
++`extents()`の各次元インデクス`k`において、`s_k`を`slices`の`k`番目の値としたとき、下記を全て満たすこと。
++
++- 型`S_k`が[`strided_slice`](../../strided_slice.md)の特殊化のとき
++    - `s_k.extent == 0`、または
++    - `s_k.stride &amp;gt; 0`
++- `0` ≤ [`first_`](../../first_.md)`&amp;lt;index_type, k&amp;gt;(slices...)` ≤ [`last_`](../../last_.md)`&amp;lt;k&amp;gt;(extents(), slices...)` ≤ `extents().`[`extent(k)`](../../extents/extent.md)
++
++
++## 戻り値
++説明用の値や型を次の通り定義する。
++
++- 値`sub_ext` : 式[`submdspan_extents`](../../submdspan_extents.md)`(extents(), slices...)`の結果
++- 型`SubExtents` : `decltype(sub_ext)`
++- 値`sub_strides` : `extents()`の各次元インデクス`k`において、[`map-rank[k]`](../../submdspan_extents.md)が[`dynamic_extent`](/reference/span/dynamic_extent.md)ではない`k`に対し`sub_strides[map-rank[k]]`が下記を満たす、[`array`](/reference/array/array.md)`&amp;lt;SubExtents::index_type,` [`SubExtents::rank()`](../../extents/rank.md)`&amp;gt;`型の配列値
++    - 型`S_k`が[`strided_slice`](../../strided_slice.md)の特殊化かつ`s_k.stride &amp;lt; s_k.extent`の場合、[`stride(k)`](stride.md) `*` [`de-ice`](../../de-ice.md)`(s_k.stride)`
++    - そうでなければ、[`stride(k)`](stride.md)
++- パラメータパック`P` : [`is_same_v`](/reference/type_traits/is_same.md)`&amp;lt;`[`make_index_sequence`](/reference/utility/make_index_sequence.md)`&amp;lt;rank()&amp;gt;,` [`index_sequence`](/reference/utility/index_sequence.md)`&amp;lt;P...&amp;gt;&amp;gt; == true`
++- 値`offset` : `size_t`型の値[`(*this)`](op_call.md)`(`[`first_`](../../first_.md)`&amp;lt;index_type, P&amp;gt;(slices...)...)`
++
++説明専用の`submdspan-mapping-impl`関数テンプレートは下記の値を返す。
++
++- [`Extents::rank()`](../../extents/rank.md) `== 0`のとき、[`submdspan_mapping_result`](../../submdspan_mapping_result.md)`{*this, 0}`
++- 以下を満たすとき、[`submdspan_mapping_result`](../../submdspan_mapping_result.md)`{`[`layout_right::mapping`](../../layout_right.md)`(sub_ext), offset}`
++    - 半開区間`[Extents::rank() - SubExtents::rank()+1, Extents::rank())`の値`k`に対して、[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S_k,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`が`true`、かつ
++    - `Extents::rank()-SubExtents::rank()`に等しい値`k`に対して、型`S_k`が[`index-pair-like`](../../index-pair-like.md)`&amp;lt;index_type&amp;gt;`のモデルもしくは[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S_k,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`が`true`
++- [`submdspan_mapping_result`](../../submdspan_mapping_result.md)`{`[`layout_stride::mapping`](../../layout_stride.md)`(sub_ext, sub_strides), offset}`
++
++
++## バージョン
++### 言語
++- C++23
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): ??
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 関連項目
++- [`submdspan`](../../submdspan.md)
++
++
++## 参照
++- [P2630R4 Submdspan](https://open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2630r4.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>mapping -- mdspan: submdspan_mapping(#1201)</title>
+      <link href="https://cpprefjp.github.io/reference/mdspan/layout_stride/mapping.html"/>
+      <id>e24da0372c3ec0575ea9cbfe339b496125eb398f:reference/mdspan/layout_stride/mapping.md</id>
+      <updated>2024-02-09T00:27:13+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/mdspan/layout_stride/mapping.md b/reference/mdspan/layout_stride/mapping.md
+index 5907bf367..d387ad12f 100644
+--- a/reference/mdspan/layout_stride/mapping.md
++++ b/reference/mdspan/layout_stride/mapping.md
+@@ -78,7 +78,7 @@ namespace std {
+ 
+ | 名前 | 説明 | 対応バージョン |
+ |------|------|----------------|
+-| [`submdspan_mapping`](mapping/submdspan_mapping.md.nolink) | [`submdspan`](../submdspan.md)サポート | C++26 |
++| [`submdspan_mapping`](mapping/submdspan_mapping.md) | [`submdspan`](../submdspan.md)サポート | C++26 |
+ 
+ ### 比較演算子
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>submdspan_mapping -- mdspan: submdspan_mapping(#1201)</title>
+      <link href="https://cpprefjp.github.io/reference/mdspan/layout_stride/mapping/submdspan_mapping.html"/>
+      <id>e24da0372c3ec0575ea9cbfe339b496125eb398f:reference/mdspan/layout_stride/mapping/submdspan_mapping.md</id>
+      <updated>2024-02-09T00:27:13+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/mdspan/layout_stride/mapping/submdspan_mapping.md b/reference/mdspan/layout_stride/mapping/submdspan_mapping.md
+new file mode 100644
+index 000000000..d66c72281
+--- /dev/null
++++ b/reference/mdspan/layout_stride/mapping/submdspan_mapping.md
+@@ -0,0 +1,84 @@
++# submdspan_mapping
++* mdspan[meta header]
++* function template[meta id-type]
++* std[meta namespace]
++* layout_stride::mapping[meta class]
++* cpp23[meta cpp]
++
++```cpp
++template&amp;lt;class... SliceSpecifiers&amp;gt;
++constexpr auto submdspan-mapping-impl(  // exposition only
++  SliceSpecifiers ... slices) const -&amp;gt; see below;
++
++template&amp;lt;class... SliceSpecifiers&amp;gt;
++friend constexpr auto submdspan_mapping(
++  const mapping&amp;amp; src, SliceSpecifiers... slices)
++{
++  return src.submdspan-mapping-impl(slices...);
++}
++```
++* see below[italic]
++* submdspan-mapping-impl[italic]
++
++## 概要
++[`submdspan`](../../submdspan.md)関数をサポートするためのカスタマイゼーションポイント。
++
++説明用の型`index_type`を[`Extents::index_type`](../../extents.md)、型`S_k`を`SliceSpecifiers`の`k`番目の型とする。
++
++
++## テンプレートパラメータ制約
++`sizeof...(slices)`が[`Extents::rank()`](../../extents/rank.md)と等しいこと。
++
++
++## 適格要件
++`extents()`の各次元インデクス`k`において、下記いずれかのうち1つだけを満たすこと。
++
++- 型`S_k`が[`convertible_to`](/reference/concepts/convertible_to.md)`&amp;lt;index_type&amp;gt;`のモデル
++- 型`S_k`が[`index-pair-like`](../../index-pair-like.md)`&amp;lt;index_type&amp;gt;`のモデル
++- [`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S_k,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`が`true`
++- 型`S_k`が[`strided_slice`](../../strided_slice.md)の特殊化
++
++
++## 事前条件
++`extents()`の各次元インデクス`k`において、`s_k`を`slices`の`k`番目の値としたとき、下記を全て満たすこと。
++
++- 型`S_k`が[`strided_slice`](../../strided_slice.md)の特殊化のとき
++    - `s_k.extent == 0`、または
++    - `s_k.stride &amp;gt; 0`
++- `0` ≤ [`first_`](../../first_.md)`&amp;lt;index_type, k&amp;gt;(slices...)` ≤ [`last_`](../../last_.md)`&amp;lt;k&amp;gt;(extents(), slices...)` ≤ `extents().`[`extent(k)`](../../extents/extent.md)
++
++
++## 戻り値
++説明用の値や型を次の通り定義する。
++
++- 値`sub_ext` : 式[`submdspan_extents`](../../submdspan_extents.md)`(extents(), slices...)`の結果
++- 型`SubExtents` : `decltype(sub_ext)`
++- 値`sub_strides` : `extents()`の各次元インデクス`k`において、[`map-rank[k]`](../../submdspan_extents.md)が[`dynamic_extent`](/reference/span/dynamic_extent.md)ではない`k`に対し`sub_strides[map-rank[k]]`が下記を満たす、[`array`](/reference/array/array.md)`&amp;lt;SubExtents::index_type,` [`SubExtents::rank()`](../../extents/rank.md)`&amp;gt;`型の配列値
++    - 型`S_k`が[`strided_slice`](../../strided_slice.md)の特殊化かつ`s_k.stride &amp;lt; s_k.extent`の場合、[`stride(k)`](stride.md) `*` [`de-ice`](../../de-ice.md)`(s_k.stride)`
++    - そうでなければ、[`stride(k)`](stride.md)
++- パラメータパック`P` : [`is_same_v`](/reference/type_traits/is_same.md)`&amp;lt;`[`make_index_sequence`](/reference/utility/make_index_sequence.md)`&amp;lt;rank()&amp;gt;,` [`index_sequence`](/reference/utility/index_sequence.md)`&amp;lt;P...&amp;gt;&amp;gt; == true`
++- 値`offset` : `size_t`型の値[`(*this)`](op_call.md)`(`[`first_`](../../first_.md)`&amp;lt;index_type, P&amp;gt;(slices...)...)`
++
++説明専用の`submdspan-mapping-impl`関数テンプレートは下記の値を返す。
++
++- [`Extents::rank()`](../../extents/rank.md) `== 0`のとき、[`submdspan_mapping_result`](../../submdspan_mapping_result.md)`{*this, 0}`
++- [`submdspan_mapping_result`](../../submdspan_mapping_result.md)`{`[`layout_stride::mapping`](../../layout_stride.md)`(sub_ext, sub_strides), offset}`
++
++
++## バージョン
++### 言語
++- C++23
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): ??
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 関連項目
++- [`submdspan`](../../submdspan.md)
++
++
++## 参照
++- [P2630R4 Submdspan](https://open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2630r4.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>submdspan -- mdspan: submdspan_mapping(#1201)</title>
+      <link href="https://cpprefjp.github.io/reference/mdspan/submdspan.html"/>
+      <id>e24da0372c3ec0575ea9cbfe339b496125eb398f:reference/mdspan/submdspan.md</id>
+      <updated>2024-02-09T00:27:13+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/mdspan/submdspan.md b/reference/mdspan/submdspan.md
+index f888eace8..73d41e563 100644
+--- a/reference/mdspan/submdspan.md
++++ b/reference/mdspan/submdspan.md
+@@ -35,6 +35,9 @@ namespace std {
+ - ストライド・スライス指定 : [`std::strided_slice`](strided_slice.md)の値。オフセット(offset)と要素数(extent)とストライド幅(stride)で指定される要素群を取り出す。
+ - 全要素指定 : [`std::full_extent`](full_extent_t.md)。指定次元の全要素を取り出す。
+ 
++### カスタマイゼーションポイント
++`submdspan`関数により[`mdspan`](mdspan.md)から部分ビューを取り出すには、変換元の[レイアウトマッピング型](LayoutMapping.md)がカスタマイゼーションポイント`submdspan_mapping`を実装している必要がある。
++
+ 
+ ## テンプレートパラメータ制約
+ - `sizeof...(slices)`が[`Extents::rank()`](extents/rank.md)と等しく、かつ
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>submdspan_extents -- mdspan: submdspan_mapping(#1201)</title>
+      <link href="https://cpprefjp.github.io/reference/mdspan/submdspan_extents.html"/>
+      <id>e24da0372c3ec0575ea9cbfe339b496125eb398f:reference/mdspan/submdspan_extents.md</id>
+      <updated>2024-02-09T00:27:13+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/mdspan/submdspan_extents.md b/reference/mdspan/submdspan_extents.md
+index bcdf8b9db..13ba564f8 100644
+--- a/reference/mdspan/submdspan_extents.md
++++ b/reference/mdspan/submdspan_extents.md
+@@ -15,6 +15,8 @@ namespace std {
+ ## 概要
+ 多次元配列サイズ[`extents`](extents.md)と各次元からの要素取り出し（スライス）方式を指定して、新しい多次元配列サイズ[`extents`](extents.md)を取得する。
+ 
++各次元からの要素取り出し方式は、[`submdspan`](submdspan.md)を参照のこと。
++
+ ### 動作説明用
+ - 型`S_k` : `SliceSpecifiers`の`k`番目の型
+ - 値`s_k` : `slices`の`k`番目の値
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>submdspan_mapping_result -- mdspan: submdspan_mapping(#1201)</title>
+      <link href="https://cpprefjp.github.io/reference/mdspan/submdspan_mapping_result.html"/>
+      <id>e24da0372c3ec0575ea9cbfe339b496125eb398f:reference/mdspan/submdspan_mapping_result.md</id>
+      <updated>2024-02-09T00:27:13+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/mdspan/submdspan_mapping_result.md b/reference/mdspan/submdspan_mapping_result.md
+index 78ec62a1c..be6cfcd48 100644
+--- a/reference/mdspan/submdspan_mapping_result.md
++++ b/reference/mdspan/submdspan_mapping_result.md
+@@ -17,7 +17,7 @@ namespace std {
+ * no_unique_address[link /lang/cpp20/language_support_for_empty_objects.md]
+ 
+ ## 概要
+-`submdspan_mapping_result`は、多次元配列ビュー[mdspan](mdspan.md)からの部分ビュー[`submdspan`](submdspan.md)取り出しサポートのために定義するカスタマイズポイント`submdspan_mapping`の戻り値型である。
++`submdspan_mapping_result`は、多次元配列ビュー[mdspan](mdspan.md)からの部分ビュー[`submdspan`](submdspan.md)取り出しサポートのために定義するカスタマイゼーションポイント`submdspan_mapping`の戻り値型である。
+ 
+ - `mapping` : 多次元配列部分ビューの[レイアウトマッピング](LayoutMapping.md)
+ - `offset` : 多次元配列部分ビューの要素オフセット位置
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>コンパイラの実装状況 -- C++23 : 「行末スペースを無視するよう規定」を追加 (close #1048)</title>
@@ -6944,41 +7425,6 @@ index 000000000..db1632503
       <author>
         <name>Akira Takahashi</name>
         <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>fold_left_with_iter -- fold_left_with_iter : 実装例修正</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_fold_left_with_iter.html"/>
-      <id>c7c70e6bc9b62d293679e86936ad8841fb2b802e:reference/algorithm/ranges_fold_left_with_iter.md</id>
-      <updated>2024-02-07T10:22:16+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_fold_left_with_iter.md b/reference/algorithm/ranges_fold_left_with_iter.md
-index 8ad351294..c938670c2 100644
---- a/reference/algorithm/ranges_fold_left_with_iter.md
-+++ b/reference/algorithm/ranges_fold_left_with_iter.md
-@@ -182,10 +182,14 @@ int main() {
- ## 実装例
- 
- ```cpp
-+template&amp;lt;typename F, typename T, typename I&amp;gt;
-+using R = decay_t&amp;lt;invoke_result_t&amp;lt;F&amp;amp;, T, iter_reference_t&amp;lt;I&amp;gt;&amp;gt;&amp;gt;;
-+
-+
- template&amp;lt;input_iterator I, sentinel_for&amp;lt;I&amp;gt; S, class T,
-          indirectly-binary-left-foldable&amp;lt;T, I&amp;gt; F&amp;gt;
--constexpr auto fold_left_with_iter(I first, S last, F f) -&amp;gt; fold_left_with_iter_result&amp;lt;I, U&amp;gt; {
--  using U = decay_t&amp;lt;invoke_result_t&amp;lt;F&amp;amp;, T, iter_reference_t&amp;lt;I&amp;gt;&amp;gt;&amp;gt;;
-+constexpr auto fold_left_with_iter(I first, S last, T init, F f) -&amp;gt; fold_left_with_iter_result&amp;lt;I, R&amp;lt;F, T, I&amp;gt;&amp;gt; {
-+  using U = R&amp;lt;F, T, I&amp;gt;;
- 
-   if (first == last) {
-     return {std::move(first), U(std::move(init))};
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
       </author>
     </entry>
   
