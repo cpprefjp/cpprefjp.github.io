@@ -2,9 +2,148 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2024-02-14T01:19:05.377737</updated>
-  <id>aaf797dd-f506-4777-bbb3-dda013435059</id>
+  <updated>2024-02-14T04:21:50.648780</updated>
+  <id>0720acb3-f512-441d-b481-0fe0f62a38a0</id>
 
+  
+    <entry>
+      <title>fold_left_first_with_iter -- fold_left(_first)_with_iter : 得られるイテレータを利用する例追加 #1088</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_fold_left_first_with_iter.html"/>
+      <id>505a00734a3b2449b2ed37343360a7ea70a9bdf5:reference/algorithm/ranges_fold_left_first_with_iter.md</id>
+      <updated>2024-02-14T13:18:28+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_fold_left_first_with_iter.md b/reference/algorithm/ranges_fold_left_first_with_iter.md
+index 062e11cab..3a097dd8a 100644
+--- a/reference/algorithm/ranges_fold_left_first_with_iter.md
++++ b/reference/algorithm/ranges_fold_left_first_with_iter.md
+@@ -191,6 +191,51 @@ int main() {
+ -1
+ ```
+ 
++### 戻り値のイテレータを活用する例
++
++```cpp example
++#include &amp;lt;ranges&amp;gt;
++#include &amp;lt;algorithm&amp;gt;
++#include &amp;lt;functional&amp;gt;
++#include &amp;lt;print&amp;gt;
++#include &amp;lt;forward_list&amp;gt;
++
++using namespace std::ranges;
++
++int main() {
++  // forward_rangeな入力
++  std::forward_list flist = {2, 4, 6, 7, 9, 3, 1, 4, 10, 3, 2, 6};
++
++  // take_whileを使用して、先頭から10未満の要素だけを取り出す
++  forward_range auto rng = flist | views::take_while([](int n) { return n &amp;lt; 10; });
++
++  auto [last, sum] = fold_left_first_with_iter(rng, std::plus&amp;lt;&amp;gt;{});
++
++  std::println(&amp;#34;sum = {:d}&amp;#34;, sum.value_or(0));
++
++  // 同じ範囲に対して別の処理をしたい
++  // rng（take_while）をそのまま使うとイテレーション時に終端判定をもう一度行うことになり非効率
++  auto [unuse1, mul1] = fold_left_first_with_iter(rng, std::multiplies&amp;lt;&amp;gt;{});
++
++  // 先ほど求めた終端を使用して元の範囲の上で部分範囲を構築
++  auto [unuse2, mul2] = fold_left_first_with_iter(subrange{flist.begin(), last}, std::multiplies&amp;lt;&amp;gt;{});
++
++  std::println(&amp;#34;mul = {:d}, {:d}&amp;#34;, mul1.value_or(0), mul2.value_or(0));
++}
++```
++* fold_left_first_with_iter[color ff0000]
++* take_while[link /reference/ranges/take_while_view.md]
++* subrange[link /reference/ranges/subrange.md]
++* println[link /reference/print/println.md]
++* value_or[link /reference/optional/optional/value_or.md]
++
++### 出力
++
++```
++sum = 36
++mul = 36288, 36288
++```
++
+ ## 実装例
+ 
+ ```cpp
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>fold_left_with_iter -- fold_left(_first)_with_iter : 得られるイテレータを利用する例追加 #1088</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_fold_left_with_iter.html"/>
+      <id>505a00734a3b2449b2ed37343360a7ea70a9bdf5:reference/algorithm/ranges_fold_left_with_iter.md</id>
+      <updated>2024-02-14T13:18:28+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_fold_left_with_iter.md b/reference/algorithm/ranges_fold_left_with_iter.md
+index 45bd92d39..9dc5bddf7 100644
+--- a/reference/algorithm/ranges_fold_left_with_iter.md
++++ b/reference/algorithm/ranges_fold_left_with_iter.md
+@@ -185,6 +185,50 @@ int main() {
+ -1
+ ```
+ 
++### 戻り値のイテレータを活用する例
++
++```cpp example
++#include &amp;lt;ranges&amp;gt;
++#include &amp;lt;algorithm&amp;gt;
++#include &amp;lt;functional&amp;gt;
++#include &amp;lt;print&amp;gt;
++#include &amp;lt;forward_list&amp;gt;
++
++using namespace std::ranges;
++
++int main() {
++  // forward_rangeな入力
++  std::forward_list flist = {2, 4, 6, 7, 9, 3, 1, 4, 10, 3, 2, 6};
++
++  // take_whileを使用して、先頭から10未満の要素だけを取り出す
++  forward_range auto rng = flist | views::take_while([](int n) { return n &amp;lt; 10; });
++
++  auto [last, sum] = fold_left_with_iter(rng, 0, std::plus&amp;lt;&amp;gt;{});
++
++  std::println(&amp;#34;sum = {:d}&amp;#34;, sum);
++
++  // 同じ範囲に対して別の処理をしたい
++  // rng（take_while）をそのまま使うとイテレーション時に終端判定をもう一度行うことになり非効率
++  auto [unuse1, mul1] = fold_left_with_iter(rng, 1, std::multiplies&amp;lt;&amp;gt;{});
++
++  // 先ほど求めた終端を使用して元の範囲の上で部分範囲を構築
++  auto [unuse2, mul2] = fold_left_with_iter(subrange{flist.begin(), last}, 1, std::multiplies&amp;lt;&amp;gt;{});
++
++  std::println(&amp;#34;mul = {:d}, {:d}&amp;#34;, mul1, mul2);
++}
++```
++* fold_left_with_iter[color ff0000]
++* take_while[link /reference/ranges/take_while_view.md]
++* subrange[link /reference/ranges/subrange.md]
++* println[link /reference/print/println.md]
++
++### 出力
++
++```
++sum = 36
++mul = 36288, 36288
++```
++
+ ## 実装例
+ 
+ ```cpp
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>generator -- generator: 例示追加 第2テンプレートパラメータV利用</title>
@@ -2604,33 +2743,6 @@ index 52bb983fb..c045a2e4f 100644
 +## アルゴリズムの戻り値型
  
  これらの型は、複数の値を1つの戻り値として返すために使われる汎用的な型である。構造化束縛で受け取ることが想定されている。
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>in_value_result -- リンク修正</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_in_value_result.html"/>
-      <id>339d3119efc1bc733a9f2026a7bd9c7765f9fedb:reference/algorithm/ranges_in_value_result.md</id>
-      <updated>2024-02-13T15:20:20+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_in_value_result.md b/reference/algorithm/ranges_in_value_result.md
-index 1cc5d9677..ae2d99128 100644
---- a/reference/algorithm/ranges_in_value_result.md
-+++ b/reference/algorithm/ranges_in_value_result.md
-@@ -44,7 +44,7 @@ namespace std::ranges {
- 
- * (1): イテレータと値を格納する型
- * (2): [`ranges::fold_left_with_iter`](/reference/algorithm/ranges_fold_left_with_iter.md)で使用するエイリアス
--* (3): [`ranges::fold_left_first_with_iter`](/reference/algorithm/ranges_fold_left_first_with_iter.md.nolink)で使用するエイリアス
-+* (3): [`ranges::fold_left_first_with_iter`](/reference/algorithm/ranges_fold_left_first_with_iter.md)で使用するエイリアス
- 
- この型は、関数が入力用に範囲を受け取る場合に、処理した範囲の末尾と、それとは別の出力を返すために使用される。
  
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
