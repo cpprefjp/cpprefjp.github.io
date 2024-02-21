@@ -188,8 +188,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2024-02-20T10:48:39">
-        2024年02月20日 10時48分39秒
+      <span itemprop="datePublished" content="2024-02-21T05:59:54">
+        2024年02月21日 05時59分54秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -253,22 +253,22 @@
 <span class="p">}</span>
 </code></pre></div>
 </p>
-<p>上記例の<code>example3(), example4()</code>は、C++20までは戻り値型が右辺値参照型であるために<code>return</code>文でコピーは発生しないため、暗黙ムーブの対象になっていなかった。C++23では、これらの場合にも暗黙ムーブが試みられるようになる。</p>
+<p>上記例の<code>example3(), example4()</code>は、C++20までは戻り値型が参照型であるために<code>return</code>文でコピーは発生しないため、暗黙ムーブの対象になっていなかった。C++23では、これらの場合にも暗黙ムーブが試みられるようになる。</p>
 <p>また同時に、C++11で導入されて以降少しづつその対象（暗黙ムーブが起こる場合および起こる場所）を拡大してきたことで複雑化していた暗黙ムーブ仕様が整理され、その仕様と実装がかなり単純化された。</p>
 <h2>仕様</h2>
-<p>暗黙ムーブ可能なエンティティ（<em>implicitly movable entity</em>）を次のように指定する</p>
+<p><strong>暗黙ムーブ可能なエンティティ</strong>（<em>implicitly movable entity</em>）を次のどちらかとして指定する</p>
 <ul>
 <li>自動記憶域期間の非<code>volatile</code>オブジェクト型変数</li>
 <li>自動記憶域期間の非<code>volatile</code>オブジェクト型への右辺値参照</li>
 </ul>
-<p>暗黙ムーブ可能なエンティティが次の場所で指名されている場合、その式はムーブする資格がある（<em>move-eligible</em>な）式となる</p>
+<p>暗黙ムーブ可能なエンティティが次の場所で指名されている場合、その式は<strong>ムーブする資格がある式</strong>（<em>move-eligible</em>）となる</p>
 <ul>
-<li><code>return/co_return</code>文のオペランド<ul>
+<li><code>return/co_return</code>文のオペランド（以下の条件を全て満たすもの）<ul>
 <li>オペランドは変数名を指定する式（<em>id-expression</em>）であり（<code>()</code>で囲まれていても良い）</li>
 <li>その変数名は、その文を囲む最も内側の関数（もしくはラムダ式）の本体内もしくは関数引数宣言内の、暗黙ムーブ可能なエンティティを指定している</li>
 </ul>
 </li>
-<li><code>throw</code>式のオペランド<ul>
+<li><code>throw</code>式のオペランド（以下の条件を全て満たすもの）<ul>
 <li>オペランドは変数名を指定する式であり（<code>()</code>で囲まれていても良い）</li>
 <li>その変数名のスコープは、囲む最も内側のtryブロックのスコープよりも長くなく</li>
 <li>その変数名は暗黙ムーブ可能なエンティティを指定している</li>
@@ -279,7 +279,78 @@
 <p>関数の戻り値は<code>return</code>文のオペランドからコピー初期化される。C++23において暗黙ムーブが可能な場合とはすなわち、<code>return</code>文のオペランドがムーブする資格がある式である場合のことで、その式（オペランド）は実際の値カテゴリがなんであれ<em>xvalue</em>として扱われる（つまり、<code>std::move()</code>されたのと等しくなる）ことで暗黙ムーブが適用される。</p>
 <p>ムーブする資格がある式は必ず変数名を指定する式（<em>id-expression</em>）であるため、<em>prvalue</em>な<code>return</code>文オペランドに対して適用される<a href="https://cpprefjp.github.io/lang/cpp17/guaranteed_copy_elision.html">コピー省略</a>と複合することは無い。NRVOとは複合しうるが、その場合は暗黙ムーブによって呼び出されるムーブコンストラクタの呼び出しがNRVOによって省略される。</p>
 <h3>副作用</h3>
-<p>(執筆中)</p>
+<p>この仕様の単純化はいくつか以前の動作を変更している。</p>
+<p>まず、<code>return</code>文のオペランドがムーブする資格がある式となる場合その式の値カテゴリは<em>xvalue</em>として扱われることで、戻り値型推論の結果が変わる場合がある。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">auto</span> <span class="nf">f</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a href="https://cpprefjp.github.io/lang/cpp14/decltype_auto.html">decltype(auto)</a></span> <span class="p">{</span>
+  <span class="k">return</span> <span class="p">(</span><span class="n">n</span><span class="p">);</span>   <span class="c1">// かっこに囲まれたid-expression、ムーブする資格がある式</span>
+<span class="p">}</span>
+<span class="c1">// C++20 : 戻り値型はint&amp;</span>
+<span class="c1">// C++23 : 戻り値型はint&amp;&amp;</span>
+
+<span class="k">auto</span> <span class="nf">g</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">auto</span><span class="o">&amp;&amp;</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="n">n</span><span class="p">;</span>     <span class="c1">// id-expression、ムーブする資格がある式</span>
+<span class="p">}</span>
+<span class="c1">// C++20 : 戻り値型はint&amp;</span>
+<span class="c1">// C++23 : 戻り値型はint&amp;&amp;</span>
+</code></pre></div>
+</p>
+<p><code>decltype(auto)</code>による戻り値型推論では、<code>return</code>文のオペランドを<code>decltype</code>することで戻り値型を推論する。<code>decltype</code>は変数名に対して使用された時はその変数の宣言された型を取得するが、変数名がかっこに囲まれている場合はかっこに囲まれた<em>id-expression</em>として値カテゴリを含めたその式の型を取得する。このため、上記<code>f()</code>のように、<code>decltype(auto)</code>戻り値型の関数で<code>return</code>文のオペランドがかっこに囲まれた変数名であり、C++23でそのオペランドがムーブする資格がある式となる場合、その値カテゴリが変更される（<em>lvalue</em> -&gt; <em>xvalue</em>）ことによって戻り値型推論結果が変化する。</p>
+<p><code>auto&amp;&amp;</code>による戻り値型推論は<code>decltype</code>と推論方法が異なるものの、やはり<code>return</code>文のオペランドの値カテゴリに応じて参照修飾が決定されるため、従来左辺値（<em>lvalue</em>）だったオペランドがC++23でムーブする資格がある式となる場合に、値カテゴリが<em>xvalue</em>となることによって推論結果が変化する。</p>
+<p>この他の場合には結果は変化しない。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">auto</span> <span class="nf">f1</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span><span class="o">-&gt;</span> <span class="n"><a href="https://cpprefjp.github.io/lang/cpp14/decltype_auto.html">decltype(auto)</a></span> <span class="p">{</span>
+  <span class="k">return</span> <span class="n">n</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="c1">// C++20/23共に戻り値型はint</span>
+
+<span class="k">auto</span> <span class="nf">f2</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span><span class="o">-&gt;</span> <span class="k">auto</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="n">n</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="c1">// C++20/23共に戻り値型はint</span>
+
+<span class="k">auto</span> <span class="nf">f3</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span><span class="o">-&gt;</span> <span class="k">auto</span><span class="o">&amp;</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="n">n</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="c1">// C++20/23共に戻り値型はint&amp;</span>
+<span class="c1">// ただし、後述のようにC++23ではエラー</span>
+
+<span class="k">auto</span> <span class="nf">f4</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span><span class="o">-&gt;</span> <span class="k">const</span> <span class="k">auto</span><span class="o">&amp;</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="n">n</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="c1">// C++20/23共に戻り値型はconst int&amp;</span>
+</code></pre></div>
+</p>
+<p>そして、同様に<code>return</code>文オペランドの値カテゴリが変化することによって、ローカル変数の参照を返す一部の関数が<a class="cpprefjp-defined-word" data-desc="プログラムが適格でないこと。コンパイルエラーなどになる" href="https://cpprefjp.github.io/implementation-compliance.html#dfn-ill-formed">不適格</a>になる様になる。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">auto</span> <span class="nf">f</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">int</span><span class="o">&amp;</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+
+  <span class="k">return</span> <span class="n">n</span><span class="p">;</span> <span class="c1">// ng、nはムーブする資格のある式であり、その型と値カテゴリはint&amp;&amp;（戻り値型と一致しない）</span>
+<span class="p">}</span>
+
+<span class="k">auto</span> <span class="nf">g</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">std</span><span class="o">::</span><span class="n"><a href="https://cpprefjp.github.io/reference/functional/reference_wrapper.html">reference_wrapper</a></span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+
+  <span class="k">return</span> <span class="n">n</span><span class="p">;</span> <span class="c1">// ng、nはムーブする資格のある式であり、その型と値カテゴリはint&amp;&amp;（<a href="https://cpprefjp.github.io/reference/functional/reference_wrapper.html">reference_wrapper</a>のコンストラクタで拒否される）</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<p>ただし、ローカル参照変数は暗黙ムーブ可能なエンティティではないため、ローカル参照を返そうとする場合従来通りエラーにはならない。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">auto</span> <span class="nf">f</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">int</span><span class="o">&amp;</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+  <span class="kt">int</span><span class="o">&amp;</span> <span class="n">r</span> <span class="o">=</span> <span class="n">n</span><span class="p">;</span>
+
+  <span class="k">return</span> <span class="n">r</span><span class="p">;</span> <span class="c1">// ok、rはムーブする資格のある式ではなく、その型と値カテゴリはint&amp;</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<p>また、この変更とは逆に、ローカル変数の右辺値参照を返そうとする場合が<a class="cpprefjp-defined-word" data-desc="プログラムが文法規則・診断対象の意味規則・単一定義規則を満たすこと" href="https://cpprefjp.github.io/implementation-compliance.html#dfn-well-formed">適格</a>になってしまう。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">auto</span> <span class="nf">f</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">int</span><span class="o">&amp;&amp;</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+
+  <span class="k">return</span> <span class="n">n</span><span class="p">;</span> <span class="c1">// C++20ではng</span>
+            <span class="c1">// C++23ではok、nはムーブする資格のある式であり、その型と値カテゴリはint&amp;&amp;</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
 <h2>例</h2>
 <p>(執筆中)</p>
 <p><div class="yata" id="f13c43f217dd0de2a102f881250a84a7c361e710"><div class="codehilite"><pre><span></span><code><span class="c1">// (ここには、言語機能の使い方を解説するための、サンプルコードを記述します。)</span>
