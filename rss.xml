@@ -2,9 +2,253 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2024-02-23T14:38:09.918108</updated>
-  <id>e51bf1df-8247-4677-8338-cb1ebf97945b</id>
+  <updated>2024-02-23T21:06:08.610419</updated>
+  <id>5612f8d5-24ec-42f6-b5ea-1be685e92f1c</id>
 
+  
+    <entry>
+      <title>ranges -- ranges::toの説明を追加</title>
+      <link href="https://cpprefjp.github.io/reference/ranges.html"/>
+      <id>3983f026a31e240e333cda929e12086f94ca1bdb:reference/ranges.md</id>
+      <updated>2024-02-24T06:02:00+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges.md b/reference/ranges.md
+index dc86669e7..be0067b51 100644
+--- a/reference/ranges.md
++++ b/reference/ranges.md
+@@ -403,7 +403,7 @@ range | adaptor(args...)
+ 
+ | 名前                 | 説明                                                           | 対応バージョン |
+ |----------------------|----------------------------------------------------------------|----------------|
+-| [`to`](ranges/to.md.nolink) | パイプライン記法でRangeからコンテナを構築する (class template) | C++23          |
++| [`to`](ranges/to.md) | パイプライン記法でRangeからコンテナを構築する (class template) | C++23          |
+ | [`from_range_t`](ranges/from_range_t.md) | Rangeからコンテナへの変換を示すタグ型 (class) | C++23          |
+ | [`from_range`](ranges/from_range_t.md) | Rangeからコンテナへの変換を示すタグ値 (variable) | C++23          |
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>to -- ranges::toの説明を追加</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/to.html"/>
+      <id>3983f026a31e240e333cda929e12086f94ca1bdb:reference/ranges/to.md</id>
+      <updated>2024-02-24T06:02:00+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/to.md b/reference/ranges/to.md
+new file mode 100644
+index 000000000..a43eb9c8a
+--- /dev/null
++++ b/reference/ranges/to.md
+@@ -0,0 +1,197 @@
++# to
++* ranges[meta header]
++* std::ranges[meta namespace]
++* function template[meta id-type]
++* cpp23[meta cpp]
++
++```cpp
++namespace std::ranges {
++  template&amp;lt;class C, input_range R, class... Args&amp;gt; requires (!view&amp;lt;C&amp;gt;)
++  constexpr C to(R&amp;amp;&amp;amp; r, Args&amp;amp;&amp;amp;... args);     // (1)
++
++  template&amp;lt;template&amp;lt;class...&amp;gt; class C, input_range R, class... Args&amp;gt;
++  constexpr auto to(R&amp;amp;&amp;amp; r, Args&amp;amp;&amp;amp;... args);  // (2)
++
++  template&amp;lt;class C, class... Args&amp;gt; requires (!view&amp;lt;C&amp;gt;)
++  constexpr auto to(Args&amp;amp;&amp;amp;... args);         // (3)
++
++  template&amp;lt;template&amp;lt;class...&amp;gt; class C, class... Args&amp;gt;
++  constexpr auto to(Args&amp;amp;&amp;amp;... args);         // (4)
++}
++```
++
++## 概要
++
++Rangeの各要素を要素とするコンテナを構築する。
++この関数は再帰的に適用され、ネストされたRangeにも対応する。
++
++- (1): 処理の実体となる関数テンプレート
++- (2): (1)のテンプレートテンプレート版
++- (3): Rangeアダプタオブジェクトを返す関数テンプレート
++- (4): (3)のテンプレートテンプレート版
++
++(2), (4) の存在により、コンテナ型を指定するときにその要素の型を省略して(=テンプレートとして)渡すことができる。
++
++
++## 適格要件
++- (1), (3): `C` はCV装飾のないクラス型であること。
++
++
++## 戻り値
++
++(1) Rangeの各要素を要素とするコンテナCのオブジェクトを以下の通りに構築して返す。
++
++`C`が[`input_range`](input_range.md)ではないか、[`convertible_to`](/reference/concepts/convertible_to.md)`&amp;lt;`[`range_reference_t`](range_reference_t.md)`&amp;lt;R&amp;gt;, `[`range_value_t`](range_value_t.md)`&amp;lt;C&amp;gt;&amp;gt;` である(`R`の要素への参照が`C`の要素に変換できる)場合:
++
++1. [`constructible_from`](/reference/concepts/constructible_from.md)`&amp;lt;C, R, Args...&amp;gt;`である(`C`が`R`と残りの引数で構築できる)場合
++    - `C(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;R&amp;gt;(r), `[`std::forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...)`
++2. [`constructible_from`](/reference/concepts/constructible_from.md)`&amp;lt;C, `[`from_range_t`](from_range_t.md)`, R, Args...&amp;gt;`である(`C`が[`from_range_t`](from_range_t.md)、`R`、残りの引数で構築できる)場合
++    - `C(`[`from_range`](from_range_t.md)`, `[`std::forward`](/reference/utility/forward.md)`&amp;lt;R&amp;gt;(r), `[`std::forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...)`
++3. [`common_range`](common_range.md)`&amp;lt;R&amp;gt;`が`true`で、[`iterator_traits`](/reference/iterator/iterator_traits.md)`&amp;lt;`[`iterator_t`](iterator_t.md)`&amp;lt;R&amp;gt;&amp;gt;​::​iterator_category`が `input_iterator_tag` から派生する有効な型であり、[`constructible_from`](/reference/concepts/constructible_from.md)`&amp;lt;C, `[`iterator_t`](iterator_t.md)`&amp;lt;R&amp;gt;, `[`sentinel_t`](sentinel_t.md)`&amp;lt;R&amp;gt;, Args...&amp;gt;`である(`C`が`R`のイテレータおよび番兵と残りの引数で構築できる)場合
++    - `C(`[`ranges::begin(r)`](begin.md)`, `[`ranges::end(r)`](end.md)`, `[`std::forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...)`
++4. [`constructible_from`](/reference/concepts/constructible_from.md)`&amp;lt;C, Args...&amp;gt;`が`true`で、`container-insertable&amp;lt;C, `[`range_reference_t`](range_reference_t.md)`&amp;lt;R&amp;gt;&amp;gt;`が`true`である場合
++    - 以下のコードで初期化する
++
++```cpp
++C c(std::forward&amp;lt;Args&amp;gt;(args)...);
++if constexpr (sized_range&amp;lt;R&amp;gt; &amp;amp;&amp;amp; reservable-container&amp;lt;C&amp;gt;)
++  c.reserve(static_cast&amp;lt;range_size_t&amp;lt;C&amp;gt;&amp;gt;(ranges::size(r)));
++ranges::copy(r, container-inserter&amp;lt;range_reference_t&amp;lt;R&amp;gt;&amp;gt;(c));
++```
++
++[`input_range`](input_range.md)`&amp;lt;`[`range_reference_t`](range_reference_t.md)`&amp;lt;R&amp;gt;&amp;gt;`である場合:
++
++```cpp
++to&amp;lt;C&amp;gt;(r | views::transform([](auto&amp;amp;&amp;amp; elem) {
++  return to&amp;lt;range_value_t&amp;lt;C&amp;gt;&amp;gt;(std::forward&amp;lt;decltype(elem)&amp;gt;(elem));
++}), std::forward&amp;lt;Args&amp;gt;(args)...);
++```
++
++どの条件にもあてはまらない場合、プログラムは不適格である。
++
++(2) `input-iterator` を次のように定義する。
++
++```cpp
++struct input-iterator {
++  using iterator_category = input_iterator_tag;
++  using value_type = range_value_t&amp;lt;R&amp;gt;;
++  using difference_type = ptrdiff_t;
++  using pointer = add_pointer_t&amp;lt;range_reference_t&amp;lt;R&amp;gt;&amp;gt;;
++  using reference = range_reference_t&amp;lt;R&amp;gt;;
++  reference operator*() const;
++  pointer operator-&amp;gt;() const;
++  input-iterator&amp;amp; operator++();
++  input-iterator operator++(int);
++  bool operator==(const input-iterator&amp;amp;) const;
++};
++```
++
++また、`DEDUCE_EXPR` を次のように定義する。
++
++1. 有効な式ならば、`C(`[`declval`](/reference/utility/declval.md)`&amp;lt;R&amp;gt;(), `[`declval`](/reference/utility/declval.md)`&amp;lt;Args&amp;gt;()...)`
++2. 有効な式ならば、`C(`[`from_range`](from_range_t.md)`, `[`declval`](/reference/utility/declval.md)`&amp;lt;R&amp;gt;(), `[`declval`](/reference/utility/declval.md)`&amp;lt;Args&amp;gt;()...)`
++3. 有効な式ならば、`C(`[`declval`](/reference/utility/declval.md)`&amp;lt;input-iterator&amp;gt;(), `[`declval`](/reference/utility/declval.md)`&amp;lt;input-iterator&amp;gt;(), `[`declval`](/reference/utility/declval.md)`&amp;lt;Args&amp;gt;()...)`
++4. 1-3が有効でなければ、ill-formed
++
++このとき、戻り値は `to&amp;lt;`[`decltype`](/lang/cpp11/decltype.md)`(DEDUCE_EXPR)&amp;gt;(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;R&amp;gt;(r), `[`std::forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...)`
++
++(3), (4): 次の性質をもつ完全転送呼び出しラッパー(*perfect forwarding call wrapper*)であるようなRangeアダプタクロージャオブジェクト`f`を返す。
++
++- ターゲットオブジェクトを持たない
++- バインドされた引数`bound_args`は、[`decay_t`](/reference/type_traits/decay.md)`&amp;lt;Args&amp;gt;...`型のオブジェクトであり、それぞれ[`std::forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...`で直接非リスト初期化(*direct-non-list-initialize*)される
++- 呼び出しパターンは`to&amp;lt;C&amp;gt;(r, bound_args...)`である。ただし、`r`は`f`の関数呼び出し式で使用される引数
++
++
++## 備考
++
++本説明に用いる説明専用コンセプトを以下のように定義する。
++
++```cpp
++template&amp;lt;class Container&amp;gt;
++constexpr bool reservable-container =
++  sized_range&amp;lt;Container&amp;gt; &amp;amp;&amp;amp;
++  requires(Container&amp;amp; c, range_size_t&amp;lt;Container&amp;gt; n) {
++    c.reserve(n);
++    { c.capacity() } -&amp;gt; same_as&amp;lt;decltype(n)&amp;gt;;
++    { c.max_size() } -&amp;gt; same_as&amp;lt;decltype(n)&amp;gt;;
++  };
++
++template&amp;lt;class Container, class Ref&amp;gt;
++constexpr bool container-insertable =
++  requires(Container&amp;amp; c, Ref&amp;amp;&amp;amp; ref) {
++    requires (requires { c.push_back(std::forward&amp;lt;Ref&amp;gt;(ref)); } ||
++              requires { c.insert(c.end(), std::forward&amp;lt;Ref&amp;gt;(ref)); });
++  };
++
++template&amp;lt;class Ref, class Container&amp;gt;
++constexpr auto container-inserter(Container&amp;amp; c) {
++  if constexpr (requires { c.push_back(declval&amp;lt;Ref&amp;gt;()); })
++    return back_inserter(c);
++  else
++    return inserter(c, c.end());
++}
++```
++
++## この機能が必要になった背景・経緯
++
++Rangeの各要素を要素とするコンテナを構築するには、従来、次のような方法があった。
++
++```cpp example
++#include &amp;lt;ranges&amp;gt;
++#include &amp;lt;vector&amp;gt;
++#include &amp;lt;string&amp;gt;
++#include &amp;lt;string_view&amp;gt;
++#include &amp;lt;print&amp;gt;
++#include &amp;lt;algorithm&amp;gt;
++
++int main() {
++  using namespace std;
++  using namespace std::literals;
++  auto str = &amp;#34;the quick brown fox&amp;#34;sv;
++  vector&amp;lt;string&amp;gt; words;
++  for(auto&amp;amp;&amp;amp; i : views::split(str, &amp;#39; &amp;#39;)) {
++    words.emplace_back(i.begin(), i.end());
++  }
++  println(&amp;#34;{}&amp;#34;, words);
++}
++```
++
++これを簡潔に書くために、`to`関数が提案された。
++
++
++## 例
++```cpp example
++#include &amp;lt;ranges&amp;gt;
++#include &amp;lt;vector&amp;gt;
++#include &amp;lt;string&amp;gt;
++#include &amp;lt;string_view&amp;gt;
++#include &amp;lt;print&amp;gt;
++
++int main() {
++  using namespace std;
++  using namespace std::literals;
++  auto str = &amp;#34;the quick brown fox&amp;#34;sv;
++  auto words = views::split(str, &amp;#39; &amp;#39;) | ranges::to&amp;lt;vector&amp;lt;string&amp;gt;&amp;gt;();
++  println(&amp;#34;{}&amp;#34;, words);
++}
++```
++* ranges::to[color ff0000]
++
++### 出力
++```
++[&amp;#34;the&amp;#34;, &amp;#34;quick&amp;#34;, &amp;#34;brown&amp;#34;, &amp;#34;fox&amp;#34;]
++```
++
++## バージョン
++### 言語
++- C++23
++
++### 処理系
++- [Clang](/implementation.md#clang): 19.0 (at least)
++- [GCC](/implementation.md#gcc): ??
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++## 参照
++
++- [26.5.7.2 ranges​::​to](https://timsong-cpp.github.io/cppwp/range.utility.conv.to)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>暗黙的なムーブを簡略化 -- 暗黙的なムーブを簡略化 : 仕様の副作用について追記 #1021</title>
@@ -1165,81 +1409,6 @@ index 000000000..a1bfd9509
       <author>
         <name>yoh</name>
         <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>暗黙的なムーブを簡略化 -- 暗黙的なムーブを簡略化 : 仕様追記 #1021</title>
-      <link href="https://cpprefjp.github.io/lang/cpp23/simpler_implicit_move.html"/>
-      <id>2673b918eb4ee85e27f243e18807aad34626f2fd:lang/cpp23/simpler_implicit_move.md</id>
-      <updated>2024-02-20T19:48:39+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp23/simpler_implicit_move.md b/lang/cpp23/simpler_implicit_move.md
-index cb5cdb15a..d8883d4fc 100644
---- a/lang/cpp23/simpler_implicit_move.md
-+++ b/lang/cpp23/simpler_implicit_move.md
-@@ -50,6 +50,29 @@ auto example4(Jeff x) -&amp;gt; int&amp;amp; {
- また同時に、C++11で導入されて以降少しづつその対象（暗黙ムーブが起こる場合および起こる場所）を拡大してきたことで複雑化していた暗黙ムーブ仕様が整理され、その仕様と実装がかなり単純化された。
- 
- ## 仕様
-+
-+暗黙ムーブ可能なエンティティ（*implicitly movable entity*）を次のように指定する
-+
-+- 自動記憶域期間の非`volatile`オブジェクト型変数
-+- 自動記憶域期間の非`volatile`オブジェクト型への右辺値参照
-+
-+暗黙ムーブ可能なエンティティが次の場所で指名されている場合、その式はムーブする資格がある（*move-eligible*な）式となる
-+
-+- `return/co_return`文のオペランド
-+    - オペランドは変数名を指定する式（*id-expression*）であり（`()`で囲まれていても良い）
-+    - その変数名は、その文を囲む最も内側の関数（もしくはラムダ式）の本体内もしくは関数引数宣言内の、暗黙ムーブ可能なエンティティを指定している
-+- `throw`式のオペランド
-+    - オペランドは変数名を指定する式であり（`()`で囲まれていても良い）
-+    - その変数名のスコープは、囲む最も内側のtryブロックのスコープよりも長くなく
-+    - その変数名は暗黙ムーブ可能なエンティティを指定している
-+
-+そして、ムーブする資格がある式の値カテゴリは*xvalue*となる。
-+
-+関数の戻り値は`return`文のオペランドからコピー初期化される。C++23において暗黙ムーブが可能な場合とはすなわち、`return`文のオペランドがムーブする資格がある式である場合のことで、その式（オペランド）は実際の値カテゴリがなんであれ*xvalue*として扱われる（つまり、`std::move()`されたのと等しくなる）ことで暗黙ムーブが適用される。
-+
-+ムーブする資格がある式は必ず変数名を指定する式（*id-expression*）であるため、*prvalue*な`return`文オペランドに対して適用される[コピー省略](/lang/cpp17/guaranteed_copy_elision.md)と複合することは無い。NRVOとは複合しうるが、その場合は暗黙ムーブによって呼び出されるムーブコンストラクタの呼び出しがNRVOによって省略される。
-+
-+### 副作用
- (執筆中)
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>lognormal_distribution -- リンク切れを修正 #1252</title>
-      <link href="https://cpprefjp.github.io/reference/random/lognormal_distribution.html"/>
-      <id>907d3e161f41297f274af157edee3167b243e3f9:reference/random/lognormal_distribution.md</id>
-      <updated>2024-02-20T17:27:58+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/random/lognormal_distribution.md b/reference/random/lognormal_distribution.md
-index 2cc2a0312..60bde6b8e 100644
---- a/reference/random/lognormal_distribution.md
-+++ b/reference/random/lognormal_distribution.md
-@@ -107,7 +107,7 @@ int main()
- ```
- ```
- 
--このプログラムによってある時に得られた結果（[lognormal_distribution.tsv.7z](https://github.com/cpprefjp/image/raw/master/reference/random/lognormal_distribution/lognormal_distribution.tsv.7z)）を図示する。 
-+このプログラムによってある時に得られた結果（[lognormal_distribution.tsv](https://github.com/cpprefjp/image/raw/master/reference/random/lognormal_distribution/lognormal_distribution.tsv)）を図示する。 
- 
- ![](https://github.com/cpprefjp/image/raw/master/reference/random/lognormal_distribution/lognormal_distribution.png)
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
       </author>
     </entry>
   
