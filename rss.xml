@@ -2,9 +2,127 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2024-02-24T14:42:23.302647</updated>
-  <id>bc5019b4-d25c-418b-8e44-98e67ea2dc24</id>
+  <updated>2024-02-24T15:38:13.234562</updated>
+  <id>6142d49d-e38f-44fc-b4f4-eaf3ed597e06</id>
 
+  
+    <entry>
+      <title>to -- ranges::to リンク修正と説明を追加</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/to.html"/>
+      <id>7de1886ba9dd411e8f16fe176a9dc67f0a76c066:reference/ranges/to.md</id>
+      <updated>2024-02-25T00:34:10+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/to.md b/reference/ranges/to.md
+index e55fac84b..5edbbf82d 100644
+--- a/reference/ranges/to.md
++++ b/reference/ranges/to.md
+@@ -54,10 +54,13 @@ Rangeの各要素を要素とするコンテナを構築する。
+ 
+ ```cpp
+ C c(std::forward&amp;lt;Args&amp;gt;(args)...);
+-if constexpr (sized_range&amp;lt;R&amp;gt; &amp;amp;&amp;amp; reservable-container&amp;lt;C&amp;gt;)
++if constexpr (sized_range&amp;lt;R&amp;gt; &amp;amp;&amp;amp; reservable-container&amp;lt;C&amp;gt;) {
+   c.reserve(static_cast&amp;lt;range_size_t&amp;lt;C&amp;gt;&amp;gt;(ranges::size(r)));
++}
+ ranges::copy(r, container-inserter&amp;lt;range_reference_t&amp;lt;R&amp;gt;&amp;gt;(c));
+ ```
++* ranges::size[link /reference/ranges/size.md]
++* ranges::copy[link /reference/algorithm/ranges_copy.md]
+ 
+ [`input_range`](input_range.md)`&amp;lt;`[`range_reference_t`](range_reference_t.md)`&amp;lt;R&amp;gt;&amp;gt;`である場合:
+ 
+@@ -66,6 +69,7 @@ to&amp;lt;C&amp;gt;(r | views::transform([](auto&amp;amp;&amp;amp; elem) {
+   return to&amp;lt;range_value_t&amp;lt;C&amp;gt;&amp;gt;(std::forward&amp;lt;decltype(elem)&amp;gt;(elem));
+ }), std::forward&amp;lt;Args&amp;gt;(args)...);
+ ```
++* views::transform[link transform_view.md]
+ 
+ どの条件にもあてはまらない場合、プログラムは不適格である。
+ 
+@@ -85,6 +89,9 @@ struct input-iterator {
+   bool operator==(const input-iterator&amp;amp;) const;
+ };
+ ```
++* input_iterator_tag[link /reference/iterator/iterator_tag.md]
++* ptrdiff_t[link /reference/cstddef/ptrdiff_t.md]
++* add_pointer_t[link /reference/type_traits/add_pointer.md]
+ 
+ また、`DEDUCE_EXPR` を次のように定義する。
+ 
+@@ -104,18 +111,20 @@ struct input-iterator {
+ 
+ ## 備考
+ 
+-本説明に用いる説明専用コンセプトを以下のように定義する。
++本説明に用いる説明専用要素を以下のように定義する。
+ 
+ ```cpp
++// reservable-container: 容量をあらかじめ確保できることを要求するコンセプト
+ template&amp;lt;class Container&amp;gt;
+ constexpr bool reservable-container =
+   sized_range&amp;lt;Container&amp;gt; &amp;amp;&amp;amp;
+   requires(Container&amp;amp; c, range_size_t&amp;lt;Container&amp;gt; n) {
+-    c.reserve(n);
+-    { c.capacity() } -&amp;gt; same_as&amp;lt;decltype(n)&amp;gt;;
+-    { c.max_size() } -&amp;gt; same_as&amp;lt;decltype(n)&amp;gt;;
++    c.reserve(n);                              // コンテナのサイズ型を引数とするreserveメンバ関数がある
++    { c.capacity() } -&amp;gt; same_as&amp;lt;decltype(n)&amp;gt;;  // コンテナのサイズ型を返すcapacityメンバ関数がある
++    { c.max_size() } -&amp;gt; same_as&amp;lt;decltype(n)&amp;gt;;  // コンテナのサイズ型を返すmax_sizeメンバ関数がある
+   };
+ 
++// container-insertable: push_backまたはinsertが使えることを要求するコンセプト
+ template&amp;lt;class Container, class Ref&amp;gt;
+ constexpr bool container-insertable =
+   requires(Container&amp;amp; c, Ref&amp;amp;&amp;amp; ref) {
+@@ -123,14 +132,19 @@ constexpr bool container-insertable =
+               requires { c.insert(c.end(), std::forward&amp;lt;Ref&amp;gt;(ref)); });
+   };
+ 
++// container-inserter: push_backが使えればback_inserter, そうでなければinserterを返す関数
+ template&amp;lt;class Ref, class Container&amp;gt;
+ constexpr auto container-inserter(Container&amp;amp; c) {
+-  if constexpr (requires { c.push_back(declval&amp;lt;Ref&amp;gt;()); })
++  if constexpr (requires { c.push_back(declval&amp;lt;Ref&amp;gt;()); }) {
+     return back_inserter(c);
+-  else
++  } else {
+     return inserter(c, c.end());
++  }
+ }
+ ```
++* back_inserter[link /reference/iterator/back_inserter.md]
++* inserter[link /reference/iterator/inserter.md]
++
+ 
+ ## この機能が必要になった背景・経緯
+ 
+@@ -155,6 +169,9 @@ int main() {
+   println(&amp;#34;{}&amp;#34;, words);
+ }
+ ```
++* views::split[link split_view.md]
++* vector[link /reference/vector/vector.md]
++* string[link /reference/string/basic_string.md]
+ 
+ これを簡潔に書くために、`to`関数が提案された。
+ 
+@@ -176,6 +193,9 @@ int main() {
+ }
+ ```
+ * ranges::to[color ff0000]
++* views::split[link split_view.md]
++* vector[link /reference/vector/vector.md]
++* string[link /reference/string/basic_string.md]
+ 
+ ### 出力
+ ```
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>to -- typo修正</title>
@@ -1223,39 +1341,6 @@ index 24c351202..7e8c85d40 100644
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>to -- 不可視文字を削除</title>
-      <link href="https://cpprefjp.github.io/reference/ranges/to.html"/>
-      <id>2f19f570ae09539c5b6f56c7fec5169065f4ab17:reference/ranges/to.md</id>
-      <updated>2024-02-24T06:09:40+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/to.md b/reference/ranges/to.md
-index a43eb9c8a..24c351202 100644
---- a/reference/ranges/to.md
-+++ b/reference/ranges/to.md
-@@ -47,7 +47,7 @@ Rangeの各要素を要素とするコンテナを構築する。
-     - `C(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;R&amp;gt;(r), `[`std::forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...)`
- 2. [`constructible_from`](/reference/concepts/constructible_from.md)`&amp;lt;C, `[`from_range_t`](from_range_t.md)`, R, Args...&amp;gt;`である(`C`が[`from_range_t`](from_range_t.md)、`R`、残りの引数で構築できる)場合
-     - `C(`[`from_range`](from_range_t.md)`, `[`std::forward`](/reference/utility/forward.md)`&amp;lt;R&amp;gt;(r), `[`std::forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...)`
--3. [`common_range`](common_range.md)`&amp;lt;R&amp;gt;`が`true`で、[`iterator_traits`](/reference/iterator/iterator_traits.md)`&amp;lt;`[`iterator_t`](iterator_t.md)`&amp;lt;R&amp;gt;&amp;gt;​::​iterator_category`が `input_iterator_tag` から派生する有効な型であり、[`constructible_from`](/reference/concepts/constructible_from.md)`&amp;lt;C, `[`iterator_t`](iterator_t.md)`&amp;lt;R&amp;gt;, `[`sentinel_t`](sentinel_t.md)`&amp;lt;R&amp;gt;, Args...&amp;gt;`である(`C`が`R`のイテレータおよび番兵と残りの引数で構築できる)場合
-+3. [`common_range`](common_range.md)`&amp;lt;R&amp;gt;`が`true`で、[`iterator_traits`](/reference/iterator/iterator_traits.md)`&amp;lt;`[`iterator_t`](iterator_t.md)`&amp;lt;R&amp;gt;&amp;gt;::iterator_category`が `input_iterator_tag` から派生する有効な型であり、[`constructible_from`](/reference/concepts/constructible_from.md)`&amp;lt;C, `[`iterator_t`](iterator_t.md)`&amp;lt;R&amp;gt;, `[`sentinel_t`](sentinel_t.md)`&amp;lt;R&amp;gt;, Args...&amp;gt;`である(`C`が`R`のイテレータおよび番兵と残りの引数で構築できる)場合
-     - `C(`[`ranges::begin(r)`](begin.md)`, `[`ranges::end(r)`](end.md)`, `[`std::forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...)`
- 4. [`constructible_from`](/reference/concepts/constructible_from.md)`&amp;lt;C, Args...&amp;gt;`が`true`で、`container-insertable&amp;lt;C, `[`range_reference_t`](range_reference_t.md)`&amp;lt;R&amp;gt;&amp;gt;`が`true`である場合
-     - 以下のコードで初期化する
-@@ -194,4 +194,4 @@ int main() {
- 
- ## 参照
- 
--- [26.5.7.2 ranges​::​to](https://timsong-cpp.github.io/cppwp/range.utility.conv.to)
-+- [26.5.7.2 ranges::to](https://timsong-cpp.github.io/cppwp/range.utility.conv.to)
-&lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
         <name>Tetsuro Matsumura</name>
