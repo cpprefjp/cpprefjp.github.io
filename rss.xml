@@ -2,9 +2,180 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2024-02-28T14:38:13.193801</updated>
-  <id>8f558250-b382-49a5-893c-d35f2329b925</id>
+  <updated>2024-02-29T03:10:35.530156</updated>
+  <id>971ae8e6-c4d8-44da-b1e9-436acfb5ca4b</id>
 
+  
+    <entry>
+      <title>暗黙的なムーブを簡略化 -- 暗黙的なムーブを簡略化 : サンプルコードの追加 #1021</title>
+      <link href="https://cpprefjp.github.io/lang/cpp23/simpler_implicit_move.html"/>
+      <id>ac864c9c9e78e30dd493f72b974688304ce40d59:lang/cpp23/simpler_implicit_move.md</id>
+      <updated>2024-02-29T12:06:50+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp23/simpler_implicit_move.md b/lang/cpp23/simpler_implicit_move.md
+index 0596df0c1..ad6937ee1 100644
+--- a/lang/cpp23/simpler_implicit_move.md
++++ b/lang/cpp23/simpler_implicit_move.md
+@@ -21,12 +21,12 @@ struct RRefTaker {
+ 
+ auto example1(Widget w) -&amp;gt; RRefTaker {
+   // ローカル変数の暗黙ムーブ
+-  return w;  // ok、C++11(CWG1579)から
++  return w;  // ok、C++11から
+ }
+ 
+ auto example2(Widget&amp;amp;&amp;amp; w) -&amp;gt; RRefTaker {
+   // ローカル右辺値参照の暗黙ムーブ
+-  return w;  // ok、C++20(P0527)から
++  return w;  // ok、C++20から
+ }
+ 
+ auto example3(Widget&amp;amp;&amp;amp; w) -&amp;gt; Widget&amp;amp;&amp;amp; {
+@@ -96,7 +96,9 @@ auto g(int n) -&amp;gt; auto&amp;amp;&amp;amp; {
+ 
+ `auto&amp;amp;&amp;amp;`による戻り値型推論は`decltype`と推論方法が異なるものの、やはり`return`文のオペランドの値カテゴリに応じて参照修飾が決定されるため、従来左辺値（*lvalue*）だったオペランドがC++23でムーブする資格がある式となる場合に、値カテゴリが*xvalue*となることによって推論結果が変化する。
+ 
+-この他の場合には結果は変化しない。
++ただし、変更に関わらず、この例のような関数はどちらもローカル変数への参照を返すものであるため、書くべきではない。
++
++戻り値型推論においては、この他の場合には結果は変化しない。
+ 
+ ```cpp
+ auto f1(int n) -&amp;gt; decltype(auto) {
+@@ -172,7 +174,7 @@ auto f() -&amp;gt; int&amp;amp;&amp;amp; {
+ |`auto f(T x) -&amp;gt; decltype(auto) { return (x); }`  |`T&amp;amp;` : 〇|**`T&amp;amp;&amp;amp;` :** 〇|ローカル参照を返す|
+ |`auto f(T&amp;amp;&amp;amp; x) -&amp;gt; decltype(x) { return x; }`     |`T&amp;amp;&amp;amp;` : ×|`T&amp;amp;&amp;amp;` : **〇**||
+ |`auto f(T&amp;amp;&amp;amp; x) -&amp;gt; decltype((x)) { return (x); }` |`T&amp;amp;` : 〇|`T&amp;amp;` : **×**||
+-|`auto f(T&amp;amp;&amp;amp; x) -&amp;gt; decltype(auto) { return x; }`  |`T&amp;amp;&amp;amp;` : ×|`T&amp;amp;&amp;amp;` : **〇**|`x`がローカル変数の場合ローカル参照を返す|
++|`auto f(T&amp;amp;&amp;amp; x) -&amp;gt; decltype(auto) { return x; }`  |`T&amp;amp;&amp;amp;` : ×|`T&amp;amp;&amp;amp;` : **〇**|`x`がローカル変数の場合ローカル参照を返すようになる|
+ |`auto f(T&amp;amp;&amp;amp; x) -&amp;gt; decltype(auto) { return (x); }`|`T&amp;amp;` : 〇|**`T&amp;amp;&amp;amp;` :** 〇|`x`がローカル変数の場合ローカル参照を返す|
+ |`auto f(T x) -&amp;gt; auto&amp;amp;&amp;amp; { return x; }`       |`T&amp;amp;` : 〇|**`T&amp;amp;&amp;amp;` :** 〇|ローカル参照を返す|
+ |`auto f(T x) -&amp;gt; auto&amp;amp;&amp;amp; { return (x); }`   |`T&amp;amp;` : 〇|**`T&amp;amp;&amp;amp;` :** 〇|ローカル参照を返す|
+@@ -182,32 +184,100 @@ auto f() -&amp;gt; int&amp;amp;&amp;amp; {
+ 右側2列の各項目内は、推論される戻り値型:コンパイル可否、のように記述しており、コンパイル可否は、〇が適格（コンパイルが通る）、×が不適格（コンパイルエラー）を表す。
+ 
+ ## 例
+-(執筆中)
+ 
+-```cpp example
+-// (ここには、言語機能の使い方を解説するための、サンプルコードを記述します。)
+-// (インクルードとmain()関数を含む、実行可能なサンプルコードを記述してください。そのようなコードブロックにはexampleタグを付けます。)
++```cpp
++struct Weird {
++  Weird();
++  Weird(Weird&amp;amp;);
++};
+ 
+-#include &amp;lt;iostream&amp;gt;
++auto g(bool b) -&amp;gt; Weird {
++  static Weird w1;
++  Weird w2;
+ 
+-int main()
+-{
+-  int variable = 0;
+-  std::cout &amp;lt;&amp;lt; variable &amp;lt;&amp;lt; std::endl;
++  if (b) {
++    return w1;  // ok、w1はムーブする資格のある式ではなく、Weird(Weird&amp;amp;)が呼ばれる
++  } else {
++    return w2;  // ng、w2はムーブする資格のある式であり、xvalue（Weird&amp;amp;&amp;amp;）となる
++  }
+ }
+ ```
+-* variable[color ff0000]
+ 
+-(コードブロック中の識別子に、文字色を付ける例です。)
++```cpp
++// 例示用のムーブ可能な型
++struct Widget {
++  Widget(Widget&amp;amp;&amp;amp;);
++};
+ 
+-### 出力
+-```
+-0
+-```
++auto f1(Widget w) -&amp;gt; Widget {
++  return w;  // ローカル変数の暗黙ムーブ、C++11から
++}
++
++// Widgetの右辺値から構築可能な型
++struct RRefTaker {
++  // Widgetの右辺値からの変換コンストラクタ
++  RRefTaker(Widget&amp;amp;&amp;amp;);
++};
++
++auto f2(Widget w) -&amp;gt; RRefTaker {
++  return w;  // 暗黙ムーブされて構築（変換）、C++11から
++}
++
++auto f3(Widget&amp;amp;&amp;amp; w) -&amp;gt; RRefTaker {
++  return w;  // ローカル右辺値参照の暗黙ムーブ、C++20から
++}
+ 
+-(ここには、サンプルコードの実行結果を記述します。何も出力がない場合は、項目を削除せず、空の出力にしてください。)  
+-(実行結果が処理系・実行環境によって異なる場合は、項目名を「出力例」に変更し、可能であればその理由も併記してください。)
++[[noreturn]]
++void f4(Widget w) {
++  throw w;  // throw式における暗黙ムーブ、C++20から
++}
++
++struct From {
++  From(Widget const &amp;amp;);
++  From(Widget&amp;amp;&amp;amp;);
++};
++
++auto f5() -&amp;gt; From {
++  Widget w;
++  return w;  // 暗黙ムーブ（コンストラクタによる変換）、C++11から
++}
++
++struct To {
++  operator Widget() &amp;amp;&amp;amp;;
++};
++
++auto f6() -&amp;gt; Widget {
++  To t;
++  return t;  // 暗黙ムーブ（変換演算子による変換）、C++20から
++}
++
++struct V {
++  V(Widget); // 値で受け取るコンストラクタ
++};
+ 
++auto f7() -&amp;gt; V {
++  Widget w;
++  return w;  // 暗黙ムーブ（コンストラクタ引数へのムーブ）、C++20から
++}
++
++// DerivedはBaseを公開継承しているとき
++auto f8() -&amp;gt; Base {
++  Derived result;
++  return result;  // 暗黙ムーブ（基底クラスへの変換）、C++20から
++}
++
++auto f9(Widget&amp;amp;&amp;amp; w) -&amp;gt; Widget&amp;amp;&amp;amp; {
++  return w;  // 戻り値型が参照型の場合の暗黙ムーブ、C++23から
++}
++
++struct J {
++  operator Widget&amp;amp;() &amp;amp;&amp;amp;;
++};
++
++auto f10(J x) -&amp;gt; Widget&amp;amp; {
++  return x;  // 戻り値型が参照型の場合の暗黙ムーブ（変換演算子による変換）、C++23から
++}
++```
+ 
+ ## この機能が必要になった背景・経緯
+ (執筆中)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>暗黙的なムーブを簡略化 -- 備考の修正</title>
@@ -202,657 +373,6 @@ index 2bf2ccd5d..bef9f698e 100644
       <author>
         <name>onihusube</name>
         <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>linalg -- linalg: layout_transpose概要(#1233)</title>
-      <link href="https://cpprefjp.github.io/reference/linalg.html"/>
-      <id>ad3c2440addb23526972119533f937d6e537a5cb:reference/linalg.md</id>
-      <updated>2024-02-28T16:02:19+09:00</updated>
-      
-        <content type="html">&lt;div class=&#34;header&#34;&gt;&amp;lt;linalg&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;token&#34;&gt;linalg&lt;/span&gt;&lt;span class=&#34;cpp cpp26&#34; title=&#34;C++26で追加&#34;&gt;(C++26)&lt;/span&gt;&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;&lt;code&gt;&amp;lt;linalg&amp;gt;&lt;/code&gt;ヘッダでは、線形代数(linear algebra)に関する基礎的な演算アルゴリズムを提供する。
-本ヘッダが提供するエンティティは、すべて名前空間&lt;code&gt;std::linalg&lt;/code&gt;に属する。&lt;/p&gt;
-&lt;p&gt;1次元データであるベクトル(vector)や2次元データである行列(matrix)に対して、線形代数分野のデファクトスタンダードとされる BLAS(Basic Linear Algebra Subprograms) 互換のアルゴリズム群、いくつかの LAPACK(Linear Algebra PACKage) 互換のアルゴリズムが提供される。
-BLAS互換アルゴリズムは、演算対象データの次元数や計算オーダーに応じて3段階に区分される。&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;Level 1 BLAS : ベクトルーベクトルの演算&lt;/li&gt;
-&lt;li&gt;Level 2 BLAS : 行列ーベクトルの演算&lt;/li&gt;
-&lt;li&gt;Level 3 BLAS : 行列ー行列の演算&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;例えば、2個の一般行列の積を求める&lt;code&gt;std::linalg::matrix_product&lt;/code&gt;はLevel 3 BLASルーチン&lt;code&gt;xGEMM&lt;/code&gt;に対応する。
-（実際のBLASルーチン名は、浮動小数点数型の単精度&lt;code&gt;S&lt;/code&gt;／倍精度&lt;code&gt;D&lt;/code&gt;とそれぞれの複素数版&lt;code&gt;C&lt;/code&gt;,&lt;code&gt;Z&lt;/code&gt;として、プレフィックス&lt;code&gt;x&lt;/code&gt;部は文字4種類のいずれか。）&lt;/p&gt;
-&lt;p&gt;また、多次元配列ビュー&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/mdspan/mdspan.html&#34;&gt;std::mdpan&lt;/a&gt;&lt;/code&gt;と組み合わせて利用する拡張機能が提供される。&lt;/p&gt;
-&lt;h2&gt;共通要件&lt;/h2&gt;
-&lt;p&gt;&lt;code&gt;&amp;lt;linalg&amp;gt;&lt;/code&gt;ヘッダが提供する演算アルゴリズムは、スカラ値およびベクトル／行列の要素型として線形代数値型(linear algebra value types)を取り扱う。&lt;/p&gt;
-&lt;p&gt;線形代数値型はBLASが取り扱う&lt;code&gt;float&lt;/code&gt;, &lt;code&gt;double&lt;/code&gt;, &lt;code&gt;std::complex&amp;lt;float&amp;gt;&lt;/code&gt;, &lt;code&gt;std::complex&amp;lt;double&amp;gt;&lt;/code&gt;をはじめ、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/concepts/semiregular.html&#34;&gt;semiregular&lt;/a&gt;&lt;/code&gt;のモデルであれば良い。
-また、線形代数値型の値初期化は加法元（算術型であれば値&lt;code&gt;0&lt;/code&gt;）であること。&lt;/p&gt;
-&lt;p&gt;プログラム定義型を利用する場合、演算アルゴリズムはカスタマイゼーションポイントとして&lt;code&gt;abs&lt;/code&gt;, &lt;code&gt;real&lt;/code&gt;, &lt;code&gt;imag&lt;/code&gt;, &lt;code&gt;conj&lt;/code&gt;を非修飾名で呼び出す。&lt;/p&gt;
-&lt;h2&gt;&lt;code&gt;std::mdspan&lt;/code&gt;向け機能拡張&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/linalg/layout_blas_packed.html&#34;&gt;layout_blas_packed&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;行列要素のBLAS互換パックレイアウトに対応する&lt;a href=&#34;https://cpprefjp.github.io/reference/mdspan/LayoutMappingPolicy.html&#34;&gt;レイアウトマッピングポリシー&lt;/a&gt; (class template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;scaled&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;要素値をスカラ倍した読み取り専用&lt;code&gt;std::mdspan&lt;/code&gt;を作る (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;scaled_accessor&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;scaled&lt;/code&gt;関数用の&lt;a href=&#34;https://cpprefjp.github.io/reference/mdspan/AccessorPolicy.html&#34;&gt;アクセサポリシー&lt;/a&gt; (class template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;conjugated_accessor&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;conjugated&lt;/code&gt;関数用の&lt;a href=&#34;https://cpprefjp.github.io/reference/mdspan/AccessorPolicy.html&#34;&gt;アクセサポリシー&lt;/a&gt; (class template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;conjugated&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;読み取り専用の複素共役ビュー&lt;code&gt;std::mdspan&lt;/code&gt;を作る (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/linalg/layout_transpose.html&#34;&gt;layout_transpose&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;transposed&lt;/code&gt;関数用の&lt;a href=&#34;https://cpprefjp.github.io/reference/mdspan/LayoutMappingPolicy.html&#34;&gt;レイアウトマッピングポリシー&lt;/a&gt; (class template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;transposed&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;2次元&lt;code&gt;std::mdspan&lt;/code&gt;の行列転置ビューを作る (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;conjugate_transposed&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;読み取り専用の複素共役転置ビュー&lt;code&gt;std::mdspan&lt;/code&gt;を作る (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;BLAS 1アルゴリズム&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;setup_givens_rotation_result&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;setup_givens_rotation&lt;/code&gt;の結果型 (class template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;setup_givens_rotation&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xLARTG: ギブンス回転をセットアップする (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;apply_givens_rotation&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xROT: ベクトルにギブンス回転を適用する (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;swap_elements&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xSWAP: 2つのベクトル／行列の要素を交換する (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;scale&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xSCAL: ベクトル／行列の要素にスカラ値を乗算する (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;copy&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xCOPY: ベクトル／行列の要素をコピーする (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;add&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xAXPY: 2つのベクトル／行列の要素を加算する (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;dot&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xDOT, xDOTU: 2つのベクトルのドット積を求める (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;dotc&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xDOTC: 2つのベクトルの複素共役ドット積を求める (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;sum_of_squares_result&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;vector_sum_of_squares&lt;/code&gt;の結果型 (class template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;vector_sum_of_squares&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xLASSQ: ベクトル要素の平方和を求める (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;vector_two_norm&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xNRM2: ベクトルのユークリッドノルム(Euclidean norm)を求める (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;vector_abs_sum&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xASUM: ベクトル要素の絶対値和を求める (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;vector_idx_abs_max&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xIAMAX: ベクトル要素のうち最大絶対値インデクスを返す (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;matrix_frob_norm&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;行列のフロベニウスノルム(Frobenius norm)を求める (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;matrix_one_norm&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;行列の1ノルム(One norm)を求める (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;matrix_inf_norm&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;行列の無限大ノルム(Infinity norm)を求める (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;BLAS 2アルゴリズム&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;matrix_vector_product&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xGEMV: 一般行列とベクトルの積を求める (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;symmetric_matrix_vector_product&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xSYMV: 対称行列とベクトルの積を求める (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;hermitian_matrix_vector_product&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xHEMV: ハミルトニアン行列とベクトルの積を求める (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;triangular_matrix_vector_product&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xTRMV: 三角行列とベクトルの積を求める (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;triangular_matrix_vector_solve&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xTRSV: 三角行列を係数とする行列方程式を解く (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;matrix_rank_1_update&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xGER, xGERU: 行列のRank-1更新 (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;matrix_rank_1_update_c&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xGERC: 複素行列のRank-1更新 (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;symmetric_matrix_rank_1_update&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xSYR: 対称行列のRank-1更新 (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;hermitian_matrix_rank_1_update&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xHER: ハミルトニアン行列のRank-1更新 (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;symmetric_matrix_rank_2_update&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xSYR2: 対称行列のRank-2更新 (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;hermitian_matrix_rank_2_update&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xHER2: ハミルトニアン行列のRank-2更新 (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;BLAS 3アルゴリズム&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;matrix_product&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xGEMM: 2つの一般行列の積を求める (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;symmetric_matrix_product&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xSYMM: 対称行列と行列の積を求める (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;hermitian_matrix_product&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xHEMM: ハミルトニアン行列と行列の積を求める (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;triangular_matrix_product&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xTRMM: 三角行列と行列の積を求める (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;triangular_matrix_left_product&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xTRMM: In-placeに三角行列と行列の積を求める (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;triangular_matrix_right_product&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xTRMM: In-placeに三角行列と行列の積を求める (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;symmetric_matrix_rank_k_update&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xSYRK: 対称行列のRank-k更新 (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;hermitian_matrix_rank_k_update&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xHERK: ハミルトニアン行列のRank-k更新 (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;symmetric_matrix_rank_2k_update&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xSYR2K: 対称行列のRank-2k更新 (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;hermitian_matrix_rank_2k_update&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xHER2K: ハミルトニアン行列のRank-2k更新 (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;triangular_matrix_matrix_left_solve&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xTRSM: 三角行列の連立一次方程式を解く (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;triangular_matrix_matrix_right_solve&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;xTRSM: 三角行列の連立一次方程式を解く (function template)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;タグ型&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/column_major_t.md.nolink&#34;&gt;column_major_t&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;列優先(colmun-major)順序を表現するためのタグ型 (class)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/column_major_t.md.nolink&#34;&gt;column_major&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;列優先(colmun-major)順序を表現するためのタグ値 (variable)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/row_major_t.md.nolink&#34;&gt;row_major_t&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;行優先(row-major)順序を表現するためのタグ型 (class)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/row_major_t.md.nolink&#34;&gt;row_major&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;行優先(row-major)順序を表現するためのタグ値 (variable)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/upper_triangle_t.md.nolink&#34;&gt;upper_triangle_t&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;上三角行列を表現するためのタグ型 (class)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/upper_triangle_t.md.nolink&#34;&gt;upper_triangle&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;上三角行列を表現するためのタグ値 (variable)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/lower_triangle_t.md.nolink&#34;&gt;lower_triangle_t&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;下三角行列を表現するためのタグ型 (class)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/lower_triangle_t.md.nolink&#34;&gt;lower_triangle&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;下三角行列を表現するためのタグ値 (variable)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;implicit_unit_diagonal_t&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;implicit unit diagonalを表現するためのタグ型 (class)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;implicit_unit_diagonal&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;implicit unit diagonalを表現するためのタグ値 (variable)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;explicit_diagonal_t&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;explicit diagonalを表現するためのタグ型 (class)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;explicit_diagonal&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;explicit diagonalを表現するためのタグ値 (variable)&lt;/td&gt;
-&lt;td&gt;C++26&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;バージョン&lt;/h2&gt;
-&lt;h3&gt;言語&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;C++26&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;関連項目&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/mdspan.html&#34;&gt;&amp;lt;mdspan&amp;gt;&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;参照&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p1673r13.html&#34; target=&#34;_blank&#34;&gt;P1673R13 A free function linear algebra interface based on the BLAS&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1674r2.html&#34; target=&#34;_blank&#34;&gt;P1674R2: Evolving a Standard C++ Linear Algebra Library from the BLAS&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://github.com/CppCon/CppCon2023/blob/main/Presentations/stdlinalg_linear_algebra_coming_to_standard_cpp.pdf&#34; target=&#34;_blank&#34;&gt;std::linalg: Linear Algebra Coming to Standard C++&lt;/a&gt;, CppCon 2023&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.netlib.org/blas/&#34; target=&#34;_blank&#34;&gt;BLAS (Basic Linear Algebra Subprograms)&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>layout_blas_packed -- linalg: layout_transpose概要(#1233)</title>
-      <link href="https://cpprefjp.github.io/reference/linalg/layout_blas_packed.html"/>
-      <id>ad3c2440addb23526972119533f937d6e537a5cb:reference/linalg/layout_blas_packed.md</id>
-      <updated>2024-02-28T16:02:19+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/linalg/layout_blas_packed.md b/reference/linalg/layout_blas_packed.md
-index 836714258..3138c5537 100644
---- a/reference/linalg/layout_blas_packed.md
-+++ b/reference/linalg/layout_blas_packed.md
-@@ -12,7 +12,7 @@ namespace std::linalg {
- ```
- 
- ## 概要
--`layout_blas_packed`は、多次元配列ビュー[`mdspan`](/reference/mdspan/mdspan.md)を用いた正方行列(square matrix)に対して、BLASにおけるパックレイアウトと互換性のある行列要素配置を表現する[レイアウトマッピングポリシー](/reference/mdspan/LayoutMappingPolicy.md)クラスである。
-+`layout_blas_packed`は、多次元配列ビュー[`mdspan`](/reference/mdspan/mdspan.md)を用いた正方行列(square matrix)に対して、BLASにおけるパックレイアウトと互換性のある行列要素メモリ配置を表現する[レイアウトマッピングポリシー](/reference/mdspan/LayoutMappingPolicy.md)クラスである。
- 
- - `Triangle` : 指定する行列要素の種別を、上三角[`upper_triangle_t`](upper_triangle_t.md.nolink)または下三角[`lower_triangle_t`](lower_triangle_t.md.nolink)から指定する。
- - `StorageOrder` : 行列要素の格納順を、列優先[`column_major_t`](column_major_t.md.nolink)または行優先[`row_major_t`](row_major_t.md.nolink)から指定する。
-@@ -39,43 +39,72 @@ namespace std::linalg {
- #include &amp;lt;linalg&amp;gt;
- #include &amp;lt;mdspan&amp;gt;
- #include &amp;lt;print&amp;gt;
-+#include &amp;lt;string_view&amp;gt;
- namespace linalg = std::linalg;
- 
-+// 行列(matrix)の要素表示
-+template &amp;lt;class T, class E, class L, class A&amp;gt;
-+void print_mat(std::string_view name, const std::mdspan&amp;lt;T, E, L, A&amp;gt;&amp;amp; mat)
-+{
-+  static_assert(mat.rank() == 2);
-+  std::println(&amp;#34;{}:&amp;#34;, name);
-+  for (size_t i = 0; i &amp;lt; mat.extent(0); ++i) {
-+    for (size_t j = 0; j &amp;lt; mat.extent(1); ++j) {
-+      std::print(&amp;#34; {:2}&amp;#34;, mat[i, j]);
-+    }
-+    std::println(&amp;#34;&amp;#34;);
-+  }
-+}
-+
- int main()
- {
--  double arr[] = {1, 2, 3, 4, 5, 6};
-+  double arr[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
- 
--  // 行優先レイアウトの下三角要素から3x3対称行列を構築
-+  // 列優先格納順の下三角要素から4x4対称行列を構築
-   std::mdspan&amp;lt;
-     double,
--    std::extents&amp;lt;size_t, 3, 3&amp;gt;,
--    linalg::layout_blas_packed&amp;lt;linalg::lower_triangle, linalg::column_major&amp;gt;
--  &amp;gt; mat{arr};
--  // 1 . .
--  // 2 4 .
--  // 3 5 6
--
--  for (size_t i = 0; i &amp;lt; mat.extent(0); i++) {
--    for (size_t j = 0; j &amp;lt; mat.extent(1); j++) {
--      std::print(&amp;#34; {}&amp;#34;, mat[i, j]);
--    }
--    std::println(&amp;#34;&amp;#34;);
--  }
-+    std::extents&amp;lt;size_t, 4, 4&amp;gt;,
-+    linalg::layout_blas_packed&amp;lt;linalg::lower_triangle_t, linalg::column_major_t&amp;gt;
-+  &amp;gt; mat1{arr};
-+  // 1 - -  -
-+  // 2 5 -  -
-+  // 3 6 8  -
-+  // 4 7 9 10
-+  print_mat(&amp;#34;mat1&amp;#34;, mat);
-+
-+  // 行優先格納順の下三角要素から4x4対称行列を構築
-+  std::mdspan&amp;lt;
-+    double,
-+    std::extents&amp;lt;size_t, 4, 4&amp;gt;,
-+    linalg::layout_blas_packed&amp;lt;linalg::lower_triangle_t, linalg::row_major_t&amp;gt;
-+  &amp;gt; mat2{arr};
-+  // 1 - -  -
-+  // 2 3 -  -
-+  // 4 5 6  -
-+  // 7 8 9 10
-+  print_mat(&amp;#34;mat2&amp;#34;, mat2);
- }
- ```
- * linalg::layout_blas_packed[color ff0000]
--* linalg::lower_triangle[link lower_triangle_t.md.nolink]
--* linalg::column_major[link column_major_t.md.nolink]
-+* linalg::lower_triangle_t[link lower_triangle_t.md.nolink]
-+* linalg::column_major_t[link column_major_t.md.nolink]
-+* linalg::row_major_t[link row_major_t.md.nolink]
- * mat.extent[link /reference/mdspan/mdspan/extent.md]
- * std::print[link /reference/print/print.md]
- * std::println[link /reference/print/println.md]
- 
--
- ### 出力
- ```
-- 1 2 3
-- 2 4 5
-- 3 5 6
-+mat1:
-+  1  2  3  4
-+  2  5  6  7
-+  3  6  8  9
-+  4  7  9 10
-+mat2:
-+  1  2  4  7
-+  2  3  5  8
-+  4  5  6  9
-+  7  8  9 10
- ```
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>mapping -- linalg: layout_transpose概要(#1233)</title>
-      <link href="https://cpprefjp.github.io/reference/linalg/layout_blas_packed/mapping.html"/>
-      <id>ad3c2440addb23526972119533f937d6e537a5cb:reference/linalg/layout_blas_packed/mapping.md</id>
-      <updated>2024-02-28T16:02:19+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/linalg/layout_blas_packed/mapping.md b/reference/linalg/layout_blas_packed/mapping.md
-index 05260eb26..7e1f27246 100644
---- a/reference/linalg/layout_blas_packed/mapping.md
-+++ b/reference/linalg/layout_blas_packed/mapping.md
-@@ -101,13 +101,14 @@ int main()
- {
-   double arr[] = {1, 2, 3, 4, 5, 6};
- 
--  // 行優先レイアウトの下三角要素から3x3対称行列を構築
--  using LayoutPacked = linalg::layout_blas_packed&amp;lt;linalg::lower_triangle, linalg::column_major&amp;gt;;
--  using Mapping = LayoutPacked::mapping&amp;lt;std::extents&amp;lt;size_t, 3, 3&amp;gt;&amp;gt;;
--  std::mdspan mat{arr, Mapping{}};
--  // 1 . .
--  // 2 4 .
--  // 3 5 6
-+  // 行優先格納順の上三角要素から3x3対称行列を構築
-+  using Ext2D = std::dextents&amp;lt;size_t, 2&amp;gt;;
-+  using LayoutPacked = linalg::layout_blas_packed&amp;lt;linalg::upper_triangle_t, linalg::row_major_t&amp;gt;;
-+  using Mapping = LayoutPacked::mapping&amp;lt;Ext2D&amp;gt;;
-+  std::mdspan mat{arr, Mapping{Ext2D{3, 3}}};
-+  // 1 2 3
-+  // - 4 5
-+  // - - 6
- 
-   for (size_t i = 0; i &amp;lt; mat.extent(0); i++) {
-     for (size_t j = 0; j &amp;lt; mat.extent(1); j++) {
-@@ -118,7 +119,12 @@ int main()
- }
- ```
- * linalg::layout_blas_packed[color ff0000]
--* ::mapping[color ff0000]
-+* LayoutPacked::mapping[color ff0000]
-+* linalg::upper_triangle_t[link upper_triangle_t.md.nolink]
-+* linalg::row_major_t[link row_major_t.md.nolink]
-+* mat.extent[link /reference/mdspan/mdspan/extent.md]
-+* std::print[link /reference/print/print.md]
-+* std::println[link /reference/print/println.md]
- 
- ### 出力
- ```
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>layout_transpose -- linalg: layout_transpose概要(#1233)</title>
-      <link href="https://cpprefjp.github.io/reference/linalg/layout_transpose.html"/>
-      <id>ad3c2440addb23526972119533f937d6e537a5cb:reference/linalg/layout_transpose.md</id>
-      <updated>2024-02-28T16:02:19+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/linalg/layout_transpose.md b/reference/linalg/layout_transpose.md
-new file mode 100644
-index 000000000..0db977228
---- /dev/null
-+++ b/reference/linalg/layout_transpose.md
-@@ -0,0 +1,49 @@
-+# layout_transpose
-+* linalg[meta header]
-+* class template[meta id-type]
-+* std::linalg[meta namespace]
-+* cpp26[meta cpp]
-+
-+```cpp
-+namespace std::linalg {
-+  template&amp;lt;class Layout&amp;gt;
-+  class layout_transpose;
-+}
-+```
-+
-+## 概要
-+`layout_transpose`は、多次元配列ビュー[`mdspan`](/reference/mdspan/mdspan.md)を用いた行列(matrix)において、転置行列を表現する[レイアウトマッピングポリシー](/reference/mdspan/LayoutMappingPolicy.md)クラスである。
-+
-+`layout_transpose`クラステンプレートは、行列転置操作[`transpose`](transpose.md.nolink)の戻り値型として利用される。
-+
-+
-+## 適格要件
-+`Layout`は[レイアウトマッピングポリシー要件](/reference/mdspan/LayoutMappingPolicy.md)を満たすこと。
-+
-+
-+## メンバ型
-+
-+| 名前 | 説明 | 対応バージョン |
-+|------|------|----------------|
-+| `nested_layout_type` | `Layout` | C++26 |
-+| [`mapping`](layout_transpose/mapping.md.nolink) | レイアウトマッピング | C++26 |
-+
-+
-+## バージョン
-+### 言語
-+- C++26
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): ??
-+- [ICC](/implementation.md#icc): ??
-+- [Visual C++](/implementation.md#visual_cpp): ??
-+
-+
-+## 関連項目
-+- [`mdspan`](/reference/mdspan/mdspan.md)
-+
-+
-+## 参照
-+- [P1673R13 A free function linear algebra interface based on the BLAS](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p1673r13.html)
-+- [P1674R2: Evolving a Standard C++ Linear Algebra Library from the BLAS](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1674r2.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
       </author>
     </entry>
   
