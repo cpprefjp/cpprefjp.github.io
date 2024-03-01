@@ -2,9 +2,36 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2024-03-01T03:49:58.696319</updated>
-  <id>359a0728-6185-401c-9190-d6fa06aa324e</id>
+  <updated>2024-03-01T05:17:24.900938</updated>
+  <id>64c5b91b-20fd-4006-8d51-a73063208958</id>
 
+  
+    <entry>
+      <title>暗黙的なムーブを簡略化 -- 不可視文字の削除</title>
+      <link href="https://cpprefjp.github.io/lang/cpp23/simpler_implicit_move.html"/>
+      <id>c4b15eaed4ad336a858490578ffbb2bd63907a59:lang/cpp23/simpler_implicit_move.md</id>
+      <updated>2024-03-01T14:13:30+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp23/simpler_implicit_move.md b/lang/cpp23/simpler_implicit_move.md
+index dc7b5733b..ac669ea6a 100644
+--- a/lang/cpp23/simpler_implicit_move.md
++++ b/lang/cpp23/simpler_implicit_move.md
+@@ -329,7 +329,7 @@ C++20の仕様は次のようになっていた。
+ - `throw`式のオペランド
+     - （諸条件はC++23仕様と同一なので省略）
+ 
+-これらのコピー初期化が行われる場所において、呼び出されるコンストラクタまたは[`return_­value()`オーバーロード](/lang/cpp20/coroutines.md)を選択するオーバーロード解決は次の順序で実行される
++これらのコピー初期化が行われる場所において、呼び出されるコンストラクタまたは[`return_value()`オーバーロード](/lang/cpp20/coroutines.md)を選択するオーバーロード解決は次の順序で実行される
+ 
+ 1. オペランドのid式を右辺値（*rvalue*）としてオーバーロード解決を実行する
+ 2. 1が失敗した（もしくは行われなかった）場合、オペランドのid式を左辺値（*lvalue*）としてオーバーロード解決を実行する
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>暗黙的なムーブを簡略化 -- 暗黙ムーブ : 経緯を追加 #1021</title>
@@ -352,177 +379,6 @@ index ad6937ee1..f61ff2f24 100644
  
  ## 例
  
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>暗黙的なムーブを簡略化 -- 暗黙的なムーブを簡略化 : サンプルコードの追加 #1021</title>
-      <link href="https://cpprefjp.github.io/lang/cpp23/simpler_implicit_move.html"/>
-      <id>ac864c9c9e78e30dd493f72b974688304ce40d59:lang/cpp23/simpler_implicit_move.md</id>
-      <updated>2024-02-29T12:06:50+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp23/simpler_implicit_move.md b/lang/cpp23/simpler_implicit_move.md
-index 0596df0c1..ad6937ee1 100644
---- a/lang/cpp23/simpler_implicit_move.md
-+++ b/lang/cpp23/simpler_implicit_move.md
-@@ -21,12 +21,12 @@ struct RRefTaker {
- 
- auto example1(Widget w) -&amp;gt; RRefTaker {
-   // ローカル変数の暗黙ムーブ
--  return w;  // ok、C++11(CWG1579)から
-+  return w;  // ok、C++11から
- }
- 
- auto example2(Widget&amp;amp;&amp;amp; w) -&amp;gt; RRefTaker {
-   // ローカル右辺値参照の暗黙ムーブ
--  return w;  // ok、C++20(P0527)から
-+  return w;  // ok、C++20から
- }
- 
- auto example3(Widget&amp;amp;&amp;amp; w) -&amp;gt; Widget&amp;amp;&amp;amp; {
-@@ -96,7 +96,9 @@ auto g(int n) -&amp;gt; auto&amp;amp;&amp;amp; {
- 
- `auto&amp;amp;&amp;amp;`による戻り値型推論は`decltype`と推論方法が異なるものの、やはり`return`文のオペランドの値カテゴリに応じて参照修飾が決定されるため、従来左辺値（*lvalue*）だったオペランドがC++23でムーブする資格がある式となる場合に、値カテゴリが*xvalue*となることによって推論結果が変化する。
- 
--この他の場合には結果は変化しない。
-+ただし、変更に関わらず、この例のような関数はどちらもローカル変数への参照を返すものであるため、書くべきではない。
-+
-+戻り値型推論においては、この他の場合には結果は変化しない。
- 
- ```cpp
- auto f1(int n) -&amp;gt; decltype(auto) {
-@@ -172,7 +174,7 @@ auto f() -&amp;gt; int&amp;amp;&amp;amp; {
- |`auto f(T x) -&amp;gt; decltype(auto) { return (x); }`  |`T&amp;amp;` : 〇|**`T&amp;amp;&amp;amp;` :** 〇|ローカル参照を返す|
- |`auto f(T&amp;amp;&amp;amp; x) -&amp;gt; decltype(x) { return x; }`     |`T&amp;amp;&amp;amp;` : ×|`T&amp;amp;&amp;amp;` : **〇**||
- |`auto f(T&amp;amp;&amp;amp; x) -&amp;gt; decltype((x)) { return (x); }` |`T&amp;amp;` : 〇|`T&amp;amp;` : **×**||
--|`auto f(T&amp;amp;&amp;amp; x) -&amp;gt; decltype(auto) { return x; }`  |`T&amp;amp;&amp;amp;` : ×|`T&amp;amp;&amp;amp;` : **〇**|`x`がローカル変数の場合ローカル参照を返す|
-+|`auto f(T&amp;amp;&amp;amp; x) -&amp;gt; decltype(auto) { return x; }`  |`T&amp;amp;&amp;amp;` : ×|`T&amp;amp;&amp;amp;` : **〇**|`x`がローカル変数の場合ローカル参照を返すようになる|
- |`auto f(T&amp;amp;&amp;amp; x) -&amp;gt; decltype(auto) { return (x); }`|`T&amp;amp;` : 〇|**`T&amp;amp;&amp;amp;` :** 〇|`x`がローカル変数の場合ローカル参照を返す|
- |`auto f(T x) -&amp;gt; auto&amp;amp;&amp;amp; { return x; }`       |`T&amp;amp;` : 〇|**`T&amp;amp;&amp;amp;` :** 〇|ローカル参照を返す|
- |`auto f(T x) -&amp;gt; auto&amp;amp;&amp;amp; { return (x); }`   |`T&amp;amp;` : 〇|**`T&amp;amp;&amp;amp;` :** 〇|ローカル参照を返す|
-@@ -182,32 +184,100 @@ auto f() -&amp;gt; int&amp;amp;&amp;amp; {
- 右側2列の各項目内は、推論される戻り値型:コンパイル可否、のように記述しており、コンパイル可否は、〇が適格（コンパイルが通る）、×が不適格（コンパイルエラー）を表す。
- 
- ## 例
--(執筆中)
- 
--```cpp example
--// (ここには、言語機能の使い方を解説するための、サンプルコードを記述します。)
--// (インクルードとmain()関数を含む、実行可能なサンプルコードを記述してください。そのようなコードブロックにはexampleタグを付けます。)
-+```cpp
-+struct Weird {
-+  Weird();
-+  Weird(Weird&amp;amp;);
-+};
- 
--#include &amp;lt;iostream&amp;gt;
-+auto g(bool b) -&amp;gt; Weird {
-+  static Weird w1;
-+  Weird w2;
- 
--int main()
--{
--  int variable = 0;
--  std::cout &amp;lt;&amp;lt; variable &amp;lt;&amp;lt; std::endl;
-+  if (b) {
-+    return w1;  // ok、w1はムーブする資格のある式ではなく、Weird(Weird&amp;amp;)が呼ばれる
-+  } else {
-+    return w2;  // ng、w2はムーブする資格のある式であり、xvalue（Weird&amp;amp;&amp;amp;）となる
-+  }
- }
- ```
--* variable[color ff0000]
- 
--(コードブロック中の識別子に、文字色を付ける例です。)
-+```cpp
-+// 例示用のムーブ可能な型
-+struct Widget {
-+  Widget(Widget&amp;amp;&amp;amp;);
-+};
- 
--### 出力
--```
--0
--```
-+auto f1(Widget w) -&amp;gt; Widget {
-+  return w;  // ローカル変数の暗黙ムーブ、C++11から
-+}
-+
-+// Widgetの右辺値から構築可能な型
-+struct RRefTaker {
-+  // Widgetの右辺値からの変換コンストラクタ
-+  RRefTaker(Widget&amp;amp;&amp;amp;);
-+};
-+
-+auto f2(Widget w) -&amp;gt; RRefTaker {
-+  return w;  // 暗黙ムーブされて構築（変換）、C++11から
-+}
-+
-+auto f3(Widget&amp;amp;&amp;amp; w) -&amp;gt; RRefTaker {
-+  return w;  // ローカル右辺値参照の暗黙ムーブ、C++20から
-+}
- 
--(ここには、サンプルコードの実行結果を記述します。何も出力がない場合は、項目を削除せず、空の出力にしてください。)  
--(実行結果が処理系・実行環境によって異なる場合は、項目名を「出力例」に変更し、可能であればその理由も併記してください。)
-+[[noreturn]]
-+void f4(Widget w) {
-+  throw w;  // throw式における暗黙ムーブ、C++20から
-+}
-+
-+struct From {
-+  From(Widget const &amp;amp;);
-+  From(Widget&amp;amp;&amp;amp;);
-+};
-+
-+auto f5() -&amp;gt; From {
-+  Widget w;
-+  return w;  // 暗黙ムーブ（コンストラクタによる変換）、C++11から
-+}
-+
-+struct To {
-+  operator Widget() &amp;amp;&amp;amp;;
-+};
-+
-+auto f6() -&amp;gt; Widget {
-+  To t;
-+  return t;  // 暗黙ムーブ（変換演算子による変換）、C++20から
-+}
-+
-+struct V {
-+  V(Widget); // 値で受け取るコンストラクタ
-+};
- 
-+auto f7() -&amp;gt; V {
-+  Widget w;
-+  return w;  // 暗黙ムーブ（コンストラクタ引数へのムーブ）、C++20から
-+}
-+
-+// DerivedはBaseを公開継承しているとき
-+auto f8() -&amp;gt; Base {
-+  Derived result;
-+  return result;  // 暗黙ムーブ（基底クラスへの変換）、C++20から
-+}
-+
-+auto f9(Widget&amp;amp;&amp;amp; w) -&amp;gt; Widget&amp;amp;&amp;amp; {
-+  return w;  // 戻り値型が参照型の場合の暗黙ムーブ、C++23から
-+}
-+
-+struct J {
-+  operator Widget&amp;amp;() &amp;amp;&amp;amp;;
-+};
-+
-+auto f10(J x) -&amp;gt; Widget&amp;amp; {
-+  return x;  // 戻り値型が参照型の場合の暗黙ムーブ（変換演算子による変換）、C++23から
-+}
-+```
- 
- ## この機能が必要になった背景・経緯
- (執筆中)
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
