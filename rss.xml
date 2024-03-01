@@ -2,9 +2,104 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2024-02-29T15:06:45.992270</updated>
-  <id>26ed3d0c-cbba-486e-b59c-62b728cd2d8a</id>
+  <updated>2024-03-01T03:49:58.696319</updated>
+  <id>359a0728-6185-401c-9190-d6fa06aa324e</id>
 
+  
+    <entry>
+      <title>暗黙的なムーブを簡略化 -- 暗黙ムーブ : 経緯を追加 #1021</title>
+      <link href="https://cpprefjp.github.io/lang/cpp23/simpler_implicit_move.html"/>
+      <id>8384e0bb49cce5acc30eca4215df91ecd554eddb:lang/cpp23/simpler_implicit_move.md</id>
+      <updated>2024-03-01T12:46:32+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp23/simpler_implicit_move.md b/lang/cpp23/simpler_implicit_move.md
+index f61ff2f24..dc7b5733b 100644
+--- a/lang/cpp23/simpler_implicit_move.md
++++ b/lang/cpp23/simpler_implicit_move.md
+@@ -207,6 +207,20 @@ auto g(bool b) -&amp;gt; Weird {
+ }
+ ```
+ 
++```cpp
++// ムーブしないことを明示する関数、C++20までは使用可能
++template&amp;lt;typename T&amp;gt;
++auto unmove(T&amp;amp;&amp;amp; v) -&amp;gt; T&amp;amp; {
++  return v; // C++23からng、vはxvalue
++}
++
++// C++23では次のように修正する必要がある
++template&amp;lt;typename T&amp;gt;
++auto unmove(T&amp;amp;&amp;amp; v) -&amp;gt; T&amp;amp; {
++  return static_cast&amp;lt;T&amp;amp;&amp;gt;(v); // ok、キャスト式はムーブする資格のある式ではない
++}
++```
++
+ ```cpp
+ // 例示用のムーブ可能な型
+ struct Widget {
+@@ -284,15 +298,48 @@ auto f10(J x) -&amp;gt; Widget&amp;amp; {
+ ```
+ 
+ ## この機能が必要になった背景・経緯
+-(執筆中)
+ 
+-## 検討されたほかの選択肢
+-(執筆中)
++C++20までは戻り値型が参照型である場合に暗黙ムーブが行われていなかった。より正確には、関数戻り値の初期化時に戻り値構築のためのコンストラクタを選択するオーバーロード解決が行われる場合にのみ、暗黙ムーブが考慮されていたが、戻り値型が参照型の場合は参照の初期化だけが起こりコンストラクタ呼び出しは関与しないため暗黙ムーブは考慮されていなかった。
++
++これによって、同じ`return`文でも戻り値型が異なることでそのオペランドの扱いが変化してしまっていた。
++
++```cpp
++// Widget, RRefTakerは上の例を参照
++// どちらも、C++20の場合
++
++auto f(Widget&amp;amp;&amp;amp; w) -&amp;gt; RRefTaker {
++  return w;  // ok、wは右辺値として扱われる
++}
++
++auto g(Widget&amp;amp;&amp;amp; w) -&amp;gt; Widget&amp;amp;&amp;amp; {
++  return w;  // ng、wは左辺値として扱われる
++}
++```
++
++この非一貫性を解消することがまず求められていた。
++
++また、C++20時点の暗黙ムーブの使用は二段階のオーバーロード解決を行う複雑なものであり、暗黙ムーブが行われるかどうかについて実装間で挙動に差異が生じていた。
++
++C++20の仕様は次のようになっていた。
++
++暗黙ムーブ可能なエンティティが次のコピー初期化が行われる場所で指名されている場合、コピーの代わりにムーブが使用される場合がある
++
++- `return/co_return`文のオペランド
++    - （諸条件はC++23仕様と同一なので省略）
++- `throw`式のオペランド
++    - （諸条件はC++23仕様と同一なので省略）
++
++これらのコピー初期化が行われる場所において、呼び出されるコンストラクタまたは[`return_­value()`オーバーロード](/lang/cpp20/coroutines.md)を選択するオーバーロード解決は次の順序で実行される
++
++1. オペランドのid式を右辺値（*rvalue*）としてオーバーロード解決を実行する
++2. 1が失敗した（もしくは行われなかった）場合、オペランドのid式を左辺値（*lvalue*）としてオーバーロード解決を実行する
++
++この最後の手順の1回目のオーバーロード解決時にコピーコンストラクタの代わりにムーブコンストラクタが選択されることによって、C++20の暗黙ムーブは達成されていた。しかし、この手順2における「失敗」という言葉の意味が明確ではなく、それによって実装間で暗黙ムーブが行われるかどうか、あるいは選択されるコンストラクタに差異が生じていた。
+ 
+-## 関連項目
+-(執筆中)
++`return`文オペランドの扱いの戻り値型の違いによる非一貫性と、使用の複雑さと曖昧さによる実装間の差異の2つの問題を解決するために、C++23ではムーブする資格がある式という概念を用いて暗黙ムーブの仕様が単純化された。
+ 
+ ## 参照
+ 
+ - [P2266R3 Simpler implicit move](https://wg21.link/p2266r3)
+-- [The Complete Guide to `return x;` - Arthur O&amp;#39;Dwyer - [CppNow 2021] - YouTube](https://www.youtube.com/watch?v=OGKAJD7bmr8)
+\ No newline at end of file
++- [The Complete Guide to `return x;` - Arthur O&amp;#39;Dwyer - [CppNow 2021] - YouTube](https://www.youtube.com/watch?v=OGKAJD7bmr8)
++- [c++ - Does c++23 break unmove - Stack Overflow](https://stackoverflow.com/questions/76647046/does-c23-break-unmove)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>const_pointer_cast -- Merge pull request #1258 from ToruNiina/typo-undefined-behavior</title>
@@ -428,38 +523,6 @@ index 0596df0c1..ad6937ee1 100644
  
  ## この機能が必要になった背景・経緯
  (執筆中)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>暗黙的なムーブを簡略化 -- 備考の修正</title>
-      <link href="https://cpprefjp.github.io/lang/cpp23/simpler_implicit_move.html"/>
-      <id>300354736781ac9f71642b3b2dc18629d4378783:lang/cpp23/simpler_implicit_move.md</id>
-      <updated>2024-02-28T17:57:53+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp23/simpler_implicit_move.md b/lang/cpp23/simpler_implicit_move.md
-index 6b93a6c13..0596df0c1 100644
---- a/lang/cpp23/simpler_implicit_move.md
-+++ b/lang/cpp23/simpler_implicit_move.md
-@@ -170,10 +170,10 @@ auto f() -&amp;gt; int&amp;amp;&amp;amp; {
- |`auto f(T x) -&amp;gt; decltype((x)) { return (x); }`   |`T&amp;amp;` : 〇|`T&amp;amp;` : **×**|ローカル参照を返していた|
- |`auto f(T x) -&amp;gt; decltype(auto) { return x; }`    |`T` : 〇|`T` : 〇||
- |`auto f(T x) -&amp;gt; decltype(auto) { return (x); }`  |`T&amp;amp;` : 〇|**`T&amp;amp;&amp;amp;` :** 〇|ローカル参照を返す|
--|`auto f(T&amp;amp;&amp;amp; x) -&amp;gt; decltype(x) { return x; }`     |`T&amp;amp;&amp;amp;` : ×|`T&amp;amp;&amp;amp;` : **〇**|`x`がローカル変数の場合ローカル参照を返す|
-+|`auto f(T&amp;amp;&amp;amp; x) -&amp;gt; decltype(x) { return x; }`     |`T&amp;amp;&amp;amp;` : ×|`T&amp;amp;&amp;amp;` : **〇**||
- |`auto f(T&amp;amp;&amp;amp; x) -&amp;gt; decltype((x)) { return (x); }` |`T&amp;amp;` : 〇|`T&amp;amp;` : **×**||
--|`auto f(T&amp;amp;&amp;amp; x) -&amp;gt; decltype(auto) { return x; }`  |`T&amp;amp;&amp;amp;` : ×|`T&amp;amp;&amp;amp;` : **〇**||
--|`auto f(T&amp;amp;&amp;amp; x) -&amp;gt; decltype(auto) { return (x); }`|`T&amp;amp;` : 〇|**`T&amp;amp;&amp;amp;` :** 〇||
-+|`auto f(T&amp;amp;&amp;amp; x) -&amp;gt; decltype(auto) { return x; }`  |`T&amp;amp;&amp;amp;` : ×|`T&amp;amp;&amp;amp;` : **〇**|`x`がローカル変数の場合ローカル参照を返す|
-+|`auto f(T&amp;amp;&amp;amp; x) -&amp;gt; decltype(auto) { return (x); }`|`T&amp;amp;` : 〇|**`T&amp;amp;&amp;amp;` :** 〇|`x`がローカル変数の場合ローカル参照を返す|
- |`auto f(T x) -&amp;gt; auto&amp;amp;&amp;amp; { return x; }`       |`T&amp;amp;` : 〇|**`T&amp;amp;&amp;amp;` :** 〇|ローカル参照を返す|
- |`auto f(T x) -&amp;gt; auto&amp;amp;&amp;amp; { return (x); }`   |`T&amp;amp;` : 〇|**`T&amp;amp;&amp;amp;` :** 〇|ローカル参照を返す|
- |`auto f(T&amp;amp;&amp;amp; x) -&amp;gt; auto&amp;amp;&amp;amp; { return x; }`       |`T&amp;amp;` : 〇|**`T&amp;amp;&amp;amp;` :** 〇|`x`がローカル変数の場合ローカル参照を返す|
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
