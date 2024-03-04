@@ -200,12 +200,12 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2023-01-16T09:18:48">
-        2023年01月16日 09時18分48秒
+      <span itemprop="datePublished" content="2024-03-04T03:34:01">
+        2024年03月04日 03時34分01秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">Akira Takahashi</span>
+        <span itemprop="name">onihusube</span>
       </span>
       が更新
     </small></p>
@@ -259,7 +259,7 @@
 <p><code>pos &gt; <a href="https://cpprefjp.github.io/reference/string/basic_string/size.html">size()</a></code>の場合、<code><a href="https://cpprefjp.github.io/reference/stdexcept.html">out_of_range</a></code>例外を送出する。</p>
 <h2>備考</h2>
 <p>C++23から(2)<a href="https://cpprefjp.github.io/lang/cpp11/ref_qualifier_for_this.html">右辺値修飾オーバーロード</a>の追加にともない、従来からある(1)はconst左辺値参照オーバーロードに変更される。
-同時にメンバ関数<code>substr</code>のライブラリ仕様記述は、新たに追加された<code>basic_string</code>コンストラクタを用いて書き直されるものの、基本的な動作はC++20までと同一である。</p>
+同時にメンバ関数<code>substr</code>のライブラリ仕様記述は、新たに追加された<code>basic_string</code>コンストラクタを用いて書き直される。その後でも基本的な動作はC++20までと同一であるが、(2)のオーバーロードでは右辺値の<code>std::string</code>からの部分文字列切り出しが効率化（余計なコピー/アロケーションの削減）される。</p>
 <h2>例</h2>
 <p><div class="yata" id="5a319ec3949ef8edf23b09171951d33003573107"><div class="codehilite"><pre><span></span><code><span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/iostream.html">&lt;iostream&gt;</a></span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/string.html">&lt;string&gt;</a></span><span class="cp"></span>
@@ -286,6 +286,34 @@
 <p><pre><code>llo
 llo
 </code></pre></p>
+<h2>C++23の右辺値参照修飾オーバーロード追加後の変更例</h2>
+<p><div class="codehilite"><pre><span></span><code><span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/iostream.html">&lt;iostream&gt;</a></span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/string.html">&lt;string&gt;</a></span><span class="cp"></span>
+
+<span class="c1">// 右辺値stringを返す関数</span>
+<span class="k">auto</span> <span class="nf">f</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><a href="https://cpprefjp.github.io/reference/string/basic_string.html">std::string</a></span><span class="p">;</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/string/basic_string.html">std::string</a></span> <span class="n">s</span> <span class="o">=</span> <span class="s">"some long string that forces allocation"</span><span class="p">;</span>
+
+  <span class="c1">// sから部分文字列のstringをコピーして作成、sは変更されない（この振る舞いは変わらない）</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/string/basic_string.html">std::string</a></span> <span class="n">result1</span> <span class="o">=</span> <span class="n">s</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
+
+  <span class="c1">// C++20 : 一時オブジェクトのstringから部分文字列のstringをコピーして作成</span>
+  <span class="c1">// C++23 : 一時オブジェクトのstringのリソースを再利用して部分文字列を保持するstringオブジェクトを作成</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/string/basic_string.html">std::string</a></span> <span class="n">result2</span> <span class="o">=</span> <span class="n">f</span><span class="p">().</span><span class="n">substr</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
+
+  <span class="c1">// C++20 : 一時オブジェクトのstringから部分文字列のstringをコピーして作成</span>
+  <span class="c1">// C++23 : 一時オブジェクトのstringのリソースを再利用して部分文字列を保持するstringオブジェクトを作成</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/string/basic_string.html">std::string</a></span> <span class="n">result3</span> <span class="o">=</span> <span class="n"><a href="https://cpprefjp.github.io/reference/string/basic_string.html">std::string</a></span><span class="p">(</span><span class="s">"hello"</span><span class="p">).</span><span class="n">substr</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
+
+  <span class="c1">// C++20 : sから部分文字列のstringをコピーして作成、sは変更されない</span>
+  <span class="c1">// C++23 : sのリソースを再利用して部分文字列を保持するstringオブジェクトを作成、aは有効だが未規定な状態となる（C++23における動作変更）</span>
+  <span class="n"><a href="https://cpprefjp.github.io/reference/string/basic_string.html">std::string</a></span> <span class="n">result4</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">s</span><span class="p">).</span><span class="n">substr</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
 <h2>参照</h2>
 <ul>
 <li><a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0980r1.pdf" target="_blank">P0980R1 Making <code>std::string</code> constexpr</a></li>

@@ -2,9 +2,73 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2024-03-03T19:36:12.152470</updated>
-  <id>33334105-8a39-4329-8cde-68fc2586488a</id>
+  <updated>2024-03-04T03:37:29.329844</updated>
+  <id>a8203478-efb7-4dbf-8747-8a2c69ff9cdc</id>
 
+  
+    <entry>
+      <title>substr -- string::substr() : 右辺値オーバーロードの動作について追記と例を追加</title>
+      <link href="https://cpprefjp.github.io/reference/string/basic_string/substr.html"/>
+      <id>8fc3e56527c951831e16575c61ea40840d7cc837:reference/string/basic_string/substr.md</id>
+      <updated>2024-03-04T12:34:01+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/basic_string/substr.md b/reference/string/basic_string/substr.md
+index a7ad8c218..44120e2a8 100644
+--- a/reference/string/basic_string/substr.md
++++ b/reference/string/basic_string/substr.md
+@@ -49,7 +49,7 @@ constexpr basic_string
+ 
+ ## 備考
+ C++23から(2)[右辺値修飾オーバーロード](/lang/cpp11/ref_qualifier_for_this.md)の追加にともない、従来からある(1)はconst左辺値参照オーバーロードに変更される。
+-同時にメンバ関数`substr`のライブラリ仕様記述は、新たに追加された`basic_string`コンストラクタを用いて書き直されるものの、基本的な動作はC++20までと同一である。
++同時にメンバ関数`substr`のライブラリ仕様記述は、新たに追加された`basic_string`コンストラクタを用いて書き直される。その後でも基本的な動作はC++20までと同一であるが、(2)のオーバーロードでは右辺値の`std::string`からの部分文字列切り出しが効率化（余計なコピー/アロケーションの削減）される。
+ 
+ 
+ ## 例
+@@ -82,6 +82,36 @@ llo
+ llo
+ ```
+ 
++## C++23の右辺値参照修飾オーバーロード追加後の変更例
++
++```cpp
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;string&amp;gt;
++
++// 右辺値stringを返す関数
++auto f() -&amp;gt; std::string;
++
++int main()
++{
++  std::string s = &amp;#34;some long string that forces allocation&amp;#34;;
++
++  // sから部分文字列のstringをコピーして作成、sは変更されない（この振る舞いは変わらない）
++  std::string result1 = s.substr(5, 4);
++
++  // C++20 : 一時オブジェクトのstringから部分文字列のstringをコピーして作成
++  // C++23 : 一時オブジェクトのstringのリソースを再利用して部分文字列を保持するstringオブジェクトを作成
++  std::string result2 = f().substr(5, 4);
++
++  // C++20 : 一時オブジェクトのstringから部分文字列のstringをコピーして作成
++  // C++23 : 一時オブジェクトのstringのリソースを再利用して部分文字列を保持するstringオブジェクトを作成
++  std::string result3 = std::string(&amp;#34;hello&amp;#34;).substr(5, 4);
++
++  // C++20 : sから部分文字列のstringをコピーして作成、sは変更されない
++  // C++23 : sのリソースを再利用して部分文字列を保持するstringオブジェクトを作成、aは有効だが未規定な状態となる（C++23における動作変更）
++  std::string result4 = std::move(s).substr(5, 4);
++}
++```
++
+ ## 参照
+ - [P0980R1 Making `std::string` constexpr](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0980r1.pdf)
+ - [P2438R2 `std::string::substr() &amp;amp;&amp;amp;`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2438r2.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>insert -- リンク修正 #1063</title>
@@ -2352,33 +2416,6 @@ index ac669ea6a..d6d4ceaa3 100644
  
  ## 参照
  
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>onihusube</name>
-        <email>44743040+onihusube@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>暗黙的なムーブを簡略化 -- 不可視文字の削除</title>
-      <link href="https://cpprefjp.github.io/lang/cpp23/simpler_implicit_move.html"/>
-      <id>c4b15eaed4ad336a858490578ffbb2bd63907a59:lang/cpp23/simpler_implicit_move.md</id>
-      <updated>2024-03-01T14:13:30+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp23/simpler_implicit_move.md b/lang/cpp23/simpler_implicit_move.md
-index dc7b5733b..ac669ea6a 100644
---- a/lang/cpp23/simpler_implicit_move.md
-+++ b/lang/cpp23/simpler_implicit_move.md
-@@ -329,7 +329,7 @@ C++20の仕様は次のようになっていた。
- - `throw`式のオペランド
-     - （諸条件はC++23仕様と同一なので省略）
- 
--これらのコピー初期化が行われる場所において、呼び出されるコンストラクタまたは[`return_­value()`オーバーロード](/lang/cpp20/coroutines.md)を選択するオーバーロード解決は次の順序で実行される
-+これらのコピー初期化が行われる場所において、呼び出されるコンストラクタまたは[`return_value()`オーバーロード](/lang/cpp20/coroutines.md)を選択するオーバーロード解決は次の順序で実行される
- 
- 1. オペランドのid式を右辺値（*rvalue*）としてオーバーロード解決を実行する
- 2. 1が失敗した（もしくは行われなかった）場合、オペランドのid式を左辺値（*lvalue*）としてオーバーロード解決を実行する
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
