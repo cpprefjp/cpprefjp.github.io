@@ -2,9 +2,708 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2024-03-05T06:08:50.419505</updated>
-  <id>d9ed81b1-a19f-4fb2-bb0c-caa4e894e721</id>
+  <updated>2024-03-05T12:33:11.462659</updated>
+  <id>2a902026-9a79-477c-809d-ef831678605f</id>
 
+  
+    <entry>
+      <title>linalg -- linalg: transposed(#1233)</title>
+      <link href="https://cpprefjp.github.io/reference/linalg.html"/>
+      <id>c27c81f982304152ebb9a2bff52dbe06fb24c198:reference/linalg.md</id>
+      <updated>2024-03-05T21:29:31+09:00</updated>
+      
+        <content type="html">&lt;div class=&#34;header&#34;&gt;&amp;lt;linalg&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;token&#34;&gt;linalg&lt;/span&gt;&lt;span class=&#34;cpp cpp26&#34; title=&#34;C++26で追加&#34;&gt;(C++26)&lt;/span&gt;&lt;/h1&gt;
+&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;&lt;code&gt;&amp;lt;linalg&amp;gt;&lt;/code&gt;ヘッダでは、線形代数(linear algebra)に関する基礎的な演算アルゴリズムを提供する。
+本ヘッダが提供するエンティティは、すべて名前空間&lt;code&gt;std::linalg&lt;/code&gt;に属する。&lt;/p&gt;
+&lt;p&gt;1次元データであるベクトル(vector)や2次元データである行列(matrix)に対して、線形代数分野のデファクトスタンダードとされる BLAS(Basic Linear Algebra Subprograms) 互換のアルゴリズム群、いくつかの LAPACK(Linear Algebra PACKage) 互換のアルゴリズムが提供される。
+BLAS互換アルゴリズムは、演算対象データの次元数や計算オーダーに応じて3段階に区分される。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Level 1 BLAS : ベクトルーベクトルの演算&lt;/li&gt;
+&lt;li&gt;Level 2 BLAS : 行列ーベクトルの演算&lt;/li&gt;
+&lt;li&gt;Level 3 BLAS : 行列ー行列の演算&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;例えば、2個の一般行列の積を求める&lt;code&gt;std::linalg::matrix_product&lt;/code&gt;はLevel 3 BLASルーチン&lt;code&gt;xGEMM&lt;/code&gt;に対応する。
+（実際のBLASルーチン名は、浮動小数点数型の単精度&lt;code&gt;S&lt;/code&gt;／倍精度&lt;code&gt;D&lt;/code&gt;とそれぞれの複素数版&lt;code&gt;C&lt;/code&gt;,&lt;code&gt;Z&lt;/code&gt;として、プレフィックス&lt;code&gt;x&lt;/code&gt;部は文字4種類のいずれか。）&lt;/p&gt;
+&lt;p&gt;また、多次元配列ビュー&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/mdspan/mdspan.html&#34;&gt;std::mdpan&lt;/a&gt;&lt;/code&gt;と組み合わせて利用する拡張機能が提供される。&lt;/p&gt;
+&lt;h2&gt;共通要件&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;&amp;lt;linalg&amp;gt;&lt;/code&gt;ヘッダが提供する演算アルゴリズムは、スカラ値およびベクトル／行列の要素型として線形代数値型(linear algebra value types)を取り扱う。&lt;/p&gt;
+&lt;p&gt;線形代数値型はBLASが取り扱う&lt;code&gt;float&lt;/code&gt;, &lt;code&gt;double&lt;/code&gt;, &lt;code&gt;std::complex&amp;lt;float&amp;gt;&lt;/code&gt;, &lt;code&gt;std::complex&amp;lt;double&amp;gt;&lt;/code&gt;をはじめ、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/concepts/semiregular.html&#34;&gt;semiregular&lt;/a&gt;&lt;/code&gt;のモデルであれば良い。
+また、線形代数値型の値初期化は加法元（算術型であれば値&lt;code&gt;0&lt;/code&gt;）であること。&lt;/p&gt;
+&lt;p&gt;プログラム定義型を利用する場合、演算アルゴリズムはカスタマイゼーションポイントとして&lt;code&gt;abs&lt;/code&gt;, &lt;code&gt;real&lt;/code&gt;, &lt;code&gt;imag&lt;/code&gt;, &lt;code&gt;conj&lt;/code&gt;を非修飾名で呼び出す。&lt;/p&gt;
+&lt;h2&gt;&lt;code&gt;std::mdspan&lt;/code&gt;向け機能拡張&lt;/h2&gt;
+&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;名前&lt;/th&gt;
+&lt;th&gt;説明&lt;/th&gt;
+&lt;th&gt;対応バージョン&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/linalg/layout_blas_packed.html&#34;&gt;layout_blas_packed&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;行列要素のBLAS互換パックレイアウトに対応する&lt;a href=&#34;https://cpprefjp.github.io/reference/mdspan/LayoutMappingPolicy.html&#34;&gt;レイアウトマッピングポリシー&lt;/a&gt; (class template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/linalg/scaled_accessor.md.nolink&#34;&gt;scaled_accessor&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;scaled&lt;/code&gt;関数用の&lt;a href=&#34;https://cpprefjp.github.io/reference/mdspan/AccessorPolicy.html&#34;&gt;アクセサポリシー&lt;/a&gt; (class template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/linalg/scaled.md.nolink&#34;&gt;scaled&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;要素値をスカラ倍した読み取り専用&lt;code&gt;std::mdspan&lt;/code&gt;を作る (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/linalg/conjugated_accessor.md.nolink&#34;&gt;conjugated_accessor&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;conjugated&lt;/code&gt;関数用の&lt;a href=&#34;https://cpprefjp.github.io/reference/mdspan/AccessorPolicy.html&#34;&gt;アクセサポリシー&lt;/a&gt; (class template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/linalg/conjugated.md.nolink&#34;&gt;conjugated&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;読み取り専用の複素共役ビュー&lt;code&gt;std::mdspan&lt;/code&gt;を作る (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/linalg/layout_transpose.html&#34;&gt;layout_transpose&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;transposed&lt;/code&gt;関数用の&lt;a href=&#34;https://cpprefjp.github.io/reference/mdspan/LayoutMappingPolicy.html&#34;&gt;レイアウトマッピングポリシー&lt;/a&gt; (class template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/linalg/transposed.html&#34;&gt;transposed&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;2次元&lt;code&gt;std::mdspan&lt;/code&gt;の行列転置ビューを作る (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/linalg/conjugate_transposed.md.nolink&#34;&gt;conjugate_transposed&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;読み取り専用の複素共役転置ビュー&lt;code&gt;std::mdspan&lt;/code&gt;を作る (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2&gt;BLAS 1アルゴリズム&lt;/h2&gt;
+&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;名前&lt;/th&gt;
+&lt;th&gt;説明&lt;/th&gt;
+&lt;th&gt;対応バージョン&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;setup_givens_rotation_result&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;setup_givens_rotation&lt;/code&gt;の結果型 (class template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;setup_givens_rotation&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xLARTG: ギブンス回転をセットアップする (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;apply_givens_rotation&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xROT: ベクトルにギブンス回転を適用する (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;swap_elements&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xSWAP: 2つのベクトル／行列の要素を交換する (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;scale&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xSCAL: ベクトル／行列の要素にスカラ値を乗算する (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;copy&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xCOPY: ベクトル／行列の要素をコピーする (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;add&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xAXPY: 2つのベクトル／行列の要素を加算する (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;dot&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xDOT, xDOTU: 2つのベクトルのドット積を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;dotc&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xDOTC: 2つのベクトルの複素共役ドット積を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;sum_of_squares_result&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;vector_sum_of_squares&lt;/code&gt;の結果型 (class template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;vector_sum_of_squares&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xLASSQ: ベクトル要素の平方和を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;vector_two_norm&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xNRM2: ベクトルのユークリッドノルム(Euclidean norm)を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;vector_abs_sum&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xASUM: ベクトル要素の絶対値和を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;vector_idx_abs_max&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xIAMAX: ベクトル要素のうち最大絶対値インデクスを返す (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;matrix_frob_norm&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;行列のフロベニウスノルム(Frobenius norm)を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;matrix_one_norm&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;行列の1ノルム(One norm)を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;matrix_inf_norm&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;行列の無限大ノルム(Infinity norm)を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2&gt;BLAS 2アルゴリズム&lt;/h2&gt;
+&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;名前&lt;/th&gt;
+&lt;th&gt;説明&lt;/th&gt;
+&lt;th&gt;対応バージョン&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;matrix_vector_product&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xGEMV: 一般行列とベクトルの積を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;symmetric_matrix_vector_product&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xSYMV: 対称行列とベクトルの積を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;hermitian_matrix_vector_product&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xHEMV: ハミルトニアン行列とベクトルの積を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;triangular_matrix_vector_product&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xTRMV: 三角行列とベクトルの積を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;triangular_matrix_vector_solve&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xTRSV: 三角行列を係数とする行列方程式を解く (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;matrix_rank_1_update&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xGER, xGERU: 行列のRank-1更新 (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;matrix_rank_1_update_c&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xGERC: 複素行列のRank-1更新 (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;symmetric_matrix_rank_1_update&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xSYR: 対称行列のRank-1更新 (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;hermitian_matrix_rank_1_update&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xHER: ハミルトニアン行列のRank-1更新 (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;symmetric_matrix_rank_2_update&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xSYR2: 対称行列のRank-2更新 (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;hermitian_matrix_rank_2_update&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xHER2: ハミルトニアン行列のRank-2更新 (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2&gt;BLAS 3アルゴリズム&lt;/h2&gt;
+&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;名前&lt;/th&gt;
+&lt;th&gt;説明&lt;/th&gt;
+&lt;th&gt;対応バージョン&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;matrix_product&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xGEMM: 2つの一般行列の積を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;symmetric_matrix_product&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xSYMM: 対称行列と行列の積を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;hermitian_matrix_product&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xHEMM: ハミルトニアン行列と行列の積を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;triangular_matrix_product&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xTRMM: 三角行列と行列の積を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;triangular_matrix_left_product&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xTRMM: In-placeに三角行列と行列の積を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;triangular_matrix_right_product&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xTRMM: In-placeに三角行列と行列の積を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;symmetric_matrix_rank_k_update&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xSYRK: 対称行列のRank-k更新 (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;hermitian_matrix_rank_k_update&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xHERK: ハミルトニアン行列のRank-k更新 (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;symmetric_matrix_rank_2k_update&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xSYR2K: 対称行列のRank-2k更新 (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;hermitian_matrix_rank_2k_update&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xHER2K: ハミルトニアン行列のRank-2k更新 (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;triangular_matrix_matrix_left_solve&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xTRSM: 三角行列の連立一次方程式を解く (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;triangular_matrix_matrix_right_solve&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xTRSM: 三角行列の連立一次方程式を解く (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2&gt;タグ型&lt;/h2&gt;
+&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;名前&lt;/th&gt;
+&lt;th&gt;説明&lt;/th&gt;
+&lt;th&gt;対応バージョン&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/linalg/column_major_t.html&#34;&gt;column_major_t&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;列優先(column-major)順序を表現するためのタグ型 (class)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/linalg/column_major_t.html&#34;&gt;column_major&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;列優先(column-major)順序を表現するためのタグ値 (variable)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/linalg/row_major_t.html&#34;&gt;row_major_t&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;行優先(row-major)順序を表現するためのタグ型 (class)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/linalg/row_major_t.html&#34;&gt;row_major&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;行優先(row-major)順序を表現するためのタグ値 (variable)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/linalg/upper_triangle_t.md.nolink&#34;&gt;upper_triangle_t&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;上三角行列を表現するためのタグ型 (class)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/linalg/upper_triangle_t.md.nolink&#34;&gt;upper_triangle&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;上三角行列を表現するためのタグ値 (variable)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/linalg/lower_triangle_t.md.nolink&#34;&gt;lower_triangle_t&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;下三角行列を表現するためのタグ型 (class)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/linalg/lower_triangle_t.md.nolink&#34;&gt;lower_triangle&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;下三角行列を表現するためのタグ値 (variable)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;implicit_unit_diagonal_t&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;implicit unit diagonalを表現するためのタグ型 (class)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;implicit_unit_diagonal&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;implicit unit diagonalを表現するためのタグ値 (variable)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;explicit_diagonal_t&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;explicit diagonalを表現するためのタグ型 (class)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;explicit_diagonal&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;explicit diagonalを表現するためのタグ値 (variable)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2&gt;バージョン&lt;/h2&gt;
+&lt;h3&gt;言語&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;C++26&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;関連項目&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/mdspan.html&#34;&gt;&amp;lt;mdspan&amp;gt;&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;参照&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p1673r13.html&#34; target=&#34;_blank&#34;&gt;P1673R13 A free function linear algebra interface based on the BLAS&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1674r2.html&#34; target=&#34;_blank&#34;&gt;P1674R2: Evolving a Standard C++ Linear Algebra Library from the BLAS&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/CppCon/CppCon2023/blob/main/Presentations/stdlinalg_linear_algebra_coming_to_standard_cpp.pdf&#34; target=&#34;_blank&#34;&gt;std::linalg: Linear Algebra Coming to Standard C++&lt;/a&gt;, CppCon 2023&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.netlib.org/blas/&#34; target=&#34;_blank&#34;&gt;BLAS (Basic Linear Algebra Subprograms)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/div&gt;</content>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>layout_transpose -- linalg: transposed(#1233)</title>
+      <link href="https://cpprefjp.github.io/reference/linalg/layout_transpose.html"/>
+      <id>c27c81f982304152ebb9a2bff52dbe06fb24c198:reference/linalg/layout_transpose.md</id>
+      <updated>2024-03-05T21:29:31+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/linalg/layout_transpose.md b/reference/linalg/layout_transpose.md
+index 33e6a26fb..c652870be 100644
+--- a/reference/linalg/layout_transpose.md
++++ b/reference/linalg/layout_transpose.md
+@@ -14,7 +14,7 @@ namespace std::linalg {
+ ## 概要
+ `layout_transpose`は、多次元配列ビュー[`mdspan`](/reference/mdspan/mdspan.md)を用いた行列(matrix)において、転置行列を表現する[レイアウトマッピングポリシー](/reference/mdspan/LayoutMappingPolicy.md)クラスである。
+ 
+-`layout_transpose`クラステンプレートは、行列転置操作[`transpose`](transpose.md.nolink)の戻り値型として利用される。
++`layout_transpose`クラステンプレートは、行列転置操作[`transposed`](transposed.md)の戻り値型として利用される。
+ 
+ 
+ ## 適格要件
+@@ -42,7 +42,7 @@ namespace std::linalg {
+ 
+ ## 関連項目
+ - [`mdspan`](/reference/mdspan/mdspan.md)
+-- [`transpose`](transpose.md.nolink)
++- [`transposed`](transposed.md)
+ 
+ 
+ ## 参照
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>mapping -- linalg: transposed(#1233)</title>
+      <link href="https://cpprefjp.github.io/reference/linalg/layout_transpose/mapping.html"/>
+      <id>c27c81f982304152ebb9a2bff52dbe06fb24c198:reference/linalg/layout_transpose/mapping.md</id>
+      <updated>2024-03-05T21:29:31+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/linalg/layout_transpose/mapping.md b/reference/linalg/layout_transpose/mapping.md
+index 1f7b64928..7ee2cb39c 100644
+--- a/reference/linalg/layout_transpose/mapping.md
++++ b/reference/linalg/layout_transpose/mapping.md
+@@ -21,7 +21,7 @@ namespace std::linalg {
+ `layout_transpose::mapping`は、任意の[レイアウトマッピングポリシー](/reference/mdspan/LayoutMappingPolicy.md)に対して行列転置操作を行った[レイアウトマッピング](/reference/mdspan/LayoutMapping.md)を表現するクラスである。
+ 
+ ### 説明専用メンバ
+-説明専用メンバ型`nested-mapping-type`を`Layout::mapping&amp;lt;transpose-extents-t&amp;lt;Extents&amp;gt;&amp;gt;`とする。
++説明専用メンバ型`nested-mapping-type`を`Layout::mapping&amp;lt;`[`transpose-extents-t`](transpose-extents.md)`&amp;lt;Extents&amp;gt;&amp;gt;`とする。
+ 
+ `layout_transpose::mapping`クラステンプレートは、下記の説明専用メンバ変数を保持する。
+ 
+@@ -96,9 +96,5 @@ namespace std::linalg {
+ - [Visual C++](/implementation.md#visual_cpp): ??
+ 
+ 
+-## 関連項目
+-- [`transpose`](transpose.md.nolink)
+-
+-
+ ## 参照
+ - [P1673R13 A free function linear algebra interface based on the BLAS](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p1673r13.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- linalg: transposed(#1233)</title>
+      <link href="https://cpprefjp.github.io/reference/linalg/layout_transpose/mapping/op_constructor.html"/>
+      <id>c27c81f982304152ebb9a2bff52dbe06fb24c198:reference/linalg/layout_transpose/mapping/op_constructor.md</id>
+      <updated>2024-03-05T21:29:31+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/linalg/layout_transpose/mapping/op_constructor.md b/reference/linalg/layout_transpose/mapping/op_constructor.md
+index 92a7781e1..f9e323780 100644
+--- a/reference/linalg/layout_transpose/mapping/op_constructor.md
++++ b/reference/linalg/layout_transpose/mapping/op_constructor.md
+@@ -14,7 +14,7 @@ constexpr explicit mapping(const nested-mapping-type&amp;amp; map);
+ 
+ 
+ ## 効果
+-説明専用メンバ`nested-mapping_`を`map`で、`extents_`を`transpose-extents(map.extents())`で初期化する。
++説明専用メンバ`nested-mapping_`を`map`で、`extents_`を[`transpose-extents`](../transpose-extents.md)`(map.extents())`で初期化する。
+ 
+ 
+ ## バージョン
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>transpose-extents -- linalg: transposed(#1233)</title>
+      <link href="https://cpprefjp.github.io/reference/linalg/layout_transpose/transpose-extents.html"/>
+      <id>c27c81f982304152ebb9a2bff52dbe06fb24c198:reference/linalg/layout_transpose/transpose-extents.md</id>
+      <updated>2024-03-05T21:29:31+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/linalg/layout_transpose/transpose-extents.md b/reference/linalg/layout_transpose/transpose-extents.md
+new file mode 100644
+index 000000000..0ce6db870
+--- /dev/null
++++ b/reference/linalg/layout_transpose/transpose-extents.md
+@@ -0,0 +1,32 @@
++# transpose-extents
++* linalg[meta header]
++* function template[meta id-type]
++* std::linalg[meta namespace]
++* cpp26[meta cpp]
++
++```cpp
++template&amp;lt;class IndexType, size_t InputExtent0, size_t InputExtent1&amp;gt;
++constexpr extents&amp;lt;IndexType, InputExtent1, InputExtent0&amp;gt;
++  transpose-extents(const extents&amp;lt;IndexType, InputExtent0, InputExtent1&amp;gt;&amp;amp; in);
++
++template&amp;lt;class InputExtents&amp;gt;
++using transpose-extents-t =
++  decltype(transpose-extents(declval&amp;lt;InputExtents&amp;gt;()));
++```
++* extents[link /reference/mdspan/extents.md]
++
++## 概要
++行列転置操作の動作説明に用いる説明専用の関数テンプレート
++
++
++## 戻り値
++[`extents`](/reference/mdspan/extents.md)`&amp;lt;IndexType, InputExtent1, InputExtent0&amp;gt;(in.extent(1), in.extent(0))`
++
++
++## バージョン
++### 言語
++- C++26
++
++
++## 参照
++- [P1673R13 A free function linear algebra interface based on the BLAS](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p1673r13.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>transposed -- linalg: transposed(#1233)</title>
+      <link href="https://cpprefjp.github.io/reference/linalg/transposed.html"/>
+      <id>c27c81f982304152ebb9a2bff52dbe06fb24c198:reference/linalg/transposed.md</id>
+      <updated>2024-03-05T21:29:31+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/linalg/transposed.md b/reference/linalg/transposed.md
+new file mode 100644
+index 000000000..bfcfede27
+--- /dev/null
++++ b/reference/linalg/transposed.md
+@@ -0,0 +1,120 @@
++# transposed
++* linalg[meta header]
++* function template[meta id-type]
++* std::linalg[meta namespace]
++* cpp26[meta cpp]
++
++```cpp
++template&amp;lt;class ElementType,
++         class Extents,
++         class Layout,
++         class Accessor&amp;gt;
++constexpr auto transposed(
++  mdspan&amp;lt;ElementType, Extents, Layout, Accessor&amp;gt; a);
++```
++* Extents[link /reference/mdspan/extents.md]
++* Layout[link /reference/mdspan/LayoutMappingPolicy.md]
++* Accessor[link /reference/mdspan/AccessorPolicy.md]
++* mdspan[link /reference/mdspan/mdspan.md]
++
++## 概要
++行列(matrix)を表現する2次元配列ビュー[`std::mdspan`](/reference/mdspan/mdspan.md)に対して、転置行列(transposed matrix)を表現する新しい2次元配列ビューを作る。
++
++本操作により`mdspan`参照先メモリブロックが書き換えられることはなく、戻り値`mdspan`を介した要素アクセス時に行／列を入れ替える転置操作が行われる。
++
++
++## 適格要件
++[`Extents::rank()`](/reference/mdspan/extents/rank.md) `== 2`
++
++
++## 戻り値
++説明用の型`ReturnExtents`を[`transpose-extents-t`](layout_transpose/transpose-extents.md)`&amp;lt;Extents&amp;gt;`、型`R`を[`mdspan`](/reference/mdspan/mdspan.md)`&amp;lt;ElementType, ReturnExtents, ReturnLayout, Accessor&amp;gt;`、型`ReturnLayout`を下記の通りとする。
++
++- `Layout`が[`layout_left`](/reference/mdspan/layout_left.md)のとき、[`layout_right`](/reference/mdspan/layout_right.md)
++- `Layout`が[`layout_right`](/reference/mdspan/layout_right.md)のとき、[`layout_left`](/reference/mdspan/layout_left.md)
++- `Layout`が[`layout_stride`](/reference/mdspan/layout_stride.md)のとき、`layout_stride`
++- `Layout`が[`layout_blas_packed`](layout_blas_packed.md)`&amp;lt;Triangle, StorageOrder&amp;gt;`のとき、`layout_blas_packed&amp;lt;OppositeTriangle, OppositeStorageOrder&amp;gt;`
++    - `OppositeTriangle`は[`conditional_t`](/reference/type_traits/conditional.md)`&amp;lt;`[`is_same_v`](/reference/type_traits/is_same.md)`&amp;lt;Triangle, upper_triangle_t&amp;gt;, lower_triangle_t, upper_triangle_t&amp;gt;`
++    - `OppositeStorageOrder`は[`conditional_t`](/reference/type_traits/conditional.md)`&amp;lt;`[`is_same_v`](/reference/type_traits/is_same.md)`&amp;lt;StorageOrder, column_major_t&amp;gt;, row_major_t, column_major_t&amp;gt;`
++- `Layout`が[`layout_transpose`](layout_transpose.md)`&amp;lt;NestedLayout&amp;gt;`のとき、`NestedLayout`
++- そうでなければ、[`layout_transpose`](layout_transpose.md)`&amp;lt;Layout&amp;gt;`
++
++型`ReturnMapping`を`ReturnLayout::mapping&amp;lt;ReturnExtents&amp;gt;`として、次の値を返す。
++
++- `Layout`が[`layout_left`](/reference/mdspan/layout_left.md)または[`layout_right`](/reference/mdspan/layout_right.md)または[`layout_blas_packed`](layout_blas_packed.md)の特殊化であるとき、
++    ```cpp
++    R(a.data_handle(),
++      ReturnMapping(transpose-extents(a.mapping().extents())),
++      a.accessor())
++    ```
++    * transpose-extents[link layout_transpose/transpose-extents.md]
++- `Layout`が[`layout_stride`](/reference/mdspan/layout_stride.md)の特殊化であるとき、
++    ```cpp
++    R(a.data_handle(),
++      ReturnMapping(transpose-extents(a.mapping().extents()),
++                    array{a.mapping().stride(1), a.mapping().stride(0)}),
++      a.accessor())
++    ```
++    * transpose-extents[link layout_transpose/transpose-extents.md]
++- `Layout`が[`layout_transpose`](layout_transpose.md)の特殊化であるとき、
++    ```cpp
++    R(a.data_handle(), a.mapping().nested_mapping(), a.accessor())
++    ```
++- それ以外のとき、
++    ```cpp
++    R(a.data_handle(), ReturnMapping(a.mapping()), a.accessor())
++    ```
++
++
++## 例
++```cpp example
++#include &amp;lt;cassert&amp;gt;
++#include &amp;lt;linalg&amp;gt;
++#include &amp;lt;mdspan&amp;gt;
++
++int main()
++{
++  int arr[] = {1, 2, 3, 4, 5, 6};
++  using Ext2D = std::dextents&amp;lt;size_t, 2&amp;gt;;
++
++  std::mdspan mat0{arr, Ext2D{2, 3}};
++  assert(mat0.extent(0) == 2 &amp;amp;&amp;amp; mat0.extent(1) == 3);
++  // 1 2
++  // 3 4
++  // 5 6
++
++  auto mat1 = std::linalg::transposed(mat0);
++  assert(mat1.extent(0) == 3 &amp;amp;&amp;amp; mat1.extent(1) == 2);
++  // 1 3 5
++  // 2 4 6
++
++  // transposed戻り値は書き換え可能なmdspan
++  mat0[1, 2] = 42;  // 6 -&amp;gt; 42
++  asssert((mat1[2, 1] == 42));
++}
++```
++* std::linalg::transposed[color ff0000]
++
++### 出力
++```
++```
++
++
++## バージョン
++### 言語
++- C++26
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): ??
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 関連項目
++- [`mdspan`](/reference/mdspan/mdspan.md)
++
++
++## 参照
++- [P1673R13 A free function linear algebra interface based on the BLAS](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p1673r13.html)
++- [P1674R2: Evolving a Standard C++ Linear Algebra Library from the BLAS](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1674r2.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>右辺値参照・ムーブセマンティクス -- C++11 右辺値参照 : 関連項目を追加</title>
@@ -178,813 +877,6 @@ index 5b15851cd..5ad23d7f2 100644
      * ranges::unique[link /reference/algorithm/ranges_unique.md]
      * key_equiv[link key_equiv.md]
      * distance[link /reference/iterator/distance.md]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>C++23 -- zip_viewの説明を追加 #1063</title>
-      <link href="https://cpprefjp.github.io/lang/cpp23.html"/>
-      <id>8306cf4ebf6730e58192cbd3a1d57099c2631534:lang/cpp23.md</id>
-      <updated>2024-03-04T04:23:31+09:00</updated>
-      
-        <content type="html">&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;token&#34;&gt;C++23&lt;/span&gt;&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;h2&gt;概要&lt;/h2&gt;
-&lt;p&gt;C++23とは、2023年中に改訂される予定の、C++バージョンの通称である。&lt;/p&gt;
-&lt;p&gt;このバージョンは、策定中のためC++2bと呼ばれることがある。「(C++20である2020年の次の) 202b年にリリースされる」という伏せ字として「b」が使われているが、3年周期に次のバージョンが策定されることが決まっているため、伏せ字になっている年数がずれることはない。&lt;/p&gt;
-&lt;h2&gt;言語機能&lt;/h2&gt;
-&lt;h3&gt;変数&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;言語機能&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/literal_suffix_for_signed_size_t.html&#34;&gt;(符号付き)&lt;code&gt;size_t&lt;/code&gt;リテラルのためのサフィックス&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;42z&lt;/code&gt;/&lt;code&gt;42Z&lt;/code&gt;とすることで&lt;code&gt;size_t&lt;/code&gt;に対応する符号付き整数型のリテラルとする&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/simpler_implicit_move.html&#34;&gt;暗黙的なムーブを簡略化&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;参照を返す関数の&lt;code&gt;return&lt;/code&gt;文で暗黙的にムーブされない問題を修正&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;p&gt;これらに加えて、ライブラリ機能として拡張浮動小数点数型が定義された。&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/stdfloat.html&#34;&gt;&amp;lt;stdfloat&amp;gt;&lt;/a&gt;&lt;/code&gt;を参照。&lt;/p&gt;
-&lt;h3&gt;関数&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;言語機能&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/declarations_and_where_to_find_them.md.nolink&#34;&gt;スコープと名前ルックアップの仕様整理&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;複雑で不完全になっているスコープと名前ルックアップの仕様を整理し、一部の問題を解決する&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/meaningful_exports.html&#34;&gt;無意味なexport宣言を禁止する&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;いくつかの不必要な宣言に対するモジュールexportを禁止する&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;制御構文&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;言語機能&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/extend_init_statement_to_allow_alias_declaration.html&#34;&gt;初期化文での型の別名宣言を許可&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;for (using T = int; T e : v) {}&lt;/code&gt;を許可&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/lifetime_extension_in_range_based_for_loop.html&#34;&gt;範囲for文が範囲初期化子内で生じた一時オブジェクトを延命することを規定&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;範囲初期化子内で生じた一時オブジェクトは範囲for文の終わりまで延命される&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/labels_at_the_end_of_compound_statements.html&#34;&gt;複合文の末尾へのラベルを許可&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;C互換のため、複合文の末尾でのgoto文のラベルを許可する&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;クラス&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;言語機能&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/deducing_this.md.nolink&#34;&gt;自身のオブジェクトを明示的にパラメータとして指定する&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;メンバ関数が&lt;code&gt;*this&lt;/code&gt;の型・オブジェクトをパラメータとしてとり、&lt;code&gt;*this&lt;/code&gt;オブジェクトがconst/非const、左辺値/右辺値であるかをメンバ関数内で識別できるようにする&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/make_declaration_order_layout_mandated.html&#34;&gt;アクセス制御の異なるメンバ変数のレイアウトを宣言順に規定&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;アクセス制御の異なるメンバ変数のレイアウトは並び替えを許可されていたが宣言順に規定する&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/multidimensional_subscript_operator.html&#34;&gt;添字演算子の多次元サポート&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;operator[](int x, int y, int z)&lt;/code&gt;のように添字演算子のオーバーロードで複数のパラメータをとることを許可&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/static_operator.html&#34;&gt;&lt;code&gt;this&lt;/code&gt;ポインタをもつ必要のない演算子を&lt;code&gt;static&lt;/code&gt;として宣言できるようにする&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;状態をもたないいくつかの演算子を&lt;code&gt;static&lt;/code&gt;として宣言できるようにする&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;文字列&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;言語機能&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/mixed_string_literal_concatenation.html&#34;&gt;異なる文字エンコーディングをもつ文字列リテラルの連結を不適格とする&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;auto a = u8&#34;&#34; L&#34;&#34;;&lt;/code&gt;のような異なる文字エンコーディング同士での文字列リテラルを連結を禁止する&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/delimited_escape_sequences.html&#34;&gt;エスケープシーケンスの区切り&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;エスケープシーケンスの範囲を明確にする構文を追加する&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/numeric_and_universal_character_escapes_in_character_and_string_literals.md.nolink&#34;&gt;文字・文字列リテラル中の数値・ユニバーサルキャラクタのエスケープに関する問題解決&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/remove_non_encodable_wide_character_literals_and_multicharacter_wide_character_literals.html&#34;&gt;1ワイド文字に収まらないワイド文字リテラルを禁止する&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;エンコード結果として&lt;code&gt;wchar_t&lt;/code&gt;の大きさに収まらないワイド文字リテラルを禁止する&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/named_universal_character_escapes.html&#34;&gt;名前付きユニバーサルキャラクタ名&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;16進数のユニバーサルキャラクタだけでなく、その文字の名前を入力できるようにする&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;テンプレート&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;言語機能&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/generalized_wording_for_partial_specializations.html&#34;&gt;変数テンプレートの部分特殊化を許可&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;変数テンプレートの部分特殊化を許可するために部分特殊化の仕様を汎用化&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/class_template_argument_deduction_from_inherited.html&#34;&gt;継承コンストラクタからのクラステンプレート引数の推論&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;継承コンストラクタからもクラステンプレート引数を推論できるようにする&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;定数式&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;言語機能&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/if_consteval.html&#34;&gt;if consteval&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;コンパイル時の文脈かどうかで分岐させる&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/narrowing_contextual_conversions_to_bool.html&#34;&gt;定数式の文脈での&lt;code&gt;bool&lt;/code&gt;への縮小変換を許可&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;if constexpr(flags &amp;amp; Flags::Exec)&lt;/code&gt;や&lt;code&gt;static_assert(N);&lt;/code&gt;を許可&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/non_literal_variables_in_constexpr_functions.html&#34;&gt;定数式内での非リテラル変数、静的変数・スレッドローカル変数およびgotoとラベルの存在を許可する&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;コンパイル時に評価されない限り、定数式内に静的変数・スレッドローカル変数およびgoto文とラベルを含むことを許可する&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/character_encoding_of_diagnostic_text.html&#34;&gt;静的な診断メッセージの文字エンコーディング&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;static_assert&lt;/code&gt;や&lt;code&gt;[[deprecated]]&lt;/code&gt;などの診断メッセージの文字集合に関する要件をなくす&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/relaxing_some_constexpr_restrictions.html&#34;&gt;&lt;code&gt;constexpr&lt;/code&gt;関数が定数実行できない場合でも適格とする&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;定数式実行できない関数であっても、実際にコンパイル時に評価されない限り&lt;code&gt;constexpr&lt;/code&gt;指定することを許可する&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/permitting_static_constexpr_variables_in_constexpr_functions.html&#34;&gt;&lt;code&gt;constexpr&lt;/code&gt;関数内での&lt;code&gt;static constexpr&lt;/code&gt;変数を許可&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;constexpr&lt;/code&gt;関数のローカルで定数を定義できるようにする&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/consteval_needs_to_propagate_up.html&#34;&gt;&lt;code&gt;constexpr&lt;/code&gt;関数内で&lt;code&gt;consteval&lt;/code&gt;関数を呼び出せない問題を軽減&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;consteval&lt;/code&gt;呼び出しを含む&lt;code&gt;constexpr&lt;/code&gt;関数を条件付きで&lt;code&gt;consteval&lt;/code&gt;関数とみなすようにする&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;ラムダ式&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;言語機能&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/down_with_lambda_parens.html&#34;&gt;ラムダ式で&lt;code&gt;()&lt;/code&gt;を省略できる条件を緩和&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;修飾や戻り値型をともなってもパラメータリストが空であれば&lt;code&gt;()&lt;/code&gt;を省略できる&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/attributes_on_lambda_expressions.html&#34;&gt;ラムダ式に対する属性&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;ラムダ式のいくつかの箇所に属性を記述できるようにする&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;属性&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;言語機能&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/portable_assumptions.html&#34;&gt;コード内容の仮定をコンパイラに伝えるassume属性&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;最適化のために、コードの仮定をコンパイラに伝える属性を標準化する&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;プリプロセッサ&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;言語機能&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/consistent_character_literal_encoding.html&#34;&gt;文字リテラルエンコーディングを一貫させる&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;プリプロセッサの条件式での文字リテラルの扱いをC++式と同様にする&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/add_support_for_preprocessing_directives_elifdef_and_elifndef.html&#34;&gt;&lt;code&gt;elif&lt;/code&gt;/&lt;code&gt;elifdef&lt;/code&gt;/&lt;code&gt;elifndef&lt;/code&gt;のサポートを追加&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;#if&lt;/code&gt;/&lt;code&gt;#ifdef&lt;/code&gt;/&lt;code&gt;#ifndef&lt;/code&gt;に対応する複数条件命令のサポートを追加する&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/warning.html&#34;&gt;&lt;code&gt;#warning&lt;/code&gt;のサポートを追加&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;多くのC++コンパイラが実装していたプリプロセス時の警告&lt;code&gt;#warning message&lt;/code&gt;を正式サポート&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/support_for_utf8_as_a_portable_source_file_encoding.html&#34;&gt;汎用的なソースコードのエンコーディングとしてUTF-8をサポート&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;すべてのコンパイラはUTF-8文字コードのソースコードをサポートしなければならない&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;小さな変更&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;言語機能&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/update_normative_reference_to_posix.html&#34;&gt;参照するPOSIX規格を更新&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;新しいPOSIX規格の機能を標準C++が参照していたため、参照するPOSIX規格のバージョンを更新&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp23/trimming_whitespaces_before_line_splicing.html&#34;&gt;行末スペースを無視するよう規定&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;行末が「&lt;code&gt;\ &lt;/code&gt;」でおわっていた場合にMSVCは行の継続をしない実装になっていたため動作を共通化するため仕様を規定&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;ライブラリ更新の概要&lt;/h2&gt;
-&lt;h3&gt;新ライブラリ&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;C++標準ライブラリ全体のモジュールとして&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/module/std.html&#34;&gt;std&lt;/a&gt;&lt;/code&gt;、C互換ライブラリ全体のモジュールとして&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/module/std.compat.html&#34;&gt;std.compat&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;スタックトレースを取得するためのライブラリとして&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/stacktrace.html&#34;&gt;&amp;lt;stacktrace&amp;gt;&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;CとC++の間でのアトミック操作の相互運用のため、C互換ライブラリとして&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/stdatomic.h.html&#34;&gt;&amp;lt;stdatomic.h&amp;gt;&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;外部から提供されるメモリバッファでストリーム処理を行うライブラリとして&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/spanstream.md.nolink&#34;&gt;&amp;lt;spanstream&amp;gt;&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;正常値とエラー値のどちらかを持つクラスおよびライブラリとして&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/expected.html&#34;&gt;&amp;lt;expected&amp;gt;&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;多次元配列ビューのライブラリとして&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/mdspan.html&#34;&gt;&amp;lt;mdspan&amp;gt;&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;ノードベースではないソート済みキーによる順序付き連想コンテナのライブラリとして、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/flat_map.html&#34;&gt;&amp;lt;flat_map&amp;gt;&lt;/a&gt;&lt;/code&gt;と&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/flat_set.md.nolink&#34;&gt;&amp;lt;flat_set&amp;gt;&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;書式指定で出力するライブラリとして&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/print.html&#34;&gt;&amp;lt;print&amp;gt;&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;コルーチンによるRangeの生成をサポートする&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/generator.html&#34;&gt;&amp;lt;generator&amp;gt;&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;拡張浮動小数点数のライブラリとして&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/stdfloat.html&#34;&gt;&amp;lt;stdfloat&amp;gt;&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;コンテナ&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/stack/stack.html&#34;&gt;std::stack&lt;/a&gt;&lt;/code&gt;と&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/queue/queue.html&#34;&gt;std::queue&lt;/a&gt;&lt;/code&gt;に、イテレータのペアをとるコンストラクタを追加&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;auto v = std::vector(v, alloc);&lt;/code&gt;のようなアロケータ引数をともなう場合のクラステンプレートのテンプレート引数推論が動作しなかったため、各コンテナクラスのコンストラクタにおけるアロケータパラメータの型を&lt;code&gt;const Allocator&amp;amp;&lt;/code&gt;から&lt;code&gt;const &lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/type_identity.html&#34;&gt;std::type_identity_t&lt;/a&gt;&amp;lt;Allocator&amp;gt;&amp;amp;&lt;/code&gt;に修正&lt;/li&gt;
-&lt;li&gt;N要素のメモリアロケート時にアロケータが実際にどれくらいのメモリを確保したかを得られるインタフェースとして、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/allocator.html&#34;&gt;std::allocator&lt;/a&gt;&lt;/code&gt;クラスに、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/allocator/allocate_at_least.md.nolink&#34;&gt;allocate_at_least()&lt;/a&gt;&lt;/code&gt;メンバ関数を追加&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/utility/pair.html&#34;&gt;std::pair&lt;/a&gt;&lt;/code&gt;の転送コンストラクタにデフォルトテンプレート引数を追加することで、&lt;code&gt;{}&lt;/code&gt;のような型推論ができない引数を渡した場合でも完全転送が行われるよう修正&lt;/li&gt;
-&lt;li&gt;順序付き連想コンテナの要素削除の処理について、一時オブジェクトのコストを抑える拡張が行われた&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/map/map/erase.html&#34;&gt;std::map::erase()&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/map/map/extract.html&#34;&gt;std::map::extract()&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/ranges.html&#34;&gt;&amp;lt;ranges&amp;gt;&lt;/a&gt;&lt;/code&gt;に、複数の範囲を綴じ合わせる&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/ranges/zip_view.html&#34;&gt;std::views::zip&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/ranges.html&#34;&gt;&amp;lt;ranges&amp;gt;&lt;/a&gt;&lt;/code&gt;に、複数の範囲の直積をとる&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/ranges/cartesian_product_view.md.nolink&#34;&gt;std::views::cartesian_product&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;Rangeから任意のコンテナに変換するRangeアダプタ&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/ranges/to.html&#34;&gt;std::ranges::to()&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;Rangeから任意のコンテナに変換するために、可変長のコンテナ (&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/array/array.html&#34;&gt;std::array&lt;/a&gt;&lt;/code&gt;以外) に、以下の機能を追加：&lt;ul&gt;
-&lt;li&gt;Rangeから変換するコンストラクタ&lt;/li&gt;
-&lt;li&gt;Rangeを挿入する&lt;code&gt;insert_range()&lt;/code&gt;メンバ関数&lt;/li&gt;
-&lt;li&gt;Rangeを先頭に追加する&lt;code&gt;prepend_range()&lt;/code&gt;メンバ関数&lt;/li&gt;
-&lt;li&gt;Rangeを末尾に追加する&lt;code&gt;append_range()&lt;/code&gt;メンバ関数&lt;/li&gt;
-&lt;li&gt;Rangeを代入する&lt;code&gt;assign_range()&lt;/code&gt;メンバ関数&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;ユーザー定義のRangeアダプタがパイプライン演算子 &lt;code&gt;|&lt;/code&gt; をサポートしやすくするために、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/ranges.html&#34;&gt;&amp;lt;ranges&amp;gt;&lt;/a&gt;&lt;/code&gt;に&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/ranges/range_adaptor_closure.md.nolink&#34;&gt;std::ranges::range_adaptor_closure&lt;/a&gt;&lt;/code&gt;クラスを追加&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/ranges.html&#34;&gt;&amp;lt;ranges&amp;gt;&lt;/a&gt;&lt;/code&gt;に、Rangeを連結させる&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/ranges/join_with_view.html&#34;&gt;join_with&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;Rangeを指定の大きさで分割する&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/ranges/chunk_view.md.nolink&#34;&gt;std::views::chunk&lt;/a&gt;&lt;/code&gt;と、Rangeを指定の大きさの隣接要素で分割する&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/ranges/slide_view.md.nolink&#34;&gt;std::views::slide&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;Rangeを条件一致する間の要素で分割する&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/ranges/chunk_by_view.md.nolink&#34;&gt;std::views::chunk_by&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/ranges.html&#34;&gt;&amp;lt;ranges&amp;gt;&lt;/a&gt;&lt;/code&gt;に、Rangeを等間隔からなるRangeに変換する&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/ranges/stride_view.md.nolink&#34;&gt;std::views::stride&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/ranges.html&#34;&gt;&amp;lt;ranges&amp;gt;&lt;/a&gt;&lt;/code&gt;に、Rangeをムーブするための&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/ranges/as_rvalue_view.html&#34;&gt;std::views::as_rvalue&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/ranges.html&#34;&gt;&amp;lt;ranges&amp;gt;&lt;/a&gt;&lt;/code&gt;に、指定した値をN回繰り返すRangeを生成する&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/ranges/repeat_view.html&#34;&gt;std::views::repeat&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/ranges.html&#34;&gt;&amp;lt;ranges&amp;gt;&lt;/a&gt;&lt;/code&gt;に、Rangeをインデックス付きでループさせる&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/ranges/enumerate.md.nolink&#34;&gt;std::views::enumerate&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;アルゴリズム&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/algorithm.html&#34;&gt;&amp;lt;algorithm&amp;gt;&lt;/a&gt;&lt;/code&gt;に、範囲の先頭が指定した範囲と合致するかを判定する&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/algorithm/ranges_starts_with.html&#34;&gt;std::starts_with()&lt;/a&gt;&lt;/code&gt;、範囲の末尾が指定した範囲と合致するかを判定する&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/algorithm/ranges_ends_with.html&#34;&gt;std::ends_with()&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/algorithm.html&#34;&gt;&amp;lt;algorithm&amp;gt;&lt;/a&gt;&lt;/code&gt;に、要素を左シフトさせるRangeアルゴリズム&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/algorithm/ranges_shift_left.html&#34;&gt;std::ranges::shift_left()&lt;/a&gt;&lt;/code&gt;、要素を右シフトさせるRangeアルゴリズム&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/algorithm/ranges_shift_right.html&#34;&gt;std::ranges::shift_right()&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/algorithm.html&#34;&gt;&amp;lt;algorithm&amp;gt;&lt;/a&gt;&lt;/code&gt;に、範囲の末尾から要素を検索する以下のアルゴリズムを追加：&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/algorithm/ranges_find_last.md.nolink&#34;&gt;std::ranges::find_last()&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/algorithm/find_last_if.md.nolink&#34;&gt;std::ranges::find_last_if()&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/algorithm/find_last_if_not.md.nolink&#34;&gt;std::ranges::find_last_if_not()&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/algorithm.html&#34;&gt;&amp;lt;algorithm&amp;gt;&lt;/a&gt;&lt;/code&gt;に、範囲に特定の値が含まれているかを判定する&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/algorithm/ranges_contains.md.nolink&#34;&gt;std::ranges::contains()&lt;/a&gt;&lt;/code&gt;、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/algorithm/ranges_contains_subrange.md.nolink&#34;&gt;std::ranges::contains_subrange&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/algorithm.html&#34;&gt;&amp;lt;algorithm&amp;gt;&lt;/a&gt;&lt;/code&gt;に、数値に限定しない汎用的な畳み込みアルゴリズムとして、以下を追加：&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/algorithm/ranges_fold_left.html&#34;&gt;std::ranges::fold_left()&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/algorithm/ranges_fold_left_first.html&#34;&gt;std::ranges::fold_left_first()&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/algorithm/ranges_fold_right.html&#34;&gt;std::ranges::fold_right()&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/algorithm/ranges_fold_right_last.html&#34;&gt;std::ranges::fold_right_last()&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/algorithm/ranges_fold_left_with_iter.html&#34;&gt;std::ranges::fold_left_with_iter()&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/algorithm/ranges_fold_left_first_with_iter.html&#34;&gt;std::ranges::fold_left_first_with_iter()&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/numeric.html&#34;&gt;&amp;lt;numeric&amp;gt;&lt;/a&gt;&lt;/code&gt;に、連番を生成するRangeアルゴリズム&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/numeric/ranges_iota.html&#34;&gt;std::ranges::iota()&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;文字列&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::basic_string&lt;/a&gt;&lt;/code&gt;クラスと&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/string_view/basic_string_view.html&#34;&gt;std::basic_string_view&lt;/a&gt;&lt;/code&gt;クラスに、文字列内に指定した文字・文字列が含まれているかを判定するメンバ関数&lt;code&gt;contains()&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/string_view/basic_string_view.html&#34;&gt;std::basic_string_view&lt;/a&gt;&lt;/code&gt;のコンストラクタに、範囲をとるオーバーロードを追加&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;std::string s = nullptr;&lt;/code&gt;のような文字列オブジェクトに&lt;code&gt;nullptr&lt;/code&gt;を代入するようなコードはバグの元であるため、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::basic_string&lt;/a&gt;&lt;/code&gt;と&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/string_view/basic_string_view.html&#34;&gt;std::basic_string_view&lt;/a&gt;&lt;/code&gt;に、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/cstddef/nullptr_t.html&#34;&gt;nullptr_t&lt;/a&gt;&lt;/code&gt;をとるコンストラクタをdelete定義として追加&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::basic_string&lt;/a&gt;&lt;/code&gt;クラスに、resize時に任意の初期化を行う&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/string/basic_string/resize_and_overwrite.md.nolink&#34;&gt;resize_and_overwrite()&lt;/a&gt;&lt;/code&gt;メンバ関数を追加&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/string/basic_string.html&#34;&gt;std::basic_string&lt;/a&gt;&lt;/code&gt;クラスのコンストラクタと&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/string/basic_string/substr.html&#34;&gt;substr()&lt;/a&gt;&lt;/code&gt;メンバ関数に一時オブジェクトのオーバーロードを追加&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/format.html&#34;&gt;std::format()&lt;/a&gt;&lt;/code&gt;関数でRange・コンテナ、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/tuple/tuple.html&#34;&gt;std::tuple&lt;/a&gt;&lt;/code&gt;、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/utility/pair.html&#34;&gt;std::pair&lt;/a&gt;&lt;/code&gt;を出力できるよう、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/formatter.html&#34;&gt;std::formatter&lt;/a&gt;&lt;/code&gt;に特殊化を追加&lt;ul&gt;
-&lt;li&gt;Range・シーケンスコンテナは&lt;code&gt;[1, 2, 3]&lt;/code&gt;、&lt;code&gt;[&#34;hello&#34;, &#34;world&#34;]&lt;/code&gt;、&lt;code&gt;[&#39;a&#39;, &#39;b&#39;, &#39;c&#39;]&lt;/code&gt;のように出力される&lt;/li&gt;
-&lt;li&gt;連想コンテナの場合、&lt;code&gt;std::map&amp;lt;int, int&amp;gt;{{1, 2}, {3, 4}}&lt;/code&gt;は&lt;code&gt;{1: 2, 3: 4}&lt;/code&gt;のように出力され、&lt;code&gt;std::set&amp;lt;int&amp;gt;{1, 2, 3}&lt;/code&gt;は&lt;code&gt;{1, 2, 3}&lt;/code&gt;のように出力される&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/tuple/tuple.html&#34;&gt;std::tuple&lt;/a&gt;&lt;/code&gt;、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/utility/pair.html&#34;&gt;std::pair&lt;/a&gt;&lt;/code&gt;は&lt;code&gt;(1, 2)&lt;/code&gt;のように出力される&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/format/format.html&#34;&gt;std::format()&lt;/a&gt;&lt;/code&gt;関数のフォーマット指定子としてデバッグ指定「&lt;code&gt;&#34;?&#34;&lt;/code&gt;」を追加。これは文字・文字列を引用符で囲み、エスケープシーケンスをエスケープする&lt;ul&gt;
-&lt;li&gt;ただし、Range・コンテナ中の文字・文字列はデフォルトでエスケープされる&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;format(&#34;{:?}&#34;, &#34;h\tello&#34;)&lt;/code&gt;は&lt;code&gt;&#34;h\tello&#34;&lt;/code&gt;のように出力される&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;入出力&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/ostream/basic_ostream.html&#34;&gt;std::basic_ostream&lt;/a&gt;&lt;/code&gt;クラスの&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/ostream/basic_ostream/op_ostream.html&#34;&gt;operator&amp;lt;&amp;lt;&lt;/a&gt;&lt;/code&gt;に、&lt;code&gt;const volatile void*&lt;/code&gt;をとるオーバーロードを追加&lt;/li&gt;
-&lt;li&gt;ファイルを開く際のオプションとして、排他モードを表す&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/ios/ios_base/type-openmode.html&#34;&gt;noreplace&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;関数オブジェクト&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/invoke.html&#34;&gt;std::invoke()&lt;/a&gt;&lt;/code&gt;の戻り値型を指定するバージョンである&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/invoke_r.html&#34;&gt;std::invoke_r()&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/function.html&#34;&gt;std::function&lt;/a&gt;&lt;/code&gt;クラスと等価な機能をもつ、ムーブのみ可能な&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/move_only_function.html&#34;&gt;std::move_only_function&lt;/a&gt;&lt;/code&gt;クラスを追加&lt;/li&gt;
-&lt;li&gt;ユーザー定義のRangeアダプタがパイプライン演算子 &lt;code&gt;|&lt;/code&gt; をサポートしやすくするために、末尾から引数を束縛する&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional/bind_back.md.nolink&#34;&gt;std::bind_back()&lt;/a&gt;&lt;/code&gt;関数を追加&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;メモリ&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory.html&#34;&gt;&amp;lt;memory&amp;gt;&lt;/a&gt;&lt;/code&gt;に、レガシーC関数からスマートポインタへの直接出力をサポートする、スマートポインタアダプタ&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/out_ptr.html&#34;&gt;std::out_ptr&lt;/a&gt;&lt;/code&gt;と&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/inout_ptr.html&#34;&gt;std::inout_ptr&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/unique_ptr.html&#34;&gt;std::unique_ptr&lt;/a&gt;&lt;/code&gt;クラスを&lt;code&gt;constexpr&lt;/code&gt;に対応&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory.html&#34;&gt;&amp;lt;memory&amp;gt;&lt;/a&gt;&lt;/code&gt;に、オブジェクトの生存期間を開始することを明示する関数として、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/start_lifetime_as.md.nolink&#34;&gt;std::start_lifetime_as()&lt;/a&gt;&lt;/code&gt;と&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/start_lifetime_as_array.md.nolink&#34;&gt;std::start_lifetime_as_array()&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/bit.html&#34;&gt;&amp;lt;bit&amp;gt;&lt;/a&gt;&lt;/code&gt;に、値のバイト入れ替え (エンディアン変換) を行う&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/bit/byteswap.html&#34;&gt;std::byteswap()&lt;/a&gt;&lt;/code&gt;関数を追加&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;ユーティリティ&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/variant/visit.html&#34;&gt;std::visit()&lt;/a&gt;&lt;/code&gt;に指定できるバリアントオブジェクトを、直接的な「&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/variant/variant.html&#34;&gt;std::variant&lt;/a&gt;&lt;/code&gt;型の特殊化であること」という制約を緩和し、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/variant/variant.html&#34;&gt;std::variant&lt;/a&gt;&lt;/code&gt;から派生した型も許可&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/utility.html&#34;&gt;&amp;lt;utility&amp;gt;&lt;/a&gt;&lt;/code&gt;に、列挙値を基底型に変換する&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/utility/to_underlying.html&#34;&gt;std::to_underlying()&lt;/a&gt;&lt;/code&gt;関数を追加&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/utility.html&#34;&gt;&amp;lt;utility&amp;gt;&lt;/a&gt;&lt;/code&gt;に、 (主に) メンバ変数を転送するため、指定された型の&lt;code&gt;const&lt;/code&gt;性と参照修飾で引数を転送する&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/utility/forward_like.html&#34;&gt;std::forward_like()&lt;/a&gt;&lt;/code&gt;関数を追加&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/optional.html&#34;&gt;std::optional&lt;/a&gt;&lt;/code&gt;クラスにモナド操作としてメンバ関数&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/optional/and_then.html&#34;&gt;and_then()&lt;/a&gt;&lt;/code&gt;、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/optional/transform.html&#34;&gt;transform()&lt;/a&gt;&lt;/code&gt;、&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/optional/optional/or_else.html&#34;&gt;or_else()&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;到達しないパスであることを表明する関数&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/utility/unreachable.html&#34;&gt;std::unreachable()&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/bitset/bitset.html&#34;&gt;std::bitset&lt;/a&gt;&lt;/code&gt;クラスをさらに&lt;code&gt;constexpr&lt;/code&gt;対応&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;型情報&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/typeinfo/type_info.html&#34;&gt;std::type_info&lt;/a&gt;&lt;/code&gt;クラスの&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/typeinfo/type_info/op_equal.html&#34;&gt;operator==&lt;/a&gt;&lt;/code&gt;を&lt;code&gt;constexpr&lt;/code&gt;に対応&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;型特性&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits.html&#34;&gt;&amp;lt;type_traits&amp;gt;&lt;/a&gt;&lt;/code&gt;に、スコープ付き列挙型かを判定する型特性&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/is_scoped_enum.html&#34;&gt;std::is_scoped_enum&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits.html&#34;&gt;&amp;lt;type_traits&amp;gt;&lt;/a&gt;&lt;/code&gt;に、第1テンプレート引数についている型修飾を外す型特性として、以下を追加：&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits.html&#34;&gt;&amp;lt;type_traits&amp;gt;&lt;/a&gt;&lt;/code&gt;に、一時オブジェクトの参照への束縛を検出するための型特性として、以下を追加：&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/reference_constructs_from_temporary.html&#34;&gt;std::reference_constructs_from_temporary&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/reference_converts_from_temporary.html&#34;&gt;std::reference_converts_from_temporary&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;C互換ライブラリ&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/cstdlib.html&#34;&gt;&amp;lt;cstdlib&amp;gt;&lt;/a&gt;&lt;/code&gt;ヘッダと&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/cmath.html&#34;&gt;&amp;lt;cmath&amp;gt;&lt;/a&gt;&lt;/code&gt;ヘッダの多くの関数を&lt;code&gt;constexpr&lt;/code&gt;に対応&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;機能の非推奨化&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/aligned_storage.html&#34;&gt;std::aligned_storage&lt;/a&gt;&lt;/code&gt;と&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/aligned_union.html&#34;&gt;std::aligned_union&lt;/a&gt;&lt;/code&gt;を非推奨化。これらの機能は未定義動作を引き起こし、間違った保証が行われ、よくないAPI設計が行われていたため、非推奨とする&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/aligned_storage.html&#34;&gt;std::aligned_storage&lt;/a&gt;&lt;/code&gt;の代わりに&lt;code&gt;alignas(T) &lt;a href=&#34;https://cpprefjp.github.io/reference/cstddef/byte.html&#34;&gt;std::byte&lt;/a&gt;[sizeof(T)];&lt;/code&gt;を使用することを推奨する&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/aligned_union.html&#34;&gt;std::aligned_union&lt;/a&gt;&lt;/code&gt;の代わりに&lt;code&gt;alignas(Ts...) &lt;a href=&#34;https://cpprefjp.github.io/reference/cstddef/byte.html&#34;&gt;std::byte&lt;/a&gt;[&lt;a href=&#34;https://cpprefjp.github.io/reference/algorithm/max.html&#34;&gt;std::max&lt;/a&gt;({sizeof(Ts)...})];&lt;/code&gt;を使用することを推奨する&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/allocator.html&#34;&gt;std::allocator&lt;/a&gt;&lt;/code&gt;のメンバ型&lt;code&gt;is_always_equal&lt;/code&gt;を非推奨化。これはアロケータが状態をもたないことを表す型でありデフォルトでは&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/type_traits/true_type.html&#34;&gt;true_type&lt;/a&gt;&lt;/code&gt;となっている。状態をもつユーザー定義のアロケータ型でこのメンバ型の上書きを忘れることでバグが埋め込まれてしまっていたため誤用防止のために非推奨とする&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/limits.html&#34;&gt;&amp;lt;limits&amp;gt;&lt;/a&gt;&lt;/code&gt;の以下の非正規化数に関する機能を非推奨化。これらの機能は必ずしもコンパイル時に決まらない可能性のある値であり有用でないため、非推奨とする&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/limits/numeric_limits.html&#34;&gt;std::numeric_limits&lt;/a&gt;::&lt;a href=&#34;https://cpprefjp.github.io/reference/limits/numeric_limits/has_denorm.html&#34;&gt;has_denorm&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/limits/numeric_limits.html&#34;&gt;std::numeric_limits&lt;/a&gt;::&lt;a href=&#34;https://cpprefjp.github.io/reference/limits/numeric_limits/has_denorm_loss.html&#34;&gt;has_denorm_loss&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/limits/float_denorm_style.html&#34;&gt;std::float_denorm_style&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;機能の削除&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;ガベージコレクションの実装にうまく役立てられなかった、ガベージコレクション実装のサポートをする以下の機能を削除する：&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/declare_reachable.html&#34;&gt;std::declare_reachable()&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/undeclare_reachable.html&#34;&gt;std::undeclare_reachable()&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/declare_no_pointers.html&#34;&gt;std::declare_no_pointers()&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/undeclare_no_pointers.html&#34;&gt;std::undeclare_no_pointers()&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/get_pointer_safety.html&#34;&gt;std::get_pointer_safety()&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory/pointer_safety.html&#34;&gt;std::pointer_safety&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://cpprefjp.github.io/lang/cpp11/predefined_macros.html&#34;&gt;&lt;code&gt;__STDCPP_STRICT_POINTER_SAFETY__&lt;/code&gt;マクロ&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;取り決め&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;以下のヘッダの一部機能をフリースタンディングライブラリとして追加：&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/utility.html&#34;&gt;&amp;lt;utility&amp;gt;&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/tuple.html&#34;&gt;&amp;lt;tuple&amp;gt;&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/memory.html&#34;&gt;&amp;lt;memory&amp;gt;&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/functional.html&#34;&gt;&amp;lt;functional&amp;gt;&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/ratio.html&#34;&gt;&amp;lt;ratio&amp;gt;&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/iterator.html&#34;&gt;&amp;lt;iterator&amp;gt;&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;https://cpprefjp.github.io/reference/ranges.html&#34;&gt;&amp;lt;ranges&amp;gt;&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>insert -- zip_viewの説明を追加 #1063</title>
-      <link href="https://cpprefjp.github.io/reference/flat_map/flat_map/insert.html"/>
-      <id>8306cf4ebf6730e58192cbd3a1d57099c2631534:reference/flat_map/flat_map/insert.md</id>
-      <updated>2024-03-04T04:23:31+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_map/flat_map/insert.md b/reference/flat_map/flat_map/insert.md
-index 276a869e1..554ad95ef 100644
---- a/reference/flat_map/flat_map/insert.md
-+++ b/reference/flat_map/flat_map/insert.md
-@@ -138,7 +138,7 @@ void insert(sorted_unique_t s,
-     ```
-     * c.keys[link containers.md]
-     * c.values[link containers.md]
--    * ranges::zip_view[link /ranges/zip_view.md.nolink]
-+    * ranges::zip_view[link /ranges/zip_view.md]
-     * ranges::unique[link /reference/algorithm/ranges_unique.md]
-     * key_equiv[link key_equiv.md]
-     * distance[link /reference/iterator/distance.md]
-@@ -171,7 +171,7 @@ void insert(sorted_unique_t s,
-     ```
-     * c.keys[link containers.md]
-     * c.values[link containers.md]
--    * ranges::zip_view[link /ranges/zip_view.md.nolink]
-+    * ranges::zip_view[link /ranges/zip_view.md]
-     * ranges::unique[link /reference/algorithm/ranges_unique.md]
-     * key_equiv[link key_equiv.md]
-     * distance[link /reference/iterator/distance.md]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>insert_range -- zip_viewの説明を追加 #1063</title>
-      <link href="https://cpprefjp.github.io/reference/flat_map/flat_map/insert_range.html"/>
-      <id>8306cf4ebf6730e58192cbd3a1d57099c2631534:reference/flat_map/flat_map/insert_range.md</id>
-      <updated>2024-03-04T04:23:31+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_map/flat_map/insert_range.md b/reference/flat_map/flat_map/insert_range.md
-index 9abdd9407..5b15851cd 100644
---- a/reference/flat_map/flat_map/insert_range.md
-+++ b/reference/flat_map/flat_map/insert_range.md
-@@ -51,7 +51,7 @@ Rangeを挿入し、コンテナを拡張する。
-     ```
-     * c.keys[link containers.md]
-     * c.values[link containers.md]
--    * ranges::zip_view[link /ranges/zip_view.md.nolink]
-+    * ranges::zip_view[link /ranges/zip_view.md]
-     * ranges::unique[link /reference/algorithm/ranges_unique.md]
-     * key_equiv[link key_equiv.md]
-     * distance[link /reference/iterator/distance.md]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>iter_const_reference_t -- zip_viewの説明を追加 #1063</title>
-      <link href="https://cpprefjp.github.io/reference/iterator/iter_const_reference_t.html"/>
-      <id>8306cf4ebf6730e58192cbd3a1d57099c2631534:reference/iterator/iter_const_reference_t.md</id>
-      <updated>2024-03-04T04:23:31+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/iter_const_reference_t.md b/reference/iterator/iter_const_reference_t.md
-index 459eb5016..1b4264ac0 100644
---- a/reference/iterator/iter_const_reference_t.md
-+++ b/reference/iterator/iter_const_reference_t.md
-@@ -38,7 +38,7 @@ namespace std {
- |---|---|---|---|
- |[`std::vector&amp;lt;bool&amp;gt;`](/reference/vector/vector.md)|`bool`|`std::vector&amp;lt;bool&amp;gt;::reference`|`bool`|
- |`const std::vector&amp;lt;bool&amp;gt;`|`bool`|`bool`|`bool`|
--|[`views::zip`](/reference/ranges/zip_view.md.nolink)|`std::tuple&amp;lt;T, U&amp;gt;`|`std::tuple&amp;lt;T&amp;amp;, U&amp;amp;&amp;gt;`|`std::tuple&amp;lt;const T&amp;amp;, const D&amp;amp;&amp;gt;`|
-+|[`views::zip`](/reference/ranges/zip_view.md)|`std::tuple&amp;lt;T, U&amp;gt;`|`std::tuple&amp;lt;T&amp;amp;, U&amp;amp;&amp;gt;`|`std::tuple&amp;lt;const T&amp;amp;, const D&amp;amp;&amp;gt;`|
- |[`views::enumrate`](/reference/ranges/enumrate_view.md.nolink)|`std::tuple&amp;lt;D, T&amp;gt;`|`std::tuple&amp;lt;D, T&amp;amp;&amp;gt;`|`std::tuple&amp;lt;D, const T&amp;amp;&amp;gt;`|
- 
- 表中の`T, U`はそれそれの`view`に入力された範囲の値型、`D`は`views::enumrate`の入力範囲の`iter_difference_t`とする。
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>ranges -- zip_viewの説明を追加 #1063</title>
-      <link href="https://cpprefjp.github.io/reference/ranges.html"/>
-      <id>8306cf4ebf6730e58192cbd3a1d57099c2631534:reference/ranges.md</id>
-      <updated>2024-03-04T04:23:31+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges.md b/reference/ranges.md
-index 0df15fe7a..d9f342e72 100644
---- a/reference/ranges.md
-+++ b/reference/ranges.md
-@@ -339,8 +339,8 @@ range | adaptor(args...)
- 
- | 名前                                                   | 説明                                                                                | 対応バージョン |
- |--------------------------------------------------------|-------------------------------------------------------------------------------------|----------------|
--| [`zip_view`](ranges/zip_view.md.nolink)                       | 2つのシーケンスから値を1つずつ取り出した`tuple`のビュー (class template)            | C++23          |
--| [`views::zip`](ranges/zip_view.md.nolink)                     | `zip_view`を生成する (customization point object)                                   | C++23          |
-+| [`zip_view`](ranges/zip_view.md)                       | 2つのシーケンスから値を1つずつ取り出した`tuple`のビュー (class template)            | C++23          |
-+| [`views::zip`](ranges/zip_view.md)                     | `zip_view`を生成する (customization point object)                                   | C++23          |
- 
- ### zip transform view
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>elements_view -- zip_viewの説明を追加 #1063</title>
-      <link href="https://cpprefjp.github.io/reference/ranges/elements_view.html"/>
-      <id>8306cf4ebf6730e58192cbd3a1d57099c2631534:reference/ranges/elements_view.md</id>
-      <updated>2024-03-04T04:23:31+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/elements_view.md b/reference/ranges/elements_view.md
-index aed0aad52..452600061 100644
---- a/reference/ranges/elements_view.md
-+++ b/reference/ranges/elements_view.md
-@@ -167,6 +167,9 @@ three
- - [ICC](/implementation.md#icc): ?
- - [Visual C++](/implementation.md#visual_cpp): 2019 Update 10
- 
-+## 関連項目
-+- [`zip_view`](zip_view.md) elements_viewの逆(要素からタプルを作る)
-+
- ## 参照
- - [N4861 24 Ranges library](https://timsong-cpp.github.io/cppwp/n4861/ranges)
- - [C++20 ranges](https://techbookfest.org/product/5134506308665344)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>zip_view -- zip_viewの説明を追加 #1063</title>
-      <link href="https://cpprefjp.github.io/reference/ranges/zip_view.html"/>
-      <id>8306cf4ebf6730e58192cbd3a1d57099c2631534:reference/ranges/zip_view.md</id>
-      <updated>2024-03-04T04:23:31+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/zip_view.md b/reference/ranges/zip_view.md
-new file mode 100644
-index 000000000..272226e45
---- /dev/null
-+++ b/reference/ranges/zip_view.md
-@@ -0,0 +1,138 @@
-+# zip_view
-+* ranges[meta header]
-+* std::ranges[meta namespace]
-+* class template[meta id-type]
-+* cpp23[meta cpp]
-+
-+```cpp
-+namespace std::ranges {
-+  template&amp;lt;input_range... Views&amp;gt;
-+  requires (view&amp;lt;Views&amp;gt; &amp;amp;&amp;amp; ...) &amp;amp;&amp;amp; (sizeof...(Views) &amp;gt; 0)
-+  class zip_view : public view_interface&amp;lt;zip_view&amp;lt;Views...&amp;gt;&amp;gt; {…… }; // (1)
-+
-+  namespace views {
-+    inline constexpr /*unspecified*/ zip = /*unspecified*/;      // (2)
-+  }
-+}
-+```
-+
-+## 概要
-+
-+`zip_view`は複数のRangeから要素を1つずつ取得した[`tuple`](/reference/tuple/tuple.md)を要素とする[`view`](view.md)。
-+
-+`zip_view`の要素を1つ取得するごとに、各Rangeの要素を1つずつ取得する。
-+
-+zipするRangeのサイズが異なっている場合、`zip_view`のサイズはそれらの中で最小のサイズとなる。
-+
-+- (1): `zip_view`のクラス定義
-+- (2): `zip_view`を生成するRangeアダプタオブジェクト
-+
-+### Rangeコンセプト
-+
-+| borrowed | sized | output | input | forward | bidirectional | random_access | contiguous | common | viewable | view |
-+|----------|-------|--------|-------|---------|---------------|---------------|------------|--------|----------|------|
-+|          | (1)   | 〇     | 〇    | (2)     | (3)           | (4)           |            | (5)    | ○       | ○   |
-+
-+- (1): zipするすべてのRangeが[`sized_range`](sized_range.md)のとき
-+- (2): zipするすべてのRangeが[`forward_range`](forward_range.md)のとき
-+- (3): zipするすべてのRangeが[`bidirectional_range`](bidirectional_range.md)のとき
-+- (4): zipするすべてのRangeが[`random_access`](forward_range.md)のとき
-+- (5): *zip-is-common*のとき
-+
-+## 効果
-+
-+- (2): 式`views::zip(Es...)`の効果は[`zip_view{Es...}`](zip_view/op_constructor.md.nolink)と等しい。
-+
-+## 備考
-+
-+本説明に用いる説明専用要素を以下のように定義する。
-+
-+```cpp
-+namespace std::ranges {
-+  // 説明専用
-+  template&amp;lt;class... Rs&amp;gt;
-+  concept zip-is-common =
-+    (sizeof...(Rs) == 1 &amp;amp;&amp;amp; (common_range&amp;lt;Rs&amp;gt; &amp;amp;&amp;amp; ...)) ||
-+    (!(bidirectional_range&amp;lt;Rs&amp;gt; &amp;amp;&amp;amp; ...) &amp;amp;&amp;amp; (common_range&amp;lt;Rs&amp;gt; &amp;amp;&amp;amp; ...)) ||
-+    ((random_access_range&amp;lt;Rs&amp;gt; &amp;amp;&amp;amp; ...) &amp;amp;&amp;amp; (sized_range&amp;lt;Rs&amp;gt; &amp;amp;&amp;amp; ...));
-+}
-+```
-+
-+## メンバ関数
-+
-+| 名前                                             | 説明                             | 対応バージョン |
-+|--------------------------------------------------|----------------------------------|----------------|
-+| [`(constructor)`](zip_view/op_constructor.md.nolink)  | コンストラクタ                   | C++23          |
-+| [`base`](zip_view/base.md.nolink)                     | `V`の参照を取得する              | C++23          |
-+| [`begin`](zip_view/begin.md.nolink)                   | 先頭を指すイテレータを取得する   | C++23          |
-+| [`end`](zip_view/end.md.nolink)                       | 番兵を取得する                   | C++23          |
-+| [`size`](take_view/size.md.nolink)                    | 要素数を取得する                 | C++23          |
-+
-+## 継承しているメンバ関数
-+
-+| 名前                                         | 説明                              | 対応バージョン |
-+|----------------------------------------------|-----------------------------------|----------------|
-+| [`empty`](view_interface/empty.md)           | Rangeが空かどうかを判定する       | C++20          |
-+| [`operator bool`](view_interface/op_bool.md) | Rangeが空でないかどうかを判定する | C++20          |
-+| [`front`](view_interface/front.md)           | 先頭要素への参照を取得する        | C++20          |
-+| [`back`](view_interface/back.md)             | 末尾要素への参照を取得する        | C++20          |
-+| [`cbegin`](view_interface/cbegin.md)         | 定数イテレータを取得する          | C++23          |
-+| [`cend`](view_interface/cend.md)             | 定数イテレータ（番兵）を取得する  | C++23          |
-+| [`operator[]`](view_interface/op_at.md)      | 要素へアクセスする                | C++20          |
-+
-+## 推論補助
-+
-+| 名前                                                  | 説明                         | 対応バージョン |
-+|-------------------------------------------------------|------------------------------|----------------|
-+| [`(deduction_guide)`](zip_view/op_deduction_guide.md.nolink) | クラステンプレートの推論補助 | C++23          |
-+
-+## 例
-+```cpp example
-+#include &amp;lt;ranges&amp;gt;
-+#include &amp;lt;vector&amp;gt;
-+#include &amp;lt;list&amp;gt;
-+#include &amp;lt;print&amp;gt;
-+
-+int main() {
-+  std::vector v = {1, 2};
-+  const std::list l = {&amp;#39;a&amp;#39;, &amp;#39;b&amp;#39;, &amp;#39;c&amp;#39;};
-+
-+  for (auto&amp;amp;&amp;amp; t : std::views::zip(v, l)) {
-+    println(&amp;#34;{}&amp;#34;, t);
-+  }
-+
-+  for (auto&amp;amp;&amp;amp; [i, c] : std::views::zip(v, l)) {
-+    i *= 10; // 要素を書き換えても良い
-+  }
-+
-+  for (auto&amp;amp;&amp;amp; t : std::views::zip(v, l)) {
-+    println(&amp;#34;{}&amp;#34;, t);
-+  }
-+}
-+```
-+* std::views::zip[color ff0000]
-+
-+### 出力
-+```
-+(1, &amp;#39;a&amp;#39;)
-+(2, &amp;#39;b&amp;#39;)
-+(10, &amp;#39;a&amp;#39;)
-+(20, &amp;#39;b&amp;#39;)
-+```
-+
-+## バージョン
-+### 言語
-+- C++23
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): 16.0
-+- [GCC](/implementation.md#gcc): 13.2
-+- [ICC](/implementation.md#icc): ??
-+- [Visual C++](/implementation.md#visual_cpp): ??
-+
-+## 関連項目
-+- [`elements_view`](elements_view.md) zipの逆(タプルから要素を取り出す)
-+- [`zip_transform_view`](zip_transform_view.md.nolink) zipして関数を適用する
-+
-+## 参照
-+- [N4950 26 Ranges library](https://timsong-cpp.github.io/cppwp/n4950/ranges)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>tuple -- zip_viewの説明を追加 #1063</title>
-      <link href="https://cpprefjp.github.io/reference/tuple/tuple.html"/>
-      <id>8306cf4ebf6730e58192cbd3a1d57099c2631534:reference/tuple/tuple.md</id>
-      <updated>2024-03-04T04:23:31+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/tuple/tuple.md b/reference/tuple/tuple.md
-index 517715021..cd3cb2f7e 100644
---- a/reference/tuple/tuple.md
-+++ b/reference/tuple/tuple.md
-@@ -146,7 +146,7 @@ hello
- 
- 
- ### プロキシ参照としての使い方（C++23）
--C++23 で[`zip_view`](/reference/ranges/zip_view.md.nolink)などが追加されたことに伴い、すべての要素がプロキシ参照であるような`tuple`は[プロキシ参照](/reference/iterator/indirectly_writable.md)として使用することが出来るようになった。
-+C++23 で[`zip_view`](/reference/ranges/zip_view.md)などが追加されたことに伴い、すべての要素がプロキシ参照であるような`tuple`は[プロキシ参照](/reference/iterator/indirectly_writable.md)として使用することが出来るようになった。
- 
- ```cpp example
- #include &amp;lt;iostream&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>pair -- zip_viewの説明を追加 #1063</title>
-      <link href="https://cpprefjp.github.io/reference/utility/pair.html"/>
-      <id>8306cf4ebf6730e58192cbd3a1d57099c2631534:reference/utility/pair.md</id>
-      <updated>2024-03-04T04:23:31+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/utility/pair.md b/reference/utility/pair.md
-index 8cab65a19..331035628 100644
---- a/reference/utility/pair.md
-+++ b/reference/utility/pair.md
-@@ -152,7 +152,7 @@ hello
- 
- 
- ### プロキシ参照としての使い方（C++23）
--C++23 で[`zip_view`](/reference/ranges/zip_view.md.nolink)などが追加されたことに伴い、どちらの要素も[プロキシ参照](/reference/iterator/indirectly_writable.md)であるような`pair`は[プロキシ参照](/reference/iterator/indirectly_writable.md)として使用することが出来るようになった。
-+C++23 で[`zip_view`](/reference/ranges/zip_view.md)などが追加されたことに伴い、どちらの要素も[プロキシ参照](/reference/iterator/indirectly_writable.md)であるような`pair`は[プロキシ参照](/reference/iterator/indirectly_writable.md)として使用することが出来るようになった。
- 
- ```cpp example
- #include &amp;lt;iostream&amp;gt;
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
