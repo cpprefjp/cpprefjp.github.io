@@ -2,9 +2,246 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2024-03-05T19:24:21.197439</updated>
-  <id>7efc01a2-2fea-4200-9a25-ecc4fc1ea6d6</id>
+  <updated>2024-03-05T19:51:08.872090</updated>
+  <id>49717ce1-00ec-456b-9923-e5e61cce0eed</id>
 
+  
+    <entry>
+      <title>ranges -- adjacent_transform_view #1063</title>
+      <link href="https://cpprefjp.github.io/reference/ranges.html"/>
+      <id>5695a7a4fbd422685400adf98dc7bcf663c0ed56:reference/ranges.md</id>
+      <updated>2024-03-06T04:47:31+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges.md b/reference/ranges.md
+index b1c0d586e..843226127 100644
+--- a/reference/ranges.md
++++ b/reference/ranges.md
+@@ -360,8 +360,8 @@ range | adaptor(args...)
+ 
+ | 名前                                                             | 説明                                                                               | 対応バージョン |
+ |------------------------------------------------------------------|------------------------------------------------------------------------------------|----------------|
+-| [`adjacent_transform_view`](ranges/adjacent_transform_view.md.nolink)   | `adjacent_view`と同様に取り出し、関数を適用した結果のビュー (class template)       | C++23          |
+-| [`views::adjacent_transform`](ranges/adjacent_transform_view.md.nolink) | `adjacent_transform_view`を生成する (customization point object)                   | C++23          |
++| [`adjacent_transform_view`](ranges/adjacent_transform_view.md)   | `adjacent_view`と同様に取り出し、関数を適用した結果のビュー (class template)       | C++23          |
++| [`views::adjacent_transform`](ranges/adjacent_transform_view.md) | `adjacent_transform_view`を生成する (customization point object)                   | C++23          |
+ 
+ ### chunk view
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>adjacent_transform_view -- adjacent_transform_view #1063</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/adjacent_transform_view.html"/>
+      <id>5695a7a4fbd422685400adf98dc7bcf663c0ed56:reference/ranges/adjacent_transform_view.md</id>
+      <updated>2024-03-06T04:47:31+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/adjacent_transform_view.md b/reference/ranges/adjacent_transform_view.md
+new file mode 100644
+index 000000000..c122908a3
+--- /dev/null
++++ b/reference/ranges/adjacent_transform_view.md
+@@ -0,0 +1,111 @@
++# adjacent_transform_view
++* ranges[meta header]
++* std::ranges[meta namespace]
++* class template[meta id-type]
++* cpp23[meta cpp]
++
++```cpp
++namespace std::ranges {
++  template&amp;lt;forward_range V, move_constructible F, size_t N&amp;gt;
++    requires view&amp;lt;V&amp;gt; &amp;amp;&amp;amp; (N &amp;gt; 0) &amp;amp;&amp;amp; is_object_v&amp;lt;F&amp;gt; &amp;amp;&amp;amp;
++             regular_invocable&amp;lt;F&amp;amp;, REPEAT(range_reference_t&amp;lt;V&amp;gt;, N)...&amp;gt; &amp;amp;&amp;amp;
++             can-reference&amp;lt;invoke_result_t&amp;lt;F&amp;amp;, REPEAT(range_reference_t&amp;lt;V&amp;gt;, N)...&amp;gt;&amp;gt;
++  class adjacent_transform_view : public view_interface&amp;lt;adjacent_transform_view&amp;lt;V, F, N&amp;gt;&amp;gt; { …… }; // (1)
++
++  namespace views {
++    inline constexpr /*unspecified*/ adjacent_transform_view = /*unspecified*/;      // (2)
++  }
++}
++```
++* REPEAT[italic]
++* can-reference[link /reference/iterator/dereferenceable.md]
++
++## 概要
++
++`adjacent_transform_view`は各要素とそれに隣接する要素を指定個数ずつ取り出し、それらを引数として関数を呼び出した結果を要素とする[`view`](view.md)。
++
++`adjacent_transform_view`の要素を1つ取得するごとに、`V` の要素を `N` 個取得する。
++
++`N` が元となるRangeの要素数より大きい場合、この[`view`](view.md)は空である。
++
++- (1): `adjacent_transform_view`のクラス定義
++- (2): `adjacent_transform_view`を生成するカスタマイゼーションポイントオブジェクト
++
++
++### Rangeコンセプト
++
++| borrowed | sized | output | input | forward | bidirectional | random_access | contiguous | common | viewable | view |
++|----------|-------|--------|-------|---------|---------------|---------------|------------|--------|----------|------|
++|          | (1)   | 〇     | 〇    | (1)     | (1)           | (1)           |            | (1)    | ○       | ○   |
++
++- (1): [`adjacent_view`](adjacent_view.md)`&amp;lt;V, N&amp;gt;`に従う
++
++## 効果
++
++- (2): 式 `views::adjacent_transform&amp;lt;N&amp;gt;(E, F)` の効果は以下の通り。
++    - `N` &amp;gt; 0 のとき、`adjacent_transform_view&amp;lt;`[`views::all_t`](all.md)`&amp;lt;decltype((E))&amp;gt;, `[`decay_t`](/reference/type_traits/decay.md)`&amp;lt;decltype((F))&amp;gt;, N&amp;gt;(E, F)` と等しい
++    - `N` = 0 のとき、`((void)E, `[`views::zip_transform`](zip_transform_view.md)`(F))` と等しい(ただし`E`と`F`の評価順は不定)
++
++## 備考
++
++`REPEAT(T, N)` をT型のN個のパックとする。
++
++## メンバ関数
++
++| 名前                                             | 説明                             | 対応バージョン |
++|--------------------------------------------------|----------------------------------|----------------|
++| [`(constructor)`](adjacent_transform_view/op_constructor.md.nolink)  | コンストラクタ                   | C++23          |
++| [`base`](adjacent_transform_view/base.md.nolink)                     | `V`の参照を取得する              | C++23          |
++| [`begin`](adjacent_transform_view/begin.md.nolink)                   | 先頭を指すイテレータを取得する   | C++23          |
++| [`end`](adjacent_transform_view/end.md.nolink)                       | 番兵を取得する                   | C++23          |
++| [`size`](adjacent_transform_view/size.md.nolink)                     | 要素数を取得する                 | C++23          |
++
++## 継承しているメンバ関数
++
++| 名前                                         | 説明                              | 対応バージョン |
++|----------------------------------------------|-----------------------------------|----------------|
++| [`empty`](view_interface/empty.md)           | Rangeが空かどうかを判定する       | C++20          |
++| [`operator bool`](view_interface/op_bool.md) | Rangeが空でないかどうかを判定する | C++20          |
++| [`front`](view_interface/front.md)           | 先頭要素への参照を取得する        | C++20          |
++| [`back`](view_interface/back.md)             | 末尾要素への参照を取得する        | C++20          |
++| [`cbegin`](view_interface/cbegin.md)         | 定数イテレータを取得する          | C++23          |
++| [`cend`](view_interface/cend.md)             | 定数イテレータ（番兵）を取得する  | C++23          |
++| [`operator[]`](view_interface/op_at.md)      | 要素へアクセスする                | C++20          |
++
++## 推論補助
++
++| 名前                                                  | 説明                         | 対応バージョン |
++|-------------------------------------------------------|------------------------------|----------------|
++| [`(deduction_guide)`](adjacent_transform_view/op_deduction_guide.md.nolink) | クラステンプレートの推論補助 | C++23          |
++
++## 例
++```cpp example
++int main() {
++  // 隣接する要素間の差を計算する
++  std::vector v = {9, 2, 5, 3, 6, 7};
++  std::println(&amp;#34;{}&amp;#34;, v | std::views::adjacent_transform_view&amp;lt;2&amp;gt;([](auto x, auto y) { return y - x; }));
++}
++```
++* std::views::adjacent_transform_view[color ff0000]
++
++### 出力
++```
++[-7, 3, -2, 3, 1]
++```
++
++
++## バージョン
++### 言語
++- C++23
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): ??
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++## 関連項目
++- [`adjacent_difference`](/reference/numeric/adjacent_difference.md) 隣接する2つの要素間の差を計算するアルゴリズム関数
++
++## 参照
++- [N4950 26 Ranges library](https://timsong-cpp.github.io/cppwp/n4950/ranges)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>adjacent_view -- adjacent_transform_view #1063</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/adjacent_view.html"/>
+      <id>5695a7a4fbd422685400adf98dc7bcf663c0ed56:reference/ranges/adjacent_view.md</id>
+      <updated>2024-03-06T04:47:31+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/adjacent_view.md b/reference/ranges/adjacent_view.md
+index 0a16fc5c2..ce5b5c064 100644
+--- a/reference/ranges/adjacent_view.md
++++ b/reference/ranges/adjacent_view.md
+@@ -25,7 +25,7 @@ namespace std::ranges {
+ `N` が元となるRangeの要素数より大きい場合、この[`view`](view.md)は空である。
+ 
+ - (1): `adjacent_view`のクラス定義
+-- (2): `adjacent_view`を生成するカスタマイゼーションポイントオブジェクト(Rangeアダプタオブジェクトではない)
++- (2): `adjacent_view`を生成するカスタマイゼーションポイントオブジェクト
+ 
+ ### Rangeコンセプト
+ 
+@@ -47,10 +47,10 @@ namespace std::ranges {
+ | 名前                                                | 説明                             | 対応バージョン |
+ |-----------------------------------------------------|----------------------------------|----------------|
+ | [`(constructor)`](adjacent_view/op_constructor.md.nolink)  | コンストラクタ                   | C++23          |
+-| [`base`](take_view/base.md.nolink)                         | `V`の参照を取得する              | C++23          |
++| [`base`](adjacent_view/base.md.nolink)                     | `V`の参照を取得する              | C++23          |
+ | [`begin`](adjacent_view/begin.md.nolink)                   | 先頭を指すイテレータを取得する   | C++23          |
+ | [`end`](adjacent_view/end.md.nolink)                       | 番兵を取得する                   | C++23          |
+-| [`size`](take_view/size.md.nolink)                         | 要素数を取得する                 | C++23          |
++| [`size`](adjacent_view/size.md.nolink)                     | 要素数を取得する                 | C++23          |
+ 
+ ## 継承しているメンバ関数
+ 
+@@ -107,7 +107,7 @@ int main() {
+ - [Visual C++](/implementation.md#visual_cpp): ??
+ 
+ ## 関連項目
+-- [`adjacent_transform_view`](adjacent_transform_view.md.nolink) `adjacent_view` と同じように要素を取得して関数を適用する
++- [`adjacent_transform_view`](adjacent_transform_view.md) `adjacent_view` と同じように要素を取得して関数を適用する
+ 
+ ## 参照
+ - [N4950 26 Ranges library](https://timsong-cpp.github.io/cppwp/n4950/ranges)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>zip_transform_view -- update zip_transform_view</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/zip_transform_view.html"/>
+      <id>de6c390dc6f762f352943a4152440d38eb0d1387:reference/ranges/zip_transform_view.md</id>
+      <updated>2024-03-06T04:27:45+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/zip_transform_view.md b/reference/ranges/zip_transform_view.md
+index dde5504bb..94b04a4d6 100644
+--- a/reference/ranges/zip_transform_view.md
++++ b/reference/ranges/zip_transform_view.md
+@@ -43,8 +43,7 @@ zipするRangeのサイズが異なっている場合、`zip_transform_view`の
+ 
+ - (2): `F`を部分式、`Es...`を部分式のパックとする。式 `views::zip_transform(F, Es...)` の効果は以下の通り。
+     - `Es` が空でないとき、`zip_transform_view(F, Es...)` と等しい
+-    - `Es` が空のとき、 `FD` を [`decay_t`](/reference/type_traits/decay.md)`&amp;lt;decltype((F))&amp;gt;`として、
+-        - `((void)F, auto(`[`views::empty`](empty_view.md)`&amp;lt;`[`decay_t`](/reference/type_traits/decay.md)`&amp;lt;`[`invoke_result_t`](/reference/type_traits/invoke_result.md)`&amp;lt;FD&amp;amp;&amp;gt;&amp;gt;&amp;gt;))` と等しい
++    - `Es` が空のとき、 `FD` を [`decay_t`](/reference/type_traits/decay.md)`&amp;lt;decltype((F))&amp;gt;`として、`((void)F, auto(`[`views::empty`](empty_view.md)`&amp;lt;`[`decay_t`](/reference/type_traits/decay.md)`&amp;lt;`[`invoke_result_t`](/reference/type_traits/invoke_result.md)`&amp;lt;FD&amp;amp;&amp;gt;&amp;gt;&amp;gt;))` と等しい
+         - ただし、 [`move_constructible`](/reference/concepts/move_constructible.md)`&amp;lt;FD&amp;gt; &amp;amp;&amp;amp; `[`regular_invocable`](/reference/concepts/invocable.md)`&amp;lt;FD&amp;amp;&amp;gt;` が `false`、または [`decay_t`](/reference/type_traits/decay.md)`&amp;lt;`[`invoke_result_t`](/reference/type_traits/invoke_result.md)`&amp;lt;FD&amp;amp;&amp;gt;&amp;gt;` がオブジェクト型でないとき、ill-formed
+ 
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>zip_transform_view -- update zip_transform_view</title>
@@ -223,304 +460,6 @@ index ee8d6dde0..bf6672a96 100644
  
  
  ## 備考
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>transform -- zip_tramsform_view #1063</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_transform.html"/>
-      <id>d02a7eee2d8effa7a2be7795cc280e86a4c24bf8:reference/algorithm/ranges_transform.md</id>
-      <updated>2024-03-06T03:39:59+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_transform.md b/reference/algorithm/ranges_transform.md
-index dbb995a60..0a52b9b52 100644
---- a/reference/algorithm/ranges_transform.md
-+++ b/reference/algorithm/ranges_transform.md
-@@ -212,3 +212,4 @@ cccc
- ## 関連項目
- 
- - [`transform_view`](/reference/ranges/transform_view.md) : 要素に関数を適用した結果をビューとして提供する
-+- [`zip_transform_view`](/reference/ranges/zip_transform_view.md) : 複数の範囲から要素を取り出し、関数を適用した結果をビューとして提供する
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>ranges -- zip_tramsform_view #1063</title>
-      <link href="https://cpprefjp.github.io/reference/ranges.html"/>
-      <id>d02a7eee2d8effa7a2be7795cc280e86a4c24bf8:reference/ranges.md</id>
-      <updated>2024-03-06T03:39:59+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges.md b/reference/ranges.md
-index d9f342e72..fb89a2813 100644
---- a/reference/ranges.md
-+++ b/reference/ranges.md
-@@ -339,15 +339,15 @@ range | adaptor(args...)
- 
- | 名前                                                   | 説明                                                                                | 対応バージョン |
- |--------------------------------------------------------|-------------------------------------------------------------------------------------|----------------|
--| [`zip_view`](ranges/zip_view.md)                       | 2つのシーケンスから値を1つずつ取り出した`tuple`のビュー (class template)            | C++23          |
-+| [`zip_view`](ranges/zip_view.md)                       | 複数のシーケンスから値を1つずつ取り出した`tuple`のビュー (class template)            | C++23          |
- | [`views::zip`](ranges/zip_view.md)                     | `zip_view`を生成する (customization point object)                                   | C++23          |
- 
- ### zip transform view
- 
- | 名前                                                   | 説明                                                                                | 対応バージョン |
- |--------------------------------------------------------|-------------------------------------------------------------------------------------|----------------|
--| [`zip_transform_view`](ranges/zip_transform_view.md.nolink)   | 2つのシーケンスから値を1つずつ取り出し、関数を適用した結果のビュー (class template) | C++23          |
--| [`views::zip_transform`](ranges/zip_transform_view.md.nolink) | `zip_transform_view`を生成する (customization point object)                         | C++23          |
-+| [`zip_transform_view`](ranges/zip_transform_view.md)   | 複数のシーケンスから値を1つずつ取り出し、関数を適用した結果のビュー (class template) | C++23          |
-+| [`views::zip_transform`](ranges/zip_transform_view.md) | `zip_transform_view`を生成する (customization point object)                         | C++23          |
- 
- ### adjacent view
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>transform_view -- zip_tramsform_view #1063</title>
-      <link href="https://cpprefjp.github.io/reference/ranges/transform_view.html"/>
-      <id>d02a7eee2d8effa7a2be7795cc280e86a4c24bf8:reference/ranges/transform_view.md</id>
-      <updated>2024-03-06T03:39:59+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/transform_view.md b/reference/ranges/transform_view.md
-index fd2d1accb..d1a9c73cd 100644
---- a/reference/ranges/transform_view.md
-+++ b/reference/ranges/transform_view.md
-@@ -150,6 +150,7 @@ int main() {
- 
- ## 関連項目
- - [`std::transform`](/reference/algorithm/transform.md), [`std::ranges::transform`](/reference/algorithm/ranges_transform.md): Rangeの要素に先行評価で関数を適用する標準アルゴリズム関数
-+- [`zip_transform_view`](zip_transform_view.md) : 複数の範囲から要素を取り出し、関数を適用した結果をビューとして提供する
- 
- ## 参照
- - [N4861 24 Ranges library](https://timsong-cpp.github.io/cppwp/n4861/ranges)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>zip_transform_view -- zip_tramsform_view #1063</title>
-      <link href="https://cpprefjp.github.io/reference/ranges/zip_transform_view.html"/>
-      <id>d02a7eee2d8effa7a2be7795cc280e86a4c24bf8:reference/ranges/zip_transform_view.md</id>
-      <updated>2024-03-06T03:39:59+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/zip_transform_view.md b/reference/ranges/zip_transform_view.md
-new file mode 100644
-index 000000000..4a3a488bc
---- /dev/null
-+++ b/reference/ranges/zip_transform_view.md
-@@ -0,0 +1,117 @@
-+# zip_transform_view
-+* ranges[meta header]
-+* std::ranges[meta namespace]
-+* class template[meta id-type]
-+* cpp23[meta cpp]
-+
-+```cpp
-+namespace std::ranges {
-+  template&amp;lt;move_constructible F, input_range... Views&amp;gt;
-+    requires (view&amp;lt;Views&amp;gt; &amp;amp;&amp;amp; ...) &amp;amp;&amp;amp; (sizeof...(Views) &amp;gt; 0) &amp;amp;&amp;amp; is_object_v&amp;lt;F&amp;gt; &amp;amp;&amp;amp;
-+              regular_invocable&amp;lt;F&amp;amp;, range_reference_t&amp;lt;Views&amp;gt;...&amp;gt; &amp;amp;&amp;amp;
-+              can-reference&amp;lt;invoke_result_t&amp;lt;F&amp;amp;, range_reference_t&amp;lt;Views&amp;gt;...&amp;gt;&amp;gt;
-+  class zip_transform_view : public view_interface&amp;lt;zip_transform_view&amp;lt;F, Views...&amp;gt;&amp;gt; {…… }; // (1)
-+
-+  namespace views {
-+    inline constexpr /*unspecified*/ zip_transform = /*unspecified*/;      // (2)
-+  }
-+}
-+```
-+* can-reference[link /reference/iterator/dereferenceable.md]
-+
-+## 概要
-+
-+`zip_transform_view`は複数のRangeから要素を1つずつ取得し、それらを引数として関数を呼び出した結果を要素とする[`view`](view.md)。
-+
-+`zip_transform_view`の要素を1つ取得するごとに、各Rangeの要素を1つずつ取得する。
-+
-+zipするRangeのサイズが異なっている場合、`zip_transform_view`のサイズはそれらの中で最小のサイズとなる。
-+
-+- (1): `zip_transform_view`のクラス定義
-+- (2): `zip_transform_view`を生成するカスタマイゼーションポイントオブジェクト(Rangeアダプタオブジェクトではない)
-+
-+
-+### Rangeコンセプト
-+
-+| borrowed | sized | output | input | forward | bidirectional | random_access | contiguous | common | viewable | view |
-+|----------|-------|--------|-------|---------|---------------|---------------|------------|--------|----------|------|
-+|          | (1)   | 〇     | 〇    | (2)     | (3)           | (4)           |            | (5)    | ○       | ○   |
-+
-+- (1): zipするすべてのRangeが[`sized_range`](sized_range.md)のとき
-+- (2): zipするすべてのRangeが[`forward_range`](forward_range.md)のとき
-+- (3): zipするすべてのRangeが[`bidirectional_range`](bidirectional_range.md)のとき
-+- (4): zipするすべてのRangeが[`random_access_range`](random_access_range.md)のとき
-+- (5): *zip-is-common*のとき
-+
-+## 効果
-+
-+- (2): `F`を部分式、`Es...`を部分式のパックとする。式 `views::zip_transform(F, Es...)` の効果は以下の通り。
-+    - `Es` が空でないとき、`zip_transform_view(F, Es...)` と等しい
-+    - `Es` が空のとき、 `FD` を [`decay_t`](/reference/type_traits/decay.md)`&amp;lt;decltype((F))&amp;gt;`として、
-+        - `((void)F, auto(`[`views::empty`](empty_view.md)`&amp;lt;`[`decay_t`](/reference/type_traits/decay.md)`&amp;lt;`[`invoke_result_t`](/reference/type_traits/invoke_result.md)`&amp;lt;FD&amp;amp;&amp;gt;&amp;gt;&amp;gt;))` と等しい
-+        - ただし、 [`move_constructible`](/reference/concepts/move_constructible.md)`&amp;lt;FD&amp;gt; &amp;amp;&amp;amp; `[`regular_invocable`](/reference/concepts/invocable.md)`&amp;lt;FD&amp;amp;&amp;gt;` が `false`、または [`decay_t`](/reference/type_traits/decay.md)`&amp;lt;`[`invoke_result_t`](/reference/type_traits/invoke_result.md)`&amp;lt;FD&amp;amp;&amp;gt;&amp;gt;` がオブジェクト型でないとき、ill-formed
-+
-+
-+## メンバ関数
-+
-+| 名前                                             | 説明                             | 対応バージョン |
-+|--------------------------------------------------|----------------------------------|----------------|
-+| [`(constructor)`](zip_transform_view/op_constructor.md.nolink)  | コンストラクタ                   | C++23          |
-+| [`begin`](zip_transform_view/begin.md.nolink)                   | 先頭を指すイテレータを取得する   | C++23          |
-+| [`end`](zip_transform_view/end.md.nolink)                       | 番兵を取得する                   | C++23          |
-+| [`size`](take_view/size.md.nolink)                    | 要素数を取得する                 | C++23          |
-+
-+## 継承しているメンバ関数
-+
-+| 名前                                         | 説明                              | 対応バージョン |
-+|----------------------------------------------|-----------------------------------|----------------|
-+| [`empty`](view_interface/empty.md)           | Rangeが空かどうかを判定する       | C++20          |
-+| [`operator bool`](view_interface/op_bool.md) | Rangeが空でないかどうかを判定する | C++20          |
-+| [`front`](view_interface/front.md)           | 先頭要素への参照を取得する        | C++20          |
-+| [`back`](view_interface/back.md)             | 末尾要素への参照を取得する        | C++20          |
-+| [`cbegin`](view_interface/cbegin.md)         | 定数イテレータを取得する          | C++23          |
-+| [`cend`](view_interface/cend.md)             | 定数イテレータ（番兵）を取得する  | C++23          |
-+| [`operator[]`](view_interface/op_at.md)      | 要素へアクセスする                | C++20          |
-+
-+## 推論補助
-+
-+| 名前                                                  | 説明                         | 対応バージョン |
-+|-------------------------------------------------------|------------------------------|----------------|
-+| [`(deduction_guide)`](zip_transform_view/op_deduction_guide.md.nolink) | クラステンプレートの推論補助 | C++23          |
-+
-+## 例
-+```cpp example
-+#include &amp;lt;ranges&amp;gt;
-+#include &amp;lt;vector&amp;gt;
-+#include &amp;lt;print&amp;gt;
-+
-+int main() {
-+  std::vector d = {1, 2, 3};
-+  std::vector p = {1, 10, 100, 1000};
-+
-+  std::println(&amp;#34;{}&amp;#34;, std::views::zip_transform([](auto x, auto y){ return x * y }, d, p));
-+}
-+```
-+* std::views::zip_transform[color ff0000]
-+
-+### 出力
-+```
-+[1, 20, 300]
-+```
-+
-+## バージョン
-+### 言語
-+- C++23
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): ??
-+- [ICC](/implementation.md#icc): ??
-+- [Visual C++](/implementation.md#visual_cpp): ??
-+
-+## 関連項目
-+- [`transform_view`](transform_view.md) zipする範囲が1つの場合
-+- [`transform`](/reference/algorithm/ranges_transform.md) 2つのRangeから要素を1つずつ取り出して関数を呼び出し、結果を出力するアルゴリズム関数
-+
-+## 参照
-+- [N4950 26 Ranges library](https://timsong-cpp.github.io/cppwp/n4950/ranges)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>zip_view -- zip_tramsform_view #1063</title>
-      <link href="https://cpprefjp.github.io/reference/ranges/zip_view.html"/>
-      <id>d02a7eee2d8effa7a2be7795cc280e86a4c24bf8:reference/ranges/zip_view.md</id>
-      <updated>2024-03-06T03:39:59+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/zip_view.md b/reference/ranges/zip_view.md
-index 98a98fd1c..ee8d6dde0 100644
---- a/reference/ranges/zip_view.md
-+++ b/reference/ranges/zip_view.md
-@@ -137,7 +137,7 @@ int main() {
- 
- ## 関連項目
- - [`elements_view`](elements_view.md) zipの逆(タプルから要素を取り出す)
--- [`zip_transform_view`](zip_transform_view.md.nolink) zipして関数を適用する
-+- [`zip_transform_view`](zip_transform_view.md) zipして関数を適用する
- 
- ## 参照
- - [N4950 26 Ranges library](https://timsong-cpp.github.io/cppwp/n4950/ranges)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>zip_view -- views::zipの効果を修正</title>
-      <link href="https://cpprefjp.github.io/reference/ranges/zip_view.html"/>
-      <id>1e44b927e9748b698742b2b06f2130928913a3a6:reference/ranges/zip_view.md</id>
-      <updated>2024-03-06T02:39:55+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/zip_view.md b/reference/ranges/zip_view.md
-index f7ebc4be8..98a98fd1c 100644
---- a/reference/ranges/zip_view.md
-+++ b/reference/ranges/zip_view.md
-@@ -41,7 +41,10 @@ zipするRangeのサイズが異なっている場合、`zip_view`のサイズ
- 
- ## 効果
- 
--- (2): 式`views::zip(Es...)`の効果は[`zip_view{Es...}`](zip_view/op_constructor.md.nolink)と等しい。
-+- (2): 式`views::zip(Es...)`の効果は次の通り
-+    - `Es`が空でないとき、`zip_view&amp;lt;`[`views​::​all_t`](all.md)`&amp;lt;decltype((Es))&amp;gt;...&amp;gt;(Es...)` と等しい
-+    - `Es`が空のとき、`auto(`[`views​::empty`](empty_view.md)`&amp;lt;`[`tuple`](/reference/tuple/tuple.md)`&amp;lt;&amp;gt;&amp;gt;)` と等しい
-+
- 
- ## 備考
- 
-@@ -63,7 +66,6 @@ namespace std::ranges {
- | 名前                                             | 説明                             | 対応バージョン |
- |--------------------------------------------------|----------------------------------|----------------|
- | [`(constructor)`](zip_view/op_constructor.md.nolink)  | コンストラクタ                   | C++23          |
--| [`base`](zip_view/base.md.nolink)                     | `V`の参照を取得する              | C++23          |
- | [`begin`](zip_view/begin.md.nolink)                   | 先頭を指すイテレータを取得する   | C++23          |
- | [`end`](zip_view/end.md.nolink)                       | 番兵を取得する                   | C++23          |
- | [`size`](take_view/size.md.nolink)                    | 要素数を取得する                 | C++23          |
-@@ -108,6 +110,9 @@ int main() {
-   // zipした結果を連想コンテナに変換する
-   const auto m = std::views::zip(v, l) | std::ranges::to&amp;lt;std::unordered_map&amp;lt;int, char&amp;gt;&amp;gt;();
-   std::println(&amp;#34;{}&amp;#34;, m);
-+
-+  // 何もzipしていないときは空になる
-+  std::println(&amp;#34;{}&amp;#34;, std::views::zip());
- }
- ```
- * std::views::zip[color ff0000]
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
