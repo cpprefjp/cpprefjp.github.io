@@ -188,8 +188,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2024-03-11T22:19:09">
-        2024年03月11日 22時19分09秒
+      <span itemprop="datePublished" content="2024-03-12T16:18:20">
+        2024年03月12日 16時18分20秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -238,9 +238,9 @@
 <p>各処理系がRangeアダプタを実装する際、どのRangeアダプタでも共通するコードを基底クラスにまとめることが行われ、パイプライン記法をサポートする<code>operator|</code>も基底クラスに対して実装された。
 そのような経験を踏まえ、Rangeアダプタクロージャオブジェクトの基底クラスとして<code>range_adaptor_closure</code>が標準化された。</p>
 <p>ユーザーは、以下のように<code>range_adaptor_closure</code>を継承することで、Rangeアダプタクロージャオブジェクトを定義することができる。</p>
-<p><div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">user_defined_closure_t</span> <span class="o">:</span> <span class="k">public</span> <span class="n">std</span><span class="o">::</span><span class="n">ranges</span><span class="o">::</span><span class="n">range_adaptor_closure</span><span class="o">&lt;</span><span class="n">user_defined_closure_t</span><span class="o">&gt;</span> <span class="p">{</span>
+<p><div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">user_defined_closure_t</span> <span class="o">:</span> <span class="k">public</span> <span class="n"><span style="color:#ff0000">std::ranges::range_adaptor_closure</span></span><span class="o">&lt;</span><span class="n">user_defined_closure_t</span><span class="o">&gt;</span> <span class="p">{</span>
 <span class="k">public</span><span class="o">:</span>
-  <span class="k">template</span> <span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">ranges</span><span class="o">::</span><span class="n"><a href="https://cpprefjp.github.io/reference/ranges/viewable_range.html">viewable_range</a></span> <span class="n">R</span><span class="o">&gt;</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="n"><a href="https://cpprefjp.github.io/reference/ranges/viewable_range.html">std::ranges::viewable_range</a></span> <span class="n">R</span><span class="o">&gt;</span>
   <span class="k">constexpr</span> <span class="k">auto</span> <span class="k">operator</span><span class="p">()(</span><span class="n">R</span><span class="o">&amp;&amp;</span> <span class="n">r</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
     <span class="c1">// user_defined_viewを構築して返す</span>
     <span class="k">return</span> <span class="n">user_defined_view</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/utility/forward.html">std::forward</a></span><span class="o">&lt;</span><span class="n">R</span><span class="o">&gt;</span><span class="p">(</span><span class="n">r</span><span class="p">));</span>
@@ -250,7 +250,14 @@
 <span class="kr">inline</span> <span class="k">constexpr</span> <span class="n">user_defined_closure_t</span> <span class="n">user_defined</span><span class="p">;</span>
 </code></pre></div>
 </p>
-<p>パイプライン記法をサポートする方法は規定されていないが、一般には処理系がRangeと<code>range_adaptor_closure</code>を引数とする<code>operator|</code>を定義することで行われる。</p>
+<p>パイプライン記法をサポートする方法は規定されていないが、一般には処理系がRangeと<code>range_adaptor_closure</code>を引数とする以下のような<code>operator|</code>を定義することで行われると考えられる。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">template</span><span class="o">&lt;</span><span class="n"><a href="https://cpprefjp.github.io/reference/ranges/viewable_range.html">std::ranges::viewable_range</a></span> <span class="n">R</span><span class="p">,</span> <span class="k">class</span> <span class="nc">T</span><span class="o">&gt;</span>
+  <span class="n">requires</span> <span class="n"><a href="https://cpprefjp.github.io/reference/concepts/derived_from.html">std::derived_from</a></span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n"><span style="color:#ff0000">std::ranges::range_adaptor_closure</span></span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span> <span class="o">&amp;&amp;</span> <span class="n"><a href="https://cpprefjp.github.io/reference/concepts/invocable.html">std::invocable</a></span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">R</span><span class="o">&gt;</span>
+<span class="k">constexpr</span> <span class="k">auto</span> <span class="k">operator</span><span class="o">|</span> <span class="p">(</span><span class="n">R</span><span class="o">&amp;&amp;</span> <span class="n">r</span><span class="p">,</span> <span class="n">T</span><span class="o">&amp;&amp;</span> <span class="n">raco</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="n">raco</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/utility/forward.html">std::forward</a></span><span class="o">&lt;</span><span class="n">R</span><span class="o">&gt;</span><span class="p">(</span><span class="n">r</span><span class="p">));</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
 <h2>例</h2>
 <p><div class="yata" id="155556897a5c0fcf28966af21eb1b4a9e47f6158"><div class="codehilite"><pre><span></span><code><span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/ranges.html">&lt;ranges&gt;</a></span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf"><a href="https://cpprefjp.github.io/reference/vector.html">&lt;vector&gt;</a></span><span class="cp"></span>
