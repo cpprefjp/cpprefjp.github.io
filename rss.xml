@@ -2,9 +2,267 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2024-03-25T17:59:56.741613</updated>
-  <id>7d98a585-697e-40d7-a210-7bc624344ca7</id>
+  <updated>2024-03-25T18:56:52.839869</updated>
+  <id>a0ec3010-0a36-4d26-b4be-defb787b091e</id>
 
+  
+    <entry>
+      <title>format -- アライメントの詳細を記載</title>
+      <link href="https://cpprefjp.github.io/reference/format/format.html"/>
+      <id>98c71c609bfbd6232d132f9066711cd26df334fd:reference/format/format.md</id>
+      <updated>2024-03-26T03:52:36+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/format.md b/reference/format/format.md
+index 6adcc35dc..60a4f19d6 100644
+--- a/reference/format/format.md
++++ b/reference/format/format.md
+@@ -126,8 +126,7 @@ string s3 = format(&amp;#34;{} {1}&amp;#34;,  &amp;#34;a&amp;#34;, &amp;#34;b&amp;#34;); // コンパイルエラー
+ 
+ イテレータ範囲`[first, last)`を[`to_chars`](/reference/charconv/to_chars.md)の結果を格納するのに十分な範囲、`value`をフォーマットする値、`charT`を`char`または`wchar_t`とする。
+ 
+-* 以下の表の通りに[`to_chars`](/reference/charconv/to_chars.md)を呼び出したあと、その結果を出力へコピーするかのような振る舞いをする。ただし、実際に[`to_chars`](/reference/charconv/to_chars.md)を呼び出すかどうかは規定されていない。
+-* 実際には、出力へコピーする際にパディングなども行われる。
++* ロケールを考慮しない場合、数値を文字列化する部分は以下の表の通りに[`to_chars`](/reference/charconv/to_chars.md)を呼び出した結果と等しくなる。
+ 
+ | type   | 意味                       | 効果                                                                      | 対応バージョン |
+ |:-------|:---------------------------|:--------------------------------------------------------------------------|----------------|
+@@ -164,6 +163,51 @@ string s3 = format(&amp;#34;{} {1}&amp;#34;,  &amp;#34;a&amp;#34;, &amp;#34;b&amp;#34;); // コンパイルエラー
+ 
+ ポインタは`void*`のみサポートする。それ以外のポインタは、`void*`にキャストしなければ出力できない。
+ 
++#### アライメントの詳細
++
++指定した幅が必要な幅より小さい場合や、幅を省略している場合はアライメントは無効となる。
++
++アライメントにおいて、一部の文字は大きな幅を持っているとみなされる。
++
++UTF-8・UTF-16・UTF-32の文字のシーケンスの場合、その幅はUnicode標準 UAX #29 で定める拡張書記素クラスタの幅の合計となる。
++
++以下の文字は2文字分の幅を持つ。
++
++- UAX #44 の規定に従って、`East_Asian_Width` が `W` (Wide)または `F` (Fullwidth)であるコードポイント
++- `U+4DC0` - `U+4DFF` (Yijing Hexagram Symbols)
++- `U+1F300` - `U+1F5FF` (Miscellaneous Symbols and Pictographs)
++- `U+1F900` - `U+1F9FF` (Supplemental Symbols and Pictographs)
++
++それ以外のコードポイントの幅は1である。
++
++UTF-8・UTF-16・UTF-32以外の文字のシーケンスの幅は未規定。
++
++アライメントに使用する文字は、常に幅1として扱われる。
++
++```cpp
++std::format(&amp;#34;{:*&amp;gt;6}&amp;#34;, &amp;#34;あ&amp;#34;); // &amp;#34;****あ&amp;#34;
++std::format(&amp;#34;{:あ&amp;gt;6}&amp;#34;, &amp;#39;x&amp;#39;); // &amp;#34;あああああx&amp;#34;
++```
++
++##### 0埋めとの関係
++
++アライメント方向が指定されていると、0埋めは無効となる。
++
++```cpp
++// 0埋めは符号を考慮する
++std::format(&amp;#34;{:05}&amp;#34;, 42);    // &amp;#34;00042&amp;#34;
++std::format(&amp;#34;{:+05}&amp;#34;, 42);   // &amp;#34;+0042&amp;#34;
++std::format(&amp;#34;{: 05}&amp;#34;, 42);   // &amp;#34; 0042&amp;#34;
++
++// アライメントは符号を考慮しない
++std::format(&amp;#34;{:0&amp;gt;5}&amp;#34;, 42);   // &amp;#34;00042&amp;#34;
++std::format(&amp;#34;{:0&amp;gt;+5}&amp;#34;, 42);  // &amp;#34;00+42&amp;#34;
++std::format(&amp;#34;{:0&amp;gt; 5}&amp;#34;, 42);  // &amp;#34;00 42&amp;#34;
++
++// 0埋めも指定しているが、アライメント方向が指定されているのでアライメントが優先される
++std::format(&amp;#34;{:0&amp;gt;05}&amp;#34;, -42);  // &amp;#34;00-42&amp;#34;
++```
++
+ #### &amp;lt;a id=&amp;#34;range-format-options&amp;#34; href=&amp;#34;#range-format-options&amp;#34;&amp;gt;Range・シーケンスコンテナの書式 (C++23)&amp;lt;/a&amp;gt;
+ 
+ Range・シーケンスコンテナに対して使用できる標準のオプション書式は次の通り(`[]`は省略可の意味)。
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>format -- フォーマット書式の表を整理</title>
+      <link href="https://cpprefjp.github.io/reference/format/format.html"/>
+      <id>89d821a70e451523f47cab945528463bf5fc14cb:reference/format/format.md</id>
+      <updated>2024-03-26T03:13:40+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/format.md b/reference/format/format.md
+index e173ca258..6adcc35dc 100644
+--- a/reference/format/format.md
++++ b/reference/format/format.md
+@@ -86,7 +86,7 @@ string s3 = format(&amp;#34;{} {1}&amp;#34;,  &amp;#34;a&amp;#34;, &amp;#34;b&amp;#34;); // コンパイルエラー
+     * スペース : 正の数にはスペースを表示する
+ * `#` : 代替表現(`0x`など形式がわかる表記)を使う
+ * `0` : 符号を考慮して0で埋める
+-* `width` : 幅 (省略時は値に応じて幅が決まり、アライメントは機能しない)
++* `width` : 幅 (アライメントもしくは0埋めの幅)
+     * 置換フィールドを使って変数で指定できる
+ * `precision` : 精度(浮動小数点数の場合)、使う文字数(文字列の場合)
+     * 置換フィールドを使って変数で指定できる
+@@ -100,10 +100,29 @@ string s3 = format(&amp;#34;{} {1}&amp;#34;,  &amp;#34;a&amp;#34;, &amp;#34;b&amp;#34;); // コンパイルエラー
+ 
+ | type       | 意味         |効果                                                                             | 対応バージョン |
+ |:-----------|:-------------|--------------------------------------------------------------------------------------|-------|
+-| s (省略可) | 文字列       | 文字列をそのまま出力                                                                      | C++20 |
++| s          | 文字列       | 文字列をそのまま出力                                                                      | C++20 |
+ | ?          | デバッグ出力 | 文字・文字列を引用符で囲み、エスケープシーケンスをエスケープして出力 (例:`&amp;#34;\n&amp;#34;`は`&amp;#34;\&amp;#34;\n\&amp;#34;&amp;#34;`となる) | C++23 |
+ 
+-#### 文字型 / `bool`型 / 整数型の場合
++デフォルトは `s`。
++
++#### 文字型の場合
++
++| type   | 意味                       | 効果                                                                      | 対応バージョン |
++|:-------|:---------------------------|:--------------------------------------------------------------------------|----------------|
++| c      | 文字として出力             | `static_cast&amp;lt;charT&amp;gt;(value)` (収まらないときは`format_error`)              | C++20 |
++| ?      | デバッグ出力               | 文字・文字列を引用符で囲み、エスケープシーケンスをエスケープして出力 (例:`&amp;#34;\n&amp;#34;`は`&amp;#34;\&amp;#34;\\n\&amp;#34;&amp;#34;`となる) | C++23 |
++
++デフォルトは `c`。
++
++整数型のオプションも指定できる。その場合は、十分な大きさの符号なし整数型として扱われる。
++
++#### `bool`型の場合
++
++デフォルトでは `true` / `false` という文字列を出力する。
++
++整数型のオプションも指定できる。その場合は、`unsigned char` に `static_cast` される。
++
++#### 整数型の場合
+ 
+ イテレータ範囲`[first, last)`を[`to_chars`](/reference/charconv/to_chars.md)の結果を格納するのに十分な範囲、`value`をフォーマットする値、`charT`を`char`または`wchar_t`とする。
+ 
+@@ -112,34 +131,36 @@ string s3 = format(&amp;#34;{} {1}&amp;#34;,  &amp;#34;a&amp;#34;, &amp;#34;b&amp;#34;); // コンパイルエラー
+ 
+ | type   | 意味                       | 効果                                                                      | 対応バージョン |
+ |:-------|:---------------------------|:--------------------------------------------------------------------------|----------------|
+-| b      | 2進数(小文字)              | `to_chars(first, last, value, 2)` (代替表現の接頭辞 `0b`)                 | C++20 |
+-| B      | 2進数(大文字)              | `b`の大文字版 (代替表現の接頭辞 `0B`)                                     | C++20 |
+-| c      | 文字として出力             | `static_cast&amp;lt;charT&amp;gt;(value)` (収まらないときは`format_error`)              | C++20 |
++| b, B   | 2進数                      | `to_chars(first, last, value, 2)` (代替表現の接頭辞 `0b`)                 | C++20 |
+ | d      | 10進数                     | `to_chars(first, last, value)`                                            | C++20 |
+ | o      | 8進数                      | `to_chars(first, last, value, 8)` (代替表現の接頭辞 `0`、ただし値が0のときは接頭辞なし) | C++20 |
+-| x      | 16進数(小文字)             | `to_chars(first, last, value, 16)` (代替表現の接頭辞 `0x`)                | C++20 |
+-| X      | 16進数(大文字)             | `x`の大文字版 (代替表現の接頭辞 `0X`)                                     | C++20 |
+-| ?      | デバッグ出力               | 文字・文字列を引用符で囲み、エスケープシーケンスをエスケープして出力 (例:`&amp;#34;\n&amp;#34;`は`&amp;#34;\&amp;#34;\\n\&amp;#34;&amp;#34;`となる) | C++23 |
+-| (なし) | デフォルト                 | `d` (整数型の場合)&amp;lt;br/&amp;gt;`c` (文字型の場合)&amp;lt;br/&amp;gt;`&amp;#34;true&amp;#34;`/`&amp;#34;false&amp;#34;`を出力(`bool`型の場合) | C++20 |
++| x, X   | 16進数                     | `to_chars(first, last, value, 16)` (代替表現の接頭辞 `0x`)                | C++20 |
++| c      | 文字として出力             | `static_cast&amp;lt;charT&amp;gt;(value)` した値を文字として出力 (収まらないときは`format_error`)  | C++20 |
++
++デフォルトは `d`。
++
++2進数・16進数については、大文字のオプションを指定すると代替表現および数値中のアルファベットが大文字になる。
+ 
+ #### 浮動小数点数型の場合
+ 
+-| type       | 意味                             | 効果                                                                                                                                                                  |
+-|:-----------|:---------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+-| f,F        | 指数表記しない                   | `to_chars(first, last, value, chars_format::fixed, precision)` (精度が指定されたとき)&amp;lt;br/&amp;gt;`to_chars(first, last, value, chars_format::fixed, 6)` (それ以外)            |
+-| e          | 指数表記(小文字)                 | `to_chars(first, last, value, chars_format::scientific, precision)` (精度が指定されたとき)&amp;lt;br/&amp;gt;`to_chars(first, last, value, chars_format::scientific, 6)` (それ以外)  |
+-| E          | 指数表記(大文字)                 | `e`の大文字版                                                                                                                                                         |
+-| a          | 16進指数表記(小文字)             | `to_chars(first, last, value, chars_format::hex, precision)` (精度が指定されたとき)&amp;lt;br/&amp;gt;`to_chars(first, last, value, chars_format::hex)` (それ以外)                   |
+-| A          | 16進指数表記(大文字)             | `a`の大文字版                                                                                                                                                         |
+-| g          | 値に応じた表記(小文字)           | `to_chars(first, last, value, chars_format::general, precision)` (精度が指定されたとき)&amp;lt;br/&amp;gt;`to_chars(first, last, value, chars_format::general, 6)` (それ以外) |
+-| G          | 値に応じた表記(大文字)           | `g`の大文字版                                                                                                                                                         |
+-| (なし)     | デフォルト                       | `to_chars(first, last, value, chars_format::fixed, general, precision)` (精度が指定されたとき)&amp;lt;br/&amp;gt;`to_chars(first, last, value)` (それ以外)                           |
++| type       | 意味                      | 効果                                                                                                                                                                  |
++|:-----------|:--------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
++| f, F       | 指数表記しない            | `to_chars(first, last, value, chars_format::fixed, precision)` (精度が指定されたとき)&amp;lt;br/&amp;gt;`to_chars(first, last, value, chars_format::fixed, 6)` (それ以外)           |
++| e, E       | 指数表記する              | `to_chars(first, last, value, chars_format::scientific, precision)` (精度が指定されたとき)&amp;lt;br/&amp;gt;`to_chars(first, last, value, chars_format::scientific, 6)` (それ以外) |
++| a, A       | 16進数で指数表記する      | `to_chars(first, last, value, chars_format::hex, precision)` (精度が指定されたとき)&amp;lt;br/&amp;gt;`to_chars(first, last, value, chars_format::hex)` (それ以外)                  |
++| g, G       | 値に応じて指数表記を使う  | `to_chars(first, last, value, chars_format::general, precision)` (精度が指定されたとき)&amp;lt;br/&amp;gt;`to_chars(first, last, value, chars_format::general, 6)` (それ以外)       |
++
++デフォルトは `g`。
++
++大文字のオプションを指定すると数値中のアルファベットが大文字になる。
+ 
+ #### ポインタの場合
+ 
+ | type       | 意味               | 効果                                                                                                            |
+ |:-----------|:-------------------|:----------------------------------------------------------------------------------------------------------------|
+-| p (省略可) | アドレスを出力する | `&amp;#34;0x&amp;#34; + to_chars(first, last, reinterpret_cast&amp;lt;uintptr_t&amp;gt;(value), 16)`  |
++| p          | アドレスを出力する | `0x` につづいて、`to_chars(first, last, reinterpret_cast&amp;lt;uintptr_t&amp;gt;(value), 16)` の結果を出力する               |
++
++デフォルトは `p`。
+ 
+ ポインタは`void*`のみサポートする。それ以外のポインタは、`void*`にキャストしなければ出力できない。
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>format -- オプション書式におけるロケールのオプションを修正</title>
+      <link href="https://cpprefjp.github.io/reference/format/format.html"/>
+      <id>c48319e12b5865fe6e8453cf0b77c7635e0c0900:reference/format/format.md</id>
+      <updated>2024-03-26T02:54:47+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/format.md b/reference/format/format.md
+index 9ed95e7e4..e173ca258 100644
+--- a/reference/format/format.md
++++ b/reference/format/format.md
+@@ -72,7 +72,7 @@ string s3 = format(&amp;#34;{} {1}&amp;#34;,  &amp;#34;a&amp;#34;, &amp;#34;b&amp;#34;); // コンパイルエラー
+ 基本的に`printf`の書式を踏襲しているが、あくまでもオプションであり、省略しても`&amp;lt;iostream&amp;gt;`と同じようにデフォルトの書式が使われる。
+ 
+ ```
+-[[fill] align] [sign] [&amp;#39;#&amp;#39;] [&amp;#39;0&amp;#39;] [width] [&amp;#39;.&amp;#39; precision] [type]
++[[fill] align] [sign] [&amp;#39;#&amp;#39;] [&amp;#39;0&amp;#39;] [width] [&amp;#39;.&amp;#39; precision] [&amp;#39;L&amp;#39;] [type]
+ ```
+ 
+ * `fill` : アライメントに使う文字 (デフォルト: スペース)
+@@ -90,9 +90,10 @@ string s3 = format(&amp;#34;{} {1}&amp;#34;,  &amp;#34;a&amp;#34;, &amp;#34;b&amp;#34;); // コンパイルエラー
+     * 置換フィールドを使って変数で指定できる
+ * `precision` : 精度(浮動小数点数の場合)、使う文字数(文字列の場合)
+     * 置換フィールドを使って変数で指定できる
++* `L` : ロケールを考慮する
+ * `type` : 値の表現方法(表を参照)
+ 
+-`printf`との違いとして、デフォルトではロケール非依存(Cロケール固定)である。ロケール依存のフォーマットをするには`n`オプションを使う。
++`printf`との違いとして、デフォルトではロケール非依存(Cロケール固定)である。ロケール依存のフォーマットをするには`L`オプションを使う。
+ ロケール非依存の場合、算術型の出力は[`to_chars`](/reference/charconv/to_chars.md)と同じになる。
+ 
+ #### 文字列型の場合
+@@ -115,7 +116,6 @@ string s3 = format(&amp;#34;{} {1}&amp;#34;,  &amp;#34;a&amp;#34;, &amp;#34;b&amp;#34;); // コンパイルエラー
+ | B      | 2進数(大文字)              | `b`の大文字版 (代替表現の接頭辞 `0B`)                                     | C++20 |
+ | c      | 文字として出力             | `static_cast&amp;lt;charT&amp;gt;(value)` (収まらないときは`format_error`)              | C++20 |
+ | d      | 10進数                     | `to_chars(first, last, value)`                                            | C++20 |
+-| n      | 10進数(ロケールを考慮する) | ロケール依存の桁区切りを使った`d`                                         | C++20 |
+ | o      | 8進数                      | `to_chars(first, last, value, 8)` (代替表現の接頭辞 `0`、ただし値が0のときは接頭辞なし) | C++20 |
+ | x      | 16進数(小文字)             | `to_chars(first, last, value, 16)` (代替表現の接頭辞 `0x`)                | C++20 |
+ | X      | 16進数(大文字)             | `x`の大文字版 (代替表現の接頭辞 `0X`)                                     | C++20 |
+@@ -133,7 +133,6 @@ string s3 = format(&amp;#34;{} {1}&amp;#34;,  &amp;#34;a&amp;#34;, &amp;#34;b&amp;#34;); // コンパイルエラー
+ | A          | 16進指数表記(大文字)             | `a`の大文字版                                                                                                                                                         |
+ | g          | 値に応じた表記(小文字)           | `to_chars(first, last, value, chars_format::general, precision)` (精度が指定されたとき)&amp;lt;br/&amp;gt;`to_chars(first, last, value, chars_format::general, 6)` (それ以外) |
+ | G          | 値に応じた表記(大文字)           | `g`の大文字版                                                                                                                                                         |
+-| n          | ロケールを考慮した値に応じた表記 | ロケールを考慮した`g`                                                                                                                                                 |
+ | (なし)     | デフォルト                       | `to_chars(first, last, value, chars_format::fixed, general, precision)` (精度が指定されたとき)&amp;lt;br/&amp;gt;`to_chars(first, last, value)` (それ以外)                           |
+ 
+ #### ポインタの場合
+@@ -245,7 +244,7 @@ format(&amp;#34;{:&amp;lt;06}&amp;#34;, -42);  // &amp;#34;-42   &amp;#34;
+ format(&amp;#34;{}&amp;#34;, 42);                      // &amp;#34;42&amp;#34;
+ format(&amp;#34;{0:b} {0:d} {0:o} {0:x}&amp;#34;, 42); // &amp;#34;101010 42 52 2a&amp;#34;
+ format(&amp;#34;{0:#x} {0:#X}&amp;#34;, 42);           // &amp;#34;0x2a 0X2A&amp;#34;
+-format(&amp;#34;{:n}&amp;#34;, 1234);                  // &amp;#34;1,234&amp;#34; (ロケールによる)
++format(&amp;#34;{:L}&amp;#34;, 1234.5678);             // &amp;#34;1,234.5678&amp;#34; (ロケールによる)
+ ```
+ 
+ ### コンパイル時の書式文字列チェック
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>poisson_distribution -- poisson_distribution : リンク差し替え (close #1262)</title>
@@ -251,90 +509,6 @@ index 32bb2e99d..1ba5b08e2 100644
       <author>
         <name>suomesta</name>
         <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>swap -- Update swap.md</title>
-      <link href="https://cpprefjp.github.io/reference/utility/swap.html"/>
-      <id>aff8e927502e4f11090b44e7330fe00ed7e061a2:reference/utility/swap.md</id>
-      <updated>2024-03-22T02:29:03+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/utility/swap.md b/reference/utility/swap.md
-index 31820431f..f7c647251 100644
---- a/reference/utility/swap.md
-+++ b/reference/utility/swap.md
-@@ -154,6 +154,11 @@ int main()
- - [Visual C++](/implementation.md#visual_cpp): 2012, 2013, 2015
- 	- 値版はそれより前から実装されている。
- 
-+## 関連項目
-+- [`std::ranges::swap()`](/reference/concepts/swap.md)
-+- [`std::iter_swap()`](/reference/algorithm/iter_swap.md)
-+
-+
- ## 参照
- - [LWG Issue 809. `std::swap` should be overloaded for array types](http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#809)
-     - C++11で、配列に対するオーバーロードが追加された経緯のレポート
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Shunsuke Shimizu</name>
-        <email>grafi@grafi.jp</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>basic_string -- Merge pull request #1261 from fktn-k/fix-typo</title>
-      <link href="https://cpprefjp.github.io/reference/string/basic_string.html"/>
-      <id>90fe9ba52a0f9a5ca9700fe4762ca87515e1fb13:reference/string/basic_string.md</id>
-      <updated>2024-03-21T02:35:11+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/basic_string.md b/reference/string/basic_string.md
-index e149400b8..ef2f425d9 100644
---- a/reference/string/basic_string.md
-+++ b/reference/string/basic_string.md
-@@ -139,7 +139,7 @@ namespace std {
- | [`find_first_of`](basic_string/find_first_of.md)                     | 最初に現れる指定文字を検索する                 |                |
- | [`find_last_of`](basic_string/find_last_of.md)                       | 最後に現れる指定文字を検索する                 |                |
- | [`find_first_not_of`](basic_string/find_first_not_of.md)             | 先頭から、指定文字が見つからない位置を検索する |                |
--| [`find_last_nof_of`](basic_string/find_last_not_of.md)               | 末尾から、指定文字が見つからない位置を検索する |                |
-+| [`find_last_not_of`](basic_string/find_last_not_of.md)               | 末尾から、指定文字が見つからない位置を検索する |                |
- | [`substr`](basic_string/substr.md)                                   | 部分文字列を取得する                           |                |
- | [`compare`](basic_string/compare.md)                                 | 他の文字列との比較を行う                       |                |
- | [`starts_with`](basic_string/starts_with.md)                         | 指定の文字列で始まるかを判定する               | C++20          |
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yumetodo</name>
-        <email>yume-wikijp@live.jp</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>basic_string -- fixed typo: find_last_nof_of -&gt; find_last_not_of</title>
-      <link href="https://cpprefjp.github.io/reference/string/basic_string.html"/>
-      <id>f99e99b866a4766f911f6ba318c8f29873a58dd1:reference/string/basic_string.md</id>
-      <updated>2024-03-21T01:26:14+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/basic_string.md b/reference/string/basic_string.md
-index e149400b8..ef2f425d9 100644
---- a/reference/string/basic_string.md
-+++ b/reference/string/basic_string.md
-@@ -139,7 +139,7 @@ namespace std {
- | [`find_first_of`](basic_string/find_first_of.md)                     | 最初に現れる指定文字を検索する                 |                |
- | [`find_last_of`](basic_string/find_last_of.md)                       | 最後に現れる指定文字を検索する                 |                |
- | [`find_first_not_of`](basic_string/find_first_not_of.md)             | 先頭から、指定文字が見つからない位置を検索する |                |
--| [`find_last_nof_of`](basic_string/find_last_not_of.md)               | 末尾から、指定文字が見つからない位置を検索する |                |
-+| [`find_last_not_of`](basic_string/find_last_not_of.md)               | 末尾から、指定文字が見つからない位置を検索する |                |
- | [`substr`](basic_string/substr.md)                                   | 部分文字列を取得する                           |                |
- | [`compare`](basic_string/compare.md)                                 | 他の文字列との比較を行う                       |                |
- | [`starts_with`](basic_string/starts_with.md)                         | 指定の文字列で始まるかを判定する               | C++20          |
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>fktn</name>
-        <email>fktn.dev@gmail.com</email>
       </author>
     </entry>
   
