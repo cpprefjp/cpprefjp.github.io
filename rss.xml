@@ -2,9 +2,302 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2024-03-27T14:38:44.934584</updated>
-  <id>5b9e3fa9-ef32-4dfe-b88d-a5922fb4a95c</id>
+  <updated>2024-03-27T17:38:57.736128</updated>
+  <id>21ec3197-86e2-47f8-9ff6-c558ba0ced65</id>
 
+  
+    <entry>
+      <title>basic_format_arg -- basic_format_arg/op_constructorの説明を追加</title>
+      <link href="https://cpprefjp.github.io/reference/format/basic_format_arg.html"/>
+      <id>49f50b7ff4af76fbe40ccaea574d5bc0d55d233d:reference/format/basic_format_arg.md</id>
+      <updated>2024-03-28T02:35:04+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/basic_format_arg.md b/reference/format/basic_format_arg.md
+index 209c54703..011923ec5 100644
+--- a/reference/format/basic_format_arg.md
++++ b/reference/format/basic_format_arg.md
+@@ -7,7 +7,31 @@
+ ```cpp
+ namespace std {
+   template&amp;lt;class Context&amp;gt;
+-  class basic_format_arg;
++  class basic_format_arg {
++  public:
++    class handle;
++
++  private:
++    using char_type = typename Context::char_type;                              // exposition only
++
++    variant&amp;lt;monostate, bool, char_type,
++            int, unsigned int, long long int, unsigned long long int,
++            float, double, long double,
++            const char_type*, basic_string_view&amp;lt;char_type&amp;gt;,
++            const void*, handle&amp;gt; value;                                         // exposition only
++
++    template&amp;lt;class T&amp;gt; explicit basic_format_arg(T&amp;amp; v) noexcept;                 // exposition only
++
++  public:
++    basic_format_arg() noexcept;
++
++    explicit operator bool() const noexcept;
++
++    template&amp;lt;class Visitor&amp;gt;
++      decltype(auto) visit(this basic_format_arg arg, Visitor&amp;amp;&amp;amp; vis);
++    template&amp;lt;class R, class Visitor&amp;gt;
++      R visit(this basic_format_arg arg, Visitor&amp;amp;&amp;amp; vis);
++  };
+ }
+ ```
+ 
+@@ -26,7 +50,7 @@ namespace std {
+ 
+ | 名前            | 説明           | 対応バージョン |
+ |-----------------|----------------|----------------|
+-| `(constructor)` | コンストラクタ | C++20          |
++| [`(constructor)`](basic_format_arg/op_constructor.md) | コンストラクタ | C++20          |
+ 
+ ### 変換演算子
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- basic_format_arg/op_constructorの説明を追加</title>
+      <link href="https://cpprefjp.github.io/reference/format/basic_format_arg/op_constructor.html"/>
+      <id>49f50b7ff4af76fbe40ccaea574d5bc0d55d233d:reference/format/basic_format_arg/op_constructor.md</id>
+      <updated>2024-03-28T02:35:04+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/basic_format_arg/op_constructor.md b/reference/format/basic_format_arg/op_constructor.md
+new file mode 100644
+index 000000000..079eb9ef8
+--- /dev/null
++++ b/reference/format/basic_format_arg/op_constructor.md
+@@ -0,0 +1,87 @@
++# コンストラクタ
++
++* format[meta header]
++* function[meta id-type]
++* std[meta namespace]
++* basic_format_arg[meta class]
++* cpp20[meta cpp]
++
++```cpp
++namespace std {
++  template&amp;lt;class Context&amp;gt;
++  class basic_format_arg {
++  private:
++    using char_type = typename Context::char_type;                              // exposition only
++
++    variant&amp;lt;monostate, bool, char_type,
++            int, unsigned int, long long int, unsigned long long int,
++            float, double, long double,
++            const char_type*, basic_string_view&amp;lt;char_type&amp;gt;,
++            const void*, handle&amp;gt; value;                                         // exposition only
++
++    template&amp;lt;class T&amp;gt; explicit basic_format_arg(T&amp;amp; v) noexcept;                 // (2) exposition only
++
++  public:
++    basic_format_arg() noexcept; // (1)
++  };
++}
++```
++* varialt[link /reference/varialt/varialt.md]
++* monostate[link /reference/varialt/monostate.md]
++* basic_string_view[link /reference/string_view/basic_string_view.md]
++* handle[link handle.md]
++* basic_format_arg[italic]
++
++## 概要
++
++* (1): 空の`basic_format_arg`を構築する
++* (2): (説明専用)[`make_format_args`](../make_format_args.md)の内部で使用され、引数から`basic_format_args`を構築する。
++
++## テンプレートパラメーター制約
++
++- (2):
++    - `T`はフォーマットできる型であること
++
++## 事前条件
++
++- (2): もし `decay_t&amp;lt;T&amp;gt;` が `char_type*` または `const char_type*` である場合、 `static_cast&amp;lt;const char_type*&amp;gt;(v)` はヌル終端された `char_type` の配列を指すこと。
++
++## 事後条件
++
++- (1): `!(*this)`
++
++## 例外
++
++投げない。
++
++## 効果
++
++- (1): `value`を[`monostate`](/reference/varialt/monostate.md)で初期化する。
++
++- (2): `TD`を`remove_const&amp;lt;T&amp;gt;`として、以下の順に`value`を初期化する。
++    - `TD`が`bool`なら、`v`で初期化
++    - `TD`が`char`かつ`char_type`が`wchar_t`なら、`value`を`static_cast&amp;lt;wchar_t&amp;gt;(v)`で初期化
++    - `TD`が`char`かつ`char_type`が`wchar_t`なら、`value`を`static_cast&amp;lt;wchar_t&amp;gt;(static_cast&amp;lt;unsigned char&amp;gt;(v))`で初期化
++    - `TD`が符号つき整数型かつ`sizeof(TD) &amp;lt;= sizeof(int)`なら、`value`を`static_cast&amp;lt;int&amp;gt;(v)`で初期化
++    - `TD`が符号なし整数型かつ`sizeof(TD) &amp;lt;= sizeof(unsigned int)`なら、`value`を`static_cast&amp;lt;unsigned int&amp;gt;(v)`で初期化
++    - `TD`が符号つき整数型かつ`sizeof(TD) &amp;lt;= sizeof(long long int)`なら、`value`を`static_cast&amp;lt;long long int&amp;gt;(v)`で初期化
++    - `TD`が符号なし整数型かつ`sizeof(TD) &amp;lt;= sizeof(unsigned long long int)`なら、`value`を`static_cast&amp;lt;unsigned long long int&amp;gt;(v)`で初期化
++    - `TD`が浮動小数点数なら、`v`で初期化
++    - `TD`が`basic_string_view`または`basic_string`の特殊化で、`TD::value_type`が`char_type`と等しければ、`value`を`basic_string_view&amp;lt;char_type&amp;gt;(v.data(), v.size())`で初期化
++    - `decay_t&amp;lt;T&amp;gt;`が`char_type*`または `const char_type*` なら、`value`を`static_cast&amp;lt;const char_type*&amp;gt;(v)`で初期化
++    - `is_void_v&amp;lt;remove_pointer_t&amp;lt;TD&amp;gt;&amp;gt;`が`true`、または`is_null_pointer_v&amp;lt;TD&amp;gt;`が`true`なら、`value`を`static_cast&amp;lt;const void*&amp;gt;(v)`で初期化
++    - それ以外なら、`value`を`handle(v)`で初期化
++
++## バージョン
++### 言語
++- C++20
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): ??
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++## 参照
++
++* [P0645R10 Text Formatting](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0645r10.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>make_format_args -- basic_format_arg/op_constructorの説明を追加</title>
+      <link href="https://cpprefjp.github.io/reference/format/make_format_args.html"/>
+      <id>49f50b7ff4af76fbe40ccaea574d5bc0d55d233d:reference/format/make_format_args.md</id>
+      <updated>2024-03-28T02:35:04+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/make_format_args.md b/reference/format/make_format_args.md
+index b8b852c5c..3e4ffefad 100644
+--- a/reference/format/make_format_args.md
++++ b/reference/format/make_format_args.md
+@@ -47,92 +47,21 @@ string format(string_view fmt, const Args&amp;amp;... args)
+ ## 事前条件
+ すべての引数の型`Ti`について`Context::formatter_type&amp;lt;Ti&amp;gt;`が`Formatter`要件を満たすこと。
+ 
+-## 効果
+-
+-(2)は次と等しい。
+-
+-```cpp
+-return make_format_args&amp;lt;wformat_context&amp;gt;(args...);
+-```
+-* wformat_context[link /reference/format/basic_format_context.md]
++## 戻り値
+ 
+-(1)は次と等しい。
++### (1)
+ 
+ ```cpp
+ return {basic_format_arg&amp;lt;Context&amp;gt;(args)...}
+ ```
+-* basic_format_arg[link /reference/format/basic_format_arg.md]
++* basic_format_arg[link /reference/format/basic_format_arg/op_constructor.md]
+ 
+-ただし、便宜上、[`basic_format_arg`](/reference/format/basic_format_arg.md)は次のprivateメンバを持つとする。
+-(これらのprivateメンバは規格に含まれない)
++### (2)
+ 
+ ```cpp
+-namespace std {
+-  template&amp;lt;class Context&amp;gt;
+-  class basic_format_arg {
+-  public:
+-    class handle;
+-
+-  private:
+-    using charT = typename Context::char_type;
+-
+-    variant&amp;lt;monostate, bool, charT,
+-            int, unsigned int, long long int, unsigned long long int,
+-            float, double, long double,
+-            const charT*, basic_string_view&amp;lt;charT&amp;gt;,
+-            const void*, handle&amp;gt; value;
+-
+-    template&amp;lt;typename T&amp;gt; explicit basic_format_arg(const T&amp;amp; v) noexcept; // (a)
+-    explicit basic_format_arg(float n) noexcept;                         // (b)
+-    explicit basic_format_arg(double n) noexcept;                        // (c)
+-    explicit basic_format_arg(long double n) noexcept;                   // (d)
+-    explicit basic_format_arg(const charT* s);                           // (e)
+-
+-    template&amp;lt;class traits&amp;gt;
+-      explicit basic_format_arg(
+-        basic_string_view&amp;lt;charT, traits&amp;gt; s) noexcept;                    // (f)
+-
+-    template&amp;lt;class traits, class Allocator&amp;gt;
+-      explicit basic_format_arg(
+-        const basic_string&amp;lt;charT, traits, Allocator&amp;gt;&amp;amp; s) noexcept;       // (g)
+-
+-    explicit basic_format_arg(nullptr_t) noexcept;                       // (h)
+-
+-    template&amp;lt;class T&amp;gt;
+-      explicit basic_format_arg(const T* p) noexcept;                    // (i)
+-
+-    template&amp;lt;class Ctx, class... Args&amp;gt;
+-      friend format_arg_store&amp;lt;Ctx, Args...&amp;gt;
+-        make_format_args(const Args&amp;amp;... args);
+-  };
+-}
++return make_format_args&amp;lt;wformat_context&amp;gt;(args...);
+ ```
+-* variant[link /reference/variant/variant.md]
+-* monostate[link /reference/variant/monostate.md]
+-* handle[link /reference/format/basic_format_arg/handle.md]
+-* basic_string[link /reference/string/basic_string.md]
+-* basic_string_view[link /reference/string_view/basic_string_view.md]
+-* basic_format_arg[link /reference/format/basic_format_arg.md]
+-
+-ここで、それぞれの効果は次と等しい。
+-
+-* (a):
+-    * `T`が`bool`または`charT`なら、`value`を`v`で初期化
+-    * または、`T`が`char`かつ`charT`が`wchar_t`なら、`value`を`static_cast&amp;lt;wchar_t&amp;gt;(v)`で初期化
+-    * または、`T`が符号つき整数型かつ`sizeof(T) &amp;lt;= sizeof(int)`なら、`value`を`static_cast&amp;lt;int&amp;gt;(v)`で初期化
+-    * または、`T`が符号なし整数型かつ`sizeof(T) &amp;lt;= sizeof(unsigned int)`なら、`value`を`static_cast&amp;lt;unsigned int&amp;gt;(v)`で初期化
+-    * または、`T`が符号つき整数型かつ`sizeof(T) &amp;lt;= sizeof(long long int)`なら、`value`を`static_cast&amp;lt;long long int&amp;gt;(v)`で初期化
+-    * または、`T`が符号なし整数型かつ`sizeof(T) &amp;lt;= sizeof(unsigned long long int)`なら、`value`を`static_cast&amp;lt;unsigned long long int&amp;gt;(v)`で初期化
+-    * または、`value`を`handle(v)`で初期化
+-* (b),(c),(d): `value`を`n`で初期化
+-* (e): `value`を`s`で初期化 (`s`は有効なC文字列であること)
+-* (f): `value`を`s`で初期化
+-* (g): `value`を`basic_string_view&amp;lt;charT&amp;gt;(s.data(), s.size())`で初期化
+-* (h): `value`を`static_cast&amp;lt;const void*&amp;gt;(nullptr)`で初期化
+-* (i): `value`を`p`で初期化 (`is_void_v&amp;lt;T&amp;gt;`が`true`であること)
+-
+-## 戻り値
+-`{basic_format_arg&amp;lt;Context&amp;gt;(args)...}`
++* wformat_context[link /reference/format/basic_format_context.md]
+ 
+ ## 実装例
+ ```cpp
+@@ -150,7 +79,7 @@ namespace std {
+   }
+ }
+ ```
+-* basic_format_arg[link /reference/format/basic_format_arg.md]
++* basic_format_arg[link /reference/format/basic_format_arg/op_constructor.md]
+ * wformat_context[link /reference/format/basic_format_context.md]
+ 
+ ## バージョン
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>format -- アライメントの詳細を記載</title>
@@ -288,227 +581,6 @@ index 505d9229a..4c913a3fd 100644
       <author>
         <name>Akira Takahashi</name>
         <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>size -- fix some typo</title>
-      <link href="https://cpprefjp.github.io/reference/list/list/size.html"/>
-      <id>428490d294cf465ad23915c1d8cbf4e5383c9470:reference/list/list/size.md</id>
-      <updated>2024-03-25T23:32:48+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/list/list/size.md b/reference/list/list/size.md
-index 4809741db..0f0b71883 100644
---- a/reference/list/list/size.md
-+++ b/reference/list/list/size.md
-@@ -22,7 +22,7 @@ size_type size() const noexcept; // C++11
- 
- 
- ## 計算量
--- C++03 : 線形時間
-+- C++03 : 実装依存（多くの実装で定数時間 or　線形時間）
- - C++11 : 定数時間
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>splice -- fix some typo</title>
-      <link href="https://cpprefjp.github.io/reference/list/list/splice.html"/>
-      <id>428490d294cf465ad23915c1d8cbf4e5383c9470:reference/list/list/splice.md</id>
-      <updated>2024-03-25T23:32:48+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/list/list/splice.md b/reference/list/list/splice.md
-index 044bd84f6..e58ddeaf2 100644
---- a/reference/list/list/splice.md
-+++ b/reference/list/list/splice.md
-@@ -50,9 +50,9 @@ void splice(const_iterator position, list&amp;amp;&amp;amp; x,
- 
- ## 計算量
- - C++03まで
--    - (1), (2) : `x`の要素数に対して線形時間
--    - (3), (4) : 定数時間
--    - (5), (6) : `[first, last)`の要素数に対して線形時間
-+    - (1) : `x`の要素数に対して線形時間
-+    - (3) : 定数時間
-+    - (5) : `[first, last)`の要素数に対して線形時間
- - C++11から
-     - (1), (2) : 定数時間
-     - (3), (4) : 定数時間
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>size -- fix some typo</title>
-      <link href="https://cpprefjp.github.io/reference/ranges/size.html"/>
-      <id>428490d294cf465ad23915c1d8cbf4e5383c9470:reference/ranges/size.md</id>
-      <updated>2024-03-25T23:32:48+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/size.md b/reference/ranges/size.md
-index 80d30453e..c00cb8463 100644
---- a/reference/ranges/size.md
-+++ b/reference/ranges/size.md
-@@ -61,7 +61,6 @@ int main()
- 4
- 10
- 7
--7
- ```
- 
- ## バージョン
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>crend -- fix some typo</title>
-      <link href="https://cpprefjp.github.io/reference/set/multiset/crend.html"/>
-      <id>428490d294cf465ad23915c1d8cbf4e5383c9470:reference/set/multiset/crend.md</id>
-      <updated>2024-03-25T23:32:48+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/set/multiset/crend.md b/reference/set/multiset/crend.md
-index 48973d85a..79111ca21 100644
---- a/reference/set/multiset/crend.md
-+++ b/reference/set/multiset/crend.md
-@@ -51,6 +51,6 @@ int main()
- | 名前                    | 説明                         |
- |-------------------------|------------------------------|
- | [`crbegin`](crbegin.md) | 末尾を指す読み取り専用逆イテレータを返す |
--| [`cbegin`](begin.md)   | 先頭を指す読み取り専用イテレータを返す   |
--| [`cend`](end.md)       | 末尾の次を指す読み取り専用イテレータを返す   |
-+| [`cbegin`](cbegin.md)   | 先頭を指す読み取り専用イテレータを返す   |
-+| [`cend`](cend.md)       | 末尾の次を指す読み取り専用イテレータを返す   |
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>end -- fix some typo</title>
-      <link href="https://cpprefjp.github.io/reference/set/multiset/end.html"/>
-      <id>428490d294cf465ad23915c1d8cbf4e5383c9470:reference/set/multiset/end.md</id>
-      <updated>2024-03-25T23:32:48+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/set/multiset/end.md b/reference/set/multiset/end.md
-index 44fe3e8ba..80fe4e615 100644
---- a/reference/set/multiset/end.md
-+++ b/reference/set/multiset/end.md
-@@ -23,7 +23,7 @@ const_iterator end() const noexcept;  // (2) C++11
- 
- 
- ## 備考
--`const` 版ではない `begin` が返す `iterator` も読み取り専用イテレータである。
-+`const` 版ではない `end` が返す `iterator` も読み取り専用イテレータである。
- 
- （が、`iterator` と `const_iterator` が同じ型とは限らない）
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>crend -- fix some typo</title>
-      <link href="https://cpprefjp.github.io/reference/set/set/crend.html"/>
-      <id>428490d294cf465ad23915c1d8cbf4e5383c9470:reference/set/set/crend.md</id>
-      <updated>2024-03-25T23:32:48+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/set/set/crend.md b/reference/set/set/crend.md
-index ebf206350..c41a1bc06 100644
---- a/reference/set/set/crend.md
-+++ b/reference/set/set/crend.md
-@@ -50,7 +50,7 @@ int main()
- 
- | 名前                    | 説明                         |
- |-------------------------|------------------------------|
--| [`crbegin`](rbegin.md) | 末尾を指す読み取り専用逆イテレータを返す |
--| [`cbegin`](begin.md)   | 先頭を指す読み取り専用イテレータを返す   |
--| [`cend`](end.md)       | 末尾の次を指す読み取り専用イテレータを返す   |
-+| [`crbegin`](crbegin.md) | 末尾を指す読み取り専用逆イテレータを返す |
-+| [`cbegin`](cbegin.md)   | 先頭を指す読み取り専用イテレータを返す   |
-+| [`cend`](cend.md)       | 末尾の次を指す読み取り専用イテレータを返す   |
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>end -- fix some typo</title>
-      <link href="https://cpprefjp.github.io/reference/set/set/end.html"/>
-      <id>428490d294cf465ad23915c1d8cbf4e5383c9470:reference/set/set/end.md</id>
-      <updated>2024-03-25T23:32:48+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/set/set/end.md b/reference/set/set/end.md
-index 2403d14fd..ac654ae64 100644
---- a/reference/set/set/end.md
-+++ b/reference/set/set/end.md
-@@ -23,7 +23,7 @@ const_iterator end() const noexcept;  // (2) C++11
- 
- 
- ## 備考
--`const` 版ではない `begin` が返す `iterator` も読み取り専用イテレータである。
-+`const` 版ではない `end` が返す `iterator` も読み取り専用イテレータである。
- 
- （が、`iterator` と `const_iterator` が同じ型とは限らない）
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>end(size_type) -- fix some typo</title>
-      <link href="https://cpprefjp.github.io/reference/unordered_set/unordered_multiset/end-size_type.html"/>
-      <id>428490d294cf465ad23915c1d8cbf4e5383c9470:reference/unordered_set/unordered_multiset/end-size_type.md</id>
-      <updated>2024-03-25T23:32:48+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/unordered_set/unordered_multiset/end-size_type.md b/reference/unordered_set/unordered_multiset/end-size_type.md
-index 32bb2e99d..1ba5b08e2 100644
---- a/reference/unordered_set/unordered_multiset/end-size_type.md
-+++ b/reference/unordered_set/unordered_multiset/end-size_type.md
-@@ -29,7 +29,7 @@ const_local_iterator end(size_type n) const;
- 
- 
- ## 備考
--`const` 版ではない `begin` が返す `local_iterator` も読み取り専用イテレータである。
-+`const` 版ではない `end` が返す `local_iterator` も読み取り専用イテレータである。
- 
- （が、`local_iterator` と `const_local_iterator` が同じ型とは限らないと思われる）
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
       </author>
     </entry>
   
