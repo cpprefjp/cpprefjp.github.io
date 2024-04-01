@@ -2,9 +2,336 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2024-04-01T14:40:17.056405</updated>
-  <id>79294062-6c34-4028-97f8-6ce235750005</id>
+  <updated>2024-04-01T22:39:09.926767</updated>
+  <id>fed656ae-8ab8-4844-8cd2-1495d8401ffb</id>
 
+  
+    <entry>
+      <title>vformat_to -- 実装例を追加</title>
+      <link href="https://cpprefjp.github.io/reference/format/vformat_to.html"/>
+      <id>5398590e45f46a3ceeebed25fc7e23c6f1c6a893:reference/format/vformat_to.md</id>
+      <updated>2024-04-02T07:35:09+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/vformat_to.md b/reference/format/vformat_to.md
+index ce3287278..78737ce05 100644
+--- a/reference/format/vformat_to.md
++++ b/reference/format/vformat_to.md
+@@ -65,6 +65,98 @@ namespace std {
+ 
+ 書式文字列が正しくなかったり、フォーマット実行時に失敗したりした場合、[`format_error`](format_error.md)を投げる。
+ 
++## 実装例
++
++```cpp
++template&amp;lt;class ParseContext, class FormatContext&amp;gt;
++struct ArgVisitor {
++  ParseContext&amp;amp; pctx;
++  FormatContext&amp;amp; fctx;
++
++  void operator()(std::monostate) {
++  }
++
++  using handle = std::basic_format_arg&amp;lt;FormatContext&amp;gt;::handle;
++  void operator()(const handle&amp;amp; handle) {
++    handle.format(pctx, fctx);
++  }
++
++  template&amp;lt;class T&amp;gt;
++  void operator()(const T&amp;amp; arg) {
++    using Formatter = FormatContext::template formatter_type&amp;lt;T&amp;gt;;
++    Formatter formatter;
++    pctx.advance_to(formatter.parse(pctx));
++    fctx.advance_to(formatter.format(arg, fctx));
++  }
++};
++
++template&amp;lt;std::output_iterator&amp;lt;char&amp;gt; Out, class Context = basic_format_context&amp;lt;Out, char&amp;gt;&amp;gt;
++Out vformat_to(Out out, std::string_view fmt, std::basic_format_args&amp;lt;Context&amp;gt; args) {
++  using ParseContext = std::basic_format_parse_context&amp;lt;decltype(fmt)::value_type&amp;gt;;
++  ParseContext pctx{fmt};
++  Context fctx{out, args}; // このコンストラクタの存在は未規定
++  ArgVisitor&amp;lt;ParseContext, Context&amp;gt; visitor{pctx, fctx};
++
++  size_t next_arg_index = 0;
++  while (!std::ranges::empty(pctx)) {
++    auto it = pctx.begin();
++    if (*it == &amp;#39;{&amp;#39;) {
++      ++it;
++      if (it == pctx.end()) {
++        throw std::format_error(&amp;#34;invalid format&amp;#34;);
++      } else if (*it != &amp;#39;{&amp;#39;) {
++        // インデックスを解析する
++        size_t index;
++        if (auto [ptr, ec] = std::from_chars(it, pctx.end(), index); ec == std::errc{}) {
++          it += (ptr - std::to_address(it));
++          pctx.check_arg_id(index);
++        } else {
++          index = next_arg_index;
++          pctx.next_arg_id();
++          ++next_arg_index;
++        }
++        // オプション開始マークを解析する
++        if (it == pctx.end()) {
++          throw std::format_error(&amp;#34;invalid format&amp;#34;);
++        } else if (*it == &amp;#39;:&amp;#39;) {
++          ++it;
++        } else if (*it != &amp;#39;}&amp;#39;) {
++          throw std::format_error(&amp;#34;invalid format&amp;#34;);
++        }
++        pctx.advance_to(it);
++        // フォーマッターを呼び出す
++        std::visit_format_arg(visitor, args.get(index));
++        // 置換フィールドの終端を解析する
++        if (it == pctx.end() || *it != &amp;#39;}&amp;#39;) {
++          throw std::format_error(&amp;#34;invalid format&amp;#34;);
++        }
++        pctx.advance_to(++it);
++        continue;
++      }
++    } else if (*it == &amp;#39;}&amp;#39;) {
++      ++it;
++      if (it == pctx.end() || *it != &amp;#39;}&amp;#39;) {
++        throw std::format_error(&amp;#34;invalid format&amp;#34;);
++      }
++    }
++    *out = *it;
++    pctx.advance_to(++it);
++    fctx.advance_to(++out);
++  }
++  return out;
++}
++```
++* pctx.advance_to[link /reference/format/basic_format_parse_context/advance_to.md]
++* fctx.advance_to[link /reference/format/basic_format_context/advance_to.md]
++* formatter.parse[link /reference/format/formatter/parse.md]
++* formatter.format[link /reference/format/formatter/format.md]
++* std::format_error[link /reference/format/format_error.md]
++* std::basic_format_parse_context[link /reference/format/basic_format_parse_context.md]
++* std::basic_format_context[link /reference/format/basic_format_context.md]
++* std::basic_format_args[link /reference/format/basic_format_args.md]
++* std::visit_format_arg[link /reference/format/visit_format_arg.md]
++* std::from_chars[link /reference/charconv/from_chars.md]
++
+ ## バージョン
+ ### 言語
+ - C++20
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>basic_format_context -- 補足説明を追加</title>
+      <link href="https://cpprefjp.github.io/reference/format/basic_format_context.html"/>
+      <id>d548d89055843d52b6c01b4883dd1ac49674d006:reference/format/basic_format_context.md</id>
+      <updated>2024-04-02T07:30:07+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/basic_format_context.md b/reference/format/basic_format_context.md
+index 17cf7666a..e3f5d4020 100644
+--- a/reference/format/basic_format_context.md
++++ b/reference/format/basic_format_context.md
+@@ -26,6 +26,9 @@ namespace std {
+ ## テンプレートパラメータ制約
+ - `Out`は`OutputIterator&amp;lt;const charT&amp;amp;&amp;gt;`であること
+ 
++## 備考
++
++出力イテレータの型はフォーマット関数に指定したイテレータである必要はない。内部でバッファリングを行う実装が可能である。
+ 
+ ## メンバ関数
+ 
+@@ -51,26 +54,33 @@ namespace std {
+   class basic_format_context {
+     basic_format_args&amp;lt;basic_format_context&amp;gt; args_;
+     Out out_;
++    std::optional&amp;lt;std::locale&amp;gt; locale;
+ 
+   public:
+     using iterator = Out;
+     using char_type = charT;
+     template&amp;lt;class T&amp;gt; using formatter_type = formatter&amp;lt;T, charT&amp;gt;;
+ 
+-    basic_format_arg&amp;lt;basic_format_context&amp;gt; arg(size_t id) const
++    basic_format_context(iterator out, std::basic_format_args&amp;lt;basic_format_context&amp;gt; args, std::optional&amp;lt;std::locale&amp;gt; locale = std::nullopt)
++      :args_(args)
++      ,out_(out)
++      ,locale_(locale)
+     {
++    }
++
++    basic_format_arg&amp;lt;basic_format_context&amp;gt; arg(size_t id) const {
+       return args_.get(id);
+     }
+ 
+-    std::locale locale();
++    std::locale locale() {
++      return locale_.value_or(std::locale());
++    }
+ 
+-    iterator out();
+-    {
++    iterator out() {
+       return out_;
+     }
+ 
+-    void advance_to(iterator it)
+-    {
++    void advance_to(iterator it) {
+       out_ = it;
+     }
+   };
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>format -- 書式文字列の取得のしかたを修正</title>
+      <link href="https://cpprefjp.github.io/reference/format/format.html"/>
+      <id>f71ba40b132264533267c4eafb43f5fb4a0d9402:reference/format/format.md</id>
+      <updated>2024-04-02T07:25:25+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/format.md b/reference/format/format.md
+index 56ac12599..8745522d7 100644
+--- a/reference/format/format.md
++++ b/reference/format/format.md
+@@ -622,25 +622,25 @@ int main()
+ template&amp;lt;class... Args&amp;gt;
+ string format(format_string&amp;lt;Args...&amp;gt; fmt, const Args&amp;amp;... args)
+ {
+-  return vformat(fmt.str, make_format_args(args...));
++  return vformat(fmt.get(), make_format_args(args...));
+ }
+ 
+ template&amp;lt;class... Args&amp;gt;
+ wstring format(wformat_string&amp;lt;Args...&amp;gt; fmt, const Args&amp;amp;... args)
+ {
+-  return vformat(fmt.str, make_wformat_args(args...));
++  return vformat(fmt.get(), make_wformat_args(args...));
+ }
+ 
+ template&amp;lt;class... Args&amp;gt;
+ string format(const locale&amp;amp; loc, format_string&amp;lt;Args...&amp;gt; fmt, const Args&amp;amp;... args)
+ {
+-  return vformat(loc, fmt.str, make_format_args(args...));
++  return vformat(loc, fmt.get(), make_format_args(args...));
+ }
+ 
+ template&amp;lt;class... Args&amp;gt;
+ wstring format(const locale&amp;amp; loc, wformat_string&amp;lt;Args...&amp;gt; fmt, const Args&amp;amp;... args)
+ {
+-  return vformat(loc, fmt.str, make_wformat_args(args...));
++  return vformat(loc, fmt.get(), make_wformat_args(args...));
+ }
+ ```
+ * string[link /reference/string/basic_string.md]
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>formatter -- formatter: 説明を追加</title>
+      <link href="https://cpprefjp.github.io/reference/format/formatter.html"/>
+      <id>a659a6b0b282b6a5000a8986ee11f8e61d70ef1d:reference/format/formatter.md</id>
+      <updated>2024-04-02T07:24:59+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/formatter.md b/reference/format/formatter.md
+index 24a788f1a..800229fdd 100644
+--- a/reference/format/formatter.md
++++ b/reference/format/formatter.md
+@@ -44,28 +44,14 @@ namespace std {
+ 
+ (1)は、`charT`を`char`または`wchar_t`とすると、標準で以下の特殊化が利用できる。
+ 
+-- 1 以下のもの。
+-    ```cpp
+-    template&amp;lt;&amp;gt; struct formatter&amp;lt;charT, charT&amp;gt;;
+-
+-    template&amp;lt;&amp;gt; struct formatter&amp;lt;char, wchar_t&amp;gt;;
+-
+-    template&amp;lt;&amp;gt; struct formatter&amp;lt;charT*, charT&amp;gt;;
+-
+-    template&amp;lt;&amp;gt; struct formatter&amp;lt;const charT*, charT&amp;gt;;
+-
+-    template&amp;lt;size_t N&amp;gt; struct formatter&amp;lt;const charT[N], charT&amp;gt;;
+-
+-    template&amp;lt;class traits, class Allocator&amp;gt;
+-    struct formatter&amp;lt;basic_string&amp;lt;charT, traits, Allocator&amp;gt;, charT&amp;gt;;
+-
+-    template&amp;lt;class traits&amp;gt;
+-    struct formatter&amp;lt;basic_string_view&amp;lt;charT, traits&amp;gt;, charT&amp;gt;;
+-    ```
+-    * basic_string[link /reference/string/basic_string.md]
+-    * basic_string_view[link /reference/string_view/basic_string_view.md]
+-
+-- 2 第1テンプレート引数が`nullptr_t`, `void*`, `const void*`, `bool`, すべてのCV修飾されない標準の整数型, 拡張整数型, 浮動小数点数型であり、第2テンプレート引数が`charT`であるもの。
++- `template&amp;lt;&amp;gt; struct formatter&amp;lt;charT, charT&amp;gt;`
++- `template&amp;lt;&amp;gt; struct formatter&amp;lt;char, wchar_t&amp;gt;`
++- `template&amp;lt;&amp;gt; struct formatter&amp;lt;charT*, charT&amp;gt;`
++- `template&amp;lt;&amp;gt; struct formatter&amp;lt;const charT*, charT&amp;gt;`
++- `template&amp;lt;size_t N&amp;gt; struct formatter&amp;lt;const charT[N], charT&amp;gt;`
++- `template&amp;lt;class traits, class Allocator&amp;gt; struct formatter&amp;lt;`[`basic_string`](/reference/string/basic_string.md)`&amp;lt;charT, traits, Allocator&amp;gt;, charT&amp;gt;`
++- `template&amp;lt;class traits&amp;gt; struct formatter&amp;lt;`[`basic_string_view`](/reference/string_view/basic_string_view.md)`&amp;lt;charT, traits&amp;gt;, charT&amp;gt;`
++- 第1テンプレート引数が`nullptr_t`, `void*`, `const void*`, `bool`, すべてのCV修飾されない標準の整数型, 拡張整数型, 浮動小数点数型であり、第2テンプレート引数が`charT`であるもの。
+ 
+ さらに、ユーザーが`formatter`を特殊化した場合、それも有効である。
+ 
+@@ -96,7 +82,7 @@ namespace std {
+     - 出力は`u`、`fc.locale()`、最後に呼び出された`f.parse(pc)`のイテレータ範囲`[pc.begin(), pc.end())`以外に依存しない
+     - `u`を変更しない
+ 
+-条件内の各要素を、以下のように定義する
++条件内の各要素を、以下のように定義する。
+ 
+ - 文字の型を`charT`
+ - 出力イテレータの型を`Out`
+@@ -109,11 +95,28 @@ namespace std {
+ - `FC`を[`basic_format_context`](basic_format_context.md)`&amp;lt;Out, charT&amp;gt;`
+ - `pc`を`PC`のlvalue
+ - `fc`を`FC`のlvalue
+-- `pc.begin()`は書式文字列中の対応する置換フィールドのオプションの先頭を指す
++
++ただし、[`parse`](formatter/parse.md)の呼び出し前の状態で、`pc.begin()`は書式文字列中の対応する置換フィールドのオプションの先頭を指す。
++
++- オプションが空でなければ、`*pc.begin()`は`:`の次の文字
+ - オプションが空なら、`pc.begin() == pc.end()`または`*pc.begin() == &amp;#39;}&amp;#39;`である
+ 
+ [`std::formattable`](/reference/format/formattable.md)コンセプトも参照。
+ 
++フォーマッターは、書式文字列中に置換フィールドが見つかるたびに次のコードと近い形で呼び出される。
++
++```cpp
++typename FC::template formatter_type&amp;lt;T&amp;gt; f;
++pc.advance_to(f.parse(pc));      // オプションを解析し状態を保存する
++fc.advance_to(f.format(u, fc));  // 状態をもとにフォーマットを行う
++assert(pc.begin() == pc.end() || *pc.begin() == &amp;#39;}&amp;#39;);
++```
++* pc.advance_to[link /reference/format/basic_format_parse_context/advance_to.md]
++* fc.advance_to[link /reference/format/basic_format_context/advance_to.md]
++* f.parse[link formatter/parse.md]
++* f.format[link formatter/format.md]
++
++[handle](/reference/format/basic_format_arg/handle.md)も参照。
+ 
+ ## メンバ関数
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>emplace -- map::emplace : 戻り値の例を追加</title>
@@ -63,172 +390,6 @@ index f9118597f..94d10465e 100644
       <author>
         <name>Akira Takahashi</name>
         <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>begin -- Update begin.md</title>
-      <link href="https://cpprefjp.github.io/reference/format/basic_format_parse_context/begin.html"/>
-      <id>4f5156fc90f197b9264e33006f213298cf42d1a9:reference/format/basic_format_parse_context/begin.md</id>
-      <updated>2024-04-01T07:28:42+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/basic_format_parse_context/begin.md b/reference/format/basic_format_parse_context/begin.md
-index be15eeaed..a91ef225b 100644
---- a/reference/format/basic_format_parse_context/begin.md
-+++ b/reference/format/basic_format_parse_context/begin.md
-@@ -10,12 +10,16 @@ constexpr const_iterator begin() const noexcept;
- ```
- 
- ## 概要
--書式文字列の先頭を指すイテレータを取得する。
--
-+残りの書式文字列の先頭を指すイテレータを取得する。
- 
- ## 効果
- メンバ変数として保持している、書式文字列の先頭を指すイテレータを返す。
- 
-+## 備考
-+コンテキストがフォーマッターの[`parse`メンバ関数](../formatter/parse.md)に渡された時点で、この関数の値は以下のいずれかである。
-+
-+- 置換フィールドのオプション`{:options...}`がある場合、`:`の次の文字を指すイテレータ
-+- オプションがない場合、 [`end()`](end.md) と等しいか、`}`を指すイテレータ
- 
- ## 例
- ### 基本的な使い方
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>std -- Update std.md</title>
-      <link href="https://cpprefjp.github.io/module/std.html"/>
-      <id>afd10bb6e3a429da8dd2a5345219ffe5875bec96:module/std.md</id>
-      <updated>2024-03-31T18:31:22+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/module/std.md b/module/std.md
-index 8916a34fd..9da6f5bb5 100644
---- a/module/std.md
-+++ b/module/std.md
-@@ -47,7 +47,23 @@ int main() {
- }
- ```
- 
--グローバル名前空間にも定義を導入したい場合、[`std.compat`](std.compat.md)を使用できる。
-+グローバル名前空間にも定義を導入したい場合、`std`の代わりに[`std.compat`](std.compat.md)を使用できる(両方を使う必要はない)。
-+
-+## この機能が必要になった背景・経緯
-+
-+C++20に言語機能としての[モジュール](/lang/cpp20/modules.md)を追加する議論と並行して、標準ライブラリをモジュールへ再編する議論も行われていた。
-+例えば、[P0581R1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0581r1.pdf)では以下のモジュールが提案されている。
-+
-+- `std.fundamental`
-+- `std.core`
-+- `std.io`
-+- `std.os`
-+- `std.concurrency`
-+- `std.math`
-+- `std`
-+
-+しかし、標準ライブラリ全体の再編はあまりにも壮大であり、C++20には間に合わなかった。
-+これではモジュールの恩恵を受けるのが難しいということで、最小限のモジュールとして`std`がC++23に間に合うように追加された。
- 
- ## バージョン
- ### 言語
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>std.compat -- Update std.compat.md</title>
-      <link href="https://cpprefjp.github.io/module/std.compat.html"/>
-      <id>fef3ffc53cd1ed014b56d454bf06c7caf090a92d:module/std.compat.md</id>
-      <updated>2024-03-31T18:11:01+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/module/std.compat.md b/module/std.compat.md
-index 3366271e7..c71c00285 100644
---- a/module/std.compat.md
-+++ b/module/std.compat.md
-@@ -18,6 +18,20 @@ int main() {
- }
- ```
- 
-+## 備考
-+`std.compat`は[`std`](std.md)の内容をすべて含んでいるので、`std.compat`をインポートする場合は[`std`](std.md)をインポートしなくてよい。
-+
-+## この機能が必要になった背景・経緯
-+
-+標準ライブラリモジュール[`std`](std.md)で、C言語互換ライブラリの内容をグローバル名前空間に導入するかどうかで意見が分かれた結果、別のモジュールとして用意することになった。
-+
-+- C言語互換ライブラリの内容をグローバル名前空間に導入しない場合、既存コードベースを移行するのが難しくなる(例えば、`std::size_t`ではなく`size_t`と書いているコードは多いだろう)。
-+- 一方、「`&amp;lt;foobar.h&amp;gt;`は確実にグローバル名前空間へ名前を導入する一方、`std`名前空間に導入するかどうかは未規定。`&amp;lt;cfoobar&amp;gt;`はその逆」という混乱した状況を、グローバル名前空間へ名前を導入しない方向へ解決する滅多にない機会でもあった。
-+
-+そこで、2つのモジュールを用意することで両方の課題を解決することとなった。グローバル名前空間を綺麗にしたいユーザーは[`std`](std.md)のみを使用すればよい。
-+一方、既存コードの互換性を重視したいときは、`std.compat`をインポートすればよい。
-+ただし、この場合でも標準ライブラリのマクロに依存したコードの互換性はない点には注意が必要である。
-+
- ## バージョン
- ### 言語
- - C++23
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>format -- Update format.md</title>
-      <link href="https://cpprefjp.github.io/reference/format/format.html"/>
-      <id>cf1a2310e4c8f7de4b5825b96a5173c7738864a7:reference/format/format.md</id>
-      <updated>2024-03-31T04:28:30+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/format.md b/reference/format/format.md
-index 60a4f19d6..56ac12599 100644
---- a/reference/format/format.md
-+++ b/reference/format/format.md
-@@ -229,21 +229,24 @@ Range・シーケンスコンテナに対して使用できる標準のオプシ
- 
- | range-type | 意味 | 効果 | 対応バージョン |
- |------------|------|------|----------------|
--| m    | `std::map`出力向けの書式 | 全体の囲み文字を`[ ]`の代わりに`{ }`とする。要素型がtuple-like型であれば要素型にも`m`書式を適用する | C++23 |
-+| m    | `std::map`出力向けの書式 | 全体の囲み文字を`[ ]`の代わりに`{ }`とする。要素型にも`m`書式を適用する | C++23 |
- | s    | 文字列として出力 | 要素型が文字型であること。エスケープ処理しない文字列として書式化する | C++23 |
- | ?s   | デバッグ文字列として出力 | 要素型が文字型であること。エスケープした文字列として書式化する | C++23 |
- 
--- `?s`書式を指定した場合、`n`オプションと、`range-underlying-spec`は指定できない。
-+- `m`書式は、要素が[`std::pair`](/reference/utility/pair.md)とサイズ2の[`std::tuple`](/reference/tuple/tuple.md)の場合のみ指定できる
-+- `?s`書式を指定した場合、`n`オプションと、`range-underlying-spec`は指定できない
- - コンテナが[`std::vector`](/reference/vector/vector.md)`&amp;lt;bool&amp;gt;`である場合、その要素型は`bool`として処理される
- - Range・シーケンスコンテナでは、要素型がデバッグ出力可能である場合、それがデフォルトで有効となる
-     - 要素型の書式を指定して、デバッグ出力指定をしなければ、デフォルトで有効になっているデバッグ出力を解除できる
- - コンテナアダプタである[`std::queue`](/reference/queue/queue.md)、[`std::priority_queue`](/reference/queue/priority_queue.md)、[`std::stack`](/reference/stack/stack.md)も使用できる
--
-+- [`std::basic_string`](/reference/string/basic_string.md)と[`std::basic_string_view`](/reference/string_view/basic_string_view.md)はRangeでもあるが、特殊化の優先順位によって標準のフォーマッターが選択されるため、Rangeとしてフォーマットすることはできない
- 
- #### &amp;lt;a id=&amp;#34;assoc-format-options&amp;#34; href=&amp;#34;#assoc-format-options&amp;#34;&amp;gt;連想コンテナの書式 (C++23)&amp;lt;/a&amp;gt;
- 
--Range・シーケンスコンテナと同じだが、デフォルトで`m`書式を適用する。
-+Range・シーケンスコンテナと同じだが、デフォルトで囲み文字を`{ }`とする。
- 
-+- メンバ型`key_type`を持つ場合、連想コンテナとみなされる
-+- さらに、メンバ型`mapped_type`を持ち、要素が[`std::pair`](/reference/utility/pair.md)またはサイズ2の[`std::tuple`](/reference/tuple/tuple.md)の場合、`map`互換のコンテナとみなされる。このとき、要素にも`m`書式を用いる
- 
- #### &amp;lt;a id=&amp;#34;tuple-format-options&amp;#34; name=&amp;#34;#tuple-format-options&amp;#34;&amp;gt;pair、tupleの書式 (C++23)&amp;lt;/a&amp;gt;
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
       </author>
     </entry>
   
