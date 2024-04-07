@@ -2,9 +2,242 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2024-04-06T14:40:20.300648</updated>
-  <id>b1755307-2f71-4072-b031-ff79fc11950e</id>
+  <updated>2024-04-07T05:02:39.499943</updated>
+  <id>92f59377-097d-47f0-a87f-3180fc02e1cb</id>
 
+  
+    <entry>
+      <title>format_to_n -- 実装例を追加</title>
+      <link href="https://cpprefjp.github.io/reference/format/format_to_n.html"/>
+      <id>8e148d172551919f6053af466778fe544ce9fe97:reference/format/format_to_n.md</id>
+      <updated>2024-04-07T13:58:43+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/format_to_n.md b/reference/format/format_to_n.md
+index 59b29c5eb..3647d188f 100644
+--- a/reference/format/format_to_n.md
++++ b/reference/format/format_to_n.md
+@@ -111,6 +111,74 @@ int main()
+ The answer is 42.
+ ```
+ 
++
++## 実装例
++
++```cpp
++template&amp;lt;class CharT, class Out&amp;gt;
++class Wrapper {
++  std::iter_difference_t&amp;lt;Out&amp;gt; count_ = 0;
++  std::iter_difference_t&amp;lt;Out&amp;gt; max_count_;
++  Out out_;
++  
++public:
++  using value_type = CharT;
++
++  Wrapper(Out out, std::iter_difference_t&amp;lt;Out&amp;gt; max_count)
++    : max_count_(max_count)
++    , out_(std::move(out))
++  {}
++
++  constexpr void push_back(const value_type&amp;amp; value) {
++    if (count_ &amp;lt; max_count_) {
++      *out_ = value;
++      ++out_;
++    }
++    ++count_;
++  }
++
++  constexpr std::format_to_n_result&amp;lt;Out&amp;gt; result() const {
++    return {out_, count_};
++  }
++};
++
++template&amp;lt;class Out, class... Args&amp;gt;
++format_to_n_result&amp;lt;Out&amp;gt; format_to_n(Out out, iter_difference_t&amp;lt;Out&amp;gt; n, format_string&amp;lt;Args...&amp;gt; fmt, Args&amp;amp;&amp;amp;... args) {
++  Wrapper&amp;lt;char, Out&amp;gt; wrapper(out, n);
++  format_to(back_inserter(wrapper), fmt, forward&amp;lt;Args&amp;gt;(args)...);
++  return wrapper.result();
++}
++
++template&amp;lt;class Out, class... Args&amp;gt;
++format_to_n_result&amp;lt;Out&amp;gt; format_to_n(Out out, iter_difference_t&amp;lt;Out&amp;gt; n, wformat_string&amp;lt;Args...&amp;gt; fmt, Args&amp;amp;&amp;amp;... args) {
++  Wrapper&amp;lt;wchar_t, Out&amp;gt; wrapper(out, n);
++  format_to(back_inserter(wrapper), fmt, forward&amp;lt;Args&amp;gt;(args)...);
++  return wrapper.result();
++}
++
++template&amp;lt;class Out, class... Args&amp;gt;
++format_to_n_result&amp;lt;Out&amp;gt; format_to_n(Out out, iter_difference_t&amp;lt;Out&amp;gt; n, const locale&amp;amp; loc, format_string&amp;lt;Args...&amp;gt; fmt, Args&amp;amp;&amp;amp;... args) {
++  Wrapper&amp;lt;char, Out&amp;gt; wrapper(out, n);
++  format_to(back_inserter(wrapper), loc, fmt, forward&amp;lt;Args&amp;gt;(args)...);
++  return wrapper.result();
++}
++
++template&amp;lt;class Out, class... Args&amp;gt;
++format_to_n_result&amp;lt;Out&amp;gt; format_to_n(Out out, iter_difference_t&amp;lt;Out&amp;gt; n, const locale&amp;amp; loc, wformat_string&amp;lt;Args...&amp;gt; fmt, Args&amp;amp;&amp;amp;... args) {
++  Wrapper&amp;lt;wchar_t, Out&amp;gt; wrapper(out, n);
++  format_to(back_inserter(wrapper), loc, fmt, forward&amp;lt;Args&amp;gt;(args)...);
++  return wrapper.result();
++}
++```
++* format_string[link basic_format_string.md]
++* wformat_string[link basic_format_string.md]
++* format_to[link format_to.md]
++* locale[link /reference/locale/locale.md]
++* forward[link /reference/utility/forward.md]
++* back_inserter[link /reference/iterator/back_inserter.md]
++* iter_difference_t[link /reference/iterator/iter_difference_t.md]
++
++
+ ## バージョン
+ ### 言語
+ - C++20
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>formatted_size -- 実装例を追加</title>
+      <link href="https://cpprefjp.github.io/reference/format/formatted_size.html"/>
+      <id>8e148d172551919f6053af466778fe544ce9fe97:reference/format/formatted_size.md</id>
+      <updated>2024-04-07T13:58:43+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/formatted_size.md b/reference/format/formatted_size.md
+index 0229779fa..5680ed13e 100644
+--- a/reference/format/formatted_size.md
++++ b/reference/format/formatted_size.md
+@@ -78,6 +78,59 @@ int main()
+ 17
+ ```
+ 
++## 実装例
++
++```cpp
++template&amp;lt;class CharT&amp;gt;
++class Counter {
++  size_t count_ = 0;
++public:
++  using value_type = CharT;
++
++  constexpr void push_back(const value_type&amp;amp;) {
++    count_++;
++  }
++
++  constexpr size_t size() const {
++    return count_;
++  }
++};
++
++template&amp;lt;class Out, class... Args&amp;gt;
++size_t formatted_size(format_string&amp;lt;Args...&amp;gt; fmt, const Args&amp;amp;... args) {
++  Counter&amp;lt;char&amp;gt; counter;
++  format_to(back_inserter(counter), fmt, forward&amp;lt;Args&amp;gt;(args)...);
++  return counter.size();
++}
++
++template&amp;lt;class Out, class... Args&amp;gt;
++size_t formatted_size(wformat_string&amp;lt;Args...&amp;gt; fmt, const Args&amp;amp;... args) {
++  Counter&amp;lt;wchar_t&amp;gt; counter;
++  format_to(back_inserter(counter), fmt, forward&amp;lt;Args&amp;gt;(args)...);
++  return counter.size();
++}
++
++template&amp;lt;class Out, class... Args&amp;gt;
++size_t formatted_size(const locale&amp;amp; loc, format_string&amp;lt;Args...&amp;gt; fmt, const Args&amp;amp;... args) {
++  Counter&amp;lt;char&amp;gt; counter;
++  format_to(loc, back_inserter(counter), fmt, forward&amp;lt;Args&amp;gt;(args)...);
++  return counter.size();
++}
++
++template&amp;lt;class Out, class... Args&amp;gt;
++size_t formatted_size(const locale&amp;amp; loc, wformat_string&amp;lt;Args...&amp;gt; fmt, const Args&amp;amp;... args) {
++  Counter&amp;lt;wchar_t&amp;gt; counter;
++  format_to(loc, back_inserter(counter), fmt, forward&amp;lt;Args&amp;gt;(args)...);
++  return counter.size();
++}
++```
++* format_string[link basic_format_string.md]
++* wformat_string[link basic_format_string.md]
++* format_to[link format_to.md]
++* locale[link /reference/locale/locale.md]
++* forward[link /reference/utility/forward.md]
++* back_inserter[link /reference/iterator/back_inserter.md]
++
+ ## バージョン
+ ### 言語
+ - C++20
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>vformat -- 実装例を追加</title>
+      <link href="https://cpprefjp.github.io/reference/format/vformat.html"/>
+      <id>8e148d172551919f6053af466778fe544ce9fe97:reference/format/vformat.md</id>
+      <updated>2024-04-07T13:58:43+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/vformat.md b/reference/format/vformat.md
+index 0d2f9fc87..54a2f69bc 100644
+--- a/reference/format/vformat.md
++++ b/reference/format/vformat.md
+@@ -44,6 +44,43 @@ namespace std {
+ 
+ フォーマット実行時に失敗した場合、[`format_error`](format_error.md)を投げる。
+ 
++## 実装例
++
++```cpp
++string vformat(string_view fmt, format_args args) {
++  string str;
++  vformat_to(back_inserter(str), fmt.str, args);
++  return str;
++}
++
++string vformat(wstring_view fmt, wformat_args args) {
++  wstring str;
++  vformat_to(back_inserter(str), fmt.str, args);
++  return str;
++}
++
++string vformat(const locale&amp;amp; loc, string_view fmt, format_args args) {
++  string str;
++  vformat_to(loc, back_inserter(str), fmt.str, args);
++  return str;
++}
++
++string vformat(const locale&amp;amp; loc, wstring_view fmt, wformat_args args) {
++  wstring str;
++  vformat_to(loc, back_inserter(str), fmt.str, args);
++  return str;
++}
++```
++* string[link /reference/string/basic_string.md]
++* wstring[link /reference/string/basic_string.md]
++* string_view[link /reference/string_view/basic_string_view.md]
++* wstring_view[link /reference/string_view/basic_string_view.md]
++* format_args[link /reference/format/basic_format_args.md]
++* wformat_args[link /reference/format/basic_format_args.md]
++* locale[link /reference/locale/locale.md]
++* vformat_to[link vformat.md]
++* back_inserter[link /reference/iterator/back_inserter.md]
++
+ ## バージョン
+ ### 言語
+ - C++20
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Tetsuro Matsumura</name>
+        <email>matsumura.t.lab@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>vformat_to -- リンク追加</title>
@@ -169,74 +402,6 @@ index ce3287278..78737ce05 100644
  ## バージョン
  ### 言語
  - C++20
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>basic_format_context -- 補足説明を追加</title>
-      <link href="https://cpprefjp.github.io/reference/format/basic_format_context.html"/>
-      <id>d548d89055843d52b6c01b4883dd1ac49674d006:reference/format/basic_format_context.md</id>
-      <updated>2024-04-02T07:30:07+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/basic_format_context.md b/reference/format/basic_format_context.md
-index 17cf7666a..e3f5d4020 100644
---- a/reference/format/basic_format_context.md
-+++ b/reference/format/basic_format_context.md
-@@ -26,6 +26,9 @@ namespace std {
- ## テンプレートパラメータ制約
- - `Out`は`OutputIterator&amp;lt;const charT&amp;amp;&amp;gt;`であること
- 
-+## 備考
-+
-+出力イテレータの型はフォーマット関数に指定したイテレータである必要はない。内部でバッファリングを行う実装が可能である。
- 
- ## メンバ関数
- 
-@@ -51,26 +54,33 @@ namespace std {
-   class basic_format_context {
-     basic_format_args&amp;lt;basic_format_context&amp;gt; args_;
-     Out out_;
-+    std::optional&amp;lt;std::locale&amp;gt; locale;
- 
-   public:
-     using iterator = Out;
-     using char_type = charT;
-     template&amp;lt;class T&amp;gt; using formatter_type = formatter&amp;lt;T, charT&amp;gt;;
- 
--    basic_format_arg&amp;lt;basic_format_context&amp;gt; arg(size_t id) const
-+    basic_format_context(iterator out, std::basic_format_args&amp;lt;basic_format_context&amp;gt; args, std::optional&amp;lt;std::locale&amp;gt; locale = std::nullopt)
-+      :args_(args)
-+      ,out_(out)
-+      ,locale_(locale)
-     {
-+    }
-+
-+    basic_format_arg&amp;lt;basic_format_context&amp;gt; arg(size_t id) const {
-       return args_.get(id);
-     }
- 
--    std::locale locale();
-+    std::locale locale() {
-+      return locale_.value_or(std::locale());
-+    }
- 
--    iterator out();
--    {
-+    iterator out() {
-       return out_;
-     }
- 
--    void advance_to(iterator it)
--    {
-+    void advance_to(iterator it) {
-       out_ = it;
-     }
-   };
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
