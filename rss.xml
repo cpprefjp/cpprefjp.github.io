@@ -2,9 +2,84 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2024-04-15T14:39:13.685932</updated>
-  <id>844191da-780c-49f5-82c7-8e426cd84235</id>
+  <updated>2024-04-15T15:05:27.752464</updated>
+  <id>6972ff6f-8282-49b6-b883-10fa8fc1f278</id>
 
+  
+    <entry>
+      <title>constexpr関数が定数実行できない場合でも適格とする -- refactor: simplify explanation of P2448R2</title>
+      <link href="https://cpprefjp.github.io/lang/cpp23/relaxing_some_constexpr_restrictions.html"/>
+      <id>d9744ca36b456eba18cfe64c461085b490716361:lang/cpp23/relaxing_some_constexpr_restrictions.md</id>
+      <updated>2024-04-15T23:57:01+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp23/relaxing_some_constexpr_restrictions.md b/lang/cpp23/relaxing_some_constexpr_restrictions.md
+index 6f909e8d0..205a7e237 100644
+--- a/lang/cpp23/relaxing_some_constexpr_restrictions.md
++++ b/lang/cpp23/relaxing_some_constexpr_restrictions.md
+@@ -25,7 +25,7 @@ constexpr int g(int x) { return f(x); } // error! fはいかなるxについて
+ しかし、多くの標準ライブラリが`constexpr`対応を進めていくようになり、状況が変化した。
+ 
+ 例えば、`std::optional`の`reset`メンバメソッドが`constexpr`に対応するのはC++23以降である。
+-これは`std::optional`の内部実装が`union`のアクティブメンバを更新しているからであり、[これを定数式内で実行するにはC++20を待たねばならなかった](/lang/cpp20/changing_the_active_member_of_a_union_inside_constexpr.md)。
++これは`std::optional`の内部実装が`union`のアクティブメンバを更新しているからであり、これを定数式内で実行するにはC++20を待たねばならなかった（参考：[定数式内での共用体のアクティブメンバの変更を許可](/lang/cpp20/changing_the_active_member_of_a_union_inside_constexpr.md)）。
+ 
+ よって、以下のコードはC++17では不適格だが、C++23では正しいコードとなる。
+ 
+@@ -37,7 +37,7 @@ constexpr void f(std::optional&amp;lt;T&amp;gt;&amp;amp; opt)
+ }
+ ```
+ 
+-これを正しく記述するには、`constexpr`指定をするかどうかをマクロで変更しなければならない。
++多くのバージョンで使われることが想定されるライブラリにおいてこれを最大限活用できるよう記述するには、`constexpr`指定するかどうかをマクロで変更しなければならない。
+ 例えばC++23から`constexpr`になる関数群に対して以下のようなマクロを使うか、
+ 
+ ```cpp
+@@ -77,9 +77,9 @@ void f(std::optional&amp;lt;T&amp;gt;&amp;amp; opt)
+ このような状況では上記のような解決策を用いてもミスを避けることは容易ではない。
+ 
+ 現在、登場時点では定数式内で実行できなかったために`constexpr`されていなかった多くの標準ライブラリ関数が、のちにコア言語機能が追加されて`constexpr`指定されている。
+-現時点で`constexpr`されていない関数は次のバージョンで`constexpr`になるかもしれず、よって現在使用されているバージョンである関数が`constexpr`ではないということを指摘することの意味は薄れている。
++そのため、現時点で`constexpr`ではない関数も次のバージョンで`constexpr`になるかもしれず、よって関数が`constexpr`指定されているだけでエラーにする意義は薄れてきた。
+ 
+-以上を鑑みて、`constexpr`関数が定数式実行可能かどうかを判断するのは、実際に定数式内で実行されてからにした方がよいという結論に至った。
++以上から、コンパイル時に実行できない`constexpr`をエラーとするのは、実際にコンパイル時に呼びだされてからでよい、ということになった。
+ 
+ 実際に定数式内で実行できない関数が定数式内で呼び出された場合、これは従来通りエラーとするほかない。
+ しかし、定数式内で呼び出されていないのならば、定数式内で実行できない関数が存在していてもプログラムを不適格とはしない。
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>ToruNiina</name>
+        <email>niina.toru.68u@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>constexpr関数が定数実行できない場合でも適格とする -- fix: typo in an example code</title>
+      <link href="https://cpprefjp.github.io/lang/cpp23/relaxing_some_constexpr_restrictions.html"/>
+      <id>8ed33cbe79c326dec1ea1e0aa6ef48fdd6d8c29a:lang/cpp23/relaxing_some_constexpr_restrictions.md</id>
+      <updated>2024-04-15T23:54:27+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp23/relaxing_some_constexpr_restrictions.md b/lang/cpp23/relaxing_some_constexpr_restrictions.md
+index 254dec4eb..6f909e8d0 100644
+--- a/lang/cpp23/relaxing_some_constexpr_restrictions.md
++++ b/lang/cpp23/relaxing_some_constexpr_restrictions.md
+@@ -64,7 +64,7 @@ constexpr
+ #endif
+ void f(std::optional&amp;lt;T&amp;gt;&amp;amp; opt)
+ {
+-  o.reset();
++  opt.reset();
+ }
+ ```
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>ToruNiina</name>
+        <email>niina.toru.68u@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>parent_path -- parent_path() : パス名末尾/の挙動について追記</title>
@@ -91,83 +166,6 @@ index abecec649..f7c91349f 100644
       <author>
         <name>Yuki Nishidate</name>
         <email>asta18425@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>read -- Add links to basic_istream/read.md</title>
-      <link href="https://cpprefjp.github.io/reference/istream/basic_istream/read.html"/>
-      <id>02654819aabef357f7e08a1a38297e049613767c:reference/istream/basic_istream/read.md</id>
-      <updated>2024-04-07T21:44:40+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/istream/basic_istream/read.md b/reference/istream/basic_istream/read.md
-index 829f0e153..ffd997e0e 100644
---- a/reference/istream/basic_istream/read.md
-+++ b/reference/istream/basic_istream/read.md
-@@ -15,14 +15,14 @@ basic_istream&amp;lt;CharT, Traits&amp;gt;&amp;amp; read(char_type* s, streamsize n);
- 実引数として配列要素へのポインタ`s`とその要素数`n`を受け取る。
- [`get`](get.md)メンバ関数などと異なり、`s`の末尾にヌル文字を書き込む処理がない。
- 
--また、`n`文字より少ない段階でEOFに達した場合を入力失敗として扱う（`failbit`を立てる）点も、他の多くのメンバ関数と異なる。
-+また、`n`文字より少ない段階でEOFに達した場合を入力失敗として扱う（[`failbit`](../../ios/ios_base/type-iostate.md)を立てる）点も、他の多くのメンバ関数と異なる。
- 
- ## 効果
--1. `sentry`オブジェクトを構築する。`sentry`オブジェクトが失敗を示した場合、何もしない。
--1. `good()`メンバ関数を呼び出して`false`であったら、`setstate(failbit)`を呼び出して終了する。
-+1. [`sentry`](sentry.md)オブジェクトを構築する。[`sentry`](sentry.md)オブジェクトが失敗を示した場合、何もしない。
-+1. [`good`](../../ios/basic_ios/good.md)`()`メンバ関数を呼び出して`false`であったら、[`setstate`](../../ios/basic_ios/setstate.md)`(`[`failbit`](../../ios/ios_base/type-iostate.md)`)`を呼び出して終了する。
- 1. 以下のいずれかを満たすまで、文字を入力して書き込む。
-     - 実引数で指定された`n`文字まで入力した。
--    - EOFに達した。この場合、`setstate(failbit | eofbit)`を呼び出す。
-+    - EOFに達した。この場合、[`setstate`](../../ios/basic_ios/setstate.md)`(`[`failbit`](../../ios/ios_base/type-iostate.md)` | `[`eofbit`](../../ios/ios_base/type-iostate.md)`)`を呼び出す。
- 
- ## 戻り値
- `*this`
-@@ -84,6 +84,12 @@ basic_istream&amp;lt;CharT, Traits&amp;gt;&amp;amp; read(char_type* s, streamsize n) {
-   return *this;
- }
- ```
-+* iostate[link ../../ios/ios_base/type-iostate.md]
-+* failbit[link ../../ios/ios_base/type-iostate.md]
-+* eofbit[link ../../ios/ios_base/type-iostate.md]
-+* sentry[link sentry.md]
-+* good[link ../../ios/basic_ios/good.md]
-+* setstate[link ../../ios/basic_ios/setstate.md]
- 
- ## バージョン
- ### 言語
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Shunsuke Shimizu</name>
-        <email>grafi@grafi.jp</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>enumerate_view -- Update enumerate_view.md</title>
-      <link href="https://cpprefjp.github.io/reference/ranges/enumerate_view.html"/>
-      <id>ea628fa7aba80cecce9af40d6ef9da8dbae9e0d6:reference/ranges/enumerate_view.md</id>
-      <updated>2024-04-07T19:32:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/enumerate_view.md b/reference/ranges/enumerate_view.md
-index 9f9682c54..86e2d9003 100644
---- a/reference/ranges/enumerate_view.md
-+++ b/reference/ranges/enumerate_view.md
-@@ -21,7 +21,7 @@ namespace std::ranges {
- 
- `enumerate_view`はインデックスを付ける[`view`](view.md)。
- 
--`enumerate_view`の要素は、インデックスと元のRangeの要素からなる[`tuple`](/reference/tuple/tuple.md)である。
-+`enumerate_view`の要素は、インデックスと元のRangeの要素からなる[`tuple`](/reference/tuple/tuple.md) ([`tuple`](/reference/tuple/tuple.md)`&amp;lt;`[`range_difference_t`](range_difference_t.md)`&amp;lt;Base&amp;gt;, `[`range_value_t`](range_value_t.md)`&amp;lt;Base&amp;gt;&amp;gt;`)である。
- 
- - (1): `enumerate_view`のクラス定義
- - (2): `enumerate_view`を生成するRangeアダプタオブジェクト
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Tetsuro Matsumura</name>
-        <email>matsumura.t.lab@gmail.com</email>
       </author>
     </entry>
   

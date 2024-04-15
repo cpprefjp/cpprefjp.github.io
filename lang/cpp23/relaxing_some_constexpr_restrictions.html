@@ -188,8 +188,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2023-12-29T10:33:47">
-        2023年12月29日 10時33分47秒
+      <span itemprop="datePublished" content="2024-04-15T14:57:01">
+        2024年04月15日 14時57分01秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -228,7 +228,7 @@
 これによって、定数式実行できない言語機能を使用している関数や、<code>constexpr</code>でない関数を誤って呼び出すようなミスを検出することができた。</p>
 <p>しかし、多くの標準ライブラリが<code>constexpr</code>対応を進めていくようになり、状況が変化した。</p>
 <p>例えば、<code>std::optional</code>の<code>reset</code>メンバメソッドが<code>constexpr</code>に対応するのはC++23以降である。
-これは<code>std::optional</code>の内部実装が<code>union</code>のアクティブメンバを更新しているからであり、<a href="https://cpprefjp.github.io/lang/cpp20/changing_the_active_member_of_a_union_inside_constexpr.html">これを定数式内で実行するにはC++20を待たねばならなかった</a>。</p>
+これは<code>std::optional</code>の内部実装が<code>union</code>のアクティブメンバを更新しているからであり、これを定数式内で実行するにはC++20を待たねばならなかった（参考：<a href="https://cpprefjp.github.io/lang/cpp20/changing_the_active_member_of_a_union_inside_constexpr.html">定数式内での共用体のアクティブメンバの変更を許可</a>）。</p>
 <p>よって、以下のコードはC++17では<a class="cpprefjp-defined-word" data-desc="プログラムが適格でないこと。コンパイルエラーなどになる" href="https://cpprefjp.github.io/implementation-compliance.html#dfn-ill-formed">不適格</a>だが、C++23では正しいコードとなる。</p>
 <p><div class="codehilite"><pre><span></span><code><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
 <span class="k">constexpr</span> <span class="kt">void</span> <span class="n">f</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/optional/optional.html">std::optional</a></span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&amp;</span> <span class="n">opt</span><span class="p">)</span>
@@ -237,7 +237,7 @@
 <span class="p">}</span>
 </code></pre></div>
 </p>
-<p>これを正しく記述するには、<code>constexpr</code>指定をするかどうかをマクロで変更しなければならない。
+<p>多くのバージョンで使われることが想定されるライブラリにおいてこれを最大限活用できるよう記述するには、<code>constexpr</code>指定するかどうかをマクロで変更しなければならない。
 例えばC++23から<code>constexpr</code>になる関数群に対して以下のようなマクロを使うか、</p>
 <p><div class="codehilite"><pre><span></span><code><span class="cp">#if __cplusplus &gt;= 202300L </span><span class="c1">// 具体的な値は未定</span>
 <span class="cp">#  define MYLIB_CXX23_CONSTEXPR constexpr</span>
@@ -259,7 +259,7 @@
 <span class="cp">#endif</span>
 <span class="kt">void</span> <span class="n">f</span><span class="p">(</span><span class="n"><a href="https://cpprefjp.github.io/reference/optional/optional.html">std::optional</a></span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&amp;</span> <span class="n">opt</span><span class="p">)</span>
 <span class="p">{</span>
-  <span class="n">o</span><span class="p">.</span><span class="n">reset</span><span class="p">();</span>
+  <span class="n">opt</span><span class="p">.</span><span class="n">reset</span><span class="p">();</span>
 <span class="p">}</span>
 </code></pre></div>
 </p>
@@ -269,8 +269,8 @@
 例えば、<code>std::array</code>の<code>operator[]</code>の非<code>const</code>版が<code>constexpr</code>指定されるのは、定数式内で変数の変更が許可されるC++14ではなく、その次のC++17である（<a href="https://cpprefjp.github.io/reference/array/array/op_at.html">参考</a>）。
 このような状況では上記のような解決策を用いてもミスを避けることは容易ではない。</p>
 <p>現在、登場時点では定数式内で実行できなかったために<code>constexpr</code>されていなかった多くの標準ライブラリ関数が、のちにコア言語機能が追加されて<code>constexpr</code>指定されている。
-現時点で<code>constexpr</code>されていない関数は次のバージョンで<code>constexpr</code>になるかもしれず、よって現在使用されているバージョンである関数が<code>constexpr</code>ではないということを指摘することの意味は薄れている。</p>
-<p>以上を鑑みて、<code>constexpr</code>関数が定数式実行可能かどうかを判断するのは、実際に定数式内で実行されてからにした方がよいという結論に至った。</p>
+そのため、現時点で<code>constexpr</code>ではない関数も次のバージョンで<code>constexpr</code>になるかもしれず、よって関数が<code>constexpr</code>指定されているだけでエラーにする意義は薄れてきた。</p>
+<p>以上から、コンパイル時に実行できない<code>constexpr</code>をエラーとするのは、実際にコンパイル時に呼びだされてからでよい、ということになった。</p>
 <p>実際に定数式内で実行できない関数が定数式内で呼び出された場合、これは従来通りエラーとするほかない。
 しかし、定数式内で呼び出されていないのならば、定数式内で実行できない関数が存在していてもプログラムを<a class="cpprefjp-defined-word" data-desc="プログラムが適格でないこと。コンパイルエラーなどになる" href="https://cpprefjp.github.io/implementation-compliance.html#dfn-ill-formed">不適格</a>とはしない。</p>
 <h2>仕様</h2>
