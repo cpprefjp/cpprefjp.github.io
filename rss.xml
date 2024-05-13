@@ -2,9 +2,100 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2024-05-13T05:42:47.200086</updated>
-  <id>3eaeebc3-eb7f-4db8-ad8d-424004b7c985</id>
+  <updated>2024-05-13T06:18:41.656398</updated>
+  <id>9315cdf5-3f59-4706-a796-4076682aa29d</id>
 
+  
+    <entry>
+      <title>assert -- assert : C++26対応として、カンマを含む式を条件式として指定できるようにした (close #1240)</title>
+      <link href="https://cpprefjp.github.io/reference/cassert/assert.html"/>
+      <id>ba9a49412500113f7235ff4e65dea28188a05dfc:reference/cassert/assert.md</id>
+      <updated>2024-05-13T15:14:50+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/cassert/assert.md b/reference/cassert/assert.md
+index 3254fd500..d10ca3ce0 100644
+--- a/reference/cassert/assert.md
++++ b/reference/cassert/assert.md
+@@ -4,9 +4,11 @@
+ 
+ ```cpp
+ # if !defined(NDEBUG)
+-  #define assert(expr) implementation-defined
++  #define assert(expr) implementation-defined // (1) C++03
++  #define assert(...) implementation-defined  // (1) C++26
+ # else
+-  #define assert(ignore) ((void)0)
++  #define assert(ignore) ((void)0)            // (2) C++03
++  #define assert(...) ((void)0)               // (2) C++26
+ # endif
+ ```
+ 
+@@ -19,14 +21,18 @@
+ 
+ 
+ ## 要件
+-パラメータの式の型はスカラ型でなければならない。
++- C++14まで : パラメータの式の型はスカラ型でなければならない
++    - C言語への参照として定義されていた仕様では、`assert`は`void assert(scalar expression);`のような関数として定義されていた
+ 
+ 
+ ## 効果
+ - 有効な場合:
+-    - パラメータの式を評価し、偽であった場合（`0`と等しい場合）、式をテキスト化したものに加え`__FILE__`, `__LINE__`, `__func__`の値を標準エラー出力に処理系定義の書式で書き込み、[`abort()`](/reference/cstdlib/abort.md)関数を呼び出してプログラムを異常終了させる。
++    - C++03 : パラメータの式を評価し、
++    - C++26 : 可変引数パラメータ`__VA_ARGS__`を`bool`に変換し、
++    - 真に評価された場合は、なにもしない
++    - そうでない場合（`0`と等しい場合）、式をテキスト化したもの、（[`std::source_location`](/reference/source_location/source_location.md)`::`[`current()`](/reference/source_location/source_location/current.md)で取得できるような) ソースファイル名、行番号、関数名を標準エラー出力に処理系定義の書式で書き込み、[`abort()`](/reference/cstdlib/abort.md)関数を呼び出してプログラムを異常終了させる
+ - 無効な場合:
+-    - パラメータの式は評価はされず、何もしない。
++    - パラメータの式は評価はされず、なにもしない
+ 
+ このマクロは、定数式内で使用できる。(C++17)
+ 
+@@ -89,6 +95,29 @@ int main()
+ ```
+ ```
+ 
++### カンマを含む条件式をassertマクロで使用する (C++26)
++```cpp example
++#include &amp;lt;cassert&amp;gt;
++#include &amp;lt;type_traits&amp;gt;
++
++template &amp;lt;class T&amp;gt;
++void f()
++{
++  assert(std::is_same_v&amp;lt;int, T&amp;gt;);   // C++26 : OK
++  assert((std::is_same_v&amp;lt;int, T&amp;gt;)); // C++23までは、カンマを含む式は全体を丸カッコで囲む必要がある
++}
++
++int main()
++{
++  f&amp;lt;int&amp;gt;();
++  f&amp;lt;double&amp;gt;();
++}
++```
++
++### 出力
++```
++```
++
+ 
+ ## 参照
+ - C++14 - 19.3 [assertions]
+@@ -96,4 +125,5 @@ int main()
+ - [What does it mean for C++ that assert takes a scalar argument?](https://groups.google.com/a/isocpp.org/d/topic/std-discussion/6EHDRo1A2EE/discussion)
+   パラメータの式の型についての要件は参照規格であるCの規定によるものであり、「スカラ型」が[C++におけるスカラ型](/reference/type_traits/is_scalar.md)となるのか、あるいはCにおけるスカラ型の範囲に限定されるのか、少なくともC++14時点でははっきりしていない。
+ - [LWG Issue 2234. `assert()` should allow usage in constant expressions](http://wg21.cmeerw.net/lwg/issue2234)
+-
++- [P2264R7 Make `assert()` macro user friendly for C and C++](https://open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2264r7.html)
++    - C++26から、カンマを含む式を条件式として使用できるようになった
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>コンパイラの実装状況 -- C++26 : 「static_assertの診断メッセージにユーザーが生成した文字列の指定を許可」を追加 (close #1177)</title>
@@ -2502,33 +2593,6 @@ index 06294806f..ef1727c73 100644
       <author>
         <name>Akira Takahashi</name>
         <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator= -- packaged_task::resetの実装の動作についても追記 #1270</title>
-      <link href="https://cpprefjp.github.io/reference/future/packaged_task/op_assign.html"/>
-      <id>2486f062f20953bf9500234b60ca893643f59cc9:reference/future/packaged_task/op_assign.md</id>
-      <updated>2024-05-06T15:17:54+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/future/packaged_task/op_assign.md b/reference/future/packaged_task/op_assign.md
-index 538183840..2dd403be6 100644
---- a/reference/future/packaged_task/op_assign.md
-+++ b/reference/future/packaged_task/op_assign.md
-@@ -37,7 +37,7 @@ C++11の仕様では、ムーブ代入演算子の効果として古い共有状
- 
- 「(共有状態を)放棄する(abandon)」とは効果の項(2)の1と2が行われることをいい、「(共有状態を)解放する(release)」とは効果の項(2)の2のみが行われることである。通常、[`promise`](../promise.md)および`packaged_task`は処理結果を提供する側であるため共有状態を所有しなくなるときには前者を行い、[`future`](../future.md)および[`shared_future`](../shared_future.md)は処理結果を受け取る側であるため共有状態を所有しなくなるときには後者を行う。
- 
--なお、実際の実装ではClangおよびGCCでは「放棄する(abandon)」の動作になっているが、Visual C++では「解放する(release)」の動作になっている。
-+なお、`operator=`の実際の実装では、ClangおよびGCCでは「放棄する(abandon)」の動作になっているが、Visual C++では「解放する(release)」の動作になっている。また、[`reset`](reset.md)では、Clang,GCC,Visual C++のいずれも「放棄する(abandon)」の動作になっている。
- 
- ## 例
- ```cpp example
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>tshino</name>
-        <email>tshino.ssr@gmail.com</email>
       </author>
     </entry>
   
