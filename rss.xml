@@ -2,9 +2,119 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2024-05-24T01:20:46.409624</updated>
-  <id>cf120722-5094-41a9-9757-0bff44fc9052</id>
+  <updated>2024-05-24T09:53:39.970379</updated>
+  <id>4cb0c473-075e-42a1-9032-2ac50214139b</id>
 
+  
+    <entry>
+      <title>コンストラクタ -- error_codeのコンストラクタ : ErrorCodeEnumをとるオーバーロードの使用例を記載</title>
+      <link href="https://cpprefjp.github.io/reference/system_error/error_code/op_constructor.html"/>
+      <id>0eeefc0f1db52a7f5bdf7f2860daebcbefb674a4:reference/system_error/error_code/op_constructor.md</id>
+      <updated>2024-05-24T18:49:49+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/system_error/error_code/op_constructor.md b/reference/system_error/error_code/op_constructor.md
+index 03071efb1..bc4fd6c50 100644
+--- a/reference/system_error/error_code/op_constructor.md
++++ b/reference/system_error/error_code/op_constructor.md
+@@ -31,10 +31,12 @@ error_code(ErrorCodeEnum e) noexcept;                    // (3)
+ 
+ 
+ ## 備考
+-- (3) : [`is_error_code_enum`](../is_error_code_enum.md)が`false`となる場合、この関数はオーバーロード解決から除外される。
++- (3) : [`is_error_code_enum`](../is_error_code_enum.md)が`false`となる場合、この関数はオーバーロード解決から除外される
++- (3) : [`make_error_code()`](../make_error_code.md)の呼び出しに`std::`名前空間がついていないことにより、指定された`ErrorCodeEnum`型が定義されている名前空間の`make_error_code()`関数がADLによって探索される
+ 
+ 
+ ## 例
++### 基本的な使い方
+ ```cpp example
+ #include &amp;lt;iostream&amp;gt;
+ #include &amp;lt;system_error&amp;gt;
+@@ -107,7 +109,7 @@ int main()
+ * std::errc::invalid_argument[link /reference/system_error/errc.md]
+ * std::generic_category()[link /reference/system_error/generic_category.md]
+ 
+-### 出力
++#### 出力
+ ```
+ default ctor
+ success
+@@ -125,6 +127,63 @@ error
+ generic
+ ```
+ 
++### 独自のエラーコードを定義する例
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;system_error&amp;gt;
++#include &amp;lt;type_traits&amp;gt;
++
++namespace mylib {
++
++enum class my_error {
++  not_found,
++};
++
++class my_error_category : public std::error_category {
++public:
++  const char* name() const noexcept override
++  {
++    return &amp;#34;my_error_category&amp;#34;;
++  }
++
++  std::string message(int value) const override
++  {
++    if (value == static_cast&amp;lt;int&amp;gt;(my_error::not_found))
++      return &amp;#34;not found&amp;#34;;
++    return &amp;#34;unknown&amp;#34;;
++  }
++};
++
++const my_error_category&amp;amp; get_my_error_category() {
++  static my_error_category cat;
++  return cat;
++}
++
++std::error_code make_error_code(my_error err)
++{
++  return std::error_code(static_cast&amp;lt;int&amp;gt;(err), get_my_error_category());
++}
++}
++
++namespace std {
++  template &amp;lt;&amp;gt;
++  struct is_error_code_enum&amp;lt;mylib::my_error&amp;gt; : public std::true_type {};
++}
++
++int main() {
++  // ecにはmy_error_categoryが設定される
++  std::error_code ec = mylib::my_error::not_found;
++  std::cout &amp;lt;&amp;lt; ec.message() &amp;lt;&amp;lt; std::endl;
++}
++```
++* ec.message()[link message.md]
++* std::error_category[link /reference/system_error/error_category.md]
++
++#### 出力
++```
++not found
++```
++
+ ## バージョン
+ ### 言語
+ - C++11
+@@ -136,4 +195,3 @@ generic
+ - [Visual C++](/implementation.md#visual_cpp): 2010 (enum class未対応のため、ErrorCodeEnumのコンストラクタは動作しない)
+ 
+ 
+-## 参照
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>stoi -- Merge pull request #1283 from yuina-blend/fix/typo</title>
@@ -488,33 +598,6 @@ index 000000000..f24981642
       <author>
         <name>Akira Takahashi</name>
         <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>zoned_time -- fix typo: zoned_time のサンプルコード修正</title>
-      <link href="https://cpprefjp.github.io/reference/chrono/zoned_time.html"/>
-      <id>6e08bd6c0347b22fa88af6e1d4a6fa933bc75939:reference/chrono/zoned_time.md</id>
-      <updated>2024-05-22T22:41:07+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/zoned_time.md b/reference/chrono/zoned_time.md
-index 03d356f4a..2d11baae2 100644
---- a/reference/chrono/zoned_time.md
-+++ b/reference/chrono/zoned_time.md
-@@ -116,7 +116,7 @@ int main()
- 
-   // UTCタイムゾーンのシステム時間を、日本のローカル時間に変換
-   chrono::local_time lt = chrono::zoned_time{&amp;#34;Asia/Tokyo&amp;#34;, now}.get_local_time();
--  std::cout &amp;lt;&amp;lt; &amp;#34;7 : &amp;#34;lt &amp;lt;&amp;lt; std::endl;
-+  std::cout &amp;lt;&amp;lt; &amp;#34;7 : &amp;#34; &amp;lt;&amp;lt; lt &amp;lt;&amp;lt; std::endl;
- }
- ```
- * chrono::zoned_time[color ff0000]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Nagarei</name>
-        <email>Nagarei@users.noreply.github.com</email>
       </author>
     </entry>
   
