@@ -1256,7 +1256,7 @@ var Index = /*#__PURE__*/function () {
   }, {
     key: "url",
     value: function url() {
-      return new (url_parse_default())("/".concat(this.fullpath, ".html"), this._ns.base_url);
+      return new (url_parse_default())("".concat(this.fullpath, ".html"), this._ns.base_url);
     }
   }, {
     key: "ns",
@@ -1664,6 +1664,7 @@ var Database = /*#__PURE__*/function () {
     this._log = log.makeContext('Database');
     this._name = json.database_name;
     this._base_url = new (url_parse_default())(json.base_url);
+    this._online_base_url = json.online_base_url ? new (url_parse_default())(json.online_base_url) : null;
     this._path_ns_map = new Map();
     this._ids = []; // global map
 
@@ -1805,6 +1806,11 @@ var Database = /*#__PURE__*/function () {
       return this._base_url;
     }
   }, {
+    key: "online_base_url",
+    get: function get() {
+      return this._online_base_url;
+    }
+  }, {
     key: "all_fullpath_pages",
     get: function get() {
       return this._all_fullpath_pages;
@@ -1917,7 +1923,7 @@ var CRSearch = /*#__PURE__*/function () {
                 _context2.next = 4;
                 return Promise.all(Array.from(this._pendingDB, /*#__PURE__*/function () {
                   var _ref = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee(url, i) {
-                    var data;
+                    var ajaxSettings, data;
                     return regenerator_default().wrap(function _callee$(_context) {
                       while (1) {
                         switch (_context.prev = _context.next) {
@@ -1929,34 +1935,42 @@ var CRSearch = /*#__PURE__*/function () {
                             _this2._log.info("fetching database (".concat(i + 1, "/").concat(size, "): ").concat(url));
 
                             _context.prev = 2;
-                            _context.next = 5;
-                            return crsearch_crsearch_$.ajax({
+                            ajaxSettings = {
                               url: url,
                               dataType: "json"
-                            });
+                            };
 
-                          case 5:
+                            if (/\.js([?#].*)?$/.test(url.toString())) {
+                              ajaxSettings.dataType = "jsonp";
+                              ajaxSettings.jsonpCallback = "callback";
+                              ajaxSettings.crossDomain = true;
+                            }
+
+                            _context.next = 7;
+                            return crsearch_crsearch_$.ajax(ajaxSettings);
+
+                          case 7:
                             data = _context.sent;
 
                             _this2._log.info('fetched');
 
                             _this2._parse(url, data);
 
-                            _context.next = 13;
+                            _context.next = 15;
                             break;
 
-                          case 10:
-                            _context.prev = 10;
+                          case 12:
+                            _context.prev = 12;
                             _context.t0 = _context["catch"](2);
 
                             _this2._log.error('fetch failed', _context.t0);
 
-                          case 13:
+                          case 15:
                           case "end":
                             return _context.stop();
                         }
                       }
-                    }, _callee, null, [[2, 10]]);
+                    }, _callee, null, [[2, 12]]);
                   }));
 
                   return function (_x, _x2) {
@@ -1993,6 +2007,8 @@ var CRSearch = /*#__PURE__*/function () {
     value: function _parse(url, json) {
       this._log.info('parsing...', json);
 
+      if (this._opts.base_url) json.base_url = this._opts.base_url;
+      if (this._opts.online_base_url) json.online_base_url = this._opts.online_base_url;
       var db = new Database(this._log, json);
 
       this._db.set(db.name, db);
@@ -2184,9 +2200,11 @@ var CRSearch = /*#__PURE__*/function () {
               _db = _step4$value[1];
 
           // always include fallback
+          var fallback_site = _db.online_base_url ? _db.online_base_url.host : _db.base_url.host;
+
           var _e2 = this._make_result(null, q.original_text, {
             name: _db.name,
-            url: _db.base_url.host
+            url: fallback_site
           });
 
           _e2.attr('data-result-id', result_id++);
@@ -2231,8 +2249,9 @@ var CRSearch = /*#__PURE__*/function () {
     key: "_make_google_url",
     value: function _make_google_url(q, site) {
       var url = this._opts.google_url;
+      if (site != '') q = "".concat(q, " site:").concat(site);
       url.set('query', {
-        q: "".concat(q, " site:").concat(site)
+        q: q
       });
       return url;
     }
@@ -2458,7 +2477,7 @@ var CRSearch = /*#__PURE__*/function () {
                 cr_info_link = crsearch_crsearch_$('<a />');
                 cr_info_link.attr('href', CRSearch._HOMEPAGE);
                 cr_info_link.attr('target', '_blank');
-                cr_info_link.text("".concat(CRSearch._APPNAME, " v").concat({"version":"3.0.22","bugs_url":"https://github.com/cpprefjp/crsearch/issues"}.version));
+                cr_info_link.text("".concat(CRSearch._APPNAME, " v").concat({"version":"3.0.23","bugs_url":"https://github.com/cpprefjp/crsearch/issues"}.version));
                 cr_info_link.appendTo(cr_info);
                 cr_info.appendTo(result_wrapper);
                 input.on('focusin', function () {
@@ -2553,7 +2572,9 @@ var CRSearch = /*#__PURE__*/function () {
     search_button: ['fa', 'fa-fw', 'fa-binoculars']
   },
   google_url: new (url_parse_default())('https://www.google.co.jp/search'),
-  force_new_window: false
+  force_new_window: false,
+  base_url: null,
+  online_base_url: null
 });
 
 (0,defineProperty/* default */.Z)(CRSearch, "_KLASS", 'crsearch');

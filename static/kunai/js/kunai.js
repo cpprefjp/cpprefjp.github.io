@@ -100,15 +100,38 @@ function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o =
 
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 
-var sanitize = function sanitize(badges) {
-  var i = 0;
+var base_url = null;
+var unresolved_links = [];
 
-  var _iterator = _createForOfIteratorHelper(badges),
+var badge_onDatabase = function onDatabase(db) {
+  base_url = db.base_url.toString();
+
+  var _iterator = _createForOfIteratorHelper(unresolved_links),
       _step;
 
   try {
     for (_iterator.s(); !(_step = _iterator.n()).done;) {
-      var b_raw = _step.value;
+      var a_elem = _step.value;
+      a_elem.attr('href', base_url.replace(/\/$/, '') + a_elem.attr('href'));
+    }
+  } catch (err) {
+    _iterator.e(err);
+  } finally {
+    _iterator.f();
+  }
+
+  unresolved_links.length = 0;
+};
+
+var sanitize = function sanitize(badges) {
+  var i = 0;
+
+  var _iterator2 = _createForOfIteratorHelper(badges),
+      _step2;
+
+  try {
+    for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+      var b_raw = _step2.value;
       ++i;
       var b = badge_$(b_raw);
       var b_classes = b.attr('class').split(/\s+/).map(function (t) {
@@ -120,12 +143,12 @@ var sanitize = function sanitize(badges) {
       var cppv = null;
       var named_version = null;
 
-      var _iterator2 = _createForOfIteratorHelper(b_classes),
-          _step2;
+      var _iterator3 = _createForOfIteratorHelper(b_classes),
+          _step3;
 
       try {
-        for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-          var c = _step2.value;
+        for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+          var c = _step3.value;
 
           if (/^(?:future|archive)$/.test(c)) {
             named_version = c;
@@ -151,9 +174,9 @@ var sanitize = function sanitize(badges) {
           }
         }
       } catch (err) {
-        _iterator2.e(err);
+        _iterator3.e(err);
       } finally {
-        _iterator2.f();
+        _iterator3.f();
       }
 
       if (!deprecated_or_removed) {
@@ -162,15 +185,16 @@ var sanitize = function sanitize(badges) {
 
       b.addClass(classes.join(' '));
       var lang_path = cppv ? "/lang/cpp".concat(cppv) : named_version ? "/lang/".concat(named_version) : "/lang";
-      b.empty().append(badge_$('<a>', {
+      var a_elem = badge_$('<a>', {
         href: "".concat(lang_path, ".html")
       }).append(badge_$('<i>')) // .append($('<span>').text(clean_txt))
-      );
+      .appendTo(b.empty());
+      if (base_url) a_elem.attr('href', base_url.replace(/\/$/, '') + a_elem.attr('href'));else unresolved_links.push(a_elem);
     }
   } catch (err) {
-    _iterator.e(err);
+    _iterator2.e(err);
   } finally {
-    _iterator.f();
+    _iterator2.f();
   }
 
   return i;
@@ -305,7 +329,7 @@ var Content = /*#__PURE__*/function () {
     (0,classCallCheck/* default */.Z)(this, Content);
 
     this.log = log.makeContext('Content');
-    this.log.debug('initialzing...');
+    this.log.debug('initializing...');
     this.log.debug("found ".concat(sanitize(content_$('main[role="main"] div[itemtype="http://schema.org/Article"] .content-body span.cpp')), " badges")); // 横幅を超える画像を横スクロール可能にするためにスクロール用のdivで囲む
 
     content_$('div[itemprop="articleBody"]').find('img').wrap('<div class="scrollable">');
@@ -1211,7 +1235,7 @@ var Treeview = /*#__PURE__*/function () {
     }).appendTo(this.e);
     this.opts = (0,esm_extends/* default */.Z)({}, opts);
     this.legacy = this.opts.legacy;
-    this.log.debug('initialzing...');
+    this.log.debug('initializing...');
 
     if (this.legacy) {
       var c = sanitize(this.e.find('.cpp-sidebar'));
@@ -1753,7 +1777,7 @@ var Sidebar = /*#__PURE__*/function () {
     (0,classCallCheck/* default */.Z)(this, Sidebar);
 
     this.log = log.makeContext('Sidebar');
-    this.log.info('initialzing...');
+    this.log.info('initializing...');
     this.kc = new crsearch/* KC.Config */.KC.De({
       'article.md': (__webpack_require__(3437)/* ["default"] */ .Z),
       'cpp.json': __webpack_require__(3723)
@@ -1867,6 +1891,8 @@ var Navbar = /*#__PURE__*/function () {
 
 
 ;// CONCATENATED MODULE: ./kunai/ui.js
+
+
 
 
 
@@ -3310,14 +3336,16 @@ var Kunai = /*#__PURE__*/function () {
           while (1) {
             switch (_context5.prev = _context5.next) {
               case 0:
-                _context5.next = 2;
+                // this.log.debug(`onDatabase`, db)
+                badge_onDatabase(db);
+                _context5.next = 3;
                 return this.ui.sidebar.onDatabase(db);
 
-              case 2:
-                _context5.next = 4;
+              case 3:
+                _context5.next = 5;
                 return this.ui.sidebar.treeview.onPageID(this.meta.page_id);
 
-              case 4:
+              case 5:
               case "end":
                 return _context5.stop();
             }
@@ -3335,7 +3363,7 @@ var Kunai = /*#__PURE__*/function () {
     key: "initCRSearch",
     value: function () {
       var _initCRSearch = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee6(isEnabled) {
-        var crs, e;
+        var dynamic_base_url, online_base_url, database_url, crs, e;
         return regenerator_default().wrap(function _callee6$(_context6) {
           while (1) {
             switch (_context6.prev = _context6.next) {
@@ -3352,19 +3380,86 @@ var Kunai = /*#__PURE__*/function () {
                 return this.initSidebar();
 
               case 4:
+                // Dynamically set the base_url
+                dynamic_base_url = function () {
+                  // Determine the location of the website base
+                  var current_script = document.currentScript || document.querySelector('script[src*="static/kunai/js/kunai.js"]');
+
+                  if (current_script) {
+                    // Try to determine the base_url based on the location of this script
+                    // ({base_url}/static/kunai/js/kunai.js).
+                    var url_kunai = current_script.getAttribute("src");
+                    var url = url_kunai.replace(/\bstatic\/kunai\/js\/kunai\.js([?#].*)?$/, "");
+                    if (url != url_kunai) return url == "" ? "/" : url;
+                  } // Fallback case assuming that the website is hosted at the top level
+
+
+                  return "/";
+                }(); // Determine the project website URL, which is assumed to be stored in
+                // <meta name="twietter:url" content="..." /> or in <meta property="og:url"
+                // content="..." />.
+
+
+                online_base_url = function () {
+                  var meta = document.querySelector('meta[name="twitter:url"]') || document.querySelector('meta[property="og:url"]');
+
+                  if (meta && meta.content) {
+                    var m = meta.content.toString().match(/^https?:\/\/[^/]*\//);
+                    if (m) return m[0];
+                  }
+
+                  return null;
+                }();
+
+                database_url = function () {
+                  // Determine the location of the database file "crsearch.json".
+                  var current_script = document.currentScript || document.querySelector('script[src*="kunai/js/kunai.js"]');
+
+                  if (current_script) {
+                    // A special care is needed for local HTML files (file://...).  When a
+                    // HTML in a local file system is directly opened in a Web browser,
+                    // "static/crsearch/crsearch.json" cannot be read using XHR due to the
+                    // CORS (cross-origin resource sharing) policy for the local files.
+                    if (/^file:\/\//.test(current_script.src)) {
+                      var _url_kunai = current_script.getAttribute("src"); // When the current script file (kunai.js) is located in an expected
+                      // path in the tree, we try to load the local database file
+                      // "crsearch/crsearch.js" in JSONP format.
+
+
+                      var _url = _url_kunai.replace(/\bkunai\/js\/kunai\.js([?#].*)?$/, "crsearch/crsearch.js");
+
+                      if (_url != _url_kunai) return _url; // Try to download "crsearch.json" from the project website.
+
+                      if (online_base_url) return online_base_url + "static/crsearch/crsearch.json";
+                    } // Try to determine the position of crsearch.json
+                    // ({base_url}/static/crsearch/crsearch.json) based on the location of
+                    // this script ({base_url}/static/kunai/js/kunai.js).
+
+
+                    var url_kunai = current_script.getAttribute("src");
+                    var url = url_kunai.replace(/\bkunai\/js\/kunai\.js([?#].*)?$/, "crsearch/crsearch.json");
+                    if (url != url_kunai) return url;
+                  } // Fallback case assuming that the website is hosted at the top level
+
+
+                  return "/static/crsearch/crsearch.json";
+                }();
+
                 crs = new crsearch/* CRSearch */.Sv({
-                  onDatabase: this.onDatabase.bind(this)
+                  onDatabase: this.onDatabase.bind(this),
+                  base_url: dynamic_base_url,
+                  online_base_url: online_base_url
                 });
-                crs.database('/static/crsearch/crsearch.json');
+                crs.database(database_url);
                 e = kunai_$('.crsearch');
-                _context6.next = 9;
+                _context6.next = 12;
                 return crs.searchbox(e);
 
-              case 9:
+              case 12:
                 e.addClass('loaded');
                 return _context6.abrupt("return", crs);
 
-              case 11:
+              case 14:
               case "end":
                 return _context6.stop();
             }
