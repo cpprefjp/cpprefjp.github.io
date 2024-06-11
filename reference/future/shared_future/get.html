@@ -16,21 +16,21 @@
 
         <meta charset="UTF-8">
 
-        <title>get - cpprefjp C++日本語リファレンス</title>
+        <title>shared_future::get - cpprefjp C++日本語リファレンス</title>
 
         <meta name="viewport" content="width=device-width,initial-scale=1">
         <meta name="keywords" content="
-  C++,標準ライブラリ,リファレンス,ドキュメント,STL,std,
+  C++,標準ライブラリ,リファレンス,ドキュメント,STL,std,future,std,shared_future,function,cpp11
 ">
-        <meta name="title" content="get - cpprefjp C++日本語リファレンス" />
-        <meta itemprop="name" content="get - cpprefjp C++日本語リファレンス" />
-        <meta property="og:title" content="get - cpprefjp C++日本語リファレンス" />
+        <meta name="title" content="shared_future::get - cpprefjp C++日本語リファレンス" />
+        <meta itemprop="name" content="shared_future::get - cpprefjp C++日本語リファレンス" />
+        <meta property="og:title" content="shared_future::get - cpprefjp C++日本語リファレンス" />
         <meta property="og:url" content="https://cpprefjp.github.io/reference/future/shared_future/get.html" />
         <meta property="og:site_name" content="cpprefjp - C++日本語リファレンス" />
         <meta property="og:type" content="article" />
         <meta property="og:description" content="結果を取得する" />
         <meta name="twitter:card" content="summary" />
-        <meta name="twitter:title" content="get - cpprefjp C++日本語リファレンス" />
+        <meta name="twitter:title" content="shared_future::get - cpprefjp C++日本語リファレンス" />
         <meta name="twitter:url" content="https://cpprefjp.github.io/reference/future/shared_future/get.html" />
         <meta name="twitter:description" content="結果を取得する" />
 
@@ -68,7 +68,7 @@
 
     </head>
     <body>
-<header data-kunai-mdinfo="{&#34;meta&#34;: {}, &#34;sources&#34;: [{&#34;id&#34;: &#34;8d59caf82f9d9a3d237db1530b728870d1273b9b&#34;, &#34;source&#34;: &#34;#include &lt;iostream&gt;\n#include &lt;future&gt;\n#include &lt;thread&gt;\n#include &lt;utility&gt;\n\nvoid calc(std::promise&lt;int&gt; p)\n{\n  int sum = 0;\n  for (int i = 0; i &lt; 10; ++i) {\n    sum += i + 1;\n  }\n\n  p.set_value(sum); // \u7d50\u679c\u5024\u3092\u66f8\u304d\u8fbc\u3080\n}\n\nint main()\n{\n  std::promise&lt;int&gt; p;\n  std::shared_future&lt;int&gt; f = p.get_future().share();\n\n  // \u5225\u30b9\u30ec\u30c3\u30c9\u3067\u8a08\u7b97\u3092\u884c\u3046\n  std::thread t(calc, std::move(p));\n\n  // calc()\u306b\u3088\u3063\u3066\u66f8\u304d\u8fbc\u307e\u308c\u305f\u7d50\u679c\u3092\u53d6\u5f97\n  std::cout &lt;&lt; f.get() &lt;&lt; std::endl;\n\n  t.join();\n}\n&#34;}, {&#34;id&#34;: &#34;7c7c267e5dbc200462667cfe24210e5e4b147f42&#34;, &#34;source&#34;: &#34;#include &lt;iostream&gt;\n#include &lt;future&gt;\n#include &lt;thread&gt;\n#include &lt;mutex&gt;\n#include &lt;vector&gt;\n#include &lt;utility&gt;\n#include &lt;numeric&gt;\n\nstd::mutex print_mtx_;\nvoid print(int value, int thread_no)\n{\n  std::lock_guard&lt;std::mutex&gt; lk(print_mtx_);\n  std::cout &lt;&lt; \&#34;thread:\&#34; &lt;&lt; thread_no &lt;&lt; \&#34; sum:\&#34; &lt;&lt; value &lt;&lt; std::endl;\n}\n\nclass X {\n  std::vector&lt;int&gt; data_;\n  std::vector&lt;std::thread&gt; process_threads_;\npublic:\n  void start()\n  {\n    std::promise&lt;void&gt; p;\n    std::shared_future&lt;void&gt; f = p.get_future().share();\n\n    for (int i = 0; i &lt; 2; ++i) {\n      process_threads_.push_back(std::thread([&amp;f, i, this] { process(f, i); }));\n    }\n\n    std::thread t3([&amp;p, this] { read_data(std::move(p)); });\n    t3.join();\n  }\n\n  void join()\n  {\n    for (std::thread&amp; t : process_threads_) {\n      t.join();\n    }\n  }\n\nprivate:\n  void read_data(std::promise&lt;void&gt; p)\n  {\n    // 1. \u30c7\u30fc\u30bf\u8aad\u307f\u8fbc\u3080j\n    for (int i = 0; i &lt; 10; ++i) {\n      data_.push_back(i + 1);\n    }\n\n    // 2. \u8aad\u307f\u8fbc\u307f\u304c\u5b8c\u4e86\u3057\u305f\u3053\u3068\u3092\u901a\u77e5\u3059\u308b\n    p.set_value();\n  }\n\n  void process(std::shared_future&lt;void&gt; f, int thread_no)\n  {\n    // 3. \u30c7\u30fc\u30bf\u306e\u6e96\u5099\u304c\u3067\u304d\u308b\u307e\u3067\u5f85\u6a5f\u3059\u308b\n    f.get();\n\n    // 4. \u6e96\u5099\u304c\u3067\u304d\u305f\u30c7\u30fc\u30bf\u3092\u30b9\u30ec\u30c3\u30c9\u3054\u3068\u306b\u4f7f\u7528\u3059\u308b\n    if (thread_no == 0) {\n      // \u534a\u5206\u305a\u3064\u5408\u8a08\u5024\u3092\u8a08\u7b97\u3059\u308b\n      int sum = std::accumulate(data_.begin(), data_.begin() + data_.size() / 2, 0);\n      print(sum, thread_no);\n    }\n    else {\n      int sum = std::accumulate(data_.begin() + data_.size() / 2, data_.end(), 0);\n      print(sum, thread_no);\n    }\n  }\n};\n\nint main()\n{\n  X x;\n  x.start();\n  x.join();\n}\n&#34;}], &#34;page_id&#34;: [&#34;reference&#34;, &#34;future&#34;, &#34;shared_future&#34;, &#34;get&#34;]}">
+<header data-kunai-mdinfo="{&#34;meta&#34;: {&#34;header&#34;: [&#34;future&#34;], &#34;namespace&#34;: [&#34;std&#34;], &#34;class&#34;: [&#34;shared_future&#34;], &#34;id-type&#34;: [&#34;function&#34;], &#34;cpp&#34;: [&#34;cpp11&#34;]}, &#34;sources&#34;: [{&#34;id&#34;: &#34;8d59caf82f9d9a3d237db1530b728870d1273b9b&#34;, &#34;source&#34;: &#34;#include &lt;iostream&gt;\n#include &lt;future&gt;\n#include &lt;thread&gt;\n#include &lt;utility&gt;\n\nvoid calc(std::promise&lt;int&gt; p)\n{\n  int sum = 0;\n  for (int i = 0; i &lt; 10; ++i) {\n    sum += i + 1;\n  }\n\n  p.set_value(sum); // \u7d50\u679c\u5024\u3092\u66f8\u304d\u8fbc\u3080\n}\n\nint main()\n{\n  std::promise&lt;int&gt; p;\n  std::shared_future&lt;int&gt; f = p.get_future().share();\n\n  // \u5225\u30b9\u30ec\u30c3\u30c9\u3067\u8a08\u7b97\u3092\u884c\u3046\n  std::thread t(calc, std::move(p));\n\n  // calc()\u306b\u3088\u3063\u3066\u66f8\u304d\u8fbc\u307e\u308c\u305f\u7d50\u679c\u3092\u53d6\u5f97\n  std::cout &lt;&lt; f.get() &lt;&lt; std::endl;\n\n  t.join();\n}\n&#34;}, {&#34;id&#34;: &#34;7c7c267e5dbc200462667cfe24210e5e4b147f42&#34;, &#34;source&#34;: &#34;#include &lt;iostream&gt;\n#include &lt;future&gt;\n#include &lt;thread&gt;\n#include &lt;mutex&gt;\n#include &lt;vector&gt;\n#include &lt;utility&gt;\n#include &lt;numeric&gt;\n\nstd::mutex print_mtx_;\nvoid print(int value, int thread_no)\n{\n  std::lock_guard&lt;std::mutex&gt; lk(print_mtx_);\n  std::cout &lt;&lt; \&#34;thread:\&#34; &lt;&lt; thread_no &lt;&lt; \&#34; sum:\&#34; &lt;&lt; value &lt;&lt; std::endl;\n}\n\nclass X {\n  std::vector&lt;int&gt; data_;\n  std::vector&lt;std::thread&gt; process_threads_;\npublic:\n  void start()\n  {\n    std::promise&lt;void&gt; p;\n    std::shared_future&lt;void&gt; f = p.get_future().share();\n\n    for (int i = 0; i &lt; 2; ++i) {\n      process_threads_.push_back(std::thread([&amp;f, i, this] { process(f, i); }));\n    }\n\n    std::thread t3([&amp;p, this] { read_data(std::move(p)); });\n    t3.join();\n  }\n\n  void join()\n  {\n    for (std::thread&amp; t : process_threads_) {\n      t.join();\n    }\n  }\n\nprivate:\n  void read_data(std::promise&lt;void&gt; p)\n  {\n    // 1. \u30c7\u30fc\u30bf\u8aad\u307f\u8fbc\u3080j\n    for (int i = 0; i &lt; 10; ++i) {\n      data_.push_back(i + 1);\n    }\n\n    // 2. \u8aad\u307f\u8fbc\u307f\u304c\u5b8c\u4e86\u3057\u305f\u3053\u3068\u3092\u901a\u77e5\u3059\u308b\n    p.set_value();\n  }\n\n  void process(std::shared_future&lt;void&gt; f, int thread_no)\n  {\n    // 3. \u30c7\u30fc\u30bf\u306e\u6e96\u5099\u304c\u3067\u304d\u308b\u307e\u3067\u5f85\u6a5f\u3059\u308b\n    f.get();\n\n    // 4. \u6e96\u5099\u304c\u3067\u304d\u305f\u30c7\u30fc\u30bf\u3092\u30b9\u30ec\u30c3\u30c9\u3054\u3068\u306b\u4f7f\u7528\u3059\u308b\n    if (thread_no == 0) {\n      // \u534a\u5206\u305a\u3064\u5408\u8a08\u5024\u3092\u8a08\u7b97\u3059\u308b\n      int sum = std::accumulate(data_.begin(), data_.begin() + data_.size() / 2, 0);\n      print(sum, thread_no);\n    }\n    else {\n      int sum = std::accumulate(data_.begin() + data_.size() / 2, data_.end(), 0);\n      print(sum, thread_no);\n    }\n  }\n};\n\nint main()\n{\n  X x;\n  x.start();\n  x.join();\n}\n&#34;}], &#34;page_id&#34;: [&#34;reference&#34;, &#34;future&#34;, &#34;shared_future&#34;, &#34;get&#34;]}">
   <nav class="navbar navbar-default" role="navigation">
     <div class="container-fluid">
       <div class="navbar-header">
@@ -224,15 +224,8 @@
     <div class="row">
       <div class="col-sm-12 content-body">
         
-  <h1 itemprop="name"><span class="token">get</span></h1>
-<div itemprop="articleBody"><ul>
-<li>future[meta header]</li>
-<li>std[meta namespace]</li>
-<li>shared_future[meta class]</li>
-<li>function[meta id-type]</li>
-<li>cpp11[meta cpp]</li>
-</ul>
-<p><div class="codehilite"><pre><span></span><code><span class="k">const</span> <span class="n">R</span><span class="o">&amp;</span> <span class="n">shared_future</span><span class="o">::</span><span class="n">get</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
+  <div class="identifier-type">function</div><div class="header">&lt;future&gt;</div><h1 itemprop="name"><span class="namespace" title="namespace std">std::</span><span class="class" title="class shared_future">shared_future::</span><span class="token">get</span><span class="cpp cpp11" title="C++11で追加">(C++11)</span></h1>
+<div itemprop="articleBody"><p><div class="codehilite"><pre><span></span><code><span class="k">const</span> <span class="n">R</span><span class="o">&amp;</span> <span class="n">shared_future</span><span class="o">::</span><span class="n">get</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
 <span class="n">R</span><span class="o">&amp;</span> <span class="n">shared_future</span><span class="o">&lt;</span><span class="n">R</span><span class="o">&amp;&gt;::</span><span class="n">get</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
 <span class="kt">void</span> <span class="n">shared_future</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;::</span><span class="n">get</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
 </code></pre></div>

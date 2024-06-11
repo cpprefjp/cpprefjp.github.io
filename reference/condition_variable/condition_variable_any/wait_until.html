@@ -16,21 +16,21 @@
 
         <meta charset="UTF-8">
 
-        <title>wait_until - cpprefjp C++日本語リファレンス</title>
+        <title>condition_variable_any::wait_until - cpprefjp C++日本語リファレンス</title>
 
         <meta name="viewport" content="width=device-width,initial-scale=1">
         <meta name="keywords" content="
-  C++,標準ライブラリ,リファレンス,ドキュメント,STL,std,
+  C++,標準ライブラリ,リファレンス,ドキュメント,STL,std,condition_variable,std,condition_variable_any,function template,cpp11
 ">
-        <meta name="title" content="wait_until - cpprefjp C++日本語リファレンス" />
-        <meta itemprop="name" content="wait_until - cpprefjp C++日本語リファレンス" />
-        <meta property="og:title" content="wait_until - cpprefjp C++日本語リファレンス" />
+        <meta name="title" content="condition_variable_any::wait_until - cpprefjp C++日本語リファレンス" />
+        <meta itemprop="name" content="condition_variable_any::wait_until - cpprefjp C++日本語リファレンス" />
+        <meta property="og:title" content="condition_variable_any::wait_until - cpprefjp C++日本語リファレンス" />
         <meta property="og:url" content="https://cpprefjp.github.io/reference/condition_variable/condition_variable_any/wait_until.html" />
         <meta property="og:site_name" content="cpprefjp - C++日本語リファレンス" />
         <meta property="og:type" content="article" />
         <meta property="og:description" content="絶対時間でタイムアウトを指定して、起床されるまで待機する。" />
         <meta name="twitter:card" content="summary" />
-        <meta name="twitter:title" content="wait_until - cpprefjp C++日本語リファレンス" />
+        <meta name="twitter:title" content="condition_variable_any::wait_until - cpprefjp C++日本語リファレンス" />
         <meta name="twitter:url" content="https://cpprefjp.github.io/reference/condition_variable/condition_variable_any/wait_until.html" />
         <meta name="twitter:description" content="絶対時間でタイムアウトを指定して、起床されるまで待機する。" />
 
@@ -68,7 +68,7 @@
 
     </head>
     <body>
-<header data-kunai-mdinfo="{&#34;meta&#34;: {}, &#34;sources&#34;: [{&#34;id&#34;: &#34;4f928bcfc6ce66e9acc915b892010bc1c16502ee&#34;, &#34;source&#34;: &#34;#include &lt;iostream&gt;\n#include &lt;condition_variable&gt;\n#include &lt;mutex&gt;\n#include &lt;thread&gt;\n#include &lt;chrono&gt;\n\nstruct ProcessData {\n  std::recursive_mutex mtx_;\n  std::condition_variable_any cond_;\n\n  bool data_ready_ = false;\n\npublic:\n  // \u51e6\u7406\u306b\u5fc5\u8981\u306a\u30c7\u30fc\u30bf\u306e\u6e96\u5099\u3092\u3059\u308b\n  void prepare_data_for_processing()\n  {\n    // ...\u6e96\u5099\u51e6\u7406...\n\n    {\n      std::lock_guard&lt;std::recursive_mutex&gt; lk(mtx_);\n      data_ready_ = true;\n    }\n\n    // \u6e96\u5099\u5b8c\u4e86\u3057\u305f\u306e\u3067\u5f85\u6a5f\u30b9\u30ec\u30c3\u30c9\u3092\u5168\u3066\u8d77\u5e8a\u3055\u305b\u308b\n    cond_.notify_all();\n  }\n\n  void wait_until_data_to_process1()\n  {\n    std::unique_lock&lt;std::recursive_mutex&gt; lk(mtx_);\n\n    // \u30c7\u30fc\u30bf\u306e\u6e96\u5099\u304c\u3067\u304d\u308b\u307e\u3067\u5f85\u6a5f\u3057\u3066\u304b\u3089\u51e6\u7406\u3059\u308b\n    while (!data_ready_) {\n      // \u8ff0\u8a9e\u3092\u6307\u5b9a\u3057\u306a\u3044\u30d0\u30fc\u30b8\u30e7\u30f3\n      // 3\u79d2\u3067\u30bf\u30a4\u30e0\u30a2\u30a6\u30c8\n      using namespace std::chrono;\n      steady_clock::time_point tp = steady_clock::now() + seconds(3);\n      std::cv_status result = cond_.wait_until(lk, tp);\n      if (result == std::cv_status::timeout) {\n        std::cout &lt;&lt; \&#34;wait_until_data_to_process1 : timeout\&#34; &lt;&lt; std::endl;\n        return;\n      }\n    }\n    process_data();\n  }\n\n  void wait_until_data_to_process2()\n  {\n    std::unique_lock&lt;std::recursive_mutex&gt; lk(mtx_);\n\n    // \u30c7\u30fc\u30bf\u306e\u6e96\u5099\u304c\u3067\u304d\u308b\u307e\u3067\u5f85\u6a5f\u3057\u3066\u304b\u3089\u51e6\u7406\u3059\u308b\n\n    // \u8ff0\u8a9e\u3092\u6307\u5b9a\u3059\u308b\u30d0\u30fc\u30b8\u30e7\u30f3\n    // 3\u79d2\u3067\u30bf\u30a4\u30e0\u30a2\u30a6\u30c8\n    using namespace std::chrono;\n    steady_clock::time_point tp = steady_clock::now() + seconds(3);\n    if (!cond_.wait_until(lk, tp, [this] { return data_ready_; })) {\n      // data_ready == false\n      std::cout &lt;&lt; \&#34;data is not ready\&#34; &lt;&lt; std::endl;\n      return;\n    }\n    process_data();\n  }\n\nprivate:\n  void process_data()\n  {\n    // ...\u30c7\u30fc\u30bf\u3092\u51e6\u7406\u3059\u308b...\n    std::cout &lt;&lt; \&#34;process data\&#34; &lt;&lt; std::endl;\n  }\n};\n\nint main()\n{\n  ProcessData p;\n\n  std::thread t1([&amp;] { p.prepare_data_for_processing(); });\n  std::thread t2([&amp;] { p.wait_until_data_to_process1(); });\n  std::thread t3([&amp;] { p.wait_until_data_to_process2(); });\n\n  t1.join();\n  t2.join();\n  t3.join();\n}\n&#34;}], &#34;page_id&#34;: [&#34;reference&#34;, &#34;condition_variable&#34;, &#34;condition_variable_any&#34;, &#34;wait_until&#34;]}">
+<header data-kunai-mdinfo="{&#34;meta&#34;: {&#34;header&#34;: [&#34;condition_variable&#34;], &#34;namespace&#34;: [&#34;std&#34;], &#34;class&#34;: [&#34;condition_variable_any&#34;], &#34;id-type&#34;: [&#34;function template&#34;], &#34;cpp&#34;: [&#34;cpp11&#34;]}, &#34;sources&#34;: [{&#34;id&#34;: &#34;4f928bcfc6ce66e9acc915b892010bc1c16502ee&#34;, &#34;source&#34;: &#34;#include &lt;iostream&gt;\n#include &lt;condition_variable&gt;\n#include &lt;mutex&gt;\n#include &lt;thread&gt;\n#include &lt;chrono&gt;\n\nstruct ProcessData {\n  std::recursive_mutex mtx_;\n  std::condition_variable_any cond_;\n\n  bool data_ready_ = false;\n\npublic:\n  // \u51e6\u7406\u306b\u5fc5\u8981\u306a\u30c7\u30fc\u30bf\u306e\u6e96\u5099\u3092\u3059\u308b\n  void prepare_data_for_processing()\n  {\n    // ...\u6e96\u5099\u51e6\u7406...\n\n    {\n      std::lock_guard&lt;std::recursive_mutex&gt; lk(mtx_);\n      data_ready_ = true;\n    }\n\n    // \u6e96\u5099\u5b8c\u4e86\u3057\u305f\u306e\u3067\u5f85\u6a5f\u30b9\u30ec\u30c3\u30c9\u3092\u5168\u3066\u8d77\u5e8a\u3055\u305b\u308b\n    cond_.notify_all();\n  }\n\n  void wait_until_data_to_process1()\n  {\n    std::unique_lock&lt;std::recursive_mutex&gt; lk(mtx_);\n\n    // \u30c7\u30fc\u30bf\u306e\u6e96\u5099\u304c\u3067\u304d\u308b\u307e\u3067\u5f85\u6a5f\u3057\u3066\u304b\u3089\u51e6\u7406\u3059\u308b\n    while (!data_ready_) {\n      // \u8ff0\u8a9e\u3092\u6307\u5b9a\u3057\u306a\u3044\u30d0\u30fc\u30b8\u30e7\u30f3\n      // 3\u79d2\u3067\u30bf\u30a4\u30e0\u30a2\u30a6\u30c8\n      using namespace std::chrono;\n      steady_clock::time_point tp = steady_clock::now() + seconds(3);\n      std::cv_status result = cond_.wait_until(lk, tp);\n      if (result == std::cv_status::timeout) {\n        std::cout &lt;&lt; \&#34;wait_until_data_to_process1 : timeout\&#34; &lt;&lt; std::endl;\n        return;\n      }\n    }\n    process_data();\n  }\n\n  void wait_until_data_to_process2()\n  {\n    std::unique_lock&lt;std::recursive_mutex&gt; lk(mtx_);\n\n    // \u30c7\u30fc\u30bf\u306e\u6e96\u5099\u304c\u3067\u304d\u308b\u307e\u3067\u5f85\u6a5f\u3057\u3066\u304b\u3089\u51e6\u7406\u3059\u308b\n\n    // \u8ff0\u8a9e\u3092\u6307\u5b9a\u3059\u308b\u30d0\u30fc\u30b8\u30e7\u30f3\n    // 3\u79d2\u3067\u30bf\u30a4\u30e0\u30a2\u30a6\u30c8\n    using namespace std::chrono;\n    steady_clock::time_point tp = steady_clock::now() + seconds(3);\n    if (!cond_.wait_until(lk, tp, [this] { return data_ready_; })) {\n      // data_ready == false\n      std::cout &lt;&lt; \&#34;data is not ready\&#34; &lt;&lt; std::endl;\n      return;\n    }\n    process_data();\n  }\n\nprivate:\n  void process_data()\n  {\n    // ...\u30c7\u30fc\u30bf\u3092\u51e6\u7406\u3059\u308b...\n    std::cout &lt;&lt; \&#34;process data\&#34; &lt;&lt; std::endl;\n  }\n};\n\nint main()\n{\n  ProcessData p;\n\n  std::thread t1([&amp;] { p.prepare_data_for_processing(); });\n  std::thread t2([&amp;] { p.wait_until_data_to_process1(); });\n  std::thread t3([&amp;] { p.wait_until_data_to_process2(); });\n\n  t1.join();\n  t2.join();\n  t3.join();\n}\n&#34;}], &#34;page_id&#34;: [&#34;reference&#34;, &#34;condition_variable&#34;, &#34;condition_variable_any&#34;, &#34;wait_until&#34;]}">
   <nav class="navbar navbar-default" role="navigation">
     <div class="container-fluid">
       <div class="navbar-header">
@@ -224,15 +224,8 @@
     <div class="row">
       <div class="col-sm-12 content-body">
         
-  <h1 itemprop="name"><span class="token">wait_until</span></h1>
-<div itemprop="articleBody"><ul>
-<li>condition_variable[meta header]</li>
-<li>std[meta namespace]</li>
-<li>condition_variable_any[meta class]</li>
-<li>function template[meta id-type]</li>
-<li>cpp11[meta cpp]</li>
-</ul>
-<p><div class="codehilite"><pre><span></span><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Lock</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Clock</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Duration</span><span class="o">&gt;</span>
+  <div class="identifier-type">function template</div><div class="header">&lt;condition_variable&gt;</div><h1 itemprop="name"><span class="namespace" title="namespace std">std::</span><span class="class" title="class condition_variable_any">condition_variable_any::</span><span class="token">wait_until</span><span class="cpp cpp11" title="C++11で追加">(C++11)</span></h1>
+<div itemprop="articleBody"><p><div class="codehilite"><pre><span></span><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Lock</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Clock</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Duration</span><span class="o">&gt;</span>
 <span class="n"><a href="../cv_status.html">cv_status</a></span> <span class="n">wait_until</span><span class="p">(</span><span class="n">Lock</span><span class="o">&amp;</span> <span class="n">lock</span><span class="p">,</span>
                      <span class="k">const</span> <span class="n">chrono</span><span class="o">::</span><span class="n"><a href="../../chrono/time_point.html">time_point</a></span><span class="o">&lt;</span><span class="n">Clock</span><span class="p">,</span> <span class="n">Duration</span><span class="o">&gt;&amp;</span> <span class="n">abs_time</span><span class="p">);</span> <span class="c1">// (1)</span>
 
