@@ -2,9 +2,61 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2024-06-25T08:38:54.128261</updated>
-  <id>7c67096e-3224-441d-aa70-f91a4c8eee84</id>
+  <updated>2024-06-25T08:47:48.565437</updated>
+  <id>985f130a-c1a4-4b52-805a-4d0cf3a73a19</id>
 
+  
+    <entry>
+      <title>推論補助 -- mdspan/推論補助: P3029R1対応がC++26以降を明記</title>
+      <link href="https://cpprefjp.github.io/reference/mdspan/mdspan/op_deduction_guide.html"/>
+      <id>417ea3031d564d8c68fec29786bde9de0c2f56ea:reference/mdspan/mdspan/op_deduction_guide.md</id>
+      <updated>2024-06-25T17:44:14+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/mdspan/mdspan/op_deduction_guide.md b/reference/mdspan/mdspan/op_deduction_guide.md
+index 5e84cc0b6..93fdb4afe 100644
+--- a/reference/mdspan/mdspan/op_deduction_guide.md
++++ b/reference/mdspan/mdspan/op_deduction_guide.md
+@@ -19,7 +19,11 @@ namespace std {
+   template&amp;lt;class ElementType, class... Integrals&amp;gt;
+     requires ((is_convertible_v&amp;lt;Integrals, size_t&amp;gt; &amp;amp;&amp;amp; ...) &amp;amp;&amp;amp; sizeof...(Integrals) &amp;gt; 0)
+     explicit mdspan(ElementType*, Integrals...)
+-      -&amp;gt; mdspan&amp;lt;ElementType, extents&amp;lt;size_t, maybe-static-ext&amp;lt;Integrals&amp;gt;...&amp;gt;&amp;gt;;  // (3)
++      -&amp;gt; mdspan&amp;lt;ElementType, dextents&amp;lt;size_t, sizeof...(Integrals)&amp;gt;&amp;gt;;           // (3) C++23
++  template&amp;lt;class ElementType, class... Integrals&amp;gt;
++    requires ((is_convertible_v&amp;lt;Integrals, size_t&amp;gt; &amp;amp;&amp;amp; ...) &amp;amp;&amp;amp; sizeof...(Integrals) &amp;gt; 0)
++    explicit mdspan(ElementType*, Integrals...)
++      -&amp;gt; mdspan&amp;lt;ElementType, extents&amp;lt;size_t, maybe-static-ext&amp;lt;Integrals&amp;gt;...&amp;gt;&amp;gt;;  // (3) C++26
+ 
+   template&amp;lt;class ElementType, class OtherIndexType, size_t N&amp;gt;
+     mdspan(ElementType*, span&amp;lt;OtherIndexType, N&amp;gt;)
+@@ -105,12 +109,13 @@ int main()
+     assert(m2[] == *ptr);
+     // m2 := 0次元配列ビュー
+   }
+-  { // (3) : 要素数リストから型推論
++  { // (3) : C++23 要素数リストから型推論
+     std::mdspan m3a{arr, 2, 3};
+     static_assert(m3a.rank_dynamic() == 2);
+     assert(m3a.size() == 6);
+     // m3a := 動的要素数 2x3 の2次元配列ビュー
+-
++  }
++  { // (3) : C++26 整数定数要素数リストから型推論
+     std::mdspan m3b{arr, Int&amp;lt;2&amp;gt;, Int&amp;lt;3&amp;gt;};
+     static_assert(m3b.rank_dynamic() == 0);
+     assert(m3b.size() == 6);
+@@ -190,3 +195,4 @@ int main()
+ ## 参照
+ - [P0009R18 MDSPAN](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p0009r18.html)
+ - [P3029R1 Better `mdspan`&amp;#39;s CTAD](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3029r1.html)
++    - C++26から、(3)で静的要素数への推論がサポートされる。
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>de-ice -- span,mdspan: C++26 P3029R1対応</title>
@@ -1154,60 +1206,6 @@ index 000000000..1120a318d
 +- [P1673R13 A free function linear algebra interface based on the BLAS](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p1673r13.html)
 +- [LAPACK: csymv](https://netlib.org/lapack/explore-html/db/d17/group__hemv_gab137e328e44dc1530ab0a93ff65c108a.html#gab137e328e44dc1530ab0a93ff65c108a)
 +
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Yuya Asano</name>
-        <email>64895419+sukeya@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>dot -- linalg : C++のバージョンを修正 (#1233)</title>
-      <link href="https://cpprefjp.github.io/reference/linalg/dot.html"/>
-      <id>7f99ecebe5642aa1eeaa85ae69b01fecb42cdfa2:reference/linalg/dot.md</id>
-      <updated>2024-06-25T13:39:34+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/linalg/dot.md b/reference/linalg/dot.md
-index c04c8e84e..d5884d797 100644
---- a/reference/linalg/dot.md
-+++ b/reference/linalg/dot.md
-@@ -88,7 +88,7 @@ $$
- 
- ## バージョン
- ### 言語
--- C++11
-+- C++26
- 
- ### 処理系
- - [Clang](/implementation.md#clang): ??
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Yuya Asano</name>
-        <email>64895419+sukeya@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>dotc -- linalg : C++のバージョンを修正 (#1233)</title>
-      <link href="https://cpprefjp.github.io/reference/linalg/dotc.html"/>
-      <id>7f99ecebe5642aa1eeaa85ae69b01fecb42cdfa2:reference/linalg/dotc.md</id>
-      <updated>2024-06-25T13:39:34+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/linalg/dotc.md b/reference/linalg/dotc.md
-index e910eaf20..59efd533a 100644
---- a/reference/linalg/dotc.md
-+++ b/reference/linalg/dotc.md
-@@ -127,7 +127,7 @@ int main()
- 
- ## バージョン
- ### 言語
--- C++11
-+- C++26
- 
- ### 処理系
- - [Clang](/implementation.md#clang): ??
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
