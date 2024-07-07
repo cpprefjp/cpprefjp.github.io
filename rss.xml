@@ -2,9 +2,697 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2024-07-07T06:39:58.993203</updated>
-  <id>f479a3ef-ac42-41a0-ba08-879392c334a2</id>
+  <updated>2024-07-07T10:30:40.062144</updated>
+  <id>76c99fb7-2907-4c7c-859c-3153b0123163</id>
 
+  
+    <entry>
+      <title>linalg -- linalg : matrix_productを追加 (#1233)</title>
+      <link href="https://cpprefjp.github.io/reference/linalg.html"/>
+      <id>ac2ed4c717ccb5f1c2a34b629e57cc649d6ab8bf:reference/linalg.md</id>
+      <updated>2024-07-07T19:26:17+09:00</updated>
+      
+        <content type="html">&lt;div class=&#34;header&#34;&gt;&amp;lt;linalg&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;token&#34;&gt;linalg&lt;/span&gt;&lt;span class=&#34;cpp cpp26&#34; title=&#34;C++26で追加&#34;&gt;(C++26)&lt;/span&gt;&lt;/h1&gt;
+&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;&lt;code&gt;&amp;lt;linalg&amp;gt;&lt;/code&gt;ヘッダでは、線形代数(linear algebra)に関する基礎的な演算アルゴリズムを提供する。
+ベクトルや行列の成分にアクセスするアルゴリズムは、多次元配列ビュー&lt;a href=&#34;mdspan/mdspan.html&#34;&gt; &lt;code&gt;std::mdspan&lt;/code&gt; &lt;/a&gt;を通してその要素にアクセスする。
+本ヘッダが提供するエンティティは、すべて名前空間&lt;code&gt;std::linalg&lt;/code&gt;に属する。&lt;/p&gt;
+&lt;p&gt;1次元データであるベクトル(vector)や2次元データである行列(matrix)に対して、線形代数分野のデファクトスタンダードとされる BLAS(Basic Linear Algebra Subprograms) 互換のアルゴリズム群、いくつかの LAPACK(Linear Algebra PACKage) 互換のアルゴリズムが提供される。
+BLAS互換アルゴリズムは、演算対象データの次元数や計算オーダーに応じて3段階に区分される。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Level 1 BLAS : ベクトルーベクトルの演算&lt;/li&gt;
+&lt;li&gt;Level 2 BLAS : 行列ーベクトルの演算&lt;/li&gt;
+&lt;li&gt;Level 3 BLAS : 行列ー行列の演算&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;例えば、2個の一般行列の積を求める&lt;code&gt;std::linalg::matrix_product&lt;/code&gt;はLevel 3 BLASルーチン&lt;code&gt;xGEMM&lt;/code&gt;に対応する。
+（実際のBLASルーチン名は、浮動小数点数型の単精度&lt;code&gt;S&lt;/code&gt;／倍精度&lt;code&gt;D&lt;/code&gt;とそれぞれの複素数版&lt;code&gt;C&lt;/code&gt;,&lt;code&gt;Z&lt;/code&gt;として、プレフィックス&lt;code&gt;x&lt;/code&gt;部は文字4種類のいずれか。）&lt;/p&gt;
+&lt;p&gt;また、&lt;code&gt;std::mdspan&lt;/code&gt;と組み合わせて利用する拡張機能が提供される。&lt;/p&gt;
+&lt;h2&gt;共通要件&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;&amp;lt;linalg&amp;gt;&lt;/code&gt;ヘッダが提供する演算アルゴリズムは、スカラ値およびベクトル／行列の要素型として線形代数値型(linear algebra value types)を取り扱う。&lt;/p&gt;
+&lt;p&gt;線形代数値型はBLASが取り扱う&lt;code&gt;float&lt;/code&gt;, &lt;code&gt;double&lt;/code&gt;, &lt;code&gt;&lt;a href=&#34;complex/complex.html&#34;&gt;std::complex&lt;/a&gt;&amp;lt;float&amp;gt;&lt;/code&gt;, &lt;code&gt;&lt;a href=&#34;complex/complex.html&#34;&gt;std::complex&lt;/a&gt;&amp;lt;double&amp;gt;&lt;/code&gt;をはじめ、&lt;code&gt;&lt;a href=&#34;concepts/semiregular.html&#34;&gt;semiregular&lt;/a&gt;&lt;/code&gt;のモデルであれば良い。
+また、線形代数値型の値初期化は加法元（算術型であれば値&lt;code&gt;0&lt;/code&gt;）であること。&lt;/p&gt;
+&lt;p&gt;プログラム定義型を利用する場合、演算アルゴリズムはカスタマイゼーションポイントとして&lt;code&gt;abs&lt;/code&gt;, &lt;code&gt;real&lt;/code&gt;, &lt;code&gt;imag&lt;/code&gt;, &lt;code&gt;conj&lt;/code&gt;を非修飾名で呼び出す。&lt;/p&gt;
+&lt;h2&gt;&lt;code&gt;std::mdspan&lt;/code&gt;向け機能拡張&lt;/h2&gt;
+&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;名前&lt;/th&gt;
+&lt;th&gt;説明&lt;/th&gt;
+&lt;th&gt;対応バージョン&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/layout_blas_packed.html&#34;&gt;layout_blas_packed&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;行列要素のBLAS互換パックレイアウトに対応する&lt;a href=&#34;mdspan/LayoutMappingPolicy.html&#34;&gt;レイアウトマッピングポリシー&lt;/a&gt; (class template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/scaled_accessor.html&#34;&gt;scaled_accessor&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;scaled&lt;/code&gt;関数用の&lt;a href=&#34;mdspan/AccessorPolicy.html&#34;&gt;アクセサポリシー&lt;/a&gt; (class template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/scaled.html&#34;&gt;scaled&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;要素値をスカラー倍した読み取り専用&lt;code&gt;std::mdspan&lt;/code&gt;を作る (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/conjugated_accessor.html&#34;&gt;conjugated_accessor&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;conjugated&lt;/code&gt;関数用の&lt;a href=&#34;mdspan/AccessorPolicy.html&#34;&gt;アクセサポリシー&lt;/a&gt; (class template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/conjugated.html&#34;&gt;conjugated&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;読み取り専用の複素共役ビュー&lt;code&gt;std::mdspan&lt;/code&gt;を作る (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/layout_transpose.html&#34;&gt;layout_transpose&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;transposed&lt;/code&gt;関数用の&lt;a href=&#34;mdspan/LayoutMappingPolicy.html&#34;&gt;レイアウトマッピングポリシー&lt;/a&gt; (class template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/transposed.html&#34;&gt;transposed&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;2次元&lt;code&gt;std::mdspan&lt;/code&gt;の行列転置ビューを作る (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/conjugate_transposed.html&#34;&gt;conjugate_transposed&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;読み取り専用の複素共役転置ビュー&lt;code&gt;std::mdspan&lt;/code&gt;を作る (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2&gt;BLASの要件&lt;/h2&gt;
+&lt;p&gt;BLAS 1, 2, 3のアルゴリズムでテンプレートパラメータが特に制約されていない場合、テンプレートパラメータの名前によって以下の制約を満たすとする。&lt;/p&gt;
+&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;名前&lt;/th&gt;
+&lt;th&gt;制約&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ExecutionPolicy&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;is_execution_policy&amp;lt;ExecutionPolicy&amp;gt;::value == true&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;Real&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;complex&amp;lt;Real&amp;gt;&lt;/code&gt;が規定できる型&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;Triangle&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;upper_triangle_t&lt;/code&gt;または&lt;code&gt;lower_triangle_t&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;DiagonalStorage&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;implicit_unit_diagonal_t&lt;/code&gt;または&lt;code&gt;implicit_unit_diagonal_t&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2&gt;BLAS 1アルゴリズム&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;std::mpspan&lt;/code&gt;をパラメータに持つ、この節の全てのアルゴリズムの計算量は渡された&lt;code&gt;std::mdspan&lt;/code&gt;の&lt;code&gt;extents&lt;/code&gt;の積の最大値、つまりベクトルや行列の要素数の最大値に線形である。&lt;/p&gt;
+&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;名前&lt;/th&gt;
+&lt;th&gt;説明&lt;/th&gt;
+&lt;th&gt;対応バージョン&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/setup_givens_rotation_result.html&#34;&gt;setup_givens_rotation_result&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;setup_givens_rotation&lt;/code&gt;の結果型 (class template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/setup_givens_rotation.html&#34;&gt;setup_givens_rotation&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xLARTG: ギブンス回転をセットアップする (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/apply_givens_rotation.html&#34;&gt;apply_givens_rotation&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xROT: ベクトルにギブンス回転を適用する (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/swap_elements.html&#34;&gt;swap_elements&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xSWAP: 2つのベクトル／行列の要素を交換する (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/scale.html&#34;&gt;scale&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xSCAL: ベクトル／行列の要素にスカラ値を乗算する (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/copy.html&#34;&gt;copy&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xCOPY: ベクトル／行列の要素をコピーする (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/add.html&#34;&gt;add&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xAXPY: 2つのベクトル／行列の要素を加算する (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/dot.html&#34;&gt;dot&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xDOT, xDOTU: 2つのベクトルのドット積を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/dotc.html&#34;&gt;dotc&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xDOTC: 2つのベクトルの複素共役ドット積を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/sum_of_squares_result.html&#34;&gt;sum_of_squares_result&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;vector_sum_of_squares&lt;/code&gt;の結果型 (class template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/vector_sum_of_squares.html&#34;&gt;vector_sum_of_squares&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xLASSQ: ベクトル要素の平方和を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/vector_two_norm.html&#34;&gt;vector_two_norm&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xNRM2: ベクトルのユークリッドノルム(Euclidean norm)を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/vector_abs_sum.html&#34;&gt;vector_abs_sum&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xASUM: ベクトル要素の絶対値和を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/vector_idx_abs_max.html&#34;&gt;vector_idx_abs_max&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xIAMAX: ベクトル要素のうち最大絶対値インデクスを返す (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/matrix_frob_norm.html&#34;&gt;matrix_frob_norm&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;行列のフロベニウスノルム(Frobenius norm)を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/matrix_one_norm.html&#34;&gt;matrix_one_norm&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;行列の1ノルム(One norm)を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/matrix_inf_norm.html&#34;&gt;matrix_inf_norm&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;行列の無限大ノルム(Infinity norm)を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2&gt;BLAS 2アルゴリズム&lt;/h2&gt;
+&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;名前&lt;/th&gt;
+&lt;th&gt;説明&lt;/th&gt;
+&lt;th&gt;対応バージョン&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/matrix_vector_product.html&#34;&gt;matrix_vector_product&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xGEMV: 一般行列とベクトルの積を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/symmetric_matrix_vector_product.html&#34;&gt;symmetric_matrix_vector_product&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xSYMV: 対称行列とベクトルの積を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/hermitian_matrix_vector_product.html&#34;&gt;hermitian_matrix_vector_product&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xHEMV: ハミルトニアン行列とベクトルの積を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/triangular_matrix_vector_product.html&#34;&gt;triangular_matrix_vector_product&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xTRMV: 三角行列とベクトルの積を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/triangular_matrix_vector_solve.html&#34;&gt;triangular_matrix_vector_solve&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xTRSV: 三角行列を係数とする行列方程式を解く (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/matrix_rank_1_update.html&#34;&gt;matrix_rank_1_update&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xGER, xGERU: 行列のRank-1更新 (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/matrix_rank_1_update_c.html&#34;&gt;matrix_rank_1_update_c&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xGERC: 複素行列のRank-1更新 (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/symmetric_matrix_rank_1_update.html&#34;&gt;symmetric_matrix_rank_1_update&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xSYR: 対称行列のRank-1更新 (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/hermitian_matrix_rank_1_update.html&#34;&gt;hermitian_matrix_rank_1_update&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xHER: ハミルトニアン行列のRank-1更新 (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/symmetric_matrix_rank_2_update.html&#34;&gt;symmetric_matrix_rank_2_update&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xSYR2: 対称行列のRank-2更新 (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/hermitian_matrix_rank_2_update.html&#34;&gt;hermitian_matrix_rank_2_update&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xHER2: ハミルトニアン行列のRank-2更新 (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2&gt;BLAS 3アルゴリズム&lt;/h2&gt;
+&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;名前&lt;/th&gt;
+&lt;th&gt;説明&lt;/th&gt;
+&lt;th&gt;対応バージョン&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/matrix_product.html&#34;&gt;matrix_product&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xGEMM: 2つの一般行列の積を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;symmetric_matrix_product&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xSYMM: 対称行列と行列の積を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;hermitian_matrix_product&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xHEMM: ハミルトニアン行列と行列の積を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;triangular_matrix_product&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xTRMM: 三角行列と行列の積を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;triangular_matrix_left_product&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xTRMM: In-placeに三角行列と行列の積を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;triangular_matrix_right_product&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xTRMM: In-placeに三角行列と行列の積を求める (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;symmetric_matrix_rank_k_update&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xSYRK: 対称行列のRank-k更新 (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;hermitian_matrix_rank_k_update&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xHERK: ハミルトニアン行列のRank-k更新 (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;symmetric_matrix_rank_2k_update&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xSYR2K: 対称行列のRank-2k更新 (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;hermitian_matrix_rank_2k_update&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xHER2K: ハミルトニアン行列のRank-2k更新 (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;triangular_matrix_matrix_left_solve&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xTRSM: 三角行列の連立一次方程式を解く (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;triangular_matrix_matrix_right_solve&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;xTRSM: 三角行列の連立一次方程式を解く (function template)&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2&gt;タグ&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;&amp;lt;linalg&amp;gt;&lt;/code&gt;ヘッダでは、行列の格納順序や三角行列の上下をタグを使って表現している。&lt;/p&gt;
+&lt;h3&gt;格納順序&lt;/h3&gt;
+&lt;p&gt;行列の格納順序を表すタグ。&lt;/p&gt;
+&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;名前&lt;/th&gt;
+&lt;th&gt;説明&lt;/th&gt;
+&lt;th&gt;対応バージョン&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/column_major_t.html&#34;&gt;column_major_t&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;列優先(column-major)を表すタグ型&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/column_major_t.html&#34;&gt;column_major&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;列優先(column-major)を表すタグ値&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/row_major_t.html&#34;&gt;row_major_t&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;行優先(row-major)を表すタグ型&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/row_major_t.html&#34;&gt;row_major&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;行優先(row-major)を表すタグ値&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3&gt;三角行列&lt;/h3&gt;
+&lt;p&gt;上三角行列か下三角行列かを表すタグ。&lt;/p&gt;
+&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;名前&lt;/th&gt;
+&lt;th&gt;説明&lt;/th&gt;
+&lt;th&gt;対応バージョン&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/upper_triangle_t.html&#34;&gt;upper_triangle_t&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;上三角行列を表すタグ型&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/upper_triangle_t.html&#34;&gt;upper_triangle&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;上三角行列を表すタグ値&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/lower_triangle_t.html&#34;&gt;lower_triangle_t&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;下三角行列を表すタグ型&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/lower_triangle_t.html&#34;&gt;lower_triangle&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;下三角行列を表すタグ値&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3&gt;対角成分&lt;/h3&gt;
+&lt;p&gt;行列の全ての対角成分を暗黙に乗法における単位元とみなすかどうかを表すタグ。みなした場合、行列の対角成分にはアクセスせず、値が乗法における単位元であるとして計算する。&lt;/p&gt;
+&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;名前&lt;/th&gt;
+&lt;th&gt;説明&lt;/th&gt;
+&lt;th&gt;対応バージョン&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/implicit_unit_diagonal_t.html&#34;&gt;implicit_unit_diagonal_t&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;全ての対角成分を暗黙に乗法における単位元とみなすタグ型&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/implicit_unit_diagonal_t.html&#34;&gt;implicit_unit_diagonal&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;全ての対角成分を暗黙に乗法における単位元とみなすタグ値&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/explicit_diagonal_t.html&#34;&gt;explicit_diagonal_t&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;全ての対角成分にアクセスするタグ型&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/explicit_diagonal_t.html&#34;&gt;explicit_diagonal&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;全ての対角成分にアクセスするタグ値&lt;/td&gt;
+&lt;td&gt;C++26&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2&gt;バージョン&lt;/h2&gt;
+&lt;h3&gt;言語&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;C++26&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;関連項目&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;&lt;a href=&#34;mdspan.html&#34;&gt;&amp;lt;mdspan&amp;gt;&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;参照&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p1673r13.html&#34; target=&#34;_blank&#34;&gt;P1673R13 A free function linear algebra interface based on the BLAS&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1674r2.html&#34; target=&#34;_blank&#34;&gt;P1674R2: Evolving a Standard C++ Linear Algebra Library from the BLAS&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/CppCon/CppCon2023/blob/main/Presentations/stdlinalg_linear_algebra_coming_to_standard_cpp.pdf&#34; target=&#34;_blank&#34;&gt;std::linalg: Linear Algebra Coming to Standard C++&lt;/a&gt;, CppCon 2023&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.netlib.org/blas/&#34; target=&#34;_blank&#34;&gt;BLAS (Basic Linear Algebra Subprograms)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://eel.is/c++draft/complex.numbers&#34; target=&#34;_blank&#34;&gt;Numerics library&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/div&gt;</content>
+      
+      <author>
+        <name>Yuya Asano</name>
+        <email>64895419+sukeya@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>matrix_product -- linalg : matrix_productを追加 (#1233)</title>
+      <link href="https://cpprefjp.github.io/reference/linalg/matrix_product.html"/>
+      <id>ac2ed4c717ccb5f1c2a34b629e57cc649d6ab8bf:reference/linalg/matrix_product.md</id>
+      <updated>2024-07-07T19:26:17+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/linalg/matrix_product.md b/reference/linalg/matrix_product.md
+new file mode 100644
+index 000000000..52adef926
+--- /dev/null
++++ b/reference/linalg/matrix_product.md
+@@ -0,0 +1,201 @@
++# matrix_product
++
++
++* [mathjax enable]
++* linalg[meta header]
++* function template[meta id-type]
++* std::linalg[meta namespace]
++* cpp26[meta cpp]
++
++
++```cpp
++namespace std::linalg {
++  template&amp;lt;in-matrix InMat1,
++          in-matrix InMat2,
++          out-matrix OutMat&amp;gt;
++  void matrix_product(InMat1 A,
++                      InMat2 B,
++                      OutMat C); // (1)
++
++  template&amp;lt;class ExecutionPolicy,
++          in-matrix InMat1,
++          in-matrix InMat2,
++          out-matrix OutMat&amp;gt;
++  void matrix_product(ExecutionPolicy&amp;amp;&amp;amp; exec,
++                      InMat1 A,
++                      InMat2 B,
++                      OutMat C); // (2)
++
++  template&amp;lt;in-matrix InMat1,
++          in-matrix InMat2,
++          in-matrix InMat3,
++          out-matrix OutMat&amp;gt;
++  void matrix_product(InMat1 A,
++                      InMat2 B,
++                      InMat3 E,
++                      OutMat C); // (3)
++
++  template&amp;lt;class ExecutionPolicy,
++          in-matrix InMat1,
++          in-matrix InMat2,
++          in-matrix InMat3,
++          out-matrix OutMat&amp;gt;
++  void matrix_product(ExecutionPolicy&amp;amp;&amp;amp; exec,
++                      InMat1 A,
++                      InMat2 B,
++                      InMat3 E,
++                      OutMat C); // (4)
++}
++```
++
++
++## 概要
++行列同士の積を計算する。
++
++- (1): $C \leftarrow AB$
++- (2): (1)を指定された実行ポリシーで実行する。
++- (3): $C \leftarrow E + AB$
++- (4): (3)を指定された実行ポリシーで実行する。
++
++
++## 適格要件
++- (1), (2), (3), (4): [`possibly-multipliable`](possibly-multipliable.md)`&amp;lt;decltype(A), decltype(B), decltype(C)&amp;gt;()`が`true`
++- (3), (4): [`possibly-addable`](possibly-addable.md)`&amp;lt;decltype(E),decltype(E),decltype(C)&amp;gt;()`が`true`
++
++
++## 事前条件
++- (1), (2), (3), (4): [`multipliable`](multipliable.md)`(A, B, C) == true`
++- (3), (4): [`addable`](addable.md)`(E, E, C) == true`
++
++
++## 効果
++- (1), (2): $C \leftarrow AB$
++- (3), (4): $C \leftarrow E + AB$
++
++
++## 戻り値
++なし
++
++
++## 計算量
++$O(\verb|A.extent(0)| \times \verb|A.extent(1)| \times \verb|B.extent(1)|)$
++
++
++## 備考
++- (3), (4): `C`に`E`を入れても良い。
++
++
++## 例
++**[注意] 処理系にあるコンパイラで確認していないため、間違っているかもしれません。**
++
++```cpp example
++#include &amp;lt;array&amp;gt;
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;linalg&amp;gt;
++#include &amp;lt;mdspan&amp;gt;
++#include &amp;lt;vector&amp;gt;
++
++template &amp;lt;class Matrix&amp;gt;
++void print_mat(const Matrix&amp;amp; A) {
++  for(int i = 0; i &amp;lt; A.extent(0); ++i) {
++    for(int j = 0; j &amp;lt; A.extent(1) - 1; ++j) {
++      std::cout &amp;lt;&amp;lt; A[i, j] &amp;lt;&amp;lt; &amp;#39; &amp;#39;;
++    }
++    std::cout &amp;lt;&amp;lt; A[i, A.extent(1) - 1] &amp;lt;&amp;lt; &amp;#39;\n&amp;#39;;
++  }
++}
++
++template &amp;lt;class Matrix&amp;gt;
++void init_mat(Matrix&amp;amp; A) {
++  for(int i = 0; i &amp;lt; A.extent(0); ++i) {
++    for(int j = 0; j &amp;lt; A.extent(1); ++j) {
++      A[i, j] = i * A.extent(1) + j;
++    }
++  }
++}
++
++int main()
++{
++  constexpr size_t N = 2;
++
++  std::vector&amp;lt;double&amp;gt; A_vec(N * N);
++  std::vector&amp;lt;double&amp;gt; B_vec(N * N);
++  std::vector&amp;lt;double&amp;gt; C_vec(N * N);
++  std::vector&amp;lt;double&amp;gt; E_vec(N * N);
++
++  std::mdspan A(A_vec.data(), N, N);
++  std::mdspan B(B_vec.data(), N, N);
++  std::mdspan C(C_vec.data(), N, N);
++  std::mdspan E(E_vec.data(), N, N);
++
++  init_mat(A);
++  init_mat(B);
++  init_mat(E);
++
++  for(int i = 0; i &amp;lt; B.extent(0); ++i) {
++    for(int j = 0; j &amp;lt; B.extent(1); ++j) {
++      B[i, j] += 4;
++    }
++  }
++
++  // (1)
++  std::cout &amp;lt;&amp;lt; &amp;#34;(1)\n&amp;#34;;
++  std::linalg::matrix_product(A, B, C);
++  print_mat(C);
++
++  // (2)
++  std::cout &amp;lt;&amp;lt; &amp;#34;(2)\n&amp;#34;;
++  std::linalg::matrix_product(std::execution::par, A, B, C);
++  print_mat(C);
++
++  // (3)
++  std::cout &amp;lt;&amp;lt; &amp;#34;(3)\n&amp;#34;;
++  std::linalg::matrix_product(A, B, E, C);
++  print_mat(C);
++
++  // (4)
++  std::cout &amp;lt;&amp;lt; &amp;#34;(4)\n&amp;#34;;
++  std::linalg::matrix_product(std::execution::par, A, B, E, C);
++  print_mat(C);
++
++  return 0;
++}
++```
++
++
++### 出力
++```
++(1)
++6 7
++26 31
++(2)
++6 7
++26 31
++(3)
++6 8
++28 34
++(4)
++6 8
++28 34
++```
++
++
++## バージョン
++### 言語
++- C++26
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): ??
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 関連項目
++- [`execution`](/reference/execution.md)
++- [`mdspan`](/reference/mdspan.md)
++
++
++## 参照
++- [P1673R13 A free function linear algebra interface based on the BLAS](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p1673r13.html)
++- [LAPACK: gemm](https://netlib.org/lapack/explore-html/dd/d09/group__gemm.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Yuya Asano</name>
+        <email>64895419+sukeya@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>find -- fix sample to run</title>
@@ -1438,222 +2126,6 @@ C++ の標準規格は、他にも各国の規格化団体によって国際標�
 &lt;li&gt;&lt;a href=&#34;https://ja.wikipedia.org/wiki/ISO/IEC_JTC_1&#34; target=&#34;_blank&#34;&gt;ISO/IEC JTC 1 - Wikipedia&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;https://ja.wikipedia.org/wiki/ISO/IEC_JTC_1/SC_22&#34; target=&#34;_blank&#34;&gt;ISO/IEC JTC 1/SC 22 - Wikipedia&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>ends_with -- fix some typo</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_ends_with.html"/>
-      <id>978a5209978260fd9322904a799ad61d838e015a:reference/algorithm/ranges_ends_with.md</id>
-      <updated>2024-07-06T17:13:49+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_ends_with.md b/reference/algorithm/ranges_ends_with.md
-index 87d51752d..4ec8b780d 100644
---- a/reference/algorithm/ranges_ends_with.md
-+++ b/reference/algorithm/ranges_ends_with.md
-@@ -23,7 +23,7 @@ namespace std::ranges {
-               S2 last2,
-               Pred pred = {},
-               Proj1 proj1 = {},
--              Proj2 proj2 = {}); // (1) C++20
-+              Proj2 proj2 = {}); // (1) C++23
- 
-   template &amp;lt;input_range R1,
-             input_range R2,
-@@ -38,7 +38,7 @@ namespace std::ranges {
-               R2&amp;amp;&amp;amp; r2,
-               Pred pred = {},
-               Proj1 proj1 = {},
--              Proj2 proj2 = {}); // (2) C++20
-+              Proj2 proj2 = {}); // (2) C++23
- }
- ```
- * input_iterator[link /reference/iterator/input_iterator.md]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>shift_left -- fix some typo</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_shift_left.html"/>
-      <id>978a5209978260fd9322904a799ad61d838e015a:reference/algorithm/ranges_shift_left.md</id>
-      <updated>2024-07-06T17:13:49+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_shift_left.md b/reference/algorithm/ranges_shift_left.md
-index 7706f89d3..3a5556dec 100644
---- a/reference/algorithm/ranges_shift_left.md
-+++ b/reference/algorithm/ranges_shift_left.md
-@@ -11,13 +11,13 @@ namespace std::ranges {
-   constexpr subrange&amp;lt;I&amp;gt;
-     shift_left(I first,
-                S last,
--               iter_difference_t&amp;lt;I&amp;gt; n);  // (1) C++20
-+               iter_difference_t&amp;lt;I&amp;gt; n);  // (1) C++23
- 
-   template &amp;lt;forward_range R&amp;gt;
-     requires permutable&amp;lt;iterator_t&amp;lt;R&amp;gt;&amp;gt;
-   constexpr borrowed_subrange_t&amp;lt;R&amp;gt;
-     shift_left(R&amp;amp;&amp;amp; r,
--               range_difference_t&amp;lt;R&amp;gt; n); // (2) C++20
-+               range_difference_t&amp;lt;R&amp;gt; n); // (2) C++23
- }
- ```
- * permutable[link /reference/iterator/permutable.md]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>shift_right -- fix some typo</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_shift_right.html"/>
-      <id>978a5209978260fd9322904a799ad61d838e015a:reference/algorithm/ranges_shift_right.md</id>
-      <updated>2024-07-06T17:13:49+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_shift_right.md b/reference/algorithm/ranges_shift_right.md
-index 8ee0dabda..1a59d172c 100644
---- a/reference/algorithm/ranges_shift_right.md
-+++ b/reference/algorithm/ranges_shift_right.md
-@@ -11,13 +11,13 @@ namespace std::ranges {
-   constexpr subrange&amp;lt;I&amp;gt;
-     shift_right(I first,
-                 S last,
--                iter_difference_t&amp;lt;I&amp;gt; n); // (1) C++20
-+                iter_difference_t&amp;lt;I&amp;gt; n); // (1) C++23
- 
-   template &amp;lt;forward_range R&amp;gt;
-     requires permutable&amp;lt;iterator_t&amp;lt;R&amp;gt;&amp;gt;
-   constexpr borrowed_subrange_t&amp;lt;R&amp;gt;
-     shift_right(R&amp;amp;&amp;amp; r,
--                range_difference_t&amp;lt;R&amp;gt; n); // (2) C++20
-+                range_difference_t&amp;lt;R&amp;gt; n); // (2) C++23
- }
- ```
- * permutable[link /reference/iterator/permutable.md]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>starts_with -- fix some typo</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_starts_with.html"/>
-      <id>978a5209978260fd9322904a799ad61d838e015a:reference/algorithm/ranges_starts_with.md</id>
-      <updated>2024-07-06T17:13:49+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_starts_with.md b/reference/algorithm/ranges_starts_with.md
-index 42d002821..77cb580de 100644
---- a/reference/algorithm/ranges_starts_with.md
-+++ b/reference/algorithm/ranges_starts_with.md
-@@ -21,7 +21,7 @@ namespace std::ranges {
-                 S2 last2,
-                 Pred pred = {},
-                 Proj1 proj1 = {},
--                Proj2 proj2 = {}); // (1) C++20
-+                Proj2 proj2 = {}); // (1) C++23
- 
-   template &amp;lt;input_range R1,
-             input_range R2,
-@@ -34,7 +34,7 @@ namespace std::ranges {
-                 R2&amp;amp;&amp;amp; r2,
-                 Pred pred = {},
-                 Proj1 proj1 = {},
--                Proj2 proj2 = {}); // (2) C++20
-+                Proj2 proj2 = {}); // (2) C++23
- }
- ```
- * input_iterator[link /reference/iterator/input_iterator.md]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>デストラクタ -- fix some typo</title>
-      <link href="https://cpprefjp.github.io/reference/optional/optional/op_destructor.html"/>
-      <id>978a5209978260fd9322904a799ad61d838e015a:reference/optional/optional/op_destructor.md</id>
-      <updated>2024-07-06T17:13:49+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/optional/optional/op_destructor.md b/reference/optional/optional/op_destructor.md
-index f0df6a165..5175ecb3f 100644
---- a/reference/optional/optional/op_destructor.md
-+++ b/reference/optional/optional/op_destructor.md
-@@ -42,15 +42,21 @@ struct C {
- 
- int main()
- {
--  std::optional&amp;lt;A&amp;gt; a;
--  std::optional&amp;lt;B&amp;gt; b;
--  std::optional&amp;lt;C&amp;gt; c;
--
--  std::optional&amp;lt;int&amp;gt; opt_int;
--} // Aのデストラクタが呼ばれる
--  // Bのデストラクタは呼ばれない
--  // Cのデストラクタは呼ばれる
--  // opt_intのデストラクタは呼ばれない
-+  {
-+    std::optional&amp;lt;A&amp;gt; a = std::make_optional&amp;lt;A&amp;gt;();
-+    std::optional&amp;lt;B&amp;gt; b = std::make_optional&amp;lt;B&amp;gt;();
-+    std::optional&amp;lt;C&amp;gt; c = std::make_optional&amp;lt;C&amp;gt;();
-+
-+    std::optional&amp;lt;int&amp;gt; opt_int = 1;
-+  } // Aのデストラクタが呼ばれる
-+    // Bのデストラクタは呼ばれない
-+    // Cのデストラクタは呼ばれる
-+    // opt_intのデストラクタは呼ばれない
-+
-+  {
-+    std::optional&amp;lt;A&amp;gt; a_null;
-+  } // Aのデストラクタは呼ばれない
-+}
- ```
- 
- ### 出力
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>tuple_cat -- fix some typo</title>
-      <link href="https://cpprefjp.github.io/reference/tuple/tuple_cat.html"/>
-      <id>978a5209978260fd9322904a799ad61d838e015a:reference/tuple/tuple_cat.md</id>
-      <updated>2024-07-06T17:13:49+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/tuple/tuple_cat.md b/reference/tuple/tuple_cat.md
-index f446c9d23..f4fa33b6d 100644
---- a/reference/tuple/tuple_cat.md
-+++ b/reference/tuple/tuple_cat.md
-@@ -44,7 +44,7 @@ namespace std {
- 
- 
- ## 戻り値
--`Tuples...`の全ての`tuple`型の要素型全てを取り出し、`std::`[`forward`](/reference/utility/forward.md)`&amp;lt;T&amp;gt;(x)`して構築される1つの[`tuple`](tuple.md)`オブジェクト。
-+`Tuples...`の全ての`tuple`型の要素型全てを取り出し、`std::`[`forward`](/reference/utility/forward.md)`&amp;lt;T&amp;gt;(x)`して構築される1つの[`tuple`](tuple.md)オブジェクト。
- 
- 
- ## 備考
-&lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
         <name>suomesta</name>
