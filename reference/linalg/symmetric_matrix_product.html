@@ -28,11 +28,11 @@
         <meta property="og:url" content="https://cpprefjp.github.io/reference/linalg/symmetric_matrix_product.html" />
         <meta property="og:site_name" content="cpprefjp - C++日本語リファレンス" />
         <meta property="og:type" content="article" />
-        <meta property="og:description" content="行列同士の積を計算する。" />
+        <meta property="og:description" content="対称行列と行列の積を計算する。" />
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:title" content="symmetric_matrix_product - cpprefjp C++日本語リファレンス" />
         <meta name="twitter:url" content="https://cpprefjp.github.io/reference/linalg/symmetric_matrix_product.html" />
-        <meta name="twitter:description" content="行列同士の積を計算する。" />
+        <meta name="twitter:description" content="対称行列と行列の積を計算する。" />
 
         
   <link rel="alternate" type="application/atom+xml" title="Atom" href="https://cpprefjp.github.io/rss.xml" />
@@ -84,7 +84,7 @@
 
     </head>
     <body>
-<header data-kunai-mdinfo="{&#34;meta&#34;: {&#34;header&#34;: [&#34;linalg&#34;], &#34;id-type&#34;: [&#34;function template&#34;], &#34;namespace&#34;: [&#34;std::linalg&#34;], &#34;cpp&#34;: [&#34;cpp26&#34;]}, &#34;sources&#34;: [{&#34;id&#34;: &#34;3a4cc7b5a77043cdab29407f3bb3fb34e9a38d8d&#34;, &#34;source&#34;: &#34;#include &lt;array&gt;\n#include &lt;iostream&gt;\n#include &lt;linalg&gt;\n#include &lt;mdspan&gt;\n#include &lt;vector&gt;\n\ntemplate &lt;class Matrix&gt;\nvoid print_mat(const Matrix&amp; A) {\n  for(int i = 0; i &lt; A.extent(0); ++i) {\n    for(int j = 0; j &lt; A.extent(1) - 1; ++j) {\n      std::cout &lt;&lt; A[i, j] &lt;&lt; &#39; &#39;;\n    }\n    std::cout &lt;&lt; A[i, A.extent(1) - 1] &lt;&lt; &#39;\\n&#39;;\n  }\n}\n\ntemplate &lt;class Matrix&gt;\nvoid init_mat(Matrix&amp; A, typename Matrix::value_type geta = 1) {\n  for(int i = 0; i &lt; A.extent(0); ++i) {\n    for(int j = 0; j &lt; A.extent(1); ++j) {\n      A[i, j] = i * A.extent(1) + j + geta;\n    }\n  }\n}\n\ntemplate &lt;class Matrix&gt;\nvoid init_symm_mat(Matrix&amp; A) {\n  for(int i = 0; i &lt; A.extent(0); ++i) {\n    for(int j = i; j &lt; A.extent(1); ++j) {\n      A[i, j] = i * A.extent(1) + j;\n    }\n  }\n}\n\nint main()\n{\n  constexpr size_t N = 2;\n\n  std::vector&lt;double&gt; A_vec(N * N);\n  std::vector&lt;double&gt; B_vec(N * N);\n  std::vector&lt;double&gt; C_vec(N * N);\n  std::vector&lt;double&gt; E_vec(N * N);\n\n  std::mdspan C(C_vec.data(), N, N);\n  std::mdspan E(E_vec.data(), N, N);\n\n  init_mat(E, N * N);\n\n  {\n    std::mdspan&lt;\n      double,\n      std::extents&lt;size_t, N, N&gt;,\n      std::linalg::layout_blas_packed&lt;\n        std::linalg::upper_triangle_t,\n        std::linalg::row_major_t&gt;\n    &gt; A(A_vec.data());\n    std::mdspan B(B_vec.data(), N, N);\n\n    init_symm_mat(A);\n    init_mat(B);\n\n    // (1)\n    std::cout &lt;&lt; \&#34;(1)\\n\&#34;;\n    std::linalg::symmetric_matrix_product(A, std::linalg::upper_triangle, B, C);\n    print_mat(C);\n\n    // (2)\n    std::cout &lt;&lt; \&#34;(2)\\n\&#34;;\n    std::linalg::symmetric_matrix_product(std::execution::par, A, std::linalg::upper_triangle, B, C);\n    print_mat(C);\n  }\n\n  {\n    std::mdspan A(A_vec.data(), N, N);\n    std::mdspan&lt;\n      double,\n      std::extents&lt;size_t, N, N&gt;,\n      std::linalg::layout_blas_packed&lt;\n        std::linalg::upper_triangle_t,\n        std::linalg::row_major_t&gt;\n    &gt; B(B_vec.data());\n\n    init_mat(A);\n    init_symm_mat(B);\n\n    // (3)\n    std::cout &lt;&lt; \&#34;(3)\\n\&#34;;\n    std::linalg::symmetric_matrix_product(A, B, std::linalg::upper_triangle, C);\n    print_mat(C);\n\n    // (4)\n    std::cout &lt;&lt; \&#34;(4)\\n\&#34;;\n    std::linalg::symmetric_matrix_product(std::execution::par, A, B, std::linalg::upper_triangle, C);\n    print_mat(C);\n  }\n\n  {\n    std::mdspan&lt;\n      double,\n      std::extents&lt;size_t, N, N&gt;,\n      std::linalg::layout_blas_packed&lt;\n        std::linalg::upper_triangle_t,\n        std::linalg::row_major_t&gt;\n    &gt; A(A_vec.data());\n    std::mdspan B(B_vec.data(), N, N);\n\n    init_symm_mat(A);\n    init_mat(B);\n\n    // (5)\n    std::cout &lt;&lt; \&#34;(5)\\n\&#34;;\n    std::linalg::symmetric_matrix_product(A, std::linalg::upper_triangle, B, E, C);\n    print_mat(C);\n\n    // (6)\n    std::cout &lt;&lt; \&#34;(6)\\n\&#34;;\n    std::linalg::symmetric_matrix_product(std::execution::par, A, std::linalg::upper_triangle, B, E, C);\n    print_mat(C);\n  }\n\n  {\n    std::mdspan A(A_vec.data(), N, N);\n    std::mdspan&lt;\n      double,\n      std::extents&lt;size_t, N, N&gt;,\n      std::linalg::layout_blas_packed&lt;\n        std::linalg::upper_triangle_t,\n        std::linalg::row_major_t&gt;\n    &gt; B(B_vec.data());\n\n    init_mat(A);\n    init_symm_mat(B);\n\n    // (7)\n    std::cout &lt;&lt; \&#34;(7)\\n\&#34;;\n    std::linalg::symmetric_matrix_product(A, B, std::linalg::upper_triangle, E, C);\n    print_mat(C);\n\n    // (8)\n    std::cout &lt;&lt; \&#34;(8)\\n\&#34;;\n    std::linalg::symmetric_matrix_product(std::execution::par, A, B, std::linalg::upper_triangle, E, C);\n    print_mat(C);\n  }\n\n  return 0;\n}\n&#34;}], &#34;page_id&#34;: [&#34;reference&#34;, &#34;linalg&#34;, &#34;symmetric_matrix_product&#34;]}">
+<header data-kunai-mdinfo="{&#34;meta&#34;: {&#34;header&#34;: [&#34;linalg&#34;], &#34;id-type&#34;: [&#34;function template&#34;], &#34;namespace&#34;: [&#34;std::linalg&#34;], &#34;cpp&#34;: [&#34;cpp26&#34;]}, &#34;sources&#34;: [{&#34;id&#34;: &#34;cd5925c11c104c712f17a5d0fb005b41e6ad6b7b&#34;, &#34;source&#34;: &#34;#include &lt;array&gt;\n#include &lt;iostream&gt;\n#include &lt;linalg&gt;\n#include &lt;mdspan&gt;\n#include &lt;vector&gt;\n\ntemplate &lt;class Matrix&gt;\nvoid print_mat(const Matrix&amp; A) {\n  for(int i = 0; i &lt; A.extent(0); ++i) {\n    for(int j = 0; j &lt; A.extent(1) - 1; ++j) {\n      std::cout &lt;&lt; A[i, j] &lt;&lt; &#39; &#39;;\n    }\n    std::cout &lt;&lt; A[i, A.extent(1) - 1] &lt;&lt; &#39;\\n&#39;;\n  }\n}\n\ntemplate &lt;class Matrix&gt;\nvoid init_mat(Matrix&amp; A, typename Matrix::value_type geta = 1) {\n  for(int i = 0; i &lt; A.extent(0); ++i) {\n    for(int j = 0; j &lt; A.extent(1); ++j) {\n      A[i, j] = i * A.extent(1) + j + geta;\n    }\n  }\n}\n\ntemplate &lt;class Matrix&gt;\nvoid init_symm_mat(Matrix&amp; A) {\n  for(int i = 0; i &lt; A.extent(0); ++i) {\n    for(int j = i; j &lt; A.extent(1); ++j) {\n      A[i, j] = i * A.extent(1) + j;\n    }\n  }\n}\n\nint main()\n{\n  constexpr size_t N = 2;\n\n  using Scalar = double;\n  using Vector = std::vector&lt;Scalar&gt;;\n  using SymmetricMatrix = std::mdspan&lt;\n      Scalar,\n      std::extents&lt;size_t, N, N&gt;,\n      std::linalg::layout_blas_packed&lt;\n        std::linalg::upper_triangle_t,\n        std::linalg::row_major_t&gt;\n    &gt;;\n\n  Vector A_vec(N * N);\n  Vector B_vec(N * N);\n  Vector C_vec(N * N);\n  Vector E_vec(N * N);\n\n  std::mdspan C(C_vec.data(), N, N);\n  std::mdspan E(E_vec.data(), N, N);\n\n  init_mat(E, N * N);\n\n  {\n    SymmetricMatrix A(A_vec.data());\n    std::mdspan     B(B_vec.data(), N, N);\n\n    init_symm_mat(A);\n    init_mat(B);\n\n    // (1)\n    std::cout &lt;&lt; \&#34;(1)\\n\&#34;;\n    std::linalg::symmetric_matrix_product(A, std::linalg::upper_triangle, B, C);\n    print_mat(C);\n\n    // (2)\n    std::cout &lt;&lt; \&#34;(2)\\n\&#34;;\n    std::linalg::symmetric_matrix_product(std::execution::par, A, std::linalg::upper_triangle, B, C);\n    print_mat(C);\n  }\n\n  {\n    std::mdspan     A(A_vec.data(), N, N);\n    SymmetricMatrix B(B_vec.data());\n\n    init_mat(A);\n    init_symm_mat(B);\n\n    // (3)\n    std::cout &lt;&lt; \&#34;(3)\\n\&#34;;\n    std::linalg::symmetric_matrix_product(A, B, std::linalg::upper_triangle, C);\n    print_mat(C);\n\n    // (4)\n    std::cout &lt;&lt; \&#34;(4)\\n\&#34;;\n    std::linalg::symmetric_matrix_product(std::execution::par, A, B, std::linalg::upper_triangle, C);\n    print_mat(C);\n  }\n\n  {\n    SymmetricMatrix A(A_vec.data());\n    std::mdspan     B(B_vec.data(), N, N);\n\n    init_symm_mat(A);\n    init_mat(B);\n\n    // (5)\n    std::cout &lt;&lt; \&#34;(5)\\n\&#34;;\n    std::linalg::symmetric_matrix_product(A, std::linalg::upper_triangle, B, E, C);\n    print_mat(C);\n\n    // (6)\n    std::cout &lt;&lt; \&#34;(6)\\n\&#34;;\n    std::linalg::symmetric_matrix_product(std::execution::par, A, std::linalg::upper_triangle, B, E, C);\n    print_mat(C);\n  }\n\n  {\n    std::mdspan     A(A_vec.data(), N, N);\n    SymmetricMatrix B(B_vec.data());\n\n    init_mat(A);\n    init_symm_mat(B);\n\n    // (7)\n    std::cout &lt;&lt; \&#34;(7)\\n\&#34;;\n    std::linalg::symmetric_matrix_product(A, B, std::linalg::upper_triangle, E, C);\n    print_mat(C);\n\n    // (8)\n    std::cout &lt;&lt; \&#34;(8)\\n\&#34;;\n    std::linalg::symmetric_matrix_product(std::execution::par, A, B, std::linalg::upper_triangle, E, C);\n    print_mat(C);\n  }\n\n  return 0;\n}\n&#34;}], &#34;page_id&#34;: [&#34;reference&#34;, &#34;linalg&#34;, &#34;symmetric_matrix_product&#34;]}">
   <nav class="navbar navbar-default" role="navigation">
     <div class="container-fluid">
       <div class="navbar-header">
@@ -204,8 +204,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2024-07-09T06:05:05">
-        2024年07月09日 06時05分05秒
+      <span itemprop="datePublished" content="2024-07-10T06:46:47">
+        2024年07月10日 06時46分47秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -329,7 +329,7 @@
 </code></pre></div>
 </p>
 <h2>概要</h2>
-<p>行列同士の積を計算する。</p>
+<p>対称行列と行列の積を計算する。</p>
 <ul>
 <li>(1): 対称行列<code>A</code>と行列<code>B</code>に対し、$C \leftarrow AB$</li>
 <li>(2): (1)を指定された実行ポリシーで実行する。</li>
@@ -345,11 +345,14 @@
 <li>共通</li>
 <li><code>Triangle</code>は<code><a href="upper_triangle_t.html">upper_triangle_t</a></code>または<code><a href="lower_triangle_t.html">lower_triangle_t</a></code></li>
 <li><code><a href="possibly-multipliable.html">possibly-multipliable</a>&lt;decltype(A), decltype(B), decltype(C)&gt;()</code>が<code>true</code></li>
-<li>(1), (2), (5), (6): <code>InMat1</code>(<code>A</code>の型)が<code><a href="layout_blas_packed.html">layout_blas_packed</a></code>を持つなら、レイアウトの<code>Triangle</code>テンプレート引数とこの関数の<code>Triangle</code>テンプレート引数が同じ型</li>
-<li>(1), (2), (5), (6): <code><a href="compatible-static-extents.html">compatible-static-extents</a>&lt;decltype(A), decltype(A)&gt;(0, 1)</code>が<code>true</code> (つまり<code>A</code>が正方行列であること)</li>
-<li>(3), (4), (7), (8): <code>InMat2</code>(<code>B</code>の型)が<code><a href="layout_blas_packed.html">layout_blas_packed</a></code>を持つなら、レイアウトの<code>Triangle</code>テンプレート引数とこの関数の<code>Triangle</code>テンプレート引数が同じ型</li>
-<li>(3), (4), (7), (8): <code><a href="compatible-static-extents.html">compatible-static-extents</a>&lt;decltype(B), decltype(B)&gt;(0, 1)</code>が<code>true</code> (つまり<code>B</code>が正方行列であること)</li>
+<li>(1), (2), (5), (6):</li>
+<li><code>InMat1</code>(<code>A</code>の型)が<code><a href="layout_blas_packed.html">layout_blas_packed</a></code>を持つなら、レイアウトの<code>Triangle</code>テンプレート引数とこの関数の<code>Triangle</code>テンプレート引数が同じ型</li>
+<li><code><a href="compatible-static-extents.html">compatible-static-extents</a>&lt;decltype(A), decltype(A)&gt;(0, 1)</code>が<code>true</code> (つまり<code>A</code>が正方行列であること)</li>
+<li>(3), (4), (7), (8):</li>
+<li><code>InMat2</code>(<code>B</code>の型)が<code><a href="layout_blas_packed.html">layout_blas_packed</a></code>を持つなら、レイアウトの<code>Triangle</code>テンプレート引数とこの関数の<code>Triangle</code>テンプレート引数が同じ型</li>
+<li><code><a href="compatible-static-extents.html">compatible-static-extents</a>&lt;decltype(B), decltype(B)&gt;(0, 1)</code>が<code>true</code> (つまり<code>B</code>が正方行列であること)</li>
 <li>(5), (6), (7), (8): <code><a href="possibly-addable.html">possibly-addable</a>&lt;decltype(E),decltype(E),decltype(C)&gt;()</code>が<code>true</code></li>
+<li>(2), (4), (6), (8): <code><a href="../execution/is_execution_policy.html">is_execution_policy</a>&lt;ExecutionPolicy&gt;::value</code>が<code>true</code></li>
 </ul>
 <h2>事前条件</h2>
 <ul>
@@ -376,7 +379,7 @@
 </ul>
 <h2>例</h2>
 <p><strong>[注意] 処理系にあるコンパイラで確認していないため、間違っているかもしれません。</strong></p>
-<p><div class="yata" id="3a4cc7b5a77043cdab29407f3bb3fb34e9a38d8d"><div class="codehilite"><pre><span></span><code><span class="cp">#include</span> <span class="cpf"><a href="../array.html">&lt;array&gt;</a></span><span class="cp"></span>
+<p><div class="yata" id="cd5925c11c104c712f17a5d0fb005b41e6ad6b7b"><div class="codehilite"><pre><span></span><code><span class="cp">#include</span> <span class="cpf"><a href="../array.html">&lt;array&gt;</a></span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf"><a href="../iostream.html">&lt;iostream&gt;</a></span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf"><a href="../linalg.html">&lt;linalg&gt;</a></span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf"><a href="../mdspan.html">&lt;mdspan&gt;</a></span><span class="cp"></span>
@@ -414,10 +417,20 @@
 <span class="p">{</span>
   <span class="k">constexpr</span> <span class="kt">size_t</span> <span class="n">N</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
 
-  <span class="n"><a href="../vector/vector.html">std::vector</a></span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">A_vec</span><span class="p">(</span><span class="n">N</span> <span class="o">*</span> <span class="n">N</span><span class="p">);</span>
-  <span class="n"><a href="../vector/vector.html">std::vector</a></span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">B_vec</span><span class="p">(</span><span class="n">N</span> <span class="o">*</span> <span class="n">N</span><span class="p">);</span>
-  <span class="n"><a href="../vector/vector.html">std::vector</a></span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">C_vec</span><span class="p">(</span><span class="n">N</span> <span class="o">*</span> <span class="n">N</span><span class="p">);</span>
-  <span class="n"><a href="../vector/vector.html">std::vector</a></span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">E_vec</span><span class="p">(</span><span class="n">N</span> <span class="o">*</span> <span class="n">N</span><span class="p">);</span>
+  <span class="k">using</span> <span class="n">Scalar</span> <span class="o">=</span> <span class="kt">double</span><span class="p">;</span>
+  <span class="k">using</span> <span class="n">Vector</span> <span class="o">=</span> <span class="n"><a href="../vector/vector.html">std::vector</a></span><span class="o">&lt;</span><span class="n">Scalar</span><span class="o">&gt;</span><span class="p">;</span>
+  <span class="k">using</span> <span class="n">SymmetricMatrix</span> <span class="o">=</span> <span class="n"><a href="../mdspan/mdspan.html">std::mdspan</a></span><span class="o">&lt;</span>
+      <span class="n">Scalar</span><span class="p">,</span>
+      <span class="n"><a href="../mdspan/extents.html">std::extents</a></span><span class="o">&lt;</span><span class="kt">size_t</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="o">&gt;</span><span class="p">,</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">layout_blas_packed</span><span class="o">&lt;</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">upper_triangle_t</span><span class="p">,</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">row_major_t</span><span class="o">&gt;</span>
+    <span class="o">&gt;</span><span class="p">;</span>
+
+  <span class="n">Vector</span> <span class="nf">A_vec</span><span class="p">(</span><span class="n">N</span> <span class="o">*</span> <span class="n">N</span><span class="p">);</span>
+  <span class="n">Vector</span> <span class="nf">B_vec</span><span class="p">(</span><span class="n">N</span> <span class="o">*</span> <span class="n">N</span><span class="p">);</span>
+  <span class="n">Vector</span> <span class="nf">C_vec</span><span class="p">(</span><span class="n">N</span> <span class="o">*</span> <span class="n">N</span><span class="p">);</span>
+  <span class="n">Vector</span> <span class="nf">E_vec</span><span class="p">(</span><span class="n">N</span> <span class="o">*</span> <span class="n">N</span><span class="p">);</span>
 
   <span class="n"><a href="../mdspan/mdspan.html">std::mdspan</a></span> <span class="nf">C</span><span class="p">(</span><span class="n">C_vec</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">);</span>
   <span class="n"><a href="../mdspan/mdspan.html">std::mdspan</a></span> <span class="nf">E</span><span class="p">(</span><span class="n">E_vec</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">);</span>
@@ -425,14 +438,8 @@
   <span class="n">init_mat</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">N</span> <span class="o">*</span> <span class="n">N</span><span class="p">);</span>
 
   <span class="p">{</span>
-    <span class="n"><a href="../mdspan/mdspan.html">std::mdspan</a></span><span class="o">&lt;</span>
-      <span class="kt">double</span><span class="p">,</span>
-      <span class="n"><a href="../mdspan/extents.html">std::extents</a></span><span class="o">&lt;</span><span class="kt">size_t</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="o">&gt;</span><span class="p">,</span>
-      <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">layout_blas_packed</span><span class="o">&lt;</span>
-        <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">upper_triangle_t</span><span class="p">,</span>
-        <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">row_major_t</span><span class="o">&gt;</span>
-    <span class="o">&gt;</span> <span class="n">A</span><span class="p">(</span><span class="n">A_vec</span><span class="p">.</span><span class="n">data</span><span class="p">());</span>
-    <span class="n"><a href="../mdspan/mdspan.html">std::mdspan</a></span> <span class="nf">B</span><span class="p">(</span><span class="n">B_vec</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">);</span>
+    <span class="n">SymmetricMatrix</span> <span class="n">A</span><span class="p">(</span><span class="n">A_vec</span><span class="p">.</span><span class="n">data</span><span class="p">());</span>
+    <span class="n"><a href="../mdspan/mdspan.html">std::mdspan</a></span>     <span class="nf">B</span><span class="p">(</span><span class="n">B_vec</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">);</span>
 
     <span class="n">init_symm_mat</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>
     <span class="n">init_mat</span><span class="p">(</span><span class="n">B</span><span class="p">);</span>
@@ -449,14 +456,8 @@
   <span class="p">}</span>
 
   <span class="p">{</span>
-    <span class="n"><a href="../mdspan/mdspan.html">std::mdspan</a></span> <span class="n">A</span><span class="p">(</span><span class="n">A_vec</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">);</span>
-    <span class="n"><a href="../mdspan/mdspan.html">std::mdspan</a></span><span class="o">&lt;</span>
-      <span class="kt">double</span><span class="p">,</span>
-      <span class="n"><a href="../mdspan/extents.html">std::extents</a></span><span class="o">&lt;</span><span class="kt">size_t</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="o">&gt;</span><span class="p">,</span>
-      <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">layout_blas_packed</span><span class="o">&lt;</span>
-        <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">upper_triangle_t</span><span class="p">,</span>
-        <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">row_major_t</span><span class="o">&gt;</span>
-    <span class="o">&gt;</span> <span class="n">B</span><span class="p">(</span><span class="n">B_vec</span><span class="p">.</span><span class="n">data</span><span class="p">());</span>
+    <span class="n"><a href="../mdspan/mdspan.html">std::mdspan</a></span>     <span class="n">A</span><span class="p">(</span><span class="n">A_vec</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">);</span>
+    <span class="n">SymmetricMatrix</span> <span class="nf">B</span><span class="p">(</span><span class="n">B_vec</span><span class="p">.</span><span class="n">data</span><span class="p">());</span>
 
     <span class="n">init_mat</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>
     <span class="n">init_symm_mat</span><span class="p">(</span><span class="n">B</span><span class="p">);</span>
@@ -473,14 +474,8 @@
   <span class="p">}</span>
 
   <span class="p">{</span>
-    <span class="n"><a href="../mdspan/mdspan.html">std::mdspan</a></span><span class="o">&lt;</span>
-      <span class="kt">double</span><span class="p">,</span>
-      <span class="n"><a href="../mdspan/extents.html">std::extents</a></span><span class="o">&lt;</span><span class="kt">size_t</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="o">&gt;</span><span class="p">,</span>
-      <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">layout_blas_packed</span><span class="o">&lt;</span>
-        <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">upper_triangle_t</span><span class="p">,</span>
-        <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">row_major_t</span><span class="o">&gt;</span>
-    <span class="o">&gt;</span> <span class="n">A</span><span class="p">(</span><span class="n">A_vec</span><span class="p">.</span><span class="n">data</span><span class="p">());</span>
-    <span class="n"><a href="../mdspan/mdspan.html">std::mdspan</a></span> <span class="nf">B</span><span class="p">(</span><span class="n">B_vec</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">);</span>
+    <span class="n">SymmetricMatrix</span> <span class="n">A</span><span class="p">(</span><span class="n">A_vec</span><span class="p">.</span><span class="n">data</span><span class="p">());</span>
+    <span class="n"><a href="../mdspan/mdspan.html">std::mdspan</a></span>     <span class="nf">B</span><span class="p">(</span><span class="n">B_vec</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">);</span>
 
     <span class="n">init_symm_mat</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>
     <span class="n">init_mat</span><span class="p">(</span><span class="n">B</span><span class="p">);</span>
@@ -497,14 +492,8 @@
   <span class="p">}</span>
 
   <span class="p">{</span>
-    <span class="n"><a href="../mdspan/mdspan.html">std::mdspan</a></span> <span class="n">A</span><span class="p">(</span><span class="n">A_vec</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">);</span>
-    <span class="n"><a href="../mdspan/mdspan.html">std::mdspan</a></span><span class="o">&lt;</span>
-      <span class="kt">double</span><span class="p">,</span>
-      <span class="n"><a href="../mdspan/extents.html">std::extents</a></span><span class="o">&lt;</span><span class="kt">size_t</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="o">&gt;</span><span class="p">,</span>
-      <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">layout_blas_packed</span><span class="o">&lt;</span>
-        <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">upper_triangle_t</span><span class="p">,</span>
-        <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">row_major_t</span><span class="o">&gt;</span>
-    <span class="o">&gt;</span> <span class="n">B</span><span class="p">(</span><span class="n">B_vec</span><span class="p">.</span><span class="n">data</span><span class="p">());</span>
+    <span class="n"><a href="../mdspan/mdspan.html">std::mdspan</a></span>     <span class="n">A</span><span class="p">(</span><span class="n">A_vec</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">);</span>
+    <span class="n">SymmetricMatrix</span> <span class="nf">B</span><span class="p">(</span><span class="n">B_vec</span><span class="p">.</span><span class="n">data</span><span class="p">());</span>
 
     <span class="n">init_mat</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>
     <span class="n">init_symm_mat</span><span class="p">(</span><span class="n">B</span><span class="p">);</span>

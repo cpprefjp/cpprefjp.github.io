@@ -16,23 +16,23 @@
 
         <meta charset="UTF-8">
 
-        <title>hermitian_matrix_product - cpprefjp C++日本語リファレンス</title>
+        <title>triangular_matrix_product - cpprefjp C++日本語リファレンス</title>
 
         <meta name="viewport" content="width=device-width,initial-scale=1">
         <meta name="keywords" content="
   C++,標準ライブラリ,リファレンス,ドキュメント,STL,std,linalg,function template,std::linalg,cpp26
 ">
-        <meta name="title" content="hermitian_matrix_product - cpprefjp C++日本語リファレンス" />
-        <meta itemprop="name" content="hermitian_matrix_product - cpprefjp C++日本語リファレンス" />
-        <meta property="og:title" content="hermitian_matrix_product - cpprefjp C++日本語リファレンス" />
-        <meta property="og:url" content="https://cpprefjp.github.io/reference/linalg/hermitian_matrix_product.html" />
+        <meta name="title" content="triangular_matrix_product - cpprefjp C++日本語リファレンス" />
+        <meta itemprop="name" content="triangular_matrix_product - cpprefjp C++日本語リファレンス" />
+        <meta property="og:title" content="triangular_matrix_product - cpprefjp C++日本語リファレンス" />
+        <meta property="og:url" content="https://cpprefjp.github.io/reference/linalg/triangular_matrix_product.html" />
         <meta property="og:site_name" content="cpprefjp - C++日本語リファレンス" />
         <meta property="og:type" content="article" />
-        <meta property="og:description" content="エルミート行列と行列の積を計算する。" />
+        <meta property="og:description" content="三角行列と行列の積を計算する。" />
         <meta name="twitter:card" content="summary" />
-        <meta name="twitter:title" content="hermitian_matrix_product - cpprefjp C++日本語リファレンス" />
-        <meta name="twitter:url" content="https://cpprefjp.github.io/reference/linalg/hermitian_matrix_product.html" />
-        <meta name="twitter:description" content="エルミート行列と行列の積を計算する。" />
+        <meta name="twitter:title" content="triangular_matrix_product - cpprefjp C++日本語リファレンス" />
+        <meta name="twitter:url" content="https://cpprefjp.github.io/reference/linalg/triangular_matrix_product.html" />
+        <meta name="twitter:description" content="三角行列と行列の積を計算する。" />
 
         
   <link rel="alternate" type="application/atom+xml" title="Atom" href="https://cpprefjp.github.io/rss.xml" />
@@ -84,7 +84,7 @@
 
     </head>
     <body>
-<header data-kunai-mdinfo="{&#34;meta&#34;: {&#34;header&#34;: [&#34;linalg&#34;], &#34;id-type&#34;: [&#34;function template&#34;], &#34;namespace&#34;: [&#34;std::linalg&#34;], &#34;cpp&#34;: [&#34;cpp26&#34;]}, &#34;sources&#34;: [{&#34;id&#34;: &#34;e3fd001c96cc8429940ed20f485eba3bfe66deae&#34;, &#34;source&#34;: &#34;#include &lt;array&gt;\n#include &lt;complex&gt;\n#include &lt;iostream&gt;\n#include &lt;linalg&gt;\n#include &lt;mdspan&gt;\n#include &lt;vector&gt;\n\ntemplate &lt;class Matrix&gt;\nvoid print_mat(const Matrix&amp; A) {\n  for(int i = 0; i &lt; A.extent(0); ++i) {\n    for(int j = 0; j &lt; A.extent(1) - 1; ++j) {\n      std::cout &lt;&lt; A[i, j] &lt;&lt; &#39; &#39;;\n    }\n    std::cout &lt;&lt; A[i, A.extent(1) - 1] &lt;&lt; &#39;\\n&#39;;\n  }\n}\n\ntemplate &lt;class Matrix&gt;\nvoid init_mat(Matrix&amp; A, typename Matrix::value_type geta = 0) {\n  for(int i = 0; i &lt; A.extent(0); ++i) {\n    for(int j = 0; j &lt; A.extent(1); ++j) {\n      A[i, j] = std::complex&lt;double&gt;(i + geta, j + geta);\n    }\n  }\n}\n\ntemplate &lt;class Matrix&gt;\nvoid init_herm_mat(Matrix&amp; A) {\n  for(int i = 0; i &lt; A.extent(0); ++i) {\n    A[i, i] = std::complex&lt;double&gt;(i, 0);\n    for(int j = i + 1; j &lt; A.extent(1); ++j) {\n      A[i, j] = std::complex&lt;double&gt;(i, j);\n    }\n  }\n}\n\nint main()\n{\n  constexpr size_t N = 2;\n\n  using Scalar = std::complex&lt;double&gt;;\n  using Vector = std::vector&lt;Scalar&gt;;\n  using HermitianMatrix = std::mdspan&lt;\n      Scalar,\n      std::extents&lt;size_t, N, N&gt;,\n      std::linalg::layout_blas_packed&lt;\n        std::linalg::upper_triangle_t,\n        std::linalg::row_major_t&gt;\n    &gt;;\n\n  Vector A_vec(N * N);\n  Vector B_vec(N * N);\n  Vector C_vec(N * N);\n  Vector E_vec(N * N);\n\n  std::mdspan C(C_vec.data(), N, N);\n  std::mdspan E(E_vec.data(), N, N);\n\n  init_mat(E, N * N);\n\n  {\n    HermitianMatrix A(A_vec.data());\n    std::mdspan     B(B_vec.data(), N, N);\n\n    init_herm_mat(A);\n    init_mat(B);\n\n    // (1)\n    std::cout &lt;&lt; \&#34;(1)\\n\&#34;;\n    std::linalg::hermitian_matrix_product(A, std::linalg::upper_triangle, B, C);\n    print_mat(C);\n\n    // (2)\n    std::cout &lt;&lt; \&#34;(2)\\n\&#34;;\n    std::linalg::hermitian_matrix_product(std::execution::par, A, std::linalg::upper_triangle, B, C);\n    print_mat(C);\n  }\n\n  {\n    std::mdspan     A(A_vec.data(), N, N);\n    HermitianMatrix B(B_vec.data());\n\n    init_mat(A);\n    init_herm_mat(B);\n\n    // (3)\n    std::cout &lt;&lt; \&#34;(3)\\n\&#34;;\n    std::linalg::hermitian_matrix_product(A, B, std::linalg::upper_triangle, C);\n    print_mat(C);\n\n    // (4)\n    std::cout &lt;&lt; \&#34;(4)\\n\&#34;;\n    std::linalg::hermitian_matrix_product(std::execution::par, A, B, std::linalg::upper_triangle, C);\n    print_mat(C);\n  }\n\n  {\n    HermitianMatrix A(A_vec.data());\n    std::mdspan     B(B_vec.data(), N, N);\n\n    init_herm_mat(A);\n    init_mat(B);\n\n    // (5)\n    std::cout &lt;&lt; \&#34;(5)\\n\&#34;;\n    std::linalg::hermitian_matrix_product(A, std::linalg::upper_triangle, B, E, C);\n    print_mat(C);\n\n    // (6)\n    std::cout &lt;&lt; \&#34;(6)\\n\&#34;;\n    std::linalg::hermitian_matrix_product(std::execution::par, A, std::linalg::upper_triangle, B, E, C);\n    print_mat(C);\n  }\n\n  {\n    std::mdspan     A(A_vec.data(), N, N);\n    HermitianMatrix B(B_vec.data());\n\n    init_mat(A);\n    init_herm_mat(B);\n\n    // (7)\n    std::cout &lt;&lt; \&#34;(7)\\n\&#34;;\n    std::linalg::hermitian_matrix_product(A, B, std::linalg::upper_triangle, E, C);\n    print_mat(C);\n\n    // (8)\n    std::cout &lt;&lt; \&#34;(8)\\n\&#34;;\n    std::linalg::hermitian_matrix_product(std::execution::par, A, B, std::linalg::upper_triangle, E, C);\n    print_mat(C);\n  }\n\n  return 0;\n}\n&#34;}], &#34;page_id&#34;: [&#34;reference&#34;, &#34;linalg&#34;, &#34;hermitian_matrix_product&#34;]}">
+<header data-kunai-mdinfo="{&#34;meta&#34;: {&#34;header&#34;: [&#34;linalg&#34;], &#34;id-type&#34;: [&#34;function template&#34;], &#34;namespace&#34;: [&#34;std::linalg&#34;], &#34;cpp&#34;: [&#34;cpp26&#34;]}, &#34;sources&#34;: [{&#34;id&#34;: &#34;a37b5505cac23220b651db452739ffb172154280&#34;, &#34;source&#34;: &#34;#include &lt;array&gt;\n#include &lt;iostream&gt;\n#include &lt;linalg&gt;\n#include &lt;mdspan&gt;\n#include &lt;vector&gt;\n\ntemplate &lt;class Matrix&gt;\nvoid print_mat(const Matrix&amp; A) {\n  for(int i = 0; i &lt; A.extent(0); ++i) {\n    for(int j = 0; j &lt; A.extent(1) - 1; ++j) {\n      std::cout &lt;&lt; A[i, j] &lt;&lt; &#39; &#39;;\n    }\n    std::cout &lt;&lt; A[i, A.extent(1) - 1] &lt;&lt; &#39;\\n&#39;;\n  }\n}\n\ntemplate &lt;class Matrix&gt;\nvoid init_mat(Matrix&amp; A, typename Matrix::value_type geta = 1) {\n  for(int i = 0; i &lt; A.extent(0); ++i) {\n    for(int j = 0; j &lt; A.extent(1); ++j) {\n      A[i, j] = i * A.extent(1) + j + geta;\n    }\n  }\n}\n\ntemplate &lt;class Matrix&gt;\nvoid init_tria_mat(Matrix&amp; A) {\n  for(int i = 0; i &lt; A.extent(0); ++i) {\n    for(int j = i + 1; j &lt; A.extent(1); ++j) {\n      A[i, j] = i * A.extent(1) + j;\n    }\n  }\n}\n\nint main()\n{\n  constexpr size_t N = 2;\n\n  using Scalar = double;\n  using Vector = std::vector&lt;Scalar&gt;;\n  using TriangularMatrix = std::mdspan&lt;\n      Scalar,\n      std::extents&lt;size_t, N, N&gt;,\n      std::linalg::layout_blas_packed&lt;\n        std::linalg::upper_triangle_t,\n        std::linalg::row_major_t&gt;\n    &gt;;\n\n  Vector A_vec(N * N);\n  Vector B_vec(N * N);\n  Vector C_vec(N * N);\n  Vector E_vec(N * N);\n\n  std::mdspan C(C_vec.data(), N, N);\n  std::mdspan E(E_vec.data(), N, N);\n\n  init_mat(E, N * N);\n\n  {\n    TriangularMatrix A(A_vec.data());\n    std::mdspan      B(B_vec.data(), N, N);\n\n    init_tria_mat(A);\n    init_mat(B);\n\n    // (1)\n    std::cout &lt;&lt; \&#34;(1)\\n\&#34;;\n    std::linalg::triangular_matrix_product(\n      A,\n      std::linalg::upper_triangle,\n      std::linalg::implicit_unit_diagonal,\n      B,\n      C);\n    print_mat(C);\n\n    // (2)\n    std::cout &lt;&lt; \&#34;(2)\\n\&#34;;\n    std::linalg::triangular_matrix_product(\n      std::execution::par,\n      A,\n      std::linalg::upper_triangle,\n      std::linalg::implicit_unit_diagonal,\n      B,\n      C);\n    print_mat(C);\n  }\n\n  {\n    std::mdspan      A(A_vec.data(), N, N);\n    TriangularMatrix B(B_vec.data());\n\n    init_mat(A);\n    init_tria_mat(B);\n\n    // (3)\n    std::cout &lt;&lt; \&#34;(3)\\n\&#34;;\n    std::linalg::triangular_matrix_product(\n      A,\n      B,\n      std::linalg::upper_triangle,\n      std::linalg::implicit_unit_diagonal,\n      C);\n    print_mat(C);\n\n    // (4)\n    std::cout &lt;&lt; \&#34;(4)\\n\&#34;;\n    std::linalg::triangular_matrix_product(\n      std::execution::par,\n      A,\n      B,\n      std::linalg::upper_triangle,\n      std::linalg::implicit_unit_diagonal,\n      C);\n    print_mat(C);\n  }\n\n  {\n    TriangularMatrix A(A_vec.data());\n    std::mdspan      B(B_vec.data(), N, N);\n\n    init_tria_mat(A);\n    init_mat(B);\n\n    // (5)\n    std::cout &lt;&lt; \&#34;(5)\\n\&#34;;\n    std::linalg::triangular_matrix_product(\n      A,\n      std::linalg::upper_triangle,\n      std::linalg::implicit_unit_diagonal,\n      B,\n      E,\n      C);\n    print_mat(C);\n\n    // (6)\n    std::cout &lt;&lt; \&#34;(6)\\n\&#34;;\n    std::linalg::triangular_matrix_product(\n      std::execution::par,\n      A,\n      std::linalg::upper_triangle,\n      std::linalg::implicit_unit_diagonal,\n      B,\n      E,\n      C);\n    print_mat(C);\n  }\n\n  {\n    std::mdspan      A(A_vec.data(), N, N);\n    TriangularMatrix B(B_vec.data());\n\n    init_mat(A);\n    init_tria_mat(B);\n\n    // (7)\n    std::cout &lt;&lt; \&#34;(7)\\n\&#34;;\n    std::linalg::triangular_matrix_product(\n      A,\n      B,\n      std::linalg::upper_triangle,\n      std::linalg::implicit_unit_diagonal,\n      E,\n      C);\n    print_mat(C);\n\n    // (8)\n    std::cout &lt;&lt; \&#34;(8)\\n\&#34;;\n    std::linalg::triangular_matrix_product(\n      std::execution::par,\n      A,\n      B,\n      std::linalg::upper_triangle,\n      std::linalg::implicit_unit_diagonal,\n      E,\n      C);\n    print_mat(C);\n  }\n\n  return 0;\n}\n&#34;}], &#34;page_id&#34;: [&#34;reference&#34;, &#34;linalg&#34;, &#34;triangular_matrix_product&#34;]}">
   <nav class="navbar navbar-default" role="navigation">
     <div class="container-fluid">
       <div class="navbar-header">
@@ -187,7 +187,7 @@
         <span>
           
             
-              <span itemprop="name">hermitian_matrix_product</span>
+              <span itemprop="name">triangular_matrix_product</span>
             
           
         </span>
@@ -216,10 +216,10 @@
   
 
         <p class="text-right">
-          <a class="history" target="_blank" href="https://github.com/cpprefjp/site/commits/master/reference/linalg/hermitian_matrix_product.md">
+          <a class="history" target="_blank" href="https://github.com/cpprefjp/site/commits/master/reference/linalg/triangular_matrix_product.md">
             <span class="fa fa-fw fa-clock-o fa-flip-horizontal"></span>履歴
           </a>
-          <a class="edit" target="_blank" href="https://github.com/cpprefjp/site/edit/master/reference/linalg/hermitian_matrix_product.md">
+          <a class="edit" target="_blank" href="https://github.com/cpprefjp/site/edit/master/reference/linalg/triangular_matrix_product.md">
             <span class="fa fa-fw fa-pencil"></span>編集
           </a>
         </p>
@@ -228,60 +228,70 @@
     <div class="row">
       <div class="col-sm-12 content-body">
         
-  <div class="identifier-type">function template</div><div class="header">&lt;linalg&gt;</div><h1 itemprop="name"><span class="namespace" title="namespace std::linalg">std::linalg::</span><span class="token">hermitian_matrix_product</span><span class="cpp cpp26" title="C++26で追加">(C++26)</span></h1>
+  <div class="identifier-type">function template</div><div class="header">&lt;linalg&gt;</div><h1 itemprop="name"><span class="namespace" title="namespace std::linalg">std::linalg::</span><span class="token">triangular_matrix_product</span><span class="cpp cpp26" title="C++26で追加">(C++26)</span></h1>
 <div itemprop="articleBody"><p><div class="codehilite"><pre><span></span><code><span class="k">namespace</span> <span class="n">std</span><span class="o">::</span><span class="n">linalg</span> <span class="p">{</span>
   <span class="k">template</span><span class="o">&lt;</span><span class="n">in</span><span class="o">-</span><span class="n">matrix</span> <span class="n">InMat1</span><span class="p">,</span>
            <span class="k">class</span> <span class="nc">Triangle</span><span class="p">,</span>
+           <span class="k">class</span> <span class="nc">DiagonalStorage</span><span class="p">,</span>
            <span class="n">in</span><span class="o">-</span><span class="n">matrix</span> <span class="n">InMat2</span><span class="p">,</span>
            <span class="n">out</span><span class="o">-</span><span class="n">matrix</span> <span class="n">OutMat</span><span class="o">&gt;</span>
-  <span class="kt">void</span> <span class="n">hermitian_matrix_product</span><span class="p">(</span>
+  <span class="kt">void</span> <span class="n">triangular_matrix_product</span><span class="p">(</span>
     <span class="n">InMat1</span> <span class="n">A</span><span class="p">,</span>
     <span class="n">Triangle</span> <span class="n">t</span><span class="p">,</span>
+    <span class="n">DiagonalStorage</span> <span class="n">d</span><span class="p">,</span>
     <span class="n">InMat2</span> <span class="n">B</span><span class="p">,</span>
     <span class="n">OutMat</span> <span class="n">C</span><span class="p">);</span> <span class="c1">// (1)</span>
 
   <span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc"><a href="../execution/execution/execution_policy.html">ExecutionPolicy</a></span><span class="p">,</span>
            <span class="n">in</span><span class="o">-</span><span class="n">matrix</span> <span class="n">InMat1</span><span class="p">,</span>
            <span class="k">class</span> <span class="nc">Triangle</span><span class="p">,</span>
+           <span class="k">class</span> <span class="nc">DiagonalStorage</span><span class="p">,</span>
            <span class="n">in</span><span class="o">-</span><span class="n">matrix</span> <span class="n">InMat2</span><span class="p">,</span>
            <span class="n">out</span><span class="o">-</span><span class="n">matrix</span> <span class="n">OutMat</span><span class="o">&gt;</span>
-  <span class="kt">void</span> <span class="n">hermitian_matrix_product</span><span class="p">(</span>
+  <span class="kt">void</span> <span class="n">triangular_matrix_product</span><span class="p">(</span>
     <span class="n"><a href="../execution/execution/execution_policy.html">ExecutionPolicy</a></span><span class="o">&amp;&amp;</span> <span class="n">exec</span><span class="p">,</span>
     <span class="n">InMat1</span> <span class="n">A</span><span class="p">,</span>
     <span class="n">Triangle</span> <span class="n">t</span><span class="p">,</span>
+    <span class="n">DiagonalStorage</span> <span class="n">d</span><span class="p">,</span>
     <span class="n">InMat2</span> <span class="n">B</span><span class="p">,</span>
     <span class="n">OutMat</span> <span class="n">C</span><span class="p">);</span> <span class="c1">// (2)</span>
 
   <span class="k">template</span><span class="o">&lt;</span><span class="n">in</span><span class="o">-</span><span class="n">matrix</span> <span class="n">InMat1</span><span class="p">,</span>
            <span class="n">in</span><span class="o">-</span><span class="n">matrix</span> <span class="n">InMat2</span><span class="p">,</span>
            <span class="k">class</span> <span class="nc">Triangle</span><span class="p">,</span>
+           <span class="k">class</span> <span class="nc">DiagonalStorage</span><span class="p">,</span>
            <span class="n">out</span><span class="o">-</span><span class="n">matrix</span> <span class="n">OutMat</span><span class="o">&gt;</span>
-  <span class="kt">void</span> <span class="n">hermitian_matrix_product</span><span class="p">(</span>
+  <span class="kt">void</span> <span class="n">triangular_matrix_product</span><span class="p">(</span>
     <span class="n">InMat1</span> <span class="n">A</span><span class="p">,</span>
     <span class="n">InMat2</span> <span class="n">B</span><span class="p">,</span>
     <span class="n">Triangle</span> <span class="n">t</span><span class="p">,</span>
+    <span class="n">DiagonalStorage</span> <span class="n">d</span><span class="p">,</span>
     <span class="n">OutMat</span> <span class="n">C</span><span class="p">);</span> <span class="c1">// (3)</span>
 
   <span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc"><a href="../execution/execution/execution_policy.html">ExecutionPolicy</a></span><span class="p">,</span>
            <span class="n">in</span><span class="o">-</span><span class="n">matrix</span> <span class="n">InMat1</span><span class="p">,</span>
            <span class="n">in</span><span class="o">-</span><span class="n">matrix</span> <span class="n">InMat2</span><span class="p">,</span>
            <span class="k">class</span> <span class="nc">Triangle</span><span class="p">,</span>
+           <span class="k">class</span> <span class="nc">DiagonalStorage</span><span class="p">,</span>
            <span class="n">out</span><span class="o">-</span><span class="n">matrix</span> <span class="n">OutMat</span><span class="o">&gt;</span>
-  <span class="kt">void</span> <span class="n">hermitian_matrix_product</span><span class="p">(</span>
+  <span class="kt">void</span> <span class="n">triangular_matrix_product</span><span class="p">(</span>
     <span class="n"><a href="../execution/execution/execution_policy.html">ExecutionPolicy</a></span><span class="o">&amp;&amp;</span> <span class="n">exec</span><span class="p">,</span>
     <span class="n">InMat1</span> <span class="n">A</span><span class="p">,</span>
     <span class="n">InMat2</span> <span class="n">B</span><span class="p">,</span>
     <span class="n">Triangle</span> <span class="n">t</span><span class="p">,</span>
+    <span class="n">DiagonalStorage</span> <span class="n">d</span><span class="p">,</span>
     <span class="n">OutMat</span> <span class="n">C</span><span class="p">);</span> <span class="c1">// (4)</span>
 
   <span class="k">template</span><span class="o">&lt;</span><span class="n">in</span><span class="o">-</span><span class="n">matrix</span> <span class="n">InMat1</span><span class="p">,</span>
            <span class="k">class</span> <span class="nc">Triangle</span><span class="p">,</span>
+           <span class="k">class</span> <span class="nc">DiagonalStorage</span><span class="p">,</span>
            <span class="n">in</span><span class="o">-</span><span class="n">matrix</span> <span class="n">InMat2</span><span class="p">,</span>
            <span class="n">in</span><span class="o">-</span><span class="n">matrix</span> <span class="n">InMat3</span><span class="p">,</span>
            <span class="n">out</span><span class="o">-</span><span class="n">matrix</span> <span class="n">OutMat</span><span class="o">&gt;</span>
-  <span class="kt">void</span> <span class="n">hermitian_matrix_product</span><span class="p">(</span>
+  <span class="kt">void</span> <span class="n">triangular_matrix_product</span><span class="p">(</span>
     <span class="n">InMat1</span> <span class="n">A</span><span class="p">,</span>
     <span class="n">Triangle</span> <span class="n">t</span><span class="p">,</span>
+    <span class="n">DiagonalStorage</span> <span class="n">d</span><span class="p">,</span>
     <span class="n">InMat2</span> <span class="n">B</span><span class="p">,</span>
     <span class="n">InMat3</span> <span class="n">E</span><span class="p">,</span>
     <span class="n">OutMat</span> <span class="n">C</span><span class="p">);</span> <span class="c1">// (5)</span>
@@ -289,13 +299,15 @@
   <span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc"><a href="../execution/execution/execution_policy.html">ExecutionPolicy</a></span><span class="p">,</span>
            <span class="n">in</span><span class="o">-</span><span class="n">matrix</span> <span class="n">InMat1</span><span class="p">,</span>
            <span class="k">class</span> <span class="nc">Triangle</span><span class="p">,</span>
+           <span class="k">class</span> <span class="nc">DiagonalStorage</span><span class="p">,</span>
            <span class="n">in</span><span class="o">-</span><span class="n">matrix</span> <span class="n">InMat2</span><span class="p">,</span>
            <span class="n">in</span><span class="o">-</span><span class="n">matrix</span> <span class="n">InMat3</span><span class="p">,</span>
            <span class="n">out</span><span class="o">-</span><span class="n">matrix</span> <span class="n">OutMat</span><span class="o">&gt;</span>
-  <span class="kt">void</span> <span class="n">hermitian_matrix_product</span><span class="p">(</span>
+  <span class="kt">void</span> <span class="n">triangular_matrix_product</span><span class="p">(</span>
     <span class="n"><a href="../execution/execution/execution_policy.html">ExecutionPolicy</a></span><span class="o">&amp;&amp;</span> <span class="n">exec</span><span class="p">,</span>
     <span class="n">InMat1</span> <span class="n">A</span><span class="p">,</span>
     <span class="n">Triangle</span> <span class="n">t</span><span class="p">,</span>
+    <span class="n">DiagonalStorage</span> <span class="n">d</span><span class="p">,</span>
     <span class="n">InMat2</span> <span class="n">B</span><span class="p">,</span>
     <span class="n">InMat3</span> <span class="n">E</span><span class="p">,</span>
     <span class="n">OutMat</span> <span class="n">C</span><span class="p">);</span> <span class="c1">// (6)</span>
@@ -303,12 +315,14 @@
   <span class="k">template</span><span class="o">&lt;</span><span class="n">in</span><span class="o">-</span><span class="n">matrix</span> <span class="n">InMat1</span><span class="p">,</span>
            <span class="n">in</span><span class="o">-</span><span class="n">matrix</span> <span class="n">InMat2</span><span class="p">,</span>
            <span class="k">class</span> <span class="nc">Triangle</span><span class="p">,</span>
+           <span class="k">class</span> <span class="nc">DiagonalStorage</span><span class="p">,</span>
            <span class="n">in</span><span class="o">-</span><span class="n">matrix</span> <span class="n">InMat3</span><span class="p">,</span>
            <span class="n">out</span><span class="o">-</span><span class="n">matrix</span> <span class="n">OutMat</span><span class="o">&gt;</span>
-  <span class="kt">void</span> <span class="n">hermitian_matrix_product</span><span class="p">(</span>
+  <span class="kt">void</span> <span class="n">triangular_matrix_product</span><span class="p">(</span>
     <span class="n">InMat1</span> <span class="n">A</span><span class="p">,</span>
     <span class="n">InMat2</span> <span class="n">B</span><span class="p">,</span>
     <span class="n">Triangle</span> <span class="n">t</span><span class="p">,</span>
+    <span class="n">DiagonalStorage</span> <span class="n">d</span><span class="p">,</span>
     <span class="n">InMat3</span> <span class="n">E</span><span class="p">,</span>
     <span class="n">OutMat</span> <span class="n">C</span><span class="p">);</span> <span class="c1">// (7)</span>
 
@@ -316,33 +330,36 @@
            <span class="n">in</span><span class="o">-</span><span class="n">matrix</span> <span class="n">InMat1</span><span class="p">,</span>
            <span class="n">in</span><span class="o">-</span><span class="n">matrix</span> <span class="n">InMat2</span><span class="p">,</span>
            <span class="k">class</span> <span class="nc">Triangle</span><span class="p">,</span>
+           <span class="k">class</span> <span class="nc">DiagonalStorage</span><span class="p">,</span>
            <span class="n">in</span><span class="o">-</span><span class="n">matrix</span> <span class="n">InMat3</span><span class="p">,</span>
            <span class="n">out</span><span class="o">-</span><span class="n">matrix</span> <span class="n">OutMat</span><span class="o">&gt;</span>
-  <span class="kt">void</span> <span class="n">hermitian_matrix_product</span><span class="p">(</span>
+  <span class="kt">void</span> <span class="n">triangular_matrix_product</span><span class="p">(</span>
     <span class="n"><a href="../execution/execution/execution_policy.html">ExecutionPolicy</a></span><span class="o">&amp;&amp;</span> <span class="n">exec</span><span class="p">,</span>
     <span class="n">InMat1</span> <span class="n">A</span><span class="p">,</span>
     <span class="n">InMat2</span> <span class="n">B</span><span class="p">,</span>
     <span class="n">Triangle</span> <span class="n">t</span><span class="p">,</span>
+    <span class="n">DiagonalStorage</span> <span class="n">d</span><span class="p">,</span>
     <span class="n">InMat3</span> <span class="n">E</span><span class="p">,</span>
     <span class="n">OutMat</span> <span class="n">C</span><span class="p">);</span> <span class="c1">// (8)</span>
 <span class="p">}</span>
 </code></pre></div>
 </p>
 <h2>概要</h2>
-<p>エルミート行列と行列の積を計算する。</p>
+<p>三角行列と行列の積を計算する。</p>
 <ul>
-<li>(1): エルミート行列<code>A</code>と行列<code>B</code>に対し、$C \leftarrow AB$</li>
+<li>(1): 三角行列<code>A</code>と行列<code>B</code>に対し、$C \leftarrow AB$</li>
 <li>(2): (1)を指定された実行ポリシーで実行する。</li>
-<li>(3): 行列<code>A</code>とエルミート行列<code>B</code>に対し、$C \leftarrow AB$</li>
+<li>(3): 行列<code>A</code>と三角行列<code>B</code>に対し、$C \leftarrow AB$</li>
 <li>(4): (3)を指定された実行ポリシーで実行する。</li>
-<li>(5): エルミート行列<code>A</code>と行列<code>B</code>に対し、$C \leftarrow E + AB$</li>
+<li>(5): 三角行列<code>A</code>と行列<code>B</code>に対し、$C \leftarrow E + AB$</li>
 <li>(6): (5)を指定された実行ポリシーで実行する。</li>
-<li>(7): 行列<code>A</code>とエルミート行列<code>B</code>に対し、$C \leftarrow E + AB$</li>
+<li>(7): 行列<code>A</code>と三角行列<code>B</code>に対し、$C \leftarrow E + AB$</li>
 <li>(8): (7)を指定された実行ポリシーで実行する。</li>
 </ul>
 <h2><a class="cpprefjp-defined-word" data-desc="満たさなければプログラムが不適格となる要件。`static_assert`や関数のdelete宣言などに相当する">適格要件</a></h2>
 <ul>
 <li>共通</li>
+<li><code>DiagonalStorage</code>が<code><a href="implicit_unit_diagonal_t.html">implicit_unit_diagonal_t</a></code>または<code><a href="explicit_diagonal_t.html">explicit_diagonal_t</a></code></li>
 <li><code>Triangle</code>は<code><a href="upper_triangle_t.html">upper_triangle_t</a></code>または<code><a href="lower_triangle_t.html">lower_triangle_t</a></code></li>
 <li><code><a href="possibly-multipliable.html">possibly-multipliable</a>&lt;decltype(A), decltype(B), decltype(C)&gt;()</code>が<code>true</code></li>
 <li>(1), (2), (5), (6):</li>
@@ -364,10 +381,10 @@
 </ul>
 <h2>効果</h2>
 <ul>
-<li>(1), (2): エルミート行列<code>A</code>と行列<code>B</code>に対し、$C \leftarrow AB$</li>
-<li>(3), (4): 行列<code>A</code>とエルミート行列<code>B</code>に対し、$C \leftarrow AB$</li>
-<li>(5), (6): エルミート行列<code>A</code>と行列<code>B</code>に対し、$C \leftarrow E + AB$</li>
-<li>(7), (8): 行列<code>A</code>とエルミート行列<code>B</code>に対し、$C \leftarrow E + AB$</li>
+<li>(1), (2): 三角行列<code>A</code>と行列<code>B</code>に対し、$C \leftarrow AB$</li>
+<li>(3), (4): 行列<code>A</code>と三角行列<code>B</code>に対し、$C \leftarrow AB$</li>
+<li>(5), (6): 三角行列<code>A</code>と行列<code>B</code>に対し、$C \leftarrow E + AB$</li>
+<li>(7), (8): 行列<code>A</code>と三角行列<code>B</code>に対し、$C \leftarrow E + AB$</li>
 </ul>
 <h2>戻り値</h2>
 <p>なし</p>
@@ -379,8 +396,7 @@
 </ul>
 <h2>例</h2>
 <p><strong>[注意] 処理系にあるコンパイラで確認していないため、間違っているかもしれません。</strong></p>
-<p><div class="yata" id="e3fd001c96cc8429940ed20f485eba3bfe66deae"><div class="codehilite"><pre><span></span><code><span class="cp">#include</span> <span class="cpf"><a href="../array.html">&lt;array&gt;</a></span><span class="cp"></span>
-<span class="cp">#include</span> <span class="cpf"><a href="../complex.html">&lt;complex&gt;</a></span><span class="cp"></span>
+<p><div class="yata" id="a37b5505cac23220b651db452739ffb172154280"><div class="codehilite"><pre><span></span><code><span class="cp">#include</span> <span class="cpf"><a href="../array.html">&lt;array&gt;</a></span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf"><a href="../iostream.html">&lt;iostream&gt;</a></span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf"><a href="../linalg.html">&lt;linalg&gt;</a></span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf"><a href="../mdspan.html">&lt;mdspan&gt;</a></span><span class="cp"></span>
@@ -397,20 +413,19 @@
 <span class="p">}</span>
 
 <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Matrix</span><span class="o">&gt;</span>
-<span class="kt">void</span> <span class="n">init_mat</span><span class="p">(</span><span class="n">Matrix</span><span class="o">&amp;</span> <span class="n">A</span><span class="p">,</span> <span class="k">typename</span> <span class="n">Matrix</span><span class="o">::</span><span class="n">value_type</span> <span class="n">geta</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+<span class="kt">void</span> <span class="n">init_mat</span><span class="p">(</span><span class="n">Matrix</span><span class="o">&amp;</span> <span class="n">A</span><span class="p">,</span> <span class="k">typename</span> <span class="n">Matrix</span><span class="o">::</span><span class="n">value_type</span> <span class="n">geta</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">A</span><span class="p">.</span><span class="n">extent</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">A</span><span class="p">.</span><span class="n">extent</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="o">++</span><span class="n">j</span><span class="p">)</span> <span class="p">{</span>
-      <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">complex</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="n">geta</span><span class="p">,</span> <span class="n">j</span> <span class="o">+</span> <span class="n">geta</span><span class="p">);</span>
+      <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span> <span class="o">*</span> <span class="n">A</span><span class="p">.</span><span class="n">extent</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">j</span> <span class="o">+</span> <span class="n">geta</span><span class="p">;</span>
     <span class="p">}</span>
   <span class="p">}</span>
 <span class="p">}</span>
 
 <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Matrix</span><span class="o">&gt;</span>
-<span class="kt">void</span> <span class="n">init_herm_mat</span><span class="p">(</span><span class="n">Matrix</span><span class="o">&amp;</span> <span class="n">A</span><span class="p">)</span> <span class="p">{</span>
+<span class="kt">void</span> <span class="n">init_tria_mat</span><span class="p">(</span><span class="n">Matrix</span><span class="o">&amp;</span> <span class="n">A</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">A</span><span class="p">.</span><span class="n">extent</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
-    <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">complex</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
     <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">A</span><span class="p">.</span><span class="n">extent</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="o">++</span><span class="n">j</span><span class="p">)</span> <span class="p">{</span>
-      <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">complex</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">);</span>
+      <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span> <span class="o">*</span> <span class="n">A</span><span class="p">.</span><span class="n">extent</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">j</span><span class="p">;</span>
     <span class="p">}</span>
   <span class="p">}</span>
 <span class="p">}</span>
@@ -419,9 +434,9 @@
 <span class="p">{</span>
   <span class="k">constexpr</span> <span class="kt">size_t</span> <span class="n">N</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
 
-  <span class="k">using</span> <span class="n">Scalar</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">complex</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">;</span>
+  <span class="k">using</span> <span class="n">Scalar</span> <span class="o">=</span> <span class="kt">double</span><span class="p">;</span>
   <span class="k">using</span> <span class="n">Vector</span> <span class="o">=</span> <span class="n"><a href="../vector/vector.html">std::vector</a></span><span class="o">&lt;</span><span class="n">Scalar</span><span class="o">&gt;</span><span class="p">;</span>
-  <span class="k">using</span> <span class="n">HermitianMatrix</span> <span class="o">=</span> <span class="n"><a href="../mdspan/mdspan.html">std::mdspan</a></span><span class="o">&lt;</span>
+  <span class="k">using</span> <span class="n">TriangularMatrix</span> <span class="o">=</span> <span class="n"><a href="../mdspan/mdspan.html">std::mdspan</a></span><span class="o">&lt;</span>
       <span class="n">Scalar</span><span class="p">,</span>
       <span class="n"><a href="../mdspan/extents.html">std::extents</a></span><span class="o">&lt;</span><span class="kt">size_t</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="o">&gt;</span><span class="p">,</span>
       <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">layout_blas_packed</span><span class="o">&lt;</span>
@@ -440,74 +455,122 @@
   <span class="n">init_mat</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">N</span> <span class="o">*</span> <span class="n">N</span><span class="p">);</span>
 
   <span class="p">{</span>
-    <span class="n">HermitianMatrix</span> <span class="n">A</span><span class="p">(</span><span class="n">A_vec</span><span class="p">.</span><span class="n">data</span><span class="p">());</span>
-    <span class="n"><a href="../mdspan/mdspan.html">std::mdspan</a></span>     <span class="nf">B</span><span class="p">(</span><span class="n">B_vec</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">);</span>
+    <span class="n">TriangularMatrix</span> <span class="n">A</span><span class="p">(</span><span class="n">A_vec</span><span class="p">.</span><span class="n">data</span><span class="p">());</span>
+    <span class="n"><a href="../mdspan/mdspan.html">std::mdspan</a></span>      <span class="nf">B</span><span class="p">(</span><span class="n">B_vec</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">);</span>
 
-    <span class="n">init_herm_mat</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>
+    <span class="n">init_tria_mat</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>
     <span class="n">init_mat</span><span class="p">(</span><span class="n">B</span><span class="p">);</span>
 
     <span class="c1">// (1)</span>
     <span class="n"><a href="../iostream/cout.html">std::cout</a></span> <span class="o">&lt;&lt;</span> <span class="s">"(1)</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">hermitian_matrix_product</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">upper_triangle</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">);</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">triangular_matrix_product</span><span class="p">(</span>
+      <span class="n">A</span><span class="p">,</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">upper_triangle</span><span class="p">,</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">implicit_unit_diagonal</span><span class="p">,</span>
+      <span class="n">B</span><span class="p">,</span>
+      <span class="n">C</span><span class="p">);</span>
     <span class="n">print_mat</span><span class="p">(</span><span class="n">C</span><span class="p">);</span>
 
     <span class="c1">// (2)</span>
     <span class="n"><a href="../iostream/cout.html">std::cout</a></span> <span class="o">&lt;&lt;</span> <span class="s">"(2)</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">hermitian_matrix_product</span><span class="p">(</span><span class="n"><a href="../execution/execution/execution_policy.html">std::execution::par</a></span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">upper_triangle</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">);</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">triangular_matrix_product</span><span class="p">(</span>
+      <span class="n"><a href="../execution/execution/execution_policy.html">std::execution::par</a></span><span class="p">,</span>
+      <span class="n">A</span><span class="p">,</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">upper_triangle</span><span class="p">,</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">implicit_unit_diagonal</span><span class="p">,</span>
+      <span class="n">B</span><span class="p">,</span>
+      <span class="n">C</span><span class="p">);</span>
     <span class="n">print_mat</span><span class="p">(</span><span class="n">C</span><span class="p">);</span>
   <span class="p">}</span>
 
   <span class="p">{</span>
-    <span class="n"><a href="../mdspan/mdspan.html">std::mdspan</a></span>     <span class="n">A</span><span class="p">(</span><span class="n">A_vec</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">);</span>
-    <span class="n">HermitianMatrix</span> <span class="nf">B</span><span class="p">(</span><span class="n">B_vec</span><span class="p">.</span><span class="n">data</span><span class="p">());</span>
+    <span class="n"><a href="../mdspan/mdspan.html">std::mdspan</a></span>      <span class="n">A</span><span class="p">(</span><span class="n">A_vec</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">);</span>
+    <span class="n">TriangularMatrix</span> <span class="nf">B</span><span class="p">(</span><span class="n">B_vec</span><span class="p">.</span><span class="n">data</span><span class="p">());</span>
 
     <span class="n">init_mat</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>
-    <span class="n">init_herm_mat</span><span class="p">(</span><span class="n">B</span><span class="p">);</span>
+    <span class="n">init_tria_mat</span><span class="p">(</span><span class="n">B</span><span class="p">);</span>
 
     <span class="c1">// (3)</span>
     <span class="n"><a href="../iostream/cout.html">std::cout</a></span> <span class="o">&lt;&lt;</span> <span class="s">"(3)</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">hermitian_matrix_product</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">upper_triangle</span><span class="p">,</span> <span class="n">C</span><span class="p">);</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">triangular_matrix_product</span><span class="p">(</span>
+      <span class="n">A</span><span class="p">,</span>
+      <span class="n">B</span><span class="p">,</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">upper_triangle</span><span class="p">,</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">implicit_unit_diagonal</span><span class="p">,</span>
+      <span class="n">C</span><span class="p">);</span>
     <span class="n">print_mat</span><span class="p">(</span><span class="n">C</span><span class="p">);</span>
 
     <span class="c1">// (4)</span>
     <span class="n"><a href="../iostream/cout.html">std::cout</a></span> <span class="o">&lt;&lt;</span> <span class="s">"(4)</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">hermitian_matrix_product</span><span class="p">(</span><span class="n"><a href="../execution/execution/execution_policy.html">std::execution::par</a></span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">upper_triangle</span><span class="p">,</span> <span class="n">C</span><span class="p">);</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">triangular_matrix_product</span><span class="p">(</span>
+      <span class="n"><a href="../execution/execution/execution_policy.html">std::execution::par</a></span><span class="p">,</span>
+      <span class="n">A</span><span class="p">,</span>
+      <span class="n">B</span><span class="p">,</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">upper_triangle</span><span class="p">,</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">implicit_unit_diagonal</span><span class="p">,</span>
+      <span class="n">C</span><span class="p">);</span>
     <span class="n">print_mat</span><span class="p">(</span><span class="n">C</span><span class="p">);</span>
   <span class="p">}</span>
 
   <span class="p">{</span>
-    <span class="n">HermitianMatrix</span> <span class="n">A</span><span class="p">(</span><span class="n">A_vec</span><span class="p">.</span><span class="n">data</span><span class="p">());</span>
-    <span class="n"><a href="../mdspan/mdspan.html">std::mdspan</a></span>     <span class="nf">B</span><span class="p">(</span><span class="n">B_vec</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">);</span>
+    <span class="n">TriangularMatrix</span> <span class="n">A</span><span class="p">(</span><span class="n">A_vec</span><span class="p">.</span><span class="n">data</span><span class="p">());</span>
+    <span class="n"><a href="../mdspan/mdspan.html">std::mdspan</a></span>      <span class="nf">B</span><span class="p">(</span><span class="n">B_vec</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">);</span>
 
-    <span class="n">init_herm_mat</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>
+    <span class="n">init_tria_mat</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>
     <span class="n">init_mat</span><span class="p">(</span><span class="n">B</span><span class="p">);</span>
 
     <span class="c1">// (5)</span>
     <span class="n"><a href="../iostream/cout.html">std::cout</a></span> <span class="o">&lt;&lt;</span> <span class="s">"(5)</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">hermitian_matrix_product</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">upper_triangle</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">C</span><span class="p">);</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">triangular_matrix_product</span><span class="p">(</span>
+      <span class="n">A</span><span class="p">,</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">upper_triangle</span><span class="p">,</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">implicit_unit_diagonal</span><span class="p">,</span>
+      <span class="n">B</span><span class="p">,</span>
+      <span class="n">E</span><span class="p">,</span>
+      <span class="n">C</span><span class="p">);</span>
     <span class="n">print_mat</span><span class="p">(</span><span class="n">C</span><span class="p">);</span>
 
     <span class="c1">// (6)</span>
     <span class="n"><a href="../iostream/cout.html">std::cout</a></span> <span class="o">&lt;&lt;</span> <span class="s">"(6)</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">hermitian_matrix_product</span><span class="p">(</span><span class="n"><a href="../execution/execution/execution_policy.html">std::execution::par</a></span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">upper_triangle</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">C</span><span class="p">);</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">triangular_matrix_product</span><span class="p">(</span>
+      <span class="n"><a href="../execution/execution/execution_policy.html">std::execution::par</a></span><span class="p">,</span>
+      <span class="n">A</span><span class="p">,</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">upper_triangle</span><span class="p">,</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">implicit_unit_diagonal</span><span class="p">,</span>
+      <span class="n">B</span><span class="p">,</span>
+      <span class="n">E</span><span class="p">,</span>
+      <span class="n">C</span><span class="p">);</span>
     <span class="n">print_mat</span><span class="p">(</span><span class="n">C</span><span class="p">);</span>
   <span class="p">}</span>
 
   <span class="p">{</span>
-    <span class="n"><a href="../mdspan/mdspan.html">std::mdspan</a></span>     <span class="n">A</span><span class="p">(</span><span class="n">A_vec</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">);</span>
-    <span class="n">HermitianMatrix</span> <span class="nf">B</span><span class="p">(</span><span class="n">B_vec</span><span class="p">.</span><span class="n">data</span><span class="p">());</span>
+    <span class="n"><a href="../mdspan/mdspan.html">std::mdspan</a></span>      <span class="n">A</span><span class="p">(</span><span class="n">A_vec</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">);</span>
+    <span class="n">TriangularMatrix</span> <span class="nf">B</span><span class="p">(</span><span class="n">B_vec</span><span class="p">.</span><span class="n">data</span><span class="p">());</span>
 
     <span class="n">init_mat</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>
-    <span class="n">init_herm_mat</span><span class="p">(</span><span class="n">B</span><span class="p">);</span>
+    <span class="n">init_tria_mat</span><span class="p">(</span><span class="n">B</span><span class="p">);</span>
 
     <span class="c1">// (7)</span>
     <span class="n"><a href="../iostream/cout.html">std::cout</a></span> <span class="o">&lt;&lt;</span> <span class="s">"(7)</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">hermitian_matrix_product</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">upper_triangle</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">C</span><span class="p">);</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">triangular_matrix_product</span><span class="p">(</span>
+      <span class="n">A</span><span class="p">,</span>
+      <span class="n">B</span><span class="p">,</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">upper_triangle</span><span class="p">,</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">implicit_unit_diagonal</span><span class="p">,</span>
+      <span class="n">E</span><span class="p">,</span>
+      <span class="n">C</span><span class="p">);</span>
     <span class="n">print_mat</span><span class="p">(</span><span class="n">C</span><span class="p">);</span>
 
     <span class="c1">// (8)</span>
     <span class="n"><a href="../iostream/cout.html">std::cout</a></span> <span class="o">&lt;&lt;</span> <span class="s">"(8)</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">hermitian_matrix_product</span><span class="p">(</span><span class="n"><a href="../execution/execution/execution_policy.html">std::execution::par</a></span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">upper_triangle</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">C</span><span class="p">);</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">triangular_matrix_product</span><span class="p">(</span>
+      <span class="n"><a href="../execution/execution/execution_policy.html">std::execution::par</a></span><span class="p">,</span>
+      <span class="n">A</span><span class="p">,</span>
+      <span class="n">B</span><span class="p">,</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">upper_triangle</span><span class="p">,</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">linalg</span><span class="o">::</span><span class="n">implicit_unit_diagonal</span><span class="p">,</span>
+      <span class="n">E</span><span class="p">,</span>
+      <span class="n">C</span><span class="p">);</span>
     <span class="n">print_mat</span><span class="p">(</span><span class="n">C</span><span class="p">);</span>
   <span class="p">}</span>
 
@@ -517,29 +580,29 @@
 </div></p>
 <h3>出力</h3>
 <p><pre><code>(1)
-(0,1) (-1,1)
-(1,0) (2,1)
+4 6
+3 4
 (2)
-(0,1) (-1,1)
-(1,0) (2,1)
+4 6
+3 4
 (3)
-(0,-1) (1,0)
-(0,-3) (3,2)
+1 3
+3 7
 (4)
-(0,-1) (1,0)
-(0,-3) (3,2)
+1 3
+3 7
 (5)
-(4,5) (3,6)
-(6,4) (7,6)
+8 11
+9 11
 (6)
-(4,5) (3,6)
-(6,4) (7,6)
+8 11
+9 11
 (7)
-(4,3) (5,5)
-(5,1) (8,7)
+5 8
+9 14
 (8)
-(4,3) (5,5)
-(5,1) (8,7)
+5 8
+9 14
 </code></pre></p>
 <h2>バージョン</h2>
 <h3>言語</h3>
@@ -559,11 +622,13 @@
 <li><code><a href="../mdspan.html">mdspan</a></code></li>
 <li><code><a href="upper_triangle_t.html">upper_triangle_t</a></code></li>
 <li><code><a href="lower_triangle_t.html">lower_triangle_t</a></code></li>
+<li><code><a href="implicit_unit_diagonal_t.html">implicit_unit_diagonal_t</a></code></li>
+<li><code><a href="explicit_diagonal_t.html">explicit_diagonal_t</a></code></li>
 </ul>
 <h2>参照</h2>
 <ul>
 <li><a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p1673r13.html" target="_blank">P1673R13 A free function linear algebra interface based on the BLAS</a></li>
-<li><a href="https://netlib.org/lapack/explore-html/d0/d16/group__hemm.html" target="_blank">LAPACK: {he,sy}mm: Hermitian/hermitian matrix-matrix multiply</a></li>
+<li><a href="https://netlib.org/lapack/explore-html/dd/dab/group__trmm.html" target="_blank">LAPACK: trmm: triangular matrix-matrix multiply</a></li>
 </ul></div>
 
       </div>
