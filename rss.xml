@@ -2,9 +2,147 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2024-07-17T05:42:40.863979</updated>
-  <id>1d36ff7b-1315-43fc-b0cc-7d04f95d1881</id>
+  <updated>2024-07-17T09:18:42.454408</updated>
+  <id>a8935fbb-dbc8-4c17-ba0c-0edb938a0a62</id>
 
+  
+    <entry>
+      <title>コンストラクタ -- Merge pull request #1299 from sukeya/add_custom_deleter_to_example</title>
+      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr/op_constructor.html"/>
+      <id>a83de745dc9be67f48581b8c96da97aeb8663eae:reference/memory/unique_ptr/op_constructor.md</id>
+      <updated>2024-07-17T18:15:52+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr/op_constructor.md b/reference/memory/unique_ptr/op_constructor.md
+index a23183cb0..48c6eb1bd 100644
+--- a/reference/memory/unique_ptr/op_constructor.md
++++ b/reference/memory/unique_ptr/op_constructor.md
+@@ -118,6 +118,20 @@ unique_ptr&amp;lt;T, D&amp;amp;&amp;gt; p(new T(), deleter); // pはdeleterへの参照を保持する
+ #include &amp;lt;cassert&amp;gt;
+ #include &amp;lt;memory&amp;gt;
+ 
++using AllocTraits = std::allocator_traits&amp;lt;std::allocator&amp;lt;int&amp;gt;&amp;gt;;
++
++class Deleter {
++ public:
++  explicit Deleter(const std::allocator&amp;lt;int&amp;gt;&amp;amp; alloc) : alloc_(alloc) {}
++
++  void operator()(int* p) {
++    AllocTraits::destroy(alloc_, p);
++    AllocTraits::deallocate(alloc_, p, 1);
++  }
++ private:
++  std::allocator&amp;lt;int&amp;gt; alloc_;
++};
++
+ int main()
+ {
+   // (1) デフォルト構築
+@@ -133,6 +147,16 @@ int main()
+   std::unique_ptr&amp;lt;int&amp;gt; p3(new int(3), std::default_delete&amp;lt;int&amp;gt;());
+   assert(p3);
+ 
++  // 自作デリータを使った例
++  {
++    std::allocator&amp;lt;int&amp;gt; alloc;
++    int* p = AllocTraits::allocate(alloc, 1);
++    AllocTraits::construct(alloc, p, 4);
++    std::unique_ptr&amp;lt;int, Deleter&amp;gt; p4(p, Deleter(alloc));
++    assert(p4);
++    assert(*p4 == 4);
++  }
++
+   // (5) 他のunique_ptrから所有権を譲渡する
+   std::unique_ptr&amp;lt;int&amp;gt; p5 = std::move(p3);
+   assert(*p5 == 3);
+@@ -147,6 +171,12 @@ int main()
+   assert(*static_cast&amp;lt;const int*&amp;gt;(p7.get()) == 3);
+ }
+ ```
++* std::allocator_traits[link /reference/memory/allocator_traits.md]
++* std::allocator[link /reference/memory/allocator.md]
++* destroy[link /reference/memory/allocator_traits/destroy.md]
++* deallocate[link /reference/memory/allocator_traits/deallocate.md]
++* allocate[link /reference/memory/allocator_traits/allocate.md]
++* construct[link /reference/memory/allocator_traits/construct.md]
+ * std::default_delete[link /reference/memory/default_delete.md]
+ * std::move[link /reference/utility/move.md]
+ * get()[link get.md]
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- std::unique_ptrに自作デリータの使用例を追加</title>
+      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr/op_constructor.html"/>
+      <id>37f60c5b903e13d13943cd7667449850714d440e:reference/memory/unique_ptr/op_constructor.md</id>
+      <updated>2024-07-17T17:21:31+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr/op_constructor.md b/reference/memory/unique_ptr/op_constructor.md
+index a23183cb0..48c6eb1bd 100644
+--- a/reference/memory/unique_ptr/op_constructor.md
++++ b/reference/memory/unique_ptr/op_constructor.md
+@@ -118,6 +118,20 @@ unique_ptr&amp;lt;T, D&amp;amp;&amp;gt; p(new T(), deleter); // pはdeleterへの参照を保持する
+ #include &amp;lt;cassert&amp;gt;
+ #include &amp;lt;memory&amp;gt;
+ 
++using AllocTraits = std::allocator_traits&amp;lt;std::allocator&amp;lt;int&amp;gt;&amp;gt;;
++
++class Deleter {
++ public:
++  explicit Deleter(const std::allocator&amp;lt;int&amp;gt;&amp;amp; alloc) : alloc_(alloc) {}
++
++  void operator()(int* p) {
++    AllocTraits::destroy(alloc_, p);
++    AllocTraits::deallocate(alloc_, p, 1);
++  }
++ private:
++  std::allocator&amp;lt;int&amp;gt; alloc_;
++};
++
+ int main()
+ {
+   // (1) デフォルト構築
+@@ -133,6 +147,16 @@ int main()
+   std::unique_ptr&amp;lt;int&amp;gt; p3(new int(3), std::default_delete&amp;lt;int&amp;gt;());
+   assert(p3);
+ 
++  // 自作デリータを使った例
++  {
++    std::allocator&amp;lt;int&amp;gt; alloc;
++    int* p = AllocTraits::allocate(alloc, 1);
++    AllocTraits::construct(alloc, p, 4);
++    std::unique_ptr&amp;lt;int, Deleter&amp;gt; p4(p, Deleter(alloc));
++    assert(p4);
++    assert(*p4 == 4);
++  }
++
+   // (5) 他のunique_ptrから所有権を譲渡する
+   std::unique_ptr&amp;lt;int&amp;gt; p5 = std::move(p3);
+   assert(*p5 == 3);
+@@ -147,6 +171,12 @@ int main()
+   assert(*static_cast&amp;lt;const int*&amp;gt;(p7.get()) == 3);
+ }
+ ```
++* std::allocator_traits[link /reference/memory/allocator_traits.md]
++* std::allocator[link /reference/memory/allocator.md]
++* destroy[link /reference/memory/allocator_traits/destroy.md]
++* deallocate[link /reference/memory/allocator_traits/deallocate.md]
++* allocate[link /reference/memory/allocator_traits/allocate.md]
++* construct[link /reference/memory/allocator_traits/construct.md]
+ * std::default_delete[link /reference/memory/default_delete.md]
+ * std::move[link /reference/utility/move.md]
+ * get()[link get.md]
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Yuya Asano</name>
+        <email>64895419+sukeya@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>triangular_matrix_matrix_left_solve -- linalg : 例を修正 (#1233)</title>
@@ -874,667 +1012,6 @@ index 000000000..89c1074e8
       <author>
         <name>Yuya Asano</name>
         <email>64895419+sukeya@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>全ての非型テンプレート引数の定数式評価を許可 [N4268] -- インラインコードブロックの全角文字の typo を修正</title>
-      <link href="https://cpprefjp.github.io/lang/cpp17/allow_constant_evaluation_for_all_non-type_template_arguments.html"/>
-      <id>ddd80639fd55a326d4c38a1b70f1b5b203540f02:lang/cpp17/allow_constant_evaluation_for_all_non-type_template_arguments.md</id>
-      <updated>2024-07-16T18:44:23+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp17/allow_constant_evaluation_for_all_non-type_template_arguments.md b/lang/cpp17/allow_constant_evaluation_for_all_non-type_template_arguments.md
-index dce9e1fb0..6e348ae5f 100644
---- a/lang/cpp17/allow_constant_evaluation_for_all_non-type_template_arguments.md
-+++ b/lang/cpp17/allow_constant_evaluation_for_all_non-type_template_arguments.md
-@@ -44,7 +44,7 @@ C++14からC++17にかけて、次の表のような変更があったと考え
- | 整数または列挙 |	任意の定数式 |
- | ポインタ型 | 正確な構文と実体、配列、関数、リンケージを使用して静的記憶期間オブジェクトまたは関数を参照する。NULLポインタに評価される任意の定数式 |
- | 参照型 |	正確な構文とオブジェクト、関数、リンケージを使用して静的記憶期間オブジェクトまたは関数を参照する |
--| メンバへのポインタ | 正確な構文と`＆X::y` 、またはメンバへのポインタが`NULL`に評価される任意の定数式 |
-+| メンバへのポインタ | 正確な構文と`&amp;amp;X::y` 、またはメンバへのポインタが`NULL`に評価される任意の定数式 |
- | [`std::nullptr_t`](/reference/cstddef/nullptr_t.md) | 任意の定数式 |
- 
- から
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator++ -- インラインコードブロックの全角文字の typo を修正</title>
-      <link href="https://cpprefjp.github.io/reference/iterator/istream_iterator/op_increment.html"/>
-      <id>ddd80639fd55a326d4c38a1b70f1b5b203540f02:reference/iterator/istream_iterator/op_increment.md</id>
-      <updated>2024-07-16T18:44:23+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/istream_iterator/op_increment.md b/reference/iterator/istream_iterator/op_increment.md
-index d2baaefc5..d3d5b03a7 100644
---- a/reference/iterator/istream_iterator/op_increment.md
-+++ b/reference/iterator/istream_iterator/op_increment.md
-@@ -16,12 +16,12 @@ istream_iterator&amp;lt;T, CharT, Traits, Distance&amp;gt; operator++(int);
- 
- ## 効果
- 前置`operator++`：
--`*in_stream ≫ value;`
-+`*in_stream &amp;gt;&amp;gt; value;`
- `return *this;`
- 
- 後置`operator++`：
- `istream_iterator&amp;lt;T, CharT, Traits, Distance&amp;gt; tmp = *this;`
--`*in_stream ≫ value;`
-+`*in_stream &amp;gt;&amp;gt; value;`
- `return tmp;`
- 
- ※`in_stream`は、メンバ変数として保持している入力ストリームオブジェクトへのポインタ
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>allocate_shared -- インラインコードブロックの全角文字の typo を修正</title>
-      <link href="https://cpprefjp.github.io/reference/memory/allocate_shared.html"/>
-      <id>ddd80639fd55a326d4c38a1b70f1b5b203540f02:reference/memory/allocate_shared.md</id>
-      <updated>2024-07-16T18:44:23+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/allocate_shared.md b/reference/memory/allocate_shared.md
-index 17a5ac19a..9c2faaf86 100644
---- a/reference/memory/allocate_shared.md
-+++ b/reference/memory/allocate_shared.md
-@@ -63,13 +63,13 @@ namespace std {
- 
- それぞれ、`pv`は型`U`のオブジェクトを保持するのに適したストレージを指し、型`A2`の`a2`は、`value_type`が`remove_cv_t&amp;lt;U&amp;gt;`になるように`allocate_shared`に渡されるアロケーター`a`のリバウンドコピーである。ここで、リバウンドコピーとは、参照カウンタと型`T`の本体を連続メモリ領域に配置するためには`T`のサイズより大きい領域をアロケートする必要があるために`allocator_traits&amp;lt;Alloc&amp;gt;::rebind_alloc&amp;lt;value_type&amp;gt;`を用いて再束縛されたものである。
- 
--非配列型Uの（サブ）オブジェクトがデフォルトの初期値を持つように指定されている場合、この関数は、式 `allocator_traits&amp;lt;A2&amp;gt;::construct(a2、pv)`を介してこの（サブ）オブジェクトを初期化する。ここで、`pv`は、型`U`のオブジェクトを保持するのに適したストレージを指し、タイプ`A2`の`a2`は、`value_type`が`remove_cv_t&amp;lt;U&amp;gt;`になるように、`allocate_shared`に渡されるアロケーター`a`のリバウンドコピーである。
-+非配列型Uの（サブ）オブジェクトがデフォルトの初期値を持つように指定されている場合、この関数は、式 `allocator_traits&amp;lt;A2&amp;gt;::construct(a2, pv)`を介してこの（サブ）オブジェクトを初期化する。ここで、`pv`は、型`U`のオブジェクトを保持するのに適したストレージを指し、タイプ`A2`の`a2`は、`value_type`が`remove_cv_t&amp;lt;U&amp;gt;`になるように、`allocate_shared`に渡されるアロケーター`a`のリバウンドコピーである。
- 
- 配列要素は、アドレスの昇順で初期化される。
- 
- 戻り値によって管理されるオブジェクトの`lifetime`が終了するか、配列要素の初期化が例外をスローすると、初期化された要素は元の構造の逆の順序で破棄される。
- 
--この関数によって初期化された非配列型`U`の（サブ）オブジェクトが破棄される場合、式`allocator_traits&amp;lt;A2&amp;gt;::destroy(a2、pv)`によって破棄される。`pv`はその型のオブジェクトを指す。`remove_cv_t&amp;lt;U&amp;gt;`および型`A2`の`a2`は、`value_type`が`remove_cv_t&amp;lt;U&amp;gt;`になるように`allocate_shared`に渡されるアロケーター`a`の再束縛されたコピーである。
-+この関数によって初期化された非配列型`U`の（サブ）オブジェクトが破棄される場合、式`allocator_traits&amp;lt;A2&amp;gt;::destroy(a2, pv)`によって破棄される。`pv`はその型のオブジェクトを指す。`remove_cv_t&amp;lt;U&amp;gt;`および型`A2`の`a2`は、`value_type`が`remove_cv_t&amp;lt;U&amp;gt;`になるように`allocate_shared`に渡されるアロケーター`a`の再束縛されたコピーである。
- 
- - (1) : 初期値`T(forward&amp;lt;Args&amp;gt;(args)...)`を持つ型`T`のオブジェクトへの`shared_ptr`を返す。Tが配列型でない場合にのみ、このオーバーロードはオーバーロード解決に関与する。この関数によって呼び出される`shared_ptr`コンストラクタは、型`T`の新しく構築されたオブジェクトのアドレスで`shared_from_this`を有効にする。
- - (2) : デフォルトの初期値を持つ`U[N]`型のオブジェクトへの`shared_ptr`を返す。ここで、`U`は`remove_extent_t&amp;lt;T&amp;gt;`である。`T`の形式が`U[]`の場合にのみ、このオーバーロードはオーバーロード解決に関与する。
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>destroy -- インラインコードブロックの全角文字の typo を修正</title>
-      <link href="https://cpprefjp.github.io/reference/memory/allocator/destroy.html"/>
-      <id>ddd80639fd55a326d4c38a1b70f1b5b203540f02:reference/memory/allocator/destroy.md</id>
-      <updated>2024-07-16T18:44:23+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/allocator/destroy.md b/reference/memory/allocator/destroy.md
-index 381c88ff5..cf65df1d4 100644
---- a/reference/memory/allocator/destroy.md
-+++ b/reference/memory/allocator/destroy.md
-@@ -23,8 +23,8 @@ void destroy(U* p);
- 
- 
- ## 効果
--- C++03 : `((T*)p)-&amp;gt;˜T()`
--- C++11 : `p-&amp;gt;˜U()`
-+- C++03 : `((T*)p)-&amp;gt;~T()`
-+- C++11 : `p-&amp;gt;~U()`
- 
- 
- ## 戻り値
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>デストラクタ -- インラインコードブロックの全角文字の typo を修正</title>
-      <link href="https://cpprefjp.github.io/reference/node_handle/node_handle/op_destructor.html"/>
-      <id>ddd80639fd55a326d4c38a1b70f1b5b203540f02:reference/node_handle/node_handle/op_destructor.md</id>
-      <updated>2024-07-16T18:44:23+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/node_handle/node_handle/op_destructor.md b/reference/node_handle/node_handle/op_destructor.md
-index 3c5632e36..3db26cae4 100644
---- a/reference/node_handle/node_handle/op_destructor.md
-+++ b/reference/node_handle/node_handle/op_destructor.md
-@@ -14,7 +14,7 @@
- 
- 
- ## 効果
--`ptr_！= nullptr` の場合、`std::allocator_traits&amp;lt;allocator_type&amp;gt;::destroy` を呼び出して `ptr_` が指す `container_node_type` オブジェクト内の `value_type` サブオブジェクトを破棄し、次に `std::allocator_traits&amp;lt;allocator_type&amp;gt;::template rebind_traits&amp;lt;container_node_type&amp;gt;::deallocate` を呼び出して `ptr_` の割り当てを解除する。
-+`ptr_ != nullptr` の場合、`std::allocator_traits&amp;lt;allocator_type&amp;gt;::destroy` を呼び出して `ptr_` が指す `container_node_type` オブジェクト内の `value_type` サブオブジェクトを破棄し、次に `std::allocator_traits&amp;lt;allocator_type&amp;gt;::template rebind_traits&amp;lt;container_node_type&amp;gt;::deallocate` を呼び出して `ptr_` の割り当てを解除する。
- 
- 
- ## 戻り値
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>emit_on_flush -- インラインコードブロックの全角文字の typo を修正</title>
-      <link href="https://cpprefjp.github.io/reference/ostream/emit_on_flush.html"/>
-      <id>ddd80639fd55a326d4c38a1b70f1b5b203540f02:reference/ostream/emit_on_flush.md</id>
-      <updated>2024-07-16T18:44:23+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ostream/emit_on_flush.md b/reference/ostream/emit_on_flush.md
-index ebc7eba73..01414bdb2 100644
---- a/reference/ostream/emit_on_flush.md
-+++ b/reference/ostream/emit_on_flush.md
-@@ -17,7 +17,7 @@ namespace std {
- 
- 
- ## 効果
--`os.rdbuf()`が`std::basic_syncbuf&amp;lt;charT、traits、Allocator&amp;gt;*`である場合、これを`buf`とすると、`buf-&amp;gt;set_emit_on_sync(true)`を呼び出す。  
-+`os.rdbuf()`が`std::basic_syncbuf&amp;lt;charT, traits, Allocator&amp;gt;*`である場合、これを`buf`とすると、`buf-&amp;gt;set_emit_on_sync(true)`を呼び出す。  
- それ以外の場合、このマニピュレータは効果がない。
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>flush_emit -- インラインコードブロックの全角文字の typo を修正</title>
-      <link href="https://cpprefjp.github.io/reference/ostream/flush_emit.html"/>
-      <id>ddd80639fd55a326d4c38a1b70f1b5b203540f02:reference/ostream/flush_emit.md</id>
-      <updated>2024-07-16T18:44:23+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ostream/flush_emit.md b/reference/ostream/flush_emit.md
-index bd68d98fd..240bbd380 100644
---- a/reference/ostream/flush_emit.md
-+++ b/reference/ostream/flush_emit.md
-@@ -19,7 +19,7 @@ namespace std {
- 
- ## 効果
- `os.flush()`を呼び出す。
--続いて`os.rdbuf()`が`std::basic_syncbuf&amp;lt;charT、traits、Allocator&amp;gt;*`である場合、これを`buf`とすると、`buf-&amp;gt;emit()`を呼び出す。
-+続いて`os.rdbuf()`が`std::basic_syncbuf&amp;lt;charT, traits, Allocator&amp;gt;*`である場合、これを`buf`とすると、`buf-&amp;gt;emit()`を呼び出す。
- 
- 
- ## 戻り値
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>noemit_on_flush -- インラインコードブロックの全角文字の typo を修正</title>
-      <link href="https://cpprefjp.github.io/reference/ostream/noemit_on_flush.html"/>
-      <id>ddd80639fd55a326d4c38a1b70f1b5b203540f02:reference/ostream/noemit_on_flush.md</id>
-      <updated>2024-07-16T18:44:23+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ostream/noemit_on_flush.md b/reference/ostream/noemit_on_flush.md
-index 8196112fc..acb6018b8 100644
---- a/reference/ostream/noemit_on_flush.md
-+++ b/reference/ostream/noemit_on_flush.md
-@@ -17,7 +17,7 @@ namespace std {
- 
- 
- ## 効果
--`os.rdbuf()`が`std::basic_syncbuf&amp;lt;charT、traits、Allocator&amp;gt;*`である場合、これを`buf`とすると、`buf-&amp;gt;set_emit_on_sync(false)`を呼び出す。  
-+`os.rdbuf()`が`std::basic_syncbuf&amp;lt;charT, traits, Allocator&amp;gt;*`である場合、これを`buf`とすると、`buf-&amp;gt;set_emit_on_sync(false)`を呼び出す。  
- それ以外の場合、このマニピュレータは効果がない。
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>コンストラクタ -- インラインコードブロックの全角文字の typo を修正</title>
-      <link href="https://cpprefjp.github.io/reference/syncstream/basic_osyncstream/op_constructor.html"/>
-      <id>ddd80639fd55a326d4c38a1b70f1b5b203540f02:reference/syncstream/basic_osyncstream/op_constructor.md</id>
-      <updated>2024-07-16T18:44:23+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/syncstream/basic_osyncstream/op_constructor.md b/reference/syncstream/basic_osyncstream/op_constructor.md
-index 803947860..bd81a85a2 100644
---- a/reference/syncstream/basic_osyncstream/op_constructor.md
-+++ b/reference/syncstream/basic_osyncstream/op_constructor.md
-@@ -29,7 +29,7 @@ basic_osyncstream(basic_osyncstream&amp;amp;&amp;amp; other) noexcept;
- - (1) : 提供されるストリームバッファ（`buf`）、アロケータ（`allocator`）を使用してプライベートメンバの[`std::basic_syncbuf`](../basic_syncbuf.md)を初期化し、そのポインタを用いて基底クラスである[`std::basic_ostream`](../../ostream/basic_ostream.md)を初期化する。
- - (2)(3) : (1)に委譲。
- - (4) : (3)に委譲。
--- (5) : 対応する`other`のサブオブジェクトから基底クラスとプライベートメンバの`std::basic_syncbuf`をムーブ構築し、基底クラスの初期化を完了するために`std::basic_ostream&amp;lt;charT、traits&amp;gt;::set_rdbuf(addressof(sb))`を呼び出す。
-+- (5) : 対応する`other`のサブオブジェクトから基底クラスとプライベートメンバの`std::basic_syncbuf`をムーブ構築し、基底クラスの初期化を完了するために`std::basic_ostream&amp;lt;charT, traits&amp;gt;::set_rdbuf(addressof(sb))`を呼び出す。
- 
- 
- ## 事後条件
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>aligned_union -- インラインコードブロックの全角文字の typo を修正</title>
-      <link href="https://cpprefjp.github.io/reference/type_traits/aligned_union.html"/>
-      <id>ddd80639fd55a326d4c38a1b70f1b5b203540f02:reference/type_traits/aligned_union.md</id>
-      <updated>2024-07-16T18:44:23+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/type_traits/aligned_union.md b/reference/type_traits/aligned_union.md
-index f72c04b43..606f7d2a5 100644
---- a/reference/type_traits/aligned_union.md
-+++ b/reference/type_traits/aligned_union.md
-@@ -53,9 +53,9 @@ namespace std {
- 
- - 第1テンプレートパラメータが無意味
-     - この機能は、可変個のすべての型のサイズとアライメントを推論し、それらの最大値を実際のストレージとして使用する。先頭のテンプレートパラメータはストレージの最小サイズである。すべての型がそれより小さい場合でも、ストレージは第1テンプレートパラメータより小さくならない
--    - 最小サイズを必要とすることはめずらしいことであり、ほとんどの場合は`aligned_union_t&amp;lt;0、Ts...&amp;gt;`のように使用する。この引数`0`は機能に精通していなければ理解しにくい
-+    - 最小サイズを必要とすることはめずらしいことであり、ほとんどの場合は`aligned_union_t&amp;lt;0, Ts...&amp;gt;`のように使用する。この引数`0`は機能に精通していなければ理解しにくい
- - サイズとアライメントの推論が[`aligned_storage`](aligned_storage.md)と一貫していない
--    - 一貫した仕様であるならば、`aligned_union_t&amp;lt;0、T&amp;gt;`のような型をひとつだけ指定する用途につながるが、現在の仕様は何を意図していたのか不明である
-+    - 一貫した仕様であるならば、`aligned_union_t&amp;lt;0, T&amp;gt;`のような型をひとつだけ指定する用途につながるが、現在の仕様は何を意図していたのか不明である
- 
- この機能を以下のように置き換えることを推奨する：
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>属性構文 [N2761] -- インラインコードブロックの範囲を修正</title>
-      <link href="https://cpprefjp.github.io/lang/cpp11/attributes.html"/>
-      <id>0b27920eb5f0d83dfdaee394f727eef78daa770d:lang/cpp11/attributes.md</id>
-      <updated>2024-07-16T18:43:27+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp11/attributes.md b/lang/cpp11/attributes.md
-index 803308f06..0259f3a4a 100644
---- a/lang/cpp11/attributes.md
-+++ b/lang/cpp11/attributes.md
-@@ -154,7 +154,7 @@ C++11で採用されたもの以外で検討された以下の機能は、属性
- 以下の属性は、C++11時点では採用されていない：
- 
- - 関数が同じ引数に対して同じ戻り値を返すことを明示する`pure`属性
--- `if`文や`switch文`の`case`に指定する条件式のヒット率が高いことを指示する`probably`属性
-+- `if`文や`switch`文の`case`に指定する条件式のヒット率が高いことを指示する`probably`属性
- - 関数が非推奨であることを指示する`deprecated`属性
- - 基底クラスによって関数を隠蔽しないことを明示する`not_hiding`属性
- - ポインタの所有者(解放する責任を持つユーザー)であることを明示する`owner`属性
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>コンストラクタ -- インラインコードブロックの範囲を修正</title>
-      <link href="https://cpprefjp.github.io/reference/bitset/bitset/op_constructor.html"/>
-      <id>0b27920eb5f0d83dfdaee394f727eef78daa770d:reference/bitset/bitset/op_constructor.md</id>
-      <updated>2024-07-16T18:43:27+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/bitset/bitset/op_constructor.md b/reference/bitset/bitset/op_constructor.md
-index 03fe984b9..3cd4a189b 100644
---- a/reference/bitset/bitset/op_constructor.md
-+++ b/reference/bitset/bitset/op_constructor.md
-@@ -68,7 +68,7 @@ constexpr explicit bitset(
- - (1) : デフォルトコンストラクタ
- - (2) : 整数値を受け取るコンストラクタ
- - (3) : `&amp;#39;0&amp;#39;`と`&amp;#39;1&amp;#39;`の文字で構成される`basic_string`文字列からビット列を構築する
--- (4) : `&amp;#39;0&amp;#39;と`&amp;#39;1&amp;#39;`の文字で構成される`[`basic_string_view`](/reference/string_view/basic_string_view.md)オブジェクトからビット列を構築する
-+- (4) : `&amp;#39;0&amp;#39;`と`&amp;#39;1&amp;#39;`の文字で構成される[`basic_string_view`](/reference/string_view/basic_string_view.md)オブジェクトからビット列を構築する
- - (5) : `&amp;#39;0&amp;#39;`と`&amp;#39;1&amp;#39;`の文字で構成される文字配列からビット列を構築する
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>next -- インラインコードブロックの範囲を修正</title>
-      <link href="https://cpprefjp.github.io/reference/iterator/ranges_next.html"/>
-      <id>0b27920eb5f0d83dfdaee394f727eef78daa770d:reference/iterator/ranges_next.md</id>
-      <updated>2024-07-16T18:43:27+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/ranges_next.md b/reference/iterator/ranges_next.md
-index 58c578ee4..66c57e8af 100644
---- a/reference/iterator/ranges_next.md
-+++ b/reference/iterator/ranges_next.md
-@@ -144,7 +144,7 @@ int main() {
- | [`prev()`](prev.md) | `n`回後方に進めたイテレータを返す |
- | [`advance()`](advance.md) | `n`回イテレータを進める |
- | [`rangse::prev()`](ranges_prev.md) | `n`回後方に進めたイテレータを返す |
--| [`ranges::advance()`](ranges_advance.md) |`n`回あるいは`boundまで`イテレータを進める |
-+| [`ranges::advance()`](ranges_advance.md) |`n`回あるいは`bound`までイテレータを進める |
- 
- 
- ## 参照
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>prev -- インラインコードブロックの範囲を修正</title>
-      <link href="https://cpprefjp.github.io/reference/iterator/ranges_prev.html"/>
-      <id>0b27920eb5f0d83dfdaee394f727eef78daa770d:reference/iterator/ranges_prev.md</id>
-      <updated>2024-07-16T18:43:27+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/ranges_prev.md b/reference/iterator/ranges_prev.md
-index 2fea54213..639f46329 100644
---- a/reference/iterator/ranges_prev.md
-+++ b/reference/iterator/ranges_prev.md
-@@ -126,7 +126,7 @@ int main() {
- | [`prev()`](prev.md) | `n`回後方に進めたイテレータを返す |
- | [`advance()`](advance.md) | `n`回イテレータを進める |
- | [`ranges::next()`](ranges_next.md) | `n`回あるいは`bound`まで前方に進めたイテレータを返す |
--| [`ranges::advance()`](ranges_advance.md) |`n`回あるいは`boundまで`イテレータを進める |
-+| [`ranges::advance()`](ranges_advance.md) |`n`回あるいは`bound`までイテレータを進める |
- 
- 
- ## 参照
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>try_lock_until -- インラインコードブロックの範囲を修正</title>
-      <link href="https://cpprefjp.github.io/reference/mutex/recursive_timed_mutex/try_lock_until.html"/>
-      <id>0b27920eb5f0d83dfdaee394f727eef78daa770d:reference/mutex/recursive_timed_mutex/try_lock_until.md</id>
-      <updated>2024-07-16T18:43:27+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/mutex/recursive_timed_mutex/try_lock_until.md b/reference/mutex/recursive_timed_mutex/try_lock_until.md
-index 3503cc146..b2a860485 100644
---- a/reference/mutex/recursive_timed_mutex/try_lock_until.md
-+++ b/reference/mutex/recursive_timed_mutex/try_lock_until.md
-@@ -24,7 +24,7 @@ bool try_lock_until(const chrono::time_point&amp;lt;Clock, Duration&amp;gt;&amp;amp; abs_time);
- 
- 所有権が取得できるまで、もしくは`abs_time`時間に到達するまでこの関数はブロッキングする。
- 
--`abs_timeにすでに到達していた場合`、この関数は[`try_lock()`](try_lock.md)と同じ効果をもち、ブロッキングせずにミューテックスの所有権取得を試みる。
-+`abs_time`にすでに到達していた場合、この関数は[`try_lock()`](try_lock.md)と同じ効果をもち、ブロッキングせずにミューテックスの所有権取得を試みる。
- 
- 
- ## 戻り値
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>try_lock_until -- インラインコードブロックの範囲を修正</title>
-      <link href="https://cpprefjp.github.io/reference/mutex/timed_mutex/try_lock_until.html"/>
-      <id>0b27920eb5f0d83dfdaee394f727eef78daa770d:reference/mutex/timed_mutex/try_lock_until.md</id>
-      <updated>2024-07-16T18:43:27+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/mutex/timed_mutex/try_lock_until.md b/reference/mutex/timed_mutex/try_lock_until.md
-index b6d08cd6d..d087e83b1 100644
---- a/reference/mutex/timed_mutex/try_lock_until.md
-+++ b/reference/mutex/timed_mutex/try_lock_until.md
-@@ -28,7 +28,7 @@ bool try_lock_until(const chrono::time_point&amp;lt;Clock, Duration&amp;gt;&amp;amp; abs_time);
- 
- 所有権が取得できるまで、もしくは`abs_time`時間に到達するまでこの関数はブロッキングする。
- 
--`abs_timeにすでに到達していた場合`、この関数は[`try_lock()`](try_lock.md)と同じ効果をもち、ブロッキングせずにミューテックスの所有権取得を試みる。
-+`abs_time`にすでに到達していた場合、この関数は[`try_lock()`](try_lock.md)と同じ効果をもち、ブロッキングせずにミューテックスの所有権取得を試みる。
- 
- 
- ## 戻り値
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>inner_product -- インラインコードブロックの範囲を修正</title>
-      <link href="https://cpprefjp.github.io/reference/numeric/inner_product.html"/>
-      <id>0b27920eb5f0d83dfdaee394f727eef78daa770d:reference/numeric/inner_product.md</id>
-      <updated>2024-07-16T18:43:27+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/numeric/inner_product.md b/reference/numeric/inner_product.md
-index a15b27bd9..1631e9b95 100644
---- a/reference/numeric/inner_product.md
-+++ b/reference/numeric/inner_product.md
-@@ -60,11 +60,11 @@ namespace std {
- 
- ## 効果
- - (1) :
--    - C++03 : `acc = init;`、イテレータ範囲`[first1, last1)`の各イテレータを`i`、イテレータ範囲`[first2, first2 + (last1 - first1))`の各イテレータ`をj`として、`acc = acc + (*i) * (*j);` の演算を行い、`acc`を返す
--    - C++20 : `acc = init;`、イテレータ範囲`[first1, last1)`の各イテレータを`i`、イテレータ範囲`[first2, first2 + (last1 - first1))`の各イテレータ`をj`として、`acc =` [`std::move`](/reference/utility/move.md)`(acc) + (*i) * (*j);` の演算を行い、`acc`を返す
-+    - C++03 : `acc = init;`、イテレータ範囲`[first1, last1)`の各イテレータを`i`、イテレータ範囲`[first2, first2 + (last1 - first1))`の各イテレータを`j`として、`acc = acc + (*i) * (*j);` の演算を行い、`acc`を返す
-+    - C++20 : `acc = init;`、イテレータ範囲`[first1, last1)`の各イテレータを`i`、イテレータ範囲`[first2, first2 + (last1 - first1))`の各イテレータを`j`として、`acc =` [`std::move`](/reference/utility/move.md)`(acc) + (*i) * (*j);` の演算を行い、`acc`を返す
- - (2) :
--    - C++03 : `acc = init;`、イテレータ範囲`[first1, last1)`の各イテレータを`i`、イテレータ範囲`[first2, first2 + (last1 - first1))`の各イテレータ`をj`として、`acc = binary_op1(acc, binary_op2((*i), (*j)));` の演算を行い、`acc`を返す
--    - C++20 : `acc = init;`、イテレータ範囲`[first1, last1)`の各イテレータを`i`、イテレータ範囲`[first2, first2 + (last1 - first1))`の各イテレータ`をj`として、`acc = binary_op1(`[`std::move`](/reference/utility/move.md)`(acc), binary_op2((*i), (*j)));` の演算を行い、`acc`を返す
-+    - C++03 : `acc = init;`、イテレータ範囲`[first1, last1)`の各イテレータを`i`、イテレータ範囲`[first2, first2 + (last1 - first1))`の各イテレータを`j`として、`acc = binary_op1(acc, binary_op2((*i), (*j)));` の演算を行い、`acc`を返す
-+    - C++20 : `acc = init;`、イテレータ範囲`[first1, last1)`の各イテレータを`i`、イテレータ範囲`[first2, first2 + (last1 - first1))`の各イテレータを`j`として、`acc = binary_op1(`[`std::move`](/reference/utility/move.md)`(acc), binary_op2((*i), (*j)));` の演算を行い、`acc`を返す
- 
- 
- ## 戻り値
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>emplace -- インラインコードブロックの範囲を修正</title>
-      <link href="https://cpprefjp.github.io/reference/optional/optional/emplace.html"/>
-      <id>0b27920eb5f0d83dfdaee394f727eef78daa770d:reference/optional/optional/emplace.md</id>
-      <updated>2024-07-16T18:43:27+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/optional/optional/emplace.md b/reference/optional/optional/emplace.md
-index 526f276e6..6d8b578cb 100644
---- a/reference/optional/optional/emplace.md
-+++ b/reference/optional/optional/emplace.md
-@@ -32,7 +32,7 @@ constexpr T&amp;amp; emplace(std::initializer_list&amp;lt;U&amp;gt; il, Args&amp;amp;&amp;amp;... args); // (2) C++23
- まず、共通の動作として、[`reset()`](reset.md)メンバ関数を呼び出す。
- 
- - (1) : 型`T`の有効値を、[`std::forward&amp;lt;Args&amp;gt;`](/reference/utility/forward.md)`(args)...`を引数として構築する
--- (2) : 型`T`の有効値を、`ilと`[`std::forward&amp;lt;Args&amp;gt;`](/reference/utility/forward.md)`(args)...`を引数として構築する
-+- (2) : 型`T`の有効値を、`il`と[`std::forward&amp;lt;Args&amp;gt;`](/reference/utility/forward.md)`(args)...`を引数として構築する
- 
- 
- ## 戻り値
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>try_lock_shared_until -- インラインコードブロックの範囲を修正</title>
-      <link href="https://cpprefjp.github.io/reference/shared_mutex/shared_timed_mutex/try_lock_shared_until.html"/>
-      <id>0b27920eb5f0d83dfdaee394f727eef78daa770d:reference/shared_mutex/shared_timed_mutex/try_lock_shared_until.md</id>
-      <updated>2024-07-16T18:43:27+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/shared_mutex/shared_timed_mutex/try_lock_shared_until.md b/reference/shared_mutex/shared_timed_mutex/try_lock_shared_until.md
-index de53869e9..6d7e43ff1 100644
---- a/reference/shared_mutex/shared_timed_mutex/try_lock_shared_until.md
-+++ b/reference/shared_mutex/shared_timed_mutex/try_lock_shared_until.md
-@@ -28,7 +28,7 @@ bool try_lock_shared_until(const chrono::time_point&amp;lt;Clock, Duration&amp;gt;&amp;amp; abs_time);
- 
- 共有所有権が取得できるまで、もしくは`abs_time`時間に到達するまでこの関数はブロッキングする。
- 
--`abs_timeにすでに到達していた場合`、この関数は[`try_lock_shared()`](try_lock_shared.md)と同じ効果をもち、ブロッキングせずにミューテックスの共有所有権の取得を試みる。
-+`abs_time`にすでに到達していた場合、この関数は[`try_lock_shared()`](try_lock_shared.md)と同じ効果をもち、ブロッキングせずにミューテックスの共有所有権の取得を試みる。
- 
- 
- ## 戻り値
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>try_lock_until -- インラインコードブロックの範囲を修正</title>
-      <link href="https://cpprefjp.github.io/reference/shared_mutex/shared_timed_mutex/try_lock_until.html"/>
-      <id>0b27920eb5f0d83dfdaee394f727eef78daa770d:reference/shared_mutex/shared_timed_mutex/try_lock_until.md</id>
-      <updated>2024-07-16T18:43:27+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/shared_mutex/shared_timed_mutex/try_lock_until.md b/reference/shared_mutex/shared_timed_mutex/try_lock_until.md
-index ef560189d..06401b21f 100644
---- a/reference/shared_mutex/shared_timed_mutex/try_lock_until.md
-+++ b/reference/shared_mutex/shared_timed_mutex/try_lock_until.md
-@@ -28,7 +28,7 @@ bool try_lock_until(const chrono::time_point&amp;lt;Clock, Duration&amp;gt;&amp;amp; abs_time);
- 
- 排他所有権が取得できるまで、もしくは`abs_time`時間に到達するまでこの関数はブロッキングする。
- 
--`abs_timeにすでに到達していた場合`、この関数は[`try_lock()`](try_lock.md)と同じ効果をもち、ブロッキングせずにミューテックスの排他所有の権取得を試みる。
-+`abs_time`にすでに到達していた場合、この関数は[`try_lock()`](try_lock.md)と同じ効果をもち、ブロッキングせずにミューテックスの排他所有の権取得を試みる。
- 
- 
- ## 戻り値
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>コンストラクタ -- インラインコードブロックの範囲を修正</title>
-      <link href="https://cpprefjp.github.io/reference/span/span/op_constructor.html"/>
-      <id>0b27920eb5f0d83dfdaee394f727eef78daa770d:reference/span/span/op_constructor.md</id>
-      <updated>2024-07-16T18:43:27+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/span/span/op_constructor.md b/reference/span/span/op_constructor.md
-index 797d6c265..5b084d70e 100644
---- a/reference/span/span/op_constructor.md
-+++ b/reference/span/span/op_constructor.md
-@@ -80,7 +80,7 @@ constexpr explicit(extent != dynamic_extent)
- - (4), (5), (6) :
-     - `extent ==` [`dynamic_extent`](/reference/span/dynamic_extent.md) `|| N == extent`が`true`であること
-     - [`remove_pointer_t`](/reference/type_traits/remove_pointer.md)`&amp;lt;decltype(`[`data`](/reference/iterator/data.md)`(arr)))&amp;gt;`を型`U`であるとして、
--        - [`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;U(*)[], element_type(*)[]&amp;gt;`が`trueであること` (この制約の意図は、配列の要素型から`element_type`へ、修飾の変換のみを許可すること)
-+        - [`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;U(*)[], element_type(*)[]&amp;gt;`が`true`であること (この制約の意図は、配列の要素型から`element_type`へ、修飾の変換のみを許可すること)
- - (7) :
-     - 型 `U` を [`std::remove_reference_t`](/reference/type_traits/remove_reference.md)`&amp;lt;`[`std::iter_reference_t`](/reference/iterator/iter_reference_t.md)`&amp;lt;R&amp;gt;&amp;gt;`とするとき
-         - 型 `R` はコンセプト `std::ranges::contiguous_range` 及び `std::ranges::sized_range` を満たしていること
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>ディレクトリ構造 -- インラインコードブロックの範囲を修正</title>
-      <link href="https://cpprefjp.github.io/start_editing/directory_structure.html"/>
-      <id>0b27920eb5f0d83dfdaee394f727eef78daa770d:start_editing/directory_structure.md</id>
-      <updated>2024-07-16T18:43:27+09:00</updated>
-      
-        <content type="html">&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;token&#34;&gt;ディレクトリ構造&lt;/span&gt;&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;h2&gt;lang&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;cpp{version}.mdの形式で、各C++バージョンの言語機能ページを作る&lt;/li&gt;
-&lt;li&gt;future.mdは、将来のC++で検討されている言語機能を記載するところである。導入予定だった機能が再検討になった場合などに使用する&lt;/li&gt;
-&lt;li&gt;archive.mdは、廃案になったC++機能だが解説として残す価値のあるものがある場合に、記載するところである&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;reference / module&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;reference階層は、ヘッダベースのライブラリリファレンスで、その階層直下にはヘッダページを置く&lt;/li&gt;
-&lt;li&gt;module階層は、モジュールベースのライブラリリファレンスで、その階層直下にはモジュールページを置く&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;reference階層とmodule階層は上記以外は同じであるため、以下、共通のルールを書きます。&lt;/p&gt;
-&lt;h3&gt;ヘッダ・モジュール階層&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;ヘッダ・モジュール階層以下に、それに所属している機能のページを置く&lt;/li&gt;
-&lt;li&gt;どのヘッダ・モジュールにも属さない機能の場合は、以下のように対応する&lt;ul&gt;
-&lt;li&gt;全体で使用する説明専用の機能は、仮のヘッダ&lt;code&gt;&amp;lt;exposition-only&amp;gt;&lt;/code&gt;に属するものとして記載する&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;クラス階層&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;クラスに属するメンバ関数と型は、クラス階層の下に置く&lt;/li&gt;
-&lt;li&gt;オーバーロードを意図している関数、そのクラス向けに特殊化した機能も、クラス階層の下に置き、機能の列挙としてもクラスページで行う&lt;ul&gt;
-&lt;li&gt;オーバーロードを意図している関数の例は以下：&lt;ul&gt;
-&lt;li&gt;非メンバ関数の演算子&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;std::get()&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;std::begin()&lt;/code&gt;/&lt;code&gt;std::end()&lt;/code&gt;/&lt;code&gt;std::data()&lt;/code&gt;/&lt;code&gt;std::size()&lt;/code&gt;およびそれに類するもの&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;std::swap()&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;std::erase()&lt;/code&gt;/&lt;code&gt;std::erase_if()&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;floor()&lt;/code&gt;/&lt;code&gt;ceil()&lt;/code&gt;/&lt;code&gt;round()&lt;/code&gt; (chrono)&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;特殊な例として、&lt;code&gt;&lt;a href=&#34;../reference/expected/expected.html&#34;&gt;std::expected&lt;/a&gt;&lt;/code&gt;では&lt;a href=&#34;../reference/expected/expected.void.html&#34;&gt;部分特殊化&lt;/a&gt;のためにクラス階層を分離している。これは各メンバ説明の差分が大きいためである&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;演算子オーバーロードは、&lt;code&gt;operator&amp;lt;&amp;lt;&lt;/code&gt; (出力ストリームへの出力) と &lt;code&gt;std::operator&amp;gt;&amp;gt;&lt;/code&gt; (入力ストリームからの入力) を除き、左辺のクラスに属するものとする&lt;ul&gt;
-&lt;li&gt;特殊な例として、&lt;code&gt;&lt;a href=&#34;../reference/system_error/error_code.html&#34;&gt;std::error_code&lt;/a&gt;&lt;/code&gt;と&lt;code&gt;&lt;a href=&#34;../reference/system_error/error_condition.html&#34;&gt;std::error_condition&lt;/a&gt;&lt;/code&gt;の比較演算子は、クラス階層ではなくヘッダ階層としている。これは所属関係がむずかしいためである&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;コンセプト階層&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;コンセプトによってオーバーロード・特殊化されている場合は、コンセプトの階層を作って、その下に置く。機能の列挙としてはヘッダページで行う&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;名前空間階層&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;名前空間の階層は基本的に導入しない。例外は以下：&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;../reference/thread/this_thread.html&#34;&gt;std::this_thread&lt;/a&gt;&lt;/code&gt;&lt;ul&gt;
-&lt;li&gt;名前空間に特殊な意味をもたせている&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>raclamusi</name>
-        <email>raclamusi@gmail.com</email>
       </author>
     </entry>
   
