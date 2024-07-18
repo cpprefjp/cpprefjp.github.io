@@ -2,258 +2,15 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2024-07-17T14:39:41.223105</updated>
-  <id>512cbde0-2bb3-4e97-8a0d-5823aa1ae72b</id>
+  <updated>2024-07-18T02:47:22.543012</updated>
+  <id>79757aea-bbb0-45c3-847f-53e9701abe5c</id>
 
   
     <entry>
-      <title>コンストラクタ -- Merge pull request #1299 from sukeya/add_custom_deleter_to_example</title>
-      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr/op_constructor.html"/>
-      <id>a83de745dc9be67f48581b8c96da97aeb8663eae:reference/memory/unique_ptr/op_constructor.md</id>
-      <updated>2024-07-17T18:15:52+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr/op_constructor.md b/reference/memory/unique_ptr/op_constructor.md
-index a23183cb0..48c6eb1bd 100644
---- a/reference/memory/unique_ptr/op_constructor.md
-+++ b/reference/memory/unique_ptr/op_constructor.md
-@@ -118,6 +118,20 @@ unique_ptr&amp;lt;T, D&amp;amp;&amp;gt; p(new T(), deleter); // pはdeleterへの参照を保持する
- #include &amp;lt;cassert&amp;gt;
- #include &amp;lt;memory&amp;gt;
- 
-+using AllocTraits = std::allocator_traits&amp;lt;std::allocator&amp;lt;int&amp;gt;&amp;gt;;
-+
-+class Deleter {
-+ public:
-+  explicit Deleter(const std::allocator&amp;lt;int&amp;gt;&amp;amp; alloc) : alloc_(alloc) {}
-+
-+  void operator()(int* p) {
-+    AllocTraits::destroy(alloc_, p);
-+    AllocTraits::deallocate(alloc_, p, 1);
-+  }
-+ private:
-+  std::allocator&amp;lt;int&amp;gt; alloc_;
-+};
-+
- int main()
- {
-   // (1) デフォルト構築
-@@ -133,6 +147,16 @@ int main()
-   std::unique_ptr&amp;lt;int&amp;gt; p3(new int(3), std::default_delete&amp;lt;int&amp;gt;());
-   assert(p3);
- 
-+  // 自作デリータを使った例
-+  {
-+    std::allocator&amp;lt;int&amp;gt; alloc;
-+    int* p = AllocTraits::allocate(alloc, 1);
-+    AllocTraits::construct(alloc, p, 4);
-+    std::unique_ptr&amp;lt;int, Deleter&amp;gt; p4(p, Deleter(alloc));
-+    assert(p4);
-+    assert(*p4 == 4);
-+  }
-+
-   // (5) 他のunique_ptrから所有権を譲渡する
-   std::unique_ptr&amp;lt;int&amp;gt; p5 = std::move(p3);
-   assert(*p5 == 3);
-@@ -147,6 +171,12 @@ int main()
-   assert(*static_cast&amp;lt;const int*&amp;gt;(p7.get()) == 3);
- }
- ```
-+* std::allocator_traits[link /reference/memory/allocator_traits.md]
-+* std::allocator[link /reference/memory/allocator.md]
-+* destroy[link /reference/memory/allocator_traits/destroy.md]
-+* deallocate[link /reference/memory/allocator_traits/deallocate.md]
-+* allocate[link /reference/memory/allocator_traits/allocate.md]
-+* construct[link /reference/memory/allocator_traits/construct.md]
- * std::default_delete[link /reference/memory/default_delete.md]
- * std::move[link /reference/utility/move.md]
- * get()[link get.md]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>コンストラクタ -- std::unique_ptrに自作デリータの使用例を追加</title>
-      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr/op_constructor.html"/>
-      <id>37f60c5b903e13d13943cd7667449850714d440e:reference/memory/unique_ptr/op_constructor.md</id>
-      <updated>2024-07-17T17:21:31+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr/op_constructor.md b/reference/memory/unique_ptr/op_constructor.md
-index a23183cb0..48c6eb1bd 100644
---- a/reference/memory/unique_ptr/op_constructor.md
-+++ b/reference/memory/unique_ptr/op_constructor.md
-@@ -118,6 +118,20 @@ unique_ptr&amp;lt;T, D&amp;amp;&amp;gt; p(new T(), deleter); // pはdeleterへの参照を保持する
- #include &amp;lt;cassert&amp;gt;
- #include &amp;lt;memory&amp;gt;
- 
-+using AllocTraits = std::allocator_traits&amp;lt;std::allocator&amp;lt;int&amp;gt;&amp;gt;;
-+
-+class Deleter {
-+ public:
-+  explicit Deleter(const std::allocator&amp;lt;int&amp;gt;&amp;amp; alloc) : alloc_(alloc) {}
-+
-+  void operator()(int* p) {
-+    AllocTraits::destroy(alloc_, p);
-+    AllocTraits::deallocate(alloc_, p, 1);
-+  }
-+ private:
-+  std::allocator&amp;lt;int&amp;gt; alloc_;
-+};
-+
- int main()
- {
-   // (1) デフォルト構築
-@@ -133,6 +147,16 @@ int main()
-   std::unique_ptr&amp;lt;int&amp;gt; p3(new int(3), std::default_delete&amp;lt;int&amp;gt;());
-   assert(p3);
- 
-+  // 自作デリータを使った例
-+  {
-+    std::allocator&amp;lt;int&amp;gt; alloc;
-+    int* p = AllocTraits::allocate(alloc, 1);
-+    AllocTraits::construct(alloc, p, 4);
-+    std::unique_ptr&amp;lt;int, Deleter&amp;gt; p4(p, Deleter(alloc));
-+    assert(p4);
-+    assert(*p4 == 4);
-+  }
-+
-   // (5) 他のunique_ptrから所有権を譲渡する
-   std::unique_ptr&amp;lt;int&amp;gt; p5 = std::move(p3);
-   assert(*p5 == 3);
-@@ -147,6 +171,12 @@ int main()
-   assert(*static_cast&amp;lt;const int*&amp;gt;(p7.get()) == 3);
- }
- ```
-+* std::allocator_traits[link /reference/memory/allocator_traits.md]
-+* std::allocator[link /reference/memory/allocator.md]
-+* destroy[link /reference/memory/allocator_traits/destroy.md]
-+* deallocate[link /reference/memory/allocator_traits/deallocate.md]
-+* allocate[link /reference/memory/allocator_traits/allocate.md]
-+* construct[link /reference/memory/allocator_traits/construct.md]
- * std::default_delete[link /reference/memory/default_delete.md]
- * std::move[link /reference/utility/move.md]
- * get()[link get.md]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Yuya Asano</name>
-        <email>64895419+sukeya@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>triangular_matrix_matrix_left_solve -- linalg : 例を修正 (#1233)</title>
-      <link href="https://cpprefjp.github.io/reference/linalg/triangular_matrix_matrix_left_solve.html"/>
-      <id>c84c78865ce78853654b463989873ec034c97296:reference/linalg/triangular_matrix_matrix_left_solve.md</id>
-      <updated>2024-07-17T14:39:35+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/linalg/triangular_matrix_matrix_left_solve.md b/reference/linalg/triangular_matrix_matrix_left_solve.md
-index 89c1074e8..f8c68987a 100644
---- a/reference/linalg/triangular_matrix_matrix_left_solve.md
-+++ b/reference/linalg/triangular_matrix_matrix_left_solve.md
-@@ -138,10 +138,10 @@ void print_mat(const Matrix&amp;amp; A) {
- }
- 
- template &amp;lt;class Matrix&amp;gt;
--void init_mat(Matrix&amp;amp; A, typename Matrix::value_type geta = 1) {
-+void init_mat(Matrix&amp;amp; A) {
-   for(int i = 0; i &amp;lt; A.extent(0); ++i) {
-     for(int j = 0; j &amp;lt; A.extent(1); ++j) {
--      A[i, j] = i * A.extent(1) + j + geta;
-+      A[i, j] = i * A.extent(1) + j;
-     }
-   }
- }
-@@ -173,7 +173,7 @@ int main()
-   std::mdspan X(X_vec.data(), N, N);
-   std::mdspan B(B_vec.data(), N, N);
- 
--  init_mat(A)
-+  init_tria_mat(A);
-   init_mat(B);
- 
-   // (1)
-@@ -197,7 +197,7 @@ int main()
-     B,
-     X,
-     std::divides&amp;lt;void&amp;gt;{});
--  print(X);
-+  print_mat(X);
- 
-   // (3)
-   std::cout &amp;lt;&amp;lt; &amp;#34;(3)\n&amp;#34;;
-@@ -207,7 +207,7 @@ int main()
-     std::linalg::implicit_unit_diagonal,
-     B,
-     X);
--  print(X);
-+  print_mat(X);
- 
-   // (4)
-   std::cout &amp;lt;&amp;lt; &amp;#34;(4)\n&amp;#34;;
-@@ -218,13 +218,12 @@ int main()
-     std::linalg::implicit_unit_diagonal,
-     B,
-     X);
--  print(X);
-+  print_mat(X);
- 
-   return 0;
- }
- ```
- * A.extent[link /reference/mdspan/extents/extent.md]
--* v.extent[link /reference/mdspan/extents/extent.md]
- * std::mdspan[link /reference/mdspan/mdspan.md]
- * std::extents[link /reference/mdspan/extents.md]
- * std::linalg::layout_blas_packed[link /reference/linalg/layout_blas_packed.md]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Yuya Asano</name>
-        <email>64895419+sukeya@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>triangular_matrix_vector_solve -- linalg : fix typo. (#1233)</title>
-      <link href="https://cpprefjp.github.io/reference/linalg/triangular_matrix_vector_solve.html"/>
-      <id>fe869d5b73f73b4743bd7df6c91772a8eef3746b:reference/linalg/triangular_matrix_vector_solve.md</id>
-      <updated>2024-07-17T14:31:59+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/linalg/triangular_matrix_vector_solve.md b/reference/linalg/triangular_matrix_vector_solve.md
-index d4c71663b..b587f9ad5 100644
---- a/reference/linalg/triangular_matrix_vector_solve.md
-+++ b/reference/linalg/triangular_matrix_vector_solve.md
-@@ -125,11 +125,11 @@ namespace std::linalg {
- 
- - (1): 連立一次方程式 $Ay = b$ を解き、`y`を`x`に代入する。もし解が存在しないなら、`x`は有効だが未規定。
- - (2): (1)を指定された実行ポリシーで実行する。
--- (3): 割り算に[`std::divedes`](/reference/functional/divides.md)`&amp;lt;void&amp;gt;`を用いて、(1)を行う。
-+- (3): 割り算に[`std::divides`](/reference/functional/divides.md)`&amp;lt;void&amp;gt;`を用いて、(1)を行う。
- - (4): (3)を指定された実行ポリシーで実行する。
- - (5): `x`に`b`を使って、in-placeに(1)を行う。
- - (6): (5)を指定された実行ポリシーで実行する。
--- (7): 割り算に[`std::divedes`](/reference/functional/divides.md)`&amp;lt;void&amp;gt;`を用いて、(5)を行う。
-+- (7): 割り算に[`std::divides`](/reference/functional/divides.md)`&amp;lt;void&amp;gt;`を用いて、(5)を行う。
- - (8): (7)を指定された実行ポリシーで実行する。
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Yuya Asano</name>
-        <email>64895419+sukeya@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>linalg -- linalg : triangular_matrix_matrix_left_solveを追加 (#1233)</title>
+      <title>linalg -- linalg : triangular_matrix_matrix_right_solveを追加 (#1233)</title>
       <link href="https://cpprefjp.github.io/reference/linalg.html"/>
-      <id>dae7d3d3ac1b7babdf79a975931548f08dba78ba:reference/linalg.md</id>
-      <updated>2024-07-17T14:31:13+09:00</updated>
+      <id>ad1f2ed629033c147d39060bbe6c9c9b1ae19055:reference/linalg.md</id>
+      <updated>2024-07-18T11:32:33+09:00</updated>
       
         <content type="html">&lt;div class=&#34;header&#34;&gt;&amp;lt;linalg&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;token&#34;&gt;linalg&lt;/span&gt;&lt;span class=&#34;cpp cpp26&#34; title=&#34;C++26で追加&#34;&gt;(C++26)&lt;/span&gt;&lt;/h1&gt;
 &lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;&lt;code&gt;&amp;lt;linalg&amp;gt;&lt;/code&gt;ヘッダでは、線形代数(linear algebra)に関する基礎的な演算アルゴリズムを提供する。
@@ -585,7 +342,7 @@ BLAS互換アルゴリズムは、演算対象データの次元数や計算オ�
 &lt;td&gt;C++26&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
-&lt;td&gt;&lt;code&gt;triangular_matrix_matrix_right_solve&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;&lt;a href=&#34;linalg/triangular_matrix_matrix_right_solve.html&#34;&gt;triangular_matrix_matrix_right_solve&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;xTRSM: 三角行列の連立一次方程式を解く (function template)&lt;/td&gt;
 &lt;td&gt;C++26&lt;/td&gt;
 &lt;/tr&gt;
@@ -717,18 +474,18 @@ BLAS互換アルゴリズムは、演算対象データの次元数や計算オ�
     </entry>
   
     <entry>
-      <title>triangular_matrix_matrix_left_solve -- linalg : triangular_matrix_matrix_left_solveを追加 (#1233)</title>
-      <link href="https://cpprefjp.github.io/reference/linalg/triangular_matrix_matrix_left_solve.html"/>
-      <id>dae7d3d3ac1b7babdf79a975931548f08dba78ba:reference/linalg/triangular_matrix_matrix_left_solve.md</id>
-      <updated>2024-07-17T14:31:13+09:00</updated>
+      <title>triangular_matrix_matrix_right_solve -- linalg : triangular_matrix_matrix_right_solveを追加 (#1233)</title>
+      <link href="https://cpprefjp.github.io/reference/linalg/triangular_matrix_matrix_right_solve.html"/>
+      <id>ad1f2ed629033c147d39060bbe6c9c9b1ae19055:reference/linalg/triangular_matrix_matrix_right_solve.md</id>
+      <updated>2024-07-18T11:32:33+09:00</updated>
       
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/linalg/triangular_matrix_matrix_left_solve.md b/reference/linalg/triangular_matrix_matrix_left_solve.md
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/linalg/triangular_matrix_matrix_right_solve.md b/reference/linalg/triangular_matrix_matrix_right_solve.md
 new file mode 100644
-index 000000000..89c1074e8
+index 000000000..561622a28
 --- /dev/null
-+++ b/reference/linalg/triangular_matrix_matrix_left_solve.md
-@@ -0,0 +1,279 @@
-+# triangular_matrix_matrix_left_solve
++++ b/reference/linalg/triangular_matrix_matrix_right_solve.md
+@@ -0,0 +1,391 @@
++# triangular_matrix_matrix_right_solve
 +
 +
 +* [mathjax enable]
@@ -746,7 +503,7 @@ index 000000000..89c1074e8
 +           in-matrix InMat2,
 +           out-matrix OutMat,
 +           class BinaryDivideOp&amp;gt;
-+  void triangular_matrix_matrix_left_solve(
++  void triangular_matrix_matrix_right_solve(
 +    InMat1 A,
 +    Triangle t,
 +    DiagonalStorage d,
@@ -761,7 +518,7 @@ index 000000000..89c1074e8
 +           in-matrix InMat2,
 +           out-matrix OutMat,
 +           class BinaryDivideOp&amp;gt;
-+  void triangular_matrix_matrix_left_solve(
++  void triangular_matrix_matrix_right_solve(
 +    ExecutionPolicy&amp;amp;&amp;amp; exec,
 +    InMat1 A,
 +    Triangle t,
@@ -775,7 +532,7 @@ index 000000000..89c1074e8
 +           class DiagonalStorage,
 +           in-matrix InMat2,
 +           out-matrix OutMat&amp;gt;
-+  void triangular_matrix_matrix_left_solve(
++  void triangular_matrix_matrix_right_solve(
 +    InMat1 A,
 +    Triangle t,
 +    DiagonalStorage d,
@@ -788,13 +545,61 @@ index 000000000..89c1074e8
 +           class DiagonalStorage,
 +           in-matrix InMat2,
 +           out-matrix OutMat&amp;gt;
-+  void triangular_matrix_matrix_left_solve(
++  void triangular_matrix_matrix_right_solve(
 +    ExecutionPolicy&amp;amp;&amp;amp; exec,
 +    InMat1 A,
 +    Triangle t,
 +    DiagonalStorage d,
 +    InMat2 B,
 +    OutMat X); // (4)
++
++  template&amp;lt;in-matrix InMat,
++           class Triangle,
++           class DiagonalStorage,
++           inout-matrix InOutMat,
++           class BinaryDivideOp&amp;gt;
++  void triangular_matrix_matrix_right_solve(
++    InMat A,
++    Triangle t,
++    DiagonalStorage d,
++    InOutMat B,
++    BinaryDivideOp divide); // (5)
++
++  template&amp;lt;class ExecutionPolicy,
++          in-matrix InMat,
++          class Triangle,
++          class DiagonalStorage,
++          inout-matrix InOutMat,
++          class BinaryDivideOp&amp;gt;
++  void triangular_matrix_matrix_right_solve(
++    ExecutionPolicy&amp;amp;&amp;amp; exec,
++    InMat A,
++    Triangle t,
++    DiagonalStorage d,
++    InOutMat B,
++    BinaryDivideOp divide); // (6)
++
++  template&amp;lt;in-matrix InMat,
++           class Triangle,
++           class DiagonalStorage,
++           inout-matrix InOutMat&amp;gt;
++  void triangular_matrix_matrix_right_solve(
++    InMat A,
++    Triangle t,
++    DiagonalStorage d,
++    InOutMat B); // (7)
++
++  template&amp;lt;class ExecutionPolicy,
++           in-matrix InMat,
++           class Triangle,
++           class DiagonalStorage,
++           inout-matrix InOutMat&amp;gt;
++  void triangular_matrix_matrix_right_solve(
++    ExecutionPolicy&amp;amp;&amp;amp; exec,
++    InMat A,
++    Triangle t,
++    DiagonalStorage d,
++    InOutMat B); // (8)
 +}
 +```
 +
@@ -805,33 +610,43 @@ index 000000000..89c1074e8
 +引数`d`には対称行列の対角成分を暗黙に乗法における単位元とみなすかどうかを指定する。
 +引数`divide`には値の割り算を指定する。この引数は非可換な掛け算を持つ値型をサポートするためにある。
 +
-+- (1): 連立一次方程式 $AY = B$ を解き、`Y`を`X`に代入する。もし解が存在しないなら、`X`は有効だが未規定。
++- (1): 連立一次方程式 $YA = B$ を解き、`Y`を`X`に代入する。もし解が存在しないなら、`X`は有効だが未規定。
 +- (2): (1)を指定された実行ポリシーで実行する。
 +- (3): 割り算に[`std::divides`](/reference/functional/divides.md)`&amp;lt;void&amp;gt;`を用いて、(1)を行う。
 +- (4): (3)を指定された実行ポリシーで実行する。
++- (5): `X`に`B`を使って、in-placeに(1)を行う。
++- (6): (5)を指定された実行ポリシーで実行する。
++- (7): 割り算に[`std::divides`](/reference/functional/divides.md)`&amp;lt;void&amp;gt;`を用いて、(5)を行う。
++- (8): (7)を指定された実行ポリシーで実行する。
 +
 +
 +## 適格要件
 +- 共通:
 +    + `Triangle`は[`upper_triangle_t`](upper_triangle_t.md)または[`lower_triangle_t`](lower_triangle_t.md)
 +    + `DiagonalStorage`は[`implicit_unit_diagonal_t`](implicit_unit_diagonal_t.md)または[`explicit_diagonal_t`](explicit_diagonal_t.md)
-+    + `InMat1`(`A`の型)が[`layout_blas_packed`](layout_blas_packed.md)を持つなら、レイアウトの`Triangle`テンプレート引数とこの関数の`Triangle`テンプレート引数が同じ型
-+    + [`possibly-multipliable`](possibly-multipliable.md)`&amp;lt;decltype(A), decltype(X), decltype(B)&amp;gt;()`が`true`
++    + `decltype(A)`が[`layout_blas_packed`](layout_blas_packed.md)を持つなら、レイアウトの`Triangle`テンプレート引数とこの関数の`Triangle`テンプレート引数が同じ型
 +    + [`compatible-static-extents`](compatible-static-extents.md)`&amp;lt;decltype(A), decltype(A)&amp;gt;(0, 1)`が`true` (つまり`A`が正方行列であること)
-+- (2), (4): [`is_execution_policy`](/reference/execution/is_execution_policy.md)`&amp;lt;ExecutionPolicy&amp;gt;::value`が`true`
++- (1), (2), (3), (4): [`possibly-multipliable`](possibly-multipliable.md)`&amp;lt;decltype(X), decltype(A), decltype(B)&amp;gt;()`が`true`
++- (5), (6), (7), (8): [`possibly-multipliable`](possibly-multipliable.md)`&amp;lt;decltype(B), decltype(A), decltype(B)&amp;gt;()`が`true`
++- (2), (4), (6), (8): [`is_execution_policy`](/reference/execution/is_execution_policy.md)`&amp;lt;ExecutionPolicy&amp;gt;::value`が`true`
 +
 +
 +## 事前条件
-+- [`multipliable`](multipliable.md)`(A, X, B)`が`true`
-+- `A.extent(0) == A.extent(1)` (つまり`A`が正方行列であること)
++- 共通:
++    + `A.extent(0) == A.extent(1)` (つまり`A`が正方行列であること)
++- (1), (2), (3), (4): [`multipliable`](multipliable.md)`(X, A, B)`が`true`
++- (5), (6), (7), (8): [`multipliable`](multipliable.md)`(B, A, B)`が`true`
 +
 +
 +## 効果
 +対称行列の成分の位置を示す`t`と対角成分へアクセスするかどうかを示す`d`を考慮して、連立一次方程式の解を求める。
 +
 +- (1), (2): 連立一次方程式 $AY = B$ を解き、`Y`を`X`に代入する。もし解が存在しないなら、`X`は有効だが未規定。
-+- (3): `triangular_matrix_matrix_left_solve(A, t, d, B, X, divides&amp;lt;void&amp;gt;{})`と同じ。
-+- (4): `triangular_matrix_matrix_left_solve(std::forward&amp;lt;ExecutionPolicy&amp;gt;(exec), A, t, d, B, X, divides&amp;lt;void&amp;gt;{})`と同じ。
++- (3): `triangular_matrix_matrix_right_solve(A, t, d, B, X, divides&amp;lt;void&amp;gt;{})`と同じ。
++- (4): `triangular_matrix_matrix_right_solve(std::forward&amp;lt;ExecutionPolicy&amp;gt;(exec), A, t, d, B, X, divides&amp;lt;void&amp;gt;{})`と同じ。
++- (5), (6): `X`に`B`を使って、in-placeに(1)を行う。
++- (7): `triangular_matrix_matrix_right_solve(A, t, d, B, divides&amp;lt;void&amp;gt;{})`と同じ。
++- (8): `triangular_matrix_matrix_right_solve(std::forward&amp;lt;ExecutionPolicy&amp;gt;(exec), A, t, d, B, divides&amp;lt;void&amp;gt;{})`と同じ。
 +
 +
 +## 戻り値
@@ -839,11 +654,11 @@ index 000000000..89c1074e8
 +
 +
 +## 計算量
-+$O(\verb|A.extent(0)| \times (\verb|X.extent(0)|)^2)$
++$O((\verb|A.extent(0)|)^2 \times \verb|B.extent(0)|)$
 +
 +
 +## 備考
-+- 三角行列が左側にあるので、非可換な掛け算の場合の`divide`の望ましい実装は数学では$y^{-1}x$と同等と思われる。ここで`x`は最初の引数で`y`は2番目の引数、$y^{-1}$は`y`の掛け算での逆元である。
++- 三角行列が左側にあるので、非可換な掛け算の場合の`divide`の望ましい実装は数学では$xy^{-1}$と同等と思われる。ここで`x`は最初の引数で`y`は2番目の引数、$y^{-1}$は`y`の掛け算での逆元である。
 +
 +
 +## 例
@@ -868,10 +683,10 @@ index 000000000..89c1074e8
 +}
 +
 +template &amp;lt;class Matrix&amp;gt;
-+void init_mat(Matrix&amp;amp; A, typename Matrix::value_type geta = 1) {
++void init_mat(Matrix&amp;amp; A) {
 +  for(int i = 0; i &amp;lt; A.extent(0); ++i) {
 +    for(int j = 0; j &amp;lt; A.extent(1); ++j) {
-+      A[i, j] = i * A.extent(1) + j + geta;
++      A[i, j] = i * A.extent(1) + j;
 +    }
 +  }
 +}
@@ -903,12 +718,12 @@ index 000000000..89c1074e8
 +  std::mdspan X(X_vec.data(), N, N);
 +  std::mdspan B(B_vec.data(), N, N);
 +
-+  init_mat(A)
++  init_tria_mat(A);
 +  init_mat(B);
 +
 +  // (1)
 +  std::cout &amp;lt;&amp;lt; &amp;#34;(1)\n&amp;#34;;
-+  std::linalg::triangular_matrix_matrix_left_solve(
++  std::linalg::triangular_matrix_matrix_right_solve(
 +    A,
 +    std::linalg::upper_triangle,
 +    std::linalg::implicit_unit_diagonal,
@@ -919,7 +734,7 @@ index 000000000..89c1074e8
 +
 +  // (2)
 +  std::cout &amp;lt;&amp;lt; &amp;#34;(2)\n&amp;#34;;
-+  std::linalg::triangular_matrix_matrix_left_solve(
++  std::linalg::triangular_matrix_matrix_right_solve(
 +    std::execution::par,
 +    A,
 +    std::linalg::upper_triangle,
@@ -927,34 +742,76 @@ index 000000000..89c1074e8
 +    B,
 +    X,
 +    std::divides&amp;lt;void&amp;gt;{});
-+  print(X);
++  print_mat(X);
 +
 +  // (3)
 +  std::cout &amp;lt;&amp;lt; &amp;#34;(3)\n&amp;#34;;
-+  std::linalg::triangular_matrix_matrix_left_solve(
++  std::linalg::triangular_matrix_matrix_right_solve(
 +    A,
 +    std::linalg::upper_triangle,
 +    std::linalg::implicit_unit_diagonal,
 +    B,
 +    X);
-+  print(X);
++  print_mat(X);
 +
 +  // (4)
 +  std::cout &amp;lt;&amp;lt; &amp;#34;(4)\n&amp;#34;;
-+  std::linalg::triangular_matrix_matrix_left_solve(
++  std::linalg::triangular_matrix_matrix_right_solve(
 +    std::execution::par,
 +    A,
 +    std::linalg::upper_triangle,
 +    std::linalg::implicit_unit_diagonal,
 +    B,
 +    X);
-+  print(X);
++  print_mat(X);
++
++  // (5)
++  std::cout &amp;lt;&amp;lt; &amp;#34;(5)\n&amp;#34;;
++  std::linalg::triangular_matrix_matrix_right_solve(
++    A,
++    std::linalg::upper_triangle,
++    std::linalg::implicit_unit_diagonal,
++    B,
++    std::divides&amp;lt;void&amp;gt;{});
++  print_mat(B);
++
++  // (6)
++  init_mat(B);
++  std::cout &amp;lt;&amp;lt; &amp;#34;(6)\n&amp;#34;;
++  std::linalg::triangular_matrix_matrix_right_solve(
++    std::execution::par,
++    A,
++    std::linalg::upper_triangle,
++    std::linalg::implicit_unit_diagonal,
++    B,
++    std::divides&amp;lt;void&amp;gt;{});
++  print_mat(B);
++
++  // (7)
++  init_mat(B);
++  std::cout &amp;lt;&amp;lt; &amp;#34;(7)\n&amp;#34;;
++  std::linalg::triangular_matrix_matrix_right_solve(
++    A,
++    std::linalg::upper_triangle,
++    std::linalg::implicit_unit_diagonal,
++    B);
++  print_mat(B);
++
++  // (8)
++  init_mat(B);
++  std::cout &amp;lt;&amp;lt; &amp;#34;(8)\n&amp;#34;;
++  std::linalg::triangular_matrix_matrix_right_solve(
++    std::execution::par,
++    A,
++    std::linalg::upper_triangle,
++    std::linalg::implicit_unit_diagonal,
++    B);
++  print_mat(B);
 +
 +  return 0;
 +}
 +```
 +* A.extent[link /reference/mdspan/extents/extent.md]
-+* v.extent[link /reference/mdspan/extents/extent.md]
 +* std::mdspan[link /reference/mdspan/mdspan.md]
 +* std::extents[link /reference/mdspan/extents.md]
 +* std::linalg::layout_blas_packed[link /reference/linalg/layout_blas_packed.md]
@@ -963,23 +820,35 @@ index 000000000..89c1074e8
 +* std::linalg::upper_triangle[link /reference/linalg/upper_triangle_t.md]
 +* std::linalg::implicit_unit_diagonal[link /reference/linalg/implicit_unit_diagonal_t.md]
 +* std::execution::par[link /reference/execution/execution/execution_policy.md]
-+* std::linalg::triangular_matrix_matrix_left_solve[color ff0000]
++* std::linalg::triangular_matrix_matrix_right_solve[color ff0000]
 +
 +
 +### 出力
 +```
 +(1)
-+-2 -2
-+2 3
++0 1
++2 1
 +(2)
-+-2 -2
-+2 3
++0 1
++2 1
 +(3)
-+-2 -2
-+2 3
++0 1
++2 1
 +(4)
-+-2 -2
-+2 3
++0 1
++2 1
++(5)
++0 1
++2 1
++(6)
++0 1
++2 1
++(7)
++0 1
++2 1
++(8)
++0 1
++2 1
 +```
 +
 +
@@ -1007,6 +876,412 @@ index 000000000..89c1074e8
 +- [P1673R13 A free function linear algebra interface based on the BLAS](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p1673r13.html)
 +- [LAPACK: trsm](https://netlib.org/lapack/explore-html/d9/de5/group__trsm.html)
 +
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Yuya Asano</name>
+        <email>64895419+sukeya@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>triangular_matrix_matrix_left_solve -- linalg : 見逃した関数オーバーロードを追加 (#1233)</title>
+      <link href="https://cpprefjp.github.io/reference/linalg/triangular_matrix_matrix_left_solve.html"/>
+      <id>bb6a33fb193cb4e62fb340c597030a8340429682:reference/linalg/triangular_matrix_matrix_left_solve.md</id>
+      <updated>2024-07-18T11:03:48+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/linalg/triangular_matrix_matrix_left_solve.md b/reference/linalg/triangular_matrix_matrix_left_solve.md
+index f8c68987a..85e0bd5b7 100644
+--- a/reference/linalg/triangular_matrix_matrix_left_solve.md
++++ b/reference/linalg/triangular_matrix_matrix_left_solve.md
+@@ -65,6 +65,54 @@ namespace std::linalg {
+     DiagonalStorage d,
+     InMat2 B,
+     OutMat X); // (4)
++
++  template&amp;lt;in-matrix InMat,
++           class Triangle,
++           class DiagonalStorage,
++           inout-matrix InOutMat,
++           class BinaryDivideOp&amp;gt;
++  void triangular_matrix_matrix_left_solve(
++    InMat A,
++    Triangle t,
++    DiagonalStorage d,
++    InOutMat B,
++    BinaryDivideOp divide); // (5)
++
++  template&amp;lt;class ExecutionPolicy,
++          in-matrix InMat,
++          class Triangle,
++          class DiagonalStorage,
++          inout-matrix InOutMat,
++          class BinaryDivideOp&amp;gt;
++  void triangular_matrix_matrix_left_solve(
++    ExecutionPolicy&amp;amp;&amp;amp; exec,
++    InMat A,
++    Triangle t,
++    DiagonalStorage d,
++    InOutMat B,
++    BinaryDivideOp divide); // (6)
++
++  template&amp;lt;in-matrix InMat,
++           class Triangle,
++           class DiagonalStorage,
++           inout-matrix InOutMat&amp;gt;
++  void triangular_matrix_matrix_left_solve(
++    InMat A,
++    Triangle t,
++    DiagonalStorage d,
++    InOutMat B); // (7)
++
++  template&amp;lt;class ExecutionPolicy,
++           in-matrix InMat,
++           class Triangle,
++           class DiagonalStorage,
++           inout-matrix InOutMat&amp;gt;
++  void triangular_matrix_matrix_left_solve(
++    ExecutionPolicy&amp;amp;&amp;amp; exec,
++    InMat A,
++    Triangle t,
++    DiagonalStorage d,
++    InOutMat B); // (8)
+ }
+ ```
+ 
+@@ -79,21 +127,28 @@ namespace std::linalg {
+ - (2): (1)を指定された実行ポリシーで実行する。
+ - (3): 割り算に[`std::divides`](/reference/functional/divides.md)`&amp;lt;void&amp;gt;`を用いて、(1)を行う。
+ - (4): (3)を指定された実行ポリシーで実行する。
++- (5): `X`に`B`を使って、in-placeに(1)を行う。
++- (6): (5)を指定された実行ポリシーで実行する。
++- (7): 割り算に[`std::divides`](/reference/functional/divides.md)`&amp;lt;void&amp;gt;`を用いて、(5)を行う。
++- (8): (7)を指定された実行ポリシーで実行する。
+ 
+ 
+ ## 適格要件
+ - 共通:
+     + `Triangle`は[`upper_triangle_t`](upper_triangle_t.md)または[`lower_triangle_t`](lower_triangle_t.md)
+     + `DiagonalStorage`は[`implicit_unit_diagonal_t`](implicit_unit_diagonal_t.md)または[`explicit_diagonal_t`](explicit_diagonal_t.md)
+-    + `InMat1`(`A`の型)が[`layout_blas_packed`](layout_blas_packed.md)を持つなら、レイアウトの`Triangle`テンプレート引数とこの関数の`Triangle`テンプレート引数が同じ型
+-    + [`possibly-multipliable`](possibly-multipliable.md)`&amp;lt;decltype(A), decltype(X), decltype(B)&amp;gt;()`が`true`
++    + `decltype(A)`が[`layout_blas_packed`](layout_blas_packed.md)を持つなら、レイアウトの`Triangle`テンプレート引数とこの関数の`Triangle`テンプレート引数が同じ型
+     + [`compatible-static-extents`](compatible-static-extents.md)`&amp;lt;decltype(A), decltype(A)&amp;gt;(0, 1)`が`true` (つまり`A`が正方行列であること)
+-- (2), (4): [`is_execution_policy`](/reference/execution/is_execution_policy.md)`&amp;lt;ExecutionPolicy&amp;gt;::value`が`true`
++- (1), (2), (3), (4): [`possibly-multipliable`](possibly-multipliable.md)`&amp;lt;decltype(A), decltype(X), decltype(B)&amp;gt;()`が`true`
++- (5), (6), (7), (8): [`possibly-multipliable`](possibly-multipliable.md)`&amp;lt;decltype(A), decltype(B), decltype(B)&amp;gt;()`が`true`
++- (2), (4), (6), (8): [`is_execution_policy`](/reference/execution/is_execution_policy.md)`&amp;lt;ExecutionPolicy&amp;gt;::value`が`true`
+ 
+ 
+ ## 事前条件
+-- [`multipliable`](multipliable.md)`(A, X, B)`が`true`
+-- `A.extent(0) == A.extent(1)` (つまり`A`が正方行列であること)
++- 共通:
++    + `A.extent(0) == A.extent(1)` (つまり`A`が正方行列であること)
++- (1), (2), (3), (4): [`multipliable`](multipliable.md)`(A, X, B)`が`true`
++- (5), (6), (7), (8): [`multipliable`](multipliable.md)`(A, B, B)`が`true`
+ 
+ 
+ ## 効果
+@@ -102,6 +157,9 @@ namespace std::linalg {
+ - (1), (2): 連立一次方程式 $AY = B$ を解き、`Y`を`X`に代入する。もし解が存在しないなら、`X`は有効だが未規定。
+ - (3): `triangular_matrix_matrix_left_solve(A, t, d, B, X, divides&amp;lt;void&amp;gt;{})`と同じ。
+ - (4): `triangular_matrix_matrix_left_solve(std::forward&amp;lt;ExecutionPolicy&amp;gt;(exec), A, t, d, B, X, divides&amp;lt;void&amp;gt;{})`と同じ。
++- (5), (6): `X`に`B`を使って、in-placeに(1)を行う。
++- (7): `triangular_matrix_matrix_left_solve(A, t, d, B, divides&amp;lt;void&amp;gt;{})`と同じ。
++- (8): `triangular_matrix_matrix_left_solve(std::forward&amp;lt;ExecutionPolicy&amp;gt;(exec), A, t, d, B, divides&amp;lt;void&amp;gt;{})`と同じ。
+ 
+ 
+ ## 戻り値
+@@ -109,7 +167,7 @@ namespace std::linalg {
+ 
+ 
+ ## 計算量
+-$O(\verb|A.extent(0)| \times (\verb|X.extent(0)|)^2)$
++$O((\verb|A.extent(0)|)^2 \times \verb|B.extent(1)|)$
+ 
+ 
+ ## 備考
+@@ -220,6 +278,49 @@ int main()
+     X);
+   print_mat(X);
+ 
++  // (5)
++  std::cout &amp;lt;&amp;lt; &amp;#34;(5)\n&amp;#34;;
++  std::linalg::triangular_matrix_matrix_left_solve(
++    A,
++    std::linalg::upper_triangle,
++    std::linalg::implicit_unit_diagonal,
++    B,
++    std::divides&amp;lt;void&amp;gt;{});
++  print_mat(B);
++
++  // (6)
++  init_mat(B);
++  std::cout &amp;lt;&amp;lt; &amp;#34;(6)\n&amp;#34;;
++  std::linalg::triangular_matrix_matrix_left_solve(
++    std::execution::par,
++    A,
++    std::linalg::upper_triangle,
++    std::linalg::implicit_unit_diagonal,
++    B,
++    std::divides&amp;lt;void&amp;gt;{});
++  print_mat(B);
++
++  // (7)
++  init_mat(B);
++  std::cout &amp;lt;&amp;lt; &amp;#34;(7)\n&amp;#34;;
++  std::linalg::triangular_matrix_matrix_left_solve(
++    A,
++    std::linalg::upper_triangle,
++    std::linalg::implicit_unit_diagonal,
++    B);
++  print_mat(B);
++
++  // (8)
++  init_mat(B);
++  std::cout &amp;lt;&amp;lt; &amp;#34;(8)\n&amp;#34;;
++  std::linalg::triangular_matrix_matrix_left_solve(
++    std::execution::par,
++    A,
++    std::linalg::upper_triangle,
++    std::linalg::implicit_unit_diagonal,
++    B);
++  print_mat(B);
++
+   return 0;
+ }
+ ```
+@@ -249,6 +350,18 @@ int main()
+ (4)
+ -2 -2
+ 2 3
++(5)
++-2 -2
++2 3
++(6)
++-2 -2
++2 3
++(7)
++-2 -2
++2 3
++(8)
++-2 -2
++2 3
+ ```
+ 
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Yuya Asano</name>
+        <email>64895419+sukeya@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- Merge pull request #1299 from sukeya/add_custom_deleter_to_example</title>
+      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr/op_constructor.html"/>
+      <id>a83de745dc9be67f48581b8c96da97aeb8663eae:reference/memory/unique_ptr/op_constructor.md</id>
+      <updated>2024-07-17T18:15:52+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr/op_constructor.md b/reference/memory/unique_ptr/op_constructor.md
+index a23183cb0..48c6eb1bd 100644
+--- a/reference/memory/unique_ptr/op_constructor.md
++++ b/reference/memory/unique_ptr/op_constructor.md
+@@ -118,6 +118,20 @@ unique_ptr&amp;lt;T, D&amp;amp;&amp;gt; p(new T(), deleter); // pはdeleterへの参照を保持する
+ #include &amp;lt;cassert&amp;gt;
+ #include &amp;lt;memory&amp;gt;
+ 
++using AllocTraits = std::allocator_traits&amp;lt;std::allocator&amp;lt;int&amp;gt;&amp;gt;;
++
++class Deleter {
++ public:
++  explicit Deleter(const std::allocator&amp;lt;int&amp;gt;&amp;amp; alloc) : alloc_(alloc) {}
++
++  void operator()(int* p) {
++    AllocTraits::destroy(alloc_, p);
++    AllocTraits::deallocate(alloc_, p, 1);
++  }
++ private:
++  std::allocator&amp;lt;int&amp;gt; alloc_;
++};
++
+ int main()
+ {
+   // (1) デフォルト構築
+@@ -133,6 +147,16 @@ int main()
+   std::unique_ptr&amp;lt;int&amp;gt; p3(new int(3), std::default_delete&amp;lt;int&amp;gt;());
+   assert(p3);
+ 
++  // 自作デリータを使った例
++  {
++    std::allocator&amp;lt;int&amp;gt; alloc;
++    int* p = AllocTraits::allocate(alloc, 1);
++    AllocTraits::construct(alloc, p, 4);
++    std::unique_ptr&amp;lt;int, Deleter&amp;gt; p4(p, Deleter(alloc));
++    assert(p4);
++    assert(*p4 == 4);
++  }
++
+   // (5) 他のunique_ptrから所有権を譲渡する
+   std::unique_ptr&amp;lt;int&amp;gt; p5 = std::move(p3);
+   assert(*p5 == 3);
+@@ -147,6 +171,12 @@ int main()
+   assert(*static_cast&amp;lt;const int*&amp;gt;(p7.get()) == 3);
+ }
+ ```
++* std::allocator_traits[link /reference/memory/allocator_traits.md]
++* std::allocator[link /reference/memory/allocator.md]
++* destroy[link /reference/memory/allocator_traits/destroy.md]
++* deallocate[link /reference/memory/allocator_traits/deallocate.md]
++* allocate[link /reference/memory/allocator_traits/allocate.md]
++* construct[link /reference/memory/allocator_traits/construct.md]
+ * std::default_delete[link /reference/memory/default_delete.md]
+ * std::move[link /reference/utility/move.md]
+ * get()[link get.md]
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- std::unique_ptrに自作デリータの使用例を追加</title>
+      <link href="https://cpprefjp.github.io/reference/memory/unique_ptr/op_constructor.html"/>
+      <id>37f60c5b903e13d13943cd7667449850714d440e:reference/memory/unique_ptr/op_constructor.md</id>
+      <updated>2024-07-17T17:21:31+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/unique_ptr/op_constructor.md b/reference/memory/unique_ptr/op_constructor.md
+index a23183cb0..48c6eb1bd 100644
+--- a/reference/memory/unique_ptr/op_constructor.md
++++ b/reference/memory/unique_ptr/op_constructor.md
+@@ -118,6 +118,20 @@ unique_ptr&amp;lt;T, D&amp;amp;&amp;gt; p(new T(), deleter); // pはdeleterへの参照を保持する
+ #include &amp;lt;cassert&amp;gt;
+ #include &amp;lt;memory&amp;gt;
+ 
++using AllocTraits = std::allocator_traits&amp;lt;std::allocator&amp;lt;int&amp;gt;&amp;gt;;
++
++class Deleter {
++ public:
++  explicit Deleter(const std::allocator&amp;lt;int&amp;gt;&amp;amp; alloc) : alloc_(alloc) {}
++
++  void operator()(int* p) {
++    AllocTraits::destroy(alloc_, p);
++    AllocTraits::deallocate(alloc_, p, 1);
++  }
++ private:
++  std::allocator&amp;lt;int&amp;gt; alloc_;
++};
++
+ int main()
+ {
+   // (1) デフォルト構築
+@@ -133,6 +147,16 @@ int main()
+   std::unique_ptr&amp;lt;int&amp;gt; p3(new int(3), std::default_delete&amp;lt;int&amp;gt;());
+   assert(p3);
+ 
++  // 自作デリータを使った例
++  {
++    std::allocator&amp;lt;int&amp;gt; alloc;
++    int* p = AllocTraits::allocate(alloc, 1);
++    AllocTraits::construct(alloc, p, 4);
++    std::unique_ptr&amp;lt;int, Deleter&amp;gt; p4(p, Deleter(alloc));
++    assert(p4);
++    assert(*p4 == 4);
++  }
++
+   // (5) 他のunique_ptrから所有権を譲渡する
+   std::unique_ptr&amp;lt;int&amp;gt; p5 = std::move(p3);
+   assert(*p5 == 3);
+@@ -147,6 +171,12 @@ int main()
+   assert(*static_cast&amp;lt;const int*&amp;gt;(p7.get()) == 3);
+ }
+ ```
++* std::allocator_traits[link /reference/memory/allocator_traits.md]
++* std::allocator[link /reference/memory/allocator.md]
++* destroy[link /reference/memory/allocator_traits/destroy.md]
++* deallocate[link /reference/memory/allocator_traits/deallocate.md]
++* allocate[link /reference/memory/allocator_traits/allocate.md]
++* construct[link /reference/memory/allocator_traits/construct.md]
+ * std::default_delete[link /reference/memory/default_delete.md]
+ * std::move[link /reference/utility/move.md]
+ * get()[link get.md]
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Yuya Asano</name>
+        <email>64895419+sukeya@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>triangular_matrix_matrix_left_solve -- linalg : 例を修正 (#1233)</title>
+      <link href="https://cpprefjp.github.io/reference/linalg/triangular_matrix_matrix_left_solve.html"/>
+      <id>c84c78865ce78853654b463989873ec034c97296:reference/linalg/triangular_matrix_matrix_left_solve.md</id>
+      <updated>2024-07-17T14:39:35+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/linalg/triangular_matrix_matrix_left_solve.md b/reference/linalg/triangular_matrix_matrix_left_solve.md
+index 89c1074e8..f8c68987a 100644
+--- a/reference/linalg/triangular_matrix_matrix_left_solve.md
++++ b/reference/linalg/triangular_matrix_matrix_left_solve.md
+@@ -138,10 +138,10 @@ void print_mat(const Matrix&amp;amp; A) {
+ }
+ 
+ template &amp;lt;class Matrix&amp;gt;
+-void init_mat(Matrix&amp;amp; A, typename Matrix::value_type geta = 1) {
++void init_mat(Matrix&amp;amp; A) {
+   for(int i = 0; i &amp;lt; A.extent(0); ++i) {
+     for(int j = 0; j &amp;lt; A.extent(1); ++j) {
+-      A[i, j] = i * A.extent(1) + j + geta;
++      A[i, j] = i * A.extent(1) + j;
+     }
+   }
+ }
+@@ -173,7 +173,7 @@ int main()
+   std::mdspan X(X_vec.data(), N, N);
+   std::mdspan B(B_vec.data(), N, N);
+ 
+-  init_mat(A)
++  init_tria_mat(A);
+   init_mat(B);
+ 
+   // (1)
+@@ -197,7 +197,7 @@ int main()
+     B,
+     X,
+     std::divides&amp;lt;void&amp;gt;{});
+-  print(X);
++  print_mat(X);
+ 
+   // (3)
+   std::cout &amp;lt;&amp;lt; &amp;#34;(3)\n&amp;#34;;
+@@ -207,7 +207,7 @@ int main()
+     std::linalg::implicit_unit_diagonal,
+     B,
+     X);
+-  print(X);
++  print_mat(X);
+ 
+   // (4)
+   std::cout &amp;lt;&amp;lt; &amp;#34;(4)\n&amp;#34;;
+@@ -218,13 +218,12 @@ int main()
+     std::linalg::implicit_unit_diagonal,
+     B,
+     X);
+-  print(X);
++  print_mat(X);
+ 
+   return 0;
+ }
+ ```
+ * A.extent[link /reference/mdspan/extents/extent.md]
+-* v.extent[link /reference/mdspan/extents/extent.md]
+ * std::mdspan[link /reference/mdspan/mdspan.md]
+ * std::extents[link /reference/mdspan/extents.md]
+ * std::linalg::layout_blas_packed[link /reference/linalg/layout_blas_packed.md]
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
