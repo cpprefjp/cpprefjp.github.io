@@ -2,9 +2,243 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2024-12-09T14:45:30.718533</updated>
-  <id>49a7c8b7-f701-45cc-bac5-bbfd5b1c1cfa</id>
+  <updated>2024-12-09T15:10:59.222654</updated>
+  <id>a56fab42-c66e-4802-9a44-0704dd584b2c</id>
 
+  
+    <entry>
+      <title>submdspan_mapping -- mdspan/layout_{left,right}(_padded): P3355R1対応</title>
+      <link href="https://cpprefjp.github.io/reference/mdspan/layout_left/mapping/submdspan_mapping.html"/>
+      <id>7675064dcb97135b059322e9be4dbf90b2fc2d7d:reference/mdspan/layout_left/mapping/submdspan_mapping.md</id>
+      <updated>2024-12-10T00:06:18+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/mdspan/layout_left/mapping/submdspan_mapping.md b/reference/mdspan/layout_left/mapping/submdspan_mapping.md
+index ed45bc337..e831b2de2 100644
+--- a/reference/mdspan/layout_left/mapping/submdspan_mapping.md
++++ b/reference/mdspan/layout_left/mapping/submdspan_mapping.md
+@@ -59,18 +59,24 @@ friend constexpr auto submdspan_mapping(
+ - パラメータパック`P` : [`is_same_v`](/reference/type_traits/is_same.md)`&amp;lt;`[`make_index_sequence`](/reference/utility/make_index_sequence.md)`&amp;lt;rank()&amp;gt;,` [`index_sequence`](/reference/utility/index_sequence.md)`&amp;lt;P...&amp;gt;&amp;gt; == true`
+ - 値`offset` : `size_t`型の値[`(*this)`](op_call.md)`(`[`first_`](../../first_.md)`&amp;lt;index_type, P&amp;gt;(slices...)...)`
+ 
++下記を満たす型`S`を、単位ストライド幅スライス(unit-stride slice)と定義する。
++
++- 型`S`が[`strided_slice`](../../strided_slice.md)の特殊化であり型`S::stride_type`が[`integral-constant-like`](/reference/span/integral-constant-like.md)のモデルかつ`S::stride_type::value`が`1`に等しい、もしくは
++- 型`S`が[`index-pair-like`](../../index-pair-like.md)`&amp;lt;index_type&amp;gt;`のモデル、もしくは
++- [`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`が`true`
++
+ 説明専用の`submdspan-mapping-impl`関数テンプレートは下記の値を返す。
+ 
+ - [`Extents::rank()`](../../extents/rank.md) `== 0`のとき、[`submdspan_mapping_result`](../../submdspan_mapping_result.md)`{*this, 0}`
+ - `SubExtents::rank() == 0`のとき、[`submdspan_mapping_result`](../../submdspan_mapping_result.md)`{`[`layout_left::mapping`](../../layout_left.md)`(sub_ext), offset}`
+ - 以下を満たすとき、[`submdspan_mapping_result`](../../submdspan_mapping_result.md)`{`[`layout_left::mapping`](../../layout_left.md)`(sub_ext), offset}`
+     - 半開区間`[0, SubExtents::rank()-1)`の値`k`に対して、[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S_k,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`が`true`、かつ
+-    - `SubExtents::rank()-1`に等しい値`k`に対して、型`S_k`が[`index-pair-like`](../../index-pair-like.md)`&amp;lt;index_type&amp;gt;`のモデルもしくは[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S_k,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`が`true`
++    - `SubExtents::rank()-1`に等しい値`k`に対して、型`S_k`が単位ストライド幅スライスである
+ - 以下を満たすとき、[`submdspan_mapping_result`](../../submdspan_mapping_result.md)`{`[`layout_left_padded&amp;lt;S_static&amp;gt;::mapping`](../../layout_left_padded/mapping.md)`(sub_ext, stride(u + 1)), offset}`
+-    - 型`S_p`が[`index-pair-like`](../../index-pair-like.md)`&amp;lt;index_type&amp;gt;`のモデルもしくは[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S_k,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`が`true`を満たす`0`より大きい最小値`p`に対して、`u+1`が`p`となる値`u`を用いて
+-        - 型`S_0`が[`index-pair-like`](../../index-pair-like.md)`&amp;lt;index_type&amp;gt;`のモデルもしくは[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S_0,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`が`true`、かつ
++    - 型`S_p`が単位ストライド幅スライスを満たす`0`より大きい最小値`p`に対して、`u+1`が`p`となる値`u`を用いて
++        - 型`S_0`が単位ストライド幅スライスであり、かつ
+         - 半開区間`[u+1, u+SubExtents::rank()-1)`の値`k`に対して、[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S_k,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`、かつ
+-        - `u+SubExtents::rank()-1`に等しい値`k`に対して、型`S_k`が[`index-pair-like`](../../index-pair-like.md)`&amp;lt;index_type&amp;gt;`のモデルもしくは[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S_k,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`が`true`
++        - `u+SubExtents::rank()-1`に等しい値`k`に対して、型`S_k`が単位ストライド幅スライスである
+     - ここで定数`S_static`は
+         - 半開区間`[0, u+1)`のいずれかの値`k`に対して`static_extent(k)`が[`dynamic_extent`](/reference/span/dynamic_extent.md)のとき、`dynamic_extent`
+         - そうでなければ、半開区間`[0, u+1)`の全ての値`k`に対して`static_extent(k)`を乗算した値
+@@ -95,3 +101,4 @@ friend constexpr auto submdspan_mapping(
+ ## 参照
+ - [P2630R4 Submdspan](https://open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2630r4.html)
+ - [P2642R6 Padded mdspan layouts](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2642r6.pdf)
++- [P3355R1 Fix submdspan for C++26](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3355r1.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>submdspan_mapping -- mdspan/layout_{left,right}(_padded): P3355R1対応</title>
+      <link href="https://cpprefjp.github.io/reference/mdspan/layout_left_padded/mapping/submdspan_mapping.html"/>
+      <id>7675064dcb97135b059322e9be4dbf90b2fc2d7d:reference/mdspan/layout_left_padded/mapping/submdspan_mapping.md</id>
+      <updated>2024-12-10T00:06:18+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/mdspan/layout_left_padded/mapping/submdspan_mapping.md b/reference/mdspan/layout_left_padded/mapping/submdspan_mapping.md
+index 39da81837..6b6cdb3b0 100644
+--- a/reference/mdspan/layout_left_padded/mapping/submdspan_mapping.md
++++ b/reference/mdspan/layout_left_padded/mapping/submdspan_mapping.md
+@@ -59,18 +59,24 @@ friend constexpr auto submdspan_mapping(
+ - パラメータパック`P` : [`is_same_v`](/reference/type_traits/is_same.md)`&amp;lt;`[`make_index_sequence`](/reference/utility/make_index_sequence.md)`&amp;lt;rank()&amp;gt;,` [`index_sequence`](/reference/utility/index_sequence.md)`&amp;lt;P...&amp;gt;&amp;gt; == true`
+ - 値`offset` : `size_t`型の値[`(*this)`](op_call.md)`(`[`first_`](../../first_.md)`&amp;lt;index_type, P&amp;gt;(slices...)...)`
+ 
++下記を満たす型`S`を、単位ストライド幅スライス(unit-stride slice)と定義する。
++
++- 型`S`が[`strided_slice`](../../strided_slice.md)の特殊化であり型`S::stride_type`が[`integral-constant-like`](/reference/span/integral-constant-like.md)のモデルかつ`S::stride_type::value`が`1`に等しい、もしくは
++- 型`S`が[`index-pair-like`](../../index-pair-like.md)`&amp;lt;index_type&amp;gt;`のモデル、もしくは
++- [`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`が`true`
++
+ 説明専用の`submdspan-mapping-impl`関数テンプレートは下記の値を返す。
+ 
+ - [`Extents::rank()`](../../extents/rank.md) `== 0`のとき、[`submdspan_mapping_result`](../../submdspan_mapping_result.md)`{*this, 0}`
+ - `rank_ == 1`または`SubExtents::rank() == 0`のとき、[`submdspan_mapping_result`](../../submdspan_mapping_result.md)`{`[`layout_left::mapping`](../../layout_left.md)`(sub_ext), offset}`
+ - 以下を満たすとき、[`submdspan_mapping_result`](../../submdspan_mapping_result.md)`{`[`layout_left::mapping`](../../layout_left.md)`(sub_ext), offset}`
+     - `SubExtents::rank() == 1`、かつ
+-    - 型`S_0`が[`index-pair-like`](../../index-pair-like.md)`&amp;lt;index_type&amp;gt;`のモデルもしくは[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S_0,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`が`true`
++    - 型`S_0`が単位ストライド幅スライスである
+ - 以下を満たすとき、[`submdspan_mapping_result`](../../submdspan_mapping_result.md)`{layout_left_padded&amp;lt;S_static&amp;gt;::mapping(sub_ext, stride(u + 1)), offset}`
+-    - 型`S_p`が[`index-pair-like`](../../index-pair-like.md)`&amp;lt;index_type&amp;gt;`のモデルもしくは[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S_k,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`が`true`を満たす`0`より大きい最小値`p`に対して、`u+1`が`p`となる値`u`を用いて
+-        - 型`S_0`が[`index-pair-like`](../../index-pair-like.md)`&amp;lt;index_type&amp;gt;`のモデルもしくは[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S_0,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`が`true`、かつ
++    - 型`S_p`が単位ストライド幅スライスを満たす`0`より大きい最小値`p`に対して、`u+1`が`p`となる値`u`を用いて
++        - 型`S_0`が単位ストライド幅スライスであり、かつ
+         - 半開区間`[u+1, u+SubExtents::rank()-1)`の値`k`に対して、[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S_k,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`、かつ
+-        - `u+SubExtents::rank()-1`に等しい値`k`に対して、型`S_k`が[`index-pair-like`](../../index-pair-like.md)`&amp;lt;index_type&amp;gt;`のモデルもしくは[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S_k,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`が`true`
++        - `u+SubExtents::rank()-1`に等しい値`k`に対して、型`S_k`が単位ストライド幅スライスである
+     - ここで定数`S_static`は
+         - 半開区間`[0, u+1)`のいずれかの値`k`に対して`static_extent(k)`が[`dynamic_extent`](/reference/span/dynamic_extent.md)のとき、`dynamic_extent`
+         - そうでなければ、半開区間`[0, u+1)`の全ての値`k`に対して`static_extent(k)`を乗算した値
+@@ -95,3 +101,4 @@ friend constexpr auto submdspan_mapping(
+ ## 参照
+ - [P2630R4 Submdspan](https://open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2630r4.html)
+ - [P2642R6 Padded mdspan layouts](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2642r6.pdf)
++- [P3355R1 Fix submdspan for C++26](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3355r1.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>submdspan_mapping -- mdspan/layout_{left,right}(_padded): P3355R1対応</title>
+      <link href="https://cpprefjp.github.io/reference/mdspan/layout_right/mapping/submdspan_mapping.html"/>
+      <id>7675064dcb97135b059322e9be4dbf90b2fc2d7d:reference/mdspan/layout_right/mapping/submdspan_mapping.md</id>
+      <updated>2024-12-10T00:06:18+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/mdspan/layout_right/mapping/submdspan_mapping.md b/reference/mdspan/layout_right/mapping/submdspan_mapping.md
+index 3b7ba7f52..627f6a57e 100644
+--- a/reference/mdspan/layout_right/mapping/submdspan_mapping.md
++++ b/reference/mdspan/layout_right/mapping/submdspan_mapping.md
+@@ -59,18 +59,24 @@ friend constexpr auto submdspan_mapping(
+ - パラメータパック`P` : [`is_same_v`](/reference/type_traits/is_same.md)`&amp;lt;`[`make_index_sequence`](/reference/utility/make_index_sequence.md)`&amp;lt;rank()&amp;gt;,` [`index_sequence`](/reference/utility/index_sequence.md)`&amp;lt;P...&amp;gt;&amp;gt; == true`
+ - 値`offset` : `size_t`型の値[`(*this)`](op_call.md)`(`[`first_`](../../first_.md)`&amp;lt;index_type, P&amp;gt;(slices...)...)`
+ 
++下記を満たす型`S`を、単位ストライド幅スライス(unit-stride slice)と定義する。
++
++- 型`S`が[`strided_slice`](../../strided_slice.md)の特殊化であり型`S::stride_type`が[`integral-constant-like`](/reference/span/integral-constant-like.md)のモデルかつ`S::stride_type::value`が`1`に等しい、もしくは
++- 型`S`が[`index-pair-like`](../../index-pair-like.md)`&amp;lt;index_type&amp;gt;`のモデル、もしくは
++- [`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`が`true`
++
+ 説明専用の`submdspan-mapping-impl`関数テンプレートは下記の値を返す。
+ 
+ - [`Extents::rank()`](../../extents/rank.md) `== 0`のとき、[`submdspan_mapping_result`](../../submdspan_mapping_result.md)`{*this, 0}`
+ - `SubExtents::rank() == 0`のとき、[`submdspan_mapping_result`](../../submdspan_mapping_result.md)`{`[`layout_right::mapping`](../../layout_right.md)`(sub_ext), offset}`
+ - 以下を満たすとき、[`submdspan_mapping_result`](../../submdspan_mapping_result.md)`{`[`layout_right::mapping`](../../layout_right.md)`(sub_ext), offset}`
+     - 半開区間`[Extents::rank() - SubExtents::rank()+1, Extents::rank())`の値`k`に対して、[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S_k,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`が`true`、かつ
+-    - `Extents::rank()-SubExtents::rank()`に等しい値`k`に対して、型`S_k`が[`index-pair-like`](../../index-pair-like.md)`&amp;lt;index_type&amp;gt;`のモデルもしくは[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S_k,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`が`true`
++    - `Extents::rank()-SubExtents::rank()`に等しい値`k`に対して、型`S_k`が単位ストライド幅スライスである
+ - 以下を満たすとき、[`submdspan_mapping_result`](../../submdspan_mapping_result.md)`{`[`layout_right_padded&amp;lt;S_static&amp;gt;::mapping`](../../layout_right_padded/mapping.md)`(sub_ext, stride(rank_-u-2)), offset}`
+-    - 型`S_p`が[`index-pair-like`](../../index-pair-like.md)`&amp;lt;index_type&amp;gt;`のモデルもしくは[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S_k,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`が`true`を満たす`rank_-1`より小さい最大値`p`に対して、`rank_-u-2`が`p`となる値`u`を用いて
+-        - `rank_-1`に等しい値`k`に対して、型`S_k`が[`index-pair-like`](../../index-pair-like.md)`&amp;lt;index_type&amp;gt;`のモデルもしくは[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S_k,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`が`true`、かつ
++    - 型`S_p`が単位ストライド幅スライスを満たす`rank_-1`より小さい最大値`p`に対して、`rank_-u-2`が`p`となる値`u`を用いて
++        - `rank_-1`に等しい値`k`に対して、型`S_k`が単位ストライド幅スライスであり、かつ
+         - 半開区間`[rank_-SubExtents::rank()-u+1, rank_-u-1)`の値`k`に対して、[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S_k,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`、かつ
+-        - `rank_-SubExtents::rank()-u`に等しい値`k`に対して、型`S_k`が[`index-pair-like`](../../index-pair-like.md)`&amp;lt;index_type&amp;gt;`のモデルもしくは[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S_k,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`が`true`
++        - `rank_-SubExtents::rank()-u`に等しい値`k`に対して、型`S_k`が単位ストライド幅スライスである
+     - ここで定数`S_static`は
+         - 半開区間`[rank_-u-1, rank_)`のいずれかの値`k`に対して`static_extent(k)`が[`dynamic_extent`](/reference/span/dynamic_extent.md)のとき、`dynamic_extent`
+         - そうでなければ、半開区間`[rank_-u-1, rank_)`の全ての値`k`に対して`static_extent(k)`を乗算した値
+@@ -95,3 +101,4 @@ friend constexpr auto submdspan_mapping(
+ ## 参照
+ - [P2630R4 Submdspan](https://open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2630r4.html)
+ - [P2642R6 Padded mdspan layouts](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2642r6.pdf)
++- [P3355R1 Fix submdspan for C++26](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3355r1.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>submdspan_mapping -- mdspan/layout_{left,right}(_padded): P3355R1対応</title>
+      <link href="https://cpprefjp.github.io/reference/mdspan/layout_right_padded/mapping/submdspan_mapping.html"/>
+      <id>7675064dcb97135b059322e9be4dbf90b2fc2d7d:reference/mdspan/layout_right_padded/mapping/submdspan_mapping.md</id>
+      <updated>2024-12-10T00:06:18+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/mdspan/layout_right_padded/mapping/submdspan_mapping.md b/reference/mdspan/layout_right_padded/mapping/submdspan_mapping.md
+index b53c0d1e4..afb947788 100644
+--- a/reference/mdspan/layout_right_padded/mapping/submdspan_mapping.md
++++ b/reference/mdspan/layout_right_padded/mapping/submdspan_mapping.md
+@@ -59,18 +59,24 @@ friend constexpr auto submdspan_mapping(
+ - パラメータパック`P` : [`is_same_v`](/reference/type_traits/is_same.md)`&amp;lt;`[`make_index_sequence`](/reference/utility/make_index_sequence.md)`&amp;lt;rank()&amp;gt;,` [`index_sequence`](/reference/utility/index_sequence.md)`&amp;lt;P...&amp;gt;&amp;gt; == true`
+ - 値`offset` : `size_t`型の値[`(*this)`](op_call.md)`(`[`first_`](../../first_.md)`&amp;lt;index_type, P&amp;gt;(slices...)...)`
+ 
++下記を満たす型`S`を、単位ストライド幅スライス(unit-stride slice)と定義する。
++
++- 型`S`が[`strided_slice`](../../strided_slice.md)の特殊化であり型`S::stride_type`が[`integral-constant-like`](/reference/span/integral-constant-like.md)のモデルかつ`S::stride_type::value`が`1`に等しい、もしくは
++- 型`S`が[`index-pair-like`](../../index-pair-like.md)`&amp;lt;index_type&amp;gt;`のモデル、もしくは
++- [`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`が`true`
++
+ 説明専用の`submdspan-mapping-impl`関数テンプレートは下記の値を返す。
+ 
+ - [`Extents::rank()`](../../extents/rank.md) `== 0`のとき、[`submdspan_mapping_result`](../../submdspan_mapping_result.md)`{*this, 0}`
+ - `rank_ == 1`または`SubExtents::rank() == 0`のとき、[`submdspan_mapping_result`](../../submdspan_mapping_result.md)`{`[`layout_right::mapping`](../../layout_right.md)`(sub_ext), offset}`
+ - 以下を満たすとき、[`submdspan_mapping_result`](../../submdspan_mapping_result.md)`{`[`layout_right::mapping`](../../layout_right.md)`(sub_ext), offset}`
+     - `SubExtents::rank() == 1`、かつ
+-    - `rank_-1`に等しい値`k`に対して、型`S_k`が[`index-pair-like`](../../index-pair-like.md)`&amp;lt;index_type&amp;gt;`のモデルもしくは[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S_k,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`が`true`
++    - `rank_-1`に等しい値`k`に対して、型`S_k`が単位ストライド幅スライスである
+ - 以下を満たすとき、[`submdspan_mapping_result`](../../submdspan_mapping_result.md)`{layout_right_padded&amp;lt;S_static&amp;gt;::mapping(sub_ext, stride(rank_-u-2)), offset}`
+-    - 型`S_p`が[`index-pair-like`](../../index-pair-like.md)`&amp;lt;index_type&amp;gt;`のモデルもしくは[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S_k,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`が`true`を満たす`rank_-1`より小さい最大値`p`に対して、`rank_-u-2`が`p`となる値`u`を用いて
+-        - `rank_-1`に等しい値`k`に対して、型`S_k`が[`index-pair-like`](../../index-pair-like.md)`&amp;lt;index_type&amp;gt;`のモデルもしくは[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S_k,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`が`true`、かつ
++    - 型`S_p`が単位ストライド幅スライスを満たす`rank_-1`より小さい最大値`p`に対して、`rank_-u-2`が`p`となる値`u`を用いて
++        - `rank_-1`に等しい値`k`に対して、型`S_k`が単位ストライド幅スライスであり、かつ
+         - 半開区間`[rank_-SubExtents::rank()-u+1, rank_-u-1)`の値`k`に対して、[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S_k,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`、かつ
+-        - `rank_-SubExtents::rank()-u`に等しい値`k`に対して、型`S_k`が[`index-pair-like`](../../index-pair-like.md)`&amp;lt;index_type&amp;gt;`のモデルもしくは[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;S_k,` [`full_extent_t`](../../full_extent_t.md)`&amp;gt;`が`true`
++        - `rank_-SubExtents::rank()-u`に等しい値`k`に対して、型`S_k`が単位ストライド幅スライスである
+     - ここで定数`S_static`は
+         - 半開区間`[rank_-u-1, rank_-1)`のいずれかの値`k`に対して`static_extent(k)`が[`dynamic_extent`](/reference/span/dynamic_extent.md)のとき、`dynamic_extent`
+         - そうでなければ、半開区間`[rank_-u-1, rank_-1)`の全ての値`k`に対して`static_extent(k)`を乗算した値
+@@ -95,3 +101,4 @@ friend constexpr auto submdspan_mapping(
+ ## 参照
+ - [P2630R4 Submdspan](https://open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2630r4.html)
+ - [P2642R6 Padded mdspan layouts](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2642r6.pdf)
++- [P3355R1 Fix submdspan for C++26](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3355r1.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>スタイル -- mdspan/layout_{left,right}(_padded): P3355R1対応</title>
+      <link href="https://cpprefjp.github.io/working_style.html"/>
+      <id>7675064dcb97135b059322e9be4dbf90b2fc2d7d:working_style.md</id>
+      <updated>2024-12-10T00:06:18+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/working_style.md b/working_style.md
+index f7668d166..980f18020 100644
+--- a/working_style.md
++++ b/working_style.md
+@@ -144,6 +144,7 @@ C++11以降対応については対応バージョンを明記します。バー
+ | trait                              | トレイト                     |
+ | trivial                            | トリビアル (逆は非トリビアル)            |
+ | underlying type                    | 基底型                       |
++| unit-stride slice                  | 単位ストライド幅スライス     |
+ | unordered associative container(s) | 非順序連想コンテナ           |
+ | unspecified                        | 未規定                       |
+ | program-defined type               | プログラム定義型             |
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>operator partial_ordering -- add meta cpp tag</title>
@@ -1674,651 +1908,6 @@ index 7f5dbb1ff..970ee09ef 100644
       <link href="https://cpprefjp.github.io/reference/string/basic_string/replace.html"/>
       <id>18510a118aa80c598d1eec5cb27c0531a3f06533:reference/string/basic_string/replace.md</id>
       <updated>2024-12-05T13:44:36+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/basic_string/replace.md b/reference/string/basic_string/replace.md
-index 1ffedb7c8..623eebd07 100644
---- a/reference/string/basic_string/replace.md
-+++ b/reference/string/basic_string/replace.md
-@@ -225,26 +225,26 @@ constexpr basic_string&amp;amp;
- - (10) : `replace(i1 -` [`begin()`](begin.md)`, i2 - i1, basic_string(j1, j2))`を呼び出す。
- - (11) : `replace(i1 -` [`begin()`](begin.md)`, i2 - i1, il.`[`begin()`](/reference/initializer_list/initializer_list/begin.md)`, il.`[`size()`](/reference/initializer_list/initializer_list/size.md)`)`を呼び出す。
- - (12) : 以下と等価。
--  ```cpp
--  basic_string_view&amp;lt;charT, traits&amp;gt; sv = t;
--  return replace(pos1, n1, sv.data(), sv.size());
--  ```
--  * basic_string_view[link /reference/string_view/basic_string_view.md]
-+    ```cpp
-+    basic_string_view&amp;lt;charT, traits&amp;gt; sv = t;
-+    return replace(pos1, n1, sv.data(), sv.size());
-+    ```
-+    * basic_string_view[link /reference/string_view/basic_string_view.md]
- 
- - (13) : 以下と等価。
--  ```cpp
--  basic_string_view&amp;lt;charT, traits&amp;gt; sv = t;
--  return replace(pos1, n1, sv.substr(pos2, n2));
--  ```
--  * basic_string_view[link /reference/string_view/basic_string_view.md]
--  * substr[link /reference/string_view/basic_string_view/substr.md]
-+    ```cpp
-+    basic_string_view&amp;lt;charT, traits&amp;gt; sv = t;
-+    return replace(pos1, n1, sv.substr(pos2, n2));
-+    ```
-+    * basic_string_view[link /reference/string_view/basic_string_view.md]
-+    * substr[link /reference/string_view/basic_string_view/substr.md]
- 
- - (14) : 以下と等価。
--  ```cpp
--  basic_string_view&amp;lt;charT, traits&amp;gt; sv = t;
--  return replace(i1 - begin(), i2 - i1, sv.data(), sv.size());
--  ```
--  * basic_string_view[link /reference/string_view/basic_string_view.md]
-+    ```cpp
-+    basic_string_view&amp;lt;charT, traits&amp;gt; sv = t;
-+    return replace(i1 - begin(), i2 - i1, sv.data(), sv.size());
-+    ```
-+    * basic_string_view[link /reference/string_view/basic_string_view.md]
- 
- 
- ## 戻り値
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>lexicographical_compare_three_way -- 表示崩れチェックCI : `*`ではじまる箇条書きをチェック #1367</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/lexicographical_compare_three_way.html"/>
-      <id>952bb0403879014c483aaf1b93773af4336e190a:reference/algorithm/lexicographical_compare_three_way.md</id>
-      <updated>2024-12-05T13:43:09+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/lexicographical_compare_three_way.md b/reference/algorithm/lexicographical_compare_three_way.md
-index c60f0ad44..caf3b5a09 100644
---- a/reference/algorithm/lexicographical_compare_three_way.md
-+++ b/reference/algorithm/lexicographical_compare_three_way.md
-@@ -57,10 +57,10 @@ namespace std {
-         - 全ての要素が等しいならば、長さを比較する
- 
- - (2) : 以下と等価、すなわち(1)に委譲
--  ```cpp
--  return lexicographical_compare_three_way(first1, last1, first2, last2, compare_three_way());
--  ```
--  * compare_three_way[link /reference/compare/compare_three_way.md]
-+    ```cpp
-+    return lexicographical_compare_three_way(first1, last1, first2, last2, compare_three_way());
-+    ```
-+    * compare_three_way[link /reference/compare/compare_three_way.md]
- 
- 
- ## 戻り値
-@@ -114,7 +114,7 @@ int main() {
-   }
- }
- ```
--  * weak_ordering[link /reference/compare/weak_ordering.md]
-+* weak_ordering[link /reference/compare/weak_ordering.md]
- 
- ### 出力例
- ```
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>iterator_traits -- 表示崩れチェックCI : `*`ではじまる箇条書きをチェック #1367</title>
-      <link href="https://cpprefjp.github.io/reference/iterator/iterator_traits.html"/>
-      <id>952bb0403879014c483aaf1b93773af4336e190a:reference/iterator/iterator_traits.md</id>
-      <updated>2024-12-05T13:43:09+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/iterator_traits.md b/reference/iterator/iterator_traits.md
-index 7fdad8e58..c5c314468 100644
---- a/reference/iterator/iterator_traits.md
-+++ b/reference/iterator/iterator_traits.md
-@@ -95,46 +95,46 @@ namespace std {
-     - この時、`I::pointer`も定義されているならば、`pointer`はそれを用いて定義される。
- 
- - いずれかのメンバ型が定義されておらず、`I`が`cpp17-input-iterator`コンセプトを満たす場合、それぞれのメンバ型は次のように定義される
--  ```cpp
--  using difference_type   = typename incrementable_traits&amp;lt;I&amp;gt;::difference_type;
--  using value_type        = typename indirectly_readable_traits&amp;lt;I&amp;gt;::value_type;
--  using pointer           = /*see below*/;
--  using reference         = /*see below*/;
--  using iterator_category = /*see below*/;
--  ```
--  * see below[italic]
--  * indirectly_readable_traits[link /reference/iterator/indirectly_readable_traits.md]
--  * incrementable_traits[link /reference/iterator/incrementable_traits.md]
--  * iter_reference_t[link /reference/iterator/iter_reference_t.md]
-+    ```cpp
-+    using difference_type   = typename incrementable_traits&amp;lt;I&amp;gt;::difference_type;
-+    using value_type        = typename indirectly_readable_traits&amp;lt;I&amp;gt;::value_type;
-+    using pointer           = /*see below*/;
-+    using reference         = /*see below*/;
-+    using iterator_category = /*see below*/;
-+    ```
-+    * see below[italic]
-+    * indirectly_readable_traits[link /reference/iterator/indirectly_readable_traits.md]
-+    * incrementable_traits[link /reference/iterator/incrementable_traits.md]
-+    * iter_reference_t[link /reference/iterator/iter_reference_t.md]
- 
-     - `pointer`は、上から順に次のいずれか
--      ```cpp
--      using pointer = I::pointer;
--      using pointer = decltype(declval&amp;lt;I&amp;amp;&amp;gt;().operator-&amp;gt;());
--      using pointer = void;
--      ```
-+    ```cpp
-+    using pointer = I::pointer;
-+    using pointer = decltype(declval&amp;lt;I&amp;amp;&amp;gt;().operator-&amp;gt;());
-+    using pointer = void;
-+    ```
- 
-     - `reference`は、上から順に次のいずれか
--      ```cpp
--      using reference = typename I::reference;
--      using reference = iter_reference_t&amp;lt;I&amp;gt;;
--      ```
-+    ```cpp
-+    using reference = typename I::reference;
-+    using reference = iter_reference_t&amp;lt;I&amp;gt;;
-+    ```
- 
-     - `iterator_category`は、上から順に次のいずれか
-         - `I`が`cpp17-random-access-iterator`コンセプトを満たす場合、`random_access_iterator_tag`
-         - `I`が`cpp17-bidirectional-iterator`コンセプトを満たす場合、`bidirectional_iterator_tag`
-         - `I`が`cpp17-forward-iterator`コンセプトを満たす場合、`forward_iterator_tag`
-         - それ以外の場合、`input_iterator_tag`
--      
-+
- 
- - そうではなく、`I`が`cpp17-iterator`コンセプトを満たす場合、それぞれのメンバ型は次のように定義される
--  ```cpp
--  using difference_type   = typename incrementable_traits&amp;lt;I&amp;gt;::difference_type;
--  using value_type        = void;
--  using pointer           = void;
--  using reference         = void;
--  using iterator_category = output_iterator_tag;
--  ```
-+    ```cpp
-+    using difference_type   = typename incrementable_traits&amp;lt;I&amp;gt;::difference_type;
-+    using value_type        = void;
-+    using pointer           = void;
-+    using reference         = void;
-+    using iterator_category = output_iterator_tag;
-+    ```
- 
-     - この時、`incrementable_traits&amp;lt;I&amp;gt;::difference_type`が定義されない場合、`difference_type = void`
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator-&gt; -- 表示崩れチェックCI : `*`ではじまる箇条書きをチェック #1367</title>
-      <link href="https://cpprefjp.github.io/reference/iterator/reverse_iterator/op_arrow.html"/>
-      <id>952bb0403879014c483aaf1b93773af4336e190a:reference/iterator/reverse_iterator/op_arrow.md</id>
-      <updated>2024-12-05T13:43:09+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/reverse_iterator/op_arrow.md b/reference/iterator/reverse_iterator/op_arrow.md
-index cc2109b2c..0728dbaa4 100644
---- a/reference/iterator/reverse_iterator/op_arrow.md
-+++ b/reference/iterator/reverse_iterator/op_arrow.md
-@@ -22,16 +22,16 @@ constexpr pointer operator-&amp;gt;() const  // C++20
- - C++14 : [`addressof`](/reference/memory/addressof.md)`(operator*())`
- - C++20 : 次のいずれか
-     - `Iterator`がポインタ型である場合
--      ```cpp
--      return prev(current);
--      ```
--      * prev[link /reference/iterator/prev.md]
-+    ```cpp
-+    return prev(current);
-+    ```
-+    * prev[link /reference/iterator/prev.md]
- 
-     - それ以外の場合
--      ```cpp
--      return prev(current).operator-&amp;gt;();
--      ```
--      * prev[link /reference/iterator/prev.md]
-+    ```cpp
-+    return prev(current).operator-&amp;gt;();
-+    ```
-+    * prev[link /reference/iterator/prev.md]
- 
- ## 例
- ```cpp example
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>append -- 表示崩れチェックCI : `*`ではじまる箇条書きをチェック #1367</title>
-      <link href="https://cpprefjp.github.io/reference/string/basic_string/append.html"/>
-      <id>952bb0403879014c483aaf1b93773af4336e190a:reference/string/basic_string/append.md</id>
-      <updated>2024-12-05T13:43:09+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/basic_string/append.md b/reference/string/basic_string/append.md
-index aec336438..8115e4703 100644
---- a/reference/string/basic_string/append.md
-+++ b/reference/string/basic_string/append.md
-@@ -107,21 +107,21 @@ constexpr basic_string&amp;amp;
-     * `append(il.begin(), il.end())` と等価。
- - (8) 対象オブジェクトの末尾に、[`basic_string_view`](/reference/string_view/basic_string_view.md)`&amp;lt;charT, traits&amp;gt;`に変換可能な`t`が参照する範囲の文字列が追加される。  
- 以下と等価。
--  ```cpp
--  basic_string_view&amp;lt;charT, traits&amp;gt; sv = t;
--  return append(sv.data(), sv.size());
--  ```
--  * basic_string_view[link /reference/string_view/basic_string_view.md]
-+    ```cpp
-+    basic_string_view&amp;lt;charT, traits&amp;gt; sv = t;
-+    return append(sv.data(), sv.size());
-+    ```
-+    * basic_string_view[link /reference/string_view/basic_string_view.md]
- 
- - (9) 対象オブジェクトの末尾に、[`basic_string_view`](/reference/string_view/basic_string_view.md)`&amp;lt;charT, traits&amp;gt;`に変換可能な`t`の指定された範囲の文字列が追加される。
-     * 文字列の長さ `rlen` は、`n` と [`sv.size()`](/reference/string_view/basic_string_view/size.md)` - pos` の小さい方である。  
- 以下と等価。
--  ```cpp
--  basic_string_view&amp;lt;charT, traits&amp;gt; sv = t;
--  return append(sv.substr(pos, n));
--  ```
--  * basic_string_view[link /reference/string_view/basic_string_view.md]
--  * substr[link /reference/string_view/basic_string_view/substr.md]
-+    ```cpp
-+    basic_string_view&amp;lt;charT, traits&amp;gt; sv = t;
-+    return append(sv.substr(pos, n));
-+    ```
-+    * basic_string_view[link /reference/string_view/basic_string_view.md]
-+    * substr[link /reference/string_view/basic_string_view/substr.md]
- 
- 
- ## 戻り値
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>assign -- 表示崩れチェックCI : `*`ではじまる箇条書きをチェック #1367</title>
-      <link href="https://cpprefjp.github.io/reference/string/basic_string/assign.html"/>
-      <id>952bb0403879014c483aaf1b93773af4336e190a:reference/string/basic_string/assign.md</id>
-      <updated>2024-12-05T13:43:09+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/basic_string/assign.md b/reference/string/basic_string/assign.md
-index fc55fcb48..8cdbf74ac 100644
---- a/reference/string/basic_string/assign.md
-+++ b/reference/string/basic_string/assign.md
-@@ -99,20 +99,20 @@ constexpr basic_string&amp;amp;
-     - `assign(il.begin(), il.end())`を呼び出す。
- - (9) : [`basic_string_view`](/reference/string_view/basic_string_view.md)`&amp;lt;charT, traits&amp;gt;`に変換可能な`t`が参照する範囲をコピーして、`basic_string`オブジェクトを構築する。  
- 以下と等価。
--  ```cpp
--  basic_string_view&amp;lt;charT, traits&amp;gt; sv = t;
--  return assign(sv.data(), sv.size());
--  ```
--  * basic_string_view[link /reference/string_view/basic_string_view.md]
-+    ```cpp
-+    basic_string_view&amp;lt;charT, traits&amp;gt; sv = t;
-+    return assign(sv.data(), sv.size());
-+    ```
-+    * basic_string_view[link /reference/string_view/basic_string_view.md]
- 
- - (10) : [`basic_string_view`](/reference/string_view/basic_string_view.md)`&amp;lt;charT, traits&amp;gt;`に変換可能な`t`が参照する文字列を範囲指定でコピーして、`basic_string`オブジェクトを構築する。  
- 以下と等価。
--  ```cpp
--  basic_string_view&amp;lt;charT, traits&amp;gt; sv = t;
--  return assign(sv.substr(pos, n));
--  ```
--  * basic_string_view[link /reference/string_view/basic_string_view.md]
--  * substr[link /reference/string_view/basic_string_view/substr.md]
-+    ```cpp
-+    basic_string_view&amp;lt;charT, traits&amp;gt; sv = t;
-+    return assign(sv.substr(pos, n));
-+    ```
-+    * basic_string_view[link /reference/string_view/basic_string_view.md]
-+    * substr[link /reference/string_view/basic_string_view/substr.md]
- 
- 
- ## 戻り値
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>compare -- 表示崩れチェックCI : `*`ではじまる箇条書きをチェック #1367</title>
-      <link href="https://cpprefjp.github.io/reference/string/basic_string/compare.html"/>
-      <id>952bb0403879014c483aaf1b93773af4336e190a:reference/string/basic_string/compare.md</id>
-      <updated>2024-12-05T13:43:09+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/basic_string/compare.md b/reference/string/basic_string/compare.md
-index 6797746a7..dc9ef61c3 100644
---- a/reference/string/basic_string/compare.md
-+++ b/reference/string/basic_string/compare.md
-@@ -127,13 +127,13 @@ constexpr int
- - (7) (1)と同様の結果を返す。`return basic_string_view&amp;lt;charT, traits&amp;gt;(*this).`[`compare`](/reference/string_view/basic_string_view/compare.md)`(t);`と等価。
- - (8) `basic_string_view&amp;lt;charT, traits&amp;gt;(*this).`[`substr`](/reference/string_view/basic_string_view/substr.md)`(pos1, n1).`[`compare`](/reference/string_view/basic_string_view/compare.md)`(t)` と等価
- - (9) 以下と等価。
--  ```cpp
--  basic_string_view&amp;lt;charT, traits&amp;gt; s = *this, sv = t;
--  return s.substr(pos1, n1).compare(sv.substr(pos2, n2));
--  ```
--  * basic_string_view[link /reference/string_view/basic_string_view.md]
--  * substr[link /reference/string_view/basic_string_view/substr.md]
--  * compare[link /reference/string_view/basic_string_view/compare.md]
-+    ```cpp
-+    basic_string_view&amp;lt;charT, traits&amp;gt; s = *this, sv = t;
-+    return s.substr(pos1, n1).compare(sv.substr(pos2, n2));
-+    ```
-+    * basic_string_view[link /reference/string_view/basic_string_view.md]
-+    * substr[link /reference/string_view/basic_string_view/substr.md]
-+    * compare[link /reference/string_view/basic_string_view/compare.md]
- 
- ## 例外
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>insert -- 表示崩れチェックCI : `*`ではじまる箇条書きをチェック #1367</title>
-      <link href="https://cpprefjp.github.io/reference/string/basic_string/insert.html"/>
-      <id>952bb0403879014c483aaf1b93773af4336e190a:reference/string/basic_string/insert.md</id>
-      <updated>2024-12-05T13:43:09+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/basic_string/insert.md b/reference/string/basic_string/insert.md
-index 7d8c6927d..452956796 100644
---- a/reference/string/basic_string/insert.md
-+++ b/reference/string/basic_string/insert.md
-@@ -118,19 +118,19 @@ constexpr basic_string&amp;amp;
- - (8) : `insert(p -` [`begin()`](begin.md)`, basic_string(first, last))`と等価の効果を持つ。
- - (9) : `insert(p, il.`[`begin()`](/reference/initializer_list/initializer_list/begin.md)`, il.`[`end()`](/reference/initializer_list/initializer_list/end.md)`)`
- - (10) : 以下と等価。
--  ```cpp
--  basic_string_view&amp;lt;charT, traits&amp;gt; sv = t;
--  return insert(pos1, sv.data(), sv.size());
--  ```
--  * basic_string_view[link /reference/string_view/basic_string_view.md]
-+    ```cpp
-+    basic_string_view&amp;lt;charT, traits&amp;gt; sv = t;
-+    return insert(pos1, sv.data(), sv.size());
-+    ```
-+    * basic_string_view[link /reference/string_view/basic_string_view.md]
- 
- - (11) : 以下と等価。
--  ```cpp
--  basic_string_view&amp;lt;charT, traits&amp;gt; sv = t;
--  return insert(pos1, sv.substr(pos2, n));
--  ```
--  * basic_string_view[link /reference/string_view/basic_string_view.md]
--  * substr[link /reference/string_view/basic_string_view/substr.md]
-+    ```cpp
-+    basic_string_view&amp;lt;charT, traits&amp;gt; sv = t;
-+    return insert(pos1, sv.substr(pos2, n));
-+    ```
-+    * basic_string_view[link /reference/string_view/basic_string_view.md]
-+    * substr[link /reference/string_view/basic_string_view/substr.md]
- 
- 
- ## 戻り値
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator= -- 表示崩れチェックCI : `*`ではじまる箇条書きをチェック #1367</title>
-      <link href="https://cpprefjp.github.io/reference/string/basic_string/op_assign.html"/>
-      <id>952bb0403879014c483aaf1b93773af4336e190a:reference/string/basic_string/op_assign.md</id>
-      <updated>2024-12-05T13:43:09+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/basic_string/op_assign.md b/reference/string/basic_string/op_assign.md
-index bae7dba46..103089ce1 100644
---- a/reference/string/basic_string/op_assign.md
-+++ b/reference/string/basic_string/op_assign.md
-@@ -42,12 +42,12 @@ basic_string&amp;amp; operator=(nullptr_t) = delete;                       // (7) C++23
- - (4) : `*this = basic_string(1, c);` と等価。
- - (5) : `*this = basic_string(il);` と等価。
- - (6) : [`std::basic_string_view`](/reference/string_view/basic_string_view.md)オブジェクトからの変換。以下と等価。
--  ```cpp
--  basic_string_view&amp;lt;charT, traits&amp;gt; sv = t;
--  return assign(sv);
--  ```
--  * basic_string_view[link /reference/string_view/basic_string_view.md]
--  * assign[link assign.md]
-+    ```cpp
-+    basic_string_view&amp;lt;charT, traits&amp;gt; sv = t;
-+    return assign(sv);
-+    ```
-+    * basic_string_view[link /reference/string_view/basic_string_view.md]
-+    * assign[link assign.md]
- 
- 
- ## テンプレートパラメータ制約
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator+ -- 表示崩れチェックCI : `*`ではじまる箇条書きをチェック #1367</title>
-      <link href="https://cpprefjp.github.io/reference/string/basic_string/op_plus.html"/>
-      <id>952bb0403879014c483aaf1b93773af4336e190a:reference/string/basic_string/op_plus.md</id>
-      <updated>2024-12-05T13:43:09+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/basic_string/op_plus.md b/reference/string/basic_string/op_plus.md
-index 7e45e540f..d44c7578e 100644
---- a/reference/string/basic_string/op_plus.md
-+++ b/reference/string/basic_string/op_plus.md
-@@ -152,73 +152,73 @@ namespace std {
- ### C++20から
- 
- - (1)(9) : 以下と等価
--  ```cpp
--  basic_string&amp;lt;charT, traits, Allocator&amp;gt; r = lhs;
--  r.append(rhs);
--  return r;
--  ```
--  * append[link append.md]
-+    ```cpp
-+    basic_string&amp;lt;charT, traits, Allocator&amp;gt; r = lhs;
-+    r.append(rhs);
-+    return r;
-+    ```
-+    * append[link append.md]
- 
- - (2)(10) : 以下と等価
--  ```cpp
--  lhs.append(rhs);
--  return std::move(lhs);
--  ```
--  * append[link append.md]
-+    ```cpp
-+    lhs.append(rhs);
-+    return std::move(lhs);
-+    ```
-+    * append[link append.md]
- 
- - (3)(6) : 以下と等価
--  ```cpp
--  rhs.insert(0, lhs);
--  return std::move(rhs);
--  ```
--  * insert[link insert.md]
-+    ```cpp
-+    rhs.insert(0, lhs);
-+    return std::move(rhs);
-+    ```
-+    * insert[link insert.md]
- 
- - (4) : 呼び出しの後でも`lhs`と`rhs`は有効だが未規定な状態のままであることを除いて、以下と等価
--  ```cpp
--  lhs.append(rhs);
--  return std::move(lhs);
--  ```
--  * append[link append.md]
-+    ```cpp
-+    lhs.append(rhs);
-+    return std::move(lhs);
-+    ```
-+    * append[link append.md]
- 
- - (5) : 以下と等価
--  ```cpp
--  basic_string&amp;lt;charT, traits, Allocator&amp;gt; r = rhs;
--  r.insert(0, lhs);
--  return r;
--  ```
--  * insert[link insert.md]
-+    ```cpp
-+    basic_string&amp;lt;charT, traits, Allocator&amp;gt; r = rhs;
-+    r.insert(0, lhs);
-+    return r;
-+    ```
-+    * insert[link insert.md]
- 
- - (7) : 以下と等価
--  ```cpp
--  basic_string&amp;lt;charT, traits, Allocator&amp;gt; r = rhs;
--  r.insert(r.begin(), lhs);
--  return r;
--  ```
--  * insert[link insert.md]
--  * begin[link begin.md]
-+    ```cpp
-+    basic_string&amp;lt;charT, traits, Allocator&amp;gt; r = rhs;
-+    r.insert(r.begin(), lhs);
-+    return r;
-+    ```
-+    * insert[link insert.md]
-+    * begin[link begin.md]
- 
- - (8) : 以下と等価
--  ```cpp
--  rhs.insert(rhs.begin(), lhs);
--  return std::move(rhs);
--  ```
--  * insert[link insert.md]
--  * begin[link begin.md]
-+    ```cpp
-+    rhs.insert(rhs.begin(), lhs);
-+    return std::move(rhs);
-+    ```
-+    * insert[link insert.md]
-+    * begin[link begin.md]
- 
- - (11) : 以下と等価
--  ```cpp
--  basic_string&amp;lt;charT, traits, Allocator&amp;gt; r = lhs;
--  r.push_back(rhs);
--  return r;
--  ```
--  * push_back[link push_back.md]
-+    ```cpp
-+    basic_string&amp;lt;charT, traits, Allocator&amp;gt; r = lhs;
-+    r.push_back(rhs);
-+    return r;
-+    ```
-+    * push_back[link push_back.md]
- 
- - (12) : 以下と等価
--  ```cpp
--  lhs.push_back(rhs);
--  return std::move(lhs);
--  ```
--  * push_back[link push_back.md]
-+    ```cpp
-+    lhs.push_back(rhs);
-+    return std::move(lhs);
-+    ```
-+    * push_back[link push_back.md]
- 
- 
- ## 備考
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator+= -- 表示崩れチェックCI : `*`ではじまる箇条書きをチェック #1367</title>
-      <link href="https://cpprefjp.github.io/reference/string/basic_string/op_plus_assign.html"/>
-      <id>952bb0403879014c483aaf1b93773af4336e190a:reference/string/basic_string/op_plus_assign.md</id>
-      <updated>2024-12-05T13:43:09+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/basic_string/op_plus_assign.md b/reference/string/basic_string/op_plus_assign.md
-index 7f5dbb1ff..970ee09ef 100644
---- a/reference/string/basic_string/op_plus_assign.md
-+++ b/reference/string/basic_string/op_plus_assign.md
-@@ -55,12 +55,12 @@ constexpr basic_string&amp;amp; operator+=(const T&amp;amp; t); // (5) C++20
- 
- - (5) 対象オブジェクトの末尾に[`basic_string_view`](/reference/string_view/basic_string_view.md)`&amp;lt;charT, traits&amp;gt;`に変換可能な`t`の参照する文字列が追加される。  
- 以下と等価。
--  ```cpp
--  basic_string_view&amp;lt;charT, traits&amp;gt; sv = t;
--  return append(sv);
--  ```
--  * basic_string_view[link /reference/string_view/basic_string_view.md]
--  * append[link append.md]
-+    ```cpp
-+    basic_string_view&amp;lt;charT, traits&amp;gt; sv = t;
-+    return append(sv);
-+    ```
-+    * basic_string_view[link /reference/string_view/basic_string_view.md]
-+    * append[link append.md]
- 
- 
- ## 戻り値
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>replace -- 表示崩れチェックCI : `*`ではじまる箇条書きをチェック #1367</title>
-      <link href="https://cpprefjp.github.io/reference/string/basic_string/replace.html"/>
-      <id>952bb0403879014c483aaf1b93773af4336e190a:reference/string/basic_string/replace.md</id>
-      <updated>2024-12-05T13:43:09+09:00</updated>
       
         <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/basic_string/replace.md b/reference/string/basic_string/replace.md
 index 1ffedb7c8..623eebd07 100644
