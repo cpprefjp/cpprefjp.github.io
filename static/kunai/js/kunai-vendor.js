@@ -1,14 +1,14 @@
-(self["webpackChunkKunai"] = self["webpackChunkKunai"] || []).push([[88],{
+(self["webpackChunkKunai"] = self["webpackChunkKunai"] || []).push([[449],{
 
-/***/ 3467:
+/***/ 7135:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-module.exports = __webpack_require__(3960);
+module.exports = __webpack_require__(6248);
 
 
 /***/ }),
 
-/***/ 2644:
+/***/ 9835:
 /***/ (function(module) {
 
 "use strict";
@@ -640,27 +640,27 @@ module.exports = Anser;
 
 /***/ }),
 
-/***/ 2091:
+/***/ 5704:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 
 // EXPORTS
 __webpack_require__.d(__webpack_exports__, {
-  KG: function() { return /* reexport */ CRSearch; },
-  ku: function() { return /* reexport */ IndexID; },
-  fo: function() { return /* reexport */ index_type; },
-  KC: function() { return /* reexport */ kunai_config_namespaceObject; }
+  "Sv": function() { return /* reexport */ CRSearch; },
+  "hs": function() { return /* reexport */ IndexID; },
+  "PX": function() { return /* reexport */ index_type; },
+  "KC": function() { return /* reexport */ kunai_config_namespaceObject; }
 });
 
 // NAMESPACE OBJECT: ../node_modules/crsearch/js/crsearch/kunai-config.js
 var kunai_config_namespaceObject = {};
 __webpack_require__.r(kunai_config_namespaceObject);
 __webpack_require__.d(kunai_config_namespaceObject, {
-  TS: function() { return Config; }
+  "De": function() { return Config; }
 });
 
-;// ../node_modules/crsearch/js/crsearch/index-type.js
+;// CONCATENATED MODULE: ../node_modules/crsearch/js/crsearch/index-type.js
 var IndexType = {
   header: 'header',
   category: 'category',
@@ -694,48 +694,60 @@ var IndexType = {
 Object.freeze(IndexType);
 /* harmony default export */ var index_type = (IndexType);
 // EXTERNAL MODULE: ../node_modules/@babel/runtime/helpers/esm/slicedToArray.js + 3 modules
-var slicedToArray = __webpack_require__(7850);
+var slicedToArray = __webpack_require__(5809);
 // EXTERNAL MODULE: ../node_modules/@babel/runtime/helpers/esm/toConsumableArray.js + 3 modules
-var toConsumableArray = __webpack_require__(4300);
+var toConsumableArray = __webpack_require__(126);
 // EXTERNAL MODULE: ../node_modules/@babel/runtime/helpers/esm/classCallCheck.js
-var classCallCheck = __webpack_require__(2099);
+var classCallCheck = __webpack_require__(2951);
 // EXTERNAL MODULE: ../node_modules/@babel/runtime/helpers/esm/createClass.js
-var createClass = __webpack_require__(8183);
+var createClass = __webpack_require__(1976);
 // EXTERNAL MODULE: ../node_modules/@babel/runtime/helpers/esm/defineProperty.js
-var defineProperty = __webpack_require__(1705);
-;// ../node_modules/crsearch/js/crsearch/index-id.js
-/* provided dependency */ var $ = __webpack_require__(5616);
+var defineProperty = __webpack_require__(4649);
+;// CONCATENATED MODULE: ../node_modules/crsearch/js/crsearch/index-id.js
+/* provided dependency */ var $ = __webpack_require__(5638);
+
 
 
 
 
 
 function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+
 
 var IndexID = /*#__PURE__*/function () {
   function IndexID(log, json) {
-    (0,classCallCheck/* default */.A)(this, IndexID);
+    (0,classCallCheck/* default */.Z)(this, IndexID);
+
     this._log = log.makeContext('IndexID');
     this._type = json.type;
     this._indexes = [];
     var keys = json.key.map(function (k) {
       return k.normalize('NFKC');
     });
+
     var _iterator = _createForOfIteratorHelper(IndexID.VERBATIM_TRS),
-      _step;
+        _step;
+
     try {
       for (_iterator.s(); !(_step = _iterator.n()).done;) {
-        var _step$value = (0,slicedToArray/* default */.A)(_step.value, 2),
-          k = _step$value[0],
-          v = _step$value[1];
+        var _step$value = (0,slicedToArray/* default */.Z)(_step.value, 2),
+            k = _step$value[0],
+            v = _step$value[1];
+
         if (v.only && !v.only.includes(this._type)) {
           continue;
         }
+
         var last = keys[keys.length - 1];
+
         if (last.includes(k)) {
           keys[keys.length - 1] = last.replace(k, v.to);
+
           if (v.type) {
             this._type = v.type;
           }
@@ -746,15 +758,18 @@ var IndexID = /*#__PURE__*/function () {
     } finally {
       _iterator.f();
     }
+
     if (index_type.isClassy(this._type)) {
       var ns = json.cpp_namespace || ['std'];
-      keys.unshift.apply(keys, (0,toConsumableArray/* default */.A)(ns));
+      keys.unshift.apply(keys, (0,toConsumableArray/* default */.Z)(ns));
     }
+
     this._keys = keys;
     this._name = this._generateName();
     Object.freeze(this);
   }
-  (0,createClass/* default */.A)(IndexID, [{
+
+  (0,createClass/* default */.Z)(IndexID, [{
     key: "_generateName",
     value: function _generateName() {
       if (index_type.isClassy(this._type)) {
@@ -815,9 +830,11 @@ var IndexID = /*#__PURE__*/function () {
       return index_type.isClassy(type);
     }
   }]);
+
   return IndexID;
 }();
-(0,defineProperty/* default */.A)(IndexID, "VERBATIM_TRS", new Map([['コンストラクタ', {
+
+(0,defineProperty/* default */.Z)(IndexID, "VERBATIM_TRS", new Map([['コンストラクタ', {
   to: '(constructor)',
   only: [index_type.mem_fun]
 }], ['デストラクタ', {
@@ -833,102 +850,132 @@ var IndexID = /*#__PURE__*/function () {
   type: index_type.mem_fun
 }], ['非メンバ関数', {
   to: 'non-member function',
-  type: index_type.function
+  type: index_type["function"]
 }], ['単項', {
   to: 'unary'
 }]]));
 
+
 // EXTERNAL MODULE: ../node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js
-var asyncToGenerator = __webpack_require__(5841);
+var asyncToGenerator = __webpack_require__(7791);
 // EXTERNAL MODULE: ../node_modules/@babel/runtime/helpers/esm/extends.js
-var esm_extends = __webpack_require__(8102);
+var esm_extends = __webpack_require__(5773);
 // EXTERNAL MODULE: ../node_modules/@babel/runtime/regenerator/index.js
-var regenerator = __webpack_require__(3467);
+var regenerator = __webpack_require__(7135);
 var regenerator_default = /*#__PURE__*/__webpack_require__.n(regenerator);
 // EXTERNAL MODULE: ../node_modules/mousetrap/mousetrap.js
-var mousetrap = __webpack_require__(2311);
+var mousetrap = __webpack_require__(3345);
 var mousetrap_default = /*#__PURE__*/__webpack_require__.n(mousetrap);
-;// ../node_modules/crsearch/js/crsearch/query.js
+;// CONCATENATED MODULE: ../node_modules/crsearch/js/crsearch/query.js
+
 
 
 function query_createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = query_unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+
 function query_unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return query_arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return query_arrayLikeToArray(o, minLen); }
+
 function query_arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+
 
 var Query = /*#__PURE__*/function () {
   function Query(log, text) {
-    (0,classCallCheck/* default */.A)(this, Query);
+    (0,classCallCheck/* default */.Z)(this, Query);
+
     this._log = log.makeContext('Query');
     this._original_text = text;
     var filters = new Set();
     var and = new Set();
     var not = new Set();
     var real_frags = [];
+
     var _iterator = query_createForOfIteratorHelper(text.normalize('NFKC').trim().split(/\s+/)),
-      _step;
+        _step;
+
     try {
       for (_iterator.s(); !(_step = _iterator.n()).done;) {
         var fr = _step.value;
+
         if (fr.startsWith('type:')) {
           var _iterator2 = query_createForOfIteratorHelper(fr.substring(5).split(',')),
-            _step2;
+              _step2;
+
           try {
             for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
               var t = _step2.value;
               var kind = null;
+
               switch (t) {
                 case 'header':
                   kind = index_type.header;
                   break;
+
                 case 'category':
                   kind = index_type.category;
                   break;
+
                 case 'module':
                   kind = index_type.category;
                   break;
+
                 case 'namespace':
                   kind = index_type.namespace;
                   break;
+
                 case 'class':
-                  kind = index_type.class;
+                  kind = index_type["class"];
                   break;
+
                 case 'function':
-                  kind = index_type.function;
+                  kind = index_type["function"];
                   break;
+
                 case 'mem_fun':
                   kind = index_type.mem_fun;
                   break;
+
                 case 'enum':
-                  kind = index_type.enum;
+                  kind = index_type["enum"];
                   break;
+
                 case 'variable':
                   kind = index_type.variable;
                   break;
+
                 case 'type-alias':
                   kind = index_type.type_alias;
                   break;
+
                 case 'concept':
                   kind = index_type.concept;
                   break;
+
                 case 'named requirement':
                   kind = index_type.named_requirement;
                   break;
+
                 case 'macro':
                   kind = index_type.macro;
                   break;
+
                 case 'cpo':
                   kind = index_type.cpo;
                   break;
+
                 case 'article':
                   kind = index_type.article;
                   break;
+
                 case 'meta':
                   kind = index_type.meta;
                   break;
+
                 default:
                   this._log.error('unhandled type in query', t);
+
                   break;
               }
+
               if (kind) {
                 filters.add(kind);
               }
@@ -951,13 +998,15 @@ var Query = /*#__PURE__*/function () {
     } finally {
       _iterator.f();
     }
+
     this._filters = filters;
     this._and = Array.from(and);
     this._not = Array.from(not);
     this._multi = and.size + not.size > 1;
     Object.freeze(this);
   }
-  (0,createClass/* default */.A)(Query, [{
+
+  (0,createClass/* default */.Z)(Query, [{
     key: "match",
     value: function match(idx) {
       return !idx.isNoJump && (this._filters.size === 0 || this._filters.has(idx.type)) && (this._multi ? this._and.every(function (s) {
@@ -976,28 +1025,38 @@ var Query = /*#__PURE__*/function () {
       return this._original_text;
     }
   }]);
+
   return Query;
 }(); // Query
 
-;// ../node_modules/crsearch/js/crsearch/dom.js
-/* provided dependency */ var dom_$ = __webpack_require__(5616);
+
+
+;// CONCATENATED MODULE: ../node_modules/crsearch/js/crsearch/dom.js
+/* provided dependency */ var dom_$ = __webpack_require__(5638);
+
 
 
 
 function dom_createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = dom_unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+
 function dom_unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return dom_arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return dom_arrayLikeToArray(o, minLen); }
+
 function dom_arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
 var DOM = /*#__PURE__*/function () {
   function DOM() {
-    (0,classCallCheck/* default */.A)(this, DOM);
+    (0,classCallCheck/* default */.Z)(this, DOM);
   }
-  (0,createClass/* default */.A)(DOM, null, [{
+
+  (0,createClass/* default */.Z)(DOM, null, [{
     key: "makeBadges",
     value: function makeBadges(attrs) {
       var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : DOM.defaultOptions;
       var ul = dom_$('<ul>').addClass('badges').addClass([].concat(opts.badges.switches).join(' '));
+
       var _iterator = dom_createForOfIteratorHelper(attrs),
-        _step;
+          _step;
+
       try {
         for (_iterator.s(); !(_step = _iterator.n()).done;) {
           var attr = _step.value;
@@ -1006,9 +1065,11 @@ var DOM = /*#__PURE__*/function () {
           }).addClass('badge').appendTo(ul);
           var target = dom_$('<a>').append(dom_$('<i/>')).appendTo(li);
           var cppm = attr.match(/cpp(\d+)/);
+
           if (cppm) {
             var cppv = "C++".concat(cppm[1]);
             li.attr('data-cpp-version', cppm[1]);
+
             if (attr.match('deprecated')) {
               li.addClass('deprecated-spec').attr('title', "".concat(cppv, "\u3067\u975E\u63A8\u5968"));
             } else if (attr.match('removed')) {
@@ -1018,11 +1079,13 @@ var DOM = /*#__PURE__*/function () {
             }
           } else {
             name = attr == 'future' ? '将来' : attr == 'archive' ? '廃案' : null;
+
             if (name) {
               li.addClass('named-version-spec').attr('title', "C++ (".concat(name, ")"));
               li.attr('named-version', attr);
             }
           }
+
           if (['deprecated_in_latest', 'removed_in_latest', 'added_in_latest'].includes(attr)) {
             li.addClass('latest-spec');
           }
@@ -1032,6 +1095,7 @@ var DOM = /*#__PURE__*/function () {
       } finally {
         _iterator.f();
       }
+
       return ul;
     }
   }, {
@@ -1042,9 +1106,11 @@ var DOM = /*#__PURE__*/function () {
       });
     }
   }]);
+
   return DOM;
 }();
-(0,defineProperty/* default */.A)(DOM, "defaultOptions", {
+
+(0,defineProperty/* default */.Z)(DOM, "defaultOptions", {
   links: {
     deprecated: null,
     removed: null
@@ -1054,7 +1120,8 @@ var DOM = /*#__PURE__*/function () {
     switches: []
   }
 });
-(0,defineProperty/* default */.A)(DOM, "_ENTITIES", {
+
+(0,defineProperty/* default */.Z)(DOM, "_ENTITIES", {
   '<': '&lt;',
   '>': '&gt;',
   '&': '&amp;',
@@ -1062,11 +1129,13 @@ var DOM = /*#__PURE__*/function () {
   "'": '&apos;'
 });
 
+
 // EXTERNAL MODULE: ../node_modules/url-parse/index.js
-var url_parse = __webpack_require__(8428);
+var url_parse = __webpack_require__(899);
 var url_parse_default = /*#__PURE__*/__webpack_require__.n(url_parse);
-;// ../node_modules/crsearch/js/crsearch/index.js
-/* provided dependency */ var crsearch_$ = __webpack_require__(5616);
+;// CONCATENATED MODULE: ../node_modules/crsearch/js/crsearch/index.js
+/* provided dependency */ var crsearch_$ = __webpack_require__(5638);
+
 
 
 
@@ -1075,16 +1144,17 @@ var url_parse_default = /*#__PURE__*/__webpack_require__.n(url_parse);
 
 var Index = /*#__PURE__*/function () {
   function Index(log, cpp_version, id, json, extra_path, ns) {
-    (0,classCallCheck/* default */.A)(this, Index);
+    (0,classCallCheck/* default */.Z)(this, Index);
+
     this._log = log.makeContext('Index');
     this._in_header = null;
     this._parent = null;
     this._ns = ns;
     this._id = id;
-    this._cpp_version = cpp_version;
+    this._cpp_version = cpp_version; // cache
 
-    // cache
     this._name = this._id.name;
+
     if (json) {
       this._page_id = extra_path.concat(json.page_id.filter(function (s) {
         return s.length !== 0;
@@ -1096,13 +1166,16 @@ var Index = /*#__PURE__*/function () {
       // this._log.debug('fake Index created')
       this._page_id = id.keys.slice(-1);
     }
+
     Object.seal(this);
     id.add_index(this);
   }
-  (0,createClass/* default */.A)(Index, [{
+
+  (0,createClass/* default */.Z)(Index, [{
     key: "isRootArticle",
     value: function isRootArticle() {
-      return this._page_id.length === 0; /* && IType.isArticles(this._id.type) */
+      return this._page_id.length === 0;
+      /* && IType.isArticles(this._id.type) */
     }
   }, {
     key: "join_html",
@@ -1111,9 +1184,11 @@ var Index = /*#__PURE__*/function () {
       var container = crsearch_$('<div>', {
         'data-index-type': this._id.type
       }).addClass('cr-index');
+
       if (index_type.isClassy(this._id.type)) {
         container.addClass('classy');
       }
+
       container.append(crsearch_$('<div>', {
         class: 'type'
       }));
@@ -1122,15 +1197,19 @@ var Index = /*#__PURE__*/function () {
       }).appendTo(container);
       title.append(this._id.join_html(opts));
       var attrs = [];
+
       if (!opts.badges.noselfcpp && this._cpp_version) {
         attrs.push("added-in-cpp".concat(this._cpp_version));
       }
+
       if (this._attributes) {
-        attrs.push.apply(attrs, (0,toConsumableArray/* default */.A)(this._attributes));
+        attrs.push.apply(attrs, (0,toConsumableArray/* default */.Z)(this._attributes));
       }
+
       if (attrs.length) {
         title.append(DOM.makeBadges(attrs, opts));
       }
+
       return container;
     }
   }, {
@@ -1149,6 +1228,7 @@ var Index = /*#__PURE__*/function () {
       if (index_type.isArticles(this._id.type)) {
         return this._name.toLowerCase().includes(q.toLowerCase());
       }
+
       return this._name.includes(q);
     }
   }, {
@@ -1157,6 +1237,7 @@ var Index = /*#__PURE__*/function () {
       if (index_type.isArticles(this._id.type)) {
         return this._name.toLowerCase().includes(q.toLowerCase());
       }
+
       return this._name.includes(q) || this._in_header && this._in_header._name.includes(q) || this._parent && this._parent._name.includes(q);
     }
   }, {
@@ -1242,32 +1323,44 @@ var Index = /*#__PURE__*/function () {
       var bhdr = bidx._in_header;
       var ahname = ahdr && ahdr._name;
       var bhname = bhdr && bhdr._name;
+
       if (ahname !== bhname) {
         return ahname < bhname ? -1 : 1;
       }
+
       var aname = aidx._name;
       var bname = bidx._name;
+
       if (aname !== bname) {
         return aname < bname ? -1 : 1;
       }
+
       return aidx.path < bidx.path ? -1 : 1;
     }
   }]);
+
   return Index;
 }();
 
-;// ../node_modules/crsearch/js/crsearch/namespace.js
+
+;// CONCATENATED MODULE: ../node_modules/crsearch/js/crsearch/namespace.js
+
 
 
 
 function namespace_createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = namespace_unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+
 function namespace_unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return namespace_arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return namespace_arrayLikeToArray(o, minLen); }
+
 function namespace_arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+
 
 
 var Namespace = /*#__PURE__*/function () {
   function Namespace(log, json, db) {
-    (0,classCallCheck/* default */.A)(this, Namespace);
+    (0,classCallCheck/* default */.Z)(this, Namespace);
+
     this._log = log.makeContext('Namespace');
     this._indexes = new Map();
     this._namespace = json.namespace;
@@ -1279,17 +1372,23 @@ var Namespace = /*#__PURE__*/function () {
     Object.seal(this);
     this.merge(json);
   }
-  (0,createClass/* default */.A)(Namespace, [{
+
+  (0,createClass/* default */.Z)(Namespace, [{
     key: "merge",
     value: function merge(json) {
       var cpp_version = json.cpp_version || null;
+
       var extra_path = this._extraPath(json.path_prefixes || this._namespace);
+
       var _iterator = namespace_createForOfIteratorHelper(json.indexes),
-        _step;
+          _step;
+
       try {
         for (_iterator.s(); !(_step = _iterator.n()).done;) {
           var j_idx = _step.value;
+
           var idx = this._createIndex(cpp_version, this._db.getIndexID(j_idx.id), j_idx, extra_path);
+
           this._indexes.set(idx.path, idx);
         }
       } catch (err) {
@@ -1312,13 +1411,18 @@ var Namespace = /*#__PURE__*/function () {
     key: "init",
     value: function init() {
       var _iterator2 = namespace_createForOfIteratorHelper(Array.from(this._indexes.keys()).sort()),
-        _step2;
+          _step2;
+
       try {
         for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
           var path = _step2.value;
+
           var idx = this._indexes.get(path);
+
           this._resolveRelatedTo(idx);
+
           this._db.all_fullpath_pages.set(idx.fullpath, idx);
+
           if (index_type.isHeader(idx.type)) {
             this._initHeader(idx);
           } else if (index_type.isContainer(idx.type)) {
@@ -1331,7 +1435,9 @@ var Namespace = /*#__PURE__*/function () {
             }
           } else {
             var h = this._all_headers.get(idx.in_header);
+
             var cand = this._indexes.get(idx.parentPath);
+
             if (cand && h.classes.has(cand)) {
               idx.parent = cand;
               h.classes.get(cand).add(idx);
@@ -1352,38 +1458,53 @@ var Namespace = /*#__PURE__*/function () {
       if (!idx.related_to) {
         return;
       }
+
       var deref_related_to = new Set();
+
       var _iterator3 = namespace_createForOfIteratorHelper(idx.related_to),
-        _step3;
+          _step3;
+
       try {
         for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
           var rsid = _step3.value;
+
           var rid = this._db.getIndexID(rsid);
+
           if (index_type.isHeader(rid.type)) {
             var found = null;
             var indexes = rid.indexes;
+
             if (indexes.length === 0) {
               found = this._createIndex(idx.cpp_version, rid, null, []);
+
               if (found.name === '<header_name>') {
                 // shit
                 continue;
               }
+
               this._indexes.set(found.name, found);
+
               this._log.warn("no namespace has this index; fake indexing '".concat(found.name, "' --> '").concat(idx.name, "'"), 'namespace:', this._pretty_name(), '\nfake index:', found, '\nself:', idx.name);
+
               found.in_header = found;
+
               this._initHeader(found);
             } else {
               found = indexes[0];
             }
+
             idx.in_header = found;
             deref_related_to.add(found);
           } // header
+
         } // deref related_to loop
+
       } catch (err) {
         _iterator3.e(err);
       } finally {
         _iterator3.f();
       }
+
       idx.related_to = deref_related_to;
     }
   }, {
@@ -1393,13 +1514,16 @@ var Namespace = /*#__PURE__*/function () {
         classes: new Map(),
         others: new Set()
       };
+
       this._all_headers.set(hdr, h);
     }
   }, {
     key: "_initClass",
     value: function _initClass(cls) {
       var hdr = cls.in_header;
+
       var h = this._all_headers.get(hdr);
+
       h.classes.set(cls, new Set());
     }
   }, {
@@ -1413,9 +1537,10 @@ var Namespace = /*#__PURE__*/function () {
           return a.name < b.name ? -1 : 1;
         }),
         headers: Array.from(this._all_headers, function (_ref) {
-          var _ref2 = (0,slicedToArray/* default */.A)(_ref, 2),
-            hdr = _ref2[0],
-            h = _ref2[1];
+          var _ref2 = (0,slicedToArray/* default */.Z)(_ref, 2),
+              hdr = _ref2[0],
+              h = _ref2[1];
+
           return {
             self: hdr,
             classes: Namespace._makeClassTree(h.classes, kc),
@@ -1430,11 +1555,14 @@ var Namespace = /*#__PURE__*/function () {
     key: "query",
     value: function query(q) {
       var targets = [];
+
       var _iterator4 = namespace_createForOfIteratorHelper(this._indexes.values()),
-        _step4;
+          _step4;
+
       try {
         for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
           var idx = _step4.value;
+
           if (q.match(idx)) {
             targets.push(idx);
           }
@@ -1444,6 +1572,7 @@ var Namespace = /*#__PURE__*/function () {
       } finally {
         _iterator4.f();
       }
+
       return targets;
     }
   }, {
@@ -1465,14 +1594,16 @@ var Namespace = /*#__PURE__*/function () {
     key: "_makeClassTree",
     value: function _makeClassTree(classes, kc) {
       return Array.from(classes.entries(), function (_ref3) {
-        var _ref4 = (0,slicedToArray/* default */.A)(_ref3, 2),
-          cls = _ref4[0],
-          members = _ref4[1];
+        var _ref4 = (0,slicedToArray/* default */.Z)(_ref3, 2),
+            cls = _ref4[0],
+            members = _ref4[1];
+
         return {
           self: cls,
           members: Array.from(members).sort(function (a_, b_) {
             var a = kc.makeMemberData(a_);
             var b = kc.makeMemberData(b_);
+
             if (a.i < b.i) {
               return -1;
             } else if (a.i > b.i) {
@@ -1500,23 +1631,31 @@ var Namespace = /*#__PURE__*/function () {
       });
     }
   }]);
+
   return Namespace;
 }();
 
-;// ../node_modules/crsearch/js/crsearch/database.js
+
+;// CONCATENATED MODULE: ../node_modules/crsearch/js/crsearch/database.js
+
 
 
 
 function database_createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = database_unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+
 function database_unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return database_arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return database_arrayLikeToArray(o, minLen); }
+
 function database_arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+
 
 
 
 
 var Database = /*#__PURE__*/function () {
   function Database(log, json) {
-    (0,classCallCheck/* default */.A)(this, Database);
+    (0,classCallCheck/* default */.Z)(this, Database);
+
     var runID = JSON.stringify({
       name: 'Database::constructor',
       timestamp: Date.now()
@@ -1527,17 +1666,20 @@ var Database = /*#__PURE__*/function () {
     this._base_url = new (url_parse_default())(json.base_url);
     this._online_base_url = json.online_base_url ? new (url_parse_default())(json.online_base_url) : null;
     this._path_ns_map = new Map();
-    this._ids = [];
+    this._ids = []; // global map
 
-    // global map
     this._all_fullpath_pages = new Map();
+
     this._log.debug('[P1] initializing all IndexID...');
+
     var _iterator = database_createForOfIteratorHelper(json.ids),
-      _step;
+        _step;
+
     try {
       for (_iterator.s(); !(_step = _iterator.n()).done;) {
         var id = _step.value;
         var iid = new IndexID(this._log, id);
+
         this._ids.push(iid);
       }
     } catch (err) {
@@ -1545,18 +1687,24 @@ var Database = /*#__PURE__*/function () {
     } finally {
       _iterator.f();
     }
+
     this._log.debug('[P1] initializing all Namespace...');
+
     var _iterator2 = database_createForOfIteratorHelper(json.namespaces),
-      _step2;
+        _step2;
+
     try {
       for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
         var j_ns = _step2.value;
         var path = j_ns.namespace.join('/');
+
         var ns = this._path_ns_map.get(path);
+
         if (ns) {
           ns.merge(j_ns);
         } else {
           ns = new Namespace(this._log, j_ns, this);
+
           this._path_ns_map.set(path, ns);
         }
       }
@@ -1565,12 +1713,16 @@ var Database = /*#__PURE__*/function () {
     } finally {
       _iterator2.f();
     }
+
     this._log.info('[P2] generating reverse maps...');
+
     var _iterator3 = database_createForOfIteratorHelper(this._path_ns_map.values()),
-      _step3;
+        _step3;
+
     try {
       for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
         var _ns = _step3.value;
+
         _ns.init();
       }
     } catch (err) {
@@ -1578,11 +1730,15 @@ var Database = /*#__PURE__*/function () {
     } finally {
       _iterator3.f();
     }
+
     console.timeEnd(runID);
+
     this._log.info('initialized.', this._all_pages);
+
     Object.freeze(this);
   }
-  (0,createClass/* default */.A)(Database, [{
+
+  (0,createClass/* default */.Z)(Database, [{
     key: "getTree",
     value: function getTree(kc) {
       var runID = JSON.stringify({
@@ -1602,25 +1758,30 @@ var Database = /*#__PURE__*/function () {
     key: "query",
     value: function query(q, max_count) {
       var targets = [];
+
       var _iterator4 = database_createForOfIteratorHelper(this._path_ns_map.values()),
-        _step4;
+          _step4;
+
       try {
         for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
           var ns = _step4.value;
-          targets.push.apply(targets, (0,toConsumableArray/* default */.A)(ns.query(q)));
+          targets.push.apply(targets, (0,toConsumableArray/* default */.Z)(ns.query(q)));
         }
       } catch (err) {
         _iterator4.e(err);
       } finally {
         _iterator4.f();
       }
+
       var grouped_targets = targets.sort(Index.compare).slice(0, max_count).reduce(function (gr, index) {
         var hdr = index.in_header;
         var indexes = gr.get(hdr);
+
         if (!indexes) {
           indexes = [];
           gr.set(hdr, indexes);
         }
+
         indexes.push(index);
         return gr;
       }, new Map());
@@ -1655,11 +1816,14 @@ var Database = /*#__PURE__*/function () {
       return this._all_fullpath_pages;
     }
   }]);
+
   return Database;
 }();
 
-;// ../node_modules/crsearch/js/crsearch/crsearch.js
-/* provided dependency */ var crsearch_crsearch_$ = __webpack_require__(5616);
+
+;// CONCATENATED MODULE: ../node_modules/crsearch/js/crsearch/crsearch.js
+/* provided dependency */ var crsearch_crsearch_$ = __webpack_require__(5638);
+
 
 
 
@@ -1667,8 +1831,12 @@ var Database = /*#__PURE__*/function () {
 
 
 function crsearch_createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = crsearch_unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e3) { throw _e3; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e4) { didErr = true; err = _e4; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+
 function crsearch_unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return crsearch_arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return crsearch_arrayLikeToArray(o, minLen); }
+
 function crsearch_arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+
 
 
 
@@ -1677,9 +1845,10 @@ function crsearch_arrayLikeToArray(arr, len) { if (len == null || len > arr.leng
 
 var DummyLogger = /*#__PURE__*/function () {
   function DummyLogger() {
-    (0,classCallCheck/* default */.A)(this, DummyLogger);
+    (0,classCallCheck/* default */.Z)(this, DummyLogger);
   }
-  (0,createClass/* default */.A)(DummyLogger, [{
+
+  (0,createClass/* default */.Z)(DummyLogger, [{
     key: "debug",
     value: function debug() {}
   }, {
@@ -1697,15 +1866,21 @@ var DummyLogger = /*#__PURE__*/function () {
       return this;
     }
   }]);
+
   return DummyLogger;
 }();
+
 ;
+
 var CRSearch = /*#__PURE__*/function () {
   function CRSearch() {
     var _this = this;
+
     var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-    (0,classCallCheck/* default */.A)(this, CRSearch);
-    this._opts = (0,esm_extends/* default */.A)({}, CRSearch._OPTS_DEFAULT, opts);
+
+    (0,classCallCheck/* default */.Z)(this, CRSearch);
+
+    this._opts = (0,esm_extends/* default */.Z)({}, CRSearch._OPTS_DEFAULT, opts);
     this._log = new DummyLogger();
     this._loaded = false;
     this._db = new Map();
@@ -1726,14 +1901,18 @@ var CRSearch = /*#__PURE__*/function () {
     mousetrap_default().bind('esc', function () {
       return _this._hide_all_result();
     });
+
     this._log.info('initialized.');
+
     Object.seal(this);
   }
-  (0,createClass/* default */.A)(CRSearch, [{
+
+  (0,createClass/* default */.Z)(CRSearch, [{
     key: "_load",
     value: function () {
-      var _load2 = (0,asyncToGenerator/* default */.A)(/*#__PURE__*/regenerator_default().mark(function _callee2() {
+      var _load2 = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee2() {
         var _this2 = this;
+
         var size;
         return regenerator_default().wrap(function _callee2$(_context2) {
           while (1) {
@@ -1743,7 +1922,7 @@ var CRSearch = /*#__PURE__*/function () {
                 size = this._pendingDB.size;
                 _context2.next = 4;
                 return Promise.all(Array.from(this._pendingDB, /*#__PURE__*/function () {
-                  var _ref = (0,asyncToGenerator/* default */.A)(/*#__PURE__*/regenerator_default().mark(function _callee(url, i) {
+                  var _ref = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee(url, i) {
                     var ajaxSettings, data;
                     return regenerator_default().wrap(function _callee$(_context) {
                       while (1) {
@@ -1752,29 +1931,40 @@ var CRSearch = /*#__PURE__*/function () {
                             if (url.pathname == '/') {
                               url.pathname = '/crsearch.json';
                             }
+
                             _this2._log.info("fetching database (".concat(i + 1, "/").concat(size, "): ").concat(url));
+
                             _context.prev = 2;
                             ajaxSettings = {
                               url: url,
                               dataType: "json"
                             };
+
                             if (/\.js([?#].*)?$/.test(url.toString())) {
                               ajaxSettings.dataType = "jsonp";
                               ajaxSettings.jsonpCallback = "callback";
                               ajaxSettings.crossDomain = true;
                             }
+
                             _context.next = 7;
                             return crsearch_crsearch_$.ajax(ajaxSettings);
+
                           case 7:
                             data = _context.sent;
+
                             _this2._log.info('fetched');
+
                             _this2._parse(url, data);
+
                             _context.next = 15;
                             break;
+
                           case 12:
                             _context.prev = 12;
                             _context.t0 = _context["catch"](2);
+
                             _this2._log.error('fetch failed', _context.t0);
+
                           case 15:
                           case "end":
                             return _context.stop();
@@ -1782,16 +1972,22 @@ var CRSearch = /*#__PURE__*/function () {
                       }
                     }, _callee, null, [[2, 12]]);
                   }));
+
                   return function (_x, _x2) {
                     return _ref.apply(this, arguments);
                   };
                 }()));
+
               case 4:
                 _context2.prev = 4;
+
                 this._pendingDB.clear();
+
                 return _context2.finish(4);
+
               case 7:
                 this._loaded = true;
+
               case 8:
               case "end":
                 return _context2.stop();
@@ -1799,23 +1995,30 @@ var CRSearch = /*#__PURE__*/function () {
           }
         }, _callee2, this, [[0,, 4, 7]]);
       }));
+
       function _load() {
         return _load2.apply(this, arguments);
       }
+
       return _load;
     }()
   }, {
     key: "_parse",
     value: function _parse(url, json) {
       this._log.info('parsing...', json);
+
       if (this._opts.base_url) json.base_url = this._opts.base_url;
       if (this._opts.online_base_url) json.online_base_url = this._opts.online_base_url;
       var db = new Database(this._log, json);
+
       this._db.set(db.name, db);
+
       if (!this._defaultUrl) {
         this._defaultUrl = new (url_parse_default())(db.base_url).hostname;
       }
+
       this._log.info("parsed '".concat(db.name, "'"), db);
+
       if (this._opts.onDatabase) {
         this._opts.onDatabase(db);
       }
@@ -1827,13 +2030,17 @@ var CRSearch = /*#__PURE__*/function () {
         if (url.pathname === '/') url.pathname = '/crsearch.json';
         return url;
       };
+
       try {
         var url = new (url_parse_default())(base_url);
+
         this._pendingDB.add(autoSuffix(url).toString());
       } catch (e) {
         var a = document.createElement('a');
         a.href = base_url;
+
         var _url = new (url_parse_default())(autoSuffix(a).toString());
+
         this._pendingDB.add(_url);
       }
     }
@@ -1841,19 +2048,22 @@ var CRSearch = /*#__PURE__*/function () {
     key: "_selectChange",
     value: function _selectChange(isUp, box) {
       // this._log.debug('_selectChange', 'isUp?: ', isUp, '_selectIndex: ', this._selectIndex, box)
-
       this._selectIndex += isUp ? -1 : 1;
+
       if (this._selectIndex < 0) {
         this._selectIndex = this._resultCount;
       } else if (this._selectIndex > this._resultCount) {
         this._selectIndex = 0;
       }
+
       var _iterator = crsearch_createForOfIteratorHelper(box.find('.results .result')),
-        _step;
+          _step;
+
       try {
         for (_iterator.s(); !(_step = _iterator.n()).done;) {
           var e = _step.value;
           var link = crsearch_crsearch_$(e).children('a');
+
           if (parseInt(crsearch_crsearch_$(e).attr('data-result-id')) === this._selectIndex) {
             link.addClass('focus');
             link.focus();
@@ -1861,9 +2071,8 @@ var CRSearch = /*#__PURE__*/function () {
             link.removeClass('focus');
             link.blur();
           }
-        }
+        } // this._log.debug(this._selectIndex)
 
-        // this._log.debug(this._selectIndex)
       } catch (err) {
         _iterator.e(err);
       } finally {
@@ -1874,6 +2083,7 @@ var CRSearch = /*#__PURE__*/function () {
     key: "_do_search",
     value: function _do_search(e) {
       var _this3 = this;
+
       clearTimeout(this._search_timer[e.data.id]);
       this._search_timer[e.data.id] = setTimeout(function () {
         _this3._selectIndex = 0;
@@ -1883,27 +2093,30 @@ var CRSearch = /*#__PURE__*/function () {
   }, {
     key: "_do_search_impl",
     value: function _do_search_impl(e) {
-      var q = new Query(this._log, this._last_input[e.data.id]);
-      // this._log.debug(`query: '${q.original_text}'`, q)
+      var q = new Query(this._log, this._last_input[e.data.id]); // this._log.debug(`query: '${q.original_text}'`, q)
 
       var result_list = this._clear_results_for(e.target);
-      var extra_info_for = {};
 
-      // do the lookup per database
+      var extra_info_for = {}; // do the lookup per database
+
       var res = new Map();
+
       var _iterator2 = crsearch_createForOfIteratorHelper(this._db),
-        _step2;
+          _step2;
+
       try {
         for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-          var _step2$value = (0,slicedToArray/* default */.A)(_step2.value, 2),
-            name = _step2$value[0],
-            db = _step2$value[1];
+          var _step2$value = (0,slicedToArray/* default */.Z)(_step2.value, 2),
+              name = _step2$value[0],
+              db = _step2$value[1];
+
           var ret = db.query(q, CRSearch._MAX_RESULT);
           extra_info_for[db.name] = {
             url: db.base_url
           };
           res.set(db.name, ret.targets);
           var found_count = ret.found_count;
+
           if (found_count === 0) {
             var msg = crsearch_crsearch_$('<div class="message"><span class="pre">No matches for</span></div>');
             var rec_q = crsearch_crsearch_$('<span class="query" />');
@@ -1921,30 +2134,42 @@ var CRSearch = /*#__PURE__*/function () {
       } finally {
         _iterator2.f();
       }
+
       var result_id = 0;
+
       var _iterator3 = crsearch_createForOfIteratorHelper(res),
-        _step3;
+          _step3;
+
       try {
         for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-          var _step3$value = (0,slicedToArray/* default */.A)(_step3.value, 2),
-            db_name = _step3$value[0],
-            grouped_targets = _step3$value[1];
+          var _step3$value = (0,slicedToArray/* default */.Z)(_step3.value, 2),
+              db_name = _step3$value[0],
+              grouped_targets = _step3$value[1];
+
           result_list.append(this._make_site_header(db_name, extra_info_for[db_name]));
+
           var _iterator5 = crsearch_createForOfIteratorHelper(grouped_targets),
-            _step5;
+              _step5;
+
           try {
             for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
-              var _step5$value = (0,slicedToArray/* default */.A)(_step5.value, 2),
-                in_header = _step5$value[0],
-                the_targets = _step5$value[1];
+              var _step5$value = (0,slicedToArray/* default */.Z)(_step5.value, 2),
+                  in_header = _step5$value[0],
+                  the_targets = _step5$value[1];
+
               result_list.append(this._make_result_header(in_header));
+
               var _iterator6 = crsearch_createForOfIteratorHelper(the_targets),
-                _step6;
+                  _step6;
+
               try {
                 for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
                   var idx = _step6.value;
+
                   var _e = this._make_result(idx.type, idx, idx.url());
+
                   _e.attr('data-result-id', result_id++);
+
                   result_list.append(_e);
                 }
               } catch (err) {
@@ -1964,30 +2189,36 @@ var CRSearch = /*#__PURE__*/function () {
       } finally {
         _iterator3.f();
       }
+
       var _iterator4 = crsearch_createForOfIteratorHelper(this._db),
-        _step4;
+          _step4;
+
       try {
         for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
-          var _step4$value = (0,slicedToArray/* default */.A)(_step4.value, 2),
-            _name = _step4$value[0],
-            _db = _step4$value[1];
+          var _step4$value = (0,slicedToArray/* default */.Z)(_step4.value, 2),
+              _name = _step4$value[0],
+              _db = _step4$value[1];
+
           // always include fallback
           var fallback_site = _db.online_base_url ? _db.online_base_url.host : _db.base_url.host;
+
           var _e2 = this._make_result(null, q.original_text, {
             name: _db.name,
             url: fallback_site
           });
-          _e2.attr('data-result-id', result_id++);
-          result_list.append(_e2);
-        }
 
-        // always focus 1st result by default
+          _e2.attr('data-result-id', result_id++);
+
+          result_list.append(_e2);
+        } // always focus 1st result by default
         // just add 'focused' class, don't actually focus
+
       } catch (err) {
         _iterator4.e(err);
       } finally {
         _iterator4.f();
       }
+
       result_list.find('.result[data-result-id="0"] > a').addClass('focus');
       return result_id - 1; // i.e. result count
     }
@@ -1995,14 +2226,18 @@ var CRSearch = /*#__PURE__*/function () {
     key: "_make_site_header",
     value: function _make_site_header(db_name, extra_info) {
       var elem = crsearch_crsearch_$('<li class="result cr-meta-result cr-result-header" />');
+
       if (extra_info.html) {
         var extra = crsearch_crsearch_$('<div class="extra" />');
+
         if (extra_info.klass) {
           extra.addClass(extra_info.klass);
         }
+
         extra_info.html.appendTo(extra);
         extra.appendTo(elem);
       }
+
       var dbn = crsearch_crsearch_$('<a class="db-name" />');
       dbn.attr('href', extra_info.url);
       dbn.attr('target', '_blank');
@@ -2025,12 +2260,15 @@ var CRSearch = /*#__PURE__*/function () {
     value: function _make_result_header(header) {
       var elem = crsearch_crsearch_$('<li class="result cr-meta-result in-header" />');
       var body = crsearch_crsearch_$('<a>');
+
       if (header) {
         if (this._opts.force_new_window) {
           body.attr('target', '_blank');
         }
+
         body.attr('href', header.url());
       }
+
       body.text(header ? header.name : '(no header)');
       body.appendTo(elem);
       return elem;
@@ -2039,10 +2277,13 @@ var CRSearch = /*#__PURE__*/function () {
     key: "_make_result",
     value: function _make_result(t, target) {
       var extra = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+
       var elem = CRSearch._RESULT_PROTO.clone();
+
       var a = elem.children('a');
       var content = crsearch_crsearch_$('<div class="content" />').appendTo(a);
       var url = null;
+
       switch (t) {
         case null:
           {
@@ -2053,6 +2294,7 @@ var CRSearch = /*#__PURE__*/function () {
             crsearch_crsearch_$("<div class=\"fallback-site\">".concat(extra.url, "</div>")).appendTo(content);
             break;
           }
+
         default:
           a.attr('href', extra);
           content.append(target.join_html({
@@ -2060,11 +2302,14 @@ var CRSearch = /*#__PURE__*/function () {
               switches: ['simple']
             }
           }));
+
           if (this._opts.force_new_window) {
             a.attr('target', '_blank');
           }
+
           break;
       }
+
       return elem;
     }
   }, {
@@ -2075,9 +2320,11 @@ var CRSearch = /*#__PURE__*/function () {
   }, {
     key: "searchbox",
     value: function () {
-      var _searchbox = (0,asyncToGenerator/* default */.A)(/*#__PURE__*/regenerator_default().mark(function _callee3(sel) {
+      var _searchbox = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee3(sel) {
         var _this4 = this;
+
         var box, _iterator7, _step7, klass, id, control, input, get_root, is_self, forceFocus, result_wrapper, results, help_content, cr_info, cr_info_link;
+
         return regenerator_default().wrap(function _callee3$(_context3) {
           while (1) {
             switch (_context3.prev = _context3.next) {
@@ -2085,21 +2332,29 @@ var CRSearch = /*#__PURE__*/function () {
                 box = crsearch_crsearch_$(sel).addClass('loading').append(crsearch_crsearch_$('<div>', {
                   class: 'loading-icon'
                 }));
+
                 if (this._loaded) {
                   _context3.next = 4;
                   break;
                 }
+
                 _context3.next = 4;
                 return this._load();
+
               case 4:
                 box.removeClass('loading').addClass('loaded');
                 this._searchButton = crsearch_crsearch_$('<a />');
+
                 this._searchButton.attr('target', '_blank');
+
                 this._searchButton.addClass('search');
+
                 _iterator7 = crsearch_createForOfIteratorHelper(this._opts.klass.search_button);
+
                 try {
                   for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
                     klass = _step7.value;
+
                     this._searchButton.addClass(klass);
                   }
                 } catch (err) {
@@ -2107,10 +2362,14 @@ var CRSearch = /*#__PURE__*/function () {
                 } finally {
                   _iterator7.f();
                 }
+
                 this._updateSearchButton('');
+
                 id = this._last_id++;
                 box.attr('data-crsearch-id', id);
+
                 this._log.info("creating searchbox ".concat(id));
+
                 this._last_input[id] = '';
                 control = crsearch_crsearch_$('<div class="control" />');
                 control.appendTo(box);
@@ -2120,65 +2379,84 @@ var CRSearch = /*#__PURE__*/function () {
                 input.attr('autocomplete', false);
                 input.attr('placeholder', CRSearch._INPUT_PLACEHOLDER);
                 input.appendTo(control);
+
                 get_root = function get_root() {
                   return crsearch_crsearch_$(document.activeElement).closest('*[data-crsearch-id="' + id + '"]');
                 };
+
                 is_self = function is_self() {
                   return !!get_root().length;
                 };
+
                 forceFocus = function forceFocus() {
                   var results = get_root().find('.results');
+
                   if (!results.children('.result a:focus').length) {
                     results.find('.result a.focus').focus()[0].click();
                   }
                 };
+
                 mousetrap_default().bind('enter', function (e) {
                   if (is_self()) {
                     // don't!
                     // e.preventDefault()
-
                     forceFocus();
                   }
+
                   return true;
                 });
                 mousetrap_default().bind('up', function (e) {
                   if (is_self()) {
                     e.preventDefault();
+
                     _this4._selectChange(true, box);
                   }
                 });
                 mousetrap_default().bind('down', function (e) {
                   if (is_self()) {
                     e.preventDefault();
+
                     _this4._selectChange(false, box);
                   }
                 });
                 input.on('click', function (e) {
                   _this4._show_result_wrapper_for(e.target);
+
                   return _this4._select_default_input();
                 });
                 input.on('keyup', {
                   id: id
                 }, function (e) {
                   _this4._show_result_wrapper_for(e.target);
+
                   var text = crsearch_crsearch_$(e.target).val().replace(/\s+/g, ' ').trim();
+
                   if (_this4._last_input[e.data.id] != text) {
                     _this4._last_input[e.data.id] = text;
+
                     _this4._updateSearchButton(text);
+
                     if (text.length >= 2) {
                       _this4._find_result_wrapper_for(e.target).removeClass('help');
+
                       _this4._msg_for(e.target);
+
                       _this4._do_search(e);
                     } else if (text.length == 0) {
                       _this4._clear_results_for(e.target);
+
                       _this4._msg_for(e.target);
+
                       _this4._find_result_wrapper_for(e.target).addClass('help');
                     } else {
                       _this4._clear_results_for(e.target);
+
                       _this4._msg_for(e.target, text.length == 0 ? '' : 'input >= 2 characters...');
+
                       _this4._find_result_wrapper_for(e.target).addClass('help');
                     }
                   }
+
                   return false;
                 });
                 this._default_input = input;
@@ -2209,7 +2487,9 @@ var CRSearch = /*#__PURE__*/function () {
                 input.on('focusout', function () {
                   _this4._hasFocus = false;
                 });
+
                 this._searchButton.appendTo(control);
+
               case 52:
               case "end":
                 return _context3.stop();
@@ -2217,15 +2497,18 @@ var CRSearch = /*#__PURE__*/function () {
           }
         }, _callee3, this);
       }));
+
       function searchbox(_x3) {
         return _searchbox.apply(this, arguments);
       }
+
       return searchbox;
     }()
   }, {
     key: "_select_default_input",
     value: function _select_default_input() {
       this._default_input.select();
+
       return false;
     }
   }, {
@@ -2247,19 +2530,23 @@ var CRSearch = /*#__PURE__*/function () {
     key: "_show_result_wrapper_for",
     value: function _show_result_wrapper_for(input) {
       this._find_result_wrapper_for(input).addClass('visible');
+
       return false;
     }
   }, {
     key: "_msg_for",
     value: function _msg_for(input) {
       var msg = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
+
       this._find_cr_for(input).find('.result-wrapper .help-content .message').text(msg);
+
       return false;
     }
   }, {
     key: "_clear_results_for",
     value: function _clear_results_for(input) {
       var res = this._find_results_for(input);
+
       res.empty();
       return res;
     }
@@ -2271,11 +2558,16 @@ var CRSearch = /*#__PURE__*/function () {
       return false;
     }
   }]);
+
   return CRSearch;
 }(); // CRSearch
-(0,defineProperty/* default */.A)(CRSearch, "_APPNAME", 'crsearch');
-(0,defineProperty/* default */.A)(CRSearch, "_HOMEPAGE", 'https://github.com/cpprefjp/crsearch');
-(0,defineProperty/* default */.A)(CRSearch, "_OPTS_DEFAULT", {
+
+
+(0,defineProperty/* default */.Z)(CRSearch, "_APPNAME", 'crsearch');
+
+(0,defineProperty/* default */.Z)(CRSearch, "_HOMEPAGE", 'https://github.com/cpprefjp/crsearch');
+
+(0,defineProperty/* default */.Z)(CRSearch, "_OPTS_DEFAULT", {
   klass: {
     search_button: ['fa', 'fa-fw', 'fa-binoculars']
   },
@@ -2284,2600 +2576,43 @@ var CRSearch = /*#__PURE__*/function () {
   base_url: null,
   online_base_url: null
 });
-(0,defineProperty/* default */.A)(CRSearch, "_KLASS", 'crsearch');
-(0,defineProperty/* default */.A)(CRSearch, "_RESULT_WRAPPER_KLASS", 'result-wrapper');
-(0,defineProperty/* default */.A)(CRSearch, "_RESULTS_KLASS", 'results');
-(0,defineProperty/* default */.A)(CRSearch, "_INPUT_PLACEHOLDER", '"std::...", "<header>", etc.');
-(0,defineProperty/* default */.A)(CRSearch, "_MAX_RESULT", 5);
-(0,defineProperty/* default */.A)(CRSearch, "_RESULT_PROTO", crsearch_crsearch_$('<li class="result"><a href="#"></a></li>'));
-(0,defineProperty/* default */.A)(CRSearch, "_HELP", "\n    <div class=\"help-content\">\n      <div class=\"message\"></div>\n      <ul class=\"examples\">\n        <li>\n          <h3>Class / Function / Type</h3>\n          <div class=\"query\">std::<span class=\"input\"></span></div>\n        </li>\n        <li>\n          <h3>Header file</h3>\n          <div class=\"query\">&lt;<span class=\"input\"></span>&gt;</div>\n        </li>\n        <li>\n          <h3>Other / All</h3>\n          <div class=\"query\"><span class=\"input\"></span></div>\n        </li>\n      </ul>\n    </div>\n  ");
 
-;// ../node_modules/marked/lib/marked.esm.js
-/**
- * marked v15.0.6 - a markdown parser
- * Copyright (c) 2011-2025, Christopher Jeffrey. (MIT Licensed)
- * https://github.com/markedjs/marked
- */
+(0,defineProperty/* default */.Z)(CRSearch, "_KLASS", 'crsearch');
 
-/**
- * DO NOT EDIT THIS FILE
- * The code in this file is generated from files in ./src/
- */
+(0,defineProperty/* default */.Z)(CRSearch, "_RESULT_WRAPPER_KLASS", 'result-wrapper');
 
-/**
- * Gets the original marked default options.
- */
-function _getDefaults() {
-    return {
-        async: false,
-        breaks: false,
-        extensions: null,
-        gfm: true,
-        hooks: null,
-        pedantic: false,
-        renderer: null,
-        silent: false,
-        tokenizer: null,
-        walkTokens: null,
-    };
-}
-let _defaults = _getDefaults();
-function changeDefaults(newDefaults) {
-    _defaults = newDefaults;
-}
+(0,defineProperty/* default */.Z)(CRSearch, "_RESULTS_KLASS", 'results');
 
-const noopTest = { exec: () => null };
-function edit(regex, opt = '') {
-    let source = typeof regex === 'string' ? regex : regex.source;
-    const obj = {
-        replace: (name, val) => {
-            let valSource = typeof val === 'string' ? val : val.source;
-            valSource = valSource.replace(other.caret, '$1');
-            source = source.replace(name, valSource);
-            return obj;
-        },
-        getRegex: () => {
-            return new RegExp(source, opt);
-        },
-    };
-    return obj;
-}
-const other = {
-    codeRemoveIndent: /^(?: {1,4}| {0,3}\t)/gm,
-    outputLinkReplace: /\\([\[\]])/g,
-    indentCodeCompensation: /^(\s+)(?:```)/,
-    beginningSpace: /^\s+/,
-    endingHash: /#$/,
-    startingSpaceChar: /^ /,
-    endingSpaceChar: / $/,
-    nonSpaceChar: /[^ ]/,
-    newLineCharGlobal: /\n/g,
-    tabCharGlobal: /\t/g,
-    multipleSpaceGlobal: /\s+/g,
-    blankLine: /^[ \t]*$/,
-    doubleBlankLine: /\n[ \t]*\n[ \t]*$/,
-    blockquoteStart: /^ {0,3}>/,
-    blockquoteSetextReplace: /\n {0,3}((?:=+|-+) *)(?=\n|$)/g,
-    blockquoteSetextReplace2: /^ {0,3}>[ \t]?/gm,
-    listReplaceTabs: /^\t+/,
-    listReplaceNesting: /^ {1,4}(?=( {4})*[^ ])/g,
-    listIsTask: /^\[[ xX]\] /,
-    listReplaceTask: /^\[[ xX]\] +/,
-    anyLine: /\n.*\n/,
-    hrefBrackets: /^<(.*)>$/,
-    tableDelimiter: /[:|]/,
-    tableAlignChars: /^\||\| *$/g,
-    tableRowBlankLine: /\n[ \t]*$/,
-    tableAlignRight: /^ *-+: *$/,
-    tableAlignCenter: /^ *:-+: *$/,
-    tableAlignLeft: /^ *:-+ *$/,
-    startATag: /^<a /i,
-    endATag: /^<\/a>/i,
-    startPreScriptTag: /^<(pre|code|kbd|script)(\s|>)/i,
-    endPreScriptTag: /^<\/(pre|code|kbd|script)(\s|>)/i,
-    startAngleBracket: /^</,
-    endAngleBracket: />$/,
-    pedanticHrefTitle: /^([^'"]*[^\s])\s+(['"])(.*)\2/,
-    unicodeAlphaNumeric: /[\p{L}\p{N}]/u,
-    escapeTest: /[&<>"']/,
-    escapeReplace: /[&<>"']/g,
-    escapeTestNoEncode: /[<>"']|&(?!(#\d{1,7}|#[Xx][a-fA-F0-9]{1,6}|\w+);)/,
-    escapeReplaceNoEncode: /[<>"']|&(?!(#\d{1,7}|#[Xx][a-fA-F0-9]{1,6}|\w+);)/g,
-    unescapeTest: /&(#(?:\d+)|(?:#x[0-9A-Fa-f]+)|(?:\w+));?/ig,
-    caret: /(^|[^\[])\^/g,
-    percentDecode: /%25/g,
-    findPipe: /\|/g,
-    splitPipe: / \|/,
-    slashPipe: /\\\|/g,
-    carriageReturn: /\r\n|\r/g,
-    spaceLine: /^ +$/gm,
-    notSpaceStart: /^\S*/,
-    endingNewline: /\n$/,
-    listItemRegex: (bull) => new RegExp(`^( {0,3}${bull})((?:[\t ][^\\n]*)?(?:\\n|$))`),
-    nextBulletRegex: (indent) => new RegExp(`^ {0,${Math.min(3, indent - 1)}}(?:[*+-]|\\d{1,9}[.)])((?:[ \t][^\\n]*)?(?:\\n|$))`),
-    hrRegex: (indent) => new RegExp(`^ {0,${Math.min(3, indent - 1)}}((?:- *){3,}|(?:_ *){3,}|(?:\\* *){3,})(?:\\n+|$)`),
-    fencesBeginRegex: (indent) => new RegExp(`^ {0,${Math.min(3, indent - 1)}}(?:\`\`\`|~~~)`),
-    headingBeginRegex: (indent) => new RegExp(`^ {0,${Math.min(3, indent - 1)}}#`),
-    htmlBeginRegex: (indent) => new RegExp(`^ {0,${Math.min(3, indent - 1)}}<(?:[a-z].*>|!--)`, 'i'),
-};
-/**
- * Block-Level Grammar
- */
-const newline = /^(?:[ \t]*(?:\n|$))+/;
-const blockCode = /^((?: {4}| {0,3}\t)[^\n]+(?:\n(?:[ \t]*(?:\n|$))*)?)+/;
-const fences = /^ {0,3}(`{3,}(?=[^`\n]*(?:\n|$))|~{3,})([^\n]*)(?:\n|$)(?:|([\s\S]*?)(?:\n|$))(?: {0,3}\1[~`]* *(?=\n|$)|$)/;
-const hr = /^ {0,3}((?:-[\t ]*){3,}|(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})(?:\n+|$)/;
-const heading = /^ {0,3}(#{1,6})(?=\s|$)(.*)(?:\n+|$)/;
-const bullet = /(?:[*+-]|\d{1,9}[.)])/;
-const lheading = edit(/^(?!bull |blockCode|fences|blockquote|heading|html)((?:.|\n(?!\s*?\n|bull |blockCode|fences|blockquote|heading|html))+?)\n {0,3}(=+|-+) *(?:\n+|$)/)
-    .replace(/bull/g, bullet) // lists can interrupt
-    .replace(/blockCode/g, /(?: {4}| {0,3}\t)/) // indented code blocks can interrupt
-    .replace(/fences/g, / {0,3}(?:`{3,}|~{3,})/) // fenced code blocks can interrupt
-    .replace(/blockquote/g, / {0,3}>/) // blockquote can interrupt
-    .replace(/heading/g, / {0,3}#{1,6}/) // ATX heading can interrupt
-    .replace(/html/g, / {0,3}<[^\n>]+>\n/) // block html can interrupt
-    .getRegex();
-const _paragraph = /^([^\n]+(?:\n(?!hr|heading|lheading|blockquote|fences|list|html|table| +\n)[^\n]+)*)/;
-const blockText = /^[^\n]+/;
-const _blockLabel = /(?!\s*\])(?:\\.|[^\[\]\\])+/;
-const def = edit(/^ {0,3}\[(label)\]: *(?:\n[ \t]*)?([^<\s][^\s]*|<.*?>)(?:(?: +(?:\n[ \t]*)?| *\n[ \t]*)(title))? *(?:\n+|$)/)
-    .replace('label', _blockLabel)
-    .replace('title', /(?:"(?:\\"?|[^"\\])*"|'[^'\n]*(?:\n[^'\n]+)*\n?'|\([^()]*\))/)
-    .getRegex();
-const list = edit(/^( {0,3}bull)([ \t][^\n]+?)?(?:\n|$)/)
-    .replace(/bull/g, bullet)
-    .getRegex();
-const _tag = 'address|article|aside|base|basefont|blockquote|body|caption'
-    + '|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption'
-    + '|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe'
-    + '|legend|li|link|main|menu|menuitem|meta|nav|noframes|ol|optgroup|option'
-    + '|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title'
-    + '|tr|track|ul';
-const _comment = /<!--(?:-?>|[\s\S]*?(?:-->|$))/;
-const html = edit('^ {0,3}(?:' // optional indentation
-    + '<(script|pre|style|textarea)[\\s>][\\s\\S]*?(?:</\\1>[^\\n]*\\n+|$)' // (1)
-    + '|comment[^\\n]*(\\n+|$)' // (2)
-    + '|<\\?[\\s\\S]*?(?:\\?>\\n*|$)' // (3)
-    + '|<![A-Z][\\s\\S]*?(?:>\\n*|$)' // (4)
-    + '|<!\\[CDATA\\[[\\s\\S]*?(?:\\]\\]>\\n*|$)' // (5)
-    + '|</?(tag)(?: +|\\n|/?>)[\\s\\S]*?(?:(?:\\n[ \t]*)+\\n|$)' // (6)
-    + '|<(?!script|pre|style|textarea)([a-z][\\w-]*)(?:attribute)*? */?>(?=[ \\t]*(?:\\n|$))[\\s\\S]*?(?:(?:\\n[ \t]*)+\\n|$)' // (7) open tag
-    + '|</(?!script|pre|style|textarea)[a-z][\\w-]*\\s*>(?=[ \\t]*(?:\\n|$))[\\s\\S]*?(?:(?:\\n[ \t]*)+\\n|$)' // (7) closing tag
-    + ')', 'i')
-    .replace('comment', _comment)
-    .replace('tag', _tag)
-    .replace('attribute', / +[a-zA-Z:_][\w.:-]*(?: *= *"[^"\n]*"| *= *'[^'\n]*'| *= *[^\s"'=<>`]+)?/)
-    .getRegex();
-const paragraph = edit(_paragraph)
-    .replace('hr', hr)
-    .replace('heading', ' {0,3}#{1,6}(?:\\s|$)')
-    .replace('|lheading', '') // setext headings don't interrupt commonmark paragraphs
-    .replace('|table', '')
-    .replace('blockquote', ' {0,3}>')
-    .replace('fences', ' {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~{3,})[^\\n]*\\n')
-    .replace('list', ' {0,3}(?:[*+-]|1[.)]) ') // only lists starting from 1 can interrupt
-    .replace('html', '</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|textarea|!--)')
-    .replace('tag', _tag) // pars can be interrupted by type (6) html blocks
-    .getRegex();
-const blockquote = edit(/^( {0,3}> ?(paragraph|[^\n]*)(?:\n|$))+/)
-    .replace('paragraph', paragraph)
-    .getRegex();
-/**
- * Normal Block Grammar
- */
-const blockNormal = {
-    blockquote,
-    code: blockCode,
-    def,
-    fences,
-    heading,
-    hr,
-    html,
-    lheading,
-    list,
-    newline,
-    paragraph,
-    table: noopTest,
-    text: blockText,
-};
-/**
- * GFM Block Grammar
- */
-const gfmTable = edit('^ *([^\\n ].*)\\n' // Header
-    + ' {0,3}((?:\\| *)?:?-+:? *(?:\\| *:?-+:? *)*(?:\\| *)?)' // Align
-    + '(?:\\n((?:(?! *\\n|hr|heading|blockquote|code|fences|list|html).*(?:\\n|$))*)\\n*|$)') // Cells
-    .replace('hr', hr)
-    .replace('heading', ' {0,3}#{1,6}(?:\\s|$)')
-    .replace('blockquote', ' {0,3}>')
-    .replace('code', '(?: {4}| {0,3}\t)[^\\n]')
-    .replace('fences', ' {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~{3,})[^\\n]*\\n')
-    .replace('list', ' {0,3}(?:[*+-]|1[.)]) ') // only lists starting from 1 can interrupt
-    .replace('html', '</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|textarea|!--)')
-    .replace('tag', _tag) // tables can be interrupted by type (6) html blocks
-    .getRegex();
-const blockGfm = {
-    ...blockNormal,
-    table: gfmTable,
-    paragraph: edit(_paragraph)
-        .replace('hr', hr)
-        .replace('heading', ' {0,3}#{1,6}(?:\\s|$)')
-        .replace('|lheading', '') // setext headings don't interrupt commonmark paragraphs
-        .replace('table', gfmTable) // interrupt paragraphs with table
-        .replace('blockquote', ' {0,3}>')
-        .replace('fences', ' {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~{3,})[^\\n]*\\n')
-        .replace('list', ' {0,3}(?:[*+-]|1[.)]) ') // only lists starting from 1 can interrupt
-        .replace('html', '</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|textarea|!--)')
-        .replace('tag', _tag) // pars can be interrupted by type (6) html blocks
-        .getRegex(),
-};
-/**
- * Pedantic grammar (original John Gruber's loose markdown specification)
- */
-const blockPedantic = {
-    ...blockNormal,
-    html: edit('^ *(?:comment *(?:\\n|\\s*$)'
-        + '|<(tag)[\\s\\S]+?</\\1> *(?:\\n{2,}|\\s*$)' // closed tag
-        + '|<tag(?:"[^"]*"|\'[^\']*\'|\\s[^\'"/>\\s]*)*?/?> *(?:\\n{2,}|\\s*$))')
-        .replace('comment', _comment)
-        .replace(/tag/g, '(?!(?:'
-        + 'a|em|strong|small|s|cite|q|dfn|abbr|data|time|code|var|samp|kbd|sub'
-        + '|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo|span|br|wbr|ins|del|img)'
-        + '\\b)\\w+(?!:|[^\\w\\s@]*@)\\b')
-        .getRegex(),
-    def: /^ *\[([^\]]+)\]: *<?([^\s>]+)>?(?: +(["(][^\n]+[")]))? *(?:\n+|$)/,
-    heading: /^(#{1,6})(.*)(?:\n+|$)/,
-    fences: noopTest, // fences not supported
-    lheading: /^(.+?)\n {0,3}(=+|-+) *(?:\n+|$)/,
-    paragraph: edit(_paragraph)
-        .replace('hr', hr)
-        .replace('heading', ' *#{1,6} *[^\n]')
-        .replace('lheading', lheading)
-        .replace('|table', '')
-        .replace('blockquote', ' {0,3}>')
-        .replace('|fences', '')
-        .replace('|list', '')
-        .replace('|html', '')
-        .replace('|tag', '')
-        .getRegex(),
-};
-/**
- * Inline-Level Grammar
- */
-const escape$1 = /^\\([!"#$%&'()*+,\-./:;<=>?@\[\]\\^_`{|}~])/;
-const inlineCode = /^(`+)([^`]|[^`][\s\S]*?[^`])\1(?!`)/;
-const br = /^( {2,}|\\)\n(?!\s*$)/;
-const inlineText = /^(`+|[^`])(?:(?= {2,}\n)|[\s\S]*?(?:(?=[\\<!\[`*_]|\b_|$)|[^ ](?= {2,}\n)))/;
-// list of unicode punctuation marks, plus any missing characters from CommonMark spec
-const _punctuation = /[\p{P}\p{S}]/u;
-const _punctuationOrSpace = /[\s\p{P}\p{S}]/u;
-const _notPunctuationOrSpace = /[^\s\p{P}\p{S}]/u;
-const punctuation = edit(/^((?![*_])punctSpace)/, 'u')
-    .replace(/punctSpace/g, _punctuationOrSpace).getRegex();
-// GFM allows ~ inside strong and em for strikethrough
-const _punctuationGfmStrongEm = /(?!~)[\p{P}\p{S}]/u;
-const _punctuationOrSpaceGfmStrongEm = /(?!~)[\s\p{P}\p{S}]/u;
-const _notPunctuationOrSpaceGfmStrongEm = /(?:[^\s\p{P}\p{S}]|~)/u;
-// sequences em should skip over [title](link), `code`, <html>
-const blockSkip = /\[[^[\]]*?\]\((?:\\.|[^\\\(\)]|\((?:\\.|[^\\\(\)])*\))*\)|`[^`]*?`|<[^<>]*?>/g;
-const emStrongLDelimCore = /^(?:\*+(?:((?!\*)punct)|[^\s*]))|^_+(?:((?!_)punct)|([^\s_]))/;
-const emStrongLDelim = edit(emStrongLDelimCore, 'u')
-    .replace(/punct/g, _punctuation)
-    .getRegex();
-const emStrongLDelimGfm = edit(emStrongLDelimCore, 'u')
-    .replace(/punct/g, _punctuationGfmStrongEm)
-    .getRegex();
-const emStrongRDelimAstCore = '^[^_*]*?__[^_*]*?\\*[^_*]*?(?=__)' // Skip orphan inside strong
-    + '|[^*]+(?=[^*])' // Consume to delim
-    + '|(?!\\*)punct(\\*+)(?=[\\s]|$)' // (1) #*** can only be a Right Delimiter
-    + '|notPunctSpace(\\*+)(?!\\*)(?=punctSpace|$)' // (2) a***#, a*** can only be a Right Delimiter
-    + '|(?!\\*)punctSpace(\\*+)(?=notPunctSpace)' // (3) #***a, ***a can only be Left Delimiter
-    + '|[\\s](\\*+)(?!\\*)(?=punct)' // (4) ***# can only be Left Delimiter
-    + '|(?!\\*)punct(\\*+)(?!\\*)(?=punct)' // (5) #***# can be either Left or Right Delimiter
-    + '|notPunctSpace(\\*+)(?=notPunctSpace)'; // (6) a***a can be either Left or Right Delimiter
-const emStrongRDelimAst = edit(emStrongRDelimAstCore, 'gu')
-    .replace(/notPunctSpace/g, _notPunctuationOrSpace)
-    .replace(/punctSpace/g, _punctuationOrSpace)
-    .replace(/punct/g, _punctuation)
-    .getRegex();
-const emStrongRDelimAstGfm = edit(emStrongRDelimAstCore, 'gu')
-    .replace(/notPunctSpace/g, _notPunctuationOrSpaceGfmStrongEm)
-    .replace(/punctSpace/g, _punctuationOrSpaceGfmStrongEm)
-    .replace(/punct/g, _punctuationGfmStrongEm)
-    .getRegex();
-// (6) Not allowed for _
-const emStrongRDelimUnd = edit('^[^_*]*?\\*\\*[^_*]*?_[^_*]*?(?=\\*\\*)' // Skip orphan inside strong
-    + '|[^_]+(?=[^_])' // Consume to delim
-    + '|(?!_)punct(_+)(?=[\\s]|$)' // (1) #___ can only be a Right Delimiter
-    + '|notPunctSpace(_+)(?!_)(?=punctSpace|$)' // (2) a___#, a___ can only be a Right Delimiter
-    + '|(?!_)punctSpace(_+)(?=notPunctSpace)' // (3) #___a, ___a can only be Left Delimiter
-    + '|[\\s](_+)(?!_)(?=punct)' // (4) ___# can only be Left Delimiter
-    + '|(?!_)punct(_+)(?!_)(?=punct)', 'gu') // (5) #___# can be either Left or Right Delimiter
-    .replace(/notPunctSpace/g, _notPunctuationOrSpace)
-    .replace(/punctSpace/g, _punctuationOrSpace)
-    .replace(/punct/g, _punctuation)
-    .getRegex();
-const anyPunctuation = edit(/\\(punct)/, 'gu')
-    .replace(/punct/g, _punctuation)
-    .getRegex();
-const autolink = edit(/^<(scheme:[^\s\x00-\x1f<>]*|email)>/)
-    .replace('scheme', /[a-zA-Z][a-zA-Z0-9+.-]{1,31}/)
-    .replace('email', /[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+(@)[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(?![-_])/)
-    .getRegex();
-const _inlineComment = edit(_comment).replace('(?:-->|$)', '-->').getRegex();
-const tag = edit('^comment'
-    + '|^</[a-zA-Z][\\w:-]*\\s*>' // self-closing tag
-    + '|^<[a-zA-Z][\\w-]*(?:attribute)*?\\s*/?>' // open tag
-    + '|^<\\?[\\s\\S]*?\\?>' // processing instruction, e.g. <?php ?>
-    + '|^<![a-zA-Z]+\\s[\\s\\S]*?>' // declaration, e.g. <!DOCTYPE html>
-    + '|^<!\\[CDATA\\[[\\s\\S]*?\\]\\]>') // CDATA section
-    .replace('comment', _inlineComment)
-    .replace('attribute', /\s+[a-zA-Z:_][\w.:-]*(?:\s*=\s*"[^"]*"|\s*=\s*'[^']*'|\s*=\s*[^\s"'=<>`]+)?/)
-    .getRegex();
-const _inlineLabel = /(?:\[(?:\\.|[^\[\]\\])*\]|\\.|`[^`]*`|[^\[\]\\`])*?/;
-const marked_esm_link = edit(/^!?\[(label)\]\(\s*(href)(?:\s+(title))?\s*\)/)
-    .replace('label', _inlineLabel)
-    .replace('href', /<(?:\\.|[^\n<>\\])+>|[^\s\x00-\x1f]*/)
-    .replace('title', /"(?:\\"?|[^"\\])*"|'(?:\\'?|[^'\\])*'|\((?:\\\)?|[^)\\])*\)/)
-    .getRegex();
-const reflink = edit(/^!?\[(label)\]\[(ref)\]/)
-    .replace('label', _inlineLabel)
-    .replace('ref', _blockLabel)
-    .getRegex();
-const nolink = edit(/^!?\[(ref)\](?:\[\])?/)
-    .replace('ref', _blockLabel)
-    .getRegex();
-const reflinkSearch = edit('reflink|nolink(?!\\()', 'g')
-    .replace('reflink', reflink)
-    .replace('nolink', nolink)
-    .getRegex();
-/**
- * Normal Inline Grammar
- */
-const inlineNormal = {
-    _backpedal: noopTest, // only used for GFM url
-    anyPunctuation,
-    autolink,
-    blockSkip,
-    br,
-    code: inlineCode,
-    del: noopTest,
-    emStrongLDelim,
-    emStrongRDelimAst,
-    emStrongRDelimUnd,
-    escape: escape$1,
-    link: marked_esm_link,
-    nolink,
-    punctuation,
-    reflink,
-    reflinkSearch,
-    tag,
-    text: inlineText,
-    url: noopTest,
-};
-/**
- * Pedantic Inline Grammar
- */
-const inlinePedantic = {
-    ...inlineNormal,
-    link: edit(/^!?\[(label)\]\((.*?)\)/)
-        .replace('label', _inlineLabel)
-        .getRegex(),
-    reflink: edit(/^!?\[(label)\]\s*\[([^\]]*)\]/)
-        .replace('label', _inlineLabel)
-        .getRegex(),
-};
-/**
- * GFM Inline Grammar
- */
-const inlineGfm = {
-    ...inlineNormal,
-    emStrongRDelimAst: emStrongRDelimAstGfm,
-    emStrongLDelim: emStrongLDelimGfm,
-    url: edit(/^((?:ftp|https?):\/\/|www\.)(?:[a-zA-Z0-9\-]+\.?)+[^\s<]*|^email/, 'i')
-        .replace('email', /[A-Za-z0-9._+-]+(@)[a-zA-Z0-9-_]+(?:\.[a-zA-Z0-9-_]*[a-zA-Z0-9])+(?![-_])/)
-        .getRegex(),
-    _backpedal: /(?:[^?!.,:;*_'"~()&]+|\([^)]*\)|&(?![a-zA-Z0-9]+;$)|[?!.,:;*_'"~)]+(?!$))+/,
-    del: /^(~~?)(?=[^\s~])((?:\\.|[^\\])*?(?:\\.|[^\s~\\]))\1(?=[^~]|$)/,
-    text: /^([`~]+|[^`~])(?:(?= {2,}\n)|(?=[a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-]+@)|[\s\S]*?(?:(?=[\\<!\[`*~_]|\b_|https?:\/\/|ftp:\/\/|www\.|$)|[^ ](?= {2,}\n)|[^a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-](?=[a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-]+@)))/,
-};
-/**
- * GFM + Line Breaks Inline Grammar
- */
-const inlineBreaks = {
-    ...inlineGfm,
-    br: edit(br).replace('{2,}', '*').getRegex(),
-    text: edit(inlineGfm.text)
-        .replace('\\b_', '\\b_| {2,}\\n')
-        .replace(/\{2,\}/g, '*')
-        .getRegex(),
-};
-/**
- * exports
- */
-const block = {
-    normal: blockNormal,
-    gfm: blockGfm,
-    pedantic: blockPedantic,
-};
-const inline = {
-    normal: inlineNormal,
-    gfm: inlineGfm,
-    breaks: inlineBreaks,
-    pedantic: inlinePedantic,
-};
+(0,defineProperty/* default */.Z)(CRSearch, "_INPUT_PLACEHOLDER", '"std::...", "<header>", etc.');
 
-/**
- * Helpers
- */
-const escapeReplacements = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;',
-};
-const getEscapeReplacement = (ch) => escapeReplacements[ch];
-function marked_esm_escape(html, encode) {
-    if (encode) {
-        if (other.escapeTest.test(html)) {
-            return html.replace(other.escapeReplace, getEscapeReplacement);
-        }
-    }
-    else {
-        if (other.escapeTestNoEncode.test(html)) {
-            return html.replace(other.escapeReplaceNoEncode, getEscapeReplacement);
-        }
-    }
-    return html;
-}
-function cleanUrl(href) {
-    try {
-        href = encodeURI(href).replace(other.percentDecode, '%');
-    }
-    catch {
-        return null;
-    }
-    return href;
-}
-function splitCells(tableRow, count) {
-    // ensure that every cell-delimiting pipe has a space
-    // before it to distinguish it from an escaped pipe
-    const row = tableRow.replace(other.findPipe, (match, offset, str) => {
-        let escaped = false;
-        let curr = offset;
-        while (--curr >= 0 && str[curr] === '\\')
-            escaped = !escaped;
-        if (escaped) {
-            // odd number of slashes means | is escaped
-            // so we leave it alone
-            return '|';
-        }
-        else {
-            // add space before unescaped |
-            return ' |';
-        }
-    }), cells = row.split(other.splitPipe);
-    let i = 0;
-    // First/last cell in a row cannot be empty if it has no leading/trailing pipe
-    if (!cells[0].trim()) {
-        cells.shift();
-    }
-    if (cells.length > 0 && !cells.at(-1)?.trim()) {
-        cells.pop();
-    }
-    if (count) {
-        if (cells.length > count) {
-            cells.splice(count);
-        }
-        else {
-            while (cells.length < count)
-                cells.push('');
-        }
-    }
-    for (; i < cells.length; i++) {
-        // leading or trailing whitespace is ignored per the gfm spec
-        cells[i] = cells[i].trim().replace(other.slashPipe, '|');
-    }
-    return cells;
-}
-/**
- * Remove trailing 'c's. Equivalent to str.replace(/c*$/, '').
- * /c*$/ is vulnerable to REDOS.
- *
- * @param str
- * @param c
- * @param invert Remove suffix of non-c chars instead. Default falsey.
- */
-function rtrim(str, c, invert) {
-    const l = str.length;
-    if (l === 0) {
-        return '';
-    }
-    // Length of suffix matching the invert condition.
-    let suffLen = 0;
-    // Step left until we fail to match the invert condition.
-    while (suffLen < l) {
-        const currChar = str.charAt(l - suffLen - 1);
-        if (currChar === c && true) {
-            suffLen++;
-        }
-        else {
-            break;
-        }
-    }
-    return str.slice(0, l - suffLen);
-}
-function findClosingBracket(str, b) {
-    if (str.indexOf(b[1]) === -1) {
-        return -1;
-    }
-    let level = 0;
-    for (let i = 0; i < str.length; i++) {
-        if (str[i] === '\\') {
-            i++;
-        }
-        else if (str[i] === b[0]) {
-            level++;
-        }
-        else if (str[i] === b[1]) {
-            level--;
-            if (level < 0) {
-                return i;
-            }
-        }
-    }
-    return -1;
-}
+(0,defineProperty/* default */.Z)(CRSearch, "_MAX_RESULT", 5);
 
-function outputLink(cap, link, raw, lexer, rules) {
-    const href = link.href;
-    const title = link.title || null;
-    const text = cap[1].replace(rules.other.outputLinkReplace, '$1');
-    if (cap[0].charAt(0) !== '!') {
-        lexer.state.inLink = true;
-        const token = {
-            type: 'link',
-            raw,
-            href,
-            title,
-            text,
-            tokens: lexer.inlineTokens(text),
-        };
-        lexer.state.inLink = false;
-        return token;
-    }
-    return {
-        type: 'image',
-        raw,
-        href,
-        title,
-        text,
-    };
-}
-function indentCodeCompensation(raw, text, rules) {
-    const matchIndentToCode = raw.match(rules.other.indentCodeCompensation);
-    if (matchIndentToCode === null) {
-        return text;
-    }
-    const indentToCode = matchIndentToCode[1];
-    return text
-        .split('\n')
-        .map(node => {
-        const matchIndentInNode = node.match(rules.other.beginningSpace);
-        if (matchIndentInNode === null) {
-            return node;
-        }
-        const [indentInNode] = matchIndentInNode;
-        if (indentInNode.length >= indentToCode.length) {
-            return node.slice(indentToCode.length);
-        }
-        return node;
-    })
-        .join('\n');
-}
-/**
- * Tokenizer
- */
-class _Tokenizer {
-    options;
-    rules; // set by the lexer
-    lexer; // set by the lexer
-    constructor(options) {
-        this.options = options || _defaults;
-    }
-    space(src) {
-        const cap = this.rules.block.newline.exec(src);
-        if (cap && cap[0].length > 0) {
-            return {
-                type: 'space',
-                raw: cap[0],
-            };
-        }
-    }
-    code(src) {
-        const cap = this.rules.block.code.exec(src);
-        if (cap) {
-            const text = cap[0].replace(this.rules.other.codeRemoveIndent, '');
-            return {
-                type: 'code',
-                raw: cap[0],
-                codeBlockStyle: 'indented',
-                text: !this.options.pedantic
-                    ? rtrim(text, '\n')
-                    : text,
-            };
-        }
-    }
-    fences(src) {
-        const cap = this.rules.block.fences.exec(src);
-        if (cap) {
-            const raw = cap[0];
-            const text = indentCodeCompensation(raw, cap[3] || '', this.rules);
-            return {
-                type: 'code',
-                raw,
-                lang: cap[2] ? cap[2].trim().replace(this.rules.inline.anyPunctuation, '$1') : cap[2],
-                text,
-            };
-        }
-    }
-    heading(src) {
-        const cap = this.rules.block.heading.exec(src);
-        if (cap) {
-            let text = cap[2].trim();
-            // remove trailing #s
-            if (this.rules.other.endingHash.test(text)) {
-                const trimmed = rtrim(text, '#');
-                if (this.options.pedantic) {
-                    text = trimmed.trim();
-                }
-                else if (!trimmed || this.rules.other.endingSpaceChar.test(trimmed)) {
-                    // CommonMark requires space before trailing #s
-                    text = trimmed.trim();
-                }
-            }
-            return {
-                type: 'heading',
-                raw: cap[0],
-                depth: cap[1].length,
-                text,
-                tokens: this.lexer.inline(text),
-            };
-        }
-    }
-    hr(src) {
-        const cap = this.rules.block.hr.exec(src);
-        if (cap) {
-            return {
-                type: 'hr',
-                raw: rtrim(cap[0], '\n'),
-            };
-        }
-    }
-    blockquote(src) {
-        const cap = this.rules.block.blockquote.exec(src);
-        if (cap) {
-            let lines = rtrim(cap[0], '\n').split('\n');
-            let raw = '';
-            let text = '';
-            const tokens = [];
-            while (lines.length > 0) {
-                let inBlockquote = false;
-                const currentLines = [];
-                let i;
-                for (i = 0; i < lines.length; i++) {
-                    // get lines up to a continuation
-                    if (this.rules.other.blockquoteStart.test(lines[i])) {
-                        currentLines.push(lines[i]);
-                        inBlockquote = true;
-                    }
-                    else if (!inBlockquote) {
-                        currentLines.push(lines[i]);
-                    }
-                    else {
-                        break;
-                    }
-                }
-                lines = lines.slice(i);
-                const currentRaw = currentLines.join('\n');
-                const currentText = currentRaw
-                    // precede setext continuation with 4 spaces so it isn't a setext
-                    .replace(this.rules.other.blockquoteSetextReplace, '\n    $1')
-                    .replace(this.rules.other.blockquoteSetextReplace2, '');
-                raw = raw ? `${raw}\n${currentRaw}` : currentRaw;
-                text = text ? `${text}\n${currentText}` : currentText;
-                // parse blockquote lines as top level tokens
-                // merge paragraphs if this is a continuation
-                const top = this.lexer.state.top;
-                this.lexer.state.top = true;
-                this.lexer.blockTokens(currentText, tokens, true);
-                this.lexer.state.top = top;
-                // if there is no continuation then we are done
-                if (lines.length === 0) {
-                    break;
-                }
-                const lastToken = tokens.at(-1);
-                if (lastToken?.type === 'code') {
-                    // blockquote continuation cannot be preceded by a code block
-                    break;
-                }
-                else if (lastToken?.type === 'blockquote') {
-                    // include continuation in nested blockquote
-                    const oldToken = lastToken;
-                    const newText = oldToken.raw + '\n' + lines.join('\n');
-                    const newToken = this.blockquote(newText);
-                    tokens[tokens.length - 1] = newToken;
-                    raw = raw.substring(0, raw.length - oldToken.raw.length) + newToken.raw;
-                    text = text.substring(0, text.length - oldToken.text.length) + newToken.text;
-                    break;
-                }
-                else if (lastToken?.type === 'list') {
-                    // include continuation in nested list
-                    const oldToken = lastToken;
-                    const newText = oldToken.raw + '\n' + lines.join('\n');
-                    const newToken = this.list(newText);
-                    tokens[tokens.length - 1] = newToken;
-                    raw = raw.substring(0, raw.length - lastToken.raw.length) + newToken.raw;
-                    text = text.substring(0, text.length - oldToken.raw.length) + newToken.raw;
-                    lines = newText.substring(tokens.at(-1).raw.length).split('\n');
-                    continue;
-                }
-            }
-            return {
-                type: 'blockquote',
-                raw,
-                tokens,
-                text,
-            };
-        }
-    }
-    list(src) {
-        let cap = this.rules.block.list.exec(src);
-        if (cap) {
-            let bull = cap[1].trim();
-            const isordered = bull.length > 1;
-            const list = {
-                type: 'list',
-                raw: '',
-                ordered: isordered,
-                start: isordered ? +bull.slice(0, -1) : '',
-                loose: false,
-                items: [],
-            };
-            bull = isordered ? `\\d{1,9}\\${bull.slice(-1)}` : `\\${bull}`;
-            if (this.options.pedantic) {
-                bull = isordered ? bull : '[*+-]';
-            }
-            // Get next list item
-            const itemRegex = this.rules.other.listItemRegex(bull);
-            let endsWithBlankLine = false;
-            // Check if current bullet point can start a new List Item
-            while (src) {
-                let endEarly = false;
-                let raw = '';
-                let itemContents = '';
-                if (!(cap = itemRegex.exec(src))) {
-                    break;
-                }
-                if (this.rules.block.hr.test(src)) { // End list if bullet was actually HR (possibly move into itemRegex?)
-                    break;
-                }
-                raw = cap[0];
-                src = src.substring(raw.length);
-                let line = cap[2].split('\n', 1)[0].replace(this.rules.other.listReplaceTabs, (t) => ' '.repeat(3 * t.length));
-                let nextLine = src.split('\n', 1)[0];
-                let blankLine = !line.trim();
-                let indent = 0;
-                if (this.options.pedantic) {
-                    indent = 2;
-                    itemContents = line.trimStart();
-                }
-                else if (blankLine) {
-                    indent = cap[1].length + 1;
-                }
-                else {
-                    indent = cap[2].search(this.rules.other.nonSpaceChar); // Find first non-space char
-                    indent = indent > 4 ? 1 : indent; // Treat indented code blocks (> 4 spaces) as having only 1 indent
-                    itemContents = line.slice(indent);
-                    indent += cap[1].length;
-                }
-                if (blankLine && this.rules.other.blankLine.test(nextLine)) { // Items begin with at most one blank line
-                    raw += nextLine + '\n';
-                    src = src.substring(nextLine.length + 1);
-                    endEarly = true;
-                }
-                if (!endEarly) {
-                    const nextBulletRegex = this.rules.other.nextBulletRegex(indent);
-                    const hrRegex = this.rules.other.hrRegex(indent);
-                    const fencesBeginRegex = this.rules.other.fencesBeginRegex(indent);
-                    const headingBeginRegex = this.rules.other.headingBeginRegex(indent);
-                    const htmlBeginRegex = this.rules.other.htmlBeginRegex(indent);
-                    // Check if following lines should be included in List Item
-                    while (src) {
-                        const rawLine = src.split('\n', 1)[0];
-                        let nextLineWithoutTabs;
-                        nextLine = rawLine;
-                        // Re-align to follow commonmark nesting rules
-                        if (this.options.pedantic) {
-                            nextLine = nextLine.replace(this.rules.other.listReplaceNesting, '  ');
-                            nextLineWithoutTabs = nextLine;
-                        }
-                        else {
-                            nextLineWithoutTabs = nextLine.replace(this.rules.other.tabCharGlobal, '    ');
-                        }
-                        // End list item if found code fences
-                        if (fencesBeginRegex.test(nextLine)) {
-                            break;
-                        }
-                        // End list item if found start of new heading
-                        if (headingBeginRegex.test(nextLine)) {
-                            break;
-                        }
-                        // End list item if found start of html block
-                        if (htmlBeginRegex.test(nextLine)) {
-                            break;
-                        }
-                        // End list item if found start of new bullet
-                        if (nextBulletRegex.test(nextLine)) {
-                            break;
-                        }
-                        // Horizontal rule found
-                        if (hrRegex.test(nextLine)) {
-                            break;
-                        }
-                        if (nextLineWithoutTabs.search(this.rules.other.nonSpaceChar) >= indent || !nextLine.trim()) { // Dedent if possible
-                            itemContents += '\n' + nextLineWithoutTabs.slice(indent);
-                        }
-                        else {
-                            // not enough indentation
-                            if (blankLine) {
-                                break;
-                            }
-                            // paragraph continuation unless last line was a different block level element
-                            if (line.replace(this.rules.other.tabCharGlobal, '    ').search(this.rules.other.nonSpaceChar) >= 4) { // indented code block
-                                break;
-                            }
-                            if (fencesBeginRegex.test(line)) {
-                                break;
-                            }
-                            if (headingBeginRegex.test(line)) {
-                                break;
-                            }
-                            if (hrRegex.test(line)) {
-                                break;
-                            }
-                            itemContents += '\n' + nextLine;
-                        }
-                        if (!blankLine && !nextLine.trim()) { // Check if current line is blank
-                            blankLine = true;
-                        }
-                        raw += rawLine + '\n';
-                        src = src.substring(rawLine.length + 1);
-                        line = nextLineWithoutTabs.slice(indent);
-                    }
-                }
-                if (!list.loose) {
-                    // If the previous item ended with a blank line, the list is loose
-                    if (endsWithBlankLine) {
-                        list.loose = true;
-                    }
-                    else if (this.rules.other.doubleBlankLine.test(raw)) {
-                        endsWithBlankLine = true;
-                    }
-                }
-                let istask = null;
-                let ischecked;
-                // Check for task list items
-                if (this.options.gfm) {
-                    istask = this.rules.other.listIsTask.exec(itemContents);
-                    if (istask) {
-                        ischecked = istask[0] !== '[ ] ';
-                        itemContents = itemContents.replace(this.rules.other.listReplaceTask, '');
-                    }
-                }
-                list.items.push({
-                    type: 'list_item',
-                    raw,
-                    task: !!istask,
-                    checked: ischecked,
-                    loose: false,
-                    text: itemContents,
-                    tokens: [],
-                });
-                list.raw += raw;
-            }
-            // Do not consume newlines at end of final item. Alternatively, make itemRegex *start* with any newlines to simplify/speed up endsWithBlankLine logic
-            const lastItem = list.items.at(-1);
-            if (lastItem) {
-                lastItem.raw = lastItem.raw.trimEnd();
-                lastItem.text = lastItem.text.trimEnd();
-            }
-            else {
-                // not a list since there were no items
-                return;
-            }
-            list.raw = list.raw.trimEnd();
-            // Item child tokens handled here at end because we needed to have the final item to trim it first
-            for (let i = 0; i < list.items.length; i++) {
-                this.lexer.state.top = false;
-                list.items[i].tokens = this.lexer.blockTokens(list.items[i].text, []);
-                if (!list.loose) {
-                    // Check if list should be loose
-                    const spacers = list.items[i].tokens.filter(t => t.type === 'space');
-                    const hasMultipleLineBreaks = spacers.length > 0 && spacers.some(t => this.rules.other.anyLine.test(t.raw));
-                    list.loose = hasMultipleLineBreaks;
-                }
-            }
-            // Set all items to loose if list is loose
-            if (list.loose) {
-                for (let i = 0; i < list.items.length; i++) {
-                    list.items[i].loose = true;
-                }
-            }
-            return list;
-        }
-    }
-    html(src) {
-        const cap = this.rules.block.html.exec(src);
-        if (cap) {
-            const token = {
-                type: 'html',
-                block: true,
-                raw: cap[0],
-                pre: cap[1] === 'pre' || cap[1] === 'script' || cap[1] === 'style',
-                text: cap[0],
-            };
-            return token;
-        }
-    }
-    def(src) {
-        const cap = this.rules.block.def.exec(src);
-        if (cap) {
-            const tag = cap[1].toLowerCase().replace(this.rules.other.multipleSpaceGlobal, ' ');
-            const href = cap[2] ? cap[2].replace(this.rules.other.hrefBrackets, '$1').replace(this.rules.inline.anyPunctuation, '$1') : '';
-            const title = cap[3] ? cap[3].substring(1, cap[3].length - 1).replace(this.rules.inline.anyPunctuation, '$1') : cap[3];
-            return {
-                type: 'def',
-                tag,
-                raw: cap[0],
-                href,
-                title,
-            };
-        }
-    }
-    table(src) {
-        const cap = this.rules.block.table.exec(src);
-        if (!cap) {
-            return;
-        }
-        if (!this.rules.other.tableDelimiter.test(cap[2])) {
-            // delimiter row must have a pipe (|) or colon (:) otherwise it is a setext heading
-            return;
-        }
-        const headers = splitCells(cap[1]);
-        const aligns = cap[2].replace(this.rules.other.tableAlignChars, '').split('|');
-        const rows = cap[3]?.trim() ? cap[3].replace(this.rules.other.tableRowBlankLine, '').split('\n') : [];
-        const item = {
-            type: 'table',
-            raw: cap[0],
-            header: [],
-            align: [],
-            rows: [],
-        };
-        if (headers.length !== aligns.length) {
-            // header and align columns must be equal, rows can be different.
-            return;
-        }
-        for (const align of aligns) {
-            if (this.rules.other.tableAlignRight.test(align)) {
-                item.align.push('right');
-            }
-            else if (this.rules.other.tableAlignCenter.test(align)) {
-                item.align.push('center');
-            }
-            else if (this.rules.other.tableAlignLeft.test(align)) {
-                item.align.push('left');
-            }
-            else {
-                item.align.push(null);
-            }
-        }
-        for (let i = 0; i < headers.length; i++) {
-            item.header.push({
-                text: headers[i],
-                tokens: this.lexer.inline(headers[i]),
-                header: true,
-                align: item.align[i],
-            });
-        }
-        for (const row of rows) {
-            item.rows.push(splitCells(row, item.header.length).map((cell, i) => {
-                return {
-                    text: cell,
-                    tokens: this.lexer.inline(cell),
-                    header: false,
-                    align: item.align[i],
-                };
-            }));
-        }
-        return item;
-    }
-    lheading(src) {
-        const cap = this.rules.block.lheading.exec(src);
-        if (cap) {
-            return {
-                type: 'heading',
-                raw: cap[0],
-                depth: cap[2].charAt(0) === '=' ? 1 : 2,
-                text: cap[1],
-                tokens: this.lexer.inline(cap[1]),
-            };
-        }
-    }
-    paragraph(src) {
-        const cap = this.rules.block.paragraph.exec(src);
-        if (cap) {
-            const text = cap[1].charAt(cap[1].length - 1) === '\n'
-                ? cap[1].slice(0, -1)
-                : cap[1];
-            return {
-                type: 'paragraph',
-                raw: cap[0],
-                text,
-                tokens: this.lexer.inline(text),
-            };
-        }
-    }
-    text(src) {
-        const cap = this.rules.block.text.exec(src);
-        if (cap) {
-            return {
-                type: 'text',
-                raw: cap[0],
-                text: cap[0],
-                tokens: this.lexer.inline(cap[0]),
-            };
-        }
-    }
-    escape(src) {
-        const cap = this.rules.inline.escape.exec(src);
-        if (cap) {
-            return {
-                type: 'escape',
-                raw: cap[0],
-                text: cap[1],
-            };
-        }
-    }
-    tag(src) {
-        const cap = this.rules.inline.tag.exec(src);
-        if (cap) {
-            if (!this.lexer.state.inLink && this.rules.other.startATag.test(cap[0])) {
-                this.lexer.state.inLink = true;
-            }
-            else if (this.lexer.state.inLink && this.rules.other.endATag.test(cap[0])) {
-                this.lexer.state.inLink = false;
-            }
-            if (!this.lexer.state.inRawBlock && this.rules.other.startPreScriptTag.test(cap[0])) {
-                this.lexer.state.inRawBlock = true;
-            }
-            else if (this.lexer.state.inRawBlock && this.rules.other.endPreScriptTag.test(cap[0])) {
-                this.lexer.state.inRawBlock = false;
-            }
-            return {
-                type: 'html',
-                raw: cap[0],
-                inLink: this.lexer.state.inLink,
-                inRawBlock: this.lexer.state.inRawBlock,
-                block: false,
-                text: cap[0],
-            };
-        }
-    }
-    link(src) {
-        const cap = this.rules.inline.link.exec(src);
-        if (cap) {
-            const trimmedUrl = cap[2].trim();
-            if (!this.options.pedantic && this.rules.other.startAngleBracket.test(trimmedUrl)) {
-                // commonmark requires matching angle brackets
-                if (!(this.rules.other.endAngleBracket.test(trimmedUrl))) {
-                    return;
-                }
-                // ending angle bracket cannot be escaped
-                const rtrimSlash = rtrim(trimmedUrl.slice(0, -1), '\\');
-                if ((trimmedUrl.length - rtrimSlash.length) % 2 === 0) {
-                    return;
-                }
-            }
-            else {
-                // find closing parenthesis
-                const lastParenIndex = findClosingBracket(cap[2], '()');
-                if (lastParenIndex > -1) {
-                    const start = cap[0].indexOf('!') === 0 ? 5 : 4;
-                    const linkLen = start + cap[1].length + lastParenIndex;
-                    cap[2] = cap[2].substring(0, lastParenIndex);
-                    cap[0] = cap[0].substring(0, linkLen).trim();
-                    cap[3] = '';
-                }
-            }
-            let href = cap[2];
-            let title = '';
-            if (this.options.pedantic) {
-                // split pedantic href and title
-                const link = this.rules.other.pedanticHrefTitle.exec(href);
-                if (link) {
-                    href = link[1];
-                    title = link[3];
-                }
-            }
-            else {
-                title = cap[3] ? cap[3].slice(1, -1) : '';
-            }
-            href = href.trim();
-            if (this.rules.other.startAngleBracket.test(href)) {
-                if (this.options.pedantic && !(this.rules.other.endAngleBracket.test(trimmedUrl))) {
-                    // pedantic allows starting angle bracket without ending angle bracket
-                    href = href.slice(1);
-                }
-                else {
-                    href = href.slice(1, -1);
-                }
-            }
-            return outputLink(cap, {
-                href: href ? href.replace(this.rules.inline.anyPunctuation, '$1') : href,
-                title: title ? title.replace(this.rules.inline.anyPunctuation, '$1') : title,
-            }, cap[0], this.lexer, this.rules);
-        }
-    }
-    reflink(src, links) {
-        let cap;
-        if ((cap = this.rules.inline.reflink.exec(src))
-            || (cap = this.rules.inline.nolink.exec(src))) {
-            const linkString = (cap[2] || cap[1]).replace(this.rules.other.multipleSpaceGlobal, ' ');
-            const link = links[linkString.toLowerCase()];
-            if (!link) {
-                const text = cap[0].charAt(0);
-                return {
-                    type: 'text',
-                    raw: text,
-                    text,
-                };
-            }
-            return outputLink(cap, link, cap[0], this.lexer, this.rules);
-        }
-    }
-    emStrong(src, maskedSrc, prevChar = '') {
-        let match = this.rules.inline.emStrongLDelim.exec(src);
-        if (!match)
-            return;
-        // _ can't be between two alphanumerics. \p{L}\p{N} includes non-english alphabet/numbers as well
-        if (match[3] && prevChar.match(this.rules.other.unicodeAlphaNumeric))
-            return;
-        const nextChar = match[1] || match[2] || '';
-        if (!nextChar || !prevChar || this.rules.inline.punctuation.exec(prevChar)) {
-            // unicode Regex counts emoji as 1 char; spread into array for proper count (used multiple times below)
-            const lLength = [...match[0]].length - 1;
-            let rDelim, rLength, delimTotal = lLength, midDelimTotal = 0;
-            const endReg = match[0][0] === '*' ? this.rules.inline.emStrongRDelimAst : this.rules.inline.emStrongRDelimUnd;
-            endReg.lastIndex = 0;
-            // Clip maskedSrc to same section of string as src (move to lexer?)
-            maskedSrc = maskedSrc.slice(-1 * src.length + lLength);
-            while ((match = endReg.exec(maskedSrc)) != null) {
-                rDelim = match[1] || match[2] || match[3] || match[4] || match[5] || match[6];
-                if (!rDelim)
-                    continue; // skip single * in __abc*abc__
-                rLength = [...rDelim].length;
-                if (match[3] || match[4]) { // found another Left Delim
-                    delimTotal += rLength;
-                    continue;
-                }
-                else if (match[5] || match[6]) { // either Left or Right Delim
-                    if (lLength % 3 && !((lLength + rLength) % 3)) {
-                        midDelimTotal += rLength;
-                        continue; // CommonMark Emphasis Rules 9-10
-                    }
-                }
-                delimTotal -= rLength;
-                if (delimTotal > 0)
-                    continue; // Haven't found enough closing delimiters
-                // Remove extra characters. *a*** -> *a*
-                rLength = Math.min(rLength, rLength + delimTotal + midDelimTotal);
-                // char length can be >1 for unicode characters;
-                const lastCharLength = [...match[0]][0].length;
-                const raw = src.slice(0, lLength + match.index + lastCharLength + rLength);
-                // Create `em` if smallest delimiter has odd char count. *a***
-                if (Math.min(lLength, rLength) % 2) {
-                    const text = raw.slice(1, -1);
-                    return {
-                        type: 'em',
-                        raw,
-                        text,
-                        tokens: this.lexer.inlineTokens(text),
-                    };
-                }
-                // Create 'strong' if smallest delimiter has even char count. **a***
-                const text = raw.slice(2, -2);
-                return {
-                    type: 'strong',
-                    raw,
-                    text,
-                    tokens: this.lexer.inlineTokens(text),
-                };
-            }
-        }
-    }
-    codespan(src) {
-        const cap = this.rules.inline.code.exec(src);
-        if (cap) {
-            let text = cap[2].replace(this.rules.other.newLineCharGlobal, ' ');
-            const hasNonSpaceChars = this.rules.other.nonSpaceChar.test(text);
-            const hasSpaceCharsOnBothEnds = this.rules.other.startingSpaceChar.test(text) && this.rules.other.endingSpaceChar.test(text);
-            if (hasNonSpaceChars && hasSpaceCharsOnBothEnds) {
-                text = text.substring(1, text.length - 1);
-            }
-            return {
-                type: 'codespan',
-                raw: cap[0],
-                text,
-            };
-        }
-    }
-    br(src) {
-        const cap = this.rules.inline.br.exec(src);
-        if (cap) {
-            return {
-                type: 'br',
-                raw: cap[0],
-            };
-        }
-    }
-    del(src) {
-        const cap = this.rules.inline.del.exec(src);
-        if (cap) {
-            return {
-                type: 'del',
-                raw: cap[0],
-                text: cap[2],
-                tokens: this.lexer.inlineTokens(cap[2]),
-            };
-        }
-    }
-    autolink(src) {
-        const cap = this.rules.inline.autolink.exec(src);
-        if (cap) {
-            let text, href;
-            if (cap[2] === '@') {
-                text = cap[1];
-                href = 'mailto:' + text;
-            }
-            else {
-                text = cap[1];
-                href = text;
-            }
-            return {
-                type: 'link',
-                raw: cap[0],
-                text,
-                href,
-                tokens: [
-                    {
-                        type: 'text',
-                        raw: text,
-                        text,
-                    },
-                ],
-            };
-        }
-    }
-    url(src) {
-        let cap;
-        if (cap = this.rules.inline.url.exec(src)) {
-            let text, href;
-            if (cap[2] === '@') {
-                text = cap[0];
-                href = 'mailto:' + text;
-            }
-            else {
-                // do extended autolink path validation
-                let prevCapZero;
-                do {
-                    prevCapZero = cap[0];
-                    cap[0] = this.rules.inline._backpedal.exec(cap[0])?.[0] ?? '';
-                } while (prevCapZero !== cap[0]);
-                text = cap[0];
-                if (cap[1] === 'www.') {
-                    href = 'http://' + cap[0];
-                }
-                else {
-                    href = cap[0];
-                }
-            }
-            return {
-                type: 'link',
-                raw: cap[0],
-                text,
-                href,
-                tokens: [
-                    {
-                        type: 'text',
-                        raw: text,
-                        text,
-                    },
-                ],
-            };
-        }
-    }
-    inlineText(src) {
-        const cap = this.rules.inline.text.exec(src);
-        if (cap) {
-            const escaped = this.lexer.state.inRawBlock;
-            return {
-                type: 'text',
-                raw: cap[0],
-                text: cap[0],
-                escaped,
-            };
-        }
-    }
-}
+(0,defineProperty/* default */.Z)(CRSearch, "_RESULT_PROTO", crsearch_crsearch_$('<li class="result"><a href="#"></a></li>'));
 
-/**
- * Block Lexer
- */
-class _Lexer {
-    tokens;
-    options;
-    state;
-    tokenizer;
-    inlineQueue;
-    constructor(options) {
-        // TokenList cannot be created in one go
-        this.tokens = [];
-        this.tokens.links = Object.create(null);
-        this.options = options || _defaults;
-        this.options.tokenizer = this.options.tokenizer || new _Tokenizer();
-        this.tokenizer = this.options.tokenizer;
-        this.tokenizer.options = this.options;
-        this.tokenizer.lexer = this;
-        this.inlineQueue = [];
-        this.state = {
-            inLink: false,
-            inRawBlock: false,
-            top: true,
-        };
-        const rules = {
-            other,
-            block: block.normal,
-            inline: inline.normal,
-        };
-        if (this.options.pedantic) {
-            rules.block = block.pedantic;
-            rules.inline = inline.pedantic;
-        }
-        else if (this.options.gfm) {
-            rules.block = block.gfm;
-            if (this.options.breaks) {
-                rules.inline = inline.breaks;
-            }
-            else {
-                rules.inline = inline.gfm;
-            }
-        }
-        this.tokenizer.rules = rules;
-    }
-    /**
-     * Expose Rules
-     */
-    static get rules() {
-        return {
-            block,
-            inline,
-        };
-    }
-    /**
-     * Static Lex Method
-     */
-    static lex(src, options) {
-        const lexer = new _Lexer(options);
-        return lexer.lex(src);
-    }
-    /**
-     * Static Lex Inline Method
-     */
-    static lexInline(src, options) {
-        const lexer = new _Lexer(options);
-        return lexer.inlineTokens(src);
-    }
-    /**
-     * Preprocessing
-     */
-    lex(src) {
-        src = src.replace(other.carriageReturn, '\n');
-        this.blockTokens(src, this.tokens);
-        for (let i = 0; i < this.inlineQueue.length; i++) {
-            const next = this.inlineQueue[i];
-            this.inlineTokens(next.src, next.tokens);
-        }
-        this.inlineQueue = [];
-        return this.tokens;
-    }
-    blockTokens(src, tokens = [], lastParagraphClipped = false) {
-        if (this.options.pedantic) {
-            src = src.replace(other.tabCharGlobal, '    ').replace(other.spaceLine, '');
-        }
-        while (src) {
-            let token;
-            if (this.options.extensions?.block?.some((extTokenizer) => {
-                if (token = extTokenizer.call({ lexer: this }, src, tokens)) {
-                    src = src.substring(token.raw.length);
-                    tokens.push(token);
-                    return true;
-                }
-                return false;
-            })) {
-                continue;
-            }
-            // newline
-            if (token = this.tokenizer.space(src)) {
-                src = src.substring(token.raw.length);
-                const lastToken = tokens.at(-1);
-                if (token.raw.length === 1 && lastToken !== undefined) {
-                    // if there's a single \n as a spacer, it's terminating the last line,
-                    // so move it there so that we don't get unnecessary paragraph tags
-                    lastToken.raw += '\n';
-                }
-                else {
-                    tokens.push(token);
-                }
-                continue;
-            }
-            // code
-            if (token = this.tokenizer.code(src)) {
-                src = src.substring(token.raw.length);
-                const lastToken = tokens.at(-1);
-                // An indented code block cannot interrupt a paragraph.
-                if (lastToken?.type === 'paragraph' || lastToken?.type === 'text') {
-                    lastToken.raw += '\n' + token.raw;
-                    lastToken.text += '\n' + token.text;
-                    this.inlineQueue.at(-1).src = lastToken.text;
-                }
-                else {
-                    tokens.push(token);
-                }
-                continue;
-            }
-            // fences
-            if (token = this.tokenizer.fences(src)) {
-                src = src.substring(token.raw.length);
-                tokens.push(token);
-                continue;
-            }
-            // heading
-            if (token = this.tokenizer.heading(src)) {
-                src = src.substring(token.raw.length);
-                tokens.push(token);
-                continue;
-            }
-            // hr
-            if (token = this.tokenizer.hr(src)) {
-                src = src.substring(token.raw.length);
-                tokens.push(token);
-                continue;
-            }
-            // blockquote
-            if (token = this.tokenizer.blockquote(src)) {
-                src = src.substring(token.raw.length);
-                tokens.push(token);
-                continue;
-            }
-            // list
-            if (token = this.tokenizer.list(src)) {
-                src = src.substring(token.raw.length);
-                tokens.push(token);
-                continue;
-            }
-            // html
-            if (token = this.tokenizer.html(src)) {
-                src = src.substring(token.raw.length);
-                tokens.push(token);
-                continue;
-            }
-            // def
-            if (token = this.tokenizer.def(src)) {
-                src = src.substring(token.raw.length);
-                const lastToken = tokens.at(-1);
-                if (lastToken?.type === 'paragraph' || lastToken?.type === 'text') {
-                    lastToken.raw += '\n' + token.raw;
-                    lastToken.text += '\n' + token.raw;
-                    this.inlineQueue.at(-1).src = lastToken.text;
-                }
-                else if (!this.tokens.links[token.tag]) {
-                    this.tokens.links[token.tag] = {
-                        href: token.href,
-                        title: token.title,
-                    };
-                }
-                continue;
-            }
-            // table (gfm)
-            if (token = this.tokenizer.table(src)) {
-                src = src.substring(token.raw.length);
-                tokens.push(token);
-                continue;
-            }
-            // lheading
-            if (token = this.tokenizer.lheading(src)) {
-                src = src.substring(token.raw.length);
-                tokens.push(token);
-                continue;
-            }
-            // top-level paragraph
-            // prevent paragraph consuming extensions by clipping 'src' to extension start
-            let cutSrc = src;
-            if (this.options.extensions?.startBlock) {
-                let startIndex = Infinity;
-                const tempSrc = src.slice(1);
-                let tempStart;
-                this.options.extensions.startBlock.forEach((getStartIndex) => {
-                    tempStart = getStartIndex.call({ lexer: this }, tempSrc);
-                    if (typeof tempStart === 'number' && tempStart >= 0) {
-                        startIndex = Math.min(startIndex, tempStart);
-                    }
-                });
-                if (startIndex < Infinity && startIndex >= 0) {
-                    cutSrc = src.substring(0, startIndex + 1);
-                }
-            }
-            if (this.state.top && (token = this.tokenizer.paragraph(cutSrc))) {
-                const lastToken = tokens.at(-1);
-                if (lastParagraphClipped && lastToken?.type === 'paragraph') {
-                    lastToken.raw += '\n' + token.raw;
-                    lastToken.text += '\n' + token.text;
-                    this.inlineQueue.pop();
-                    this.inlineQueue.at(-1).src = lastToken.text;
-                }
-                else {
-                    tokens.push(token);
-                }
-                lastParagraphClipped = cutSrc.length !== src.length;
-                src = src.substring(token.raw.length);
-                continue;
-            }
-            // text
-            if (token = this.tokenizer.text(src)) {
-                src = src.substring(token.raw.length);
-                const lastToken = tokens.at(-1);
-                if (lastToken?.type === 'text') {
-                    lastToken.raw += '\n' + token.raw;
-                    lastToken.text += '\n' + token.text;
-                    this.inlineQueue.pop();
-                    this.inlineQueue.at(-1).src = lastToken.text;
-                }
-                else {
-                    tokens.push(token);
-                }
-                continue;
-            }
-            if (src) {
-                const errMsg = 'Infinite loop on byte: ' + src.charCodeAt(0);
-                if (this.options.silent) {
-                    console.error(errMsg);
-                    break;
-                }
-                else {
-                    throw new Error(errMsg);
-                }
-            }
-        }
-        this.state.top = true;
-        return tokens;
-    }
-    inline(src, tokens = []) {
-        this.inlineQueue.push({ src, tokens });
-        return tokens;
-    }
-    /**
-     * Lexing/Compiling
-     */
-    inlineTokens(src, tokens = []) {
-        // String with links masked to avoid interference with em and strong
-        let maskedSrc = src;
-        let match = null;
-        // Mask out reflinks
-        if (this.tokens.links) {
-            const links = Object.keys(this.tokens.links);
-            if (links.length > 0) {
-                while ((match = this.tokenizer.rules.inline.reflinkSearch.exec(maskedSrc)) != null) {
-                    if (links.includes(match[0].slice(match[0].lastIndexOf('[') + 1, -1))) {
-                        maskedSrc = maskedSrc.slice(0, match.index)
-                            + '[' + 'a'.repeat(match[0].length - 2) + ']'
-                            + maskedSrc.slice(this.tokenizer.rules.inline.reflinkSearch.lastIndex);
-                    }
-                }
-            }
-        }
-        // Mask out other blocks
-        while ((match = this.tokenizer.rules.inline.blockSkip.exec(maskedSrc)) != null) {
-            maskedSrc = maskedSrc.slice(0, match.index) + '[' + 'a'.repeat(match[0].length - 2) + ']' + maskedSrc.slice(this.tokenizer.rules.inline.blockSkip.lastIndex);
-        }
-        // Mask out escaped characters
-        while ((match = this.tokenizer.rules.inline.anyPunctuation.exec(maskedSrc)) != null) {
-            maskedSrc = maskedSrc.slice(0, match.index) + '++' + maskedSrc.slice(this.tokenizer.rules.inline.anyPunctuation.lastIndex);
-        }
-        let keepPrevChar = false;
-        let prevChar = '';
-        while (src) {
-            if (!keepPrevChar) {
-                prevChar = '';
-            }
-            keepPrevChar = false;
-            let token;
-            // extensions
-            if (this.options.extensions?.inline?.some((extTokenizer) => {
-                if (token = extTokenizer.call({ lexer: this }, src, tokens)) {
-                    src = src.substring(token.raw.length);
-                    tokens.push(token);
-                    return true;
-                }
-                return false;
-            })) {
-                continue;
-            }
-            // escape
-            if (token = this.tokenizer.escape(src)) {
-                src = src.substring(token.raw.length);
-                tokens.push(token);
-                continue;
-            }
-            // tag
-            if (token = this.tokenizer.tag(src)) {
-                src = src.substring(token.raw.length);
-                tokens.push(token);
-                continue;
-            }
-            // link
-            if (token = this.tokenizer.link(src)) {
-                src = src.substring(token.raw.length);
-                tokens.push(token);
-                continue;
-            }
-            // reflink, nolink
-            if (token = this.tokenizer.reflink(src, this.tokens.links)) {
-                src = src.substring(token.raw.length);
-                const lastToken = tokens.at(-1);
-                if (token.type === 'text' && lastToken?.type === 'text') {
-                    lastToken.raw += token.raw;
-                    lastToken.text += token.text;
-                }
-                else {
-                    tokens.push(token);
-                }
-                continue;
-            }
-            // em & strong
-            if (token = this.tokenizer.emStrong(src, maskedSrc, prevChar)) {
-                src = src.substring(token.raw.length);
-                tokens.push(token);
-                continue;
-            }
-            // code
-            if (token = this.tokenizer.codespan(src)) {
-                src = src.substring(token.raw.length);
-                tokens.push(token);
-                continue;
-            }
-            // br
-            if (token = this.tokenizer.br(src)) {
-                src = src.substring(token.raw.length);
-                tokens.push(token);
-                continue;
-            }
-            // del (gfm)
-            if (token = this.tokenizer.del(src)) {
-                src = src.substring(token.raw.length);
-                tokens.push(token);
-                continue;
-            }
-            // autolink
-            if (token = this.tokenizer.autolink(src)) {
-                src = src.substring(token.raw.length);
-                tokens.push(token);
-                continue;
-            }
-            // url (gfm)
-            if (!this.state.inLink && (token = this.tokenizer.url(src))) {
-                src = src.substring(token.raw.length);
-                tokens.push(token);
-                continue;
-            }
-            // text
-            // prevent inlineText consuming extensions by clipping 'src' to extension start
-            let cutSrc = src;
-            if (this.options.extensions?.startInline) {
-                let startIndex = Infinity;
-                const tempSrc = src.slice(1);
-                let tempStart;
-                this.options.extensions.startInline.forEach((getStartIndex) => {
-                    tempStart = getStartIndex.call({ lexer: this }, tempSrc);
-                    if (typeof tempStart === 'number' && tempStart >= 0) {
-                        startIndex = Math.min(startIndex, tempStart);
-                    }
-                });
-                if (startIndex < Infinity && startIndex >= 0) {
-                    cutSrc = src.substring(0, startIndex + 1);
-                }
-            }
-            if (token = this.tokenizer.inlineText(cutSrc)) {
-                src = src.substring(token.raw.length);
-                if (token.raw.slice(-1) !== '_') { // Track prevChar before string of ____ started
-                    prevChar = token.raw.slice(-1);
-                }
-                keepPrevChar = true;
-                const lastToken = tokens.at(-1);
-                if (lastToken?.type === 'text') {
-                    lastToken.raw += token.raw;
-                    lastToken.text += token.text;
-                }
-                else {
-                    tokens.push(token);
-                }
-                continue;
-            }
-            if (src) {
-                const errMsg = 'Infinite loop on byte: ' + src.charCodeAt(0);
-                if (this.options.silent) {
-                    console.error(errMsg);
-                    break;
-                }
-                else {
-                    throw new Error(errMsg);
-                }
-            }
-        }
-        return tokens;
-    }
-}
-
-/**
- * Renderer
- */
-class _Renderer {
-    options;
-    parser; // set by the parser
-    constructor(options) {
-        this.options = options || _defaults;
-    }
-    space(token) {
-        return '';
-    }
-    code({ text, lang, escaped }) {
-        const langString = (lang || '').match(other.notSpaceStart)?.[0];
-        const code = text.replace(other.endingNewline, '') + '\n';
-        if (!langString) {
-            return '<pre><code>'
-                + (escaped ? code : marked_esm_escape(code, true))
-                + '</code></pre>\n';
-        }
-        return '<pre><code class="language-'
-            + marked_esm_escape(langString)
-            + '">'
-            + (escaped ? code : marked_esm_escape(code, true))
-            + '</code></pre>\n';
-    }
-    blockquote({ tokens }) {
-        const body = this.parser.parse(tokens);
-        return `<blockquote>\n${body}</blockquote>\n`;
-    }
-    html({ text }) {
-        return text;
-    }
-    heading({ tokens, depth }) {
-        return `<h${depth}>${this.parser.parseInline(tokens)}</h${depth}>\n`;
-    }
-    hr(token) {
-        return '<hr>\n';
-    }
-    list(token) {
-        const ordered = token.ordered;
-        const start = token.start;
-        let body = '';
-        for (let j = 0; j < token.items.length; j++) {
-            const item = token.items[j];
-            body += this.listitem(item);
-        }
-        const type = ordered ? 'ol' : 'ul';
-        const startAttr = (ordered && start !== 1) ? (' start="' + start + '"') : '';
-        return '<' + type + startAttr + '>\n' + body + '</' + type + '>\n';
-    }
-    listitem(item) {
-        let itemBody = '';
-        if (item.task) {
-            const checkbox = this.checkbox({ checked: !!item.checked });
-            if (item.loose) {
-                if (item.tokens[0]?.type === 'paragraph') {
-                    item.tokens[0].text = checkbox + ' ' + item.tokens[0].text;
-                    if (item.tokens[0].tokens && item.tokens[0].tokens.length > 0 && item.tokens[0].tokens[0].type === 'text') {
-                        item.tokens[0].tokens[0].text = checkbox + ' ' + marked_esm_escape(item.tokens[0].tokens[0].text);
-                        item.tokens[0].tokens[0].escaped = true;
-                    }
-                }
-                else {
-                    item.tokens.unshift({
-                        type: 'text',
-                        raw: checkbox + ' ',
-                        text: checkbox + ' ',
-                        escaped: true,
-                    });
-                }
-            }
-            else {
-                itemBody += checkbox + ' ';
-            }
-        }
-        itemBody += this.parser.parse(item.tokens, !!item.loose);
-        return `<li>${itemBody}</li>\n`;
-    }
-    checkbox({ checked }) {
-        return '<input '
-            + (checked ? 'checked="" ' : '')
-            + 'disabled="" type="checkbox">';
-    }
-    paragraph({ tokens }) {
-        return `<p>${this.parser.parseInline(tokens)}</p>\n`;
-    }
-    table(token) {
-        let header = '';
-        // header
-        let cell = '';
-        for (let j = 0; j < token.header.length; j++) {
-            cell += this.tablecell(token.header[j]);
-        }
-        header += this.tablerow({ text: cell });
-        let body = '';
-        for (let j = 0; j < token.rows.length; j++) {
-            const row = token.rows[j];
-            cell = '';
-            for (let k = 0; k < row.length; k++) {
-                cell += this.tablecell(row[k]);
-            }
-            body += this.tablerow({ text: cell });
-        }
-        if (body)
-            body = `<tbody>${body}</tbody>`;
-        return '<table>\n'
-            + '<thead>\n'
-            + header
-            + '</thead>\n'
-            + body
-            + '</table>\n';
-    }
-    tablerow({ text }) {
-        return `<tr>\n${text}</tr>\n`;
-    }
-    tablecell(token) {
-        const content = this.parser.parseInline(token.tokens);
-        const type = token.header ? 'th' : 'td';
-        const tag = token.align
-            ? `<${type} align="${token.align}">`
-            : `<${type}>`;
-        return tag + content + `</${type}>\n`;
-    }
-    /**
-     * span level renderer
-     */
-    strong({ tokens }) {
-        return `<strong>${this.parser.parseInline(tokens)}</strong>`;
-    }
-    em({ tokens }) {
-        return `<em>${this.parser.parseInline(tokens)}</em>`;
-    }
-    codespan({ text }) {
-        return `<code>${marked_esm_escape(text, true)}</code>`;
-    }
-    br(token) {
-        return '<br>';
-    }
-    del({ tokens }) {
-        return `<del>${this.parser.parseInline(tokens)}</del>`;
-    }
-    link({ href, title, tokens }) {
-        const text = this.parser.parseInline(tokens);
-        const cleanHref = cleanUrl(href);
-        if (cleanHref === null) {
-            return text;
-        }
-        href = cleanHref;
-        let out = '<a href="' + href + '"';
-        if (title) {
-            out += ' title="' + (marked_esm_escape(title)) + '"';
-        }
-        out += '>' + text + '</a>';
-        return out;
-    }
-    image({ href, title, text }) {
-        const cleanHref = cleanUrl(href);
-        if (cleanHref === null) {
-            return marked_esm_escape(text);
-        }
-        href = cleanHref;
-        let out = `<img src="${href}" alt="${text}"`;
-        if (title) {
-            out += ` title="${marked_esm_escape(title)}"`;
-        }
-        out += '>';
-        return out;
-    }
-    text(token) {
-        return 'tokens' in token && token.tokens
-            ? this.parser.parseInline(token.tokens)
-            : ('escaped' in token && token.escaped ? token.text : marked_esm_escape(token.text));
-    }
-}
-
-/**
- * TextRenderer
- * returns only the textual part of the token
- */
-class _TextRenderer {
-    // no need for block level renderers
-    strong({ text }) {
-        return text;
-    }
-    em({ text }) {
-        return text;
-    }
-    codespan({ text }) {
-        return text;
-    }
-    del({ text }) {
-        return text;
-    }
-    html({ text }) {
-        return text;
-    }
-    text({ text }) {
-        return text;
-    }
-    link({ text }) {
-        return '' + text;
-    }
-    image({ text }) {
-        return '' + text;
-    }
-    br() {
-        return '';
-    }
-}
-
-/**
- * Parsing & Compiling
- */
-class _Parser {
-    options;
-    renderer;
-    textRenderer;
-    constructor(options) {
-        this.options = options || _defaults;
-        this.options.renderer = this.options.renderer || new _Renderer();
-        this.renderer = this.options.renderer;
-        this.renderer.options = this.options;
-        this.renderer.parser = this;
-        this.textRenderer = new _TextRenderer();
-    }
-    /**
-     * Static Parse Method
-     */
-    static parse(tokens, options) {
-        const parser = new _Parser(options);
-        return parser.parse(tokens);
-    }
-    /**
-     * Static Parse Inline Method
-     */
-    static parseInline(tokens, options) {
-        const parser = new _Parser(options);
-        return parser.parseInline(tokens);
-    }
-    /**
-     * Parse Loop
-     */
-    parse(tokens, top = true) {
-        let out = '';
-        for (let i = 0; i < tokens.length; i++) {
-            const anyToken = tokens[i];
-            // Run any renderer extensions
-            if (this.options.extensions?.renderers?.[anyToken.type]) {
-                const genericToken = anyToken;
-                const ret = this.options.extensions.renderers[genericToken.type].call({ parser: this }, genericToken);
-                if (ret !== false || !['space', 'hr', 'heading', 'code', 'table', 'blockquote', 'list', 'html', 'paragraph', 'text'].includes(genericToken.type)) {
-                    out += ret || '';
-                    continue;
-                }
-            }
-            const token = anyToken;
-            switch (token.type) {
-                case 'space': {
-                    out += this.renderer.space(token);
-                    continue;
-                }
-                case 'hr': {
-                    out += this.renderer.hr(token);
-                    continue;
-                }
-                case 'heading': {
-                    out += this.renderer.heading(token);
-                    continue;
-                }
-                case 'code': {
-                    out += this.renderer.code(token);
-                    continue;
-                }
-                case 'table': {
-                    out += this.renderer.table(token);
-                    continue;
-                }
-                case 'blockquote': {
-                    out += this.renderer.blockquote(token);
-                    continue;
-                }
-                case 'list': {
-                    out += this.renderer.list(token);
-                    continue;
-                }
-                case 'html': {
-                    out += this.renderer.html(token);
-                    continue;
-                }
-                case 'paragraph': {
-                    out += this.renderer.paragraph(token);
-                    continue;
-                }
-                case 'text': {
-                    let textToken = token;
-                    let body = this.renderer.text(textToken);
-                    while (i + 1 < tokens.length && tokens[i + 1].type === 'text') {
-                        textToken = tokens[++i];
-                        body += '\n' + this.renderer.text(textToken);
-                    }
-                    if (top) {
-                        out += this.renderer.paragraph({
-                            type: 'paragraph',
-                            raw: body,
-                            text: body,
-                            tokens: [{ type: 'text', raw: body, text: body, escaped: true }],
-                        });
-                    }
-                    else {
-                        out += body;
-                    }
-                    continue;
-                }
-                default: {
-                    const errMsg = 'Token with "' + token.type + '" type was not found.';
-                    if (this.options.silent) {
-                        console.error(errMsg);
-                        return '';
-                    }
-                    else {
-                        throw new Error(errMsg);
-                    }
-                }
-            }
-        }
-        return out;
-    }
-    /**
-     * Parse Inline Tokens
-     */
-    parseInline(tokens, renderer = this.renderer) {
-        let out = '';
-        for (let i = 0; i < tokens.length; i++) {
-            const anyToken = tokens[i];
-            // Run any renderer extensions
-            if (this.options.extensions?.renderers?.[anyToken.type]) {
-                const ret = this.options.extensions.renderers[anyToken.type].call({ parser: this }, anyToken);
-                if (ret !== false || !['escape', 'html', 'link', 'image', 'strong', 'em', 'codespan', 'br', 'del', 'text'].includes(anyToken.type)) {
-                    out += ret || '';
-                    continue;
-                }
-            }
-            const token = anyToken;
-            switch (token.type) {
-                case 'escape': {
-                    out += renderer.text(token);
-                    break;
-                }
-                case 'html': {
-                    out += renderer.html(token);
-                    break;
-                }
-                case 'link': {
-                    out += renderer.link(token);
-                    break;
-                }
-                case 'image': {
-                    out += renderer.image(token);
-                    break;
-                }
-                case 'strong': {
-                    out += renderer.strong(token);
-                    break;
-                }
-                case 'em': {
-                    out += renderer.em(token);
-                    break;
-                }
-                case 'codespan': {
-                    out += renderer.codespan(token);
-                    break;
-                }
-                case 'br': {
-                    out += renderer.br(token);
-                    break;
-                }
-                case 'del': {
-                    out += renderer.del(token);
-                    break;
-                }
-                case 'text': {
-                    out += renderer.text(token);
-                    break;
-                }
-                default: {
-                    const errMsg = 'Token with "' + token.type + '" type was not found.';
-                    if (this.options.silent) {
-                        console.error(errMsg);
-                        return '';
-                    }
-                    else {
-                        throw new Error(errMsg);
-                    }
-                }
-            }
-        }
-        return out;
-    }
-}
-
-class _Hooks {
-    options;
-    block;
-    constructor(options) {
-        this.options = options || _defaults;
-    }
-    static passThroughHooks = new Set([
-        'preprocess',
-        'postprocess',
-        'processAllTokens',
-    ]);
-    /**
-     * Process markdown before marked
-     */
-    preprocess(markdown) {
-        return markdown;
-    }
-    /**
-     * Process HTML after marked is finished
-     */
-    postprocess(html) {
-        return html;
-    }
-    /**
-     * Process all tokens before walk tokens
-     */
-    processAllTokens(tokens) {
-        return tokens;
-    }
-    /**
-     * Provide function to tokenize markdown
-     */
-    provideLexer() {
-        return this.block ? _Lexer.lex : _Lexer.lexInline;
-    }
-    /**
-     * Provide function to parse tokens
-     */
-    provideParser() {
-        return this.block ? _Parser.parse : _Parser.parseInline;
-    }
-}
-
-class Marked {
-    defaults = _getDefaults();
-    options = this.setOptions;
-    parse = this.parseMarkdown(true);
-    parseInline = this.parseMarkdown(false);
-    Parser = _Parser;
-    Renderer = _Renderer;
-    TextRenderer = _TextRenderer;
-    Lexer = _Lexer;
-    Tokenizer = _Tokenizer;
-    Hooks = _Hooks;
-    constructor(...args) {
-        this.use(...args);
-    }
-    /**
-     * Run callback for every token
-     */
-    walkTokens(tokens, callback) {
-        let values = [];
-        for (const token of tokens) {
-            values = values.concat(callback.call(this, token));
-            switch (token.type) {
-                case 'table': {
-                    const tableToken = token;
-                    for (const cell of tableToken.header) {
-                        values = values.concat(this.walkTokens(cell.tokens, callback));
-                    }
-                    for (const row of tableToken.rows) {
-                        for (const cell of row) {
-                            values = values.concat(this.walkTokens(cell.tokens, callback));
-                        }
-                    }
-                    break;
-                }
-                case 'list': {
-                    const listToken = token;
-                    values = values.concat(this.walkTokens(listToken.items, callback));
-                    break;
-                }
-                default: {
-                    const genericToken = token;
-                    if (this.defaults.extensions?.childTokens?.[genericToken.type]) {
-                        this.defaults.extensions.childTokens[genericToken.type].forEach((childTokens) => {
-                            const tokens = genericToken[childTokens].flat(Infinity);
-                            values = values.concat(this.walkTokens(tokens, callback));
-                        });
-                    }
-                    else if (genericToken.tokens) {
-                        values = values.concat(this.walkTokens(genericToken.tokens, callback));
-                    }
-                }
-            }
-        }
-        return values;
-    }
-    use(...args) {
-        const extensions = this.defaults.extensions || { renderers: {}, childTokens: {} };
-        args.forEach((pack) => {
-            // copy options to new object
-            const opts = { ...pack };
-            // set async to true if it was set to true before
-            opts.async = this.defaults.async || opts.async || false;
-            // ==-- Parse "addon" extensions --== //
-            if (pack.extensions) {
-                pack.extensions.forEach((ext) => {
-                    if (!ext.name) {
-                        throw new Error('extension name required');
-                    }
-                    if ('renderer' in ext) { // Renderer extensions
-                        const prevRenderer = extensions.renderers[ext.name];
-                        if (prevRenderer) {
-                            // Replace extension with func to run new extension but fall back if false
-                            extensions.renderers[ext.name] = function (...args) {
-                                let ret = ext.renderer.apply(this, args);
-                                if (ret === false) {
-                                    ret = prevRenderer.apply(this, args);
-                                }
-                                return ret;
-                            };
-                        }
-                        else {
-                            extensions.renderers[ext.name] = ext.renderer;
-                        }
-                    }
-                    if ('tokenizer' in ext) { // Tokenizer Extensions
-                        if (!ext.level || (ext.level !== 'block' && ext.level !== 'inline')) {
-                            throw new Error("extension level must be 'block' or 'inline'");
-                        }
-                        const extLevel = extensions[ext.level];
-                        if (extLevel) {
-                            extLevel.unshift(ext.tokenizer);
-                        }
-                        else {
-                            extensions[ext.level] = [ext.tokenizer];
-                        }
-                        if (ext.start) { // Function to check for start of token
-                            if (ext.level === 'block') {
-                                if (extensions.startBlock) {
-                                    extensions.startBlock.push(ext.start);
-                                }
-                                else {
-                                    extensions.startBlock = [ext.start];
-                                }
-                            }
-                            else if (ext.level === 'inline') {
-                                if (extensions.startInline) {
-                                    extensions.startInline.push(ext.start);
-                                }
-                                else {
-                                    extensions.startInline = [ext.start];
-                                }
-                            }
-                        }
-                    }
-                    if ('childTokens' in ext && ext.childTokens) { // Child tokens to be visited by walkTokens
-                        extensions.childTokens[ext.name] = ext.childTokens;
-                    }
-                });
-                opts.extensions = extensions;
-            }
-            // ==-- Parse "overwrite" extensions --== //
-            if (pack.renderer) {
-                const renderer = this.defaults.renderer || new _Renderer(this.defaults);
-                for (const prop in pack.renderer) {
-                    if (!(prop in renderer)) {
-                        throw new Error(`renderer '${prop}' does not exist`);
-                    }
-                    if (['options', 'parser'].includes(prop)) {
-                        // ignore options property
-                        continue;
-                    }
-                    const rendererProp = prop;
-                    const rendererFunc = pack.renderer[rendererProp];
-                    const prevRenderer = renderer[rendererProp];
-                    // Replace renderer with func to run extension, but fall back if false
-                    renderer[rendererProp] = (...args) => {
-                        let ret = rendererFunc.apply(renderer, args);
-                        if (ret === false) {
-                            ret = prevRenderer.apply(renderer, args);
-                        }
-                        return ret || '';
-                    };
-                }
-                opts.renderer = renderer;
-            }
-            if (pack.tokenizer) {
-                const tokenizer = this.defaults.tokenizer || new _Tokenizer(this.defaults);
-                for (const prop in pack.tokenizer) {
-                    if (!(prop in tokenizer)) {
-                        throw new Error(`tokenizer '${prop}' does not exist`);
-                    }
-                    if (['options', 'rules', 'lexer'].includes(prop)) {
-                        // ignore options, rules, and lexer properties
-                        continue;
-                    }
-                    const tokenizerProp = prop;
-                    const tokenizerFunc = pack.tokenizer[tokenizerProp];
-                    const prevTokenizer = tokenizer[tokenizerProp];
-                    // Replace tokenizer with func to run extension, but fall back if false
-                    // @ts-expect-error cannot type tokenizer function dynamically
-                    tokenizer[tokenizerProp] = (...args) => {
-                        let ret = tokenizerFunc.apply(tokenizer, args);
-                        if (ret === false) {
-                            ret = prevTokenizer.apply(tokenizer, args);
-                        }
-                        return ret;
-                    };
-                }
-                opts.tokenizer = tokenizer;
-            }
-            // ==-- Parse Hooks extensions --== //
-            if (pack.hooks) {
-                const hooks = this.defaults.hooks || new _Hooks();
-                for (const prop in pack.hooks) {
-                    if (!(prop in hooks)) {
-                        throw new Error(`hook '${prop}' does not exist`);
-                    }
-                    if (['options', 'block'].includes(prop)) {
-                        // ignore options and block properties
-                        continue;
-                    }
-                    const hooksProp = prop;
-                    const hooksFunc = pack.hooks[hooksProp];
-                    const prevHook = hooks[hooksProp];
-                    if (_Hooks.passThroughHooks.has(prop)) {
-                        // @ts-expect-error cannot type hook function dynamically
-                        hooks[hooksProp] = (arg) => {
-                            if (this.defaults.async) {
-                                return Promise.resolve(hooksFunc.call(hooks, arg)).then(ret => {
-                                    return prevHook.call(hooks, ret);
-                                });
-                            }
-                            const ret = hooksFunc.call(hooks, arg);
-                            return prevHook.call(hooks, ret);
-                        };
-                    }
-                    else {
-                        // @ts-expect-error cannot type hook function dynamically
-                        hooks[hooksProp] = (...args) => {
-                            let ret = hooksFunc.apply(hooks, args);
-                            if (ret === false) {
-                                ret = prevHook.apply(hooks, args);
-                            }
-                            return ret;
-                        };
-                    }
-                }
-                opts.hooks = hooks;
-            }
-            // ==-- Parse WalkTokens extensions --== //
-            if (pack.walkTokens) {
-                const walkTokens = this.defaults.walkTokens;
-                const packWalktokens = pack.walkTokens;
-                opts.walkTokens = function (token) {
-                    let values = [];
-                    values.push(packWalktokens.call(this, token));
-                    if (walkTokens) {
-                        values = values.concat(walkTokens.call(this, token));
-                    }
-                    return values;
-                };
-            }
-            this.defaults = { ...this.defaults, ...opts };
-        });
-        return this;
-    }
-    setOptions(opt) {
-        this.defaults = { ...this.defaults, ...opt };
-        return this;
-    }
-    lexer(src, options) {
-        return _Lexer.lex(src, options ?? this.defaults);
-    }
-    parser(tokens, options) {
-        return _Parser.parse(tokens, options ?? this.defaults);
-    }
-    parseMarkdown(blockType) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const parse = (src, options) => {
-            const origOpt = { ...options };
-            const opt = { ...this.defaults, ...origOpt };
-            const throwError = this.onError(!!opt.silent, !!opt.async);
-            // throw error if an extension set async to true but parse was called with async: false
-            if (this.defaults.async === true && origOpt.async === false) {
-                return throwError(new Error('marked(): The async option was set to true by an extension. Remove async: false from the parse options object to return a Promise.'));
-            }
-            // throw error in case of non string input
-            if (typeof src === 'undefined' || src === null) {
-                return throwError(new Error('marked(): input parameter is undefined or null'));
-            }
-            if (typeof src !== 'string') {
-                return throwError(new Error('marked(): input parameter is of type '
-                    + Object.prototype.toString.call(src) + ', string expected'));
-            }
-            if (opt.hooks) {
-                opt.hooks.options = opt;
-                opt.hooks.block = blockType;
-            }
-            const lexer = opt.hooks ? opt.hooks.provideLexer() : (blockType ? _Lexer.lex : _Lexer.lexInline);
-            const parser = opt.hooks ? opt.hooks.provideParser() : (blockType ? _Parser.parse : _Parser.parseInline);
-            if (opt.async) {
-                return Promise.resolve(opt.hooks ? opt.hooks.preprocess(src) : src)
-                    .then(src => lexer(src, opt))
-                    .then(tokens => opt.hooks ? opt.hooks.processAllTokens(tokens) : tokens)
-                    .then(tokens => opt.walkTokens ? Promise.all(this.walkTokens(tokens, opt.walkTokens)).then(() => tokens) : tokens)
-                    .then(tokens => parser(tokens, opt))
-                    .then(html => opt.hooks ? opt.hooks.postprocess(html) : html)
-                    .catch(throwError);
-            }
-            try {
-                if (opt.hooks) {
-                    src = opt.hooks.preprocess(src);
-                }
-                let tokens = lexer(src, opt);
-                if (opt.hooks) {
-                    tokens = opt.hooks.processAllTokens(tokens);
-                }
-                if (opt.walkTokens) {
-                    this.walkTokens(tokens, opt.walkTokens);
-                }
-                let html = parser(tokens, opt);
-                if (opt.hooks) {
-                    html = opt.hooks.postprocess(html);
-                }
-                return html;
-            }
-            catch (e) {
-                return throwError(e);
-            }
-        };
-        return parse;
-    }
-    onError(silent, async) {
-        return (e) => {
-            e.message += '\nPlease report this to https://github.com/markedjs/marked.';
-            if (silent) {
-                const msg = '<p>An error occurred:</p><pre>'
-                    + marked_esm_escape(e.message + '', true)
-                    + '</pre>';
-                if (async) {
-                    return Promise.resolve(msg);
-                }
-                return msg;
-            }
-            if (async) {
-                return Promise.reject(e);
-            }
-            throw e;
-        };
-    }
-}
-
-const markedInstance = new Marked();
-function marked(src, opt) {
-    return markedInstance.parse(src, opt);
-}
-/**
- * Sets the default options.
- *
- * @param options Hash of options
- */
-marked.options =
-    marked.setOptions = function (options) {
-        markedInstance.setOptions(options);
-        marked.defaults = markedInstance.defaults;
-        changeDefaults(marked.defaults);
-        return marked;
-    };
-/**
- * Gets the original marked default options.
- */
-marked.getDefaults = _getDefaults;
-marked.defaults = _defaults;
-/**
- * Use Extension
- */
-marked.use = function (...args) {
-    markedInstance.use(...args);
-    marked.defaults = markedInstance.defaults;
-    changeDefaults(marked.defaults);
-    return marked;
-};
-/**
- * Run callback for every token
- */
-marked.walkTokens = function (tokens, callback) {
-    return markedInstance.walkTokens(tokens, callback);
-};
-/**
- * Compiles markdown to HTML without enclosing `p` tag.
- *
- * @param src String of markdown source to be compiled
- * @param options Hash of options
- * @return String of compiled HTML
- */
-marked.parseInline = markedInstance.parseInline;
-/**
- * Expose
- */
-marked.Parser = _Parser;
-marked.parser = _Parser.parse;
-marked.Renderer = _Renderer;
-marked.TextRenderer = _TextRenderer;
-marked.Lexer = _Lexer;
-marked.lexer = _Lexer.lex;
-marked.Tokenizer = _Tokenizer;
-marked.Hooks = _Hooks;
-marked.parse = marked;
-const options = marked.options;
-const setOptions = marked.setOptions;
-const use = marked.use;
-const walkTokens = marked.walkTokens;
-const parseInline = marked.parseInline;
-const parse = (/* unused pure expression or super */ null && (marked));
-const parser = _Parser.parse;
-const lexer = _Lexer.lex;
+(0,defineProperty/* default */.Z)(CRSearch, "_HELP", "\n    <div class=\"help-content\">\n      <div class=\"message\"></div>\n      <ul class=\"examples\">\n        <li>\n          <h3>Class / Function / Type</h3>\n          <div class=\"query\">std::<span class=\"input\"></span></div>\n        </li>\n        <li>\n          <h3>Header file</h3>\n          <div class=\"query\">&lt;<span class=\"input\"></span>&gt;</div>\n        </li>\n        <li>\n          <h3>Other / All</h3>\n          <div class=\"query\"><span class=\"input\"></span></div>\n        </li>\n      </ul>\n    </div>\n  ");
 
 
-//# sourceMappingURL=marked.esm.js.map
+// EXTERNAL MODULE: ../node_modules/marked/src/marked.js
+var marked = __webpack_require__(4617);
+var marked_default = /*#__PURE__*/__webpack_require__.n(marked);
+;// CONCATENATED MODULE: ../node_modules/crsearch/js/crsearch/kunai-config.js
 
-;// ../node_modules/crsearch/js/crsearch/kunai-config.js
 
 
 
 
 function kunai_config_createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = kunai_config_unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+
 function kunai_config_unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return kunai_config_arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return kunai_config_arrayLikeToArray(o, minLen); }
+
 function kunai_config_arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
 
 
 var MarkedOpts = {
   gfm: true,
   tables: true
-};
-
-//
+}; //
 // Reference implementation for https://github.com/cpprefjp/kunai_config
 //
 
@@ -4885,31 +2620,40 @@ var Prop = {
   toplevel_category: 'TOPLEVEL_CATEGORY',
   order_priority: 'order_priority'
 };
+
 var Priority = /*#__PURE__*/function () {
   function Priority(index, name) {
-    (0,classCallCheck/* default */.A)(this, Priority);
+    (0,classCallCheck/* default */.Z)(this, Priority);
+
     this.index = index;
     this.name = name;
     Object.freeze(this);
   }
-  (0,createClass/* default */.A)(Priority, [{
+
+  (0,createClass/* default */.Z)(Priority, [{
     key: "toString",
     value: function toString() {
       return "Priority(#".concat(this.index, ", '").concat(this.name, "')");
     }
   }]);
+
   return Priority;
 }();
+
 var UnhandledHeading = function UnhandledHeading(token) {
-  (0,classCallCheck/* default */.A)(this, UnhandledHeading);
+  (0,classCallCheck/* default */.Z)(this, UnhandledHeading);
+
   this.reason = "unhandled heading '".concat(token.get('text'), "'");
   this.args = arguments;
   Object.freeze(this);
 };
+
 var ArticleProcessor = /*#__PURE__*/function () {
   function ArticleProcessor() {
     var _this = this;
-    (0,classCallCheck/* default */.A)(this, ArticleProcessor);
+
+    (0,classCallCheck/* default */.Z)(this, ArticleProcessor);
+
     this._categories = new Map();
     this._single_bufs = [];
     this._currentIndex = 0;
@@ -4918,13 +2662,15 @@ var ArticleProcessor = /*#__PURE__*/function () {
         _this._single_bufs.push('');
       },
       'list_item_end': function list_item_end() {
-        var buf = _this._single_bufs.pop();
-        // console.log(buf)
+        var buf = _this._single_bufs.pop(); // console.log(buf)
+
 
         var m = buf.match(/^([^[]+)\[([^\]]+)\]$/);
+
         if (!m) {
           throw new Error("[BUG] unhandled format ".concat(buf));
         }
+
         _this._categories.set(m[2], new Priority(_this._currentIndex++, m[1]));
       },
       'text': function text(token) {
@@ -4935,14 +2681,17 @@ var ArticleProcessor = /*#__PURE__*/function () {
     this._currentZoneProc = null;
     Object.seal(this);
   }
-  (0,createClass/* default */.A)(ArticleProcessor, [{
+
+  (0,createClass/* default */.Z)(ArticleProcessor, [{
     key: "process",
     value: function process(tokens) {
       var _iterator = kunai_config_createForOfIteratorHelper(tokens),
-        _step;
+          _step;
+
       try {
         for (_iterator.s(); !(_step = _iterator.n()).done;) {
           var token = _step.value;
+
           this._process_single(token);
         }
       } catch (err) {
@@ -4950,12 +2699,14 @@ var ArticleProcessor = /*#__PURE__*/function () {
       } finally {
         _iterator.f();
       }
+
       return this._categories;
     }
   }, {
     key: "_process_single",
     value: function _process_single(token) {
       var type = token.get('type');
+
       switch (type) {
         case 'heading':
           {
@@ -4963,10 +2714,13 @@ var ArticleProcessor = /*#__PURE__*/function () {
               if (token.get('depth') !== 2) {
                 break;
               }
+
               var heading = token.get('text').trim();
+
               if (!this._zoneProc.has(heading)) {
                 throw new UnhandledHeading(token);
               }
+
               this._currentZoneProc = this._zoneProc.get(heading);
             } catch (e) {
               if (e instanceof UnhandledHeading) {
@@ -4976,55 +2730,65 @@ var ArticleProcessor = /*#__PURE__*/function () {
                 throw e;
               }
             }
+
             break;
           }
+
         default:
           {
             if (this._currentZoneProc) {
               var proc = this._currentZoneProc[type];
+
               if (proc) {
                 proc(token);
               }
             }
+
             break;
           }
       }
     }
   }]);
+
   return ArticleProcessor;
 }();
+
 var Config = /*#__PURE__*/function () {
   function Config(data) {
-    (0,classCallCheck/* default */.A)(this, Config);
+    (0,classCallCheck/* default */.Z)(this, Config);
+
     this._article = new Map();
     {
-      var e = Config.parseMD(data['article.md'], new ArticleProcessor());
-      // console.log(e)
+      var e = Config.parseMD(data['article.md'], new ArticleProcessor()); // console.log(e)
+
       this._article.set(Prop.toplevel_category, e);
     }
     var i = 0;
     this._cpp_json = new Map();
+
     this._cpp_json.set(Prop.order_priority, new Map(data['cpp.json']['order_priority'].map(function (e) {
-      return (
-        // e[0]: id
+      return (// e[0]: id
         // e[1]: description
         // console.log(e)
-
         [e[0], [i++, e]]
       );
     })));
+
     this._prioSpecials = new Map();
+
     var _iterator2 = kunai_config_createForOfIteratorHelper(this._getData(Prop.order_priority)),
-      _step2;
+        _step2;
+
     try {
       for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-        var _step2$value = (0,slicedToArray/* default */.A)(_step2.value, 2),
-          k = _step2$value[0],
-          _step2$value$ = (0,slicedToArray/* default */.A)(_step2$value[1], 2),
-          _i = _step2$value$[0],
-          _step2$value$$ = (0,slicedToArray/* default */.A)(_step2$value$[1], 2),
-          key = _step2$value$$[0],
-          desc = _step2$value$$[1];
+        var _step2$value = (0,slicedToArray/* default */.Z)(_step2.value, 2),
+            k = _step2$value[0],
+            _step2$value$ = (0,slicedToArray/* default */.Z)(_step2$value[1], 2),
+            _i = _step2$value$[0],
+            _step2$value$$ = (0,slicedToArray/* default */.Z)(_step2$value$[1], 2),
+            key = _step2$value$$[0],
+            desc = _step2$value$$[1];
+
         if (key.match(/^__/)) {
           this._prioSpecials.set(key, new Priority(_i, key));
         }
@@ -5034,9 +2798,11 @@ var Config = /*#__PURE__*/function () {
     } finally {
       _iterator2.f();
     }
+
     Object.freeze(this);
   }
-  (0,createClass/* default */.A)(Config, [{
+
+  (0,createClass/* default */.Z)(Config, [{
     key: "_getData",
     value: function _getData(prop) {
       return this._cpp_json.get(prop);
@@ -5052,22 +2818,26 @@ var Config = /*#__PURE__*/function () {
       if (!idx.page_id || !idx.page_id.length) {
         throw [1];
       }
+
       if (index_type.isHeader(idx.type)) {
         throw [2];
       }
-      var key = idx.page_id[idx.page_id.length - 1];
-      // console.log(`key: ${key}`)
+
+      var key = idx.page_id[idx.page_id.length - 1]; // console.log(`key: ${key}`)
 
       if (this._cpp_json.get(Prop.order_priority).has(key)) {
         // exact match
         return new Priority(this._cpp_json.get(Prop.order_priority).get(key)[0], key);
       }
+
       if (key.match(/^op_/)) {
         return this._prioSpecials.get('__converter__');
       }
+
       if (key.match(/^type-/)) {
         return this._prioSpecials.get('__types__');
       }
+
       return this._prioSpecials.get('__functions__');
     }
   }, {
@@ -5086,20 +2856,22 @@ var Config = /*#__PURE__*/function () {
   }], [{
     key: "parseMD",
     value: function parseMD(md_raw, proc) {
-      var lexer = new marked.Lexer(MarkedOpts);
+      var lexer = new (marked_default()).Lexer(MarkedOpts);
       return proc.process(lexer.lex(md_raw).map(function (e) {
         return new Map(Object.entries(e));
       }));
     }
   }]);
+
   return Config;
 }();
-(0,defineProperty/* default */.A)(Config, "Prop", Prop);
 
-;// ../node_modules/crsearch/js/crsearch.js
+(0,defineProperty/* default */.Z)(Config, "Prop", Prop);
 
 
-//import Index from './crsearch/index'
+;// CONCATENATED MODULE: ../node_modules/crsearch/js/crsearch.js
+
+ //import Index from './crsearch/index'
 //import Namespace from './crsearch/namespace'
 //import Database from './crsearch/database'
 //import DOM from './crsearch/dom'
@@ -5107,9 +2879,10 @@ var Config = /*#__PURE__*/function () {
 
 
 
+
 /***/ }),
 
-/***/ 4257:
+/***/ 1036:
 /***/ (function(module) {
 
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
@@ -14962,7 +12735,7 @@ var Config = /*#__PURE__*/function () {
 
 /***/ }),
 
-/***/ 9212:
+/***/ 7790:
 /***/ (function(__unused_webpack_module, __unused_webpack_exports, __webpack_require__) {
 
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
@@ -14970,7 +12743,7 @@ var Config = /*#__PURE__*/function () {
 
 (function(mod) {
   if (true) // CommonJS
-    mod(__webpack_require__(4257));
+    mod(__webpack_require__(1036));
   else {}
 })(function(CodeMirror) {
 "use strict";
@@ -15901,7 +13674,7 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
 
 /***/ }),
 
-/***/ 4850:
+/***/ 9529:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -15911,10 +13684,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.decodeHTML = exports.decodeHTMLStrict = exports.decodeXML = void 0;
-var entities_json_1 = __importDefault(__webpack_require__(8058));
-var legacy_json_1 = __importDefault(__webpack_require__(6182));
-var xml_json_1 = __importDefault(__webpack_require__(5614));
-var decode_codepoint_1 = __importDefault(__webpack_require__(9132));
+var entities_json_1 = __importDefault(__webpack_require__(2834));
+var legacy_json_1 = __importDefault(__webpack_require__(2061));
+var xml_json_1 = __importDefault(__webpack_require__(5529));
+var decode_codepoint_1 = __importDefault(__webpack_require__(8787));
 exports.decodeXML = getStrictDecoder(xml_json_1.default);
 exports.decodeHTMLStrict = getStrictDecoder(entities_json_1.default);
 function getStrictDecoder(map) {
@@ -15963,7 +13736,7 @@ function getReplacer(map) {
 
 /***/ }),
 
-/***/ 9132:
+/***/ 8787:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -15972,7 +13745,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-var decode_json_1 = __importDefault(__webpack_require__(1971));
+var decode_json_1 = __importDefault(__webpack_require__(8124));
 // modified version of https://github.com/mathiasbynens/he/blob/master/src/he.js#L94-L119
 function decodeCodePoint(codePoint) {
     if ((codePoint >= 0xd800 && codePoint <= 0xdfff) || codePoint > 0x10ffff) {
@@ -15995,7 +13768,7 @@ exports["default"] = decodeCodePoint;
 
 /***/ }),
 
-/***/ 2438:
+/***/ 6336:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -16005,11 +13778,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.escape = exports.encodeHTML = exports.encodeXML = void 0;
-var xml_json_1 = __importDefault(__webpack_require__(5614));
+var xml_json_1 = __importDefault(__webpack_require__(5529));
 var inverseXML = getInverseObj(xml_json_1.default);
 var xmlReplacer = getInverseReplacer(inverseXML);
 exports.encodeXML = getInverse(inverseXML, xmlReplacer);
-var entities_json_1 = __importDefault(__webpack_require__(8058));
+var entities_json_1 = __importDefault(__webpack_require__(2834));
 var inverseHTML = getInverseObj(entities_json_1.default);
 var htmlReplacer = getInverseReplacer(inverseHTML);
 exports.encodeHTML = getInverse(inverseHTML, htmlReplacer);
@@ -16076,7 +13849,7 @@ exports.escape = escape;
 
 /***/ }),
 
-/***/ 6942:
+/***/ 9625:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -16084,8 +13857,8 @@ var __webpack_unused_export__;
 
 __webpack_unused_export__ = ({ value: true });
 __webpack_unused_export__ = __webpack_unused_export__ = __webpack_unused_export__ = void 0;
-var decode_1 = __webpack_require__(4850);
-var encode_1 = __webpack_require__(2438);
+var decode_1 = __webpack_require__(9529);
+var encode_1 = __webpack_require__(6336);
 /**
  * Decodes a string with entities.
  *
@@ -16116,16 +13889,16 @@ function encode(data, level) {
     return (!level || level <= 0 ? encode_1.encodeXML : encode_1.encodeHTML)(data);
 }
 __webpack_unused_export__ = encode;
-var encode_2 = __webpack_require__(2438);
+var encode_2 = __webpack_require__(6336);
 __webpack_unused_export__ = ({ enumerable: true, get: function () { return encode_2.encodeXML; } });
 __webpack_unused_export__ = ({ enumerable: true, get: function () { return encode_2.encodeHTML; } });
 __webpack_unused_export__ = ({ enumerable: true, get: function () { return encode_2.escape; } });
 // Legacy aliases
 __webpack_unused_export__ = ({ enumerable: true, get: function () { return encode_2.encodeHTML; } });
 __webpack_unused_export__ = ({ enumerable: true, get: function () { return encode_2.encodeHTML; } });
-var decode_2 = __webpack_require__(4850);
+var decode_2 = __webpack_require__(9529);
 __webpack_unused_export__ = ({ enumerable: true, get: function () { return decode_2.decodeXML; } });
-Object.defineProperty(exports, "Gz", ({ enumerable: true, get: function () { return decode_2.decodeHTML; } }));
+Object.defineProperty(exports, "p1", ({ enumerable: true, get: function () { return decode_2.decodeHTML; } }));
 __webpack_unused_export__ = ({ enumerable: true, get: function () { return decode_2.decodeHTMLStrict; } });
 // Legacy aliases
 __webpack_unused_export__ = ({ enumerable: true, get: function () { return decode_2.decodeHTML; } });
@@ -16137,7 +13910,7 @@ __webpack_unused_export__ = ({ enumerable: true, get: function () { return decod
 
 /***/ }),
 
-/***/ 5616:
+/***/ 5638:
 /***/ (function(module, exports) {
 
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -27026,7 +24799,1906 @@ return jQuery;
 
 /***/ }),
 
-/***/ 2687:
+/***/ 6081:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+const Renderer = __webpack_require__(8234);
+const { defaults } = __webpack_require__(4762);
+const { inline } = __webpack_require__(526);
+const {
+  findClosingBracket,
+  escape
+} = __webpack_require__(3959);
+
+/**
+ * Inline Lexer & Compiler
+ */
+module.exports = class InlineLexer {
+  constructor(links, options) {
+    this.options = options || defaults;
+    this.links = links;
+    this.rules = inline.normal;
+    this.options.renderer = this.options.renderer || new Renderer();
+    this.renderer = this.options.renderer;
+    this.renderer.options = this.options;
+
+    if (!this.links) {
+      throw new Error('Tokens array requires a `links` property.');
+    }
+
+    if (this.options.pedantic) {
+      this.rules = inline.pedantic;
+    } else if (this.options.gfm) {
+      if (this.options.breaks) {
+        this.rules = inline.breaks;
+      } else {
+        this.rules = inline.gfm;
+      }
+    }
+  }
+
+  /**
+   * Expose Inline Rules
+   */
+  static get rules() {
+    return inline;
+  }
+
+  /**
+   * Static Lexing/Compiling Method
+   */
+  static output(src, links, options) {
+    const inline = new InlineLexer(links, options);
+    return inline.output(src);
+  }
+
+  /**
+   * Lexing/Compiling
+   */
+  output(src) {
+    let out = '',
+      link,
+      text,
+      href,
+      title,
+      cap,
+      prevCapZero;
+
+    while (src) {
+      // escape
+      if (cap = this.rules.escape.exec(src)) {
+        src = src.substring(cap[0].length);
+        out += escape(cap[1]);
+        continue;
+      }
+
+      // tag
+      if (cap = this.rules.tag.exec(src)) {
+        if (!this.inLink && /^<a /i.test(cap[0])) {
+          this.inLink = true;
+        } else if (this.inLink && /^<\/a>/i.test(cap[0])) {
+          this.inLink = false;
+        }
+        if (!this.inRawBlock && /^<(pre|code|kbd|script)(\s|>)/i.test(cap[0])) {
+          this.inRawBlock = true;
+        } else if (this.inRawBlock && /^<\/(pre|code|kbd|script)(\s|>)/i.test(cap[0])) {
+          this.inRawBlock = false;
+        }
+
+        src = src.substring(cap[0].length);
+        out += this.renderer.html(this.options.sanitize
+          ? (this.options.sanitizer
+            ? this.options.sanitizer(cap[0])
+            : escape(cap[0]))
+          : cap[0]);
+        continue;
+      }
+
+      // link
+      if (cap = this.rules.link.exec(src)) {
+        const lastParenIndex = findClosingBracket(cap[2], '()');
+        if (lastParenIndex > -1) {
+          const start = cap[0].indexOf('!') === 0 ? 5 : 4;
+          const linkLen = start + cap[1].length + lastParenIndex;
+          cap[2] = cap[2].substring(0, lastParenIndex);
+          cap[0] = cap[0].substring(0, linkLen).trim();
+          cap[3] = '';
+        }
+        src = src.substring(cap[0].length);
+        this.inLink = true;
+        href = cap[2];
+        if (this.options.pedantic) {
+          link = /^([^'"]*[^\s])\s+(['"])(.*)\2/.exec(href);
+
+          if (link) {
+            href = link[1];
+            title = link[3];
+          } else {
+            title = '';
+          }
+        } else {
+          title = cap[3] ? cap[3].slice(1, -1) : '';
+        }
+        href = href.trim().replace(/^<([\s\S]*)>$/, '$1');
+        out += this.outputLink(cap, {
+          href: InlineLexer.escapes(href),
+          title: InlineLexer.escapes(title)
+        });
+        this.inLink = false;
+        continue;
+      }
+
+      // reflink, nolink
+      if ((cap = this.rules.reflink.exec(src))
+          || (cap = this.rules.nolink.exec(src))) {
+        src = src.substring(cap[0].length);
+        link = (cap[2] || cap[1]).replace(/\s+/g, ' ');
+        link = this.links[link.toLowerCase()];
+        if (!link || !link.href) {
+          out += cap[0].charAt(0);
+          src = cap[0].substring(1) + src;
+          continue;
+        }
+        this.inLink = true;
+        out += this.outputLink(cap, link);
+        this.inLink = false;
+        continue;
+      }
+
+      // strong
+      if (cap = this.rules.strong.exec(src)) {
+        src = src.substring(cap[0].length);
+        out += this.renderer.strong(this.output(cap[4] || cap[3] || cap[2] || cap[1]));
+        continue;
+      }
+
+      // em
+      if (cap = this.rules.em.exec(src)) {
+        src = src.substring(cap[0].length);
+        out += this.renderer.em(this.output(cap[6] || cap[5] || cap[4] || cap[3] || cap[2] || cap[1]));
+        continue;
+      }
+
+      // code
+      if (cap = this.rules.code.exec(src)) {
+        src = src.substring(cap[0].length);
+        out += this.renderer.codespan(escape(cap[2].trim(), true));
+        continue;
+      }
+
+      // br
+      if (cap = this.rules.br.exec(src)) {
+        src = src.substring(cap[0].length);
+        out += this.renderer.br();
+        continue;
+      }
+
+      // del (gfm)
+      if (cap = this.rules.del.exec(src)) {
+        src = src.substring(cap[0].length);
+        out += this.renderer.del(this.output(cap[1]));
+        continue;
+      }
+
+      // autolink
+      if (cap = this.rules.autolink.exec(src)) {
+        src = src.substring(cap[0].length);
+        if (cap[2] === '@') {
+          text = escape(this.mangle(cap[1]));
+          href = 'mailto:' + text;
+        } else {
+          text = escape(cap[1]);
+          href = text;
+        }
+        out += this.renderer.link(href, null, text);
+        continue;
+      }
+
+      // url (gfm)
+      if (!this.inLink && (cap = this.rules.url.exec(src))) {
+        if (cap[2] === '@') {
+          text = escape(cap[0]);
+          href = 'mailto:' + text;
+        } else {
+          // do extended autolink path validation
+          do {
+            prevCapZero = cap[0];
+            cap[0] = this.rules._backpedal.exec(cap[0])[0];
+          } while (prevCapZero !== cap[0]);
+          text = escape(cap[0]);
+          if (cap[1] === 'www.') {
+            href = 'http://' + text;
+          } else {
+            href = text;
+          }
+        }
+        src = src.substring(cap[0].length);
+        out += this.renderer.link(href, null, text);
+        continue;
+      }
+
+      // text
+      if (cap = this.rules.text.exec(src)) {
+        src = src.substring(cap[0].length);
+        if (this.inRawBlock) {
+          out += this.renderer.text(this.options.sanitize ? (this.options.sanitizer ? this.options.sanitizer(cap[0]) : escape(cap[0])) : cap[0]);
+        } else {
+          out += this.renderer.text(escape(this.smartypants(cap[0])));
+        }
+        continue;
+      }
+
+      if (src) {
+        throw new Error('Infinite loop on byte: ' + src.charCodeAt(0));
+      }
+    }
+
+    return out;
+  }
+
+  static escapes(text) {
+    return text ? text.replace(InlineLexer.rules._escapes, '$1') : text;
+  }
+
+  /**
+   * Compile Link
+   */
+  outputLink(cap, link) {
+    const href = link.href,
+      title = link.title ? escape(link.title) : null;
+
+    return cap[0].charAt(0) !== '!'
+      ? this.renderer.link(href, title, this.output(cap[1]))
+      : this.renderer.image(href, title, escape(cap[1]));
+  }
+
+  /**
+   * Smartypants Transformations
+   */
+  smartypants(text) {
+    if (!this.options.smartypants) return text;
+    return text
+      // em-dashes
+      .replace(/---/g, '\u2014')
+      // en-dashes
+      .replace(/--/g, '\u2013')
+      // opening singles
+      .replace(/(^|[-\u2014/(\[{"\s])'/g, '$1\u2018')
+      // closing singles & apostrophes
+      .replace(/'/g, '\u2019')
+      // opening doubles
+      .replace(/(^|[-\u2014/(\[{\u2018\s])"/g, '$1\u201c')
+      // closing doubles
+      .replace(/"/g, '\u201d')
+      // ellipses
+      .replace(/\.{3}/g, '\u2026');
+  }
+
+  /**
+   * Mangle Links
+   */
+  mangle(text) {
+    if (!this.options.mangle) return text;
+    const l = text.length;
+    let out = '',
+      i = 0,
+      ch;
+
+    for (; i < l; i++) {
+      ch = text.charCodeAt(i);
+      if (Math.random() > 0.5) {
+        ch = 'x' + ch.toString(16);
+      }
+      out += '&#' + ch + ';';
+    }
+
+    return out;
+  }
+};
+
+
+/***/ }),
+
+/***/ 3146:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+const { defaults } = __webpack_require__(4762);
+const { block } = __webpack_require__(526);
+const {
+  rtrim,
+  splitCells,
+  escape
+} = __webpack_require__(3959);
+
+/**
+ * Block Lexer
+ */
+module.exports = class Lexer {
+  constructor(options) {
+    this.tokens = [];
+    this.tokens.links = Object.create(null);
+    this.options = options || defaults;
+    this.rules = block.normal;
+
+    if (this.options.pedantic) {
+      this.rules = block.pedantic;
+    } else if (this.options.gfm) {
+      this.rules = block.gfm;
+    }
+  }
+
+  /**
+   * Expose Block Rules
+   */
+  static get rules() {
+    return block;
+  }
+
+  /**
+   * Static Lex Method
+   */
+  static lex(src, options) {
+    const lexer = new Lexer(options);
+    return lexer.lex(src);
+  };
+
+  /**
+   * Preprocessing
+   */
+  lex(src) {
+    src = src
+      .replace(/\r\n|\r/g, '\n')
+      .replace(/\t/g, '    ');
+
+    return this.token(src, true);
+  };
+
+  /**
+   * Lexing
+   */
+  token(src, top) {
+    src = src.replace(/^ +$/gm, '');
+    let next,
+      loose,
+      cap,
+      bull,
+      b,
+      item,
+      listStart,
+      listItems,
+      t,
+      space,
+      i,
+      tag,
+      l,
+      isordered,
+      istask,
+      ischecked;
+
+    while (src) {
+      // newline
+      if (cap = this.rules.newline.exec(src)) {
+        src = src.substring(cap[0].length);
+        if (cap[0].length > 1) {
+          this.tokens.push({
+            type: 'space'
+          });
+        }
+      }
+
+      // code
+      if (cap = this.rules.code.exec(src)) {
+        const lastToken = this.tokens[this.tokens.length - 1];
+        src = src.substring(cap[0].length);
+        // An indented code block cannot interrupt a paragraph.
+        if (lastToken && lastToken.type === 'paragraph') {
+          lastToken.text += '\n' + cap[0].trimRight();
+        } else {
+          cap = cap[0].replace(/^ {4}/gm, '');
+          this.tokens.push({
+            type: 'code',
+            codeBlockStyle: 'indented',
+            text: !this.options.pedantic
+              ? rtrim(cap, '\n')
+              : cap
+          });
+        }
+        continue;
+      }
+
+      // fences
+      if (cap = this.rules.fences.exec(src)) {
+        src = src.substring(cap[0].length);
+        this.tokens.push({
+          type: 'code',
+          lang: cap[2] ? cap[2].trim() : cap[2],
+          text: cap[3] || ''
+        });
+        continue;
+      }
+
+      // heading
+      if (cap = this.rules.heading.exec(src)) {
+        src = src.substring(cap[0].length);
+        this.tokens.push({
+          type: 'heading',
+          depth: cap[1].length,
+          text: cap[2]
+        });
+        continue;
+      }
+
+      // table no leading pipe (gfm)
+      if (cap = this.rules.nptable.exec(src)) {
+        item = {
+          type: 'table',
+          header: splitCells(cap[1].replace(/^ *| *\| *$/g, '')),
+          align: cap[2].replace(/^ *|\| *$/g, '').split(/ *\| */),
+          cells: cap[3] ? cap[3].replace(/\n$/, '').split('\n') : []
+        };
+
+        if (item.header.length === item.align.length) {
+          src = src.substring(cap[0].length);
+
+          for (i = 0; i < item.align.length; i++) {
+            if (/^ *-+: *$/.test(item.align[i])) {
+              item.align[i] = 'right';
+            } else if (/^ *:-+: *$/.test(item.align[i])) {
+              item.align[i] = 'center';
+            } else if (/^ *:-+ *$/.test(item.align[i])) {
+              item.align[i] = 'left';
+            } else {
+              item.align[i] = null;
+            }
+          }
+
+          for (i = 0; i < item.cells.length; i++) {
+            item.cells[i] = splitCells(item.cells[i], item.header.length);
+          }
+
+          this.tokens.push(item);
+
+          continue;
+        }
+      }
+
+      // hr
+      if (cap = this.rules.hr.exec(src)) {
+        src = src.substring(cap[0].length);
+        this.tokens.push({
+          type: 'hr'
+        });
+        continue;
+      }
+
+      // blockquote
+      if (cap = this.rules.blockquote.exec(src)) {
+        src = src.substring(cap[0].length);
+
+        this.tokens.push({
+          type: 'blockquote_start'
+        });
+
+        cap = cap[0].replace(/^ *> ?/gm, '');
+
+        // Pass `top` to keep the current
+        // "toplevel" state. This is exactly
+        // how markdown.pl works.
+        this.token(cap, top);
+
+        this.tokens.push({
+          type: 'blockquote_end'
+        });
+
+        continue;
+      }
+
+      // list
+      if (cap = this.rules.list.exec(src)) {
+        src = src.substring(cap[0].length);
+        bull = cap[2];
+        isordered = bull.length > 1;
+
+        listStart = {
+          type: 'list_start',
+          ordered: isordered,
+          start: isordered ? +bull : '',
+          loose: false
+        };
+
+        this.tokens.push(listStart);
+
+        // Get each top-level item.
+        cap = cap[0].match(this.rules.item);
+
+        listItems = [];
+        next = false;
+        l = cap.length;
+        i = 0;
+
+        for (; i < l; i++) {
+          item = cap[i];
+
+          // Remove the list item's bullet
+          // so it is seen as the next token.
+          space = item.length;
+          item = item.replace(/^ *([*+-]|\d+\.) */, '');
+
+          // Outdent whatever the
+          // list item contains. Hacky.
+          if (~item.indexOf('\n ')) {
+            space -= item.length;
+            item = !this.options.pedantic
+              ? item.replace(new RegExp('^ {1,' + space + '}', 'gm'), '')
+              : item.replace(/^ {1,4}/gm, '');
+          }
+
+          // Determine whether the next list item belongs here.
+          // Backpedal if it does not belong in this list.
+          if (i !== l - 1) {
+            b = block.bullet.exec(cap[i + 1])[0];
+            if (bull.length > 1 ? b.length === 1
+              : (b.length > 1 || (this.options.smartLists && b !== bull))) {
+              src = cap.slice(i + 1).join('\n') + src;
+              i = l - 1;
+            }
+          }
+
+          // Determine whether item is loose or not.
+          // Use: /(^|\n)(?! )[^\n]+\n\n(?!\s*$)/
+          // for discount behavior.
+          loose = next || /\n\n(?!\s*$)/.test(item);
+          if (i !== l - 1) {
+            next = item.charAt(item.length - 1) === '\n';
+            if (!loose) loose = next;
+          }
+
+          if (loose) {
+            listStart.loose = true;
+          }
+
+          // Check for task list items
+          istask = /^\[[ xX]\] /.test(item);
+          ischecked = undefined;
+          if (istask) {
+            ischecked = item[1] !== ' ';
+            item = item.replace(/^\[[ xX]\] +/, '');
+          }
+
+          t = {
+            type: 'list_item_start',
+            task: istask,
+            checked: ischecked,
+            loose: loose
+          };
+
+          listItems.push(t);
+          this.tokens.push(t);
+
+          // Recurse.
+          this.token(item, false);
+
+          this.tokens.push({
+            type: 'list_item_end'
+          });
+        }
+
+        if (listStart.loose) {
+          l = listItems.length;
+          i = 0;
+          for (; i < l; i++) {
+            listItems[i].loose = true;
+          }
+        }
+
+        this.tokens.push({
+          type: 'list_end'
+        });
+
+        continue;
+      }
+
+      // html
+      if (cap = this.rules.html.exec(src)) {
+        src = src.substring(cap[0].length);
+        this.tokens.push({
+          type: this.options.sanitize
+            ? 'paragraph'
+            : 'html',
+          pre: !this.options.sanitizer
+            && (cap[1] === 'pre' || cap[1] === 'script' || cap[1] === 'style'),
+          text: this.options.sanitize ? (this.options.sanitizer ? this.options.sanitizer(cap[0]) : escape(cap[0])) : cap[0]
+        });
+        continue;
+      }
+
+      // def
+      if (top && (cap = this.rules.def.exec(src))) {
+        src = src.substring(cap[0].length);
+        if (cap[3]) cap[3] = cap[3].substring(1, cap[3].length - 1);
+        tag = cap[1].toLowerCase().replace(/\s+/g, ' ');
+        if (!this.tokens.links[tag]) {
+          this.tokens.links[tag] = {
+            href: cap[2],
+            title: cap[3]
+          };
+        }
+        continue;
+      }
+
+      // table (gfm)
+      if (cap = this.rules.table.exec(src)) {
+        item = {
+          type: 'table',
+          header: splitCells(cap[1].replace(/^ *| *\| *$/g, '')),
+          align: cap[2].replace(/^ *|\| *$/g, '').split(/ *\| */),
+          cells: cap[3] ? cap[3].replace(/\n$/, '').split('\n') : []
+        };
+
+        if (item.header.length === item.align.length) {
+          src = src.substring(cap[0].length);
+
+          for (i = 0; i < item.align.length; i++) {
+            if (/^ *-+: *$/.test(item.align[i])) {
+              item.align[i] = 'right';
+            } else if (/^ *:-+: *$/.test(item.align[i])) {
+              item.align[i] = 'center';
+            } else if (/^ *:-+ *$/.test(item.align[i])) {
+              item.align[i] = 'left';
+            } else {
+              item.align[i] = null;
+            }
+          }
+
+          for (i = 0; i < item.cells.length; i++) {
+            item.cells[i] = splitCells(
+              item.cells[i].replace(/^ *\| *| *\| *$/g, ''),
+              item.header.length);
+          }
+
+          this.tokens.push(item);
+
+          continue;
+        }
+      }
+
+      // lheading
+      if (cap = this.rules.lheading.exec(src)) {
+        src = src.substring(cap[0].length);
+        this.tokens.push({
+          type: 'heading',
+          depth: cap[2].charAt(0) === '=' ? 1 : 2,
+          text: cap[1]
+        });
+        continue;
+      }
+
+      // top-level paragraph
+      if (top && (cap = this.rules.paragraph.exec(src))) {
+        src = src.substring(cap[0].length);
+        this.tokens.push({
+          type: 'paragraph',
+          text: cap[1].charAt(cap[1].length - 1) === '\n'
+            ? cap[1].slice(0, -1)
+            : cap[1]
+        });
+        continue;
+      }
+
+      // text
+      if (cap = this.rules.text.exec(src)) {
+        // Top-level should never reach here.
+        src = src.substring(cap[0].length);
+        this.tokens.push({
+          type: 'text',
+          text: cap[0]
+        });
+        continue;
+      }
+
+      if (src) {
+        throw new Error('Infinite loop on byte: ' + src.charCodeAt(0));
+      }
+    }
+
+    return this.tokens;
+  };
+};
+
+
+/***/ }),
+
+/***/ 2483:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+const Renderer = __webpack_require__(8234);
+const Slugger = __webpack_require__(3975);
+const InlineLexer = __webpack_require__(6081);
+const TextRenderer = __webpack_require__(4008);
+const { defaults } = __webpack_require__(4762);
+const {
+  merge,
+  unescape
+} = __webpack_require__(3959);
+
+/**
+ * Parsing & Compiling
+ */
+module.exports = class Parser {
+  constructor(options) {
+    this.tokens = [];
+    this.token = null;
+    this.options = options || defaults;
+    this.options.renderer = this.options.renderer || new Renderer();
+    this.renderer = this.options.renderer;
+    this.renderer.options = this.options;
+    this.slugger = new Slugger();
+  }
+
+  /**
+   * Static Parse Method
+   */
+  static parse(tokens, options) {
+    const parser = new Parser(options);
+    return parser.parse(tokens);
+  };
+
+  /**
+   * Parse Loop
+   */
+  parse(tokens) {
+    this.inline = new InlineLexer(tokens.links, this.options);
+    // use an InlineLexer with a TextRenderer to extract pure text
+    this.inlineText = new InlineLexer(
+      tokens.links,
+      merge({}, this.options, { renderer: new TextRenderer() })
+    );
+    this.tokens = tokens.reverse();
+
+    let out = '';
+    while (this.next()) {
+      out += this.tok();
+    }
+
+    return out;
+  };
+
+  /**
+   * Next Token
+   */
+  next() {
+    this.token = this.tokens.pop();
+    return this.token;
+  };
+
+  /**
+   * Preview Next Token
+   */
+  peek() {
+    return this.tokens[this.tokens.length - 1] || 0;
+  };
+
+  /**
+   * Parse Text Tokens
+   */
+  parseText() {
+    let body = this.token.text;
+
+    while (this.peek().type === 'text') {
+      body += '\n' + this.next().text;
+    }
+
+    return this.inline.output(body);
+  };
+
+  /**
+   * Parse Current Token
+   */
+  tok() {
+    let body = '';
+    switch (this.token.type) {
+      case 'space': {
+        return '';
+      }
+      case 'hr': {
+        return this.renderer.hr();
+      }
+      case 'heading': {
+        return this.renderer.heading(
+          this.inline.output(this.token.text),
+          this.token.depth,
+          unescape(this.inlineText.output(this.token.text)),
+          this.slugger);
+      }
+      case 'code': {
+        return this.renderer.code(this.token.text,
+          this.token.lang,
+          this.token.escaped);
+      }
+      case 'table': {
+        let header = '',
+          i,
+          row,
+          cell,
+          j;
+
+        // header
+        cell = '';
+        for (i = 0; i < this.token.header.length; i++) {
+          cell += this.renderer.tablecell(
+            this.inline.output(this.token.header[i]),
+            { header: true, align: this.token.align[i] }
+          );
+        }
+        header += this.renderer.tablerow(cell);
+
+        for (i = 0; i < this.token.cells.length; i++) {
+          row = this.token.cells[i];
+
+          cell = '';
+          for (j = 0; j < row.length; j++) {
+            cell += this.renderer.tablecell(
+              this.inline.output(row[j]),
+              { header: false, align: this.token.align[j] }
+            );
+          }
+
+          body += this.renderer.tablerow(cell);
+        }
+        return this.renderer.table(header, body);
+      }
+      case 'blockquote_start': {
+        body = '';
+
+        while (this.next().type !== 'blockquote_end') {
+          body += this.tok();
+        }
+
+        return this.renderer.blockquote(body);
+      }
+      case 'list_start': {
+        body = '';
+        const ordered = this.token.ordered,
+          start = this.token.start;
+
+        while (this.next().type !== 'list_end') {
+          body += this.tok();
+        }
+
+        return this.renderer.list(body, ordered, start);
+      }
+      case 'list_item_start': {
+        body = '';
+        const loose = this.token.loose;
+        const checked = this.token.checked;
+        const task = this.token.task;
+
+        if (this.token.task) {
+          if (loose) {
+            if (this.peek().type === 'text') {
+              const nextToken = this.peek();
+              nextToken.text = this.renderer.checkbox(checked) + ' ' + nextToken.text;
+            } else {
+              this.tokens.push({
+                type: 'text',
+                text: this.renderer.checkbox(checked)
+              });
+            }
+          } else {
+            body += this.renderer.checkbox(checked);
+          }
+        }
+
+        while (this.next().type !== 'list_item_end') {
+          body += !loose && this.token.type === 'text'
+            ? this.parseText()
+            : this.tok();
+        }
+        return this.renderer.listitem(body, task, checked);
+      }
+      case 'html': {
+        // TODO parse inline content if parameter markdown=1
+        return this.renderer.html(this.token.text);
+      }
+      case 'paragraph': {
+        return this.renderer.paragraph(this.inline.output(this.token.text));
+      }
+      case 'text': {
+        return this.renderer.paragraph(this.parseText());
+      }
+      default: {
+        const errMsg = 'Token with "' + this.token.type + '" type was not found.';
+        if (this.options.silent) {
+          console.log(errMsg);
+        } else {
+          throw new Error(errMsg);
+        }
+      }
+    }
+  };
+};
+
+
+/***/ }),
+
+/***/ 8234:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+const { defaults } = __webpack_require__(4762);
+const {
+  cleanUrl,
+  escape
+} = __webpack_require__(3959);
+
+/**
+ * Renderer
+ */
+module.exports = class Renderer {
+  constructor(options) {
+    this.options = options || defaults;
+  }
+
+  code(code, infostring, escaped) {
+    const lang = (infostring || '').match(/\S*/)[0];
+    if (this.options.highlight) {
+      const out = this.options.highlight(code, lang);
+      if (out != null && out !== code) {
+        escaped = true;
+        code = out;
+      }
+    }
+
+    if (!lang) {
+      return '<pre><code>'
+        + (escaped ? code : escape(code, true))
+        + '</code></pre>';
+    }
+
+    return '<pre><code class="'
+      + this.options.langPrefix
+      + escape(lang, true)
+      + '">'
+      + (escaped ? code : escape(code, true))
+      + '</code></pre>\n';
+  };
+
+  blockquote(quote) {
+    return '<blockquote>\n' + quote + '</blockquote>\n';
+  };
+
+  html(html) {
+    return html;
+  };
+
+  heading(text, level, raw, slugger) {
+    if (this.options.headerIds) {
+      return '<h'
+        + level
+        + ' id="'
+        + this.options.headerPrefix
+        + slugger.slug(raw)
+        + '">'
+        + text
+        + '</h'
+        + level
+        + '>\n';
+    }
+    // ignore IDs
+    return '<h' + level + '>' + text + '</h' + level + '>\n';
+  };
+
+  hr() {
+    return this.options.xhtml ? '<hr/>\n' : '<hr>\n';
+  };
+
+  list(body, ordered, start) {
+    const type = ordered ? 'ol' : 'ul',
+      startatt = (ordered && start !== 1) ? (' start="' + start + '"') : '';
+    return '<' + type + startatt + '>\n' + body + '</' + type + '>\n';
+  };
+
+  listitem(text) {
+    return '<li>' + text + '</li>\n';
+  };
+
+  checkbox(checked) {
+    return '<input '
+      + (checked ? 'checked="" ' : '')
+      + 'disabled="" type="checkbox"'
+      + (this.options.xhtml ? ' /' : '')
+      + '> ';
+  };
+
+  paragraph(text) {
+    return '<p>' + text + '</p>\n';
+  };
+
+  table(header, body) {
+    if (body) body = '<tbody>' + body + '</tbody>';
+
+    return '<table>\n'
+      + '<thead>\n'
+      + header
+      + '</thead>\n'
+      + body
+      + '</table>\n';
+  };
+
+  tablerow(content) {
+    return '<tr>\n' + content + '</tr>\n';
+  };
+
+  tablecell(content, flags) {
+    const type = flags.header ? 'th' : 'td';
+    const tag = flags.align
+      ? '<' + type + ' align="' + flags.align + '">'
+      : '<' + type + '>';
+    return tag + content + '</' + type + '>\n';
+  };
+
+  // span level renderer
+  strong(text) {
+    return '<strong>' + text + '</strong>';
+  };
+
+  em(text) {
+    return '<em>' + text + '</em>';
+  };
+
+  codespan(text) {
+    return '<code>' + text + '</code>';
+  };
+
+  br() {
+    return this.options.xhtml ? '<br/>' : '<br>';
+  };
+
+  del(text) {
+    return '<del>' + text + '</del>';
+  };
+
+  link(href, title, text) {
+    href = cleanUrl(this.options.sanitize, this.options.baseUrl, href);
+    if (href === null) {
+      return text;
+    }
+    let out = '<a href="' + escape(href) + '"';
+    if (title) {
+      out += ' title="' + title + '"';
+    }
+    out += '>' + text + '</a>';
+    return out;
+  };
+
+  image(href, title, text) {
+    href = cleanUrl(this.options.sanitize, this.options.baseUrl, href);
+    if (href === null) {
+      return text;
+    }
+
+    let out = '<img src="' + href + '" alt="' + text + '"';
+    if (title) {
+      out += ' title="' + title + '"';
+    }
+    out += this.options.xhtml ? '/>' : '>';
+    return out;
+  };
+
+  text(text) {
+    return text;
+  };
+};
+
+
+/***/ }),
+
+/***/ 3975:
+/***/ (function(module) {
+
+/**
+ * Slugger generates header id
+ */
+module.exports = class Slugger {
+  constructor() {
+    this.seen = {};
+  }
+
+  /**
+   * Convert string to unique id
+   */
+  slug(value) {
+    let slug = value
+      .toLowerCase()
+      .trim()
+      // remove html tags
+      .replace(/<[!\/a-z].*?>/ig, '')
+      // remove unwanted chars
+      .replace(/[\u2000-\u206F\u2E00-\u2E7F\\'!"#$%&()*+,./:;<=>?@[\]^`{|}~]/g, '')
+      .replace(/\s/g, '-');
+
+    if (this.seen.hasOwnProperty(slug)) {
+      const originalSlug = slug;
+      do {
+        this.seen[originalSlug]++;
+        slug = originalSlug + '-' + this.seen[originalSlug];
+      } while (this.seen.hasOwnProperty(slug));
+    }
+    this.seen[slug] = 0;
+
+    return slug;
+  };
+};
+
+
+/***/ }),
+
+/***/ 4008:
+/***/ (function(module) {
+
+/**
+ * TextRenderer
+ * returns only the textual part of the token
+ */
+module.exports = class TextRenderer {
+  // no need for block level renderers
+  strong(text) {
+    return text;
+  }
+
+  em(text) {
+    return text;
+  }
+
+  codespan(text) {
+    return text;
+  }
+
+  del(text) {
+    return text;
+  }
+
+  html(text) {
+    return text;
+  }
+
+  text(text) {
+    return text;
+  }
+
+  link(href, title, text) {
+    return '' + text;
+  }
+
+  image(href, title, text) {
+    return '' + text;
+  }
+
+  br() {
+    return '';
+  }
+};
+
+
+/***/ }),
+
+/***/ 4762:
+/***/ (function(module) {
+
+function getDefaults() {
+  return {
+    baseUrl: null,
+    breaks: false,
+    gfm: true,
+    headerIds: true,
+    headerPrefix: '',
+    highlight: null,
+    langPrefix: 'language-',
+    mangle: true,
+    pedantic: false,
+    renderer: null,
+    sanitize: false,
+    sanitizer: null,
+    silent: false,
+    smartLists: false,
+    smartypants: false,
+    xhtml: false
+  };
+}
+
+function changeDefaults(newDefaults) {
+  module.exports.defaults = newDefaults;
+}
+
+module.exports = {
+  defaults: getDefaults(),
+  getDefaults,
+  changeDefaults
+};
+
+
+/***/ }),
+
+/***/ 3959:
+/***/ (function(module) {
+
+/**
+ * Helpers
+ */
+const escapeTest = /[&<>"']/;
+const escapeReplace = /[&<>"']/g;
+const escapeTestNoEncode = /[<>"']|&(?!#?\w+;)/;
+const escapeReplaceNoEncode = /[<>"']|&(?!#?\w+;)/g;
+const escapeReplacements = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;'
+};
+const getEscapeReplacement = (ch) => escapeReplacements[ch];
+function escape(html, encode) {
+  if (encode) {
+    if (escapeTest.test(html)) {
+      return html.replace(escapeReplace, getEscapeReplacement);
+    }
+  } else {
+    if (escapeTestNoEncode.test(html)) {
+      return html.replace(escapeReplaceNoEncode, getEscapeReplacement);
+    }
+  }
+
+  return html;
+}
+
+const unescapeTest = /&(#(?:\d+)|(?:#x[0-9A-Fa-f]+)|(?:\w+));?/ig;
+
+function unescape(html) {
+  // explicitly match decimal, hex, and named HTML entities
+  return html.replace(unescapeTest, (_, n) => {
+    n = n.toLowerCase();
+    if (n === 'colon') return ':';
+    if (n.charAt(0) === '#') {
+      return n.charAt(1) === 'x'
+        ? String.fromCharCode(parseInt(n.substring(2), 16))
+        : String.fromCharCode(+n.substring(1));
+    }
+    return '';
+  });
+}
+
+const caret = /(^|[^\[])\^/g;
+function edit(regex, opt) {
+  regex = regex.source || regex;
+  opt = opt || '';
+  const obj = {
+    replace: (name, val) => {
+      val = val.source || val;
+      val = val.replace(caret, '$1');
+      regex = regex.replace(name, val);
+      return obj;
+    },
+    getRegex: () => {
+      return new RegExp(regex, opt);
+    }
+  };
+  return obj;
+}
+
+const nonWordAndColonTest = /[^\w:]/g;
+const originIndependentUrl = /^$|^[a-z][a-z0-9+.-]*:|^[?#]/i;
+function cleanUrl(sanitize, base, href) {
+  if (sanitize) {
+    let prot;
+    try {
+      prot = decodeURIComponent(unescape(href))
+        .replace(nonWordAndColonTest, '')
+        .toLowerCase();
+    } catch (e) {
+      return null;
+    }
+    if (prot.indexOf('javascript:') === 0 || prot.indexOf('vbscript:') === 0 || prot.indexOf('data:') === 0) {
+      return null;
+    }
+  }
+  if (base && !originIndependentUrl.test(href)) {
+    href = resolveUrl(base, href);
+  }
+  try {
+    href = encodeURI(href).replace(/%25/g, '%');
+  } catch (e) {
+    return null;
+  }
+  return href;
+}
+
+const baseUrls = {};
+const justDomain = /^[^:]+:\/*[^/]*$/;
+const protocol = /^([^:]+:)[\s\S]*$/;
+const domain = /^([^:]+:\/*[^/]*)[\s\S]*$/;
+
+function resolveUrl(base, href) {
+  if (!baseUrls[' ' + base]) {
+    // we can ignore everything in base after the last slash of its path component,
+    // but we might need to add _that_
+    // https://tools.ietf.org/html/rfc3986#section-3
+    if (justDomain.test(base)) {
+      baseUrls[' ' + base] = base + '/';
+    } else {
+      baseUrls[' ' + base] = rtrim(base, '/', true);
+    }
+  }
+  base = baseUrls[' ' + base];
+  const relativeBase = base.indexOf(':') === -1;
+
+  if (href.substring(0, 2) === '//') {
+    if (relativeBase) {
+      return href;
+    }
+    return base.replace(protocol, '$1') + href;
+  } else if (href.charAt(0) === '/') {
+    if (relativeBase) {
+      return href;
+    }
+    return base.replace(domain, '$1') + href;
+  } else {
+    return base + href;
+  }
+}
+
+const noopTest = { exec: function noopTest() {} };
+
+function merge(obj) {
+  let i = 1,
+    target,
+    key;
+
+  for (; i < arguments.length; i++) {
+    target = arguments[i];
+    for (key in target) {
+      if (Object.prototype.hasOwnProperty.call(target, key)) {
+        obj[key] = target[key];
+      }
+    }
+  }
+
+  return obj;
+}
+
+function splitCells(tableRow, count) {
+  // ensure that every cell-delimiting pipe has a space
+  // before it to distinguish it from an escaped pipe
+  const row = tableRow.replace(/\|/g, (match, offset, str) => {
+      let escaped = false,
+        curr = offset;
+      while (--curr >= 0 && str[curr] === '\\') escaped = !escaped;
+      if (escaped) {
+        // odd number of slashes means | is escaped
+        // so we leave it alone
+        return '|';
+      } else {
+        // add space before unescaped |
+        return ' |';
+      }
+    }),
+    cells = row.split(/ \|/);
+  let i = 0;
+
+  if (cells.length > count) {
+    cells.splice(count);
+  } else {
+    while (cells.length < count) cells.push('');
+  }
+
+  for (; i < cells.length; i++) {
+    // leading or trailing whitespace is ignored per the gfm spec
+    cells[i] = cells[i].trim().replace(/\\\|/g, '|');
+  }
+  return cells;
+}
+
+// Remove trailing 'c's. Equivalent to str.replace(/c*$/, '').
+// /c*$/ is vulnerable to REDOS.
+// invert: Remove suffix of non-c chars instead. Default falsey.
+function rtrim(str, c, invert) {
+  const l = str.length;
+  if (l === 0) {
+    return '';
+  }
+
+  // Length of suffix matching the invert condition.
+  let suffLen = 0;
+
+  // Step left until we fail to match the invert condition.
+  while (suffLen < l) {
+    const currChar = str.charAt(l - suffLen - 1);
+    if (currChar === c && !invert) {
+      suffLen++;
+    } else if (currChar !== c && invert) {
+      suffLen++;
+    } else {
+      break;
+    }
+  }
+
+  return str.substr(0, l - suffLen);
+}
+
+function findClosingBracket(str, b) {
+  if (str.indexOf(b[1]) === -1) {
+    return -1;
+  }
+  const l = str.length;
+  let level = 0,
+    i = 0;
+  for (; i < l; i++) {
+    if (str[i] === '\\') {
+      i++;
+    } else if (str[i] === b[0]) {
+      level++;
+    } else if (str[i] === b[1]) {
+      level--;
+      if (level < 0) {
+        return i;
+      }
+    }
+  }
+  return -1;
+}
+
+function checkSanitizeDeprecation(opt) {
+  if (opt && opt.sanitize && !opt.silent) {
+    console.warn('marked(): sanitize and sanitizer parameters are deprecated since version 0.7.0, should not be used and will be removed in the future. Read more here: https://marked.js.org/#/USING_ADVANCED.md#options');
+  }
+}
+
+module.exports = {
+  escape,
+  unescape,
+  edit,
+  cleanUrl,
+  resolveUrl,
+  noopTest,
+  merge,
+  splitCells,
+  rtrim,
+  findClosingBracket,
+  checkSanitizeDeprecation
+};
+
+
+/***/ }),
+
+/***/ 4617:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+const Lexer = __webpack_require__(3146);
+const Parser = __webpack_require__(2483);
+const Renderer = __webpack_require__(8234);
+const TextRenderer = __webpack_require__(4008);
+const InlineLexer = __webpack_require__(6081);
+const Slugger = __webpack_require__(3975);
+const {
+  merge,
+  checkSanitizeDeprecation,
+  escape
+} = __webpack_require__(3959);
+const {
+  getDefaults,
+  changeDefaults,
+  defaults
+} = __webpack_require__(4762);
+
+/**
+ * Marked
+ */
+function marked(src, opt, callback) {
+  // throw error in case of non string input
+  if (typeof src === 'undefined' || src === null) {
+    throw new Error('marked(): input parameter is undefined or null');
+  }
+  if (typeof src !== 'string') {
+    throw new Error('marked(): input parameter is of type '
+      + Object.prototype.toString.call(src) + ', string expected');
+  }
+
+  if (callback || typeof opt === 'function') {
+    if (!callback) {
+      callback = opt;
+      opt = null;
+    }
+
+    opt = merge({}, marked.defaults, opt || {});
+    checkSanitizeDeprecation(opt);
+    const highlight = opt.highlight;
+    let tokens,
+      pending,
+      i = 0;
+
+    try {
+      tokens = Lexer.lex(src, opt);
+    } catch (e) {
+      return callback(e);
+    }
+
+    pending = tokens.length;
+
+    const done = function(err) {
+      if (err) {
+        opt.highlight = highlight;
+        return callback(err);
+      }
+
+      let out;
+
+      try {
+        out = Parser.parse(tokens, opt);
+      } catch (e) {
+        err = e;
+      }
+
+      opt.highlight = highlight;
+
+      return err
+        ? callback(err)
+        : callback(null, out);
+    };
+
+    if (!highlight || highlight.length < 3) {
+      return done();
+    }
+
+    delete opt.highlight;
+
+    if (!pending) return done();
+
+    for (; i < tokens.length; i++) {
+      (function(token) {
+        if (token.type !== 'code') {
+          return --pending || done();
+        }
+        return highlight(token.text, token.lang, function(err, code) {
+          if (err) return done(err);
+          if (code == null || code === token.text) {
+            return --pending || done();
+          }
+          token.text = code;
+          token.escaped = true;
+          --pending || done();
+        });
+      })(tokens[i]);
+    }
+
+    return;
+  }
+  try {
+    opt = merge({}, marked.defaults, opt || {});
+    checkSanitizeDeprecation(opt);
+    return Parser.parse(Lexer.lex(src, opt), opt);
+  } catch (e) {
+    e.message += '\nPlease report this to https://github.com/markedjs/marked.';
+    if ((opt || marked.defaults).silent) {
+      return '<p>An error occurred:</p><pre>'
+        + escape(e.message + '', true)
+        + '</pre>';
+    }
+    throw e;
+  }
+}
+
+/**
+ * Options
+ */
+
+marked.options =
+marked.setOptions = function(opt) {
+  merge(marked.defaults, opt);
+  changeDefaults(marked.defaults);
+  return marked;
+};
+
+marked.getDefaults = getDefaults;
+
+marked.defaults = defaults;
+
+/**
+ * Expose
+ */
+
+marked.Parser = Parser;
+marked.parser = Parser.parse;
+
+marked.Renderer = Renderer;
+marked.TextRenderer = TextRenderer;
+
+marked.Lexer = Lexer;
+marked.lexer = Lexer.lex;
+
+marked.InlineLexer = InlineLexer;
+marked.inlineLexer = InlineLexer.output;
+
+marked.Slugger = Slugger;
+
+marked.parse = marked;
+
+module.exports = marked;
+
+
+/***/ }),
+
+/***/ 526:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+const {
+  noopTest,
+  edit,
+  merge
+} = __webpack_require__(3959);
+
+/**
+ * Block-Level Grammar
+ */
+const block = {
+  newline: /^\n+/,
+  code: /^( {4}[^\n]+\n*)+/,
+  fences: /^ {0,3}(`{3,}(?=[^`\n]*\n)|~{3,})([^\n]*)\n(?:|([\s\S]*?)\n)(?: {0,3}\1[~`]* *(?:\n+|$)|$)/,
+  hr: /^ {0,3}((?:- *){3,}|(?:_ *){3,}|(?:\* *){3,})(?:\n+|$)/,
+  heading: /^ {0,3}(#{1,6}) +([^\n]*?)(?: +#+)? *(?:\n+|$)/,
+  blockquote: /^( {0,3}> ?(paragraph|[^\n]*)(?:\n|$))+/,
+  list: /^( {0,3})(bull) [\s\S]+?(?:hr|def|\n{2,}(?! )(?!\1bull )\n*|\s*$)/,
+  html: '^ {0,3}(?:' // optional indentation
+    + '<(script|pre|style)[\\s>][\\s\\S]*?(?:</\\1>[^\\n]*\\n+|$)' // (1)
+    + '|comment[^\\n]*(\\n+|$)' // (2)
+    + '|<\\?[\\s\\S]*?\\?>\\n*' // (3)
+    + '|<![A-Z][\\s\\S]*?>\\n*' // (4)
+    + '|<!\\[CDATA\\[[\\s\\S]*?\\]\\]>\\n*' // (5)
+    + '|</?(tag)(?: +|\\n|/?>)[\\s\\S]*?(?:\\n{2,}|$)' // (6)
+    + '|<(?!script|pre|style)([a-z][\\w-]*)(?:attribute)*? */?>(?=[ \\t]*(?:\\n|$))[\\s\\S]*?(?:\\n{2,}|$)' // (7) open tag
+    + '|</(?!script|pre|style)[a-z][\\w-]*\\s*>(?=[ \\t]*(?:\\n|$))[\\s\\S]*?(?:\\n{2,}|$)' // (7) closing tag
+    + ')',
+  def: /^ {0,3}\[(label)\]: *\n? *<?([^\s>]+)>?(?:(?: +\n? *| *\n *)(title))? *(?:\n+|$)/,
+  nptable: noopTest,
+  table: noopTest,
+  lheading: /^([^\n]+)\n {0,3}(=+|-+) *(?:\n+|$)/,
+  // regex template, placeholders will be replaced according to different paragraph
+  // interruption rules of commonmark and the original markdown spec:
+  _paragraph: /^([^\n]+(?:\n(?!hr|heading|lheading|blockquote|fences|list|html)[^\n]+)*)/,
+  text: /^[^\n]+/
+};
+
+block._label = /(?!\s*\])(?:\\[\[\]]|[^\[\]])+/;
+block._title = /(?:"(?:\\"?|[^"\\])*"|'[^'\n]*(?:\n[^'\n]+)*\n?'|\([^()]*\))/;
+block.def = edit(block.def)
+  .replace('label', block._label)
+  .replace('title', block._title)
+  .getRegex();
+
+block.bullet = /(?:[*+-]|\d{1,9}\.)/;
+block.item = /^( *)(bull) ?[^\n]*(?:\n(?!\1bull ?)[^\n]*)*/;
+block.item = edit(block.item, 'gm')
+  .replace(/bull/g, block.bullet)
+  .getRegex();
+
+block.list = edit(block.list)
+  .replace(/bull/g, block.bullet)
+  .replace('hr', '\\n+(?=\\1?(?:(?:- *){3,}|(?:_ *){3,}|(?:\\* *){3,})(?:\\n+|$))')
+  .replace('def', '\\n+(?=' + block.def.source + ')')
+  .getRegex();
+
+block._tag = 'address|article|aside|base|basefont|blockquote|body|caption'
+  + '|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption'
+  + '|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe'
+  + '|legend|li|link|main|menu|menuitem|meta|nav|noframes|ol|optgroup|option'
+  + '|p|param|section|source|summary|table|tbody|td|tfoot|th|thead|title|tr'
+  + '|track|ul';
+block._comment = /<!--(?!-?>)[\s\S]*?-->/;
+block.html = edit(block.html, 'i')
+  .replace('comment', block._comment)
+  .replace('tag', block._tag)
+  .replace('attribute', / +[a-zA-Z:_][\w.:-]*(?: *= *"[^"\n]*"| *= *'[^'\n]*'| *= *[^\s"'=<>`]+)?/)
+  .getRegex();
+
+block.paragraph = edit(block._paragraph)
+  .replace('hr', block.hr)
+  .replace('heading', ' {0,3}#{1,6} ')
+  .replace('|lheading', '') // setex headings don't interrupt commonmark paragraphs
+  .replace('blockquote', ' {0,3}>')
+  .replace('fences', ' {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~{3,})[^\\n]*\\n')
+  .replace('list', ' {0,3}(?:[*+-]|1[.)]) ') // only lists starting from 1 can interrupt
+  .replace('html', '</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|!--)')
+  .replace('tag', block._tag) // pars can be interrupted by type (6) html blocks
+  .getRegex();
+
+block.blockquote = edit(block.blockquote)
+  .replace('paragraph', block.paragraph)
+  .getRegex();
+
+/**
+ * Normal Block Grammar
+ */
+
+block.normal = merge({}, block);
+
+/**
+ * GFM Block Grammar
+ */
+
+block.gfm = merge({}, block.normal, {
+  nptable: '^ *([^|\\n ].*\\|.*)\\n' // Header
+    + ' *([-:]+ *\\|[-| :]*)' // Align
+    + '(?:\\n((?:(?!\\n|hr|heading|blockquote|code|fences|list|html).*(?:\\n|$))*)\\n*|$)', // Cells
+  table: '^ *\\|(.+)\\n' // Header
+    + ' *\\|?( *[-:]+[-| :]*)' // Align
+    + '(?:\\n *((?:(?!\\n|hr|heading|blockquote|code|fences|list|html).*(?:\\n|$))*)\\n*|$)' // Cells
+});
+
+block.gfm.nptable = edit(block.gfm.nptable)
+  .replace('hr', block.hr)
+  .replace('heading', ' {0,3}#{1,6} ')
+  .replace('blockquote', ' {0,3}>')
+  .replace('code', ' {4}[^\\n]')
+  .replace('fences', ' {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~{3,})[^\\n]*\\n')
+  .replace('list', ' {0,3}(?:[*+-]|1[.)]) ') // only lists starting from 1 can interrupt
+  .replace('html', '</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|!--)')
+  .replace('tag', block._tag) // tables can be interrupted by type (6) html blocks
+  .getRegex();
+
+block.gfm.table = edit(block.gfm.table)
+  .replace('hr', block.hr)
+  .replace('heading', ' {0,3}#{1,6} ')
+  .replace('blockquote', ' {0,3}>')
+  .replace('code', ' {4}[^\\n]')
+  .replace('fences', ' {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~{3,})[^\\n]*\\n')
+  .replace('list', ' {0,3}(?:[*+-]|1[.)]) ') // only lists starting from 1 can interrupt
+  .replace('html', '</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|!--)')
+  .replace('tag', block._tag) // tables can be interrupted by type (6) html blocks
+  .getRegex();
+
+/**
+ * Pedantic grammar (original John Gruber's loose markdown specification)
+ */
+
+block.pedantic = merge({}, block.normal, {
+  html: edit(
+    '^ *(?:comment *(?:\\n|\\s*$)'
+    + '|<(tag)[\\s\\S]+?</\\1> *(?:\\n{2,}|\\s*$)' // closed tag
+    + '|<tag(?:"[^"]*"|\'[^\']*\'|\\s[^\'"/>\\s]*)*?/?> *(?:\\n{2,}|\\s*$))')
+    .replace('comment', block._comment)
+    .replace(/tag/g, '(?!(?:'
+      + 'a|em|strong|small|s|cite|q|dfn|abbr|data|time|code|var|samp|kbd|sub'
+      + '|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo|span|br|wbr|ins|del|img)'
+      + '\\b)\\w+(?!:|[^\\w\\s@]*@)\\b')
+    .getRegex(),
+  def: /^ *\[([^\]]+)\]: *<?([^\s>]+)>?(?: +(["(][^\n]+[")]))? *(?:\n+|$)/,
+  heading: /^ *(#{1,6}) *([^\n]+?) *(?:#+ *)?(?:\n+|$)/,
+  fences: noopTest, // fences not supported
+  paragraph: edit(block.normal._paragraph)
+    .replace('hr', block.hr)
+    .replace('heading', ' *#{1,6} *[^\n]')
+    .replace('lheading', block.lheading)
+    .replace('blockquote', ' {0,3}>')
+    .replace('|fences', '')
+    .replace('|list', '')
+    .replace('|html', '')
+    .getRegex()
+});
+
+/**
+ * Inline-Level Grammar
+ */
+const inline = {
+  escape: /^\\([!"#$%&'()*+,\-./:;<=>?@\[\]\\^_`{|}~])/,
+  autolink: /^<(scheme:[^\s\x00-\x1f<>]*|email)>/,
+  url: noopTest,
+  tag: '^comment'
+    + '|^</[a-zA-Z][\\w:-]*\\s*>' // self-closing tag
+    + '|^<[a-zA-Z][\\w-]*(?:attribute)*?\\s*/?>' // open tag
+    + '|^<\\?[\\s\\S]*?\\?>' // processing instruction, e.g. <?php ?>
+    + '|^<![a-zA-Z]+\\s[\\s\\S]*?>' // declaration, e.g. <!DOCTYPE html>
+    + '|^<!\\[CDATA\\[[\\s\\S]*?\\]\\]>', // CDATA section
+  link: /^!?\[(label)\]\(\s*(href)(?:\s+(title))?\s*\)/,
+  reflink: /^!?\[(label)\]\[(?!\s*\])((?:\\[\[\]]?|[^\[\]\\])+)\]/,
+  nolink: /^!?\[(?!\s*\])((?:\[[^\[\]]*\]|\\[\[\]]|[^\[\]])*)\](?:\[\])?/,
+  strong: /^__([^\s_])__(?!_)|^\*\*([^\s*])\*\*(?!\*)|^__([^\s][\s\S]*?[^\s])__(?!_)|^\*\*([^\s][\s\S]*?[^\s])\*\*(?!\*)/,
+  em: /^_([^\s_])_(?!_)|^\*([^\s*<\[])\*(?!\*)|^_([^\s<][\s\S]*?[^\s_])_(?!_|[^\spunctuation])|^_([^\s_<][\s\S]*?[^\s])_(?!_|[^\spunctuation])|^\*([^\s<"][\s\S]*?[^\s\*])\*(?!\*|[^\spunctuation])|^\*([^\s*"<\[][\s\S]*?[^\s])\*(?!\*)/,
+  code: /^(`+)([^`]|[^`][\s\S]*?[^`])\1(?!`)/,
+  br: /^( {2,}|\\)\n(?!\s*$)/,
+  del: noopTest,
+  text: /^(`+|[^`])(?:[\s\S]*?(?:(?=[\\<!\[`*]|\b_|$)|[^ ](?= {2,}\n))|(?= {2,}\n))/
+};
+
+// list of punctuation marks from common mark spec
+// without ` and ] to workaround Rule 17 (inline code blocks/links)
+inline._punctuation = '!"#$%&\'()*+,\\-./:;<=>?@\\[^_{|}~';
+inline.em = edit(inline.em).replace(/punctuation/g, inline._punctuation).getRegex();
+
+inline._escapes = /\\([!"#$%&'()*+,\-./:;<=>?@\[\]\\^_`{|}~])/g;
+
+inline._scheme = /[a-zA-Z][a-zA-Z0-9+.-]{1,31}/;
+inline._email = /[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+(@)[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(?![-_])/;
+inline.autolink = edit(inline.autolink)
+  .replace('scheme', inline._scheme)
+  .replace('email', inline._email)
+  .getRegex();
+
+inline._attribute = /\s+[a-zA-Z:_][\w.:-]*(?:\s*=\s*"[^"]*"|\s*=\s*'[^']*'|\s*=\s*[^\s"'=<>`]+)?/;
+
+inline.tag = edit(inline.tag)
+  .replace('comment', block._comment)
+  .replace('attribute', inline._attribute)
+  .getRegex();
+
+inline._label = /(?:\[[^\[\]]*\]|\\.|`[^`]*`|[^\[\]\\`])*?/;
+inline._href = /<(?:\\[<>]?|[^\s<>\\])*>|[^\s\x00-\x1f]*/;
+inline._title = /"(?:\\"?|[^"\\])*"|'(?:\\'?|[^'\\])*'|\((?:\\\)?|[^)\\])*\)/;
+
+inline.link = edit(inline.link)
+  .replace('label', inline._label)
+  .replace('href', inline._href)
+  .replace('title', inline._title)
+  .getRegex();
+
+inline.reflink = edit(inline.reflink)
+  .replace('label', inline._label)
+  .getRegex();
+
+/**
+ * Normal Inline Grammar
+ */
+
+inline.normal = merge({}, inline);
+
+/**
+ * Pedantic Inline Grammar
+ */
+
+inline.pedantic = merge({}, inline.normal, {
+  strong: /^__(?=\S)([\s\S]*?\S)__(?!_)|^\*\*(?=\S)([\s\S]*?\S)\*\*(?!\*)/,
+  em: /^_(?=\S)([\s\S]*?\S)_(?!_)|^\*(?=\S)([\s\S]*?\S)\*(?!\*)/,
+  link: edit(/^!?\[(label)\]\((.*?)\)/)
+    .replace('label', inline._label)
+    .getRegex(),
+  reflink: edit(/^!?\[(label)\]\s*\[([^\]]*)\]/)
+    .replace('label', inline._label)
+    .getRegex()
+});
+
+/**
+ * GFM Inline Grammar
+ */
+
+inline.gfm = merge({}, inline.normal, {
+  escape: edit(inline.escape).replace('])', '~|])').getRegex(),
+  _extended_email: /[A-Za-z0-9._+-]+(@)[a-zA-Z0-9-_]+(?:\.[a-zA-Z0-9-_]*[a-zA-Z0-9])+(?![-_])/,
+  url: /^((?:ftp|https?):\/\/|www\.)(?:[a-zA-Z0-9\-]+\.?)+[^\s<]*|^email/,
+  _backpedal: /(?:[^?!.,:;*_~()&]+|\([^)]*\)|&(?![a-zA-Z0-9]+;$)|[?!.,:;*_~)]+(?!$))+/,
+  del: /^~+(?=\S)([\s\S]*?\S)~+/,
+  text: /^(`+|[^`])(?:[\s\S]*?(?:(?=[\\<!\[`*~]|\b_|https?:\/\/|ftp:\/\/|www\.|$)|[^ ](?= {2,}\n)|[^a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-](?=[a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-]+@))|(?= {2,}\n|[a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-]+@))/
+});
+
+inline.gfm.url = edit(inline.gfm.url, 'i')
+  .replace('email', inline.gfm._extended_email)
+  .getRegex();
+/**
+ * GFM + Line Breaks Inline Grammar
+ */
+
+inline.breaks = merge({}, inline.gfm, {
+  br: edit(inline.br).replace('{2,}', '*').getRegex(),
+  text: edit(inline.gfm.text)
+    .replace('\\b_', '\\b_| {2,}\\n')
+    .replace(/\{2,\}/g, '*')
+    .getRegex()
+});
+
+module.exports = {
+  block,
+  inline
+};
+
+
+/***/ }),
+
+/***/ 4651:
 /***/ (function(module) {
 
 "use strict";
@@ -27132,427 +26804,21 @@ module.exports = encode;
 
 /***/ }),
 
-/***/ 654:
+/***/ 5514:
 /***/ (function() {
 
 // extracted by mini-css-extract-plugin
 
 /***/ }),
 
-/***/ 7354:
+/***/ 4105:
 /***/ (function() {
 
 // extracted by mini-css-extract-plugin
 
 /***/ }),
 
-/***/ 3764:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 729:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 3933:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 2496:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 5536:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 7581:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 9409:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 5569:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 9827:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 999:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 3537:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 5302:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 2122:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 6228:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 8165:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 9885:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 4957:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 5564:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 7924:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 5674:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 8005:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 8500:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 4313:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 6575:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 9271:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 8041:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 6888:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 419:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 6703:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 382:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 4410:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 4059:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 9494:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 7641:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 6960:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 4284:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 8279:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 7576:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 4056:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 3264:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 639:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 6988:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 2140:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 6674:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 7152:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 1584:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 737:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 4420:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 1821:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 2513:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 6119:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 2542:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 7237:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 5287:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 7157:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 4399:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 7384:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 4935:
-/***/ (function() {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 4876:
+/***/ 6663:
 /***/ (function() {
 
 // extracted by mini-css-extract-plugin
@@ -27566,28 +26832,434 @@ module.exports = encode;
 
 /***/ }),
 
-/***/ 1407:
+/***/ 7142:
 /***/ (function() {
 
 // extracted by mini-css-extract-plugin
 
 /***/ }),
 
-/***/ 316:
+/***/ 2545:
 /***/ (function() {
 
 // extracted by mini-css-extract-plugin
 
 /***/ }),
 
-/***/ 4078:
+/***/ 1353:
 /***/ (function() {
 
 // extracted by mini-css-extract-plugin
 
 /***/ }),
 
-/***/ 2311:
+/***/ 5684:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 7203:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 3467:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 7057:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 6614:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 7211:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 4006:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 3192:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 5443:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 9285:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 927:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 7495:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 2828:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 4590:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 8475:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 6303:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 2952:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 9840:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 8452:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 1985:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 751:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 8747:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 3254:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 2713:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 4351:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 6967:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 4847:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 586:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 5307:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 4512:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 7778:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 5369:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 3815:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 2946:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 9017:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 8632:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 6144:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 7263:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 7625:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 4386:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 6284:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 7707:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 8927:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 2387:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 7280:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 3348:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 3763:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 2172:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 410:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 4952:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 1060:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 7692:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 2752:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 6675:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 2549:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 5824:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 975:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 2394:
+/***/ (function() {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ 3345:
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_RESULT__;/*global define:false */
@@ -28653,7 +28325,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/*global define:false */
 
 /***/ }),
 
-/***/ 4951:
+/***/ 4960:
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;/*! @preserve
@@ -29673,7 +29345,7 @@ return numeral;
 
 /***/ }),
 
-/***/ 9828:
+/***/ 8157:
 /***/ (function(__unused_webpack_module, exports) {
 
 "use strict";
@@ -29799,7 +29471,7 @@ exports.parse = querystring;
 
 /***/ }),
 
-/***/ 3960:
+/***/ 6248:
 /***/ (function(module) {
 
 /**
@@ -30560,7 +30232,7 @@ try {
 
 /***/ }),
 
-/***/ 7315:
+/***/ 3096:
 /***/ (function(module) {
 
 "use strict";
@@ -30606,7 +30278,7 @@ module.exports = function required(port, protocol) {
 
 /***/ }),
 
-/***/ 6718:
+/***/ 4205:
 /***/ (function() {
 
 /*! http://mths.be/repeat v0.2.0 by @mathias */
@@ -30663,14 +30335,14 @@ if (!String.prototype.repeat) {
 
 /***/ }),
 
-/***/ 8428:
+/***/ 899:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
 "use strict";
 
 
-var required = __webpack_require__(7315)
-  , qs = __webpack_require__(9828)
+var required = __webpack_require__(3096)
+  , qs = __webpack_require__(8157)
   , controlOrWhitespace = /^[\x00-\x20\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]+/
   , CRHTLF = /[\n\r\t]/g
   , slashes = /^[A-Za-z][A-Za-z0-9+-.]*:\/\//
@@ -31260,12 +30932,12 @@ module.exports = Url;
 
 /***/ }),
 
-/***/ 7451:
+/***/ 1793:
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   A: function() { return /* binding */ _arrayLikeToArray; }
+/* harmony export */   "Z": function() { return /* binding */ _arrayLikeToArray; }
 /* harmony export */ });
 function _arrayLikeToArray(arr, len) {
   if (len == null || len > arr.length) len = arr.length;
@@ -31279,12 +30951,12 @@ function _arrayLikeToArray(arr, len) {
 
 /***/ }),
 
-/***/ 5841:
+/***/ 7791:
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   A: function() { return /* binding */ _asyncToGenerator; }
+/* harmony export */   "Z": function() { return /* binding */ _asyncToGenerator; }
 /* harmony export */ });
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
   try {
@@ -31324,12 +30996,12 @@ function _asyncToGenerator(fn) {
 
 /***/ }),
 
-/***/ 2099:
+/***/ 2951:
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   A: function() { return /* binding */ _classCallCheck; }
+/* harmony export */   "Z": function() { return /* binding */ _classCallCheck; }
 /* harmony export */ });
 function _classCallCheck(instance, Constructor) {
   if (!(instance instanceof Constructor)) {
@@ -31339,12 +31011,12 @@ function _classCallCheck(instance, Constructor) {
 
 /***/ }),
 
-/***/ 8183:
+/***/ 1976:
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   A: function() { return /* binding */ _createClass; }
+/* harmony export */   "Z": function() { return /* binding */ _createClass; }
 /* harmony export */ });
 function _defineProperties(target, props) {
   for (var i = 0; i < props.length; i++) {
@@ -31364,12 +31036,12 @@ function _createClass(Constructor, protoProps, staticProps) {
 
 /***/ }),
 
-/***/ 1705:
+/***/ 4649:
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   A: function() { return /* binding */ _defineProperty; }
+/* harmony export */   "Z": function() { return /* binding */ _defineProperty; }
 /* harmony export */ });
 function _defineProperty(obj, key, value) {
   if (key in obj) {
@@ -31388,12 +31060,12 @@ function _defineProperty(obj, key, value) {
 
 /***/ }),
 
-/***/ 8102:
+/***/ 5773:
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   A: function() { return /* binding */ _extends; }
+/* harmony export */   "Z": function() { return /* binding */ _extends; }
 /* harmony export */ });
 function _extends() {
   _extends = Object.assign || function (target) {
@@ -31415,21 +31087,124 @@ function _extends() {
 
 /***/ }),
 
-/***/ 7850:
+/***/ 7597:
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Z": function() { return /* binding */ _getPrototypeOf; }
+/* harmony export */ });
+function _getPrototypeOf(o) {
+  _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
+    return o.__proto__ || Object.getPrototypeOf(o);
+  };
+  return _getPrototypeOf(o);
+}
+
+/***/ }),
+
+/***/ 7132:
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 
 // EXPORTS
 __webpack_require__.d(__webpack_exports__, {
-  A: function() { return /* binding */ _slicedToArray; }
+  "Z": function() { return /* binding */ _inherits; }
 });
 
-;// ../node_modules/@babel/runtime/helpers/esm/arrayWithHoles.js
+;// CONCATENATED MODULE: ../node_modules/@babel/runtime/helpers/esm/setPrototypeOf.js
+function _setPrototypeOf(o, p) {
+  _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
+    o.__proto__ = p;
+    return o;
+  };
+
+  return _setPrototypeOf(o, p);
+}
+;// CONCATENATED MODULE: ../node_modules/@babel/runtime/helpers/esm/inherits.js
+
+function _inherits(subClass, superClass) {
+  if (typeof superClass !== "function" && superClass !== null) {
+    throw new TypeError("Super expression must either be null or a function");
+  }
+
+  subClass.prototype = Object.create(superClass && superClass.prototype, {
+    constructor: {
+      value: subClass,
+      writable: true,
+      configurable: true
+    }
+  });
+  if (superClass) _setPrototypeOf(subClass, superClass);
+}
+
+/***/ }),
+
+/***/ 82:
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  "Z": function() { return /* binding */ _possibleConstructorReturn; }
+});
+
+;// CONCATENATED MODULE: ../node_modules/@babel/runtime/helpers/esm/typeof.js
+function _typeof(obj) {
+  "@babel/helpers - typeof";
+
+  if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+    _typeof = function _typeof(obj) {
+      return typeof obj;
+    };
+  } else {
+    _typeof = function _typeof(obj) {
+      return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+    };
+  }
+
+  return _typeof(obj);
+}
+;// CONCATENATED MODULE: ../node_modules/@babel/runtime/helpers/esm/assertThisInitialized.js
+function _assertThisInitialized(self) {
+  if (self === void 0) {
+    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+  }
+
+  return self;
+}
+;// CONCATENATED MODULE: ../node_modules/@babel/runtime/helpers/esm/possibleConstructorReturn.js
+
+
+function _possibleConstructorReturn(self, call) {
+  if (call && (_typeof(call) === "object" || typeof call === "function")) {
+    return call;
+  } else if (call !== void 0) {
+    throw new TypeError("Derived constructors may only return object or undefined");
+  }
+
+  return _assertThisInitialized(self);
+}
+
+/***/ }),
+
+/***/ 5809:
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  "Z": function() { return /* binding */ _slicedToArray; }
+});
+
+;// CONCATENATED MODULE: ../node_modules/@babel/runtime/helpers/esm/arrayWithHoles.js
 function _arrayWithHoles(arr) {
   if (Array.isArray(arr)) return arr;
 }
-;// ../node_modules/@babel/runtime/helpers/esm/iterableToArrayLimit.js
+;// CONCATENATED MODULE: ../node_modules/@babel/runtime/helpers/esm/iterableToArrayLimit.js
 function _iterableToArrayLimit(arr, i) {
   var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"];
 
@@ -31460,88 +31235,88 @@ function _iterableToArrayLimit(arr, i) {
   return _arr;
 }
 // EXTERNAL MODULE: ../node_modules/@babel/runtime/helpers/esm/unsupportedIterableToArray.js
-var unsupportedIterableToArray = __webpack_require__(6438);
-;// ../node_modules/@babel/runtime/helpers/esm/nonIterableRest.js
+var unsupportedIterableToArray = __webpack_require__(4013);
+;// CONCATENATED MODULE: ../node_modules/@babel/runtime/helpers/esm/nonIterableRest.js
 function _nonIterableRest() {
   throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
 }
-;// ../node_modules/@babel/runtime/helpers/esm/slicedToArray.js
+;// CONCATENATED MODULE: ../node_modules/@babel/runtime/helpers/esm/slicedToArray.js
 
 
 
 
 function _slicedToArray(arr, i) {
-  return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || (0,unsupportedIterableToArray/* default */.A)(arr, i) || _nonIterableRest();
+  return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || (0,unsupportedIterableToArray/* default */.Z)(arr, i) || _nonIterableRest();
 }
 
 /***/ }),
 
-/***/ 4300:
+/***/ 126:
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 
 // EXPORTS
 __webpack_require__.d(__webpack_exports__, {
-  A: function() { return /* binding */ _toConsumableArray; }
+  "Z": function() { return /* binding */ _toConsumableArray; }
 });
 
 // EXTERNAL MODULE: ../node_modules/@babel/runtime/helpers/esm/arrayLikeToArray.js
-var arrayLikeToArray = __webpack_require__(7451);
-;// ../node_modules/@babel/runtime/helpers/esm/arrayWithoutHoles.js
+var arrayLikeToArray = __webpack_require__(1793);
+;// CONCATENATED MODULE: ../node_modules/@babel/runtime/helpers/esm/arrayWithoutHoles.js
 
 function _arrayWithoutHoles(arr) {
-  if (Array.isArray(arr)) return (0,arrayLikeToArray/* default */.A)(arr);
+  if (Array.isArray(arr)) return (0,arrayLikeToArray/* default */.Z)(arr);
 }
-;// ../node_modules/@babel/runtime/helpers/esm/iterableToArray.js
+;// CONCATENATED MODULE: ../node_modules/@babel/runtime/helpers/esm/iterableToArray.js
 function _iterableToArray(iter) {
   if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);
 }
 // EXTERNAL MODULE: ../node_modules/@babel/runtime/helpers/esm/unsupportedIterableToArray.js
-var unsupportedIterableToArray = __webpack_require__(6438);
-;// ../node_modules/@babel/runtime/helpers/esm/nonIterableSpread.js
+var unsupportedIterableToArray = __webpack_require__(4013);
+;// CONCATENATED MODULE: ../node_modules/@babel/runtime/helpers/esm/nonIterableSpread.js
 function _nonIterableSpread() {
   throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
 }
-;// ../node_modules/@babel/runtime/helpers/esm/toConsumableArray.js
+;// CONCATENATED MODULE: ../node_modules/@babel/runtime/helpers/esm/toConsumableArray.js
 
 
 
 
 function _toConsumableArray(arr) {
-  return _arrayWithoutHoles(arr) || _iterableToArray(arr) || (0,unsupportedIterableToArray/* default */.A)(arr) || _nonIterableSpread();
+  return _arrayWithoutHoles(arr) || _iterableToArray(arr) || (0,unsupportedIterableToArray/* default */.Z)(arr) || _nonIterableSpread();
 }
 
 /***/ }),
 
-/***/ 6438:
+/***/ 4013:
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   A: function() { return /* binding */ _unsupportedIterableToArray; }
+/* harmony export */   "Z": function() { return /* binding */ _unsupportedIterableToArray; }
 /* harmony export */ });
-/* harmony import */ var _arrayLikeToArray_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7451);
+/* harmony import */ var _arrayLikeToArray_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1793);
 
 function _unsupportedIterableToArray(o, minLen) {
   if (!o) return;
-  if (typeof o === "string") return (0,_arrayLikeToArray_js__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A)(o, minLen);
+  if (typeof o === "string") return (0,_arrayLikeToArray_js__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z)(o, minLen);
   var n = Object.prototype.toString.call(o).slice(8, -1);
   if (n === "Object" && o.constructor) n = o.constructor.name;
   if (n === "Map" || n === "Set") return Array.from(o);
-  if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return (0,_arrayLikeToArray_js__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A)(o, minLen);
+  if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return (0,_arrayLikeToArray_js__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z)(o, minLen);
 }
 
 /***/ }),
 
-/***/ 645:
+/***/ 823:
 /***/ (function(__unused_webpack___webpack_module__, __unused_webpack___webpack_exports__, __webpack_require__) {
 
 "use strict";
 
 // UNUSED EXPORTS: HtmlRenderer, Node, Parser, Renderer, XmlRenderer
 
-;// ../node_modules/commonmark/lib/node.js
+;// CONCATENATED MODULE: ../node_modules/commonmark/lib/node.js
 
 
 function isContainer(node) {
@@ -31874,10 +31649,10 @@ node_Node.prototype.walker = function() {
  */
 
 // EXTERNAL MODULE: ../node_modules/mdurl/encode.js
-var encode = __webpack_require__(2687);
+var encode = __webpack_require__(4651);
 // EXTERNAL MODULE: ../node_modules/entities/lib/index.js
-var lib = __webpack_require__(6942);
-;// ../node_modules/commonmark/lib/common.js
+var lib = __webpack_require__(9625);
+;// CONCATENATED MODULE: ../node_modules/commonmark/lib/common.js
 
 
 
@@ -31938,7 +31713,7 @@ var unescapeChar = function(s) {
     if (s.charCodeAt(0) === C_BACKSLASH) {
         return s.charAt(1);
     } else {
-        return (0,lib/* decodeHTML */.Gz)(s);
+        return (0,lib/* decodeHTML */.p1)(s);
     }
 };
 
@@ -31984,7 +31759,7 @@ var escapeXml = function(s) {
 
 
 
-;// ../node_modules/commonmark/lib/from-code-point.js
+;// CONCATENATED MODULE: ../node_modules/commonmark/lib/from-code-point.js
 
 
 // derived from https://github.com/mathiasbynens/String.fromCodePoint
@@ -32052,8 +31827,8 @@ if (String.fromCodePoint) {
 }
 
 // EXTERNAL MODULE: ../node_modules/string.prototype.repeat/repeat.js
-var repeat = __webpack_require__(6718);
-;// ../node_modules/commonmark/lib/inlines.js
+var repeat = __webpack_require__(4205);
+;// CONCATENATED MODULE: ../node_modules/commonmark/lib/inlines.js
 
 
 
@@ -33070,7 +32845,7 @@ function inlines_InlineParser(options) {
 
 /* harmony default export */ var inlines = ((/* unused pure expression or super */ null && (inlines_InlineParser)));
 
-;// ../node_modules/commonmark/lib/blocks.js
+;// CONCATENATED MODULE: ../node_modules/commonmark/lib/blocks.js
 
 
 
@@ -34079,7 +33854,7 @@ function Parser(options) {
 
 /* harmony default export */ var lib_blocks = ((/* unused pure expression or super */ null && (Parser)));
 
-;// ../node_modules/commonmark/lib/render/renderer.js
+;// CONCATENATED MODULE: ../node_modules/commonmark/lib/render/renderer.js
 
 
 function Renderer() {}
@@ -34156,7 +33931,7 @@ Renderer.prototype.esc = esc;
 
 /* harmony default export */ var renderer = (Renderer);
 
-;// ../node_modules/commonmark/lib/render/html.js
+;// CONCATENATED MODULE: ../node_modules/commonmark/lib/render/html.js
 
 
 
@@ -34453,7 +34228,7 @@ HtmlRenderer.prototype.attrs = attrs;
 
 /* harmony default export */ var html = ((/* unused pure expression or super */ null && (HtmlRenderer)));
 
-;// ../node_modules/commonmark/lib/render/xml.js
+;// CONCATENATED MODULE: ../node_modules/commonmark/lib/render/xml.js
 
 
 
@@ -34651,7 +34426,7 @@ XmlRenderer.prototype.esc = escapeXml;
 
 /* harmony default export */ var xml = ((/* unused pure expression or super */ null && (XmlRenderer)));
 
-;// ../node_modules/commonmark/lib/index.js
+;// CONCATENATED MODULE: ../node_modules/commonmark/lib/index.js
 
 
 // commonmark.js - CommomMark in JavaScript
@@ -34674,35 +34449,35 @@ XmlRenderer.prototype.esc = escapeXml;
 
 /***/ }),
 
-/***/ 1971:
+/***/ 8124:
 /***/ (function(module) {
 
 "use strict";
-module.exports = /*#__PURE__*/JSON.parse('{"0":65533,"128":8364,"130":8218,"131":402,"132":8222,"133":8230,"134":8224,"135":8225,"136":710,"137":8240,"138":352,"139":8249,"140":338,"142":381,"145":8216,"146":8217,"147":8220,"148":8221,"149":8226,"150":8211,"151":8212,"152":732,"153":8482,"154":353,"155":8250,"156":339,"158":382,"159":376}');
+module.exports = JSON.parse('{"0":65533,"128":8364,"130":8218,"131":402,"132":8222,"133":8230,"134":8224,"135":8225,"136":710,"137":8240,"138":352,"139":8249,"140":338,"142":381,"145":8216,"146":8217,"147":8220,"148":8221,"149":8226,"150":8211,"151":8212,"152":732,"153":8482,"154":353,"155":8250,"156":339,"158":382,"159":376}');
 
 /***/ }),
 
-/***/ 8058:
+/***/ 2834:
 /***/ (function(module) {
 
 "use strict";
-module.exports = /*#__PURE__*/JSON.parse('{"Aacute":"Á","aacute":"á","Abreve":"Ă","abreve":"ă","ac":"∾","acd":"∿","acE":"∾̳","Acirc":"Â","acirc":"â","acute":"´","Acy":"А","acy":"а","AElig":"Æ","aelig":"æ","af":"⁡","Afr":"𝔄","afr":"𝔞","Agrave":"À","agrave":"à","alefsym":"ℵ","aleph":"ℵ","Alpha":"Α","alpha":"α","Amacr":"Ā","amacr":"ā","amalg":"⨿","amp":"&","AMP":"&","andand":"⩕","And":"⩓","and":"∧","andd":"⩜","andslope":"⩘","andv":"⩚","ang":"∠","ange":"⦤","angle":"∠","angmsdaa":"⦨","angmsdab":"⦩","angmsdac":"⦪","angmsdad":"⦫","angmsdae":"⦬","angmsdaf":"⦭","angmsdag":"⦮","angmsdah":"⦯","angmsd":"∡","angrt":"∟","angrtvb":"⊾","angrtvbd":"⦝","angsph":"∢","angst":"Å","angzarr":"⍼","Aogon":"Ą","aogon":"ą","Aopf":"𝔸","aopf":"𝕒","apacir":"⩯","ap":"≈","apE":"⩰","ape":"≊","apid":"≋","apos":"\'","ApplyFunction":"⁡","approx":"≈","approxeq":"≊","Aring":"Å","aring":"å","Ascr":"𝒜","ascr":"𝒶","Assign":"≔","ast":"*","asymp":"≈","asympeq":"≍","Atilde":"Ã","atilde":"ã","Auml":"Ä","auml":"ä","awconint":"∳","awint":"⨑","backcong":"≌","backepsilon":"϶","backprime":"‵","backsim":"∽","backsimeq":"⋍","Backslash":"∖","Barv":"⫧","barvee":"⊽","barwed":"⌅","Barwed":"⌆","barwedge":"⌅","bbrk":"⎵","bbrktbrk":"⎶","bcong":"≌","Bcy":"Б","bcy":"б","bdquo":"„","becaus":"∵","because":"∵","Because":"∵","bemptyv":"⦰","bepsi":"϶","bernou":"ℬ","Bernoullis":"ℬ","Beta":"Β","beta":"β","beth":"ℶ","between":"≬","Bfr":"𝔅","bfr":"𝔟","bigcap":"⋂","bigcirc":"◯","bigcup":"⋃","bigodot":"⨀","bigoplus":"⨁","bigotimes":"⨂","bigsqcup":"⨆","bigstar":"★","bigtriangledown":"▽","bigtriangleup":"△","biguplus":"⨄","bigvee":"⋁","bigwedge":"⋀","bkarow":"⤍","blacklozenge":"⧫","blacksquare":"▪","blacktriangle":"▴","blacktriangledown":"▾","blacktriangleleft":"◂","blacktriangleright":"▸","blank":"␣","blk12":"▒","blk14":"░","blk34":"▓","block":"█","bne":"=⃥","bnequiv":"≡⃥","bNot":"⫭","bnot":"⌐","Bopf":"𝔹","bopf":"𝕓","bot":"⊥","bottom":"⊥","bowtie":"⋈","boxbox":"⧉","boxdl":"┐","boxdL":"╕","boxDl":"╖","boxDL":"╗","boxdr":"┌","boxdR":"╒","boxDr":"╓","boxDR":"╔","boxh":"─","boxH":"═","boxhd":"┬","boxHd":"╤","boxhD":"╥","boxHD":"╦","boxhu":"┴","boxHu":"╧","boxhU":"╨","boxHU":"╩","boxminus":"⊟","boxplus":"⊞","boxtimes":"⊠","boxul":"┘","boxuL":"╛","boxUl":"╜","boxUL":"╝","boxur":"└","boxuR":"╘","boxUr":"╙","boxUR":"╚","boxv":"│","boxV":"║","boxvh":"┼","boxvH":"╪","boxVh":"╫","boxVH":"╬","boxvl":"┤","boxvL":"╡","boxVl":"╢","boxVL":"╣","boxvr":"├","boxvR":"╞","boxVr":"╟","boxVR":"╠","bprime":"‵","breve":"˘","Breve":"˘","brvbar":"¦","bscr":"𝒷","Bscr":"ℬ","bsemi":"⁏","bsim":"∽","bsime":"⋍","bsolb":"⧅","bsol":"\\\\","bsolhsub":"⟈","bull":"•","bullet":"•","bump":"≎","bumpE":"⪮","bumpe":"≏","Bumpeq":"≎","bumpeq":"≏","Cacute":"Ć","cacute":"ć","capand":"⩄","capbrcup":"⩉","capcap":"⩋","cap":"∩","Cap":"⋒","capcup":"⩇","capdot":"⩀","CapitalDifferentialD":"ⅅ","caps":"∩︀","caret":"⁁","caron":"ˇ","Cayleys":"ℭ","ccaps":"⩍","Ccaron":"Č","ccaron":"č","Ccedil":"Ç","ccedil":"ç","Ccirc":"Ĉ","ccirc":"ĉ","Cconint":"∰","ccups":"⩌","ccupssm":"⩐","Cdot":"Ċ","cdot":"ċ","cedil":"¸","Cedilla":"¸","cemptyv":"⦲","cent":"¢","centerdot":"·","CenterDot":"·","cfr":"𝔠","Cfr":"ℭ","CHcy":"Ч","chcy":"ч","check":"✓","checkmark":"✓","Chi":"Χ","chi":"χ","circ":"ˆ","circeq":"≗","circlearrowleft":"↺","circlearrowright":"↻","circledast":"⊛","circledcirc":"⊚","circleddash":"⊝","CircleDot":"⊙","circledR":"®","circledS":"Ⓢ","CircleMinus":"⊖","CirclePlus":"⊕","CircleTimes":"⊗","cir":"○","cirE":"⧃","cire":"≗","cirfnint":"⨐","cirmid":"⫯","cirscir":"⧂","ClockwiseContourIntegral":"∲","CloseCurlyDoubleQuote":"”","CloseCurlyQuote":"’","clubs":"♣","clubsuit":"♣","colon":":","Colon":"∷","Colone":"⩴","colone":"≔","coloneq":"≔","comma":",","commat":"@","comp":"∁","compfn":"∘","complement":"∁","complexes":"ℂ","cong":"≅","congdot":"⩭","Congruent":"≡","conint":"∮","Conint":"∯","ContourIntegral":"∮","copf":"𝕔","Copf":"ℂ","coprod":"∐","Coproduct":"∐","copy":"©","COPY":"©","copysr":"℗","CounterClockwiseContourIntegral":"∳","crarr":"↵","cross":"✗","Cross":"⨯","Cscr":"𝒞","cscr":"𝒸","csub":"⫏","csube":"⫑","csup":"⫐","csupe":"⫒","ctdot":"⋯","cudarrl":"⤸","cudarrr":"⤵","cuepr":"⋞","cuesc":"⋟","cularr":"↶","cularrp":"⤽","cupbrcap":"⩈","cupcap":"⩆","CupCap":"≍","cup":"∪","Cup":"⋓","cupcup":"⩊","cupdot":"⊍","cupor":"⩅","cups":"∪︀","curarr":"↷","curarrm":"⤼","curlyeqprec":"⋞","curlyeqsucc":"⋟","curlyvee":"⋎","curlywedge":"⋏","curren":"¤","curvearrowleft":"↶","curvearrowright":"↷","cuvee":"⋎","cuwed":"⋏","cwconint":"∲","cwint":"∱","cylcty":"⌭","dagger":"†","Dagger":"‡","daleth":"ℸ","darr":"↓","Darr":"↡","dArr":"⇓","dash":"‐","Dashv":"⫤","dashv":"⊣","dbkarow":"⤏","dblac":"˝","Dcaron":"Ď","dcaron":"ď","Dcy":"Д","dcy":"д","ddagger":"‡","ddarr":"⇊","DD":"ⅅ","dd":"ⅆ","DDotrahd":"⤑","ddotseq":"⩷","deg":"°","Del":"∇","Delta":"Δ","delta":"δ","demptyv":"⦱","dfisht":"⥿","Dfr":"𝔇","dfr":"𝔡","dHar":"⥥","dharl":"⇃","dharr":"⇂","DiacriticalAcute":"´","DiacriticalDot":"˙","DiacriticalDoubleAcute":"˝","DiacriticalGrave":"`","DiacriticalTilde":"˜","diam":"⋄","diamond":"⋄","Diamond":"⋄","diamondsuit":"♦","diams":"♦","die":"¨","DifferentialD":"ⅆ","digamma":"ϝ","disin":"⋲","div":"÷","divide":"÷","divideontimes":"⋇","divonx":"⋇","DJcy":"Ђ","djcy":"ђ","dlcorn":"⌞","dlcrop":"⌍","dollar":"$","Dopf":"𝔻","dopf":"𝕕","Dot":"¨","dot":"˙","DotDot":"⃜","doteq":"≐","doteqdot":"≑","DotEqual":"≐","dotminus":"∸","dotplus":"∔","dotsquare":"⊡","doublebarwedge":"⌆","DoubleContourIntegral":"∯","DoubleDot":"¨","DoubleDownArrow":"⇓","DoubleLeftArrow":"⇐","DoubleLeftRightArrow":"⇔","DoubleLeftTee":"⫤","DoubleLongLeftArrow":"⟸","DoubleLongLeftRightArrow":"⟺","DoubleLongRightArrow":"⟹","DoubleRightArrow":"⇒","DoubleRightTee":"⊨","DoubleUpArrow":"⇑","DoubleUpDownArrow":"⇕","DoubleVerticalBar":"∥","DownArrowBar":"⤓","downarrow":"↓","DownArrow":"↓","Downarrow":"⇓","DownArrowUpArrow":"⇵","DownBreve":"̑","downdownarrows":"⇊","downharpoonleft":"⇃","downharpoonright":"⇂","DownLeftRightVector":"⥐","DownLeftTeeVector":"⥞","DownLeftVectorBar":"⥖","DownLeftVector":"↽","DownRightTeeVector":"⥟","DownRightVectorBar":"⥗","DownRightVector":"⇁","DownTeeArrow":"↧","DownTee":"⊤","drbkarow":"⤐","drcorn":"⌟","drcrop":"⌌","Dscr":"𝒟","dscr":"𝒹","DScy":"Ѕ","dscy":"ѕ","dsol":"⧶","Dstrok":"Đ","dstrok":"đ","dtdot":"⋱","dtri":"▿","dtrif":"▾","duarr":"⇵","duhar":"⥯","dwangle":"⦦","DZcy":"Џ","dzcy":"џ","dzigrarr":"⟿","Eacute":"É","eacute":"é","easter":"⩮","Ecaron":"Ě","ecaron":"ě","Ecirc":"Ê","ecirc":"ê","ecir":"≖","ecolon":"≕","Ecy":"Э","ecy":"э","eDDot":"⩷","Edot":"Ė","edot":"ė","eDot":"≑","ee":"ⅇ","efDot":"≒","Efr":"𝔈","efr":"𝔢","eg":"⪚","Egrave":"È","egrave":"è","egs":"⪖","egsdot":"⪘","el":"⪙","Element":"∈","elinters":"⏧","ell":"ℓ","els":"⪕","elsdot":"⪗","Emacr":"Ē","emacr":"ē","empty":"∅","emptyset":"∅","EmptySmallSquare":"◻","emptyv":"∅","EmptyVerySmallSquare":"▫","emsp13":" ","emsp14":" ","emsp":" ","ENG":"Ŋ","eng":"ŋ","ensp":" ","Eogon":"Ę","eogon":"ę","Eopf":"𝔼","eopf":"𝕖","epar":"⋕","eparsl":"⧣","eplus":"⩱","epsi":"ε","Epsilon":"Ε","epsilon":"ε","epsiv":"ϵ","eqcirc":"≖","eqcolon":"≕","eqsim":"≂","eqslantgtr":"⪖","eqslantless":"⪕","Equal":"⩵","equals":"=","EqualTilde":"≂","equest":"≟","Equilibrium":"⇌","equiv":"≡","equivDD":"⩸","eqvparsl":"⧥","erarr":"⥱","erDot":"≓","escr":"ℯ","Escr":"ℰ","esdot":"≐","Esim":"⩳","esim":"≂","Eta":"Η","eta":"η","ETH":"Ð","eth":"ð","Euml":"Ë","euml":"ë","euro":"€","excl":"!","exist":"∃","Exists":"∃","expectation":"ℰ","exponentiale":"ⅇ","ExponentialE":"ⅇ","fallingdotseq":"≒","Fcy":"Ф","fcy":"ф","female":"♀","ffilig":"ﬃ","fflig":"ﬀ","ffllig":"ﬄ","Ffr":"𝔉","ffr":"𝔣","filig":"ﬁ","FilledSmallSquare":"◼","FilledVerySmallSquare":"▪","fjlig":"fj","flat":"♭","fllig":"ﬂ","fltns":"▱","fnof":"ƒ","Fopf":"𝔽","fopf":"𝕗","forall":"∀","ForAll":"∀","fork":"⋔","forkv":"⫙","Fouriertrf":"ℱ","fpartint":"⨍","frac12":"½","frac13":"⅓","frac14":"¼","frac15":"⅕","frac16":"⅙","frac18":"⅛","frac23":"⅔","frac25":"⅖","frac34":"¾","frac35":"⅗","frac38":"⅜","frac45":"⅘","frac56":"⅚","frac58":"⅝","frac78":"⅞","frasl":"⁄","frown":"⌢","fscr":"𝒻","Fscr":"ℱ","gacute":"ǵ","Gamma":"Γ","gamma":"γ","Gammad":"Ϝ","gammad":"ϝ","gap":"⪆","Gbreve":"Ğ","gbreve":"ğ","Gcedil":"Ģ","Gcirc":"Ĝ","gcirc":"ĝ","Gcy":"Г","gcy":"г","Gdot":"Ġ","gdot":"ġ","ge":"≥","gE":"≧","gEl":"⪌","gel":"⋛","geq":"≥","geqq":"≧","geqslant":"⩾","gescc":"⪩","ges":"⩾","gesdot":"⪀","gesdoto":"⪂","gesdotol":"⪄","gesl":"⋛︀","gesles":"⪔","Gfr":"𝔊","gfr":"𝔤","gg":"≫","Gg":"⋙","ggg":"⋙","gimel":"ℷ","GJcy":"Ѓ","gjcy":"ѓ","gla":"⪥","gl":"≷","glE":"⪒","glj":"⪤","gnap":"⪊","gnapprox":"⪊","gne":"⪈","gnE":"≩","gneq":"⪈","gneqq":"≩","gnsim":"⋧","Gopf":"𝔾","gopf":"𝕘","grave":"`","GreaterEqual":"≥","GreaterEqualLess":"⋛","GreaterFullEqual":"≧","GreaterGreater":"⪢","GreaterLess":"≷","GreaterSlantEqual":"⩾","GreaterTilde":"≳","Gscr":"𝒢","gscr":"ℊ","gsim":"≳","gsime":"⪎","gsiml":"⪐","gtcc":"⪧","gtcir":"⩺","gt":">","GT":">","Gt":"≫","gtdot":"⋗","gtlPar":"⦕","gtquest":"⩼","gtrapprox":"⪆","gtrarr":"⥸","gtrdot":"⋗","gtreqless":"⋛","gtreqqless":"⪌","gtrless":"≷","gtrsim":"≳","gvertneqq":"≩︀","gvnE":"≩︀","Hacek":"ˇ","hairsp":" ","half":"½","hamilt":"ℋ","HARDcy":"Ъ","hardcy":"ъ","harrcir":"⥈","harr":"↔","hArr":"⇔","harrw":"↭","Hat":"^","hbar":"ℏ","Hcirc":"Ĥ","hcirc":"ĥ","hearts":"♥","heartsuit":"♥","hellip":"…","hercon":"⊹","hfr":"𝔥","Hfr":"ℌ","HilbertSpace":"ℋ","hksearow":"⤥","hkswarow":"⤦","hoarr":"⇿","homtht":"∻","hookleftarrow":"↩","hookrightarrow":"↪","hopf":"𝕙","Hopf":"ℍ","horbar":"―","HorizontalLine":"─","hscr":"𝒽","Hscr":"ℋ","hslash":"ℏ","Hstrok":"Ħ","hstrok":"ħ","HumpDownHump":"≎","HumpEqual":"≏","hybull":"⁃","hyphen":"‐","Iacute":"Í","iacute":"í","ic":"⁣","Icirc":"Î","icirc":"î","Icy":"И","icy":"и","Idot":"İ","IEcy":"Е","iecy":"е","iexcl":"¡","iff":"⇔","ifr":"𝔦","Ifr":"ℑ","Igrave":"Ì","igrave":"ì","ii":"ⅈ","iiiint":"⨌","iiint":"∭","iinfin":"⧜","iiota":"℩","IJlig":"Ĳ","ijlig":"ĳ","Imacr":"Ī","imacr":"ī","image":"ℑ","ImaginaryI":"ⅈ","imagline":"ℐ","imagpart":"ℑ","imath":"ı","Im":"ℑ","imof":"⊷","imped":"Ƶ","Implies":"⇒","incare":"℅","in":"∈","infin":"∞","infintie":"⧝","inodot":"ı","intcal":"⊺","int":"∫","Int":"∬","integers":"ℤ","Integral":"∫","intercal":"⊺","Intersection":"⋂","intlarhk":"⨗","intprod":"⨼","InvisibleComma":"⁣","InvisibleTimes":"⁢","IOcy":"Ё","iocy":"ё","Iogon":"Į","iogon":"į","Iopf":"𝕀","iopf":"𝕚","Iota":"Ι","iota":"ι","iprod":"⨼","iquest":"¿","iscr":"𝒾","Iscr":"ℐ","isin":"∈","isindot":"⋵","isinE":"⋹","isins":"⋴","isinsv":"⋳","isinv":"∈","it":"⁢","Itilde":"Ĩ","itilde":"ĩ","Iukcy":"І","iukcy":"і","Iuml":"Ï","iuml":"ï","Jcirc":"Ĵ","jcirc":"ĵ","Jcy":"Й","jcy":"й","Jfr":"𝔍","jfr":"𝔧","jmath":"ȷ","Jopf":"𝕁","jopf":"𝕛","Jscr":"𝒥","jscr":"𝒿","Jsercy":"Ј","jsercy":"ј","Jukcy":"Є","jukcy":"є","Kappa":"Κ","kappa":"κ","kappav":"ϰ","Kcedil":"Ķ","kcedil":"ķ","Kcy":"К","kcy":"к","Kfr":"𝔎","kfr":"𝔨","kgreen":"ĸ","KHcy":"Х","khcy":"х","KJcy":"Ќ","kjcy":"ќ","Kopf":"𝕂","kopf":"𝕜","Kscr":"𝒦","kscr":"𝓀","lAarr":"⇚","Lacute":"Ĺ","lacute":"ĺ","laemptyv":"⦴","lagran":"ℒ","Lambda":"Λ","lambda":"λ","lang":"⟨","Lang":"⟪","langd":"⦑","langle":"⟨","lap":"⪅","Laplacetrf":"ℒ","laquo":"«","larrb":"⇤","larrbfs":"⤟","larr":"←","Larr":"↞","lArr":"⇐","larrfs":"⤝","larrhk":"↩","larrlp":"↫","larrpl":"⤹","larrsim":"⥳","larrtl":"↢","latail":"⤙","lAtail":"⤛","lat":"⪫","late":"⪭","lates":"⪭︀","lbarr":"⤌","lBarr":"⤎","lbbrk":"❲","lbrace":"{","lbrack":"[","lbrke":"⦋","lbrksld":"⦏","lbrkslu":"⦍","Lcaron":"Ľ","lcaron":"ľ","Lcedil":"Ļ","lcedil":"ļ","lceil":"⌈","lcub":"{","Lcy":"Л","lcy":"л","ldca":"⤶","ldquo":"“","ldquor":"„","ldrdhar":"⥧","ldrushar":"⥋","ldsh":"↲","le":"≤","lE":"≦","LeftAngleBracket":"⟨","LeftArrowBar":"⇤","leftarrow":"←","LeftArrow":"←","Leftarrow":"⇐","LeftArrowRightArrow":"⇆","leftarrowtail":"↢","LeftCeiling":"⌈","LeftDoubleBracket":"⟦","LeftDownTeeVector":"⥡","LeftDownVectorBar":"⥙","LeftDownVector":"⇃","LeftFloor":"⌊","leftharpoondown":"↽","leftharpoonup":"↼","leftleftarrows":"⇇","leftrightarrow":"↔","LeftRightArrow":"↔","Leftrightarrow":"⇔","leftrightarrows":"⇆","leftrightharpoons":"⇋","leftrightsquigarrow":"↭","LeftRightVector":"⥎","LeftTeeArrow":"↤","LeftTee":"⊣","LeftTeeVector":"⥚","leftthreetimes":"⋋","LeftTriangleBar":"⧏","LeftTriangle":"⊲","LeftTriangleEqual":"⊴","LeftUpDownVector":"⥑","LeftUpTeeVector":"⥠","LeftUpVectorBar":"⥘","LeftUpVector":"↿","LeftVectorBar":"⥒","LeftVector":"↼","lEg":"⪋","leg":"⋚","leq":"≤","leqq":"≦","leqslant":"⩽","lescc":"⪨","les":"⩽","lesdot":"⩿","lesdoto":"⪁","lesdotor":"⪃","lesg":"⋚︀","lesges":"⪓","lessapprox":"⪅","lessdot":"⋖","lesseqgtr":"⋚","lesseqqgtr":"⪋","LessEqualGreater":"⋚","LessFullEqual":"≦","LessGreater":"≶","lessgtr":"≶","LessLess":"⪡","lesssim":"≲","LessSlantEqual":"⩽","LessTilde":"≲","lfisht":"⥼","lfloor":"⌊","Lfr":"𝔏","lfr":"𝔩","lg":"≶","lgE":"⪑","lHar":"⥢","lhard":"↽","lharu":"↼","lharul":"⥪","lhblk":"▄","LJcy":"Љ","ljcy":"љ","llarr":"⇇","ll":"≪","Ll":"⋘","llcorner":"⌞","Lleftarrow":"⇚","llhard":"⥫","lltri":"◺","Lmidot":"Ŀ","lmidot":"ŀ","lmoustache":"⎰","lmoust":"⎰","lnap":"⪉","lnapprox":"⪉","lne":"⪇","lnE":"≨","lneq":"⪇","lneqq":"≨","lnsim":"⋦","loang":"⟬","loarr":"⇽","lobrk":"⟦","longleftarrow":"⟵","LongLeftArrow":"⟵","Longleftarrow":"⟸","longleftrightarrow":"⟷","LongLeftRightArrow":"⟷","Longleftrightarrow":"⟺","longmapsto":"⟼","longrightarrow":"⟶","LongRightArrow":"⟶","Longrightarrow":"⟹","looparrowleft":"↫","looparrowright":"↬","lopar":"⦅","Lopf":"𝕃","lopf":"𝕝","loplus":"⨭","lotimes":"⨴","lowast":"∗","lowbar":"_","LowerLeftArrow":"↙","LowerRightArrow":"↘","loz":"◊","lozenge":"◊","lozf":"⧫","lpar":"(","lparlt":"⦓","lrarr":"⇆","lrcorner":"⌟","lrhar":"⇋","lrhard":"⥭","lrm":"‎","lrtri":"⊿","lsaquo":"‹","lscr":"𝓁","Lscr":"ℒ","lsh":"↰","Lsh":"↰","lsim":"≲","lsime":"⪍","lsimg":"⪏","lsqb":"[","lsquo":"‘","lsquor":"‚","Lstrok":"Ł","lstrok":"ł","ltcc":"⪦","ltcir":"⩹","lt":"<","LT":"<","Lt":"≪","ltdot":"⋖","lthree":"⋋","ltimes":"⋉","ltlarr":"⥶","ltquest":"⩻","ltri":"◃","ltrie":"⊴","ltrif":"◂","ltrPar":"⦖","lurdshar":"⥊","luruhar":"⥦","lvertneqq":"≨︀","lvnE":"≨︀","macr":"¯","male":"♂","malt":"✠","maltese":"✠","Map":"⤅","map":"↦","mapsto":"↦","mapstodown":"↧","mapstoleft":"↤","mapstoup":"↥","marker":"▮","mcomma":"⨩","Mcy":"М","mcy":"м","mdash":"—","mDDot":"∺","measuredangle":"∡","MediumSpace":" ","Mellintrf":"ℳ","Mfr":"𝔐","mfr":"𝔪","mho":"℧","micro":"µ","midast":"*","midcir":"⫰","mid":"∣","middot":"·","minusb":"⊟","minus":"−","minusd":"∸","minusdu":"⨪","MinusPlus":"∓","mlcp":"⫛","mldr":"…","mnplus":"∓","models":"⊧","Mopf":"𝕄","mopf":"𝕞","mp":"∓","mscr":"𝓂","Mscr":"ℳ","mstpos":"∾","Mu":"Μ","mu":"μ","multimap":"⊸","mumap":"⊸","nabla":"∇","Nacute":"Ń","nacute":"ń","nang":"∠⃒","nap":"≉","napE":"⩰̸","napid":"≋̸","napos":"ŉ","napprox":"≉","natural":"♮","naturals":"ℕ","natur":"♮","nbsp":" ","nbump":"≎̸","nbumpe":"≏̸","ncap":"⩃","Ncaron":"Ň","ncaron":"ň","Ncedil":"Ņ","ncedil":"ņ","ncong":"≇","ncongdot":"⩭̸","ncup":"⩂","Ncy":"Н","ncy":"н","ndash":"–","nearhk":"⤤","nearr":"↗","neArr":"⇗","nearrow":"↗","ne":"≠","nedot":"≐̸","NegativeMediumSpace":"​","NegativeThickSpace":"​","NegativeThinSpace":"​","NegativeVeryThinSpace":"​","nequiv":"≢","nesear":"⤨","nesim":"≂̸","NestedGreaterGreater":"≫","NestedLessLess":"≪","NewLine":"\\n","nexist":"∄","nexists":"∄","Nfr":"𝔑","nfr":"𝔫","ngE":"≧̸","nge":"≱","ngeq":"≱","ngeqq":"≧̸","ngeqslant":"⩾̸","nges":"⩾̸","nGg":"⋙̸","ngsim":"≵","nGt":"≫⃒","ngt":"≯","ngtr":"≯","nGtv":"≫̸","nharr":"↮","nhArr":"⇎","nhpar":"⫲","ni":"∋","nis":"⋼","nisd":"⋺","niv":"∋","NJcy":"Њ","njcy":"њ","nlarr":"↚","nlArr":"⇍","nldr":"‥","nlE":"≦̸","nle":"≰","nleftarrow":"↚","nLeftarrow":"⇍","nleftrightarrow":"↮","nLeftrightarrow":"⇎","nleq":"≰","nleqq":"≦̸","nleqslant":"⩽̸","nles":"⩽̸","nless":"≮","nLl":"⋘̸","nlsim":"≴","nLt":"≪⃒","nlt":"≮","nltri":"⋪","nltrie":"⋬","nLtv":"≪̸","nmid":"∤","NoBreak":"⁠","NonBreakingSpace":" ","nopf":"𝕟","Nopf":"ℕ","Not":"⫬","not":"¬","NotCongruent":"≢","NotCupCap":"≭","NotDoubleVerticalBar":"∦","NotElement":"∉","NotEqual":"≠","NotEqualTilde":"≂̸","NotExists":"∄","NotGreater":"≯","NotGreaterEqual":"≱","NotGreaterFullEqual":"≧̸","NotGreaterGreater":"≫̸","NotGreaterLess":"≹","NotGreaterSlantEqual":"⩾̸","NotGreaterTilde":"≵","NotHumpDownHump":"≎̸","NotHumpEqual":"≏̸","notin":"∉","notindot":"⋵̸","notinE":"⋹̸","notinva":"∉","notinvb":"⋷","notinvc":"⋶","NotLeftTriangleBar":"⧏̸","NotLeftTriangle":"⋪","NotLeftTriangleEqual":"⋬","NotLess":"≮","NotLessEqual":"≰","NotLessGreater":"≸","NotLessLess":"≪̸","NotLessSlantEqual":"⩽̸","NotLessTilde":"≴","NotNestedGreaterGreater":"⪢̸","NotNestedLessLess":"⪡̸","notni":"∌","notniva":"∌","notnivb":"⋾","notnivc":"⋽","NotPrecedes":"⊀","NotPrecedesEqual":"⪯̸","NotPrecedesSlantEqual":"⋠","NotReverseElement":"∌","NotRightTriangleBar":"⧐̸","NotRightTriangle":"⋫","NotRightTriangleEqual":"⋭","NotSquareSubset":"⊏̸","NotSquareSubsetEqual":"⋢","NotSquareSuperset":"⊐̸","NotSquareSupersetEqual":"⋣","NotSubset":"⊂⃒","NotSubsetEqual":"⊈","NotSucceeds":"⊁","NotSucceedsEqual":"⪰̸","NotSucceedsSlantEqual":"⋡","NotSucceedsTilde":"≿̸","NotSuperset":"⊃⃒","NotSupersetEqual":"⊉","NotTilde":"≁","NotTildeEqual":"≄","NotTildeFullEqual":"≇","NotTildeTilde":"≉","NotVerticalBar":"∤","nparallel":"∦","npar":"∦","nparsl":"⫽⃥","npart":"∂̸","npolint":"⨔","npr":"⊀","nprcue":"⋠","nprec":"⊀","npreceq":"⪯̸","npre":"⪯̸","nrarrc":"⤳̸","nrarr":"↛","nrArr":"⇏","nrarrw":"↝̸","nrightarrow":"↛","nRightarrow":"⇏","nrtri":"⋫","nrtrie":"⋭","nsc":"⊁","nsccue":"⋡","nsce":"⪰̸","Nscr":"𝒩","nscr":"𝓃","nshortmid":"∤","nshortparallel":"∦","nsim":"≁","nsime":"≄","nsimeq":"≄","nsmid":"∤","nspar":"∦","nsqsube":"⋢","nsqsupe":"⋣","nsub":"⊄","nsubE":"⫅̸","nsube":"⊈","nsubset":"⊂⃒","nsubseteq":"⊈","nsubseteqq":"⫅̸","nsucc":"⊁","nsucceq":"⪰̸","nsup":"⊅","nsupE":"⫆̸","nsupe":"⊉","nsupset":"⊃⃒","nsupseteq":"⊉","nsupseteqq":"⫆̸","ntgl":"≹","Ntilde":"Ñ","ntilde":"ñ","ntlg":"≸","ntriangleleft":"⋪","ntrianglelefteq":"⋬","ntriangleright":"⋫","ntrianglerighteq":"⋭","Nu":"Ν","nu":"ν","num":"#","numero":"№","numsp":" ","nvap":"≍⃒","nvdash":"⊬","nvDash":"⊭","nVdash":"⊮","nVDash":"⊯","nvge":"≥⃒","nvgt":">⃒","nvHarr":"⤄","nvinfin":"⧞","nvlArr":"⤂","nvle":"≤⃒","nvlt":"<⃒","nvltrie":"⊴⃒","nvrArr":"⤃","nvrtrie":"⊵⃒","nvsim":"∼⃒","nwarhk":"⤣","nwarr":"↖","nwArr":"⇖","nwarrow":"↖","nwnear":"⤧","Oacute":"Ó","oacute":"ó","oast":"⊛","Ocirc":"Ô","ocirc":"ô","ocir":"⊚","Ocy":"О","ocy":"о","odash":"⊝","Odblac":"Ő","odblac":"ő","odiv":"⨸","odot":"⊙","odsold":"⦼","OElig":"Œ","oelig":"œ","ofcir":"⦿","Ofr":"𝔒","ofr":"𝔬","ogon":"˛","Ograve":"Ò","ograve":"ò","ogt":"⧁","ohbar":"⦵","ohm":"Ω","oint":"∮","olarr":"↺","olcir":"⦾","olcross":"⦻","oline":"‾","olt":"⧀","Omacr":"Ō","omacr":"ō","Omega":"Ω","omega":"ω","Omicron":"Ο","omicron":"ο","omid":"⦶","ominus":"⊖","Oopf":"𝕆","oopf":"𝕠","opar":"⦷","OpenCurlyDoubleQuote":"“","OpenCurlyQuote":"‘","operp":"⦹","oplus":"⊕","orarr":"↻","Or":"⩔","or":"∨","ord":"⩝","order":"ℴ","orderof":"ℴ","ordf":"ª","ordm":"º","origof":"⊶","oror":"⩖","orslope":"⩗","orv":"⩛","oS":"Ⓢ","Oscr":"𝒪","oscr":"ℴ","Oslash":"Ø","oslash":"ø","osol":"⊘","Otilde":"Õ","otilde":"õ","otimesas":"⨶","Otimes":"⨷","otimes":"⊗","Ouml":"Ö","ouml":"ö","ovbar":"⌽","OverBar":"‾","OverBrace":"⏞","OverBracket":"⎴","OverParenthesis":"⏜","para":"¶","parallel":"∥","par":"∥","parsim":"⫳","parsl":"⫽","part":"∂","PartialD":"∂","Pcy":"П","pcy":"п","percnt":"%","period":".","permil":"‰","perp":"⊥","pertenk":"‱","Pfr":"𝔓","pfr":"𝔭","Phi":"Φ","phi":"φ","phiv":"ϕ","phmmat":"ℳ","phone":"☎","Pi":"Π","pi":"π","pitchfork":"⋔","piv":"ϖ","planck":"ℏ","planckh":"ℎ","plankv":"ℏ","plusacir":"⨣","plusb":"⊞","pluscir":"⨢","plus":"+","plusdo":"∔","plusdu":"⨥","pluse":"⩲","PlusMinus":"±","plusmn":"±","plussim":"⨦","plustwo":"⨧","pm":"±","Poincareplane":"ℌ","pointint":"⨕","popf":"𝕡","Popf":"ℙ","pound":"£","prap":"⪷","Pr":"⪻","pr":"≺","prcue":"≼","precapprox":"⪷","prec":"≺","preccurlyeq":"≼","Precedes":"≺","PrecedesEqual":"⪯","PrecedesSlantEqual":"≼","PrecedesTilde":"≾","preceq":"⪯","precnapprox":"⪹","precneqq":"⪵","precnsim":"⋨","pre":"⪯","prE":"⪳","precsim":"≾","prime":"′","Prime":"″","primes":"ℙ","prnap":"⪹","prnE":"⪵","prnsim":"⋨","prod":"∏","Product":"∏","profalar":"⌮","profline":"⌒","profsurf":"⌓","prop":"∝","Proportional":"∝","Proportion":"∷","propto":"∝","prsim":"≾","prurel":"⊰","Pscr":"𝒫","pscr":"𝓅","Psi":"Ψ","psi":"ψ","puncsp":" ","Qfr":"𝔔","qfr":"𝔮","qint":"⨌","qopf":"𝕢","Qopf":"ℚ","qprime":"⁗","Qscr":"𝒬","qscr":"𝓆","quaternions":"ℍ","quatint":"⨖","quest":"?","questeq":"≟","quot":"\\"","QUOT":"\\"","rAarr":"⇛","race":"∽̱","Racute":"Ŕ","racute":"ŕ","radic":"√","raemptyv":"⦳","rang":"⟩","Rang":"⟫","rangd":"⦒","range":"⦥","rangle":"⟩","raquo":"»","rarrap":"⥵","rarrb":"⇥","rarrbfs":"⤠","rarrc":"⤳","rarr":"→","Rarr":"↠","rArr":"⇒","rarrfs":"⤞","rarrhk":"↪","rarrlp":"↬","rarrpl":"⥅","rarrsim":"⥴","Rarrtl":"⤖","rarrtl":"↣","rarrw":"↝","ratail":"⤚","rAtail":"⤜","ratio":"∶","rationals":"ℚ","rbarr":"⤍","rBarr":"⤏","RBarr":"⤐","rbbrk":"❳","rbrace":"}","rbrack":"]","rbrke":"⦌","rbrksld":"⦎","rbrkslu":"⦐","Rcaron":"Ř","rcaron":"ř","Rcedil":"Ŗ","rcedil":"ŗ","rceil":"⌉","rcub":"}","Rcy":"Р","rcy":"р","rdca":"⤷","rdldhar":"⥩","rdquo":"”","rdquor":"”","rdsh":"↳","real":"ℜ","realine":"ℛ","realpart":"ℜ","reals":"ℝ","Re":"ℜ","rect":"▭","reg":"®","REG":"®","ReverseElement":"∋","ReverseEquilibrium":"⇋","ReverseUpEquilibrium":"⥯","rfisht":"⥽","rfloor":"⌋","rfr":"𝔯","Rfr":"ℜ","rHar":"⥤","rhard":"⇁","rharu":"⇀","rharul":"⥬","Rho":"Ρ","rho":"ρ","rhov":"ϱ","RightAngleBracket":"⟩","RightArrowBar":"⇥","rightarrow":"→","RightArrow":"→","Rightarrow":"⇒","RightArrowLeftArrow":"⇄","rightarrowtail":"↣","RightCeiling":"⌉","RightDoubleBracket":"⟧","RightDownTeeVector":"⥝","RightDownVectorBar":"⥕","RightDownVector":"⇂","RightFloor":"⌋","rightharpoondown":"⇁","rightharpoonup":"⇀","rightleftarrows":"⇄","rightleftharpoons":"⇌","rightrightarrows":"⇉","rightsquigarrow":"↝","RightTeeArrow":"↦","RightTee":"⊢","RightTeeVector":"⥛","rightthreetimes":"⋌","RightTriangleBar":"⧐","RightTriangle":"⊳","RightTriangleEqual":"⊵","RightUpDownVector":"⥏","RightUpTeeVector":"⥜","RightUpVectorBar":"⥔","RightUpVector":"↾","RightVectorBar":"⥓","RightVector":"⇀","ring":"˚","risingdotseq":"≓","rlarr":"⇄","rlhar":"⇌","rlm":"‏","rmoustache":"⎱","rmoust":"⎱","rnmid":"⫮","roang":"⟭","roarr":"⇾","robrk":"⟧","ropar":"⦆","ropf":"𝕣","Ropf":"ℝ","roplus":"⨮","rotimes":"⨵","RoundImplies":"⥰","rpar":")","rpargt":"⦔","rppolint":"⨒","rrarr":"⇉","Rrightarrow":"⇛","rsaquo":"›","rscr":"𝓇","Rscr":"ℛ","rsh":"↱","Rsh":"↱","rsqb":"]","rsquo":"’","rsquor":"’","rthree":"⋌","rtimes":"⋊","rtri":"▹","rtrie":"⊵","rtrif":"▸","rtriltri":"⧎","RuleDelayed":"⧴","ruluhar":"⥨","rx":"℞","Sacute":"Ś","sacute":"ś","sbquo":"‚","scap":"⪸","Scaron":"Š","scaron":"š","Sc":"⪼","sc":"≻","sccue":"≽","sce":"⪰","scE":"⪴","Scedil":"Ş","scedil":"ş","Scirc":"Ŝ","scirc":"ŝ","scnap":"⪺","scnE":"⪶","scnsim":"⋩","scpolint":"⨓","scsim":"≿","Scy":"С","scy":"с","sdotb":"⊡","sdot":"⋅","sdote":"⩦","searhk":"⤥","searr":"↘","seArr":"⇘","searrow":"↘","sect":"§","semi":";","seswar":"⤩","setminus":"∖","setmn":"∖","sext":"✶","Sfr":"𝔖","sfr":"𝔰","sfrown":"⌢","sharp":"♯","SHCHcy":"Щ","shchcy":"щ","SHcy":"Ш","shcy":"ш","ShortDownArrow":"↓","ShortLeftArrow":"←","shortmid":"∣","shortparallel":"∥","ShortRightArrow":"→","ShortUpArrow":"↑","shy":"­","Sigma":"Σ","sigma":"σ","sigmaf":"ς","sigmav":"ς","sim":"∼","simdot":"⩪","sime":"≃","simeq":"≃","simg":"⪞","simgE":"⪠","siml":"⪝","simlE":"⪟","simne":"≆","simplus":"⨤","simrarr":"⥲","slarr":"←","SmallCircle":"∘","smallsetminus":"∖","smashp":"⨳","smeparsl":"⧤","smid":"∣","smile":"⌣","smt":"⪪","smte":"⪬","smtes":"⪬︀","SOFTcy":"Ь","softcy":"ь","solbar":"⌿","solb":"⧄","sol":"/","Sopf":"𝕊","sopf":"𝕤","spades":"♠","spadesuit":"♠","spar":"∥","sqcap":"⊓","sqcaps":"⊓︀","sqcup":"⊔","sqcups":"⊔︀","Sqrt":"√","sqsub":"⊏","sqsube":"⊑","sqsubset":"⊏","sqsubseteq":"⊑","sqsup":"⊐","sqsupe":"⊒","sqsupset":"⊐","sqsupseteq":"⊒","square":"□","Square":"□","SquareIntersection":"⊓","SquareSubset":"⊏","SquareSubsetEqual":"⊑","SquareSuperset":"⊐","SquareSupersetEqual":"⊒","SquareUnion":"⊔","squarf":"▪","squ":"□","squf":"▪","srarr":"→","Sscr":"𝒮","sscr":"𝓈","ssetmn":"∖","ssmile":"⌣","sstarf":"⋆","Star":"⋆","star":"☆","starf":"★","straightepsilon":"ϵ","straightphi":"ϕ","strns":"¯","sub":"⊂","Sub":"⋐","subdot":"⪽","subE":"⫅","sube":"⊆","subedot":"⫃","submult":"⫁","subnE":"⫋","subne":"⊊","subplus":"⪿","subrarr":"⥹","subset":"⊂","Subset":"⋐","subseteq":"⊆","subseteqq":"⫅","SubsetEqual":"⊆","subsetneq":"⊊","subsetneqq":"⫋","subsim":"⫇","subsub":"⫕","subsup":"⫓","succapprox":"⪸","succ":"≻","succcurlyeq":"≽","Succeeds":"≻","SucceedsEqual":"⪰","SucceedsSlantEqual":"≽","SucceedsTilde":"≿","succeq":"⪰","succnapprox":"⪺","succneqq":"⪶","succnsim":"⋩","succsim":"≿","SuchThat":"∋","sum":"∑","Sum":"∑","sung":"♪","sup1":"¹","sup2":"²","sup3":"³","sup":"⊃","Sup":"⋑","supdot":"⪾","supdsub":"⫘","supE":"⫆","supe":"⊇","supedot":"⫄","Superset":"⊃","SupersetEqual":"⊇","suphsol":"⟉","suphsub":"⫗","suplarr":"⥻","supmult":"⫂","supnE":"⫌","supne":"⊋","supplus":"⫀","supset":"⊃","Supset":"⋑","supseteq":"⊇","supseteqq":"⫆","supsetneq":"⊋","supsetneqq":"⫌","supsim":"⫈","supsub":"⫔","supsup":"⫖","swarhk":"⤦","swarr":"↙","swArr":"⇙","swarrow":"↙","swnwar":"⤪","szlig":"ß","Tab":"\\t","target":"⌖","Tau":"Τ","tau":"τ","tbrk":"⎴","Tcaron":"Ť","tcaron":"ť","Tcedil":"Ţ","tcedil":"ţ","Tcy":"Т","tcy":"т","tdot":"⃛","telrec":"⌕","Tfr":"𝔗","tfr":"𝔱","there4":"∴","therefore":"∴","Therefore":"∴","Theta":"Θ","theta":"θ","thetasym":"ϑ","thetav":"ϑ","thickapprox":"≈","thicksim":"∼","ThickSpace":"  ","ThinSpace":" ","thinsp":" ","thkap":"≈","thksim":"∼","THORN":"Þ","thorn":"þ","tilde":"˜","Tilde":"∼","TildeEqual":"≃","TildeFullEqual":"≅","TildeTilde":"≈","timesbar":"⨱","timesb":"⊠","times":"×","timesd":"⨰","tint":"∭","toea":"⤨","topbot":"⌶","topcir":"⫱","top":"⊤","Topf":"𝕋","topf":"𝕥","topfork":"⫚","tosa":"⤩","tprime":"‴","trade":"™","TRADE":"™","triangle":"▵","triangledown":"▿","triangleleft":"◃","trianglelefteq":"⊴","triangleq":"≜","triangleright":"▹","trianglerighteq":"⊵","tridot":"◬","trie":"≜","triminus":"⨺","TripleDot":"⃛","triplus":"⨹","trisb":"⧍","tritime":"⨻","trpezium":"⏢","Tscr":"𝒯","tscr":"𝓉","TScy":"Ц","tscy":"ц","TSHcy":"Ћ","tshcy":"ћ","Tstrok":"Ŧ","tstrok":"ŧ","twixt":"≬","twoheadleftarrow":"↞","twoheadrightarrow":"↠","Uacute":"Ú","uacute":"ú","uarr":"↑","Uarr":"↟","uArr":"⇑","Uarrocir":"⥉","Ubrcy":"Ў","ubrcy":"ў","Ubreve":"Ŭ","ubreve":"ŭ","Ucirc":"Û","ucirc":"û","Ucy":"У","ucy":"у","udarr":"⇅","Udblac":"Ű","udblac":"ű","udhar":"⥮","ufisht":"⥾","Ufr":"𝔘","ufr":"𝔲","Ugrave":"Ù","ugrave":"ù","uHar":"⥣","uharl":"↿","uharr":"↾","uhblk":"▀","ulcorn":"⌜","ulcorner":"⌜","ulcrop":"⌏","ultri":"◸","Umacr":"Ū","umacr":"ū","uml":"¨","UnderBar":"_","UnderBrace":"⏟","UnderBracket":"⎵","UnderParenthesis":"⏝","Union":"⋃","UnionPlus":"⊎","Uogon":"Ų","uogon":"ų","Uopf":"𝕌","uopf":"𝕦","UpArrowBar":"⤒","uparrow":"↑","UpArrow":"↑","Uparrow":"⇑","UpArrowDownArrow":"⇅","updownarrow":"↕","UpDownArrow":"↕","Updownarrow":"⇕","UpEquilibrium":"⥮","upharpoonleft":"↿","upharpoonright":"↾","uplus":"⊎","UpperLeftArrow":"↖","UpperRightArrow":"↗","upsi":"υ","Upsi":"ϒ","upsih":"ϒ","Upsilon":"Υ","upsilon":"υ","UpTeeArrow":"↥","UpTee":"⊥","upuparrows":"⇈","urcorn":"⌝","urcorner":"⌝","urcrop":"⌎","Uring":"Ů","uring":"ů","urtri":"◹","Uscr":"𝒰","uscr":"𝓊","utdot":"⋰","Utilde":"Ũ","utilde":"ũ","utri":"▵","utrif":"▴","uuarr":"⇈","Uuml":"Ü","uuml":"ü","uwangle":"⦧","vangrt":"⦜","varepsilon":"ϵ","varkappa":"ϰ","varnothing":"∅","varphi":"ϕ","varpi":"ϖ","varpropto":"∝","varr":"↕","vArr":"⇕","varrho":"ϱ","varsigma":"ς","varsubsetneq":"⊊︀","varsubsetneqq":"⫋︀","varsupsetneq":"⊋︀","varsupsetneqq":"⫌︀","vartheta":"ϑ","vartriangleleft":"⊲","vartriangleright":"⊳","vBar":"⫨","Vbar":"⫫","vBarv":"⫩","Vcy":"В","vcy":"в","vdash":"⊢","vDash":"⊨","Vdash":"⊩","VDash":"⊫","Vdashl":"⫦","veebar":"⊻","vee":"∨","Vee":"⋁","veeeq":"≚","vellip":"⋮","verbar":"|","Verbar":"‖","vert":"|","Vert":"‖","VerticalBar":"∣","VerticalLine":"|","VerticalSeparator":"❘","VerticalTilde":"≀","VeryThinSpace":" ","Vfr":"𝔙","vfr":"𝔳","vltri":"⊲","vnsub":"⊂⃒","vnsup":"⊃⃒","Vopf":"𝕍","vopf":"𝕧","vprop":"∝","vrtri":"⊳","Vscr":"𝒱","vscr":"𝓋","vsubnE":"⫋︀","vsubne":"⊊︀","vsupnE":"⫌︀","vsupne":"⊋︀","Vvdash":"⊪","vzigzag":"⦚","Wcirc":"Ŵ","wcirc":"ŵ","wedbar":"⩟","wedge":"∧","Wedge":"⋀","wedgeq":"≙","weierp":"℘","Wfr":"𝔚","wfr":"𝔴","Wopf":"𝕎","wopf":"𝕨","wp":"℘","wr":"≀","wreath":"≀","Wscr":"𝒲","wscr":"𝓌","xcap":"⋂","xcirc":"◯","xcup":"⋃","xdtri":"▽","Xfr":"𝔛","xfr":"𝔵","xharr":"⟷","xhArr":"⟺","Xi":"Ξ","xi":"ξ","xlarr":"⟵","xlArr":"⟸","xmap":"⟼","xnis":"⋻","xodot":"⨀","Xopf":"𝕏","xopf":"𝕩","xoplus":"⨁","xotime":"⨂","xrarr":"⟶","xrArr":"⟹","Xscr":"𝒳","xscr":"𝓍","xsqcup":"⨆","xuplus":"⨄","xutri":"△","xvee":"⋁","xwedge":"⋀","Yacute":"Ý","yacute":"ý","YAcy":"Я","yacy":"я","Ycirc":"Ŷ","ycirc":"ŷ","Ycy":"Ы","ycy":"ы","yen":"¥","Yfr":"𝔜","yfr":"𝔶","YIcy":"Ї","yicy":"ї","Yopf":"𝕐","yopf":"𝕪","Yscr":"𝒴","yscr":"𝓎","YUcy":"Ю","yucy":"ю","yuml":"ÿ","Yuml":"Ÿ","Zacute":"Ź","zacute":"ź","Zcaron":"Ž","zcaron":"ž","Zcy":"З","zcy":"з","Zdot":"Ż","zdot":"ż","zeetrf":"ℨ","ZeroWidthSpace":"​","Zeta":"Ζ","zeta":"ζ","zfr":"𝔷","Zfr":"ℨ","ZHcy":"Ж","zhcy":"ж","zigrarr":"⇝","zopf":"𝕫","Zopf":"ℤ","Zscr":"𝒵","zscr":"𝓏","zwj":"‍","zwnj":"‌"}');
+module.exports = JSON.parse('{"Aacute":"Á","aacute":"á","Abreve":"Ă","abreve":"ă","ac":"∾","acd":"∿","acE":"∾̳","Acirc":"Â","acirc":"â","acute":"´","Acy":"А","acy":"а","AElig":"Æ","aelig":"æ","af":"⁡","Afr":"𝔄","afr":"𝔞","Agrave":"À","agrave":"à","alefsym":"ℵ","aleph":"ℵ","Alpha":"Α","alpha":"α","Amacr":"Ā","amacr":"ā","amalg":"⨿","amp":"&","AMP":"&","andand":"⩕","And":"⩓","and":"∧","andd":"⩜","andslope":"⩘","andv":"⩚","ang":"∠","ange":"⦤","angle":"∠","angmsdaa":"⦨","angmsdab":"⦩","angmsdac":"⦪","angmsdad":"⦫","angmsdae":"⦬","angmsdaf":"⦭","angmsdag":"⦮","angmsdah":"⦯","angmsd":"∡","angrt":"∟","angrtvb":"⊾","angrtvbd":"⦝","angsph":"∢","angst":"Å","angzarr":"⍼","Aogon":"Ą","aogon":"ą","Aopf":"𝔸","aopf":"𝕒","apacir":"⩯","ap":"≈","apE":"⩰","ape":"≊","apid":"≋","apos":"\'","ApplyFunction":"⁡","approx":"≈","approxeq":"≊","Aring":"Å","aring":"å","Ascr":"𝒜","ascr":"𝒶","Assign":"≔","ast":"*","asymp":"≈","asympeq":"≍","Atilde":"Ã","atilde":"ã","Auml":"Ä","auml":"ä","awconint":"∳","awint":"⨑","backcong":"≌","backepsilon":"϶","backprime":"‵","backsim":"∽","backsimeq":"⋍","Backslash":"∖","Barv":"⫧","barvee":"⊽","barwed":"⌅","Barwed":"⌆","barwedge":"⌅","bbrk":"⎵","bbrktbrk":"⎶","bcong":"≌","Bcy":"Б","bcy":"б","bdquo":"„","becaus":"∵","because":"∵","Because":"∵","bemptyv":"⦰","bepsi":"϶","bernou":"ℬ","Bernoullis":"ℬ","Beta":"Β","beta":"β","beth":"ℶ","between":"≬","Bfr":"𝔅","bfr":"𝔟","bigcap":"⋂","bigcirc":"◯","bigcup":"⋃","bigodot":"⨀","bigoplus":"⨁","bigotimes":"⨂","bigsqcup":"⨆","bigstar":"★","bigtriangledown":"▽","bigtriangleup":"△","biguplus":"⨄","bigvee":"⋁","bigwedge":"⋀","bkarow":"⤍","blacklozenge":"⧫","blacksquare":"▪","blacktriangle":"▴","blacktriangledown":"▾","blacktriangleleft":"◂","blacktriangleright":"▸","blank":"␣","blk12":"▒","blk14":"░","blk34":"▓","block":"█","bne":"=⃥","bnequiv":"≡⃥","bNot":"⫭","bnot":"⌐","Bopf":"𝔹","bopf":"𝕓","bot":"⊥","bottom":"⊥","bowtie":"⋈","boxbox":"⧉","boxdl":"┐","boxdL":"╕","boxDl":"╖","boxDL":"╗","boxdr":"┌","boxdR":"╒","boxDr":"╓","boxDR":"╔","boxh":"─","boxH":"═","boxhd":"┬","boxHd":"╤","boxhD":"╥","boxHD":"╦","boxhu":"┴","boxHu":"╧","boxhU":"╨","boxHU":"╩","boxminus":"⊟","boxplus":"⊞","boxtimes":"⊠","boxul":"┘","boxuL":"╛","boxUl":"╜","boxUL":"╝","boxur":"└","boxuR":"╘","boxUr":"╙","boxUR":"╚","boxv":"│","boxV":"║","boxvh":"┼","boxvH":"╪","boxVh":"╫","boxVH":"╬","boxvl":"┤","boxvL":"╡","boxVl":"╢","boxVL":"╣","boxvr":"├","boxvR":"╞","boxVr":"╟","boxVR":"╠","bprime":"‵","breve":"˘","Breve":"˘","brvbar":"¦","bscr":"𝒷","Bscr":"ℬ","bsemi":"⁏","bsim":"∽","bsime":"⋍","bsolb":"⧅","bsol":"\\\\","bsolhsub":"⟈","bull":"•","bullet":"•","bump":"≎","bumpE":"⪮","bumpe":"≏","Bumpeq":"≎","bumpeq":"≏","Cacute":"Ć","cacute":"ć","capand":"⩄","capbrcup":"⩉","capcap":"⩋","cap":"∩","Cap":"⋒","capcup":"⩇","capdot":"⩀","CapitalDifferentialD":"ⅅ","caps":"∩︀","caret":"⁁","caron":"ˇ","Cayleys":"ℭ","ccaps":"⩍","Ccaron":"Č","ccaron":"č","Ccedil":"Ç","ccedil":"ç","Ccirc":"Ĉ","ccirc":"ĉ","Cconint":"∰","ccups":"⩌","ccupssm":"⩐","Cdot":"Ċ","cdot":"ċ","cedil":"¸","Cedilla":"¸","cemptyv":"⦲","cent":"¢","centerdot":"·","CenterDot":"·","cfr":"𝔠","Cfr":"ℭ","CHcy":"Ч","chcy":"ч","check":"✓","checkmark":"✓","Chi":"Χ","chi":"χ","circ":"ˆ","circeq":"≗","circlearrowleft":"↺","circlearrowright":"↻","circledast":"⊛","circledcirc":"⊚","circleddash":"⊝","CircleDot":"⊙","circledR":"®","circledS":"Ⓢ","CircleMinus":"⊖","CirclePlus":"⊕","CircleTimes":"⊗","cir":"○","cirE":"⧃","cire":"≗","cirfnint":"⨐","cirmid":"⫯","cirscir":"⧂","ClockwiseContourIntegral":"∲","CloseCurlyDoubleQuote":"”","CloseCurlyQuote":"’","clubs":"♣","clubsuit":"♣","colon":":","Colon":"∷","Colone":"⩴","colone":"≔","coloneq":"≔","comma":",","commat":"@","comp":"∁","compfn":"∘","complement":"∁","complexes":"ℂ","cong":"≅","congdot":"⩭","Congruent":"≡","conint":"∮","Conint":"∯","ContourIntegral":"∮","copf":"𝕔","Copf":"ℂ","coprod":"∐","Coproduct":"∐","copy":"©","COPY":"©","copysr":"℗","CounterClockwiseContourIntegral":"∳","crarr":"↵","cross":"✗","Cross":"⨯","Cscr":"𝒞","cscr":"𝒸","csub":"⫏","csube":"⫑","csup":"⫐","csupe":"⫒","ctdot":"⋯","cudarrl":"⤸","cudarrr":"⤵","cuepr":"⋞","cuesc":"⋟","cularr":"↶","cularrp":"⤽","cupbrcap":"⩈","cupcap":"⩆","CupCap":"≍","cup":"∪","Cup":"⋓","cupcup":"⩊","cupdot":"⊍","cupor":"⩅","cups":"∪︀","curarr":"↷","curarrm":"⤼","curlyeqprec":"⋞","curlyeqsucc":"⋟","curlyvee":"⋎","curlywedge":"⋏","curren":"¤","curvearrowleft":"↶","curvearrowright":"↷","cuvee":"⋎","cuwed":"⋏","cwconint":"∲","cwint":"∱","cylcty":"⌭","dagger":"†","Dagger":"‡","daleth":"ℸ","darr":"↓","Darr":"↡","dArr":"⇓","dash":"‐","Dashv":"⫤","dashv":"⊣","dbkarow":"⤏","dblac":"˝","Dcaron":"Ď","dcaron":"ď","Dcy":"Д","dcy":"д","ddagger":"‡","ddarr":"⇊","DD":"ⅅ","dd":"ⅆ","DDotrahd":"⤑","ddotseq":"⩷","deg":"°","Del":"∇","Delta":"Δ","delta":"δ","demptyv":"⦱","dfisht":"⥿","Dfr":"𝔇","dfr":"𝔡","dHar":"⥥","dharl":"⇃","dharr":"⇂","DiacriticalAcute":"´","DiacriticalDot":"˙","DiacriticalDoubleAcute":"˝","DiacriticalGrave":"`","DiacriticalTilde":"˜","diam":"⋄","diamond":"⋄","Diamond":"⋄","diamondsuit":"♦","diams":"♦","die":"¨","DifferentialD":"ⅆ","digamma":"ϝ","disin":"⋲","div":"÷","divide":"÷","divideontimes":"⋇","divonx":"⋇","DJcy":"Ђ","djcy":"ђ","dlcorn":"⌞","dlcrop":"⌍","dollar":"$","Dopf":"𝔻","dopf":"𝕕","Dot":"¨","dot":"˙","DotDot":"⃜","doteq":"≐","doteqdot":"≑","DotEqual":"≐","dotminus":"∸","dotplus":"∔","dotsquare":"⊡","doublebarwedge":"⌆","DoubleContourIntegral":"∯","DoubleDot":"¨","DoubleDownArrow":"⇓","DoubleLeftArrow":"⇐","DoubleLeftRightArrow":"⇔","DoubleLeftTee":"⫤","DoubleLongLeftArrow":"⟸","DoubleLongLeftRightArrow":"⟺","DoubleLongRightArrow":"⟹","DoubleRightArrow":"⇒","DoubleRightTee":"⊨","DoubleUpArrow":"⇑","DoubleUpDownArrow":"⇕","DoubleVerticalBar":"∥","DownArrowBar":"⤓","downarrow":"↓","DownArrow":"↓","Downarrow":"⇓","DownArrowUpArrow":"⇵","DownBreve":"̑","downdownarrows":"⇊","downharpoonleft":"⇃","downharpoonright":"⇂","DownLeftRightVector":"⥐","DownLeftTeeVector":"⥞","DownLeftVectorBar":"⥖","DownLeftVector":"↽","DownRightTeeVector":"⥟","DownRightVectorBar":"⥗","DownRightVector":"⇁","DownTeeArrow":"↧","DownTee":"⊤","drbkarow":"⤐","drcorn":"⌟","drcrop":"⌌","Dscr":"𝒟","dscr":"𝒹","DScy":"Ѕ","dscy":"ѕ","dsol":"⧶","Dstrok":"Đ","dstrok":"đ","dtdot":"⋱","dtri":"▿","dtrif":"▾","duarr":"⇵","duhar":"⥯","dwangle":"⦦","DZcy":"Џ","dzcy":"џ","dzigrarr":"⟿","Eacute":"É","eacute":"é","easter":"⩮","Ecaron":"Ě","ecaron":"ě","Ecirc":"Ê","ecirc":"ê","ecir":"≖","ecolon":"≕","Ecy":"Э","ecy":"э","eDDot":"⩷","Edot":"Ė","edot":"ė","eDot":"≑","ee":"ⅇ","efDot":"≒","Efr":"𝔈","efr":"𝔢","eg":"⪚","Egrave":"È","egrave":"è","egs":"⪖","egsdot":"⪘","el":"⪙","Element":"∈","elinters":"⏧","ell":"ℓ","els":"⪕","elsdot":"⪗","Emacr":"Ē","emacr":"ē","empty":"∅","emptyset":"∅","EmptySmallSquare":"◻","emptyv":"∅","EmptyVerySmallSquare":"▫","emsp13":" ","emsp14":" ","emsp":" ","ENG":"Ŋ","eng":"ŋ","ensp":" ","Eogon":"Ę","eogon":"ę","Eopf":"𝔼","eopf":"𝕖","epar":"⋕","eparsl":"⧣","eplus":"⩱","epsi":"ε","Epsilon":"Ε","epsilon":"ε","epsiv":"ϵ","eqcirc":"≖","eqcolon":"≕","eqsim":"≂","eqslantgtr":"⪖","eqslantless":"⪕","Equal":"⩵","equals":"=","EqualTilde":"≂","equest":"≟","Equilibrium":"⇌","equiv":"≡","equivDD":"⩸","eqvparsl":"⧥","erarr":"⥱","erDot":"≓","escr":"ℯ","Escr":"ℰ","esdot":"≐","Esim":"⩳","esim":"≂","Eta":"Η","eta":"η","ETH":"Ð","eth":"ð","Euml":"Ë","euml":"ë","euro":"€","excl":"!","exist":"∃","Exists":"∃","expectation":"ℰ","exponentiale":"ⅇ","ExponentialE":"ⅇ","fallingdotseq":"≒","Fcy":"Ф","fcy":"ф","female":"♀","ffilig":"ﬃ","fflig":"ﬀ","ffllig":"ﬄ","Ffr":"𝔉","ffr":"𝔣","filig":"ﬁ","FilledSmallSquare":"◼","FilledVerySmallSquare":"▪","fjlig":"fj","flat":"♭","fllig":"ﬂ","fltns":"▱","fnof":"ƒ","Fopf":"𝔽","fopf":"𝕗","forall":"∀","ForAll":"∀","fork":"⋔","forkv":"⫙","Fouriertrf":"ℱ","fpartint":"⨍","frac12":"½","frac13":"⅓","frac14":"¼","frac15":"⅕","frac16":"⅙","frac18":"⅛","frac23":"⅔","frac25":"⅖","frac34":"¾","frac35":"⅗","frac38":"⅜","frac45":"⅘","frac56":"⅚","frac58":"⅝","frac78":"⅞","frasl":"⁄","frown":"⌢","fscr":"𝒻","Fscr":"ℱ","gacute":"ǵ","Gamma":"Γ","gamma":"γ","Gammad":"Ϝ","gammad":"ϝ","gap":"⪆","Gbreve":"Ğ","gbreve":"ğ","Gcedil":"Ģ","Gcirc":"Ĝ","gcirc":"ĝ","Gcy":"Г","gcy":"г","Gdot":"Ġ","gdot":"ġ","ge":"≥","gE":"≧","gEl":"⪌","gel":"⋛","geq":"≥","geqq":"≧","geqslant":"⩾","gescc":"⪩","ges":"⩾","gesdot":"⪀","gesdoto":"⪂","gesdotol":"⪄","gesl":"⋛︀","gesles":"⪔","Gfr":"𝔊","gfr":"𝔤","gg":"≫","Gg":"⋙","ggg":"⋙","gimel":"ℷ","GJcy":"Ѓ","gjcy":"ѓ","gla":"⪥","gl":"≷","glE":"⪒","glj":"⪤","gnap":"⪊","gnapprox":"⪊","gne":"⪈","gnE":"≩","gneq":"⪈","gneqq":"≩","gnsim":"⋧","Gopf":"𝔾","gopf":"𝕘","grave":"`","GreaterEqual":"≥","GreaterEqualLess":"⋛","GreaterFullEqual":"≧","GreaterGreater":"⪢","GreaterLess":"≷","GreaterSlantEqual":"⩾","GreaterTilde":"≳","Gscr":"𝒢","gscr":"ℊ","gsim":"≳","gsime":"⪎","gsiml":"⪐","gtcc":"⪧","gtcir":"⩺","gt":">","GT":">","Gt":"≫","gtdot":"⋗","gtlPar":"⦕","gtquest":"⩼","gtrapprox":"⪆","gtrarr":"⥸","gtrdot":"⋗","gtreqless":"⋛","gtreqqless":"⪌","gtrless":"≷","gtrsim":"≳","gvertneqq":"≩︀","gvnE":"≩︀","Hacek":"ˇ","hairsp":" ","half":"½","hamilt":"ℋ","HARDcy":"Ъ","hardcy":"ъ","harrcir":"⥈","harr":"↔","hArr":"⇔","harrw":"↭","Hat":"^","hbar":"ℏ","Hcirc":"Ĥ","hcirc":"ĥ","hearts":"♥","heartsuit":"♥","hellip":"…","hercon":"⊹","hfr":"𝔥","Hfr":"ℌ","HilbertSpace":"ℋ","hksearow":"⤥","hkswarow":"⤦","hoarr":"⇿","homtht":"∻","hookleftarrow":"↩","hookrightarrow":"↪","hopf":"𝕙","Hopf":"ℍ","horbar":"―","HorizontalLine":"─","hscr":"𝒽","Hscr":"ℋ","hslash":"ℏ","Hstrok":"Ħ","hstrok":"ħ","HumpDownHump":"≎","HumpEqual":"≏","hybull":"⁃","hyphen":"‐","Iacute":"Í","iacute":"í","ic":"⁣","Icirc":"Î","icirc":"î","Icy":"И","icy":"и","Idot":"İ","IEcy":"Е","iecy":"е","iexcl":"¡","iff":"⇔","ifr":"𝔦","Ifr":"ℑ","Igrave":"Ì","igrave":"ì","ii":"ⅈ","iiiint":"⨌","iiint":"∭","iinfin":"⧜","iiota":"℩","IJlig":"Ĳ","ijlig":"ĳ","Imacr":"Ī","imacr":"ī","image":"ℑ","ImaginaryI":"ⅈ","imagline":"ℐ","imagpart":"ℑ","imath":"ı","Im":"ℑ","imof":"⊷","imped":"Ƶ","Implies":"⇒","incare":"℅","in":"∈","infin":"∞","infintie":"⧝","inodot":"ı","intcal":"⊺","int":"∫","Int":"∬","integers":"ℤ","Integral":"∫","intercal":"⊺","Intersection":"⋂","intlarhk":"⨗","intprod":"⨼","InvisibleComma":"⁣","InvisibleTimes":"⁢","IOcy":"Ё","iocy":"ё","Iogon":"Į","iogon":"į","Iopf":"𝕀","iopf":"𝕚","Iota":"Ι","iota":"ι","iprod":"⨼","iquest":"¿","iscr":"𝒾","Iscr":"ℐ","isin":"∈","isindot":"⋵","isinE":"⋹","isins":"⋴","isinsv":"⋳","isinv":"∈","it":"⁢","Itilde":"Ĩ","itilde":"ĩ","Iukcy":"І","iukcy":"і","Iuml":"Ï","iuml":"ï","Jcirc":"Ĵ","jcirc":"ĵ","Jcy":"Й","jcy":"й","Jfr":"𝔍","jfr":"𝔧","jmath":"ȷ","Jopf":"𝕁","jopf":"𝕛","Jscr":"𝒥","jscr":"𝒿","Jsercy":"Ј","jsercy":"ј","Jukcy":"Є","jukcy":"є","Kappa":"Κ","kappa":"κ","kappav":"ϰ","Kcedil":"Ķ","kcedil":"ķ","Kcy":"К","kcy":"к","Kfr":"𝔎","kfr":"𝔨","kgreen":"ĸ","KHcy":"Х","khcy":"х","KJcy":"Ќ","kjcy":"ќ","Kopf":"𝕂","kopf":"𝕜","Kscr":"𝒦","kscr":"𝓀","lAarr":"⇚","Lacute":"Ĺ","lacute":"ĺ","laemptyv":"⦴","lagran":"ℒ","Lambda":"Λ","lambda":"λ","lang":"⟨","Lang":"⟪","langd":"⦑","langle":"⟨","lap":"⪅","Laplacetrf":"ℒ","laquo":"«","larrb":"⇤","larrbfs":"⤟","larr":"←","Larr":"↞","lArr":"⇐","larrfs":"⤝","larrhk":"↩","larrlp":"↫","larrpl":"⤹","larrsim":"⥳","larrtl":"↢","latail":"⤙","lAtail":"⤛","lat":"⪫","late":"⪭","lates":"⪭︀","lbarr":"⤌","lBarr":"⤎","lbbrk":"❲","lbrace":"{","lbrack":"[","lbrke":"⦋","lbrksld":"⦏","lbrkslu":"⦍","Lcaron":"Ľ","lcaron":"ľ","Lcedil":"Ļ","lcedil":"ļ","lceil":"⌈","lcub":"{","Lcy":"Л","lcy":"л","ldca":"⤶","ldquo":"“","ldquor":"„","ldrdhar":"⥧","ldrushar":"⥋","ldsh":"↲","le":"≤","lE":"≦","LeftAngleBracket":"⟨","LeftArrowBar":"⇤","leftarrow":"←","LeftArrow":"←","Leftarrow":"⇐","LeftArrowRightArrow":"⇆","leftarrowtail":"↢","LeftCeiling":"⌈","LeftDoubleBracket":"⟦","LeftDownTeeVector":"⥡","LeftDownVectorBar":"⥙","LeftDownVector":"⇃","LeftFloor":"⌊","leftharpoondown":"↽","leftharpoonup":"↼","leftleftarrows":"⇇","leftrightarrow":"↔","LeftRightArrow":"↔","Leftrightarrow":"⇔","leftrightarrows":"⇆","leftrightharpoons":"⇋","leftrightsquigarrow":"↭","LeftRightVector":"⥎","LeftTeeArrow":"↤","LeftTee":"⊣","LeftTeeVector":"⥚","leftthreetimes":"⋋","LeftTriangleBar":"⧏","LeftTriangle":"⊲","LeftTriangleEqual":"⊴","LeftUpDownVector":"⥑","LeftUpTeeVector":"⥠","LeftUpVectorBar":"⥘","LeftUpVector":"↿","LeftVectorBar":"⥒","LeftVector":"↼","lEg":"⪋","leg":"⋚","leq":"≤","leqq":"≦","leqslant":"⩽","lescc":"⪨","les":"⩽","lesdot":"⩿","lesdoto":"⪁","lesdotor":"⪃","lesg":"⋚︀","lesges":"⪓","lessapprox":"⪅","lessdot":"⋖","lesseqgtr":"⋚","lesseqqgtr":"⪋","LessEqualGreater":"⋚","LessFullEqual":"≦","LessGreater":"≶","lessgtr":"≶","LessLess":"⪡","lesssim":"≲","LessSlantEqual":"⩽","LessTilde":"≲","lfisht":"⥼","lfloor":"⌊","Lfr":"𝔏","lfr":"𝔩","lg":"≶","lgE":"⪑","lHar":"⥢","lhard":"↽","lharu":"↼","lharul":"⥪","lhblk":"▄","LJcy":"Љ","ljcy":"љ","llarr":"⇇","ll":"≪","Ll":"⋘","llcorner":"⌞","Lleftarrow":"⇚","llhard":"⥫","lltri":"◺","Lmidot":"Ŀ","lmidot":"ŀ","lmoustache":"⎰","lmoust":"⎰","lnap":"⪉","lnapprox":"⪉","lne":"⪇","lnE":"≨","lneq":"⪇","lneqq":"≨","lnsim":"⋦","loang":"⟬","loarr":"⇽","lobrk":"⟦","longleftarrow":"⟵","LongLeftArrow":"⟵","Longleftarrow":"⟸","longleftrightarrow":"⟷","LongLeftRightArrow":"⟷","Longleftrightarrow":"⟺","longmapsto":"⟼","longrightarrow":"⟶","LongRightArrow":"⟶","Longrightarrow":"⟹","looparrowleft":"↫","looparrowright":"↬","lopar":"⦅","Lopf":"𝕃","lopf":"𝕝","loplus":"⨭","lotimes":"⨴","lowast":"∗","lowbar":"_","LowerLeftArrow":"↙","LowerRightArrow":"↘","loz":"◊","lozenge":"◊","lozf":"⧫","lpar":"(","lparlt":"⦓","lrarr":"⇆","lrcorner":"⌟","lrhar":"⇋","lrhard":"⥭","lrm":"‎","lrtri":"⊿","lsaquo":"‹","lscr":"𝓁","Lscr":"ℒ","lsh":"↰","Lsh":"↰","lsim":"≲","lsime":"⪍","lsimg":"⪏","lsqb":"[","lsquo":"‘","lsquor":"‚","Lstrok":"Ł","lstrok":"ł","ltcc":"⪦","ltcir":"⩹","lt":"<","LT":"<","Lt":"≪","ltdot":"⋖","lthree":"⋋","ltimes":"⋉","ltlarr":"⥶","ltquest":"⩻","ltri":"◃","ltrie":"⊴","ltrif":"◂","ltrPar":"⦖","lurdshar":"⥊","luruhar":"⥦","lvertneqq":"≨︀","lvnE":"≨︀","macr":"¯","male":"♂","malt":"✠","maltese":"✠","Map":"⤅","map":"↦","mapsto":"↦","mapstodown":"↧","mapstoleft":"↤","mapstoup":"↥","marker":"▮","mcomma":"⨩","Mcy":"М","mcy":"м","mdash":"—","mDDot":"∺","measuredangle":"∡","MediumSpace":" ","Mellintrf":"ℳ","Mfr":"𝔐","mfr":"𝔪","mho":"℧","micro":"µ","midast":"*","midcir":"⫰","mid":"∣","middot":"·","minusb":"⊟","minus":"−","minusd":"∸","minusdu":"⨪","MinusPlus":"∓","mlcp":"⫛","mldr":"…","mnplus":"∓","models":"⊧","Mopf":"𝕄","mopf":"𝕞","mp":"∓","mscr":"𝓂","Mscr":"ℳ","mstpos":"∾","Mu":"Μ","mu":"μ","multimap":"⊸","mumap":"⊸","nabla":"∇","Nacute":"Ń","nacute":"ń","nang":"∠⃒","nap":"≉","napE":"⩰̸","napid":"≋̸","napos":"ŉ","napprox":"≉","natural":"♮","naturals":"ℕ","natur":"♮","nbsp":" ","nbump":"≎̸","nbumpe":"≏̸","ncap":"⩃","Ncaron":"Ň","ncaron":"ň","Ncedil":"Ņ","ncedil":"ņ","ncong":"≇","ncongdot":"⩭̸","ncup":"⩂","Ncy":"Н","ncy":"н","ndash":"–","nearhk":"⤤","nearr":"↗","neArr":"⇗","nearrow":"↗","ne":"≠","nedot":"≐̸","NegativeMediumSpace":"​","NegativeThickSpace":"​","NegativeThinSpace":"​","NegativeVeryThinSpace":"​","nequiv":"≢","nesear":"⤨","nesim":"≂̸","NestedGreaterGreater":"≫","NestedLessLess":"≪","NewLine":"\\n","nexist":"∄","nexists":"∄","Nfr":"𝔑","nfr":"𝔫","ngE":"≧̸","nge":"≱","ngeq":"≱","ngeqq":"≧̸","ngeqslant":"⩾̸","nges":"⩾̸","nGg":"⋙̸","ngsim":"≵","nGt":"≫⃒","ngt":"≯","ngtr":"≯","nGtv":"≫̸","nharr":"↮","nhArr":"⇎","nhpar":"⫲","ni":"∋","nis":"⋼","nisd":"⋺","niv":"∋","NJcy":"Њ","njcy":"њ","nlarr":"↚","nlArr":"⇍","nldr":"‥","nlE":"≦̸","nle":"≰","nleftarrow":"↚","nLeftarrow":"⇍","nleftrightarrow":"↮","nLeftrightarrow":"⇎","nleq":"≰","nleqq":"≦̸","nleqslant":"⩽̸","nles":"⩽̸","nless":"≮","nLl":"⋘̸","nlsim":"≴","nLt":"≪⃒","nlt":"≮","nltri":"⋪","nltrie":"⋬","nLtv":"≪̸","nmid":"∤","NoBreak":"⁠","NonBreakingSpace":" ","nopf":"𝕟","Nopf":"ℕ","Not":"⫬","not":"¬","NotCongruent":"≢","NotCupCap":"≭","NotDoubleVerticalBar":"∦","NotElement":"∉","NotEqual":"≠","NotEqualTilde":"≂̸","NotExists":"∄","NotGreater":"≯","NotGreaterEqual":"≱","NotGreaterFullEqual":"≧̸","NotGreaterGreater":"≫̸","NotGreaterLess":"≹","NotGreaterSlantEqual":"⩾̸","NotGreaterTilde":"≵","NotHumpDownHump":"≎̸","NotHumpEqual":"≏̸","notin":"∉","notindot":"⋵̸","notinE":"⋹̸","notinva":"∉","notinvb":"⋷","notinvc":"⋶","NotLeftTriangleBar":"⧏̸","NotLeftTriangle":"⋪","NotLeftTriangleEqual":"⋬","NotLess":"≮","NotLessEqual":"≰","NotLessGreater":"≸","NotLessLess":"≪̸","NotLessSlantEqual":"⩽̸","NotLessTilde":"≴","NotNestedGreaterGreater":"⪢̸","NotNestedLessLess":"⪡̸","notni":"∌","notniva":"∌","notnivb":"⋾","notnivc":"⋽","NotPrecedes":"⊀","NotPrecedesEqual":"⪯̸","NotPrecedesSlantEqual":"⋠","NotReverseElement":"∌","NotRightTriangleBar":"⧐̸","NotRightTriangle":"⋫","NotRightTriangleEqual":"⋭","NotSquareSubset":"⊏̸","NotSquareSubsetEqual":"⋢","NotSquareSuperset":"⊐̸","NotSquareSupersetEqual":"⋣","NotSubset":"⊂⃒","NotSubsetEqual":"⊈","NotSucceeds":"⊁","NotSucceedsEqual":"⪰̸","NotSucceedsSlantEqual":"⋡","NotSucceedsTilde":"≿̸","NotSuperset":"⊃⃒","NotSupersetEqual":"⊉","NotTilde":"≁","NotTildeEqual":"≄","NotTildeFullEqual":"≇","NotTildeTilde":"≉","NotVerticalBar":"∤","nparallel":"∦","npar":"∦","nparsl":"⫽⃥","npart":"∂̸","npolint":"⨔","npr":"⊀","nprcue":"⋠","nprec":"⊀","npreceq":"⪯̸","npre":"⪯̸","nrarrc":"⤳̸","nrarr":"↛","nrArr":"⇏","nrarrw":"↝̸","nrightarrow":"↛","nRightarrow":"⇏","nrtri":"⋫","nrtrie":"⋭","nsc":"⊁","nsccue":"⋡","nsce":"⪰̸","Nscr":"𝒩","nscr":"𝓃","nshortmid":"∤","nshortparallel":"∦","nsim":"≁","nsime":"≄","nsimeq":"≄","nsmid":"∤","nspar":"∦","nsqsube":"⋢","nsqsupe":"⋣","nsub":"⊄","nsubE":"⫅̸","nsube":"⊈","nsubset":"⊂⃒","nsubseteq":"⊈","nsubseteqq":"⫅̸","nsucc":"⊁","nsucceq":"⪰̸","nsup":"⊅","nsupE":"⫆̸","nsupe":"⊉","nsupset":"⊃⃒","nsupseteq":"⊉","nsupseteqq":"⫆̸","ntgl":"≹","Ntilde":"Ñ","ntilde":"ñ","ntlg":"≸","ntriangleleft":"⋪","ntrianglelefteq":"⋬","ntriangleright":"⋫","ntrianglerighteq":"⋭","Nu":"Ν","nu":"ν","num":"#","numero":"№","numsp":" ","nvap":"≍⃒","nvdash":"⊬","nvDash":"⊭","nVdash":"⊮","nVDash":"⊯","nvge":"≥⃒","nvgt":">⃒","nvHarr":"⤄","nvinfin":"⧞","nvlArr":"⤂","nvle":"≤⃒","nvlt":"<⃒","nvltrie":"⊴⃒","nvrArr":"⤃","nvrtrie":"⊵⃒","nvsim":"∼⃒","nwarhk":"⤣","nwarr":"↖","nwArr":"⇖","nwarrow":"↖","nwnear":"⤧","Oacute":"Ó","oacute":"ó","oast":"⊛","Ocirc":"Ô","ocirc":"ô","ocir":"⊚","Ocy":"О","ocy":"о","odash":"⊝","Odblac":"Ő","odblac":"ő","odiv":"⨸","odot":"⊙","odsold":"⦼","OElig":"Œ","oelig":"œ","ofcir":"⦿","Ofr":"𝔒","ofr":"𝔬","ogon":"˛","Ograve":"Ò","ograve":"ò","ogt":"⧁","ohbar":"⦵","ohm":"Ω","oint":"∮","olarr":"↺","olcir":"⦾","olcross":"⦻","oline":"‾","olt":"⧀","Omacr":"Ō","omacr":"ō","Omega":"Ω","omega":"ω","Omicron":"Ο","omicron":"ο","omid":"⦶","ominus":"⊖","Oopf":"𝕆","oopf":"𝕠","opar":"⦷","OpenCurlyDoubleQuote":"“","OpenCurlyQuote":"‘","operp":"⦹","oplus":"⊕","orarr":"↻","Or":"⩔","or":"∨","ord":"⩝","order":"ℴ","orderof":"ℴ","ordf":"ª","ordm":"º","origof":"⊶","oror":"⩖","orslope":"⩗","orv":"⩛","oS":"Ⓢ","Oscr":"𝒪","oscr":"ℴ","Oslash":"Ø","oslash":"ø","osol":"⊘","Otilde":"Õ","otilde":"õ","otimesas":"⨶","Otimes":"⨷","otimes":"⊗","Ouml":"Ö","ouml":"ö","ovbar":"⌽","OverBar":"‾","OverBrace":"⏞","OverBracket":"⎴","OverParenthesis":"⏜","para":"¶","parallel":"∥","par":"∥","parsim":"⫳","parsl":"⫽","part":"∂","PartialD":"∂","Pcy":"П","pcy":"п","percnt":"%","period":".","permil":"‰","perp":"⊥","pertenk":"‱","Pfr":"𝔓","pfr":"𝔭","Phi":"Φ","phi":"φ","phiv":"ϕ","phmmat":"ℳ","phone":"☎","Pi":"Π","pi":"π","pitchfork":"⋔","piv":"ϖ","planck":"ℏ","planckh":"ℎ","plankv":"ℏ","plusacir":"⨣","plusb":"⊞","pluscir":"⨢","plus":"+","plusdo":"∔","plusdu":"⨥","pluse":"⩲","PlusMinus":"±","plusmn":"±","plussim":"⨦","plustwo":"⨧","pm":"±","Poincareplane":"ℌ","pointint":"⨕","popf":"𝕡","Popf":"ℙ","pound":"£","prap":"⪷","Pr":"⪻","pr":"≺","prcue":"≼","precapprox":"⪷","prec":"≺","preccurlyeq":"≼","Precedes":"≺","PrecedesEqual":"⪯","PrecedesSlantEqual":"≼","PrecedesTilde":"≾","preceq":"⪯","precnapprox":"⪹","precneqq":"⪵","precnsim":"⋨","pre":"⪯","prE":"⪳","precsim":"≾","prime":"′","Prime":"″","primes":"ℙ","prnap":"⪹","prnE":"⪵","prnsim":"⋨","prod":"∏","Product":"∏","profalar":"⌮","profline":"⌒","profsurf":"⌓","prop":"∝","Proportional":"∝","Proportion":"∷","propto":"∝","prsim":"≾","prurel":"⊰","Pscr":"𝒫","pscr":"𝓅","Psi":"Ψ","psi":"ψ","puncsp":" ","Qfr":"𝔔","qfr":"𝔮","qint":"⨌","qopf":"𝕢","Qopf":"ℚ","qprime":"⁗","Qscr":"𝒬","qscr":"𝓆","quaternions":"ℍ","quatint":"⨖","quest":"?","questeq":"≟","quot":"\\"","QUOT":"\\"","rAarr":"⇛","race":"∽̱","Racute":"Ŕ","racute":"ŕ","radic":"√","raemptyv":"⦳","rang":"⟩","Rang":"⟫","rangd":"⦒","range":"⦥","rangle":"⟩","raquo":"»","rarrap":"⥵","rarrb":"⇥","rarrbfs":"⤠","rarrc":"⤳","rarr":"→","Rarr":"↠","rArr":"⇒","rarrfs":"⤞","rarrhk":"↪","rarrlp":"↬","rarrpl":"⥅","rarrsim":"⥴","Rarrtl":"⤖","rarrtl":"↣","rarrw":"↝","ratail":"⤚","rAtail":"⤜","ratio":"∶","rationals":"ℚ","rbarr":"⤍","rBarr":"⤏","RBarr":"⤐","rbbrk":"❳","rbrace":"}","rbrack":"]","rbrke":"⦌","rbrksld":"⦎","rbrkslu":"⦐","Rcaron":"Ř","rcaron":"ř","Rcedil":"Ŗ","rcedil":"ŗ","rceil":"⌉","rcub":"}","Rcy":"Р","rcy":"р","rdca":"⤷","rdldhar":"⥩","rdquo":"”","rdquor":"”","rdsh":"↳","real":"ℜ","realine":"ℛ","realpart":"ℜ","reals":"ℝ","Re":"ℜ","rect":"▭","reg":"®","REG":"®","ReverseElement":"∋","ReverseEquilibrium":"⇋","ReverseUpEquilibrium":"⥯","rfisht":"⥽","rfloor":"⌋","rfr":"𝔯","Rfr":"ℜ","rHar":"⥤","rhard":"⇁","rharu":"⇀","rharul":"⥬","Rho":"Ρ","rho":"ρ","rhov":"ϱ","RightAngleBracket":"⟩","RightArrowBar":"⇥","rightarrow":"→","RightArrow":"→","Rightarrow":"⇒","RightArrowLeftArrow":"⇄","rightarrowtail":"↣","RightCeiling":"⌉","RightDoubleBracket":"⟧","RightDownTeeVector":"⥝","RightDownVectorBar":"⥕","RightDownVector":"⇂","RightFloor":"⌋","rightharpoondown":"⇁","rightharpoonup":"⇀","rightleftarrows":"⇄","rightleftharpoons":"⇌","rightrightarrows":"⇉","rightsquigarrow":"↝","RightTeeArrow":"↦","RightTee":"⊢","RightTeeVector":"⥛","rightthreetimes":"⋌","RightTriangleBar":"⧐","RightTriangle":"⊳","RightTriangleEqual":"⊵","RightUpDownVector":"⥏","RightUpTeeVector":"⥜","RightUpVectorBar":"⥔","RightUpVector":"↾","RightVectorBar":"⥓","RightVector":"⇀","ring":"˚","risingdotseq":"≓","rlarr":"⇄","rlhar":"⇌","rlm":"‏","rmoustache":"⎱","rmoust":"⎱","rnmid":"⫮","roang":"⟭","roarr":"⇾","robrk":"⟧","ropar":"⦆","ropf":"𝕣","Ropf":"ℝ","roplus":"⨮","rotimes":"⨵","RoundImplies":"⥰","rpar":")","rpargt":"⦔","rppolint":"⨒","rrarr":"⇉","Rrightarrow":"⇛","rsaquo":"›","rscr":"𝓇","Rscr":"ℛ","rsh":"↱","Rsh":"↱","rsqb":"]","rsquo":"’","rsquor":"’","rthree":"⋌","rtimes":"⋊","rtri":"▹","rtrie":"⊵","rtrif":"▸","rtriltri":"⧎","RuleDelayed":"⧴","ruluhar":"⥨","rx":"℞","Sacute":"Ś","sacute":"ś","sbquo":"‚","scap":"⪸","Scaron":"Š","scaron":"š","Sc":"⪼","sc":"≻","sccue":"≽","sce":"⪰","scE":"⪴","Scedil":"Ş","scedil":"ş","Scirc":"Ŝ","scirc":"ŝ","scnap":"⪺","scnE":"⪶","scnsim":"⋩","scpolint":"⨓","scsim":"≿","Scy":"С","scy":"с","sdotb":"⊡","sdot":"⋅","sdote":"⩦","searhk":"⤥","searr":"↘","seArr":"⇘","searrow":"↘","sect":"§","semi":";","seswar":"⤩","setminus":"∖","setmn":"∖","sext":"✶","Sfr":"𝔖","sfr":"𝔰","sfrown":"⌢","sharp":"♯","SHCHcy":"Щ","shchcy":"щ","SHcy":"Ш","shcy":"ш","ShortDownArrow":"↓","ShortLeftArrow":"←","shortmid":"∣","shortparallel":"∥","ShortRightArrow":"→","ShortUpArrow":"↑","shy":"­","Sigma":"Σ","sigma":"σ","sigmaf":"ς","sigmav":"ς","sim":"∼","simdot":"⩪","sime":"≃","simeq":"≃","simg":"⪞","simgE":"⪠","siml":"⪝","simlE":"⪟","simne":"≆","simplus":"⨤","simrarr":"⥲","slarr":"←","SmallCircle":"∘","smallsetminus":"∖","smashp":"⨳","smeparsl":"⧤","smid":"∣","smile":"⌣","smt":"⪪","smte":"⪬","smtes":"⪬︀","SOFTcy":"Ь","softcy":"ь","solbar":"⌿","solb":"⧄","sol":"/","Sopf":"𝕊","sopf":"𝕤","spades":"♠","spadesuit":"♠","spar":"∥","sqcap":"⊓","sqcaps":"⊓︀","sqcup":"⊔","sqcups":"⊔︀","Sqrt":"√","sqsub":"⊏","sqsube":"⊑","sqsubset":"⊏","sqsubseteq":"⊑","sqsup":"⊐","sqsupe":"⊒","sqsupset":"⊐","sqsupseteq":"⊒","square":"□","Square":"□","SquareIntersection":"⊓","SquareSubset":"⊏","SquareSubsetEqual":"⊑","SquareSuperset":"⊐","SquareSupersetEqual":"⊒","SquareUnion":"⊔","squarf":"▪","squ":"□","squf":"▪","srarr":"→","Sscr":"𝒮","sscr":"𝓈","ssetmn":"∖","ssmile":"⌣","sstarf":"⋆","Star":"⋆","star":"☆","starf":"★","straightepsilon":"ϵ","straightphi":"ϕ","strns":"¯","sub":"⊂","Sub":"⋐","subdot":"⪽","subE":"⫅","sube":"⊆","subedot":"⫃","submult":"⫁","subnE":"⫋","subne":"⊊","subplus":"⪿","subrarr":"⥹","subset":"⊂","Subset":"⋐","subseteq":"⊆","subseteqq":"⫅","SubsetEqual":"⊆","subsetneq":"⊊","subsetneqq":"⫋","subsim":"⫇","subsub":"⫕","subsup":"⫓","succapprox":"⪸","succ":"≻","succcurlyeq":"≽","Succeeds":"≻","SucceedsEqual":"⪰","SucceedsSlantEqual":"≽","SucceedsTilde":"≿","succeq":"⪰","succnapprox":"⪺","succneqq":"⪶","succnsim":"⋩","succsim":"≿","SuchThat":"∋","sum":"∑","Sum":"∑","sung":"♪","sup1":"¹","sup2":"²","sup3":"³","sup":"⊃","Sup":"⋑","supdot":"⪾","supdsub":"⫘","supE":"⫆","supe":"⊇","supedot":"⫄","Superset":"⊃","SupersetEqual":"⊇","suphsol":"⟉","suphsub":"⫗","suplarr":"⥻","supmult":"⫂","supnE":"⫌","supne":"⊋","supplus":"⫀","supset":"⊃","Supset":"⋑","supseteq":"⊇","supseteqq":"⫆","supsetneq":"⊋","supsetneqq":"⫌","supsim":"⫈","supsub":"⫔","supsup":"⫖","swarhk":"⤦","swarr":"↙","swArr":"⇙","swarrow":"↙","swnwar":"⤪","szlig":"ß","Tab":"\\t","target":"⌖","Tau":"Τ","tau":"τ","tbrk":"⎴","Tcaron":"Ť","tcaron":"ť","Tcedil":"Ţ","tcedil":"ţ","Tcy":"Т","tcy":"т","tdot":"⃛","telrec":"⌕","Tfr":"𝔗","tfr":"𝔱","there4":"∴","therefore":"∴","Therefore":"∴","Theta":"Θ","theta":"θ","thetasym":"ϑ","thetav":"ϑ","thickapprox":"≈","thicksim":"∼","ThickSpace":"  ","ThinSpace":" ","thinsp":" ","thkap":"≈","thksim":"∼","THORN":"Þ","thorn":"þ","tilde":"˜","Tilde":"∼","TildeEqual":"≃","TildeFullEqual":"≅","TildeTilde":"≈","timesbar":"⨱","timesb":"⊠","times":"×","timesd":"⨰","tint":"∭","toea":"⤨","topbot":"⌶","topcir":"⫱","top":"⊤","Topf":"𝕋","topf":"𝕥","topfork":"⫚","tosa":"⤩","tprime":"‴","trade":"™","TRADE":"™","triangle":"▵","triangledown":"▿","triangleleft":"◃","trianglelefteq":"⊴","triangleq":"≜","triangleright":"▹","trianglerighteq":"⊵","tridot":"◬","trie":"≜","triminus":"⨺","TripleDot":"⃛","triplus":"⨹","trisb":"⧍","tritime":"⨻","trpezium":"⏢","Tscr":"𝒯","tscr":"𝓉","TScy":"Ц","tscy":"ц","TSHcy":"Ћ","tshcy":"ћ","Tstrok":"Ŧ","tstrok":"ŧ","twixt":"≬","twoheadleftarrow":"↞","twoheadrightarrow":"↠","Uacute":"Ú","uacute":"ú","uarr":"↑","Uarr":"↟","uArr":"⇑","Uarrocir":"⥉","Ubrcy":"Ў","ubrcy":"ў","Ubreve":"Ŭ","ubreve":"ŭ","Ucirc":"Û","ucirc":"û","Ucy":"У","ucy":"у","udarr":"⇅","Udblac":"Ű","udblac":"ű","udhar":"⥮","ufisht":"⥾","Ufr":"𝔘","ufr":"𝔲","Ugrave":"Ù","ugrave":"ù","uHar":"⥣","uharl":"↿","uharr":"↾","uhblk":"▀","ulcorn":"⌜","ulcorner":"⌜","ulcrop":"⌏","ultri":"◸","Umacr":"Ū","umacr":"ū","uml":"¨","UnderBar":"_","UnderBrace":"⏟","UnderBracket":"⎵","UnderParenthesis":"⏝","Union":"⋃","UnionPlus":"⊎","Uogon":"Ų","uogon":"ų","Uopf":"𝕌","uopf":"𝕦","UpArrowBar":"⤒","uparrow":"↑","UpArrow":"↑","Uparrow":"⇑","UpArrowDownArrow":"⇅","updownarrow":"↕","UpDownArrow":"↕","Updownarrow":"⇕","UpEquilibrium":"⥮","upharpoonleft":"↿","upharpoonright":"↾","uplus":"⊎","UpperLeftArrow":"↖","UpperRightArrow":"↗","upsi":"υ","Upsi":"ϒ","upsih":"ϒ","Upsilon":"Υ","upsilon":"υ","UpTeeArrow":"↥","UpTee":"⊥","upuparrows":"⇈","urcorn":"⌝","urcorner":"⌝","urcrop":"⌎","Uring":"Ů","uring":"ů","urtri":"◹","Uscr":"𝒰","uscr":"𝓊","utdot":"⋰","Utilde":"Ũ","utilde":"ũ","utri":"▵","utrif":"▴","uuarr":"⇈","Uuml":"Ü","uuml":"ü","uwangle":"⦧","vangrt":"⦜","varepsilon":"ϵ","varkappa":"ϰ","varnothing":"∅","varphi":"ϕ","varpi":"ϖ","varpropto":"∝","varr":"↕","vArr":"⇕","varrho":"ϱ","varsigma":"ς","varsubsetneq":"⊊︀","varsubsetneqq":"⫋︀","varsupsetneq":"⊋︀","varsupsetneqq":"⫌︀","vartheta":"ϑ","vartriangleleft":"⊲","vartriangleright":"⊳","vBar":"⫨","Vbar":"⫫","vBarv":"⫩","Vcy":"В","vcy":"в","vdash":"⊢","vDash":"⊨","Vdash":"⊩","VDash":"⊫","Vdashl":"⫦","veebar":"⊻","vee":"∨","Vee":"⋁","veeeq":"≚","vellip":"⋮","verbar":"|","Verbar":"‖","vert":"|","Vert":"‖","VerticalBar":"∣","VerticalLine":"|","VerticalSeparator":"❘","VerticalTilde":"≀","VeryThinSpace":" ","Vfr":"𝔙","vfr":"𝔳","vltri":"⊲","vnsub":"⊂⃒","vnsup":"⊃⃒","Vopf":"𝕍","vopf":"𝕧","vprop":"∝","vrtri":"⊳","Vscr":"𝒱","vscr":"𝓋","vsubnE":"⫋︀","vsubne":"⊊︀","vsupnE":"⫌︀","vsupne":"⊋︀","Vvdash":"⊪","vzigzag":"⦚","Wcirc":"Ŵ","wcirc":"ŵ","wedbar":"⩟","wedge":"∧","Wedge":"⋀","wedgeq":"≙","weierp":"℘","Wfr":"𝔚","wfr":"𝔴","Wopf":"𝕎","wopf":"𝕨","wp":"℘","wr":"≀","wreath":"≀","Wscr":"𝒲","wscr":"𝓌","xcap":"⋂","xcirc":"◯","xcup":"⋃","xdtri":"▽","Xfr":"𝔛","xfr":"𝔵","xharr":"⟷","xhArr":"⟺","Xi":"Ξ","xi":"ξ","xlarr":"⟵","xlArr":"⟸","xmap":"⟼","xnis":"⋻","xodot":"⨀","Xopf":"𝕏","xopf":"𝕩","xoplus":"⨁","xotime":"⨂","xrarr":"⟶","xrArr":"⟹","Xscr":"𝒳","xscr":"𝓍","xsqcup":"⨆","xuplus":"⨄","xutri":"△","xvee":"⋁","xwedge":"⋀","Yacute":"Ý","yacute":"ý","YAcy":"Я","yacy":"я","Ycirc":"Ŷ","ycirc":"ŷ","Ycy":"Ы","ycy":"ы","yen":"¥","Yfr":"𝔜","yfr":"𝔶","YIcy":"Ї","yicy":"ї","Yopf":"𝕐","yopf":"𝕪","Yscr":"𝒴","yscr":"𝓎","YUcy":"Ю","yucy":"ю","yuml":"ÿ","Yuml":"Ÿ","Zacute":"Ź","zacute":"ź","Zcaron":"Ž","zcaron":"ž","Zcy":"З","zcy":"з","Zdot":"Ż","zdot":"ż","zeetrf":"ℨ","ZeroWidthSpace":"​","Zeta":"Ζ","zeta":"ζ","zfr":"𝔷","Zfr":"ℨ","ZHcy":"Ж","zhcy":"ж","zigrarr":"⇝","zopf":"𝕫","Zopf":"ℤ","Zscr":"𝒵","zscr":"𝓏","zwj":"‍","zwnj":"‌"}');
 
 /***/ }),
 
-/***/ 6182:
+/***/ 2061:
 /***/ (function(module) {
 
 "use strict";
-module.exports = /*#__PURE__*/JSON.parse('{"Aacute":"Á","aacute":"á","Acirc":"Â","acirc":"â","acute":"´","AElig":"Æ","aelig":"æ","Agrave":"À","agrave":"à","amp":"&","AMP":"&","Aring":"Å","aring":"å","Atilde":"Ã","atilde":"ã","Auml":"Ä","auml":"ä","brvbar":"¦","Ccedil":"Ç","ccedil":"ç","cedil":"¸","cent":"¢","copy":"©","COPY":"©","curren":"¤","deg":"°","divide":"÷","Eacute":"É","eacute":"é","Ecirc":"Ê","ecirc":"ê","Egrave":"È","egrave":"è","ETH":"Ð","eth":"ð","Euml":"Ë","euml":"ë","frac12":"½","frac14":"¼","frac34":"¾","gt":">","GT":">","Iacute":"Í","iacute":"í","Icirc":"Î","icirc":"î","iexcl":"¡","Igrave":"Ì","igrave":"ì","iquest":"¿","Iuml":"Ï","iuml":"ï","laquo":"«","lt":"<","LT":"<","macr":"¯","micro":"µ","middot":"·","nbsp":" ","not":"¬","Ntilde":"Ñ","ntilde":"ñ","Oacute":"Ó","oacute":"ó","Ocirc":"Ô","ocirc":"ô","Ograve":"Ò","ograve":"ò","ordf":"ª","ordm":"º","Oslash":"Ø","oslash":"ø","Otilde":"Õ","otilde":"õ","Ouml":"Ö","ouml":"ö","para":"¶","plusmn":"±","pound":"£","quot":"\\"","QUOT":"\\"","raquo":"»","reg":"®","REG":"®","sect":"§","shy":"­","sup1":"¹","sup2":"²","sup3":"³","szlig":"ß","THORN":"Þ","thorn":"þ","times":"×","Uacute":"Ú","uacute":"ú","Ucirc":"Û","ucirc":"û","Ugrave":"Ù","ugrave":"ù","uml":"¨","Uuml":"Ü","uuml":"ü","Yacute":"Ý","yacute":"ý","yen":"¥","yuml":"ÿ"}');
+module.exports = JSON.parse('{"Aacute":"Á","aacute":"á","Acirc":"Â","acirc":"â","acute":"´","AElig":"Æ","aelig":"æ","Agrave":"À","agrave":"à","amp":"&","AMP":"&","Aring":"Å","aring":"å","Atilde":"Ã","atilde":"ã","Auml":"Ä","auml":"ä","brvbar":"¦","Ccedil":"Ç","ccedil":"ç","cedil":"¸","cent":"¢","copy":"©","COPY":"©","curren":"¤","deg":"°","divide":"÷","Eacute":"É","eacute":"é","Ecirc":"Ê","ecirc":"ê","Egrave":"È","egrave":"è","ETH":"Ð","eth":"ð","Euml":"Ë","euml":"ë","frac12":"½","frac14":"¼","frac34":"¾","gt":">","GT":">","Iacute":"Í","iacute":"í","Icirc":"Î","icirc":"î","iexcl":"¡","Igrave":"Ì","igrave":"ì","iquest":"¿","Iuml":"Ï","iuml":"ï","laquo":"«","lt":"<","LT":"<","macr":"¯","micro":"µ","middot":"·","nbsp":" ","not":"¬","Ntilde":"Ñ","ntilde":"ñ","Oacute":"Ó","oacute":"ó","Ocirc":"Ô","ocirc":"ô","Ograve":"Ò","ograve":"ò","ordf":"ª","ordm":"º","Oslash":"Ø","oslash":"ø","Otilde":"Õ","otilde":"õ","Ouml":"Ö","ouml":"ö","para":"¶","plusmn":"±","pound":"£","quot":"\\"","QUOT":"\\"","raquo":"»","reg":"®","REG":"®","sect":"§","shy":"­","sup1":"¹","sup2":"²","sup3":"³","szlig":"ß","THORN":"Þ","thorn":"þ","times":"×","Uacute":"Ú","uacute":"ú","Ucirc":"Û","ucirc":"û","Ugrave":"Ù","ugrave":"ù","uml":"¨","Uuml":"Ü","uuml":"ü","Yacute":"Ý","yacute":"ý","yen":"¥","yuml":"ÿ"}');
 
 /***/ }),
 
-/***/ 5614:
+/***/ 5529:
 /***/ (function(module) {
 
 "use strict";
-module.exports = /*#__PURE__*/JSON.parse('{"amp":"&","apos":"\'","gt":">","lt":"<","quot":"\\""}');
+module.exports = JSON.parse('{"amp":"&","apos":"\'","gt":">","lt":"<","quot":"\\""}');
 
 /***/ })
 
