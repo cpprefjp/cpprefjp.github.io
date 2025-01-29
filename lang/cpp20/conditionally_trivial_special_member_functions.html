@@ -188,8 +188,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2025-01-23T16:56:13">
-        2025年01月23日 16時56分13秒
+      <span itemprop="datePublished" content="2025-01-29T17:01:42">
+        2025年01月29日 17時01分42秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -219,6 +219,7 @@
 <p>クラスの特殊メンバ関数（コンストラクタ・代入演算子・デストラクタ）の<code>default</code>宣言をコンセプトによって制約することで、テンプレートパラメータの性質に応じて優先的に選択させることができる様になる。</p>
 <p><div class="codehilite"><pre><span></span><code><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
 <span class="k">struct</span> <span class="n">wrap</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">t</span><span class="p">;</span>
 
   <span class="c1">// 1. 制約されたdefaultなコピーコンストラクタ</span>
   <span class="n">wrap</span><span class="p">(</span><span class="k">const</span> <span class="n">wrap</span><span class="o">&amp;</span><span class="p">)</span> <span class="n">requires</span> <span class="n">std</span><span class="o">::</span><span class="n">is_trivially_copy_constructible_v</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
@@ -230,10 +231,37 @@
 <span class="p">};</span>
 </code></pre></div>
 </p>
-<p><code>T</code>が<code>std::is_trivially_copy_constructible</code>を満たす場合、1の宣言が選択され<code>wrap&lt;T&gt;</code>のコピーコンストラクタは<code>default</code>実装される（2のコンストラクタが選択されることは無い）。<code>T</code>が<code>std::is_trivially_copy_constructible</code>を満たさない場合、2の宣言が選択され<code>wrap&lt;T&gt;</code>のコピーコンストラクタは<a class="cpprefjp-defined-word" data-desc="プログラム定義。ユーザー（プログラマ）によって定義されること（標準ライブラリで定義されるものを除く）">ユーザー定義</a>される。</p>
-<p>特に、<code>T</code>がトリビアルコピー可能である場合にこの仕組みによって1のコンストラクタが選択されれば、（他の条件を満たしているものとして）<code>wrap&lt;T&gt;</code>もまたトリビアルコピー可能となる。</p>
+<p><code>T</code>が<code>std::is_trivially_copy_constructible</code>を満たす場合、1の宣言が選択され<code>wrap&lt;T&gt;</code>のコピーコンストラクタは<code>default</code>実装される（2のコンストラクタが選択されることは無い）。<code>T</code>が<code>std::is_trivially_copy_constructible</code>を満たさない場合、2の宣言が選択され<code>wrap&lt;T&gt;</code>のコピーコンストラクタは<a class="cpprefjp-defined-word" data-desc="プログラム定義。ユーザー（プログラマ）によって定義されること（標準ライブラリで定義されるものを除く）">ユーザー定義</a>される（1のコンストラクタが選択されることは無い）。</p>
+<p>特に、<code>T</code>がトリビアルコピー可能である場合にこの仕組みによって1のコンストラクタが選択されれば、（他の条件を満たしているものとして）<code>wrap&lt;T&gt;</code>もまたトリビアルコピー可能となる。トリビアル性に関する他の性質も同様に伝播することが可能となる。</p>
 <h2>仕様</h2>
-<p>(執筆中)</p>
+<p>次のいずれかの場合、2つの特殊メンバ関数は同種となる</p>
+<ol>
+<li>両方ともデフォルトコンストラクタ</li>
+<li>両方ともコピー/ムーブコンストラクタであり、最初の引数型が同じ</li>
+<li>両方ともコピー/ムーブ代入演算子であり、最初の引数型と参照・<a class="cpprefjp-defined-word" data-desc="型をconstおよび・もしくはvolatileで修飾すること">CV修飾</a>が同じ</li>
+</ol>
+<p>ある特殊メンバ関数が次の全てを満たす場合、それは資格のある（<em>eligible</em>）特殊メンバ関数となる</p>
+<ol>
+<li><code>delete</code>されていない</li>
+<li>関連制約がある場合（コンセプト機能により制約がなされている場合）、それが満たされている</li>
+<li>同種の特殊メンバ関数で、より制約されているものがない</li>
+</ol>
+<p>次に、宣言されている全てのデストラクタはデストラクタ候補（<em>prospective destructor</em>）として扱われるようになる。そして、クラスの定義の最後（<code>};</code>が出現した場所と思って差し支えない）において、全てのデストラクタ候補の間で空の引数リストで呼び出す形で<a class="cpprefjp-defined-word" data-desc="関数呼び出し時に、同名の関数の中から実際に呼び出す関数を決定する処理。このときの候補になることを、オーバーロード解決に参加するという">オーバーロード解決</a>を実行し、そのクラスのデストラクタを選択する。</p>
+<p>こうして選ばれたデストラクタの事を選択されたデストラクタ（<em>selected destructor</em>）とも呼ぶが、この選択されたデストラクタだけがそのクラスのデストラクタとなる（規格書中の他のすべての箇所で単にデストラクタ（<em>destructor</em>）と呼ばれるものは、この選択されたデストラクタの事を指す）。なお、何らかの理由で<a class="cpprefjp-defined-word" data-desc="関数呼び出し時に、同名の関数の中から実際に呼び出す関数を決定する処理。このときの候補になることを、オーバーロード解決に参加するという">オーバーロード解決</a>が失敗した場合、プログラムは<a class="cpprefjp-defined-word" data-desc="プログラムが適格でないこと。コンパイルエラーなどになる" href="../../implementation-compliance.html#dfn-ill-formed">不適格</a>となる。</p>
+<p>そして、あるクラスは次の条件を全て満たす場合にトリビアルコピー可能である</p>
+<ol>
+<li>少なくとも1つの、資格のあるコピーコンストラクタ、ムーブコンストラクタ、コピー代入演算子、またはムーブ代入演算子を持つ</li>
+<li>それら資格のあるコピーコンストラクタ、ムーブコンストラクタ、コピー代入演算子、ムーブ代入演算子、はそれぞれすべてトリビアルである</li>
+<li>トリビアルで削除されていないデストラクタ（選択されたデストラクタ）を持つ</li>
+</ol>
+<p>また、あるクラスは次の条件をすべて満たす場合にトリビアルである</p>
+<ol>
+<li>トリビアルコピー可能である</li>
+<li>1つ以上の資格のあるデフォルトコンストラクタを持つ</li>
+<li>それらのデフォルトコンストラクタは全てトリビアルである</li>
+</ol>
+<p><code>default</code>宣言の扱いについては、選択されたデストラクタ以外の<code>default</code>指定されたデストラクタ候補は<code>delete</code>定義され、デストラクタ候補でも資格があるわけでもない<code>default</code>指定された特殊メンバ関数は<code>delete</code>定義される。</p>
+<p>コンセプトによって制約された特殊メンバ関数があるとき、どれが使用されるか（<a class="cpprefjp-defined-word" data-desc="関数呼び出し時に、同名の関数の中から実際に呼び出す関数を決定する処理。このときの候補になることを、オーバーロード解決に参加するという">オーバーロード解決</a>）については通常の制約された関数と同じルールに従って選択される。そして、そのような特殊メンバ関数を持つ型のトリビアル性に関する性質については、特殊メンバ関数の<a class="cpprefjp-defined-word" data-desc="同名の関数を異なる引数・テンプレート・制約などで複数定義すること。または同名の関数の集合">オーバーロード</a>のうち資格があるもの（デストラクタの場合は選択されたもの）によって決定される。</p>
 <h2>例</h2>
 <p>(執筆中)</p>
 <p><div class="yata" id="f13c43f217dd0de2a102f881250a84a7c361e710"><div class="codehilite"><pre><span></span><code><span class="c1">// (ここには、言語機能の使い方を解説するための、サンプルコードを記述します。)</span>
@@ -252,9 +280,10 @@
 <p><pre><code>0
 </code></pre></p>
 <h2>この機能が必要になった背景・経緯</h2>
-<p>(執筆中)</p>
-<h2>検討されたほかの選択肢</h2>
-<p>(執筆中)</p>
+<p>例にあるように、C++17まで、<code>std::optional</code>のようにテンプレートパラメータで指定された型の値を保持するラッパクラス型において、その指定された型のトリビアル性を伝播するためには非常に複雑な実装を必要としていた。</p>
+<p>C++20のコンセプトの導入によって、コンセプトによって特殊メンバ関数の宣言を選択することができるようになっていたものの、トリビアル性（特にトリビアルコピー可能性）の規格上の定義がそれを考慮したものになっておらず、コンセプトによる特殊メンバ関数の選択は仕様として完全なものではなかった。</p>
+<p>この機能はそれを補うための仕組みであり、特殊メンバ関数に対するコンセプト制約自体は最初のコンセプト導入時から可能になっていたため、この機能は厳密にいえば仕様の調整のみである。</p>
+<p>この機能は、C++23の<code>std::expceted</code>の実装で活用されるだろう。</p>
 <h2>## <a href="#relative-page" id="relative-page">関連項目</a></h2>
 <ul>
 <li><a href="concepts.html">コンセプト</a></li>
@@ -263,6 +292,7 @@
 <ul>
 <li><a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0848r0.html" target="_blank">P0848R0 Conditionally Trivial Special Member Functions</a></li>
 <li><a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0848r3.html" target="_blank">P0848R3 Conditionally Trivial Special Member Functions</a></li>
+<li><a href="https://stackoverflow.com/questions/66055641/what-is-a-prospective-destructor-in-c20" target="_blank">What is a "prospective destructor" in C++20? - stackoverflow</a></li>
 </ul></div>
 
       </div>
