@@ -2,9 +2,255 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-02-15T02:18:56.716492</updated>
-  <id>e145ee3f-9a17-4344-9d5c-37dcf30eba09</id>
+  <updated>2025-02-15T09:44:03.290410</updated>
+  <id>e04055ed-589c-41c7-b3c5-28360a664c6a</id>
 
+  
+    <entry>
+      <title>条件付きで特殊メンバ関数をトリビアルに定義するように -- 例を追加 #1106</title>
+      <link href="https://cpprefjp.github.io/lang/cpp20/conditionally_trivial_special_member_functions.html"/>
+      <id>e25e0cdc98c39398b391c59c8dfd3368f5ee436c:lang/cpp20/conditionally_trivial_special_member_functions.md</id>
+      <updated>2025-02-15T18:40:43+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/conditionally_trivial_special_member_functions.md b/lang/cpp20/conditionally_trivial_special_member_functions.md
+index 6820cc28b..7a305b64c 100644
+--- a/lang/cpp20/conditionally_trivial_special_member_functions.md
++++ b/lang/cpp20/conditionally_trivial_special_member_functions.md
+@@ -64,25 +64,217 @@ struct wrap {
+ 
+ ## 例
+ 
+-(執筆中)
++`std::optional&amp;lt;T&amp;gt;`の簡易実装を考える。デストラクタについて、要素型`T`が[`trivially_destructible`](/reference/type_traits/is_trivially_destructible.md)であるかどうかに応じて`optional&amp;lt;T&amp;gt;`のデストラクタのトリビアル性も切り替えたい場合、次のような実装になる
++
++```cpp
++// デストラクタがトリビアルでない場合のストレージ型
++template&amp;lt;typename T, bool = std::is_trivially_destructible_v&amp;lt;T&amp;gt;&amp;gt;
++struct optional_storage {
++  union {
++    char dummy;
++    T data;
++  };
++  bool has_value = false;
++
++  // デストラクタは常に非トリビアルでdeleteされているので定義する
++  ~optional_storage() {
++    if (has_value) {
++      this-&amp;gt;data.~T();
++    }
++  }
++};
++
++// デストラクタがトリビアルである場合のストレージ型
++template&amp;lt;typename T&amp;gt;
++struct optional_storage&amp;lt;T, true&amp;gt; {
++  union {
++    char dummy;
++    T data;
++  };
++  bool has_value = false;
++
++  // デストラクタはトリビアルであり常にdeleteされないので、宣言も不要
++};
++
++template&amp;lt;typename T&amp;gt;
++class my_optional : private optional_storage&amp;lt;T&amp;gt; {
++public:
++
++  // 略
++  ...
++
++  // デストラクタ、この宣言も実はいらない
++  ~my_optional() = default;
++};
++```
++
++無効値と有効値でストレージを共有し、なおかつ遅延初期化等を行いながら動的確保や追加のストレージ消費を抑えるためには共用体を使用する。共用体の特殊メンバ関数はそのメンバ型のもつ特殊メンバ関数が1つでも非トリビアルであるならば対応する特殊メンバ関数が`delete`されるため、その場合はユーザーが定義しなければならない。しかしそれを一つの型の中で行うことができなかったため、このようにデストラクタの実装を行うレイヤにおいて型を分割する必要があった。
++
++これをこの機能を用いて書き直すと、次のような実装になる
++
++```cpp
++template&amp;lt;typename T&amp;gt;
++class my_optional {
++  bool has_value = false;
++  union {
++    char dummy;
++    T data;
++  };
++
++public:
++
++  // 略
++  ...
++
++  // Tのデストラクタがトリビアルならばこちらが有効化
++  ~my_optional() requires std::is_trivially_destructible_v&amp;lt;T&amp;gt; = default;
++
++  // そうでないならばこちらが有効化
++  ~my_optional() {
++    this-&amp;gt;reset();
++  }
++  
++  // reset()の定義も同様の記法で分岐できる
++
++  void reset() requires std::is_trivially_destructible_v&amp;lt;T&amp;gt; {
++    this-&amp;gt;has_value = false;
++  }
++
++  void reset() {
++    if (this-&amp;gt;has_value) {
++      this-&amp;gt;data.~T();
++    }
++    this-&amp;gt;has_value = false;
++  }
++};
++```
++
++コンセプトによって`T`の（デストラクタの）トリビアル性に応じてデストラクタを選択できるようになるため、先ほどのような定義を分けるためのレイヤが不要になり、コード量を大きく削減することができる。
++
++元の（この機能を使わない）実装に戻って、さらにコピーコンストラクタとムーブコンストラクタ、そしてコピー/ムーブ代入演算子についても同様に`T`のトリビアル性に応じて`default`とするかを切り替えることを考える。実装としてはデストラクタの時と同様に基底クラスにその判定と分岐を行うレイヤを追加して、そこで`T`の性質に応じた宣言（ユーザー定義/`default`定義）を記述していくことになるが、その総数はデストラクタのためのレイヤも含めて全5層に達し、実装はかなり複雑になる（このためここでは省略するが、この実装に興味がある場合、MSVC STLの[`xsmf_control.h`](https://github.com/microsoft/STL/blob/main/stl/inc/xsmf_control.h)およびこれを利用した`std::optional`/`std::variant`の実装が参考になると思われる）。
++
++しかし、この機能を使用すると先ほどのデストラクタの場合と同様にそのような不要なレイヤを必要とすることなくシンプルに記述できる
+ 
+ ```cpp example
+-// (ここには、言語機能の使い方を解説するための、サンプルコードを記述します。)
+-// (インクルードとmain()関数を含む、実行可能なサンプルコードを記述してください。そのようなコードブロックにはexampleタグを付けます。)
++#include &amp;lt;type_traits&amp;gt;
++#include &amp;lt;string&amp;gt;
++
++template&amp;lt;typename T&amp;gt;
++class my_optional {
++  bool has_value = false;
++  union {
++    char dummy;
++    T data;
++  };
++
++public:
++
++  // デフォルトコンストラクタ
++  constexpr my_optional() 
++    : has_value(false)
++    , dummy{}
++  {}
++
++  // 値を受け取るコンストラクタ
++  template&amp;lt;typename U=T&amp;gt;
++  constexpr my_optional(U&amp;amp;&amp;amp; v)
++    : has_value(true)
++    , data(std::forward&amp;lt;U&amp;gt;(v))
++  {}
++
++  // トリビアルに定義できるならそうする
++  my_optional(const my_optional&amp;amp; that) requires std::is_trivially_copy_constructible_v&amp;lt;T&amp;gt; = default;
++  my_optional(my_optional&amp;amp;&amp;amp; that) requires std::is_trivially_move_constructible_v&amp;lt;T&amp;gt; = default;
++  my_optional&amp;amp; operator=(const my_optional&amp;amp; that) requires std::is_trivially_copy_assignable_v&amp;lt;T&amp;gt; = default;
++  my_optional&amp;amp; operator=(my_optional&amp;amp;&amp;amp; that) requires std::is_trivially_move_assignable_v&amp;lt;T&amp;gt; = default;
++  ~my_optional() requires std::is_trivially_destructible_v&amp;lt;T&amp;gt; = default;
++
++
++  // そうでない場合はユーザー定義する
++
++  my_optional(const my_optional&amp;amp; that)
++    : has_value(that.has_value)
++    , dummy{}
++  {
++    if (that.has_value) {
++      new (&amp;amp;this-&amp;gt;data) T(that.data);
++    }
++  }
+ 
+-#include &amp;lt;iostream&amp;gt;
++  my_optional(my_optional&amp;amp;&amp;amp; that)
++    : has_value(that.has_value)
++    , dummy{}
++  {
++    if (that.has_value) {
++      new (&amp;amp;this-&amp;gt;data) T(std::move(that.data));
++    }
++  }
+ 
+-int main()
+-{
+-  int variable = 0;
+-  std::cout &amp;lt;&amp;lt; variable &amp;lt;&amp;lt; std::endl;
++  my_optional&amp;amp; operator=(const my_optional&amp;amp; that) {
++    auto copy = that;
++    *this = std::move(copy);
++    
++    return *this;
++  }
++
++  my_optional&amp;amp; operator=(my_optional&amp;amp;&amp;amp; that) {
++    if (that.has_value) {
++      if (this-&amp;gt;has_value) {
++        this-&amp;gt;data = std::move(that.data);
++      } else {
++        new (&amp;amp;this-&amp;gt;data) T(std::move(that.data));
++      }
++    } else {
++      this-&amp;gt;reset();
++    }
++
++    return *this;
++  }
++
++  ~my_optional() {
++    this-&amp;gt;reset();
++  }
++  
++  // reset()の定義も同様の記法で分岐できる
++
++  void reset() requires std::is_trivially_destructible_v&amp;lt;T&amp;gt; {
++    this-&amp;gt;has_value = false;
++  }
++
++  void reset() {
++    if (this-&amp;gt;has_value) {
++      this-&amp;gt;data.~T();
++    }
++    this-&amp;gt;has_value = false;
++  }
++};
++
++int main() {
++  // int（全てのメンバ関数はトリビアル）の場合、my_optional&amp;lt;int&amp;gt;も同様になる
++  static_assert(std::is_trivially_destructible_v&amp;lt;my_optional&amp;lt;int&amp;gt;&amp;gt;);
++  static_assert(std::is_trivially_copy_constructible_v&amp;lt;my_optional&amp;lt;int&amp;gt;&amp;gt;);
++  static_assert(std::is_trivially_move_constructible_v&amp;lt;my_optional&amp;lt;int&amp;gt;&amp;gt;);
++  static_assert(std::is_trivially_copy_assignable_v&amp;lt;my_optional&amp;lt;int&amp;gt;&amp;gt;);
++  static_assert(std::is_trivially_move_assignable_v&amp;lt;my_optional&amp;lt;int&amp;gt;&amp;gt;);
++    
++  // std::string（全てのメンバ関数は非トリビアル）の場合、my_optional&amp;lt;std::string&amp;gt;も同様になる
++  static_assert(std::is_trivially_destructible_v&amp;lt;my_optional&amp;lt;std::string&amp;gt;&amp;gt; == false);
++  static_assert(std::is_trivially_copy_constructible_v&amp;lt;my_optional&amp;lt;std::string&amp;gt;&amp;gt; == false);
++  static_assert(std::is_trivially_move_constructible_v&amp;lt;my_optional&amp;lt;std::string&amp;gt;&amp;gt; == false);
++  static_assert(std::is_trivially_copy_assignable_v&amp;lt;my_optional&amp;lt;std::string&amp;gt;&amp;gt; == false);
++  static_assert(std::is_trivially_move_assignable_v&amp;lt;my_optional&amp;lt;std::string&amp;gt;&amp;gt; == false);
++  
++  // しかし、全ての特殊メンバ関数は利用可能（トリビアルでないだけ）
++  static_assert(std::is_destructible_v&amp;lt;my_optional&amp;lt;std::string&amp;gt;&amp;gt;);
++  static_assert(std::is_copy_constructible_v&amp;lt;my_optional&amp;lt;std::string&amp;gt;&amp;gt;);
++  static_assert(std::is_move_constructible_v&amp;lt;my_optional&amp;lt;std::string&amp;gt;&amp;gt;);
++  static_assert(std::is_copy_assignable_v&amp;lt;my_optional&amp;lt;std::string&amp;gt;&amp;gt;);
++  static_assert(std::is_move_assignable_v&amp;lt;my_optional&amp;lt;std::string&amp;gt;&amp;gt;);
+ }
+ ```
+-* variable[color ff0000]
+ 
+ ### 出力
+ ```
+-0
+ ```
+ 
+ ## この機能が必要になった背景・経緯
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>mona-@live.jp</email>
+      </author>
+    </entry>
   
     <entry>
       <title>処理系 -- Merge pull request #1408 from cpprefjp/replace-version-with-Version</title>
@@ -3664,312 +3910,6 @@
       <author>
         <name>Yuhki Ogasawara</name>
         <email>y121516@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>flat_multiset -- add op_deduction_guide to flat_set. (#1079)</title>
-      <link href="https://cpprefjp.github.io/reference/flat_set/flat_multiset.html"/>
-      <id>f7e7a97f12518a9c88ecb00272734282b6c09772:reference/flat_set/flat_multiset.md</id>
-      <updated>2025-02-11T09:56:48+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_set/flat_multiset.md b/reference/flat_set/flat_multiset.md
-index e6e3bd6ad..60d49067e 100644
---- a/reference/flat_set/flat_multiset.md
-+++ b/reference/flat_set/flat_multiset.md
-@@ -136,7 +136,7 @@ namespace std {
- 
- | 名前 | 説明 | 対応バージョン |
- |---------------------------------------------|------------------------------------|-------|
--| [`(deduction_guide)`](flat_multiset/op_deduction_guide.md.nolink) | クラステンプレートの推論補助 | C++23 |
-+| [`(deduction_guide)`](flat_multiset/op_deduction_guide.md) | クラステンプレートの推論補助 | C++23 |
- 
- 
- ## その他
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>推論補助 -- add op_deduction_guide to flat_set. (#1079)</title>
-      <link href="https://cpprefjp.github.io/reference/flat_set/flat_multiset/op_deduction_guide.html"/>
-      <id>f7e7a97f12518a9c88ecb00272734282b6c09772:reference/flat_set/flat_multiset/op_deduction_guide.md</id>
-      <updated>2025-02-11T09:56:48+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_set/flat_multiset/op_deduction_guide.md b/reference/flat_set/flat_multiset/op_deduction_guide.md
-new file mode 100644
-index 000000000..2b1a907c9
---- /dev/null
-+++ b/reference/flat_set/flat_multiset/op_deduction_guide.md
-@@ -0,0 +1,106 @@
-+# 推論補助
-+* flat_set[meta header]
-+* std[meta namespace]
-+* flat_multiset[meta class]
-+* cpp23[meta cpp]
-+
-+```cpp
-+namespace std {
-+  // 説明用の型
-+  template &amp;lt;class InputIterator&amp;gt;
-+  using iter_val_t = typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type;
-+  template&amp;lt;class Allocator, class T&amp;gt;
-+  using alloc_rebind = typename allocator_traits&amp;lt;Allocator&amp;gt;::template rebind_alloc&amp;lt;T&amp;gt;;
-+
-+  template&amp;lt;class KeyContainer, class Compare = less&amp;lt;typename KeyContainer::value_type&amp;gt;&amp;gt;
-+  flat_multiset(KeyContainer, Compare = Compare())
-+    -&amp;gt; flat_multiset&amp;lt;typename KeyContainer::value_type, Compare, KeyContainer&amp;gt;;         // (1)
-+
-+  template&amp;lt;class KeyContainer, class Allocator&amp;gt;
-+  flat_multiset(KeyContainer, Allocator)
-+    -&amp;gt; flat_multiset&amp;lt;typename KeyContainer::value_type,
-+                less&amp;lt;typename KeyContainer::value_type&amp;gt;, KeyContainer&amp;gt;;                 // (2)
-+
-+  template&amp;lt;class KeyContainer, class Compare, class Allocator&amp;gt;
-+  flat_multiset(KeyContainer, Compare, Allocator)
-+    -&amp;gt; flat_multiset&amp;lt;typename KeyContainer::value_type, Compare, KeyContainer&amp;gt;;         // (3)
-+
-+  template&amp;lt;class KeyContainer, class Compare = less&amp;lt;typename KeyContainer::value_type&amp;gt;&amp;gt;
-+  flat_multiset(sorted_equivalent_t, KeyContainer, Compare = Compare())
-+    -&amp;gt; flat_multiset&amp;lt;typename KeyContainer::value_type, Compare, KeyContainer&amp;gt;;         // (4)
-+
-+  template&amp;lt;class KeyContainer, class Allocator&amp;gt;
-+  flat_multiset(sorted_equivalent_t, KeyContainer, Allocator)
-+    -&amp;gt; flat_multiset&amp;lt;typename KeyContainer::value_type,
-+                less&amp;lt;typename KeyContainer::value_type&amp;gt;, KeyContainer&amp;gt;;                 // (5)
-+
-+  template&amp;lt;class KeyContainer, class Compare, class Allocator&amp;gt;
-+  flat_multiset(sorted_equivalent_t, KeyContainer, Compare, Allocator)
-+    -&amp;gt; flat_multiset&amp;lt;typename KeyContainer::value_type, Compare, KeyContainer&amp;gt;;         // (6)
-+
-+  template&amp;lt;class InputIterator, class Compare = less&amp;lt;iter_val_t&amp;lt;InputIterator&amp;gt;&amp;gt;&amp;gt;
-+  flat_multiset(InputIterator, InputIterator, Compare = Compare())
-+    -&amp;gt; flat_multiset&amp;lt;iter_val_t&amp;lt;InputIterator&amp;gt;, Compare&amp;gt;;                               // (7)
-+
-+  template&amp;lt;class InputIterator, class Compare = less&amp;lt;iter_val_t&amp;lt;InputIterator&amp;gt;&amp;gt;&amp;gt;
-+  flat_multiset(sorted_equivalent_t, InputIterator, InputIterator, Compare = Compare())
-+    -&amp;gt; flat_multiset&amp;lt;iter_val_t&amp;lt;InputIterator&amp;gt;, Compare&amp;gt;;                               // (8)
-+
-+  template&amp;lt;ranges::input_range R, class Compare = less&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;,
-+           class Allocator = allocator&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;&amp;gt;
-+  flat_multiset(from_range_t, R&amp;amp;&amp;amp;, Compare = Compare(), Allocator = Allocator())
-+    -&amp;gt; flat_multiset&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;, Compare,
-+                vector&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;,
-+                alloc_rebind&amp;lt;Allocator, ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;&amp;gt;&amp;gt;;                    // (9)
-+
-+  template&amp;lt;ranges::input_range R, class Allocator&amp;gt;
-+  flat_multiset(from_range_t, R&amp;amp;&amp;amp;, Allocator)
-+    -&amp;gt; flat_multiset&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;, less&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;,
-+                vector&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;,
-+                alloc_rebind&amp;lt;Allocator, ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;&amp;gt;&amp;gt;;                    // (10)
-+
-+  template&amp;lt;class Key, class Compare = less&amp;lt;Key&amp;gt;&amp;gt;
-+  flat_multiset(initializer_list&amp;lt;Key&amp;gt;, Compare = Compare())
-+    -&amp;gt; flat_multiset&amp;lt;Key, Compare&amp;gt;;                                                     // (11)
-+
-+  template&amp;lt;class Key, class Compare = less&amp;lt;Key&amp;gt;&amp;gt;
-+  flat_multiset(sorted_equivalent_t, initializer_list&amp;lt;Key&amp;gt;, Compare = Compare())
-+    -&amp;gt; flat_multiset&amp;lt;Key, Compare&amp;gt;;                                                     // (12)
-+```
-+* vector[link /reference/vector/vector.md]
-+* from_range_t[link ../../ranges/from_range_t.md]
-+* sorted_equivalent_t[link ../sorted_equivalent_t.md]
-+* iterator_traits[link /reference/iterator/iterator_traits.md]
-+* less[link /reference/functional/less.md]
-+* allocator[link /reference/memory/allocator.md]
-+* initializer_list[link /reference/initializer_list/initializer_list.md]
-+* ranges::input_range[link /reference/ranges/input_range.md]
-+* ranges::range_value_t[link /reference/ranges/range_value_t.md]
-+* allocator_traits[link /reference/memory/allocator_traits.md]
-+
-+
-+## 概要
-+`std::flat_multiset`クラステンプレートの型推論補助。
-+
-+- (1) : キーのコンテナ、比較関数からの推論
-+- (2) : キーのコンテナ、アロケータからの推論
-+- (3) : キーのコンテナ、比較関数、アロケータからの推論
-+- (4) : キーのコンテナ、比較関数からの推論
-+- (5) : キーのコンテナ、アロケータからの推論
-+- (6) : キーのコンテナ、比較関数、アロケータからの推論
-+- (7) : イテレータ範囲、比較関数からの推論
-+- (8) : イテレータ範囲、比較関数からの推論
-+- (9) : Range、比較関数、アロケータからの推論
-+- (10) : Range、アロケータからの推論
-+- (11) : 初期化子リスト、比較関数からの推論
-+- (12) : 初期化子リスト、比較関数からの推論
-+
-+
-+## バージョン
-+### 言語
-+- C++23
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): ??
-+- [Visual C++](/implementation.md#visual_cpp): ??
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>flat_set -- add op_deduction_guide to flat_set. (#1079)</title>
-      <link href="https://cpprefjp.github.io/reference/flat_set/flat_set.html"/>
-      <id>f7e7a97f12518a9c88ecb00272734282b6c09772:reference/flat_set/flat_set.md</id>
-      <updated>2025-02-11T09:56:48+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_set/flat_set.md b/reference/flat_set/flat_set.md
-index c4715fbc2..ece18174a 100644
---- a/reference/flat_set/flat_set.md
-+++ b/reference/flat_set/flat_set.md
-@@ -136,7 +136,7 @@ namespace std {
- 
- | 名前 | 説明 | 対応バージョン |
- |---------------------------------------------|------------------------------------|-------|
--| [`(deduction_guide)`](flat_set/op_deduction_guide.md.nolink) | クラステンプレートの推論補助 | C++23 |
-+| [`(deduction_guide)`](flat_set/op_deduction_guide.md) | クラステンプレートの推論補助 | C++23 |
- 
- 
- ## その他
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>推論補助 -- add op_deduction_guide to flat_set. (#1079)</title>
-      <link href="https://cpprefjp.github.io/reference/flat_set/flat_set/op_deduction_guide.html"/>
-      <id>f7e7a97f12518a9c88ecb00272734282b6c09772:reference/flat_set/flat_set/op_deduction_guide.md</id>
-      <updated>2025-02-11T09:56:48+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_set/flat_set/op_deduction_guide.md b/reference/flat_set/flat_set/op_deduction_guide.md
-new file mode 100644
-index 000000000..cadaca6b2
---- /dev/null
-+++ b/reference/flat_set/flat_set/op_deduction_guide.md
-@@ -0,0 +1,106 @@
-+# 推論補助
-+* flat_set[meta header]
-+* std[meta namespace]
-+* flat_set[meta class]
-+* cpp23[meta cpp]
-+
-+```cpp
-+namespace std {
-+  // 説明用の型
-+  template &amp;lt;class InputIterator&amp;gt;
-+  using iter_val_t = typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type;
-+  template&amp;lt;class Allocator, class T&amp;gt;
-+  using alloc_rebind = typename allocator_traits&amp;lt;Allocator&amp;gt;::template rebind_alloc&amp;lt;T&amp;gt;;
-+
-+  template&amp;lt;class KeyContainer, class Compare = less&amp;lt;typename KeyContainer::value_type&amp;gt;&amp;gt;
-+  flat_set(KeyContainer, Compare = Compare())
-+    -&amp;gt; flat_set&amp;lt;typename KeyContainer::value_type, Compare, KeyContainer&amp;gt;;              // (1)
-+
-+  template&amp;lt;class KeyContainer, class Allocator&amp;gt;
-+  flat_set(KeyContainer, Allocator)
-+    -&amp;gt; flat_set&amp;lt;typename KeyContainer::value_type,
-+                less&amp;lt;typename KeyContainer::value_type&amp;gt;, KeyContainer&amp;gt;;                 // (2)
-+
-+  template&amp;lt;class KeyContainer, class Compare, class Allocator&amp;gt;
-+  flat_set(KeyContainer, Compare, Allocator)
-+    -&amp;gt; flat_set&amp;lt;typename KeyContainer::value_type, Compare, KeyContainer&amp;gt;;              // (3)
-+
-+  template&amp;lt;class KeyContainer, class Compare = less&amp;lt;typename KeyContainer::value_type&amp;gt;&amp;gt;
-+  flat_set(sorted_unique_t, KeyContainer, Compare = Compare())
-+    -&amp;gt; flat_set&amp;lt;typename KeyContainer::value_type, Compare, KeyContainer&amp;gt;;              // (4)
-+
-+  template&amp;lt;class KeyContainer, class Allocator&amp;gt;
-+  flat_set(sorted_unique_t, KeyContainer, Allocator)
-+    -&amp;gt; flat_set&amp;lt;typename KeyContainer::value_type,
-+                less&amp;lt;typename KeyContainer::value_type&amp;gt;, KeyContainer&amp;gt;;                 // (5)
-+
-+  template&amp;lt;class KeyContainer, class Compare, class Allocator&amp;gt;
-+  flat_set(sorted_unique_t, KeyContainer, Compare, Allocator)
-+    -&amp;gt; flat_set&amp;lt;typename KeyContainer::value_type, Compare, KeyContainer&amp;gt;;              // (6)
-+
-+  template&amp;lt;class InputIterator, class Compare = less&amp;lt;iter_val_t&amp;lt;InputIterator&amp;gt;&amp;gt;&amp;gt;
-+  flat_set(InputIterator, InputIterator, Compare = Compare())
-+    -&amp;gt; flat_set&amp;lt;iter_val_t&amp;lt;InputIterator&amp;gt;, Compare&amp;gt;;                                    // (7)
-+
-+  template&amp;lt;class InputIterator, class Compare = less&amp;lt;iter_val_t&amp;lt;InputIterator&amp;gt;&amp;gt;&amp;gt;
-+  flat_set(sorted_unique_t, InputIterator, InputIterator, Compare = Compare())
-+    -&amp;gt; flat_set&amp;lt;iter_val_t&amp;lt;InputIterator&amp;gt;, Compare&amp;gt;;                                    // (8)
-+
-+  template&amp;lt;ranges::input_range R, class Compare = less&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;,
-+           class Allocator = allocator&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;&amp;gt;
-+  flat_set(from_range_t, R&amp;amp;&amp;amp;, Compare = Compare(), Allocator = Allocator())
-+    -&amp;gt; flat_set&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;, Compare,
-+                vector&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;,
-+                alloc_rebind&amp;lt;Allocator, ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;&amp;gt;&amp;gt;;                    // (9)
-+
-+  template&amp;lt;ranges::input_range R, class Allocator&amp;gt;
-+  flat_set(from_range_t, R&amp;amp;&amp;amp;, Allocator)
-+    -&amp;gt; flat_set&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;, less&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;,
-+                vector&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;,
-+                alloc_rebind&amp;lt;Allocator, ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;&amp;gt;&amp;gt;;                    // (10)
-+
-+  template&amp;lt;class Key, class Compare = less&amp;lt;Key&amp;gt;&amp;gt;
-+  flat_set(initializer_list&amp;lt;Key&amp;gt;, Compare = Compare())
-+    -&amp;gt; flat_set&amp;lt;Key, Compare&amp;gt;;                                                          // (11)
-+
-+  template&amp;lt;class Key, class Compare = less&amp;lt;Key&amp;gt;&amp;gt;
-+  flat_set(sorted_unique_t, initializer_list&amp;lt;Key&amp;gt;, Compare = Compare())
-+    -&amp;gt; flat_set&amp;lt;Key, Compare&amp;gt;;                                                          // (12)
-+```
-+* vector[link /reference/vector/vector.md]
-+* from_range_t[link ../../ranges/from_range_t.md]
-+* sorted_unique_t[link ../sorted_unique_t.md]
-+* iterator_traits[link /reference/iterator/iterator_traits.md]
-+* less[link /reference/functional/less.md]
-+* allocator[link /reference/memory/allocator.md]
-+* initializer_list[link /reference/initializer_list/initializer_list.md]
-+* ranges::input_range[link /reference/ranges/input_range.md]
-+* ranges::range_value_t[link /reference/ranges/range_value_t.md]
-+* allocator_traits[link /reference/memory/allocator_traits.md]
-+
-+
-+## 概要
-+`std::flat_set`クラステンプレートの型推論補助。
-+
-+- (1) : キーのコンテナ、比較関数からの推論
-+- (2) : キーのコンテナ、アロケータからの推論
-+- (3) : キーのコンテナ、比較関数、アロケータからの推論
-+- (4) : キーのコンテナ、比較関数からの推論
-+- (5) : キーのコンテナ、アロケータからの推論
-+- (6) : キーのコンテナ、比較関数、アロケータからの推論
-+- (7) : イテレータ範囲、比較関数からの推論
-+- (8) : イテレータ範囲、比較関数からの推論
-+- (9) : Range、比較関数、アロケータからの推論
-+- (10) : Range、アロケータからの推論
-+- (11) : 初期化子リスト、比較関数からの推論
-+- (12) : 初期化子リスト、比較関数からの推論
-+
-+
-+## バージョン
-+### 言語
-+- C++23
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): ??
-+- [Visual C++](/implementation.md#visual_cpp): ??
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
       </author>
     </entry>
   
