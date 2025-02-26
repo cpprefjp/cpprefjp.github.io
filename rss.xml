@@ -2,9 +2,123 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-02-25T14:44:28.164097</updated>
-  <id>ab264814-db38-48c9-bd06-7bd017fc6e8f</id>
+  <updated>2025-02-26T08:10:34.577414</updated>
+  <id>db40170c-0545-40af-be8d-e7e3b8fcd0fa</id>
 
+  
+    <entry>
+      <title>非型テンプレートパラメータとしてクラス型を許可する [P0732R2] -- C++20 非型テンプレートパラメータとしてクラス型を許可する : プレースホルダー型とリテラル演算子の例を追加</title>
+      <link href="https://cpprefjp.github.io/lang/cpp20/class_types_in_non-type_template_parameters.html"/>
+      <id>15399cae51a375371e61af1eae0426b72ada8a84:lang/cpp20/class_types_in_non-type_template_parameters.md</id>
+      <updated>2025-02-26T17:06:54+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/class_types_in_non-type_template_parameters.md b/lang/cpp20/class_types_in_non-type_template_parameters.md
+index 743d86a47..0758e8aae 100644
+--- a/lang/cpp20/class_types_in_non-type_template_parameters.md
++++ b/lang/cpp20/class_types_in_non-type_template_parameters.md
+@@ -44,6 +44,7 @@ C++11以降での[汎用的な定数式`constexpr`](/lang/cpp11/constexpr.md)の
+ 
+ 
+ ## 例
++### floatやクラス型を非型テンプレートパラメータにする例
+ ```cpp example
+ #include &amp;lt;utility&amp;gt;
+ 
+@@ -105,10 +106,79 @@ int main() {
+ }
+ ```
+ 
+-### 出力
++#### 出力
+ ```
+ ```
+ 
++### プレースホルダーを含む型を非型テンプレートパラメータにする例
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++
++template &amp;lt;class T&amp;gt;
++struct X {
++  constexpr X(T x) : value(x) {}
++  T value;
++};
++
++template &amp;lt;X x&amp;gt;
++struct Y {
++  void print() {
++    std::cout &amp;lt;&amp;lt; x.value &amp;lt;&amp;lt; std::endl;
++  }
++};
++
++int main() {
++  // Xクラステンプレートのテンプレートパラメータが
++  // コンストラクタ引数`3`から推論される
++  Y&amp;lt;3&amp;gt;{}.print();
++}
++```
++
++#### 出力
++```
++3
++```
++
++
++### 文字列クラスオブジェクトを非型テンプレートパラメータにしてリテラル演算子を定義する例
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;algorithm&amp;gt;
++
++template &amp;lt;typename CharT, std::size_t N&amp;gt;
++struct basic_fixed_string {
++  constexpr basic_fixed_string(const CharT (&amp;amp;str)[N+1])
++  { std::copy_n(str, N+1, data); }
++
++  friend auto operator&amp;lt;=&amp;gt;(const basic_fixed_string&amp;amp;, const basic_fixed_string&amp;amp;) = default;
++  CharT data[N+1];
++};
++
++template &amp;lt;typename CharT, std::size_t N&amp;gt;
++basic_fixed_string(const CharT (&amp;amp;str)[N]) -&amp;gt; basic_fixed_string&amp;lt;CharT, N-1&amp;gt;;
++
++template &amp;lt;std::size_t N&amp;gt;
++using fixed_string = basic_fixed_string&amp;lt;char, N&amp;gt;;
++
++namespace my_literals {
++template &amp;lt;basic_fixed_string str&amp;gt;
++auto operator&amp;#34;&amp;#34;_udl() {
++    return str;
++}
++}
++
++int main() {
++  using namespace my_literals;
++  auto s = &amp;#34;hello&amp;#34;_udl;
++  std::cout &amp;lt;&amp;lt; s.data &amp;lt;&amp;lt; std::endl;
++}
++```
++
++#### 出力
++```
++hello
++```
++
+ 
+ ## 備考
+ - [Bug 97930 - `pair` is not a structural type](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=97930)
+@@ -121,4 +191,4 @@ int main() {
+ 
+ ## 参照
+ - [P0732R2 Class Types in Non-Type Template Parameters](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0732r2.pdf)
+-- [P1907R1 Inconsistencies with non-type template parameters](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1907r1.html)
+\ No newline at end of file
++- [P1907R1 Inconsistencies with non-type template parameters](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1907r1.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>contains -- fix sample in flat_multiset</title>
@@ -278,1046 +392,6 @@ index 37bd5f5bf..4f19a53d9 100644
       <author>
         <name>Akira Takahashi</name>
         <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>推論補助 -- add deduction guide with range to some containers.</title>
-      <link href="https://cpprefjp.github.io/reference/deque/deque/op_deduction_guide.html"/>
-      <id>e44911377d9340e5f31ed3d125486bc1305c5a9c:reference/deque/deque/op_deduction_guide.md</id>
-      <updated>2025-02-17T21:01:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/deque/deque/op_deduction_guide.md b/reference/deque/deque/op_deduction_guide.md
-index 3564d08ab..2f223cdf3 100644
---- a/reference/deque/deque/op_deduction_guide.md
-+++ b/reference/deque/deque/op_deduction_guide.md
-@@ -9,13 +9,25 @@ namespace std {
-   template &amp;lt;class InputIterator,
-             class Allocator = allocator&amp;lt;typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type&amp;gt;&amp;gt;
-   deque(InputIterator, InputIterator, Allocator = Allocator())
--    -&amp;gt; deque&amp;lt;typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type, Allocator&amp;gt;;
-+    -&amp;gt; deque&amp;lt;typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type, Allocator&amp;gt;; // (1)
-+
-+  template &amp;lt;ranges::input_range R,
-+            class Allocator = allocator&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;&amp;gt;
-+  deque(from_range_t, R&amp;amp;&amp;amp;, Allocator = Allocator())
-+    -&amp;gt; deque&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;, Allocator&amp;gt;;                            // (2) C++23から
- }
- ```
- * iterator_traits[link /reference/iterator/iterator_traits.md]
-+* ranges::input_range[link /reference/ranges/input_range.md]
-+* allocator[link /reference/memory/allocator.md]
-+* ranges::range_value_t[link /reference/ranges/range_value_t.md]
-+* from_range_t[link /reference/ranges/from_range_t.md]
- 
- ## 概要
--`std::deque`クラステンプレートの型推論補助。イテレータ範囲から推論する。
-+`std::deque`クラステンプレートの型推論補助。
-+
-+- (1) : イテレータ範囲から推論する。
-+- (2) : Rangeから推論する。
- 
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>推論補助 -- add deduction guide with range to some containers.</title>
-      <link href="https://cpprefjp.github.io/reference/forward_list/forward_list/op_deduction_guide.html"/>
-      <id>e44911377d9340e5f31ed3d125486bc1305c5a9c:reference/forward_list/forward_list/op_deduction_guide.md</id>
-      <updated>2025-02-17T21:01:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/forward_list/forward_list/op_deduction_guide.md b/reference/forward_list/forward_list/op_deduction_guide.md
-index 27df64fa3..b882d7666 100644
---- a/reference/forward_list/forward_list/op_deduction_guide.md
-+++ b/reference/forward_list/forward_list/op_deduction_guide.md
-@@ -9,13 +9,25 @@ namespace std {
-   template &amp;lt;class InputIterator,
-             class Allocator = allocator&amp;lt;typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type&amp;gt;&amp;gt;
-   forward_list(InputIterator, InputIterator, Allocator = Allocator())
--    -&amp;gt; forward_list&amp;lt;typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type, Allocator&amp;gt;;
-+    -&amp;gt; forward_list&amp;lt;typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type, Allocator&amp;gt;; // (1)
-+
-+  template &amp;lt;ranges::input_range R,
-+            class Allocator = allocator&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;&amp;gt;
-+  forward_list(from_range_t, R&amp;amp;&amp;amp;, Allocator = Allocator())
-+    -&amp;gt; forward_list&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;, Allocator&amp;gt;;                            // (2) C++23から
- }
- ```
- * iterator_traits[link /reference/iterator/iterator_traits.md]
-+* ranges::input_range[link /reference/ranges/input_range.md]
-+* allocator[link /reference/memory/allocator.md]
-+* ranges::range_value_t[link /reference/ranges/range_value_t.md]
-+* from_range_t[link /reference/ranges/from_range_t.md]
- 
- ## 概要
--`std::forward_list`クラステンプレートの型推論補助。イテレータ範囲から推論する。
-+`std::forward_list`クラステンプレートの型推論補助。
-+
-+- (1) : イテレータ範囲から推論する。
-+- (2) : Rangeから推論する。
- 
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>コンストラクタ -- add deduction guide with range to some containers.</title>
-      <link href="https://cpprefjp.github.io/reference/list/list/op_constructor.html"/>
-      <id>e44911377d9340e5f31ed3d125486bc1305c5a9c:reference/list/list/op_constructor.md</id>
-      <updated>2025-02-17T21:01:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/list/list/op_constructor.md b/reference/list/list/op_constructor.md
-index a881629f4..4a50e7dca 100644
---- a/reference/list/list/op_constructor.md
-+++ b/reference/list/list/op_constructor.md
-@@ -35,7 +35,7 @@ list(from_range_t, R&amp;amp;&amp;amp; rg,
-      const Allocator&amp;amp; a = Allocator());          // (11) C++23 から
- ```
- * initializer_list[link /reference/initializer_list/initializer_list.md]
--* from_range_t[link ../../ranges/from_range_t.md]
-+* from_range_t[link /reference/ranges/from_range_t.md]
- 
- 
- ## 概要
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>推論補助 -- add deduction guide with range to some containers.</title>
-      <link href="https://cpprefjp.github.io/reference/list/list/op_deduction_guide.html"/>
-      <id>e44911377d9340e5f31ed3d125486bc1305c5a9c:reference/list/list/op_deduction_guide.md</id>
-      <updated>2025-02-17T21:01:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/list/list/op_deduction_guide.md b/reference/list/list/op_deduction_guide.md
-index fe63d096d..0a82481b3 100644
---- a/reference/list/list/op_deduction_guide.md
-+++ b/reference/list/list/op_deduction_guide.md
-@@ -9,13 +9,25 @@ namespace std {
-   template &amp;lt;class InputIterator,
-             class Allocator = allocator&amp;lt;typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type&amp;gt;&amp;gt;
-   list(InputIterator, InputIterator, Allocator = Allocator())
--    -&amp;gt; list&amp;lt;typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type, Allocator&amp;gt;;
-+    -&amp;gt; list&amp;lt;typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type, Allocator&amp;gt;; // (1)
-+
-+  template &amp;lt;ranges::input_range R,
-+            class Allocator = allocator&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;&amp;gt;
-+  list(from_range_t, R&amp;amp;&amp;amp;, Allocator = Allocator())
-+    -&amp;gt; list&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;, Allocator&amp;gt;;                            // (2) C++23から
- }
- ```
- * iterator_traits[link /reference/iterator/iterator_traits.md]
-+* ranges::input_range[link /reference/ranges/input_range.md]
-+* allocator[link /reference/memory/allocator.md]
-+* ranges::range_value_t[link /reference/ranges/range_value_t.md]
-+* from_range_t[link /reference/ranges/from_range_t.md]
- 
- ## 概要
--`std::list`クラステンプレートの型推論補助。イテレータ範囲から推論する。
-+`std::list`クラステンプレートの型推論補助。
-+
-+- (1) : イテレータ範囲から推論する。
-+- (2) : Rangeから推論する。
- 
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>推論補助 -- add deduction guide with range to some containers.</title>
-      <link href="https://cpprefjp.github.io/reference/map/map/op_deduction_guide.html"/>
-      <id>e44911377d9340e5f31ed3d125486bc1305c5a9c:reference/map/map/op_deduction_guide.md</id>
-      <updated>2025-02-17T21:01:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/map/map/op_deduction_guide.md b/reference/map/map/op_deduction_guide.md
-index 8f7fefcef..68c7d66b6 100644
---- a/reference/map/map/op_deduction_guide.md
-+++ b/reference/map/map/op_deduction_guide.md
-@@ -14,6 +14,10 @@ namespace std {
-   template &amp;lt;class InputIterator&amp;gt;
-   using iter_to_alloc_t = pair&amp;lt;add_const_t&amp;lt;typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type::first_type&amp;gt;,
-                                typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type::second_type&amp;gt;;
-+  template &amp;lt;ranges::input_range Range&amp;gt;
-+  using range_key_t = remove_const_t&amp;lt;typename ranges::range_value_t&amp;lt;Range&amp;gt;::first_type&amp;gt;;
-+  template &amp;lt;ranges::input_range Range&amp;gt;
-+  using range_val_t = typename ranges::range_value_t&amp;lt;Range&amp;gt;::second_type;
- 
-   template &amp;lt;class InputIterator,
-             class Compare = less&amp;lt;iter_key_t&amp;lt;InputIterator&amp;gt;&amp;gt;,
-@@ -36,6 +40,10 @@ namespace std {
-   template &amp;lt;class Key, class T, class Allocator&amp;gt;
-   map(initializer_list&amp;lt;pair&amp;lt;Key, T&amp;gt;&amp;gt;, Allocator)
-     -&amp;gt; map&amp;lt;Key, T, less&amp;lt;Key&amp;gt;, Allocator&amp;gt;;                                             // (4)
-+
-+  template &amp;lt;ranges::input_range R, class Allocator&amp;gt;
-+  map(from_range_t, R&amp;amp;&amp;amp;, Allocator)
-+    -&amp;gt; map&amp;lt;range_key_t&amp;lt;R&amp;gt;, range_val_t&amp;lt;R&amp;gt;, less&amp;lt;range_key_t&amp;lt;R&amp;gt;&amp;gt;, Allocator&amp;gt;;          // (5) C++23から
- }
- ```
- * remove_const_t[link /reference/type_traits/remove_const.md]
-@@ -45,6 +53,9 @@ namespace std {
- * less[link /reference/functional/less.md]
- * allocator[link /reference/memory/allocator.md]
- * initializer_list[link /reference/initializer_list/initializer_list.md]
-+* ranges::input_range[link /reference/ranges/input_range.md]
-+* ranges::range_value_t[link /reference/ranges/range_value_t.md]
-+* from_range_t[link /reference/ranges/from_range_t.md]
- 
- ## 概要
- `std::map`クラステンプレートの型推論補助。
-@@ -53,6 +64,7 @@ namespace std {
- - (2) : 初期化子リストからの推論
- - (3) : イテレータ範囲とアロケータからの推論
- - (4) : 初期化子リストとアロケータからの推論
-+- (5) : Rangeからの推論
- 
- 
- ## 備考
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>推論補助 -- add deduction guide with range to some containers.</title>
-      <link href="https://cpprefjp.github.io/reference/map/multimap/op_deduction_guide.html"/>
-      <id>e44911377d9340e5f31ed3d125486bc1305c5a9c:reference/map/multimap/op_deduction_guide.md</id>
-      <updated>2025-02-17T21:01:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/map/multimap/op_deduction_guide.md b/reference/map/multimap/op_deduction_guide.md
-index f797ca0a0..03cb0ea04 100644
---- a/reference/map/multimap/op_deduction_guide.md
-+++ b/reference/map/multimap/op_deduction_guide.md
-@@ -14,6 +14,10 @@ namespace std {
-   template &amp;lt;class InputIterator&amp;gt;
-   using iter_to_alloc_t = pair&amp;lt;add_const_t&amp;lt;typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type::first_type&amp;gt;,
-                                typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type::second_type&amp;gt;;
-+  template &amp;lt;ranges::input_range Range&amp;gt;
-+  using range_key_t = remove_const_t&amp;lt;typename ranges::range_value_t&amp;lt;Range&amp;gt;::first_type&amp;gt;;
-+  template &amp;lt;ranges::input_range Range&amp;gt;
-+  using range_val_t = typename ranges::range_value_t&amp;lt;Range&amp;gt;::second_type;
- 
-   template &amp;lt;class InputIterator,
-             class Compare = less&amp;lt;iter_key_t&amp;lt;InputIterator&amp;gt;&amp;gt;,
-@@ -36,6 +40,10 @@ namespace std {
-   template &amp;lt;class Key, class T, class Allocator&amp;gt;
-   multimap(initializer_list&amp;lt;pair&amp;lt;Key, T&amp;gt;&amp;gt;, Allocator)
-     -&amp;gt; multimap&amp;lt;Key, T, less&amp;lt;Key&amp;gt;, Allocator&amp;gt;;                                             // (4)
-+
-+  template &amp;lt;ranges::input_range R, class Allocator&amp;gt;
-+  multimap(from_range_t, R&amp;amp;&amp;amp;, Allocator)
-+    -&amp;gt; multimap&amp;lt;range_key_t&amp;lt;R&amp;gt;, range_val_t&amp;lt;R&amp;gt;, less&amp;lt;range_key_t&amp;lt;R&amp;gt;&amp;gt;, Allocator&amp;gt;;          // (5) C++23から
- }
- ```
- * remove_const_t[link /reference/type_traits/remove_const.md]
-@@ -45,6 +53,9 @@ namespace std {
- * less[link /reference/functional/less.md]
- * allocator[link /reference/memory/allocator.md]
- * initializer_list[link /reference/initializer_list/initializer_list.md]
-+* ranges::input_range[link /reference/ranges/input_range.md]
-+* ranges::range_value_t[link /reference/ranges/range_value_t.md]
-+* from_range_t[link /reference/ranges/from_range_t.md]
- 
- ## 概要
- `std::multimap`クラステンプレートの型推論補助。
-@@ -53,6 +64,7 @@ namespace std {
- - (2) : 初期化子リストからの推論
- - (3) : イテレータ範囲とアロケータからの推論
- - (4) : 初期化子リストとアロケータからの推論
-+- (5) : Rangeからの推論
- 
- 
- ## 備考
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>推論補助 -- add deduction guide with range to some containers.</title>
-      <link href="https://cpprefjp.github.io/reference/queue/priority_queue/op_deduction_guide.html"/>
-      <id>e44911377d9340e5f31ed3d125486bc1305c5a9c:reference/queue/priority_queue/op_deduction_guide.md</id>
-      <updated>2025-02-17T21:01:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/queue/priority_queue/op_deduction_guide.md b/reference/queue/priority_queue/op_deduction_guide.md
-index b9670980d..90952debc 100644
---- a/reference/queue/priority_queue/op_deduction_guide.md
-+++ b/reference/queue/priority_queue/op_deduction_guide.md
-@@ -6,32 +6,76 @@
- 
- ```cpp
- namespace std {
--  template &amp;lt;class Compare, class Container&amp;gt;
-+  // 説明用の型
-+  template &amp;lt;class InputIterator&amp;gt;
-+  using iter_val_t = typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type;
-+
-+template &amp;lt;class Compare, class Container&amp;gt;
-   priority_queue(Compare, Container)
-     -&amp;gt; priority_queue&amp;lt;typename Container::value_type, Container, Compare&amp;gt;; // (1)
- 
-   template &amp;lt;class InputIterator,
--            class Compare = less&amp;lt;typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type&amp;gt;,
--            class Container = std::vector&amp;lt;typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type&amp;gt;&amp;gt;
-+            class Compare = less&amp;lt;iter_val_t&amp;lt;InputIterator&amp;gt;&amp;gt;,
-+            class Container = std::vector&amp;lt;iter_val_t&amp;lt;InputIterator&amp;gt;&amp;gt;&amp;gt;
-   priority_queue(InputIterator, InputIterator, Compare = Compare(), Container = Container())
--    -&amp;gt; priority_queue&amp;lt;
--         typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type,
--         Container, Compare&amp;gt;;                                              // (2)
-+    -&amp;gt; priority_queue&amp;lt;iter_val_t&amp;lt;InputIterator&amp;gt;, Container, Compare&amp;gt;;      // (2)
-+
-+  template &amp;lt;ranges::input_range R, class Compare = less&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;&amp;gt;
-+  priority_queue(from_range_t, R&amp;amp;&amp;amp;, Compare = Compare())
-+    -&amp;gt; priority_queue&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;,
-+                      vector&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;, Compare&amp;gt;;          // (3) C++23から
- 
-   template &amp;lt;class Compare, class Container, class Allocator&amp;gt;
-   priority_queue(Compare, Container, Allocator)
--    -&amp;gt; priority_queue&amp;lt;typename Container::value_type, Container, Compare&amp;gt;; // (3)
-+    -&amp;gt; priority_queue&amp;lt;typename Container::value_type, Container, Compare&amp;gt;; // (4)
-+
-+  template &amp;lt;class InputIterator, class Allocator&amp;gt;
-+  priority_queue(InputIterator, InputIterator, Allocator)
-+    -&amp;gt; priority_queue&amp;lt;iter_val_t&amp;lt;InputIterator&amp;gt;,
-+                      vector&amp;lt;iter_val_t&amp;lt;InputIterator&amp;gt;, Allocator&amp;gt;,
-+                      less&amp;lt;iter_val_t&amp;lt;InputIterator&amp;gt;&amp;gt;&amp;gt;;                    // (5) C++23から
-+
-+  template &amp;lt;class InputIterator, class Compare, class Allocator&amp;gt;
-+  priority_queue(InputIterator, InputIterator, Compare, Allocator)
-+    -&amp;gt; priority_queue&amp;lt;iter_val_t&amp;lt;InputIterator&amp;gt;,
-+                      vector&amp;lt;iter_val_t&amp;lt;InputIterator&amp;gt;, Allocator&amp;gt;,
-+                      Compare&amp;gt;;                                            // (6) C++23から
-+
-+  template &amp;lt;class InputIterator, class Compare, class Container, class Allocator&amp;gt;
-+  priority_queue(InputIterator, InputIterator, Compare, Container, Allocator)
-+    -&amp;gt; priority_queue&amp;lt;typename Container::value_type, Container, Compare&amp;gt;; // (7) C++23から
-+
-+  template &amp;lt;ranges::input_range R, class Compare, class Allocator&amp;gt;
-+  priority_queue(from_range_t, R&amp;amp;&amp;amp;, Compare, Allocator)
-+    -&amp;gt; priority_queue&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;,
-+                      vector&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;, Allocator&amp;gt;,
-+                      Compare&amp;gt;;                                            // (8) C++23から
-+
-+  template &amp;lt;ranges::input_range R, class Allocator&amp;gt;
-+  priority_queue(from_range_t, R&amp;amp;&amp;amp;, Allocator)
-+    -&amp;gt; priority_queue&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;,
-+                      vector&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;, Allocator&amp;gt;&amp;gt;;        // (9) C++23から
- }
- ```
- * iterator_traits[link /reference/iterator/iterator_traits.md]
- * less[link /reference/functional/less.md]
-+* vector[link /reference/vector/vector.md]
-+* ranges::input_range[link /reference/ranges/input_range.md]
-+* ranges::range_value_t[link /reference/ranges/range_value_t.md]
-+* from_range_t[link /reference/ranges/from_range_t.md]
- 
- ## 概要
- `std::priority_queue`クラステンプレートの型推論補助。
- 
- - (1) : 比較関数オブジェクトと、元となるコンテナから推論する
- - (2) : イテレータ範囲、比較関数オブジェクト、元となるコンテナから推論する
--- (3) : 比較関数オブジェクトと、元となるコンテナ、アロケータから推論する
-+- (3) : Rangeと比較関数オブジェクトから推論する
-+- (4) : 比較関数オブジェクトと、元となるコンテナ、アロケータから推論する
-+- (5) : イテレータ範囲とアロケータから推論する
-+- (6) : イテレータ範囲、比較関数オブジェクト、アロケータから推論する
-+- (7) : イテレータ範囲、比較関数オブジェクト、元となるコンテナ、アロケータから推論する
-+- (8) : Range、比較関数オブジェクト、元となるコンテナから推論する
-+- (9) : Rangeとアロケータから推論する
- 
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>推論補助 -- add deduction guide with range to some containers.</title>
-      <link href="https://cpprefjp.github.io/reference/queue/queue/op_deduction_guide.html"/>
-      <id>e44911377d9340e5f31ed3d125486bc1305c5a9c:reference/queue/queue/op_deduction_guide.md</id>
-      <updated>2025-02-17T21:01:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/queue/queue/op_deduction_guide.md b/reference/queue/queue/op_deduction_guide.md
-index 0d2a04eb5..fc38ce514 100644
---- a/reference/queue/queue/op_deduction_guide.md
-+++ b/reference/queue/queue/op_deduction_guide.md
-@@ -8,26 +8,47 @@
- namespace std {
-   template &amp;lt;class Container&amp;gt;
-   queue(Container)
--    -&amp;gt; queue&amp;lt;typename Container::value_type, Container&amp;gt;; // (1)
-+    -&amp;gt; queue&amp;lt;typename Container::value_type, Container&amp;gt;;       // (1)
- 
--  template&amp;lt;class InputIterator&amp;gt;
-+  template &amp;lt;class InputIterator&amp;gt;
-   queue(InputIterator, InputIterator)
--    -&amp;gt; queue&amp;lt;&amp;lt;InputIterator&amp;gt;&amp;gt;;  // (2) C++23
-+    -&amp;gt; queue&amp;lt;&amp;lt;InputIterator&amp;gt;&amp;gt;;                                 // (2) C++23
-+
-+  template &amp;lt;ranges::input_range R&amp;gt;
-+  queue(from_range_t, R&amp;amp;&amp;amp;) -&amp;gt; queue&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;; // (3) C++23
-+
- 
-   template &amp;lt;class Container, class Allocator&amp;gt;
-   queue(Container, Allocator)
--    -&amp;gt; queue&amp;lt;typename Container::value_type, Container&amp;gt;; // (3)
-+    -&amp;gt; queue&amp;lt;typename Container::value_type, Container&amp;gt;;       // (4)
- 
--  template&amp;lt;class InputIterator, class Allocator&amp;gt;
-+  template &amp;lt;class InputIterator, class Allocator&amp;gt;
-   queue(InputIterator, InputIterator, Allocator)
-     -&amp;gt; queue&amp;lt;iter-value-type&amp;lt;InputIterator&amp;gt;, deque&amp;lt;iter-value-type&amp;lt;InputIterator&amp;gt;,
--             Allocator&amp;gt;&amp;gt;;  // (4) C++23
-+             Allocator&amp;gt;&amp;gt;;                                      // (5) C++23
-+
-+  template &amp;lt;ranges::input_range R, class Allocator&amp;gt;
-+  queue(from_range_t, R&amp;amp;&amp;amp;, Allocator)
-+    -&amp;gt; queue&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;, deque&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;,
-+             Allocator&amp;gt;&amp;gt;;                                      // (6) C++23
-+
- }
- ```
- * iter-value-type[italic]
-+* deque[link /reference/deque/deque.md]
-+* ranges::input_range[link /reference/ranges/input_range.md]
-+* ranges::range_value_t[link /reference/ranges/range_value_t.md]
-+* from_range_t[link /reference/ranges/from_range_t.md]
- 
- ## 概要
--`std::queue`クラステンプレートの型推論補助。元となるコンテナから推論する。
-+`std::queue`クラステンプレートの型推論補助。
-+
-+- (1) : 元となるコンテナから推論する。
-+- (2) : イテレータ範囲から推論する。
-+- (3) : Rangeからの推論する。
-+- (4) : 元となるコンテナとアロケータから推論する。
-+- (5) : イテレータ範囲とアロケータから推論する。
-+- (6) : Rangeとアロケータからの推論する。
- 
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>推論補助 -- add deduction guide with range to some containers.</title>
-      <link href="https://cpprefjp.github.io/reference/set/multiset/op_deduction_guide.html"/>
-      <id>e44911377d9340e5f31ed3d125486bc1305c5a9c:reference/set/multiset/op_deduction_guide.md</id>
-      <updated>2025-02-17T21:01:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/set/multiset/op_deduction_guide.md b/reference/set/multiset/op_deduction_guide.md
-index 4d8206c7d..5b2724600 100644
---- a/reference/set/multiset/op_deduction_guide.md
-+++ b/reference/set/multiset/op_deduction_guide.md
-@@ -20,16 +20,23 @@ namespace std {
-   template &amp;lt;class InputIterator, class Allocator&amp;gt;
-   multiset(InputIterator, InputIterator, Allocator)
-     -&amp;gt; multiset&amp;lt;typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type,
--           less&amp;lt;typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type&amp;gt;, Allocator&amp;gt;;    // (3)
-+           less&amp;lt;typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type&amp;gt;, Allocator&amp;gt;;         // (3)
- 
-   template &amp;lt;class Key, class Allocator&amp;gt;
--  multiset(initializer_list&amp;lt;Key&amp;gt;, Allocator) -&amp;gt; multiset&amp;lt;Key, less&amp;lt;Key&amp;gt;, Allocator&amp;gt;;           // (4)
-+  multiset(initializer_list&amp;lt;Key&amp;gt;, Allocator) -&amp;gt; multiset&amp;lt;Key, less&amp;lt;Key&amp;gt;, Allocator&amp;gt;;      // (4)
-+
-+  template &amp;lt;ranges::input_range R, class Allocator&amp;gt;
-+  multiset(from_range_t, R&amp;amp;&amp;amp;, Allocator)
-+    -&amp;gt; multiset&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;, less&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;, Allocator&amp;gt;;     // (5) C++23から
- }
- ```
- * less[link /reference/functional/less.md]
- * iterator_traits[link /reference/iterator/iterator_traits.md]
- * allocator[link /reference/memory/allocator.md]
- * initializer_list[link /reference/initializer_list/initializer_list.md]
-+* ranges::input_range[link /reference/ranges/input_range.md]
-+* ranges::range_value_t[link /reference/ranges/range_value_t.md]
-+* from_range_t[link /reference/ranges/from_range_t.md]
- 
- ## 概要
- `std::multiset`クラステンプレートの型推論補助。
-@@ -38,6 +45,7 @@ namespace std {
- - (2) : 初期化子リストと比較関数オブジェクトからの推論
- - (3) : イテレータ範囲とアロケータからの推論
- - (4) : 初期化子リストとアロケータからの推論
-+- (5) : Rangeからの推論
- 
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>推論補助 -- add deduction guide with range to some containers.</title>
-      <link href="https://cpprefjp.github.io/reference/set/set/op_deduction_guide.html"/>
-      <id>e44911377d9340e5f31ed3d125486bc1305c5a9c:reference/set/set/op_deduction_guide.md</id>
-      <updated>2025-02-17T21:01:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/set/set/op_deduction_guide.md b/reference/set/set/op_deduction_guide.md
-index 4c65d0e3d..7a13e3800 100644
---- a/reference/set/set/op_deduction_guide.md
-+++ b/reference/set/set/op_deduction_guide.md
-@@ -24,12 +24,19 @@ namespace std {
- 
-   template &amp;lt;class Key, class Allocator&amp;gt;
-   set(initializer_list&amp;lt;Key&amp;gt;, Allocator) -&amp;gt; set&amp;lt;Key, less&amp;lt;Key&amp;gt;, Allocator&amp;gt;;           // (4)
-+
-+  template &amp;lt;ranges::input_range R, class Allocator&amp;gt;
-+  set(from_range_t, R&amp;amp;&amp;amp;, Allocator)
-+    -&amp;gt; set&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;, less&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;, Allocator&amp;gt;;     // (5) C++23から
- }
- ```
- * less[link /reference/functional/less.md]
- * iterator_traits[link /reference/iterator/iterator_traits.md]
- * allocator[link /reference/memory/allocator.md]
- * initializer_list[link /reference/initializer_list/initializer_list.md]
-+* ranges::input_range[link /reference/ranges/input_range.md]
-+* ranges::range_value_t[link /reference/ranges/range_value_t.md]
-+* from_range_t[link /reference/ranges/from_range_t.md]
- 
- ## 概要
- `std::set`クラステンプレートの型推論補助。
-@@ -38,6 +45,7 @@ namespace std {
- - (2) : 初期化子リストと比較関数オブジェクトからの推論
- - (3) : イテレータ範囲とアロケータからの推論
- - (4) : 初期化子リストとアロケータからの推論
-+- (5) : Rangeからの推論
- 
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>推論補助 -- add deduction guide with range to some containers.</title>
-      <link href="https://cpprefjp.github.io/reference/stack/stack/op_deduction_guide.html"/>
-      <id>e44911377d9340e5f31ed3d125486bc1305c5a9c:reference/stack/stack/op_deduction_guide.md</id>
-      <updated>2025-02-17T21:01:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/stack/stack/op_deduction_guide.md b/reference/stack/stack/op_deduction_guide.md
-index 53fd601ae..62c8ae875 100644
---- a/reference/stack/stack/op_deduction_guide.md
-+++ b/reference/stack/stack/op_deduction_guide.md
-@@ -6,28 +6,51 @@
- 
- ```cpp
- namespace std {
--  template&amp;lt;class Container&amp;gt;
-+  // 説明用の型
-+  template &amp;lt;class InputIterator&amp;gt;
-+  using iter_val_t = typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type;
-+
-+  template &amp;lt;class Container&amp;gt;
-   stack(Container)
--    -&amp;gt; stack&amp;lt;typename Container::value_type, Container&amp;gt;; // (1)
-+    -&amp;gt; stack&amp;lt;typename Container::value_type, Container&amp;gt;;      // (1)
- 
--  template&amp;lt;class InputIterator&amp;gt;
-+  template &amp;lt;class InputIterator&amp;gt;
-   stack(InputIterator, InputIterator)
--    -&amp;gt; stack&amp;lt;iter-value-type&amp;lt;InputIterator&amp;gt;&amp;gt;;  // (2) C++23
-+    -&amp;gt; stack&amp;lt;iter_val_t&amp;lt;InputIterator&amp;gt;&amp;gt;;                      // (2) C++23から
-+
-+  template &amp;lt;ranges::input_range R&amp;gt;
-+  stack(from_range_t, R&amp;amp;&amp;amp;)-&amp;gt; stack&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;; // (3) C++23から
- 
--  template&amp;lt;class Container, class Allocator&amp;gt;
-+  template &amp;lt;class Container, class Allocator&amp;gt;
-   stack(Container, Allocator)
--    -&amp;gt; stack&amp;lt;typename Container::value_type, Container&amp;gt;; // (3)
-+    -&amp;gt; stack&amp;lt;typename Container::value_type, Container&amp;gt;;      // (4)
- 
--  template&amp;lt;class InputIterator, class Allocator&amp;gt;
-+  template &amp;lt;class InputIterator, class Allocator&amp;gt;
-   stack(InputIterator, InputIterator, Allocator)
--    -&amp;gt; stack&amp;lt;iter-value-type&amp;lt;InputIterator&amp;gt;, deque&amp;lt;iter-value-type&amp;lt;InputIterator&amp;gt;,
--             Allocator&amp;gt;&amp;gt;;  // (4) C++23
-+    -&amp;gt; stack&amp;lt;iter_val_t&amp;lt;InputIterator&amp;gt;, deque&amp;lt;iter_val_t&amp;lt;InputIterator&amp;gt;,
-+             Allocator&amp;gt;&amp;gt;;                                     // (5) C++23から
-+
-+  template &amp;lt;ranges::input_range R, class Allocator&amp;gt;
-+  stack(from_range_t, R&amp;amp;&amp;amp;, Allocator)
-+    -&amp;gt; stack&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;, deque&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;,
-+             Allocator&amp;gt;&amp;gt;;                                     // (6) C++23から
- }
- ```
--* iter-value-type[italic]
-+* iterator_traits[link /reference/iterator/iterator_traits.md]
-+* deque[link /reference/deque/deque.md]
-+* ranges::input_range[link /reference/ranges/input_range.md]
-+* ranges::range_value_t[link /reference/ranges/range_value_t.md]
-+* from_range_t[link /reference/ranges/from_range_t.md]
- 
- ## 概要
--`std::stack`クラステンプレートの型推論補助。元となるコンテナから推論する。
-+`std::stack`クラステンプレートの型推論補助。
-+
-+- (1) : 元となるコンテナから推論する。
-+- (2) : イテレータ範囲から推論する。
-+- (3) : Rangeからの推論する。
-+- (4) : 元となるコンテナとアロケータから推論する。
-+- (5) : イテレータ範囲とアロケータから推論する。
-+- (6) : Rangeとアロケータからの推論する。
- 
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>推論補助 -- add deduction guide with range to some containers.</title>
-      <link href="https://cpprefjp.github.io/reference/string/basic_string/op_deduction_guide.html"/>
-      <id>e44911377d9340e5f31ed3d125486bc1305c5a9c:reference/string/basic_string/op_deduction_guide.md</id>
-      <updated>2025-02-17T21:01:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/basic_string/op_deduction_guide.md b/reference/string/basic_string/op_deduction_guide.md
-index cda97ea53..5e23053fd 100644
---- a/reference/string/basic_string/op_deduction_guide.md
-+++ b/reference/string/basic_string/op_deduction_guide.md
-@@ -27,6 +27,13 @@ namespace std {
-                typename see below::size_type,
-                const Allocator&amp;amp; = Allocator())
-     -&amp;gt; basic_string&amp;lt;CharT, Traits, Allocator&amp;gt;;  // (3) C++20
-+
-+  template &amp;lt;ranges::input_range R,
-+            class Allocator = allocator&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;&amp;gt;
-+  basic_string(from_range_t, R&amp;amp;&amp;amp;, Allocator = Allocator())
-+    -&amp;gt; basic_string&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;,
-+                    char_traits&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;,
-+                    Allocator&amp;gt;;                 // (4) C++23
- }
- ```
- * see below[italic]
-@@ -34,9 +41,17 @@ namespace std {
- * iterator_traits[link /reference/iterator/iterator_traits.md]
- * char_traits[link /reference/string/char_traits.md]
- * basic_string_view[link /reference/string_view/basic_string_view.md]
-+* ranges::input_range[link /reference/ranges/input_range.md]
-+* ranges::range_value_t[link /reference/ranges/range_value_t.md]
-+* from_range_t[link /reference/ranges/from_range_t.md]
- 
- ## 概要
--`std::basic_string`クラステンプレートの型推論補助。イテレータ範囲から推論する。
-+`std::basic_string`クラステンプレートの型推論補助。
-+
-+- (1) : イテレータ範囲からの推論
-+- (2) : string_viewからの推論
-+- (3) : string_viewとpos, countからの推論
-+- (4) : Rangeからの推論
- 
- 
- ## 備考
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>推論補助 -- add deduction guide with range to some containers.</title>
-      <link href="https://cpprefjp.github.io/reference/unordered_map/unordered_map/op_deduction_guide.html"/>
-      <id>e44911377d9340e5f31ed3d125486bc1305c5a9c:reference/unordered_map/unordered_map/op_deduction_guide.md</id>
-      <updated>2025-02-17T21:01:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/unordered_map/unordered_map/op_deduction_guide.md b/reference/unordered_map/unordered_map/op_deduction_guide.md
-index 5378eadba..f31caacee 100644
---- a/reference/unordered_map/unordered_map/op_deduction_guide.md
-+++ b/reference/unordered_map/unordered_map/op_deduction_guide.md
-@@ -14,6 +14,10 @@ namespace std {
-   template &amp;lt;class InputIterator&amp;gt;
-   using iter_to_alloc_t = pair&amp;lt;add_const_t&amp;lt;typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type::first_type&amp;gt;,
-                                typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type::second_type&amp;gt;;
-+  template &amp;lt;ranges::input_range Range&amp;gt;
-+  using range_key_t = remove_const_t&amp;lt;typename ranges::range_value_t&amp;lt;Range&amp;gt;::first_type&amp;gt;;
-+  template &amp;lt;ranges::input_range Range&amp;gt;
-+  using range_val_t = typename ranges::range_value_t&amp;lt;Range&amp;gt;::second_type;
- 
-   template &amp;lt;class InputIterator,
-             class Hash = hash&amp;lt;iter_key_t&amp;lt;InputIterator&amp;gt;&amp;gt;,
-@@ -75,6 +79,28 @@ namespace std {
-   unordered_map(initializer_list&amp;lt;pair&amp;lt;Key, T&amp;gt;&amp;gt;, typename see below::size_type, Hash, Allocator)
-     -&amp;gt; unordered_map&amp;lt;Key, T, Hash,
-                      equal_to&amp;lt;Key&amp;gt;, Allocator&amp;gt;;      // (8)
-+
-+  template &amp;lt;ranges::input_range R, class Hash = hash&amp;lt;range_key_t&amp;lt;R&amp;gt;&amp;gt;,
-+           class Pred = equal_to&amp;lt;range_key_t&amp;lt;R&amp;gt;&amp;gt;,
-+           class Allocator = allocator&amp;lt;range-to-alloc-type&amp;lt;R&amp;gt;&amp;gt;&amp;gt;
-+  unordered_map(from_range_t, R&amp;amp;&amp;amp;, typename see below::size_type = see below,
-+                Hash = Hash(), Pred = Pred(), Allocator = Allocator())
-+    -&amp;gt; unordered_map&amp;lt;range_key_t&amp;lt;R&amp;gt;, range_val_t&amp;lt;R&amp;gt;, Hash, Pred, Allocator&amp;gt;; // (9) C++23から
-+
-+  template &amp;lt;ranges::input_range R, class Allocator&amp;gt;
-+  unordered_map(from_range_t, R&amp;amp;&amp;amp;, typename see below::size_type, Allocator)
-+    -&amp;gt; unordered_map&amp;lt;range_key_t&amp;lt;R&amp;gt;, range_val_t&amp;lt;R&amp;gt;, hash&amp;lt;range_key_t&amp;lt;R&amp;gt;&amp;gt;,
-+                     equal_to&amp;lt;range_key_t&amp;lt;R&amp;gt;&amp;gt;, Allocator&amp;gt;;                   // (10) C++23から
-+
-+  template &amp;lt;ranges::input_range R, class Allocator&amp;gt;
-+  unordered_map(from_range_t, R&amp;amp;&amp;amp;, Allocator)
-+    -&amp;gt; unordered_map&amp;lt;range_key_t&amp;lt;R&amp;gt;, range_val_t&amp;lt;R&amp;gt;, hash&amp;lt;range_key_t&amp;lt;R&amp;gt;&amp;gt;,
-+                     equal_to&amp;lt;range_key_t&amp;lt;R&amp;gt;&amp;gt;, Allocator&amp;gt;;                   // (11) C++23から
-+
-+  template &amp;lt;ranges::input_range R, class Hash, class Allocator&amp;gt;
-+  unordered_map(from_range_t, R&amp;amp;&amp;amp;, typename see below::size_type, Hash, Allocator)
-+    -&amp;gt; unordered_map&amp;lt;range_key_t&amp;lt;R&amp;gt;, range_val_t&amp;lt;R&amp;gt;, Hash,
-+                     equal_to&amp;lt;range_key_t&amp;lt;R&amp;gt;&amp;gt;, Allocator&amp;gt;;                   // (12) C++23から
- }
- ```
- * see below[italic]
-@@ -86,6 +112,9 @@ namespace std {
- * equal_to[link /reference/functional/equal_to.md]
- * allocator[link /reference/memory/allocator.md]
- * initializer_list[link /reference/initializer_list/initializer_list.md]
-+* ranges::input_range[link /reference/ranges/input_range.md]
-+* ranges::range_value_t[link /reference/ranges/range_value_t.md]
-+* from_range_t[link /reference/ranges/from_range_t.md]
- 
- ## 概要
- `std::unordered_map`クラステンプレートの型推論補助。
-@@ -98,6 +127,10 @@ namespace std {
- - (6) : 初期化子リストとバケット数、アロケータからの推論
- - (7) : 初期化子リストとアロケータからの推論
- - (8) : 初期化子リストとバケット数、ハッシュ関数、アロケータからの推論
-+- (9) : Rangeからの推論
-+- (10) : Rangeとバケット数、アロケータからの推論
-+- (11) : Rangeとアロケータからの推論
-+- (12) : Rangeとバケット数、ハッシュ関数、アロケータからの推論
- 
- 
- ## 備考
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>推論補助 -- add deduction guide with range to some containers.</title>
-      <link href="https://cpprefjp.github.io/reference/unordered_map/unordered_multimap/op_deduction_guide.html"/>
-      <id>e44911377d9340e5f31ed3d125486bc1305c5a9c:reference/unordered_map/unordered_multimap/op_deduction_guide.md</id>
-      <updated>2025-02-17T21:01:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/unordered_map/unordered_multimap/op_deduction_guide.md b/reference/unordered_map/unordered_multimap/op_deduction_guide.md
-index 3091f49eb..78ec0c7e6 100644
---- a/reference/unordered_map/unordered_multimap/op_deduction_guide.md
-+++ b/reference/unordered_map/unordered_multimap/op_deduction_guide.md
-@@ -14,6 +14,10 @@ namespace std {
-   template &amp;lt;class InputIterator&amp;gt;
-   using iter_to_alloc_t = pair&amp;lt;add_const_t&amp;lt;typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type::first_type&amp;gt;,
-                                typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type::second_type&amp;gt;;
-+  template &amp;lt;ranges::input_range Range&amp;gt;
-+  using range_key_t = remove_const_t&amp;lt;typename ranges::range_value_t&amp;lt;Range&amp;gt;::first_type&amp;gt;;
-+  template &amp;lt;ranges::input_range Range&amp;gt;
-+  using range_val_t = typename ranges::range_value_t&amp;lt;Range&amp;gt;::second_type;
- 
-   template &amp;lt;class InputIterator,
-             class Hash = hash&amp;lt;iter_key_t&amp;lt;InputIterator&amp;gt;&amp;gt;,
-@@ -75,6 +79,28 @@ namespace std {
-   unordered_multimap(initializer_list&amp;lt;pair&amp;lt;Key, T&amp;gt;&amp;gt;, typename see below::size_type, Hash, Allocator)
-     -&amp;gt; unordered_multimap&amp;lt;Key, T, Hash,
-                           equal_to&amp;lt;Key&amp;gt;, Allocator&amp;gt;;      // (8)
-+
-+  template &amp;lt;ranges::input_range R, class Hash = hash&amp;lt;range_key_t&amp;lt;R&amp;gt;&amp;gt;,
-+           class Pred = equal_to&amp;lt;range_key_t&amp;lt;R&amp;gt;&amp;gt;,
-+           class Allocator = allocator&amp;lt;range-to-alloc-type&amp;lt;R&amp;gt;&amp;gt;&amp;gt;
-+  unordered_multimap(from_range_t, R&amp;amp;&amp;amp;, typename see below::size_type = see below,
-+                     Hash = Hash(), Pred = Pred(), Allocator = Allocator())
-+    -&amp;gt; unordered_multimap&amp;lt;range_key_t&amp;lt;R&amp;gt;, range_val_t&amp;lt;R&amp;gt;, Hash, Pred, Allocator&amp;gt;; // (9) C++23から
-+
-+  template &amp;lt;ranges::input_range R, class Allocator&amp;gt;
-+  unordered_multimap(from_range_t, R&amp;amp;&amp;amp;, typename see below::size_type, Allocator)
-+    -&amp;gt; unordered_multimap&amp;lt;range_key_t&amp;lt;R&amp;gt;, range_val_t&amp;lt;R&amp;gt;, hash&amp;lt;range_key_t&amp;lt;R&amp;gt;&amp;gt;,
-+                          equal_to&amp;lt;range_key_t&amp;lt;R&amp;gt;&amp;gt;, Allocator&amp;gt;;                   // (10) C++23から
-+
-+  template &amp;lt;ranges::input_range R, class Allocator&amp;gt;
-+  unordered_multimap(from_range_t, R&amp;amp;&amp;amp;, Allocator)
-+    -&amp;gt; unordered_multimap&amp;lt;range_key_t&amp;lt;R&amp;gt;, range_val_t&amp;lt;R&amp;gt;, hash&amp;lt;range_key_t&amp;lt;R&amp;gt;&amp;gt;,
-+                          equal_to&amp;lt;range_key_t&amp;lt;R&amp;gt;&amp;gt;, Allocator&amp;gt;;                   // (11) C++23から
-+
-+  template &amp;lt;ranges::input_range R, class Hash, class Allocator&amp;gt;
-+  unordered_multimap(from_range_t, R&amp;amp;&amp;amp;, typename see below::size_type, Hash, Allocator)
-+    -&amp;gt; unordered_multimap&amp;lt;range_key_t&amp;lt;R&amp;gt;, range_val_t&amp;lt;R&amp;gt;, Hash,
-+                          equal_to&amp;lt;range_key_t&amp;lt;R&amp;gt;&amp;gt;, Allocator&amp;gt;;                   // (12) C++23から
- }
- ```
- * see below[italic]
-@@ -86,6 +112,9 @@ namespace std {
- * equal_to[link /reference/functional/equal_to.md]
- * allocator[link /reference/memory/allocator.md]
- * initializer_list[link /reference/initializer_list/initializer_list.md]
-+* ranges::input_range[link /reference/ranges/input_range.md]
-+* ranges::range_value_t[link /reference/ranges/range_value_t.md]
-+* from_range_t[link /reference/ranges/from_range_t.md]
- 
- ## 概要
- `std::unordered_multimap`クラステンプレートの型推論補助。
-@@ -98,6 +127,10 @@ namespace std {
- - (6) : 初期化子リストとバケット数、アロケータからの推論
- - (7) : 初期化子リストとアロケータからの推論
- - (8) : 初期化子リストとバケット数、ハッシュ関数、アロケータからの推論
-+- (9) : Rangeからの推論
-+- (10) : Rangeとバケット数、アロケータからの推論
-+- (11) : Rangeとアロケータからの推論
-+- (12) : Rangeとバケット数、ハッシュ関数、アロケータからの推論
- 
- 
- ## 備考
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>推論補助 -- add deduction guide with range to some containers.</title>
-      <link href="https://cpprefjp.github.io/reference/unordered_set/unordered_multiset/op_deduction_guide.html"/>
-      <id>e44911377d9340e5f31ed3d125486bc1305c5a9c:reference/unordered_set/unordered_multiset/op_deduction_guide.md</id>
-      <updated>2025-02-17T21:01:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/unordered_set/unordered_multiset/op_deduction_guide.md b/reference/unordered_set/unordered_multiset/op_deduction_guide.md
-index d572ad857..3e31c623a 100644
---- a/reference/unordered_set/unordered_multiset/op_deduction_guide.md
-+++ b/reference/unordered_set/unordered_multiset/op_deduction_guide.md
-@@ -46,6 +46,29 @@ namespace std {
-   unordered_multiset(initializer_list&amp;lt;T&amp;gt;, typename see below::size_type, Hash, Allocator)
-     -&amp;gt; unordered_multiset&amp;lt;T, Hash,
-                           equal_to&amp;lt;T&amp;gt;, Allocator&amp;gt;;   // (6)
-+
-+  template &amp;lt;ranges::input_range R,
-+           class Hash = hash&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;,
-+           class Pred = equal_to&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;,
-+           class Allocator = allocator&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;&amp;gt;
-+  unordered_multiset(from_range_t, R&amp;amp;&amp;amp;, typename see below::size_type = see below,
-+                     Hash = Hash(), Pred = Pred(), Allocator = Allocator())
-+    -&amp;gt; unordered_multiset&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;, Hash, Pred, Allocator&amp;gt;; // (7) C++23から
-+
-+  template &amp;lt;ranges::input_range R, class Allocator&amp;gt;
-+  unordered_multiset(from_range_t, R&amp;amp;&amp;amp;, typename see below::size_type, Allocator)
-+    -&amp;gt; unordered_multiset&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;, hash&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;,
-+                          equal_to&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;, Allocator&amp;gt;;   // (8) C++23から
-+
-+  template &amp;lt;ranges::input_range R, class Allocator&amp;gt;
-+  unordered_multiset(from_range_t, R&amp;amp;&amp;amp;, Allocator)
-+    -&amp;gt; unordered_multiset&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;, hash&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;,
-+                          equal_to&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;, Allocator&amp;gt;;   // (9) C++23から
-+
-+  template &amp;lt;ranges::input_range R, class Hash, class Allocator&amp;gt;
-+  unordered_multiset(from_range_t, R&amp;amp;&amp;amp;, typename see below::size_type, Hash, Allocator)
-+    -&amp;gt; unordered_multiset&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;, Hash,
-+                          equal_to&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;, Allocator&amp;gt;;   // (10) C++23から
- }
- ```
- * see below[italic]
-@@ -54,15 +77,23 @@ namespace std {
- * iterator_traits[link /reference/iterator/iterator_traits.md]
- * allocator[link /reference/memory/allocator.md]
- * initializer_list[link /reference/initializer_list/initializer_list.md]
-+* ranges::input_range[link /reference/ranges/input_range.md]
-+* ranges::range_value_t[link /reference/ranges/range_value_t.md]
-+* from_range_t[link /reference/ranges/from_range_t.md]
- 
- ## 概要
- `std::unordered_multiset`クラステンプレートの型推論補助。
- 
- - (1) : イテレータ範囲からの推論
--- (2) : 初期化子リスト、ハッシュ関数、比較関数オブジェクトからの推論
-+- (2) : 初期化子リストからの推論
- - (3) : イテレータ範囲とアロケータからの推論
- - (4) : イテレータ範囲、ハッシュ関数、アロケータからの推論
- - (5) : 初期化子リストとアロケータからの推論
-+- (6) : 初期化子リスト、ハッシュ関数、アロケータからの推論
-+- (7) : Rangeからの推論
-+- (8) : Rangeとアロケータからの推論
-+- (9) : Rangeとハッシュ関数からの推論
-+- (10) : Range、ハッシュ関数、アロケータからの推論
- 
- 
- ## 備考
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>推論補助 -- add deduction guide with range to some containers.</title>
-      <link href="https://cpprefjp.github.io/reference/unordered_set/unordered_set/op_deduction_guide.html"/>
-      <id>e44911377d9340e5f31ed3d125486bc1305c5a9c:reference/unordered_set/unordered_set/op_deduction_guide.md</id>
-      <updated>2025-02-17T21:01:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/unordered_set/unordered_set/op_deduction_guide.md b/reference/unordered_set/unordered_set/op_deduction_guide.md
-index d94582324..e5689e203 100644
---- a/reference/unordered_set/unordered_set/op_deduction_guide.md
-+++ b/reference/unordered_set/unordered_set/op_deduction_guide.md
-@@ -39,9 +39,32 @@ namespace std {
-   unordered_set(initializer_list&amp;lt;T&amp;gt;, typename see below::size_type, Allocator)
-     -&amp;gt; unordered_set&amp;lt;T, hash&amp;lt;T&amp;gt;, equal_to&amp;lt;T&amp;gt;, Allocator&amp;gt;; // (5)
- 
--  template&amp;lt;class T, class Hash, class Allocator&amp;gt;
-+  template &amp;lt;class T, class Hash, class Allocator&amp;gt;
-   unordered_set(initializer_list&amp;lt;T&amp;gt;, typename see below::size_type, Hash, Allocator)
-     -&amp;gt; unordered_set&amp;lt;T, Hash, equal_to&amp;lt;T&amp;gt;, Allocator&amp;gt;;    // (6)
-+
-+  template &amp;lt;ranges::input_range R,
-+           class Hash = hash&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;,
-+           class Pred = equal_to&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;,
-+           class Allocator = allocator&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;&amp;gt;
-+  unordered_set(from_range_t, R&amp;amp;&amp;amp;, typename see below::size_type = see below,
-+                Hash = Hash(), Pred = Pred(), Allocator = Allocator())
-+    -&amp;gt; unordered_set&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;, Hash, Pred, Allocator&amp;gt;; // (7) C++23から
-+
-+  template &amp;lt;ranges::input_range R, class Allocator&amp;gt;
-+  unordered_set(from_range_t, R&amp;amp;&amp;amp;, typename see below::size_type, Allocator)
-+    -&amp;gt; unordered_set&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;, hash&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;,
-+                     equal_to&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;, Allocator&amp;gt;;   // (8) C++23から
-+
-+  template &amp;lt;ranges::input_range R, class Allocator&amp;gt;
-+  unordered_set(from_range_t, R&amp;amp;&amp;amp;, Allocator)
-+    -&amp;gt; unordered_set&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;, hash&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;,
-+                     equal_to&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;, Allocator&amp;gt;;   // (9) C++23から
-+
-+  template &amp;lt;ranges::input_range R, class Hash, class Allocator&amp;gt;
-+  unordered_set(from_range_t, R&amp;amp;&amp;amp;, typename see below::size_type, Hash, Allocator)
-+    -&amp;gt; unordered_set&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;, Hash,
-+                     equal_to&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;, Allocator&amp;gt;;   // (10) C++23から
- }
- ```
- * see below[italic]
-@@ -50,15 +73,23 @@ namespace std {
- * iterator_traits[link /reference/iterator/iterator_traits.md]
- * allocator[link /reference/memory/allocator.md]
- * initializer_list[link /reference/initializer_list/initializer_list.md]
-+* ranges::input_range[link /reference/ranges/input_range.md]
-+* ranges::range_value_t[link /reference/ranges/range_value_t.md]
-+* from_range_t[link /reference/ranges/from_range_t.md]
- 
- ## 概要
- `std::unordered_set`クラステンプレートの型推論補助。
- 
- - (1) : イテレータ範囲からの推論
--- (2) : 初期化子リスト、ハッシュ関数、比較関数オブジェクトからの推論
-+- (2) : 初期化子リストからの推論
- - (3) : イテレータ範囲とアロケータからの推論
- - (4) : イテレータ範囲、ハッシュ関数、アロケータからの推論
- - (5) : 初期化子リストとアロケータからの推論
-+- (6) : 初期化子リスト、ハッシュ関数、アロケータからの推論
-+- (7) : Rangeからの推論
-+- (8) : Rangeとアロケータからの推論
-+- (9) : Rangeとハッシュ関数からの推論
-+- (10) : Range、ハッシュ関数、アロケータからの推論
- 
- 
- ## 備考
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>推論補助 -- add deduction guide with range to some containers.</title>
-      <link href="https://cpprefjp.github.io/reference/vector/vector/op_deduction_guide.html"/>
-      <id>e44911377d9340e5f31ed3d125486bc1305c5a9c:reference/vector/vector/op_deduction_guide.md</id>
-      <updated>2025-02-17T21:01:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/vector/vector/op_deduction_guide.md b/reference/vector/vector/op_deduction_guide.md
-index f935a13e9..1276d700c 100644
---- a/reference/vector/vector/op_deduction_guide.md
-+++ b/reference/vector/vector/op_deduction_guide.md
-@@ -9,13 +9,24 @@ namespace std {
-   template &amp;lt;class InputIterator,
-             class Allocator = allocator&amp;lt;typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type&amp;gt;&amp;gt;
-   vector(InputIterator, InputIterator, Allocator = Allocator())
--    -&amp;gt; vector&amp;lt;typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type, Allocator&amp;gt;;
-+    -&amp;gt; vector&amp;lt;typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type, Allocator&amp;gt;; // (1)
- }
-+
-+  template &amp;lt;ranges::input_range R, class Allocator = allocator&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;&amp;gt;&amp;gt;
-+  vector(from_range_t, R&amp;amp;&amp;amp;, Allocator = Allocator())
-+    -&amp;gt; vector&amp;lt;ranges::range_value_t&amp;lt;R&amp;gt;, Allocator&amp;gt;;                            // (2) C++23から
- ```
- * iterator_traits[link /reference/iterator/iterator_traits.md]
-+* ranges::input_range[link /reference/ranges/input_range.md]
-+* allocator[link /reference/memory/allocator.md]
-+* ranges::range_value_t[link /reference/ranges/range_value_t.md]
-+* from_range_t[link /reference/ranges/from_range_t.md]
- 
- ## 概要
--`std::vector`クラステンプレートの型推論補助。イテレータ範囲から推論する。
-+`std::vector`クラステンプレートの型推論補助。
-+
-+- (1) : イテレータ範囲から推論する。
-+- (2) : Rangeから推論する。
- 
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
       </author>
     </entry>
   
