@@ -2,9 +2,147 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-03-03T03:23:35.931449</updated>
-  <id>387ee93f-e1c1-4cc0-85d1-8129c9832f04</id>
+  <updated>2025-03-03T05:03:33.804505</updated>
+  <id>365e3fff-756f-4655-a7e2-12a9a9738e1d</id>
 
+  
+    <entry>
+      <title>path -- path: C++26対応としてformatterの特殊化を追加 (close #1336)</title>
+      <link href="https://cpprefjp.github.io/reference/filesystem/path.html"/>
+      <id>78f2291fb56835b01dc66a155e7c319b533c7c3b:reference/filesystem/path.md</id>
+      <updated>2025-03-03T13:59:58+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/filesystem/path.md b/reference/filesystem/path.md
+index 2ee24d21e..a938b10cb 100644
+--- a/reference/filesystem/path.md
++++ b/reference/filesystem/path.md
+@@ -187,6 +187,12 @@ namespace std::filesystem {
+ |------|------|----------------|
+ | [`u8path`](u8path.md) | UTF-8エンコードされた文字列からパスオブジェクトを構築する | C++17&amp;lt;br/&amp;gt; C++20で非推奨 |
+ 
++## 文字列フォーマットサポート
++
++| 名前 | 説明 | 対応バージョン |
++|------|------|----------------|
++| [`formatter`](path/formatter.md) | [`std::formatter`](/reference/format/formatter.md)クラスの特殊化 | C++26 |
++
+ 
+ ## 例
+ ### POSIXベースシステムの例
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>formatter -- path: C++26対応としてformatterの特殊化を追加 (close #1336)</title>
+      <link href="https://cpprefjp.github.io/reference/filesystem/path/formatter.html"/>
+      <id>78f2291fb56835b01dc66a155e7c319b533c7c3b:reference/filesystem/path/formatter.md</id>
+      <updated>2025-03-03T13:59:58+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/filesystem/path/formatter.md b/reference/filesystem/path/formatter.md
+new file mode 100644
+index 000000000..2ef420752
+--- /dev/null
++++ b/reference/filesystem/path/formatter.md
+@@ -0,0 +1,87 @@
++# formatter
++* filesystem[meta header]
++* std[meta namespace]
++* class[meta id-type]
++* cpp26[meta cpp]
++
++```cpp
++namespace std {
++  template &amp;lt;class charT&amp;gt;
++  struct formatter&amp;lt;filesystem::path, charT&amp;gt;;
++}
++```
++
++## 概要
++`filesystem::path`クラスに対する[`std::formatter`](/reference/format/formatter.md)クラステンプレートの特殊化。
++
++書式としては、以下を使用できる：
++
++```
++[[fill] align] [width] [?] [g]
++```
++
++* `fill` : アライメントに使う文字 (デフォルト: スペース)
++* `align` : アライメント(デフォルトは型による)
++    * `&amp;gt;` : 右寄せ
++    * `&amp;lt;` : 左寄せ
++    * `^` : 中央寄せ
++* `width` : 幅 (アライメントもしくは0埋めの幅)
++    * 置換フィールドを使って変数で指定できる
++* `?` : デバッグ出力
++    * 文字・文字列を引用符で囲み、エスケープシーケンスをエスケープして出力
++* `g` : 環境非依存のパスフォーマット ([`generic_string()`](generic_string.md)) を使用する
++    * これが指定されない場合は、プラットフォームごとのパスフォーマット ([`native()`](native.md)) を使用する
++
++
++## 例
++```cpp example
++#include &amp;lt;print&amp;gt;
++#include &amp;lt;filesystem&amp;gt;
++
++namespace fs = std::filesystem;
++
++int main() {
++  fs::path a = &amp;#34;/a/b/c.txt&amp;#34;;
++  fs::path b = &amp;#34;multi\nline&amp;#34;;
++  fs::path c = &amp;#34;a\\b\\c.txt&amp;#34;;
++
++  // デフォルトフォーマットは、operator&amp;lt;&amp;lt;とちがって
++  // 引用符で囲まずに出力する
++  std::println(&amp;#34;1 : {}&amp;#34;, a);
++
++  // デバッグ出力。
++  // 引用符で囲み、エスケープシーケンスをエスケープして出力する
++  std::println(&amp;#34;2 : {:?}&amp;#34;, a);
++  std::println(&amp;#34;3 : {:?}&amp;#34;, b);
++
++  // 環境非依存のパスフォーマット
++  std::println(&amp;#34;4 : {:g}&amp;#34;, c);
++  std::println(&amp;#34;5 : {}&amp;#34;, c);
++}
++```
++
++### 出力例
++```
++1. /a/b/c.txt
++2. &amp;#34;/a/b/c.txt&amp;#34;
++3. &amp;#34;multi\nline&amp;#34;
++4. a/b/c.txt
++5. a\b\c.txt
++```
++
++## バージョン
++### 言語
++- C++26
++
++### 処理系
++- [Clang](/implementation.md#clang): 20.0 [mark noimpl]
++- [GCC](/implementation.md#gcc): 14 [mark noimpl]
++- [Visual C++](/implementation.md#visual_cpp): 2022 Update 10 [mark noimpl]
++
++
++## 関連項目
++- [`std::format()`](/reference/format/format.md) (フォーマットの詳細)
++
++
++## 参照
++- [P2845R8 Formatting of `std::filesystem::path`](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2845r8.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>cpprefjp - C++日本語リファレンス -- スポンサー更新 #1411</title>
@@ -280,138 +418,6 @@ index 56c8af48c..b7cbe5ccf 100644
       <author>
         <name>Raclamusi</name>
         <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator== -- expected : C++26対応として比較演算子の適格要件をテンプレートパラメータ制約に変更 (close #1379)</title>
-      <link href="https://cpprefjp.github.io/reference/expected/expected.void/op_equal.html"/>
-      <id>94b8b36e62a3cd0246fbf1c4e336fff4a300c877:reference/expected/expected.void/op_equal.md</id>
-      <updated>2025-02-28T10:18:32+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/expected/expected.void/op_equal.md b/reference/expected/expected.void/op_equal.md
-index d61ff5eda..f72459f70 100644
---- a/reference/expected/expected.void/op_equal.md
-+++ b/reference/expected/expected.void/op_equal.md
-@@ -24,7 +24,7 @@ friend constexpr bool operator==(const unexpected&amp;lt;E2&amp;gt;&amp;amp; e, const expected&amp;amp; x);
- - (2), (3) : `expected`オブジェクトとエラー値の等値比較を行う。
- 
- 
--## 適格要件
-+## テンプレートパラメータ制約
- - (1) : 式`x.`[`error()`](error.md) `== y.`[`error()`](error.md)が適格であり、その結果を`bool`へ変換可能であること。
- - (2), (3) : 式`x.`[`error()`](error.md) `== e.`[`error()`](../unexpected/error.md)が適格であり、その結果を`bool`へ変換可能であること。
- 
-@@ -80,3 +80,5 @@ int main()
- 
- ## 参照
- - [P0323R12 std::expected](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p0323r12.html)
-+- [P3379R0 Constrain `std::expected` equality operators](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3379r0.html)
-+    - C++26で「適格要件」を「テンプレートパラメータ制約」に変更
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator!= -- expected : C++26対応として比較演算子の適格要件をテンプレートパラメータ制約に変更 (close #1379)</title>
-      <link href="https://cpprefjp.github.io/reference/expected/expected.void/op_not_equal.html"/>
-      <id>94b8b36e62a3cd0246fbf1c4e336fff4a300c877:reference/expected/expected.void/op_not_equal.md</id>
-      <updated>2025-02-28T10:18:32+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/expected/expected.void/op_not_equal.md b/reference/expected/expected.void/op_not_equal.md
-index 9c203450b..b256e992f 100644
---- a/reference/expected/expected.void/op_not_equal.md
-+++ b/reference/expected/expected.void/op_not_equal.md
-@@ -25,7 +25,7 @@ friend constexpr bool operator!=(const unexpected&amp;lt;E2&amp;gt;&amp;amp; e, const expected&amp;amp; x);
- - (2), (3) : `expected`オブジェクトとエラー値の非等値比較を行う。
- 
- 
--## 適格要件
-+## テンプレートパラメータ制約
- - (1) : 式`x.`[`error()`](error.md) `== y.`[`error()`](error.md)が適格であり、その結果を`bool`へ変換可能であること。
- - (2), (3) : 式`x.`[`error()`](error.md) `== e.`[`error()`](../unexpected/error.md)が適格であり、その結果を`bool`へ変換可能であること。
- 
-@@ -79,3 +79,5 @@ int main()
- 
- ## 参照
- - [P0323R12 std::expected](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p0323r12.html)
-+- [P3379R0 Constrain `std::expected` equality operators](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3379r0.html)
-+    - C++26で「適格要件」を「テンプレートパラメータ制約」に変更
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator== -- expected : C++26対応として比較演算子の適格要件をテンプレートパラメータ制約に変更 (close #1379)</title>
-      <link href="https://cpprefjp.github.io/reference/expected/expected/op_equal.html"/>
-      <id>94b8b36e62a3cd0246fbf1c4e336fff4a300c877:reference/expected/expected/op_equal.md</id>
-      <updated>2025-02-28T10:18:32+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/expected/expected/op_equal.md b/reference/expected/expected/op_equal.md
-index 25e4668a7..d491fff22 100644
---- a/reference/expected/expected/op_equal.md
-+++ b/reference/expected/expected/op_equal.md
-@@ -30,7 +30,7 @@ friend constexpr bool operator==(const unexpected&amp;lt;E2&amp;gt;&amp;amp; e, const expected&amp;amp; x); //
- - (4), (5) : `expected`オブジェクトとエラー値の等値比較を行う。
- 
- 
--## 適格要件
-+## テンプレートパラメータ制約
- - (1) : 式[`*x`](op_deref.md) `==` [`*y`](op_deref.md)および式`x.`[`error()`](error.md) `== y.`[`error()`](error.md)が適格であり、各式の結果を`bool`へ変換可能であること。
- - (2), (3) : 式[`*x`](op_deref.md) `== v`が適格であり、その結果を`bool`へ変換可能であること。
- - (4), (5) : 式`x.`[`error()`](error.md) `== e.`[`error()`](../unexpected/error.md)が適格であり、その結果を`bool`へ変換可能であること。
-@@ -93,3 +93,5 @@ int main()
- 
- ## 参照
- - [P0323R12 std::expected](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p0323r12.html)
-+- [P3379R0 Constrain `std::expected` equality operators](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3379r0.html)
-+    - C++26で「適格要件」を「テンプレートパラメータ制約」に変更
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator!= -- expected : C++26対応として比較演算子の適格要件をテンプレートパラメータ制約に変更 (close #1379)</title>
-      <link href="https://cpprefjp.github.io/reference/expected/expected/op_not_equal.html"/>
-      <id>94b8b36e62a3cd0246fbf1c4e336fff4a300c877:reference/expected/expected/op_not_equal.md</id>
-      <updated>2025-02-28T10:18:32+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/expected/expected/op_not_equal.md b/reference/expected/expected/op_not_equal.md
-index bce953cf5..14cb8532e 100644
---- a/reference/expected/expected/op_not_equal.md
-+++ b/reference/expected/expected/op_not_equal.md
-@@ -30,7 +30,7 @@ friend constexpr bool operator!=(const unexpected&amp;lt;E2&amp;gt;&amp;amp; e, const expected&amp;amp; x); //
- - (4), (5) : `expected`オブジェクトとエラー値の非等値比較を行う。
- 
- 
--## 適格要件
-+## テンプレートパラメータ制約
- - (1) : 式[`*x`](op_deref.md) `==` [`*y`](op_deref.md)および式`x.`[`error()`](error.md) `== y.`[`error()`](error.md)が適格であり、各式の結果を`bool`へ変換可能であること。
- - (2), (3) : 式[`*x`](op_deref.md) `== v`が適格であり、その結果を`bool`へ変換可能であること。
- - (4), (5) : 式`x.`[`error()`](error.md) `== e.`[`error()`](../unexpected/error.md)が適格であり、その結果を`bool`へ変換可能であること。
-@@ -90,3 +90,5 @@ int main()
- 
- ## 参照
- - [P0323R12 std::expected](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p0323r12.html)
-+- [P3379R0 Constrain `std::expected` equality operators](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3379r0.html)
-+    - C++26で「適格要件」を「テンプレートパラメータ制約」に変更
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
       </author>
     </entry>
   
