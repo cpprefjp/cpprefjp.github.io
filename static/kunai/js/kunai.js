@@ -2092,7 +2092,7 @@ var Wand = /*#__PURE__*/function () {
   }]);
   return Wand;
 }();
-(0,defineProperty/* default */.A)(Wand, "defaults", new Map([['compiler', 'clang-head'], ['options', ['warning', 'c++2a', 'cpp-pedantic-errors']], ['compiler-option-raw', ['-Wall', '-Wextra' /*'-Werror'*/]]]));
+(0,defineProperty/* default */.A)(Wand, "defaults", new Map([['compiler', 'clang-head'], ['options', ['warning', 'cpp-pedantic-errors']], ['compiler-option-raw', ['-std=c++2c', '-Wall', '-Wextra' /*'-Werror'*/]]]));
 
 // EXTERNAL MODULE: ./kunai/mirror/theme.js
 var mirror_theme = __webpack_require__(9346);
