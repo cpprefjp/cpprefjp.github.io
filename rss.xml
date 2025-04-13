@@ -2,9 +2,391 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-04-13T07:10:32.024679</updated>
-  <id>12c9ab55-8cb9-4b1c-9878-ae5c1773d447</id>
+  <updated>2025-04-13T08:50:56.536231</updated>
+  <id>718ec8dc-75e2-4a43-ac7f-4c4e98769169</id>
 
+  
+    <entry>
+      <title>execution -- execution: scheduler (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution.html"/>
+      <id>a7e53aef7e9ce247a1032acc329f68bce4f14ba0:reference/execution/execution.md</id>
+      <updated>2025-04-13T17:47:15+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution.md b/reference/execution/execution.md
+index 2e8c81770..1814d74cd 100644
+--- a/reference/execution/execution.md
++++ b/reference/execution/execution.md
+@@ -56,7 +56,7 @@ namespace std::execution {
+ 
+ | 名前 | 説明 | 対応バージョン |
+ |------|------|----------------|
+-| [`execution::scheduler`](execution/scheduler.md.nolink) | Scheduler (concept) | C++26 |
++| [`execution::scheduler`](execution/scheduler.md) | Scheduler型 (concept) | C++26 |
+ 
+ ### Receiver
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operation_state -- execution: scheduler (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/operation_state.html"/>
+      <id>a7e53aef7e9ce247a1032acc329f68bce4f14ba0:reference/execution/execution/operation_state.md</id>
+      <updated>2025-04-13T17:47:15+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/operation_state.md b/reference/execution/execution/operation_state.md
+index c5c20037b..09d93bb90 100644
+--- a/reference/execution/execution/operation_state.md
++++ b/reference/execution/execution/operation_state.md
+@@ -27,7 +27,7 @@ namespace std::execution {
+ 下記をみたすクラス型はOperation Stateとみなせる。
+ 
+ - `operation_state_t`をメンバ型`O::operation_state_concept`として定義するクラス型
+-- `O`型の左辺値`o`に対して`execution::start(o)`が有効な式かつ例外送出されないこと
++- `O`型の左辺値`o`に対して[`execution::start`](start.md.nolink)`(o)`が有効な式かつ例外送出されないこと
+ 
+ 非同期操作の生存期間中に`operation_state`オブジェクトが破棄されると、未定義の動作を引き起こす。
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>scheduler -- execution: scheduler (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/scheduler.html"/>
+      <id>a7e53aef7e9ce247a1032acc329f68bce4f14ba0:reference/execution/execution/scheduler.md</id>
+      <updated>2025-04-13T17:47:15+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/scheduler.md b/reference/execution/execution/scheduler.md
+new file mode 100644
+index 000000000..364157770
+--- /dev/null
++++ b/reference/execution/execution/scheduler.md
+@@ -0,0 +1,80 @@
++# scheduler
++* execution[meta header]
++* concept[meta id-type]
++* std::execution[meta namespace]
++* cpp26[meta cpp]
++
++```cpp
++namespace std::execution {
++  template&amp;lt;class Sch&amp;gt;
++  concept scheduler =
++    derived_from&amp;lt;typename remove_cvref_t&amp;lt;Sch&amp;gt;::scheduler_concept, scheduler_t&amp;gt; &amp;amp;&amp;amp;
++    queryable&amp;lt;Sch&amp;gt; &amp;amp;&amp;amp;
++    requires(Sch&amp;amp;&amp;amp; sch) {
++      { schedule(std::forward&amp;lt;Sch&amp;gt;(sch)) } -&amp;gt; sender;
++      { auto(get_completion_scheduler&amp;lt;set_value_t&amp;gt;(
++          get_env(schedule(std::forward&amp;lt;Sch&amp;gt;(sch))))) }
++            -&amp;gt; same_as&amp;lt;remove_cvref_t&amp;lt;Sch&amp;gt;&amp;gt;;
++    } &amp;amp;&amp;amp;
++    equality_comparable&amp;lt;remove_cvref_t&amp;lt;Sch&amp;gt;&amp;gt; &amp;amp;&amp;amp;
++    copyable&amp;lt;remove_cvref_t&amp;lt;Sch&amp;gt;&amp;gt;;
++
++  struct scheduler_t {};  // タグ型
++}
++```
++* derived_from[link /reference/concepts/derived_from.md]
++* queryable[link queryable.md.nolink]
++* get_completion_scheduler[link get_completion_scheduler.md.nolink]
++* get_env[link get_env.md.nolink]
++* equality_comparable[link /reference/concepts/equality_comparable.md]
++* copyable[link /reference/concepts/copyable.md]
++
++## 概要
++`scheduler`は、型`Sch`がScheduler型の要件を満たすことを表すコンセプトである。
++
++下記をみたすクラス型はSchedulerとみなせる。
++
++- `scheduler_t`をメンバ型`Sch::scheduler_concept`として定義するクラス型
++- [問い合わせ可能](queryable.md.nolink)であること
++- `Sch`型の値`sch`に対して下記が有効な式であること
++    - [`execution::schedule`](schedule.md.nolink)`(sch)`が[Sender](sender.md)を返すこと
++    - [`execution::get_completion_scheduler`](get_completion_scheduler.md.nolink)`&amp;lt;set_value_t&amp;gt;(`[`execution::get_env`](get_env.md.nolink)`(`[`execution::schedule`](schedule.md.nolink)`(sch)))`の結果が`Sch`型に等しいこと
++
++
++## 例
++```cpp example
++#include &amp;lt;execution&amp;gt;
++namespace ex = std::execution;
++
++int main()
++{
++  ex::run_loop loop;
++  ex::scheduler auto sch = loop.get_scheduler();
++}
++```
++* ex::scheduler[color ff0000]
++* ex::run_loop[link run_loop.md.nolink]
++* get_scheduler()[link run_loop/get_scheduler.md.nolink]
++
++### 出力
++```
++```
++
++
++## バージョン
++### 言語
++- C++26
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): ??
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 関連項目
++- [`execution::schedule`](schedule.md.nolink)
++
++
++## 参照
++- [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>execution -- execution: operation_state (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution.html"/>
+      <id>23cf8aa3b6c28c7bbe7d08ddaec5bd077cf3b0e4:reference/execution/execution.md</id>
+      <updated>2025-04-13T17:07:04+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution.md b/reference/execution/execution.md
+index bb710c76c..2e8c81770 100644
+--- a/reference/execution/execution.md
++++ b/reference/execution/execution.md
+@@ -72,7 +72,7 @@ namespace std::execution {
+ 
+ | 名前 | 説明 | 対応バージョン |
+ |------|------|----------------|
+-| [`execution::operation_state`](execution/operation_state.md.nolink) | Operation State (concept) | C++26 |
++| [`execution::operation_state`](execution/operation_state.md) | Operation State型 (concept) | C++26 |
+ | [`execution::start`](execution/start.md.nolink) | 非同期操作の開始 (customization point object) | C++26 |
+ 
+ ### Sender
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operation_state -- execution: operation_state (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/operation_state.html"/>
+      <id>23cf8aa3b6c28c7bbe7d08ddaec5bd077cf3b0e4:reference/execution/execution/operation_state.md</id>
+      <updated>2025-04-13T17:07:04+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/operation_state.md b/reference/execution/execution/operation_state.md
+new file mode 100644
+index 000000000..c5c20037b
+--- /dev/null
++++ b/reference/execution/execution/operation_state.md
+@@ -0,0 +1,91 @@
++# operation_state
++* execution[meta header]
++* concept[meta id-type]
++* std::execution[meta namespace]
++* cpp26[meta cpp]
++
++```cpp
++namespace std::execution {
++  template&amp;lt;class O&amp;gt;
++  concept operation_state =
++    derived_from&amp;lt;typename O::operation_state_concept, operation_state_t&amp;gt; &amp;amp;&amp;amp;
++    is_object_v&amp;lt;O&amp;gt; &amp;amp;&amp;amp;
++    requires (O&amp;amp; o) {
++      { start(o) } noexcept;
++    };
++
++  struct operation_state_t {};  // タグ型
++}
++```
++* derived_from[link /reference/concepts/derived_from.md]
++* is_object_v[link /reference/type_traits/is_object.md]
++* start[link start.md.nolink]
++
++## 概要
++`operation_state`は、型`O`がOperation State型の要件を満たすことを表すコンセプトである。
++
++下記をみたすクラス型はOperation Stateとみなせる。
++
++- `operation_state_t`をメンバ型`O::operation_state_concept`として定義するクラス型
++- `O`型の左辺値`o`に対して`execution::start(o)`が有効な式かつ例外送出されないこと
++
++非同期操作の生存期間中に`operation_state`オブジェクトが破棄されると、未定義の動作を引き起こす。
++
++
++## 例
++```cpp
++#include &amp;lt;print&amp;gt;
++#include &amp;lt;execution&amp;gt;
++namespace ex = std::execution;
++
++struct ValueReceiver {
++  using receiver_concept = ex::receiver_t;
++
++  void set_value(int v) noexcept
++  {
++    std::println(&amp;#34;{}&amp;#34;, v);
++  }
++};
++
++int main()
++{
++  // 値42を送信するSender
++  ex::sender auto sndr = ex::just(42);
++  // int値を受信して表示するReceiver
++  ValueReceiver rcvr;
++ 
++  // SenderとReceiverを接続
++  ex::operation_state auto op = ex::connect(sndr, rcvr);
++  // Operation Stateを開始
++  ex::start(op);
++}
++```
++* ex::operation_state[color ff0000]
++* ex::sender[link sender.md]
++* ex::just[link just.md.nolink]
++* ex::connect[link connect.md.nolink]
++* ex::start[link start.md.nolink]
++
++### 出力
++```
++42
++```
++
++
++## バージョン
++### 言語
++- C++26
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): ??
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 関連項目
++- [`execution::connect`](connect.md.nolink)
++
++
++## 参照
++- [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>sender_in -- execution: operation_state (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/sender_in.html"/>
+      <id>23cf8aa3b6c28c7bbe7d08ddaec5bd077cf3b0e4:reference/execution/execution/sender_in.md</id>
+      <updated>2025-04-13T17:07:04+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/sender_in.md b/reference/execution/execution/sender_in.md
+index 00c8523b1..c5d35fd1b 100644
+--- a/reference/execution/execution/sender_in.md
++++ b/reference/execution/execution/sender_in.md
+@@ -31,7 +31,7 @@ namespace std::execution {
+ 
+ また、ある完了操作の完了シグネチャが[`completion_signatures_of_t`](completion_signatures_of_t.md)`&amp;lt;Sndr, Env&amp;gt;`で取得される[`completion_signatures`](completion_signatures.md)リストに含まれるとき、`Sndr`と`Env`における許容可能完了(permissible completion)となる。
+ 
+-`sndr`と`rcvr`の接続後に[Operation State](operation_state.md.nolink)を開始することで評価されうる完了操作が、全て許容可能完了(permissible completion)である場合、`Sndr`と`Env`は`sender_in&amp;lt;Sndr, Env&amp;gt;`のモデルとなる。
++`sndr`と`rcvr`の接続後に[Operation State](operation_state.md)を開始することで評価されうる完了操作が、全て許容可能完了(permissible completion)である場合、`Sndr`と`Env`は`sender_in&amp;lt;Sndr, Env&amp;gt;`のモデルとなる。
+ 
+ 
+ ## 例
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>sender_to -- execution: operation_state (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/sender_to.html"/>
+      <id>23cf8aa3b6c28c7bbe7d08ddaec5bd077cf3b0e4:reference/execution/execution/sender_to.md</id>
+      <updated>2025-04-13T17:07:04+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/sender_to.md b/reference/execution/execution/sender_to.md
+index 1fe7b9055..84fc45ba8 100644
+--- a/reference/execution/execution/sender_to.md
++++ b/reference/execution/execution/sender_to.md
+@@ -49,15 +49,16 @@ int main()
+   // int値を受信して表示するReceiver
+   ValueReceiver rcvr;
+  
+-  // SenderとReceiver接続後にOperation Stateを開始
++  // SenderとReceiverを接続
+   ex::operation_state auto op = ex::connect(sndr, rcvr);
++  // Operation Stateを開始
+   ex::start(op);
+ }
+ ```
+ * ex::sender_to[color ff0000]
+ * ex::sender[link sender.md]
+ * ex::just[link just.md.nolink]
+-* ex::operation_state[link operation_state.md.nolink]
++* ex::operation_state[link operation_state.md]
+ * ex::connect[link connect.md.nolink]
+ * ex::start[link start.md.nolink]
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>スタイル -- execution: operation_state (#1384)</title>
+      <link href="https://cpprefjp.github.io/working_style.html"/>
+      <id>23cf8aa3b6c28c7bbe7d08ddaec5bd077cf3b0e4:working_style.md</id>
+      <updated>2025-04-13T17:07:04+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/working_style.md b/working_style.md
+index e1b6820e7..88d0da3a7 100644
+--- a/working_style.md
++++ b/working_style.md
+@@ -67,6 +67,7 @@ C++11以降対応については対応バージョンを明記します。バー
+ | apply, application                 | 適用                         |
+ | arithmetic type                    | 算術型                       |
+ | associative container(s)           | 連想コンテナ                 |
++| asynchronous operation             | 非同期操作                   |
+ | base class                         | 基底クラス                   |
+ | bidirectional iterator             | 双方向イテレータ             |
+ | bucket                             | バケット                     |
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>execution -- execution: completion_signatures(_of_t) (#1384)</title>
@@ -792,444 +1174,6 @@ index c6d31bc3b..4bbde047b 100644
       <author>
         <name>yoh</name>
         <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>execution -- execution: sender,sender_in,sender_to (#1384)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution.html"/>
-      <id>c1903808c21645d39a634845685e5f5bf0e84678:reference/execution/execution.md</id>
-      <updated>2025-04-13T01:08:34+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution.md b/reference/execution/execution.md
-index 3d788b319..9decab877 100644
---- a/reference/execution/execution.md
-+++ b/reference/execution/execution.md
-@@ -58,12 +58,12 @@ namespace std::execution {
- |------|------|----------------|
- | [`execution::scheduler`](execution/scheduler.md.nolink) | Scheduler (concept) | C++26 |
- 
--### Reciever
-+### Receiver
- 
- | 名前 | 説明 | 対応バージョン |
- |------|------|----------------|
--| [`execution::receiver`](execution/receiver.md.nolink) | Reciever (concept) | C++26 |
--| [`execution::receiver_of`](execution/receiver_of.md.nolink) | 完了ハンドラ指定Reciever (concept) | C++26 |
-+| [`execution::receiver`](execution/receiver.md.nolink) | Receiver (concept) | C++26 |
-+| [`execution::receiver_of`](execution/receiver_of.md.nolink) | 完了ハンドラ指定Receiver (concept) | C++26 |
- | [`execution::set_value`](execution/set_value.md.nolink) | 値による完了関数 (customization point object) | C++26 |
- | [`execution::set_error`](execution/set_error.md.nolink) | エラーによる完了関数 (customization point object) | C++26 |
- | [`execution::set_stopped`](execution/set_stopped.md.nolink) | 停止による完了関数 (customization point object) | C++26 |
-@@ -80,9 +80,9 @@ namespace std::execution {
- | 名前 | 説明 | 対応バージョン |
- |------|------|----------------|
- | [`execution::default_domain`](execution/default_domain.md.nolink) | デフォルト実行ドメイン (class) | C++26 |
--| [`execution::sender`](execution/sender.md.nolink) | Sender (concept) | C++26 |
--| [`execution::sender_in`](execution/sender_in.md.nolink) | 環境に対応するSender (concept) | C++26 |
--| [`execution::sender_to`](execution/sender_to.md.nolink) | Recieverに対応するSender (concept) | C++26 |
-+| [`execution::sender`](execution/sender.md) | Sender型 (concept) | C++26 |
-+| [`execution::sender_in`](execution/sender_in.md) | 指定環境で有効なSender (concept) | C++26 |
-+| [`execution::sender_to`](execution/sender_to.md) | 指定Receiverに接続可能なSender (concept) | C++26 |
- | [`execution::get_completion_signatures`](execution/get_completion_signatures.md.nolink) | 完了シグネチャ取得の問い合わせオブジェクト (customization point object) | C++26 |
- | [`execution::completion_signatures_of_t`](execution/get_completion_signatures.md.nolink) | Senderから完了シグネチャを取得 (alias template) | C++26 |
- | [`execution::value_types_of_t`](execution/value_types_of_t.md.nolink) | Senderの値完了型を取得 (alias template) | C++26 |
-@@ -92,7 +92,7 @@ namespace std::execution {
- | [`execution::transform_sender`](execution/transform_sender.md.nolink) | Senderを変換 (function template) | C++26 |
- | [`execution::transform_env`](execution/transform_env.md.nolink) | 問い合わせオブジェクトを変換 (function template) | C++26 |
- | [`execution::apply_sender`](execution/apply_sender.md.nolink) | Senderにタグ型と引数を適用 (function template) | C++26 |
--| [`execution::connect`](execution/connect.md.nolink) | SenderとRecieverを接続 (customization point object) | C++26 |
-+| [`execution::connect`](execution/connect.md.nolink) | SenderとReceiverを接続 (customization point object) | C++26 |
- | [`execution::connect_result_t`](execution/connect_result_t.md.nolink) | `connect`結果型を取得 (alias template) | C++26 |
- 
- ### Senderファクトリ
-@@ -102,7 +102,7 @@ namespace std::execution {
- | [`execution::just`](execution/just.md.nolink) | 値を送信するSender (customization point object) | C++26 |
- | [`execution::just_error`](execution/just_error.md.nolink) | エラーを送信するSender (customization point object) | C++26 |
- | [`execution::just_stopped`](execution/just_stopped.md.nolink) | 停止を送信するSender (customization point object) | C++26 |
--| [`execution::read_env`](execution/read_env.md.nolink) | Reciever環境から構築されるSender (customization point object) | C++26 |
-+| [`execution::read_env`](execution/read_env.md.nolink) | Receiver環境から構築されるSender (customization point object) | C++26 |
- | [`execution::schedule`](execution/schedule.md.nolink) | Scheduler上で実行されるSender (customization point object) | C++26 |
- | [`execution::schedule_result_t`](execution/schedule_result_t.md.nolink) | `schedule`結果型を取得 (alias template) | C++26 |
- 
-@@ -138,7 +138,7 @@ namespace std::execution {
- 
- Senderコンシューマは名前空間 `std::this_thread` で定義される。
- 
--### Sender/Recieverユーティリティ
-+### Sender/Receiverユーティリティ
- 
- | 名前 | 説明 | 対応バージョン |
- |------|------|----------------|
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>sender -- execution: sender,sender_in,sender_to (#1384)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/sender.html"/>
-      <id>c1903808c21645d39a634845685e5f5bf0e84678:reference/execution/execution/sender.md</id>
-      <updated>2025-04-13T01:08:34+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/sender.md b/reference/execution/execution/sender.md
-new file mode 100644
-index 000000000..1b702b27d
---- /dev/null
-+++ b/reference/execution/execution/sender.md
-@@ -0,0 +1,116 @@
-+# sender
-+* execution[meta header]
-+* concept[meta id-type]
-+* std::execution[meta namespace]
-+* cpp26[meta cpp]
-+
-+```cpp
-+namespace std::execution {
-+  template &amp;lt;class Sndr&amp;gt;
-+  concept sender;
-+
-+  struct sender_t {};  // タグ型
-+}
-+```
-+
-+## 概要
-+`sender`は、型`Sndr`がSender型の要件を満たすことを表すコンセプトである。
-+
-+次のいずれかのクラス型はSenderとみなせる。
-+
-+- `sender_t`をメンバ型`Sndr::sender_concept`として定義するクラス型
-+- [コルーチンのAwaitable型](/lang/cpp20/coroutines.md)クラス型
-+
-+
-+## 要件
-+説明専用コンセプト`is-sender`, `enable-sender`、説明用クラステンプレート`env-promise`を以下のように定義する。
-+
-+```cpp
-+template&amp;lt;class Sndr&amp;gt;
-+concept is-sender =
-+  derived_from&amp;lt;typename Sndr::sender_concept, sender_t&amp;gt;;
-+
-+template&amp;lt;class Sndr&amp;gt;
-+concept enable-sender =
-+  is-sender&amp;lt;Sndr&amp;gt; ||
-+  is-awaitable&amp;lt;Sndr, env-promise&amp;lt;env&amp;lt;&amp;gt;&amp;gt;&amp;gt;;
-+
-+template&amp;lt;class Env&amp;gt;
-+struct env-promise : with-await-transform&amp;lt;env-promise&amp;lt;Env&amp;gt;&amp;gt; {
-+  unspecified get_return_object() noexcept;
-+  unspecified initial_suspend() noexcept;
-+  unspecified final_suspend() noexcept;
-+  void unhandled_exception() noexcept;
-+  void return_void() noexcept;
-+  coroutine_handle&amp;lt;&amp;gt; unhandled_stopped() noexcept;
-+
-+  const Env&amp;amp; get_env() const noexcept;
-+};
-+```
-+* is-awaitable[link is-awaitable.md.nolink]
-+* env[link env.md.nolink]
-+* derived_from[link /reference/concepts/derived_from.md]
-+* coroutine_handle[link /reference/coroutine/coroutine_handle.md]
-+* unspecified[italic]
-+
-+`sender`コンセプトは、以下のように定義される。
-+
-+```cpp
-+template&amp;lt;class Sndr&amp;gt;
-+concept sender =
-+  bool(enable-sender&amp;lt;remove_cvref_t&amp;lt;Sndr&amp;gt;&amp;gt;) &amp;amp;&amp;amp;
-+  requires (const remove_cvref_t&amp;lt;Sndr&amp;gt;&amp;amp; sndr) {
-+    { get_env(sndr) } -&amp;gt; queryable;
-+  } &amp;amp;&amp;amp;
-+  move_constructible&amp;lt;remove_cvref_t&amp;lt;Sndr&amp;gt;&amp;gt; &amp;amp;&amp;amp;
-+  constructible_from&amp;lt;remove_cvref_t&amp;lt;Sndr&amp;gt;, Sndr&amp;gt;;
-+```
-+* get_env[link get_env.md.nolink]
-+* queryable[link queryable.md.nolink]
-+* move_constructible[link /reference/concepts/move_constructible.md]
-+* constructible_from[link /reference/concepts/constructible_from.md]
-+
-+
-+## 備考
-+`sender`コンセプトの制約式に現れる第1項`bool(enable-sender&amp;lt;...&amp;gt;)`は[原子制約(atomic contraint)](/lang/cpp20/concepts.md)を構成する。
-+これによりオーバーロード解決時の優先順比較のためのにおいて`enable-sender`コンセプトの`||`を単純なOR条件とみなせ、コンパイル時の複雑な包摂関係計算コストを抑制できる。
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;execution&amp;gt;
-+namespace ex = std::execution;
-+
-+int main()
-+{
-+  // 値42を送信するSender
-+  ex::sender auto sndr = ex::just(42);
-+}
-+```
-+* ex::sender[color ff0000]
-+* ex::just[link just.md.nolink]
-+
-+### 出力
-+```
-+```
-+
-+
-+## バージョン
-+### 言語
-+- C++26
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): ??
-+- [ICC](/implementation.md#icc): ??
-+- [Visual C++](/implementation.md#visual_cpp): ??
-+
-+
-+## 関連項目
-+- [`sender_in`](sender_in.md)
-+- [`sender_to`](sender_to.md)
-+- [コルーチン](/lang/cpp20/coroutines.md)
-+
-+
-+## 参照
-+- [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>sender_in -- execution: sender,sender_in,sender_to (#1384)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/sender_in.html"/>
-      <id>c1903808c21645d39a634845685e5f5bf0e84678:reference/execution/execution/sender_in.md</id>
-      <updated>2025-04-13T01:08:34+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/sender_in.md b/reference/execution/execution/sender_in.md
-new file mode 100644
-index 000000000..43c09e6c4
---- /dev/null
-+++ b/reference/execution/execution/sender_in.md
-@@ -0,0 +1,75 @@
-+# sender_in
-+* execution[meta header]
-+* concept[meta id-type]
-+* std::execution[meta namespace]
-+* cpp26[meta cpp]
-+
-+```cpp
-+namespace std::execution {
-+  template&amp;lt;class Sndr, class Env = env&amp;lt;&amp;gt;&amp;gt;
-+  concept sender_in =
-+    sender&amp;lt;Sndr&amp;gt; &amp;amp;&amp;amp;
-+    queryable&amp;lt;Env&amp;gt; &amp;amp;&amp;amp;
-+    requires (Sndr&amp;amp;&amp;amp; sndr, Env&amp;amp;&amp;amp; env) {
-+      { get_completion_signatures(std::forward&amp;lt;Sndr&amp;gt;(sndr), std::forward&amp;lt;Env&amp;gt;(env)) }
-+        -&amp;gt; valid-completion-signatures;
-+    };
-+}
-+```
-+* env&amp;lt;&amp;gt;[link env.md.nolink]
-+* sender[link sender.md]
-+* queryable[link queryable.md.nolink]
-+* get_completion_signatures[link get_completion_signatures.md.nolink]
-+* valid-completion-signatures[link valid-completion-signatures.md.nolink]
-+
-+## 概要
-+`sender_in`は、[Sender型](sender.md)`Sndr`が[環境](env.md.nolink)`Env`において非同期操作を作成できること表すコンセプトである。
-+
-+
-+## モデル
-+説明用に`sndr`を`decltype((sndr))`が`Sndr`型となる式、`rcvr`を環境`Env`に関連付けられたReceiverと定義する。
-+
-+また、ある完了操作の完了シグネチャが[`completion_signatures_of_t`](completion_signatures_of_t.md.nolink)`&amp;lt;Sndr, Env&amp;gt;`で取得される[`completion_signatures`](completion_signatures.md.nolink)リストに含まれるとき、`Sndr`と`Env`における許容可能完了操作(permissible completion)となる。
-+
-+`sndr`と`rcvr`の接続後に操作状態を開始することで評価されうる完了操作が、全て許容可能完了操作(permissible completion)である場合、`Sndr`と`Env`は`sender_in&amp;lt;Sndr, Env&amp;gt;`のモデルとなる。
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;execution&amp;gt;
-+namespace ex = std::execution;
-+
-+int main()
-+{
-+  ex::sender auto sndr = ex::just(42);
-+  static_assert(ex::sender_in&amp;lt;decltype(sndr), ex::env&amp;lt;&amp;gt;&amp;gt;);
-+}
-+```
-+* ex::sender_in[color ff0000]
-+* ex::sender[link sender.md]
-+* ex::just[link just.md.nolink]
-+* ex::env&amp;lt;&amp;gt;[link env.md.nolink]
-+
-+### 出力
-+```
-+```
-+
-+
-+## バージョン
-+### 言語
-+- C++26
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): ??
-+- [ICC](/implementation.md#icc): ??
-+- [Visual C++](/implementation.md#visual_cpp): ??
-+
-+
-+## 関連項目
-+- [`sender`](sender.md)
-+- [`env`](env.md.nolink)
-+
-+
-+## 参照
-+- [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>sender_to -- execution: sender,sender_in,sender_to (#1384)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/sender_to.html"/>
-      <id>c1903808c21645d39a634845685e5f5bf0e84678:reference/execution/execution/sender_to.md</id>
-      <updated>2025-04-13T01:08:34+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/sender_to.md b/reference/execution/execution/sender_to.md
-new file mode 100644
-index 000000000..c6d31bc3b
---- /dev/null
-+++ b/reference/execution/execution/sender_to.md
-@@ -0,0 +1,86 @@
-+# sender_to
-+* execution[meta header]
-+* concept[meta id-type]
-+* std::execution[meta namespace]
-+* cpp26[meta cpp]
-+
-+```cpp
-+namespace std::execution {
-+  template&amp;lt;class Sndr, class Rcvr&amp;gt;
-+  concept sender_to =
-+    sender_in&amp;lt;Sndr, env_of_t&amp;lt;Rcvr&amp;gt;&amp;gt; &amp;amp;&amp;amp;
-+    receiver_of&amp;lt;Rcvr, completion_signatures_of_t&amp;lt;Sndr, env_of_t&amp;lt;Rcvr&amp;gt;&amp;gt;&amp;gt; &amp;amp;&amp;amp;
-+    requires (Sndr&amp;amp;&amp;amp; sndr, Rcvr&amp;amp;&amp;amp; rcvr) {
-+      connect(std::forward&amp;lt;Sndr&amp;gt;(sndr), std::forward&amp;lt;Rcvr&amp;gt;(rcvr));
-+    };
-+}
-+```
-+* sender_in[link sender_in.md]
-+* env_of_t[link env_of_t.md.nolink]
-+* receiver_of[link receiver_of.md.nolink]
-+* completion_signatures_of_t[link completion_signatures_of_t.md.nolink]
-+* connect[link connect.md.nolink]
-+
-+## 概要
-+`sender_to`は、[Sender型](sender.md)`Sndr`が[Receiver型](receiver.md.nolink)`Rcvr`と接続可能であること表すコンセプトである。
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;print&amp;gt;
-+#include &amp;lt;execution&amp;gt;
-+namespace ex = stdexec;
-+
-+struct ValueReceiver {
-+  using receiver_concept = ex::receiver_t;
-+
-+  void set_value(int v) noexcept
-+  {
-+    std::println(&amp;#34;{}&amp;#34;, v);
-+  }
-+};
-+
-+int main()
-+{
-+  // 値42を送信するSender
-+  ex::sender auto sndr = ex::just(42);
-+  static_assert(ex::sender_to&amp;lt;decltype(sndr), ValueReceiver&amp;gt;);
-+
-+  // int値を受信して表示するReceiver
-+  ValueReceiver rcvr;
-+ 
-+  // SenderとReceiver接続後にOperationStateを開始
-+  ex::operation_state auto op = ex::connect(sndr, rcvr);
-+  ex::start(op);
-+}
-+```
-+* ex::sender_to[color ff0000]
-+* ex::just[link just.md.nolink]
-+* ex::operation_state[link operation_state.md.nolink]
-+* ex::connect[link connect.md.nolink]
-+* ex::start[link start.md.nolink]
-+
-+### 出力
-+```
-+42
-+```
-+
-+
-+## バージョン
-+### 言語
-+- C++26
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): ??
-+- [ICC](/implementation.md#icc): ??
-+- [Visual C++](/implementation.md#visual_cpp): ??
-+
-+
-+## 関連項目
-+- [`sender`](sender.md)
-+- [`receiver`](receiver.md.nolink)
-+
-+
-+## 参照
-+- [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>構造化束縛でパックを導入できるようにする [P1061R10] -- コードブロックに言語指定</title>
-      <link href="https://cpprefjp.github.io/lang/cpp26/structured_bindings_can_introduce_a_pack.html"/>
-      <id>ef98bb04a21a45f4a209da5de3d0866ac5ea227e:lang/cpp26/structured_bindings_can_introduce_a_pack.md</id>
-      <updated>2025-04-10T16:27:01+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp26/structured_bindings_can_introduce_a_pack.md b/lang/cpp26/structured_bindings_can_introduce_a_pack.md
-index a3c27fc98..5b9018db0 100644
---- a/lang/cpp26/structured_bindings_can_introduce_a_pack.md
-+++ b/lang/cpp26/structured_bindings_can_introduce_a_pack.md
-@@ -81,7 +81,7 @@ auto dot_product(P p, Q q) {
- 
- C++26の場合：
- 
--```
-+```cpp
- template &amp;lt;class P, class Q&amp;gt;
- auto dot_product(P p, Q q) {
-   // applyが必要なくなる
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
       </author>
     </entry>
   
