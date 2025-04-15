@@ -2,9 +2,81 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-04-15T14:46:19.904713</updated>
-  <id>cacb9b7c-f5a9-4052-85cb-13b4904e4fd4</id>
+  <updated>2025-04-15T15:37:50.382450</updated>
+  <id>46ccdabf-a643-4660-9b0a-29a821f593bb</id>
 
+  
+    <entry>
+      <title>query -- execution/env/query: refinement (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/env/query.html"/>
+      <id>6137b03cdbc9079845bbf6dd8e20b7e010fb5cad:reference/execution/execution/env/query.md</id>
+      <updated>2025-04-16T00:33:52+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/env/query.md b/reference/execution/execution/env/query.md
+index 171fa25da..bf238c6d9 100644
+--- a/reference/execution/execution/env/query.md
++++ b/reference/execution/execution/env/query.md
+@@ -26,6 +26,7 @@ concept has-query =
+   };
+ ```
+ 
++
+ ## 効果
+ 説明用の`fe`を、`env`クラステンプレートの説明専用メンバ変数`envs0_`, ..., `envsN_`のうち最初に式`fe.query(q)`が適格となる要素としたとき、下記と等価。
+ 
+@@ -33,8 +34,10 @@ concept has-query =
+ return fe.query(q);
+ ```
+ 
++
+ ## 例外
+-式`fe.query(q)`が`true`のとき、例外送出しない。
++式`noexcept(fe.query(q))`が`true`のとき、例外送出しない。
++それ以外の場合、式`fe.query(q)`から送出される例外。
+ 
+ 
+ ## 例
+@@ -46,19 +49,28 @@ using ex = std::execution;
+ 
+ int main()
+ {
+-  auto env = ex::env{
+-    ex::prop(std::get_stop_token, std::stop_token{}),
++  // get_stop_token,get_stop_tokenをサポートするクエリ可能オブジェクト
++  auto env0 = ex::env{
+     ex::prop(std::get_allocator, std::allocator&amp;lt;std::byte&amp;gt;{}),
+-    ex::prop(std::get_stop_token, std::never_stop_token{}),
++    ex::prop(std::get_stop_token, std::never_stop_token{})
+   };
++  auto token0 = env0.query(std::get_stop_token);
++  static_assert(std::same_as&amp;lt;decltype(token0), std::never_stop_token&amp;gt;);
+ 
+-  auto token = env.query(std::get_stop_token);
+-  static_assert(std::same_as&amp;lt;decltype(token), std::stop_token&amp;gt;);
++  // env0のget_stop_tokenクエリオブジェクト動作を上書き
++  auto env1 = ex::env{
++    ex::prop(std::get_stop_token, std::stop_token{}),
++    env0
++  };
++  auto token1 = env1.query(std::get_stop_token);
++  static_assert(std::same_as&amp;lt;decltype(token1), std::stop_token&amp;gt;);
+ }
+ ```
+ * query[color ff0000]
+ * ex::env[link ../env.md]
+ * ex::prop[link ../prop.md]
++* ex::never_stop_token[link /reference/stop_token/never_stop_token.md]
++* ex::stop_token[link /reference/stop_token/stop_token.md]
+ 
+ ### 出力
+ ```
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>コンパイラの実装状況 -- C++26: 「可変引数テンプレートでfriend宣言をできるようにする」を追加 (close #1329)</title>
@@ -3591,33 +3663,6 @@ index 2e632953f..2bd0b2352 100644
       <author>
         <name>Akira Takahashi</name>
         <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>env -- execution/env: fix ngword</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/env.html"/>
-      <id>92a7237ce2698f7bc6fcaed781f171f579040706:reference/execution/execution/env.md</id>
-      <updated>2025-04-15T01:19:47+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/env.md b/reference/execution/execution/env.md
-index df547da64..4ebb6362c 100644
---- a/reference/execution/execution/env.md
-+++ b/reference/execution/execution/env.md
-@@ -30,7 +30,7 @@ namespace std::execution {
- 
- `env`の特殊化は代入可能ではない。
- 
--式リストが単一要素で構成される場合を除いて、`env`が括弧を用いた式リストによる初期化をサポートするか否かは未規定。
-+式リストが単一要素で構成される場合を除いて、`env`が丸カッコを用いた式リストによる初期化をサポートするか否かは未規定。
- 
- 
- ## メンバ関数
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
       </author>
     </entry>
   
