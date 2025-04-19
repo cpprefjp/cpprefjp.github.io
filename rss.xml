@@ -2,9 +2,218 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-04-19T12:48:32.122248</updated>
-  <id>e7d913ac-a0fd-47be-b98c-4aad9518a73e</id>
+  <updated>2025-04-19T14:07:43.849112</updated>
+  <id>9cc4dca3-136f-45bc-9788-f5a8736a5d73</id>
 
+  
+    <entry>
+      <title>execution --  execution: schedule (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution.html"/>
+      <id>08365debe249bdbd6a7347ad462ea1c22e7cc2a8:reference/execution/execution.md</id>
+      <updated>2025-04-19T23:04:09+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution.md b/reference/execution/execution.md
+index cb5b97bb8..f4b35abe5 100644
+--- a/reference/execution/execution.md
++++ b/reference/execution/execution.md
+@@ -103,7 +103,7 @@ namespace std::execution {
+ | [`execution::just_error`](execution/just_error.md.nolink) | エラーを送信するSender (customization point object) | C++26 |
+ | [`execution::just_stopped`](execution/just_stopped.md.nolink) | 停止を送信するSender (customization point object) | C++26 |
+ | [`execution::read_env`](execution/read_env.md.nolink) | Receiver環境から構築されるSender (customization point object) | C++26 |
+-| [`execution::schedule`](execution/schedule.md.nolink) | Scheduler上で実行されるSender (customization point object) | C++26 |
++| [`execution::schedule`](execution/schedule.md) | Scheduler上で実行されるSender (customization point object) | C++26 |
+ | [`execution::schedule_result_t`](execution/schedule_result_t.md.nolink) | `schedule`結果型を取得 (alias template) | C++26 |
+ 
+ ### Senderアダプタ
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>schedule --  execution: schedule (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/schedule.html"/>
+      <id>08365debe249bdbd6a7347ad462ea1c22e7cc2a8:reference/execution/execution/schedule.md</id>
+      <updated>2025-04-19T23:04:09+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/schedule.md b/reference/execution/execution/schedule.md
+new file mode 100644
+index 000000000..f7571c0e2
+--- /dev/null
++++ b/reference/execution/execution/schedule.md
+@@ -0,0 +1,97 @@
++# schedule
++* execution[meta header]
++* cpo[meta id-type]
++* std::execution[meta namespace]
++* cpp26[meta cpp]
++
++```cpp
++namespace std::execution {
++  struct schedule_t { unspecified };
++  inline constexpr schedule_t schedule{};
++}
++```
++* unspecified[italic]
++
++## 概要
++`schedule`は、[Scheduler](scheduler.md)から[スケジュールSender](sender.md)を取得するSenderファクトリである。
++
++スケジュールSenderより生成される[非同期操作](operation_state.md)を開始すると、Schedulerに関連付けられた実行リソース上で空の[値完了関数](set_value.md)を呼び出す。
++
++
++## 効果
++呼び出し式`schedule(sch)`は式`sch.schedule()`と等価であり、式の型は[`sender`](sender.md)を満たすこと。
++
++式[`get_completion_scheduler`](get_completion_scheduler.md.nolink)`&amp;lt;`[`set_value_t`](set_value.md)`&amp;gt;(`[`get_env`](get_env.md)`(sch.schedule())) == sch`が不適格もしくは`false`となる場合、呼び出し式`schedule(sch)`の動作は未定義となる。
++
++
++## カスタマイゼーションポイント
++[Scheduler](scheduler.md)`sch`に対して、式`sch.schedule()`が呼び出される。
++
++
++## 例
++```cpp example
++#include &amp;lt;print&amp;gt;
++#include &amp;lt;thread&amp;gt;
++#include &amp;lt;execution&amp;gt;
++namespace ex = std::execution;
++
++int main()
++{
++  ex::run_loop loop;
++  std::jthread worker{[&amp;amp;]{
++    std::println(&amp;#34;start worker#{}&amp;#34;, std::this_thread::get_id());
++    loop.run();
++  }};
++
++  ex::scheduler auto sch = loop.get_scheduler();
++  ex::sender auto sndr =
++    ex::schedule(sch)
++    | ex::then([]{
++      std::println(&amp;#34;on worker#{}&amp;#34;, std::this_thread::get_id());
++      return 42;
++    });
++
++  std::println(&amp;#34;main#{}&amp;#34;, std::this_thread::get_id());
++
++  auto [val] = std::this_thread::sync_wait(std::move(sndr)).value();
++  std::println(&amp;#34;val={}&amp;#34;, val);
++
++  loop.finish();
++}
++```
++* ex::schedule[color ff0000]
++* ex::scheduler[link scheduler.md]
++* ex::sender[link sender.md]
++* ex::then[link then.md.nolink]
++* ex::run_loop[link run_loop.md.nolink]
++* get_scheduler()[link run_loop/get_scheduler.md.nolink]
++* run()[link run_loop/run.md.nolink]
++* finish()[link run_loop/finish.md.nolink]
++* std::this_thread::get_id()[link /reference/thread/this_thread/get_id.md]
++
++### 出力例
++```
++main#134276695947072
++start worker#134276691527232
++on worker#134276691527232
++val=42
++```
++
++
++## バージョン
++### 言語
++- C++26
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): ??
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 関連項目
++- [`execution::scheduler`](scheduler.md)
++
++
++## 参照
++- [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>scheduler --  execution: schedule (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/scheduler.html"/>
+      <id>08365debe249bdbd6a7347ad462ea1c22e7cc2a8:reference/execution/execution/scheduler.md</id>
+      <updated>2025-04-19T23:04:09+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/scheduler.md b/reference/execution/execution/scheduler.md
+index 27ef5307c..427727a05 100644
+--- a/reference/execution/execution/scheduler.md
++++ b/reference/execution/execution/scheduler.md
+@@ -25,7 +25,7 @@ namespace std::execution {
+ * derived_from[link /reference/concepts/derived_from.md]
+ * sender[link sender.md]
+ * queryable[link ../queryable.md]
+-* schedule[link schedule.md.nolink]
++* schedule[link schedule.md]
+ * get_completion_scheduler[link get_completion_scheduler.md.nolink]
+ * set_value_t[link set_value.md]
+ * get_env[link get_env.md]
+@@ -40,7 +40,7 @@ namespace std::execution {
+ - `scheduler_t`をメンバ型`Sch::scheduler_concept`として定義する
+ - [クエリ可能オブジェクト](../queryable.md)である
+ - `Sch`型の値`sch`に対して下記を満たすこと
+-    - [`execution::schedule`](schedule.md.nolink)`(sch)`が[Sender](sender.md)を返す
++    - [`execution::schedule`](schedule.md)`(sch)`が[Sender](sender.md)を返す
+     - 上記Senderの[値完了関数](set_value.md)の[完了Scheduler](get_completion_scheduler.md.nolink)が`Sch`に等しいこと
+ - コピー可能かつ同値比較可能
+ 
+@@ -69,15 +69,15 @@ namespace std::execution {
+ 型`Sch`を`scheduler`の型、型`Env`を[`sender_in`](sender_in.md)`&amp;lt;schedule_result_t&amp;lt;Sch&amp;gt;, Env&amp;gt;`を満たす実行環境の型としたとき、`sender-in-of&amp;lt;schedule_result_t&amp;lt;Sch&amp;gt;, Env&amp;gt;`のモデルとなること。
+ 
+ [`copyable`](/reference/concepts/copyable.md)`&amp;lt;remove_cvref_t&amp;lt;Sch&amp;gt;&amp;gt;`および[`equality_comparable`](/reference/concepts/equality_comparable.md)`&amp;lt;remove_cvref_t&amp;lt;Sch&amp;gt;&amp;gt;`により要求される操作は、例外で終了してはならない。
+-これらの操作やScheduler型の[`schedule`](schedule.md.nolink)関数は、異なるスレッドから同時に操作を呼び出す可能性がある場合でも、データ競合を引き起こしてはならない。
++これらの操作やScheduler型の[`schedule`](schedule.md)関数は、異なるスレッドから同時に操作を呼び出す可能性がある場合でも、データ競合を引き起こしてはならない。
+ 
+ あるScheduler型`Sch`の2つの値`sch1`と`sch2`に対して、`sch1`と`sch2`が同じ実行リソースを共有する場合に限って、`sch1 == sch2`は`true`となる。
+ 
+-あるScheduler`sch`に対して、式[`get_completion_scheduler`](get_completion_scheduler.md.nolink)`&amp;lt;`[`set_value_t`](set_value.md)`&amp;gt;(`[`get_env`](get_env.md)`(`[`schedule`](schedule.md.nolink)`(sch)))`が`sch`と等しいこと。
++あるScheduler`sch`に対して、式[`get_completion_scheduler`](get_completion_scheduler.md.nolink)`&amp;lt;`[`set_value_t`](set_value.md)`&amp;gt;(`[`get_env`](get_env.md)`(`[`schedule`](schedule.md)`(sch)))`が`sch`と等しいこと。
+ 
+-あるScheduler`sch`に対して式[`get_domain`](get_domain.md.nolink)`(sch)`が適格であるとき、式`get_domain(`[`get_env`](get_env.md)`(schedule(sch)))`も適格であり、かつ同じ型を持つ。
++あるScheduler`sch`に対して式[`get_domain`](get_domain.md.nolink)`(sch)`が適格であるとき、式`get_domain(`[`get_env`](get_env.md)`(`[`schedule`](schedule.md)`(sch)))`も適格であり、かつ同じ型を持つ。
+ 
+-Scheduler型のデストラクタは、`schedule`が返すSenderオブジェクトに接続されたReceiverの完了を待機してブロックしてはならない。
++Scheduler型のデストラクタは、[`schedule`](schedule.md)が返すSenderオブジェクトに接続されたReceiverの完了を待機してブロックしてはならない。
+ 
+ 
+ ## 例
+@@ -112,7 +112,7 @@ int main()
+ 
+ 
+ ## 関連項目
+-- [`execution::schedule`](schedule.md.nolink)
++- [`execution::schedule`](schedule.md)
+ 
+ 
+ ## 参照
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>scheduler -- execution/scheduler: fix inner link</title>
@@ -343,33 +552,6 @@ index d5404cf6e..ecb33dfab 100644
       <author>
         <name>Keita Nonaka</name>
         <email>iKonnyaku40@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>start -- execution/start: fix defined word</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/start.html"/>
-      <id>20a8d5e9258e4355235398d9a82e00cfeb7aad50:reference/execution/execution/start.md</id>
-      <updated>2025-04-19T00:30:32+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/start.md b/reference/execution/execution/start.md
-index 9154ea7b1..9c6e4c668 100644
---- a/reference/execution/execution/start.md
-+++ b/reference/execution/execution/start.md
-@@ -19,7 +19,7 @@ namespace std::execution {
- 式`start(op)`は、`op`が右辺値の場合は不適格となる。
- そうでなければ、`op.start()`と等価。
- 
--`op.start()`が[Operation State](operation_state.md)に関連付けさられた非同期操作を開始しない場合、式`start(op)`は未定義動作となる。
-+`op.start()`が[Operation State](operation_state.md)に関連付けさられた非同期操作を開始しない場合、式`start(op)`の動作は未定義となる。
- 
- 
- ## カスタマイゼーションポイント
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
       </author>
     </entry>
   
