@@ -2,9 +2,113 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-04-29T16:28:04.454334</updated>
-  <id>b86c59f2-3a65-4be6-8a66-744db6566baf</id>
+  <updated>2025-04-30T01:44:03.723516</updated>
+  <id>833c9569-d355-4d9f-ad1a-c579640c4285</id>
 
+  
+    <entry>
+      <title>completion-domain -- execution: get-completion-domain (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/completion-domain.html"/>
+      <id>c1091ca91d0263cca01e11e567e8668ddff8689e:reference/execution/execution/completion-domain.md</id>
+      <updated>2025-04-30T10:39:58+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/completion-domain.md b/reference/execution/execution/completion-domain.md
+new file mode 100644
+index 000000000..70eb1a6ac
+--- /dev/null
++++ b/reference/execution/execution/completion-domain.md
+@@ -0,0 +1,41 @@
++# completion-domain
++* execution[meta header]
++* function template[meta id-type]
++* std::execution[meta namespace]
++* cpp26[meta cpp]
++
++```cpp
++template&amp;lt;class Default = default_domain, class Sndr&amp;gt;
++constexpr auto completion-domain(const Sndr&amp;amp; sndr) noexcept;
++```
++* default_domain[link default_domain.md]
++
++## 概要
++[Sender型](sender.md)`sndr`の[完了Scheduler](get_completion_scheduler.md)から[実行ドメイン](default_domain.md)を取得する説明専用の関数テンプレート。
++
++
++## 効果
++説明用の型`COMPL-DOMAIN(T)`を式[`get_domain`](get_domain.md)`(`[`get_completion_scheduler`](get_completion_scheduler.md)`&amp;lt;T&amp;gt;(`[`get_env`](get_env.md)`(sndr)))`の型とする。
++
++- 型`COMPL-DOMAIN(`[`set_value_t`](set_value.md)`)`、`COMPL-DOMAIN(`[`set_error_t`](set_error.md)`)`、`COMPL-DOMAIN(`[`set_stopped_t`](set_stopped.md)`)`の全てが不適格の場合、`completion-domain&amp;lt;Default&amp;gt;`は`Default`型のデフォルト構築されたprvalueとなる。
++- そうではなく、上記のうち不適格となる型を除いた型が[共通型](/reference/type_traits/common_type.md)を共有するならば、`completion-domain&amp;lt;Default&amp;gt;`はその共有型のデフォルト構築されたprvalueとなる。
++- そうでなければ、`completion-domain&amp;lt;Default&amp;gt;`は不適格となる。
++
++
++## 例外
++投げない
++
++
++## バージョン
++### 言語
++- C++26
++
++
++## 関連項目
++- [`get-domain-early`](get-domain-early.md.nolink)
++- [`get-domain-late`](get-domain-late.md)
++
++
++## 参照
++- [P2999R3 Sender Algorithm Customization](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2999r3.html)
++- [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>get-domain-late -- execution: get-completion-domain (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/get-domain-late.html"/>
+      <id>c1091ca91d0263cca01e11e567e8668ddff8689e:reference/execution/execution/get-domain-late.md</id>
+      <updated>2025-04-30T10:39:58+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/get-domain-late.md b/reference/execution/execution/get-domain-late.md
+index bb9a34f9d..19daa05a9 100644
+--- a/reference/execution/execution/get-domain-late.md
++++ b/reference/execution/execution/get-domain-late.md
+@@ -12,6 +12,15 @@ constexpr auto get-domain-late(const Sndr&amp;amp; sndr, const Env&amp;amp; env) noexcept;
+ ## 概要
+ [Sender](sender.md)と[Receiver](receiver.md)間[接続(connect)](connect.md)時のカスタマイゼーションポイントとして、[実行ドメイン](default_domain.md)を取得する説明専用の関数テンプレート。
+ 
++下記の優先順で実行ドメインを検索し、最初に妥当となる型を採用する。
++（Senderアルゴリズム[`continue_on`](continue_on.md.nolink)のみ引数に指定した[Scheduler](scheduler.md)から取得。）
++
++- Senderの[属性](../queryable.md)
++- Senderの[完了Scheduler](get_completion_scheduler.md)
++- Receiverの[環境](../queryable.md)
++- Receiver環境の[Scheduler](scheduler.md)
++- [`default_domain`](default_domain.md)
++
+ 
+ ## 効果
+ 説明用の型`Domain`を下記の通り定義したとき、`return Doamin();`と等価。
+@@ -30,7 +39,7 @@ constexpr auto get-domain-late(const Sndr&amp;amp; sndr, const Env&amp;amp; env) noexcept;
+ 
+ - それ以外のとき、下記リストのうち最初に妥当となる式の型、かつ`void`ではない型とする。
+     - [`get_domain`](get_domain.md)`(`[`get_env`](get_env.md)`(sndr))`
+-    - [`completion-domain`](completion-domain.md.nolink)`&amp;lt;void&amp;gt;(sndr)`
++    - [`completion-domain&amp;lt;void&amp;gt;`](completion-domain.md)`(sndr)`
+     - [`get_domain`](get_domain.md)`(env)`
+     - [`get_domain`](get_domain.md)`(`[`get_scheduler`](get_scheduler.md)`(env))`
+     - [`default_domain()`](default_domain.md)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>execution -- execution: run_loop/get_scheduler (#1384)</title>
