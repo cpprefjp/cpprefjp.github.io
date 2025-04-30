@@ -2,9 +2,218 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-04-30T05:34:21.461275</updated>
-  <id>f59b48a6-b902-46ea-9d69-633795132a59</id>
+  <updated>2025-04-30T09:13:08.457850</updated>
+  <id>dd89e666-aca5-4cef-9166-e51a7c2f0f01</id>
 
+  
+    <entry>
+      <title>run_loop -- execution/run_loop: 微調整 (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/run_loop.html"/>
+      <id>e6b7e2cfbe40cd345f07d28f060da229a653766d:reference/execution/execution/run_loop.md</id>
+      <updated>2025-04-30T18:09:00+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/run_loop.md b/reference/execution/execution/run_loop.md
+index 1d469bf4d..e87534f35 100644
+--- a/reference/execution/execution/run_loop.md
++++ b/reference/execution/execution/run_loop.md
+@@ -14,7 +14,7 @@ namespace std::execition {
+ `run_loop`は、実行制御ライブラリの作業を[スケジュール](schedule.md)可能な実行リソース(execution resource)である。
+ 
+ 内部的にスレッドセーフなFIFO (first-in first-out) 作業キューを保持する。
+-[`run`メンバ関数](run_loop/run.md)はキューから作業を取り出し、同関数を呼び出したスレッド上のループで実行する。
++[`run`メンバ関数](run_loop/run.md)はキューから作業を順次取り出し、同関数を呼び出すスレッド上で逐次実行する。
+ 
+ `run_loop`インスタンスの動作説明のため、下記の説明用メンバ変数を持つ。
+ 
+@@ -32,7 +32,7 @@ namespace std::execition {
+ | [`run`](run_loop/run.md) | キュー上の作業を逐次実行 | C++26 |
+ | [`finish`](run_loop/finish.md) | 状態を終了中に変更 | C++26 |
+ 
+-## 説明専用のメンバ型
++## メンバ型
+ 
+ | 名前 | 説明 | 対応バージョン |
+ |------|------|-------|
+@@ -119,3 +119,4 @@ success
+ 
+ ## 参照
+ - [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
++- [P3396R1 std::execution wording fixes](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3396r1.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>finish -- execution/run_loop: 微調整 (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/run_loop/finish.html"/>
+      <id>e6b7e2cfbe40cd345f07d28f060da229a653766d:reference/execution/execution/run_loop/finish.md</id>
+      <updated>2025-04-30T18:09:00+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/run_loop/finish.md b/reference/execution/execution/run_loop/finish.md
+index 45565054a..fe72b5e9a 100644
+--- a/reference/execution/execution/run_loop/finish.md
++++ b/reference/execution/execution/run_loop/finish.md
+@@ -63,3 +63,4 @@ int main()
+ 
+ ## 参照
+ - [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
++- [P3396R1 std::execution wording fixes](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3396r1.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>get_scheduler -- execution/run_loop: 微調整 (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/run_loop/get_scheduler.html"/>
+      <id>e6b7e2cfbe40cd345f07d28f060da229a653766d:reference/execution/execution/run_loop/get_scheduler.md</id>
+      <updated>2025-04-30T18:09:00+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/run_loop/get_scheduler.md b/reference/execution/execution/run_loop/get_scheduler.md
+index 462704953..ba9707d1f 100644
+--- a/reference/execution/execution/run_loop/get_scheduler.md
++++ b/reference/execution/execution/run_loop/get_scheduler.md
+@@ -20,6 +20,8 @@ run-loop-scheduler get_scheduler();
+ 
+ ## 例
+ ```cpp example
++#include &amp;lt;cassert&amp;gt;
++#include &amp;lt;concepts&amp;gt;
+ #include &amp;lt;execution&amp;gt;
+ namespace ex = std::execution;
+ 
+@@ -27,11 +29,34 @@ int main()
+ {
+   ex::run_loop loop;
+   ex::scheduler auto sch = loop.get_scheduler();
++
++  // スケジュールSenderを作成
++  ex::sender auto sndr = ex::schedule(sch);
++
++  // スケジュールSenderの完了シグネチャ集合を確認
++  auto sigs = ex::get_completion_signatures(sndr);
++  static_assert(std::same_as&amp;lt;decltype(sigs),
++    ex::completion_signatures&amp;lt;ex::set_value_t(),
++                              ex::set_error_t(std::exception_ptr),
++                              ex::set_stopped_t()&amp;gt;&amp;gt;);
++
++  // スケジュールSender属性の値完了スケジューラを確認
++  auto compl_sch = ex::get_completion_scheduler&amp;lt;ex::set_value_t&amp;gt;(ex::get_env(sndr));
++  assert(compl_sch == sch);
+ }
+ ```
+ * get_scheduler()[color ff0000]
+ * ex::run_loop[link ../run_loop.md]
+ * ex::scheduler[link ../scheduler.md]
++* ex::sender[link ../sender.md]
++* ex::schedule[link ../schedule.md]
++* ex::get_completion_signatures[link ../get_completion_signatures.md]
++* ex::completion_signatures[link ../completion_signatures.md]
++* ex::set_value_t[link ../set_value.md]
++* ex::set_error_t[link ../set_error.md]
++* ex::set_stopped_t[link ../set_stopped.md]
++* ex::get_completion_scheduler[link ../get_completion_scheduler.md]
++* ex::get_env[link ../get_env.md]
+ 
+ ### 出力
+ ```
+@@ -51,6 +76,7 @@ int main()
+ 
+ ## 関連項目
+ - [`run-loop-scheduler`](run-loop-scheduler.md)
++- [`run-loop-sender`](run-loop-sender.md)
+ - [`execution::schedule`](../schedule.md)
+ 
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>run-loop-opstate -- execution/run_loop: 微調整 (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/run_loop/run-loop-opstate.html"/>
+      <id>e6b7e2cfbe40cd345f07d28f060da229a653766d:reference/execution/execution/run_loop/run-loop-opstate.md</id>
+      <updated>2025-04-30T18:09:00+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/run_loop/run-loop-opstate.md b/reference/execution/execution/run_loop/run-loop-opstate.md
+index 48d7ebd1c..fb631d051 100644
+--- a/reference/execution/execution/run_loop/run-loop-opstate.md
++++ b/reference/execution/execution/run_loop/run-loop-opstate.md
+@@ -67,6 +67,7 @@ struct run-loop-opstate-base {  // exposition only
+ 
+ ## 関連項目
+ - [`run`](run.md)
++- [`execution::connect`](../connect.md)
+ - [`execution::start`](../start.md)
+ 
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>run-loop-sender -- execution/run_loop: 微調整 (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/run_loop/run-loop-sender.html"/>
+      <id>e6b7e2cfbe40cd345f07d28f060da229a653766d:reference/execution/execution/run_loop/run-loop-sender.md</id>
+      <updated>2025-04-30T18:09:00+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/run_loop/run-loop-sender.md b/reference/execution/execution/run_loop/run-loop-sender.md
+index 24f642fed..65937e3ef 100644
+--- a/reference/execution/execution/run_loop/run-loop-sender.md
++++ b/reference/execution/execution/run_loop/run-loop-sender.md
+@@ -27,6 +27,7 @@ class run-loop-sender;  // exposition only
+ 
+ 
+ ## 関連項目
++- [`get_scheduler`](get_scheduler.md)
+ - [`run-loop-scheduler`](run-loop-scheduler.md)
+ - [`execution::sender`](../sender.md)
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>run -- execution/run_loop: 微調整 (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/run_loop/run.html"/>
+      <id>e6b7e2cfbe40cd345f07d28f060da229a653766d:reference/execution/execution/run_loop/run.md</id>
+      <updated>2025-04-30T18:09:00+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/run_loop/run.md b/reference/execution/execution/run_loop/run.md
+index 6519680ca..3c7970871 100644
+--- a/reference/execution/execution/run_loop/run.md
++++ b/reference/execution/execution/run_loop/run.md
+@@ -117,3 +117,4 @@ finished
+ 
+ ## 参照
+ - [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
++- [P3396R1 std::execution wording fixes](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3396r1.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>completion-domain -- execution: run_loop全メンバ (#1384)</title>
@@ -741,37 +950,6 @@ index 26b29e1f7..340872faf 100644
 +  return ch &amp;gt;= &amp;#39;A&amp;#39; &amp;amp;&amp;amp; ch &amp;lt;= &amp;#39;Z&amp;#39;;
 +}
 +```
-+
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>rotarymars</name>
-        <email>s.goto2050@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>isspace -- reference/cctype/isspace.md: Created sample implementation</title>
-      <link href="https://cpprefjp.github.io/reference/cctype/isspace.html"/>
-      <id>3527568f5c5f8c59b00f4ee03ae050d3ca62ebac:reference/cctype/isspace.md</id>
-      <updated>2025-04-30T12:55:02+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/cctype/isspace.md b/reference/cctype/isspace.md
-index 087dd8fc2..26a1e8f7f 100644
---- a/reference/cctype/isspace.md
-+++ b/reference/cctype/isspace.md
-@@ -50,3 +50,12 @@ isspace(&amp;#39; &amp;#39;) = 8192
- isspace(&amp;#39;\n&amp;#39;) = 8192
- isspace(&amp;#39;0x0f&amp;#39;) = 0
- ```
-+
-+## 実装例
-+```cpp
-+int isspace(int ch) {
-+  return ch == &amp;#39; &amp;#39; || ch == &amp;#39;\t&amp;#39; || ch == &amp;#39;\r&amp;#39; || ch == &amp;#39;\n&amp;#39; || ch == &amp;#39;\v&amp;#39; || ch == &amp;#39;\f&amp;#39;;
-+}
-+```
-+
 +
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
