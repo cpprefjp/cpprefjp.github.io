@@ -2,9 +2,160 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-05-01T08:04:22.384114</updated>
-  <id>cec1e334-f98a-478d-863f-d5b3bd99ae37</id>
+  <updated>2025-05-01T14:37:07.515349</updated>
+  <id>282f37f2-fd96-466a-8823-ade0ef75c2b6</id>
 
+  
+    <entry>
+      <title>sync-wait-receiver -- execution/sync_wait(_with_variant): 微調整 (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/this_thread/sync-wait-receiver.html"/>
+      <id>7aa4a3a5a9224b867655b6a458e594698cf8f847:reference/execution/this_thread/sync-wait-receiver.md</id>
+      <updated>2025-05-01T23:33:20+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/this_thread/sync-wait-receiver.md b/reference/execution/this_thread/sync-wait-receiver.md
+index f3823750a..28b5d3e38 100644
+--- a/reference/execution/this_thread/sync-wait-receiver.md
++++ b/reference/execution/this_thread/sync-wait-receiver.md
+@@ -31,6 +31,7 @@ namespace std::this_thread {
+ }
+ ```
+ * execution::receiver_t[link ../execution/receiver.md]
++* sync-wait-env[link sync-wait-env.md]
+ * execution::run_loop[link ../execution/run_loop.md]
+ * exception_ptr[link /reference/exception/exception_ptr.md]
+ * sync-wait-result-type[link sync_wait.md]
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>sync_wait -- execution/sync_wait(_with_variant): 微調整 (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/this_thread/sync_wait.html"/>
+      <id>7aa4a3a5a9224b867655b6a458e594698cf8f847:reference/execution/this_thread/sync_wait.md</id>
+      <updated>2025-05-01T23:33:20+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/this_thread/sync_wait.md b/reference/execution/this_thread/sync_wait.md
+index b54097da9..a6625caf8 100644
+--- a/reference/execution/this_thread/sync_wait.md
++++ b/reference/execution/this_thread/sync_wait.md
+@@ -15,7 +15,10 @@ namespace std::this_thread {
+ ## 概要
+ `sync_wait`は、[Sender](../execution/sender.md)が完了するまで現在のスレッドをブロックし、非同期操作の結果を取得するSenderコンシューマである。
+ 
+-`sync_wait`は入力Senderが[値完了シグネチャ](../execution/set_value.md)をただ1種類だけ持つことを要求する。
++`sync_wait`は入力Senderが[値完了シグネチャ](../execution/set_value.md)を1個だけ持つことを要求する。
++値完了シグネチャが複数存在する場合は[`sync_wait_with_variant`](sync_wait_with_variant.md)アルゴリズムを利用する。
++
++入力Senderの値完了シグネチャが[`set_value_t`](../execution/set_value.md)`(Ts...)`のとき、`sync_wait`の結果型は[`optional`](/reference/optional/optional.md)`&amp;lt;`[`tuple`](/reference/tuple/tuple.md)`&amp;lt;Ts...&amp;gt;&amp;gt;`となる。
+ 
+ 
+ ## 効果
+@@ -35,8 +38,8 @@ apply_sender(get-domain-early(sndr), sync_wait, sndr)
+ - 上記の`apply_sender`式を`e`としたとき、[`same_as`](/reference/concepts/same_as.md)`&amp;lt;decltype(e), sync-wait-result-type&amp;lt;Sndr&amp;gt;&amp;gt; == true`であること。
+ 
+ 
+-### 戻り値型
+-`sync_wait`の戻り値型となる、説明専用のエイリアステンプレート`sync-wait-result-type`を下記の通り定義する。
++### 結果型
++`sync_wait`の結果型となる、説明専用のエイリアステンプレート`sync-wait-result-type`を下記の通り定義する。
+ 
+ ```cpp
+ namespace std::this_thread {
+@@ -91,9 +94,9 @@ return std::move(state.result);
+ 
+ - 指定したSenderが完了するまで、前方進行保証委任(forward progress guarantee delegation)による現在のスレッドをブロックすること。
+ - 指定したSenderの非同期操作の結果が返る場合
+-    - 値完了の場合、結果データは[`optional`](/reference/optional/optional.md)オブジェクト内の[`tuple`](/reference/tuple/tuple.md)で返されること。
+-    - エラー完了の場合、例外を送出すること。
+-    - 停止完了の場合、空の[`optional`](/reference/optional/optional.md)オブジェクトが返されること。
++    - [値完了](../execution/set_value.md)の場合、結果データは[`optional`](/reference/optional/optional.md)オブジェクト内の[`tuple`](/reference/tuple/tuple.md)で返されること。
++    - [エラー完了](../execution/set_error.md)の場合、例外を送出すること。
++    - [停止完了](../execution/set_stopped.md)の場合、無効値[`optional`](/reference/optional/optional.md)オブジェクトが返されること。
+ 
+ 
+ ## 例
+@@ -108,7 +111,7 @@ int main()
+   ex::sender auto sndr = ex::just(100, &amp;#39;X&amp;#39;);
+   // メインスレッド上で完了待機
+   auto result = std::this_thread::sync_wait(sndr);
+-  // 戻り値型optional&amp;lt;tuple&amp;lt;int,char&amp;gt;&amp;gt;から値を取り出す
++  // 結果型optional&amp;lt;tuple&amp;lt;int,char&amp;gt;&amp;gt;から値を取り出す
+   auto [n, c] = result.value();
+   std::println(&amp;#34;result=({}, {})&amp;#34;, n, c);
+ }
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>sync_wait_with_variant -- execution/sync_wait(_with_variant): 微調整 (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/this_thread/sync_wait_with_variant.html"/>
+      <id>7aa4a3a5a9224b867655b6a458e594698cf8f847:reference/execution/this_thread/sync_wait_with_variant.md</id>
+      <updated>2025-05-01T23:33:20+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/this_thread/sync_wait_with_variant.md b/reference/execution/this_thread/sync_wait_with_variant.md
+index 8dc96b1d2..a6e227308 100644
+--- a/reference/execution/this_thread/sync_wait_with_variant.md
++++ b/reference/execution/this_thread/sync_wait_with_variant.md
+@@ -16,6 +16,10 @@ namespace std::this_thread {
+ `sync_wait_with_variant`は、[Sender](../execution/sender.md)が完了するまで現在のスレッドをブロックし、非同期操作の結果を取得するSenderコンシューマである。
+ 
+ `sync_wait_with_variant`は入力Senderが複数の[値完了シグネチャ](../execution/set_value.md)を持つケースに対応する。
++値完了シグネチャが1個だけの場合は[`sync_wait`](sync_wait.md)アルゴリズムを利用する。
++
++
++入力Senderの値完了シグネチャが[`set_value_t`](../execution/set_value.md)`(Ts0...)`, ..., [`set_value_t`](../execution/set_value.md)`(TsN...)`のとき、`sync_wait_with_variant`の結果型は[`optional`](/reference/optional/optional.md)`&amp;lt;`[`variant`](/reference/variant/variant.md)`&amp;lt;`[`tuple`](/reference/tuple/tuple.md)`&amp;lt;Ts0...&amp;gt;, ...,` [`tuple`](/reference/tuple/tuple.md)`&amp;lt;TsN...&amp;gt;&amp;gt;`となる。
+ 
+ 
+ ## 効果
+@@ -35,8 +39,8 @@ apply_sender(get-domain-early(sndr), sync_wait_with_variant, sndr)
+ - 上記の`apply_sender`式を`e`としたとき、[`same_as`](/reference/concepts/same_as.md)`&amp;lt;decltype(e), sync-wait-with-variant-result-type&amp;lt;Sndr&amp;gt;&amp;gt; == true`であること。
+ 
+ 
+-### 戻り値型
+-`sync_wait_with_variant`の戻り値型となる、説明専用のエイリアステンプレート`sync-wait-with-variant-result-type`を下記の通り定義する。
++### 結果型
++`sync_wait_with_variant`の結果型となる、説明専用のエイリアステンプレート`sync-wait-with-variant-result-type`を下記の通り定義する。
+ 
+ ```cpp
+ namespace std::this_thread {
+@@ -81,9 +85,9 @@ return result_type(nullopt);
+ 
+ - 指定したSenderが完了するまで、前方進行保証委任(forward progress guarantee delegation)による現在のスレッドをブロックすること。
+ - 指定したSenderの非同期操作の結果が返る場合
+-    - 値完了の場合、結果データは[`optional`](/reference/optional/optional.md)オブジェクト内の[`tuple`](/reference/tuple/tuple.md)の[`variant`](/reference/variant/variant.md)で返されること。
+-    - エラー完了の場合、例外を送出すること。
+-    - 停止完了の場合、空の[`optional`](/reference/optional/optional.md)オブジェクトが返されること。
++    - [値完了](../execution/set_value.md)の場合、結果データは[`optional`](/reference/optional/optional.md)オブジェクト内の[`tuple`](/reference/tuple/tuple.md)の[`variant`](/reference/variant/variant.md)で返されること。
++    - [エラー完了](../execution/set_error.md)の場合、例外を送出すること。
++    - [停止完了](../execution/set_stopped.md)の場合、無効値[`optional`](/reference/optional/optional.md)オブジェクトが返されること。
+ 
+ 
+ ## 例
+@@ -98,7 +102,7 @@ int main()
+   ex::sender auto sndr = ex::just(100, &amp;#39;X&amp;#39;);
+   // メインスレッド上で完了待機
+   auto result = std::this_thread::sync_wait_with_variant(sndr);
+-  // 戻り値型optional&amp;lt;variant&amp;lt;tuple&amp;lt;int,char&amp;gt;&amp;gt;&amp;gt;からtupleを取り出す
++  // 結果型optional&amp;lt;variant&amp;lt;tuple&amp;lt;int,char&amp;gt;&amp;gt;&amp;gt;からtupleを取り出す
+   auto tup = get&amp;lt;0&amp;gt;(result.value());
+   std::println(&amp;#34;result={}&amp;#34;, tup);
+ }
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>execution -- execution: sync_wait(_with_variant) (#1384)</title>
@@ -1597,39 +1748,6 @@ index b48446459..ca21a5652 100644
 +  return ch;
 +}
 +```
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>rotarymars</name>
-        <email>s.goto2050@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>tolower -- reference/cctype/tolower.md: Created sample implementation</title>
-      <link href="https://cpprefjp.github.io/reference/cctype/tolower.html"/>
-      <id>3b77b17e0ac396592a2bb77e481fc85edabf695d:reference/cctype/tolower.md</id>
-      <updated>2025-04-30T12:55:34+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/cctype/tolower.md b/reference/cctype/tolower.md
-index 838d96ba0..88da612c6 100644
---- a/reference/cctype/tolower.md
-+++ b/reference/cctype/tolower.md
-@@ -42,3 +42,14 @@ tolower(&amp;#39;1&amp;#39;) = 1
- tolower(&amp;#39;.&amp;#39;) = .
- tolower(&amp;#39;$&amp;#39;) = $
- ```
-+
-+## 実装例
-+```cpp
-+int tolower(int ch) {
-+  if (isupper(ch)) {
-+    ch ^= 32
-+  }
-+  return ch;
-+}
-+```
-+
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
