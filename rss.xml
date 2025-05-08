@@ -2,9 +2,160 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-05-08T04:28:40.704060</updated>
-  <id>db2a13a6-f946-48e3-bb21-320e829ad004</id>
+  <updated>2025-05-08T08:54:43.244519</updated>
+  <id>3cd94365-a13a-4986-b1d8-4429dc59eabf</id>
 
+  
+    <entry>
+      <title>execution -- execution: read_env (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution.html"/>
+      <id>b8c7c50fec35db39373dc7b8e006cf05362ce622:reference/execution/execution.md</id>
+      <updated>2025-05-08T17:49:46+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution.md b/reference/execution/execution.md
+index 631483cb2..3bdb0796d 100644
+--- a/reference/execution/execution.md
++++ b/reference/execution/execution.md
+@@ -88,7 +88,7 @@ namespace std::execution {
+ | [`execution::value_types_of_t`](execution/value_types_of_t.md) | Senderの値完了シグネチャ集合から指定操作で型を生成 (alias template) | C++26 |
+ | [`execution::error_types_of_t`](execution/error_types_of_t.md) | Senderのエラー完了シグネチャ集合から指定操作で型を生成 (alias template) | C++26 |
+ | [`execution::sends_stopped`](execution/sends_stopped.md) | Senderが停止完了を送信しうるか否か (variable template) | C++26 |
+-| [`execution::tag_of_t`](execution/tag_of_t.md) | Senderアルゴリズムタグを取得 (alias template) | C++26 |
++| [`execution::tag_of_t`](execution/tag_of_t.md) | Senderアルゴリズムタグ型を取得 (alias template) | C++26 |
+ | [`execution::transform_sender`](execution/transform_sender.md) | Senderを変換 (function template) | C++26 |
+ | [`execution::transform_env`](execution/transform_env.md) | 環境を変換 (function template) | C++26 |
+ | [`execution::apply_sender`](execution/apply_sender.md) | Senderアルゴリズムを適用 (function template) | C++26 |
+@@ -102,7 +102,7 @@ namespace std::execution {
+ | [`execution::just`](execution/just.md) | 値を送信するSender (customization point object) | C++26 |
+ | [`execution::just_error`](execution/just_error.md.nolink) | エラーを送信するSender (customization point object) | C++26 |
+ | [`execution::just_stopped`](execution/just_stopped.md.nolink) | 停止を送信するSender (customization point object) | C++26 |
+-| [`execution::read_env`](execution/read_env.md.nolink) | Receiver環境から構築されるSender (customization point object) | C++26 |
++| [`execution::read_env`](execution/read_env.md) | Receiver環境からクエリオブジェクトで値を読み取るSender (customization point object) | C++26 |
+ | [`execution::schedule`](execution/schedule.md) | Scheduler上で実行されるSender (customization point object) | C++26 |
+ | [`execution::schedule_result_t`](execution/schedule_result_t.md) | [`schedule`](execution/schedule.md)結果型を取得 (alias template) | C++26 |
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>read_env -- execution: read_env (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/read_env.html"/>
+      <id>b8c7c50fec35db39373dc7b8e006cf05362ce622:reference/execution/execution/read_env.md</id>
+      <updated>2025-05-08T17:49:46+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/read_env.md b/reference/execution/execution/read_env.md
+new file mode 100644
+index 000000000..41e98e7f8
+--- /dev/null
++++ b/reference/execution/execution/read_env.md
+@@ -0,0 +1,94 @@
++# read_env
++* execution[meta header]
++* cpo[meta id-type]
++* std::execution[meta namespace]
++* cpp26[meta cpp]
++
++```cpp
++namespace std::execution {
++  inline constexpr unspecified read_env{};
++}
++```
++* unspecified[italic]
++
++## 概要
++`read_env`は、非同期動作の[開始(start)](start.md)時に接続先[Receiver](receiver.md)の[環境](../queryable.md)に対して[クエリオブジェクト](../queryable.md)で問い合わせ、読み取った値を[値完了関数](set_value.md)で送信するSenderファクトリである。
++
++クエリオブジェクトによるReceiver環境への問い合わせは`read_env`[Sender](sender.md)の構築時ではなく、Receiverと接続されたのち非同期動作が開始されるタイミングまで遅延される。
++[`let_value`](let_value.md.nolink)Senderアダプタと組み合わせたり、[Sender Awaitableなコルーチン](with_awaitable_senders.md.nolink)での`co_await`式によって、[Scheduler](get_scheduler.md)や[停止トークン](../get_stop_token.md)を読み取ることができる。
++
++
++## 効果
++[クエリオブジェクト](../queryable.md)`q`に対して、呼び出し式`read_env(q)`は式[`make-sender`](make-sender.md)`(read_env, q)`と等価。
++
++
++### Senderアルゴリズムタグ
++Senderアルゴリズム動作説明用のクラステンプレート`impls-for`に対して、下記の特殊化が定義される。
++
++```cpp
++namespace std::execution {
++  template&amp;lt;&amp;gt;
++  struct impls-for&amp;lt;decayed-typeof&amp;lt;read_env&amp;gt;&amp;gt; : default-impls {
++    static constexpr auto start =
++      [](auto query, auto&amp;amp; rcvr) noexcept -&amp;gt; void {
++        TRY-SET-VALUE(rcvr, query(get_env(rcvr)));
++      };
++  };
++}
++```
++* decayed-typeof[link decayed-typeof.md.nolink]
++* impls-for[link impls-for.md]
++* default-impls[link impls-for.md]
++* get_env[link get_env.md]
++
++
++## 備考
++`read_env`の[Senderアルゴリズムタグ型](tag_of_t.md)は未規定とされる。
++
++
++## 例
++```cpp example
++#include &amp;lt;print&amp;gt;
++#include &amp;lt;execution&amp;gt;
++namespace ex = std::execution;
++
++int main()
++{
++  ex::sender auto sndr = ex::read_env(ex::get_scheduler)
++    | ex::let_value([](auto sch) -&amp;gt; ex::sender auto {
++        // sch := sync_wait内部のScheduler
++        return ex::starts_on(sch, std::just(42));
++      });
++  auto [val] = std::this_thread::sync_wait(sndr).value();
++  std::println(&amp;#34;{}&amp;#34;, val);
++}
++```
++* ex::read_env[color ff0000]
++* ex::sender[link sender.md]
++* ex::get_scheduler[link get_scheduler.md]
++* ex::starts_on[link starts_on.md.nolink]
++* std::this_thread::sync_wait[link ../this_thread/sync_wait.md]
++
++### 出力
++```
++42
++```
++
++
++## バージョン
++### 言語
++- C++26
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): ??
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 関連項目
++- [`execution::get_env`](read_env.md)
++
++
++## 参照
++- [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
+\ No newline at end of file
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>contracts -- fix: Fixed compiler version</title>
@@ -398,32 +549,6 @@ index 000000000..4d03f0528
 +
 +## 参照
 +- [P0542R5 Support for contract based programming in C++](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>rotarymars</name>
-        <email>s.goto2050@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>contract_violation -- fix: Added version for contract_violation</title>
-      <link href="https://cpprefjp.github.io/reference/contracts/contract_violation.html"/>
-      <id>77d4a16738e24aaa0624b55333bcf630978e9d91:reference/contracts/contract_violation.md</id>
-      <updated>2025-05-08T08:54:17+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/contracts/contract_violation.md b/reference/contracts/contract_violation.md
-index 4e4cf7725..b09eb9335 100644
---- a/reference/contracts/contract_violation.md
-+++ b/reference/contracts/contract_violation.md
-@@ -2,6 +2,7 @@
- * contracts[meta header]
- * std::contracts[meta namespace]
- * class[meta id-type]
-+* cpp26[meta cpp]
- 
- ```cpp
- namespace std::contracts {
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
