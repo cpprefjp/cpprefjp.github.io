@@ -68,7 +68,7 @@
 
     </head>
     <body>
-<header data-kunai-mdinfo="{&#34;meta&#34;: {&#34;header&#34;: [&#34;execution&#34;], &#34;id-type&#34;: [&#34;cpo&#34;], &#34;namespace&#34;: [&#34;std::execution&#34;], &#34;cpp&#34;: [&#34;cpp26&#34;]}, &#34;sources&#34;: [{&#34;id&#34;: &#34;05e7668357f603616f5342898e53247888e00673&#34;, &#34;source&#34;: &#34;#include &lt;string&gt;\n#include &lt;tuple&gt;\n#include &lt;print&gt;\n#include &lt;variant&gt;\n#include &lt;execution&gt;\nnamespace ex = std::execution;\n\nstruct FizzBuzzSender {\n  using sender_concept = ex::sender_t;\n  using completion_signatures = ex::completion_signatures&lt;\n    ex::set_value_t(int),\n    ex::set_value_t(std::string)\n  &gt;;\n\n  template &lt;typename Rcvr&gt;\n  struct state {\n    using operation_state_concept = ex::operation_state_t;\n\n    state(Rcvr rcvr, int val)\n      : rcvr_{std::move(rcvr)}, val_{val} {}\n\n    void start() noexcept {\n      if (val_ % 15 == 0) {\n        ex::set_value(std::move(rcvr_), \&#34;FizzBuzz\&#34;);\n      } else if (val_ % 3 == 0) {\n        ex::set_value(std::move(rcvr_), \&#34;Fizz\&#34;);\n      } else if (val_ % 5 == 0) {\n        ex::set_value(std::move(rcvr_), \&#34;Buzz\&#34;);\n      } else {\n        ex::set_value(std::move(rcvr_), val_);\n      }\n    }\n\n    Rcvr rcvr_;\n    int val_;\n  };\n\n  template &lt;typename Rcvr&gt;\n  auto connect(Rcvr rcvr) noexcept {\n    return state{std::move(rcvr), val_};\n  }\n\n  int val_;\n};\n\ntemplate&lt;typename... Ts&gt;\nstruct overload : Ts... { using Ts::operator()...; };\n\nint main()\n{\n  int val = 15;\n  ex::sender auto sndr = ex::into_variant(FizzBuzzSender{val});\n  auto [result] = std::this_thread::sync_wait(sndr).value();\n\n  std::visit(overload{\n    [](std::tuple&lt;int&gt; n) {\n      std::println(\&#34;(int) {}\&#34;, get&lt;0&gt;(n));\n    },\n    [](std::tuple&lt;std::string&gt; s) {\n      std::println(\&#34;(str) {}\&#34;, get&lt;0&gt;(s));\n    }\n  }, result);\n}\n&#34;}], &#34;page_id&#34;: [&#34;reference&#34;, &#34;execution&#34;, &#34;execution&#34;, &#34;into_variant&#34;]}">
+<header data-kunai-mdinfo="{&#34;meta&#34;: {&#34;header&#34;: [&#34;execution&#34;], &#34;id-type&#34;: [&#34;cpo&#34;], &#34;namespace&#34;: [&#34;std::execution&#34;], &#34;cpp&#34;: [&#34;cpp26&#34;]}, &#34;sources&#34;: [{&#34;id&#34;: &#34;40968a9977f041b8463413cc79744ccdb024fe31&#34;, &#34;source&#34;: &#34;#include &lt;string&gt;\n#include &lt;tuple&gt;\n#include &lt;print&gt;\n#include &lt;variant&gt;\n#include &lt;execution&gt;\nnamespace ex = std::execution;\n\nstruct FizzBuzzSender {\n  using sender_concept = ex::sender_t;\n\n  // FizzBuzzSender\u306f2\u7a2e\u985e\u306e\u5024\u5b8c\u4e86\u30b7\u30b0\u30cd\u30c1\u30e3\u3092\u6301\u3064\n  using completion_signatures = ex::completion_signatures&lt;\n    ex::set_value_t(int),\n    ex::set_value_t(std::string)\n  &gt;;\n\n  // Operation State\u578b\n  template &lt;typename Rcvr&gt;\n  struct State {\n    using operation_state_concept = ex::operation_state_t;\n\n    State(Rcvr rcvr, int val)\n      : rcvr_{std::move(rcvr)}, val_{val} {}\n\n    void start() noexcept {\n      using namespace std::string_literals;\n      if (val_ % 15 == 0) {\n        ex::set_value(std::move(rcvr_), \&#34;FizzBuzz\&#34;s);\n      } else if (val_ % 3 == 0) {\n        ex::set_value(std::move(rcvr_), \&#34;Fizz\&#34;s);\n      } else if (val_ % 5 == 0) {\n        ex::set_value(std::move(rcvr_), \&#34;Buzz\&#34;s);\n      } else {\n        ex::set_value(std::move(rcvr_), val_);\n      }\n    }\n\n    Rcvr rcvr_;\n    int val_;\n  };\n\n  template &lt;typename Rcvr&gt;\n  auto connect(Rcvr rcvr) noexcept {\n    return State{std::move(rcvr), val_};\n  }\n\n  int val_;\n};\n\ntemplate&lt;typename... Ts&gt;\nstruct overload : Ts... { using Ts::operator()...; };\n\nint main()\n{\n  int val = 15;\n#if 0\n  // \u95a2\u6570\u547c\u3073\u51fa\u3057\n  ex::sender auto snd0 = FizzBuzzSender{val};\n  ex::sender auto sndr = ex::into_variant(snd0);\n#else\n  // \u30d1\u30a4\u30d7\u30e9\u30a4\u30f3\u8a18\u6cd5\n  ex::sender auto sndr = FizzBuzzSender{val} | ex::into_variant();\n#endif\n  auto [result] = std::this_thread::sync_wait(sndr).value();\n\n  // result := variant&lt;tuple&lt;int&gt;, tuple&lt;string&gt;&gt;\u578b\n  std::visit(overload{\n    [](std::tuple&lt;int&gt; n) {\n      std::println(\&#34;(int) {}\&#34;, get&lt;0&gt;(n));\n    },\n    [](std::tuple&lt;std::string&gt; s) {\n      std::println(\&#34;(str) {}\&#34;, get&lt;0&gt;(s));\n    }\n  }, result);\n}\n&#34;}], &#34;page_id&#34;: [&#34;reference&#34;, &#34;execution&#34;, &#34;execution&#34;, &#34;into_variant&#34;]}">
   <nav class="navbar navbar-default" role="navigation">
     <div class="container-fluid">
       <div class="navbar-header">
@@ -200,8 +200,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2025-05-10T14:27:12">
-        2025年05月10日 14時27分12秒
+      <span itemprop="datePublished" content="2025-05-12T04:30:35">
+        2025年05月12日 04時30分35秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -253,7 +253,7 @@
 </p>
 <p><code>impls-for&lt;into_variant_t&gt;::get-state</code>メンバは、下記ラムダ式と等価な関数呼び出し可能なオブジェクトで初期化される。</p>
 <ul>
-<li>子<a href="sender.html">Sender</a>の<a href="value_types_of_t.html">値完了シグニチャを集約</a>した<code><a href="../../variant/variant.html">variant</a>&lt;<a href="../../variant/variant.html">tuple</a>&lt;...&gt;, ...&gt;</code>型を<code><a href="../../type_traits/type_identity.html">type_identity</a></code>クラステンプレートのパラメータに格納して返す。</li>
+<li>子<a href="sender.html">Sender</a>の<a href="value_types_of_t.html">値完了シグネチャを集約</a>した<code><a href="../../variant/variant.html">variant</a>&lt;<a href="../../variant/variant.html">tuple</a>&lt;...&gt;, ...&gt;</code>型を<code><a href="../../type_traits/type_identity.html">type_identity</a></code>クラステンプレートのパラメータに格納して返す。</li>
 </ul>
 <p><div class="codehilite"><pre><span></span><code><span class="p">[]</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">Sndr</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Rcvr</span><span class="o">&gt;</span><span class="p">(</span><span class="n">Sndr</span><span class="o">&amp;&amp;</span> <span class="n">sndr</span><span class="p">,</span> <span class="n">Rcvr</span><span class="o">&amp;</span> <span class="n">rcvr</span><span class="p">)</span> <span class="k">noexcept</span>
   <span class="o">-&gt;</span> <span class="n"><a href="../../type_traits/type_identity.html">type_identity</a></span><span class="o">&lt;</span><span class="n"><a href="value_types_of_t.html">value_types_of_t</a></span><span class="o">&lt;</span><span class="n"><a href="child-type.html">child-type</a></span><span class="o">&lt;</span><span class="n">Sndr</span><span class="o">&gt;</span><span class="p">,</span> <span class="n"><a href="env_of_t.html">env_of_t</a></span><span class="o">&lt;</span><span class="n">Rcvr</span><span class="o">&gt;&gt;&gt;</span> <span class="p">{</span>
@@ -282,7 +282,7 @@
 <p>Senderアルゴリズム構築時および<a href="receiver.html">Receiver</a>接続時に、関連付けられた実行ドメインに対して<code><a href="transform_sender.html">execution::transform_sender</a></code>経由でSender変換が行われる。
 <a href="default_domain.html">デフォルト実行ドメイン</a>では無変換。</p>
 <h2>例</h2>
-<p><div class="yata" id="05e7668357f603616f5342898e53247888e00673"><div class="codehilite"><pre><span></span><code><span class="cp">#include</span> <span class="cpf"><a href="../../string.html">&lt;string&gt;</a></span><span class="cp"></span>
+<p><div class="yata" id="40968a9977f041b8463413cc79744ccdb024fe31"><div class="codehilite"><pre><span></span><code><span class="cp">#include</span> <span class="cpf"><a href="../../string.html">&lt;string&gt;</a></span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf"><a href="../../tuple.html">&lt;tuple&gt;</a></span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf"><a href="../../print.html">&lt;print&gt;</a></span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf"><a href="../../variant.html">&lt;variant&gt;</a></span><span class="cp"></span>
@@ -291,25 +291,29 @@
 
 <span class="k">struct</span> <span class="n">FizzBuzzSender</span> <span class="p">{</span>
   <span class="k">using</span> <span class="n">sender_concept</span> <span class="o">=</span> <span class="n"><a href="sender.html">ex::sender_t</a></span><span class="p">;</span>
+
+  <span class="c1">// FizzBuzzSenderは2種類の値完了シグネチャを持つ</span>
   <span class="k">using</span> <span class="n">completion_signatures</span> <span class="o">=</span> <span class="n"><a href="completion_signatures.html">ex::completion_signatures</a></span><span class="o">&lt;</span>
     <span class="n"><a href="set_value.html">ex::set_value_t</a></span><span class="p">(</span><span class="kt">int</span><span class="p">),</span>
     <span class="n"><a href="set_value.html">ex::set_value_t</a></span><span class="p">(</span><span class="n"><a href="../../string/basic_string.html">std::string</a></span><span class="p">)</span>
   <span class="o">&gt;</span><span class="p">;</span>
 
+  <span class="c1">// Operation State型</span>
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">Rcvr</span><span class="o">&gt;</span>
-  <span class="k">struct</span> <span class="n">state</span> <span class="p">{</span>
-    <span class="k">using</span> <span class="n">operation_state_concept</span> <span class="o">=</span> <span class="n">ex</span><span class="o">::</span><span class="n">operation_state_t</span><span class="p">;</span>
+  <span class="k">struct</span> <span class="n">State</span> <span class="p">{</span>
+    <span class="k">using</span> <span class="n">operation_state_concept</span> <span class="o">=</span> <span class="n"><a href="operation_state.html">ex::operation_state_t</a></span><span class="p">;</span>
 
-    <span class="n">state</span><span class="p">(</span><span class="n">Rcvr</span> <span class="n">rcvr</span><span class="p">,</span> <span class="kt">int</span> <span class="n">val</span><span class="p">)</span>
+    <span class="n">State</span><span class="p">(</span><span class="n">Rcvr</span> <span class="n">rcvr</span><span class="p">,</span> <span class="kt">int</span> <span class="n">val</span><span class="p">)</span>
       <span class="o">:</span> <span class="n">rcvr_</span><span class="p">{</span><span class="n"><a href="../../utility/move.html">std::move</a></span><span class="p">(</span><span class="n">rcvr</span><span class="p">)},</span> <span class="n">val_</span><span class="p">{</span><span class="n">val</span><span class="p">}</span> <span class="p">{}</span>
 
     <span class="kt">void</span> <span class="n">start</span><span class="p">()</span> <span class="k">noexcept</span> <span class="p">{</span>
+      <span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="o">::</span><span class="n">string_literals</span><span class="p">;</span>
       <span class="k">if</span> <span class="p">(</span><span class="n">val_</span> <span class="o">%</span> <span class="mi">15</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-        <span class="n"><a href="set_value.html">ex::set_value</a></span><span class="p">(</span><span class="n"><a href="../../utility/move.html">std::move</a></span><span class="p">(</span><span class="n">rcvr_</span><span class="p">),</span> <span class="s">"FizzBuzz"</span><span class="p">);</span>
+        <span class="n"><a href="set_value.html">ex::set_value</a></span><span class="p">(</span><span class="n"><a href="../../utility/move.html">std::move</a></span><span class="p">(</span><span class="n">rcvr_</span><span class="p">),</span> <span class="s">"FizzBuzz"</span><span class="n">s</span><span class="p">);</span>
       <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">val_</span> <span class="o">%</span> <span class="mi">3</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-        <span class="n"><a href="set_value.html">ex::set_value</a></span><span class="p">(</span><span class="n"><a href="../../utility/move.html">std::move</a></span><span class="p">(</span><span class="n">rcvr_</span><span class="p">),</span> <span class="s">"Fizz"</span><span class="p">);</span>
+        <span class="n"><a href="set_value.html">ex::set_value</a></span><span class="p">(</span><span class="n"><a href="../../utility/move.html">std::move</a></span><span class="p">(</span><span class="n">rcvr_</span><span class="p">),</span> <span class="s">"Fizz"</span><span class="n">s</span><span class="p">);</span>
       <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">val_</span> <span class="o">%</span> <span class="mi">5</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-        <span class="n"><a href="set_value.html">ex::set_value</a></span><span class="p">(</span><span class="n"><a href="../../utility/move.html">std::move</a></span><span class="p">(</span><span class="n">rcvr_</span><span class="p">),</span> <span class="s">"Buzz"</span><span class="p">);</span>
+        <span class="n"><a href="set_value.html">ex::set_value</a></span><span class="p">(</span><span class="n"><a href="../../utility/move.html">std::move</a></span><span class="p">(</span><span class="n">rcvr_</span><span class="p">),</span> <span class="s">"Buzz"</span><span class="n">s</span><span class="p">);</span>
       <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
         <span class="n"><a href="set_value.html">ex::set_value</a></span><span class="p">(</span><span class="n"><a href="../../utility/move.html">std::move</a></span><span class="p">(</span><span class="n">rcvr_</span><span class="p">),</span> <span class="n">val_</span><span class="p">);</span>
       <span class="p">}</span>
@@ -321,7 +325,7 @@
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">Rcvr</span><span class="o">&gt;</span>
   <span class="k">auto</span> <span class="n">connect</span><span class="p">(</span><span class="n">Rcvr</span> <span class="n">rcvr</span><span class="p">)</span> <span class="k">noexcept</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="n">state</span><span class="p">{</span><span class="n"><a href="../../utility/move.html">std::move</a></span><span class="p">(</span><span class="n">rcvr</span><span class="p">),</span> <span class="n">val_</span><span class="p">};</span>
+    <span class="k">return</span> <span class="n">State</span><span class="p">{</span><span class="n"><a href="../../utility/move.html">std::move</a></span><span class="p">(</span><span class="n">rcvr</span><span class="p">),</span> <span class="n">val_</span><span class="p">};</span>
   <span class="p">}</span>
 
   <span class="kt">int</span> <span class="n">val_</span><span class="p">;</span>
@@ -333,9 +337,17 @@
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
 <span class="p">{</span>
   <span class="kt">int</span> <span class="n">val</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span>
-  <span class="n"><a href="sender.html">ex::sender</a></span> <span class="k">auto</span> <span class="n">sndr</span> <span class="o">=</span> <span class="n"><span style="color:#ff0000">ex::into_variant</span></span><span class="p">(</span><span class="n">FizzBuzzSender</span><span class="p">{</span><span class="n">val</span><span class="p">});</span>
+<span class="cp">#if 0</span><span class="c"></span>
+<span class="c">  // 関数呼び出し</span>
+<span class="c">  <a href="sender.html">ex::sender</a> auto snd0 = FizzBuzzSender{val};</span>
+<span class="c">  <a href="sender.html">ex::sender</a> auto sndr = <span style="color:#ff0000">ex::into_variant</span>(snd0);</span>
+<span class="cp">#else</span>
+  <span class="c1">// パイプライン記法</span>
+  <span class="n"><a href="sender.html">ex::sender</a></span> <span class="k">auto</span> <span class="n">sndr</span> <span class="o">=</span> <span class="n">FizzBuzzSender</span><span class="p">{</span><span class="n">val</span><span class="p">}</span> <span class="o">|</span> <span class="n"><span style="color:#ff0000">ex::into_variant</span></span><span class="p">();</span>
+<span class="cp">#endif</span>
   <span class="k">auto</span> <span class="p">[</span><span class="n">result</span><span class="p">]</span> <span class="o">=</span> <span class="n"><a href="../this_thread/sync_wait.html">std::this_thread::sync_wait</a></span><span class="p">(</span><span class="n">sndr</span><span class="p">).</span><span class="n"><a href="../../optional/optional/value.html">value()</a></span><span class="p">;</span>
 
+  <span class="c1">// result := variant&lt;tuple&lt;int&gt;, tuple&lt;string&gt;&gt;型</span>
   <span class="n"><a href="../../variant/visit.html">std::visit</a></span><span class="p">(</span><span class="n">overload</span><span class="p">{</span>
     <span class="p">[](</span><span class="n"><a href="../../tuple/tuple.html">std::tuple</a></span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">n</span><span class="p">)</span> <span class="p">{</span>
       <span class="n"><a href="../../print/println.html">std::println</a></span><span class="p">(</span><span class="s">"(int) {}"</span><span class="p">,</span> <span class="n"><a href="../../tuple/tuple/get.html">get&lt;0&gt;</a></span><span class="p">(</span><span class="n">n</span><span class="p">));</span>
