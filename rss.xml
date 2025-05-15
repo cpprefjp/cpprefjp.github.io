@@ -2,9 +2,168 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-05-15T03:42:34.001171</updated>
-  <id>af285532-220a-4cd2-bc8b-9e79100a2d1f</id>
+  <updated>2025-05-15T05:16:45.144597</updated>
+  <id>5cd68fc6-c51c-4ddd-b20d-2d6a2d9278e1</id>
 
+  
+    <entry>
+      <title>宣言のみで使用しない変数の名前として_をサポート [P2169R4] -- ignore : C++26対応として詳細な定義を追加し、例を追加 (close #1315)</title>
+      <link href="https://cpprefjp.github.io/lang/cpp26/nice_placeholder_with_no_name.html"/>
+      <id>676aba0cd327f2f742d2d3f3bb89c29e08247b74:lang/cpp26/nice_placeholder_with_no_name.md</id>
+      <updated>2025-05-15T14:13:05+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp26/nice_placeholder_with_no_name.md b/lang/cpp26/nice_placeholder_with_no_name.md
+index 8e36638dc..e26b12587 100644
+--- a/lang/cpp26/nice_placeholder_with_no_name.md
++++ b/lang/cpp26/nice_placeholder_with_no_name.md
+@@ -86,6 +86,7 @@ int main() {
+ 
+ ## &amp;lt;a id=&amp;#34;relative-page&amp;#34; href=&amp;#34;#relative-page&amp;#34;&amp;gt;関連項目&amp;lt;/a&amp;gt;
+ - [C++17 `[[maybe_unused]]`属性](/lang/cpp17/maybe_unused.md)
++- [`std::ignore`](/reference/tuple/ignore.md)
+ 
+ ## 参照
+ - [P2169R4 A nice placeholder with no name](https://open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2169r4.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>ignore -- ignore : C++26対応として詳細な定義を追加し、例を追加 (close #1315)</title>
+      <link href="https://cpprefjp.github.io/reference/tuple/ignore.html"/>
+      <id>676aba0cd327f2f742d2d3f3bb89c29e08247b74:reference/tuple/ignore.md</id>
+      <updated>2025-05-15T14:13:05+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/tuple/ignore.md b/reference/tuple/ignore.md
+index 46b212ca5..8d3d8a3bc 100644
+--- a/reference/tuple/ignore.md
++++ b/reference/tuple/ignore.md
+@@ -6,8 +6,15 @@
+ 
+ ```cpp
+ namespace std {
+-  const unspecified ignore;            // C++11
+-  inline constexpr unspecified ignore; // C++17
++  struct ignore-type { // 説明用の定義 (C++26)
++    constexpr const ignore-type&amp;amp;
++    operator=(const auto &amp;amp;) const noexcept
++      { return *this; }
++  };
++
++  const unspecified ignore;            // (1) C++11
++  inline constexpr unspecified ignore; // (1) C++17
++  inline constexpr ignore-type ignore; // (1) C++26
+ }
+ ```
+ * unspecified[italic]
+@@ -15,7 +22,61 @@ namespace std {
+ ## 概要
+ `ignore`は、[`tie()`](tie.md)を使用してタプルから値を抽出する際に、「不要な値」をマーキングするためのプレースホルダーである。
+ 
+-使用例は[`tie()`](tie.md)を参照。
++そのほか、関数の戻り値を明示的に無視する際にも使用できる。
++
++C++26以降は、[`&amp;lt;utility&amp;gt;`](/reference/utility.md)をインクルードして使用することもできる。
++
++
++## 例
++### タプルの要素を取り出す際に一部の要素を無視する
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;tuple&amp;gt;
++#include &amp;lt;string&amp;gt;
++
++std::tuple&amp;lt;int, char, std::string&amp;gt; f()
++{
++  return {1, &amp;#39;a&amp;#39;, &amp;#34;hello&amp;#34;};
++}
++
++int main() {
++  // char要素は無視する
++  int a;
++  std::string c;
++  std::tie(a, std::ignore, c) = f();
++
++  std::cout &amp;lt;&amp;lt; a &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; c &amp;lt;&amp;lt; std::endl;
++}
++```
++* std::ignore[color ff0000]
++
++#### 出力
++```
++1
++hello
++```
++
++### 関数の戻り値を無視する (C++17)
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;tuple&amp;gt;
++#include &amp;lt;string&amp;gt;
++
++[[nodiscard]]
++int print_string(std::string s)
++{
++  std::cout &amp;lt;&amp;lt; s &amp;lt;&amp;lt; std::endl;
++  return 0;
++}
++
++int main() {
++  // 自分の用途ではこの関数は必ず成功するため、
++  // 戻り値を無視する
++  std::ignore = print_string(&amp;#34;hello&amp;#34;);
++}
++```
++* std::ignore[color ff0000]
+ 
+ 
+ ## バージョン
+@@ -33,4 +94,9 @@ namespace std {
+ - [`std::make_tuple`](make_tuple.md)
+ - [`std::forward_as_tuple`](forward_as_tuple.md)
+ - [`std::tie`](tie.md)
++- [C++17 `[[nodiscard]]`属性](/lang/cpp17/nodiscard.md)
++- [C++26 宣言のみで使用しない変数の名前として`_`をサポート](/lang/cpp26/nice_placeholder_with_no_name.md)
++
+ 
++## 参照
++- [P2968R2 Make `std::ignore` a first-class object](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2968r2.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>tie -- ignore : C++26対応として詳細な定義を追加し、例を追加 (close #1315)</title>
+      <link href="https://cpprefjp.github.io/reference/tuple/tie.html"/>
+      <id>676aba0cd327f2f742d2d3f3bb89c29e08247b74:reference/tuple/tie.md</id>
+      <updated>2025-05-15T14:13:05+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/tuple/tie.md b/reference/tuple/tie.md
+index 255593bd6..949b3494c 100644
+--- a/reference/tuple/tie.md
++++ b/reference/tuple/tie.md
+@@ -160,4 +160,5 @@ text, b.txt
+ 
+ ## 参照
+ - [LWG2301 Why is std::tie not constexpr?](http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-active.html#2301)
++- [P2968R2 Make `std::ignore` a first-class object](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2968r2.html)
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>iterator_concept -- move_iterator::iterator_concept : C++23対応 (close #1099)</title>
@@ -324,108 +483,6 @@ index 000000000..983dd2b73
 +
 +## 参照
 +- [P0896R4 The One Ranges Proposal (was Merging the Ranges TS)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0896r4.pdf)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>flat_multiset -- flat_set / flat_multiset : 概要文章を追加 #1448</title>
-      <link href="https://cpprefjp.github.io/reference/flat_set/flat_multiset.html"/>
-      <id>f529f5d9fea79c03660a64477e0afacfc787351a:reference/flat_set/flat_multiset.md</id>
-      <updated>2025-05-14T16:24:04+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_set/flat_multiset.md b/reference/flat_set/flat_multiset.md
-index 60d49067e..5c10721b4 100644
---- a/reference/flat_set/flat_multiset.md
-+++ b/reference/flat_set/flat_multiset.md
-@@ -16,6 +16,32 @@ namespace std {
- * vector[link /reference/vector/vector.md]
- 
- ## 概要
-+`std::flat_multiset`は、重複する要素を許可する連想コンテナの一種であり、要素自身がキーとなる、集合を表すクラスである。
-+
-+`std::flat_multiset`は、ノードベースで実装される[`std::multiset`](/reference/set/multiset.md)、ハッシュテーブルで実装される[`std::unordered_multiset`](/reference/unordered_set/unordered_multiset.md)とは異なり、ソート済み配列と二分探索の組み合わせで実装される。これはほかの実装と比較して、メモリ使用量と列挙速度において優位であり、一方で挿入速度と検索速度はほかの実装に劣る。
-+
-+また、このクラスは分類としては[`std::queue`](/reference/queue/queue.md)や[`std::skack`](/reference/stack/stack.md)と同様のコンテナアダプタに分類され、キーの配列をラップして扱う実装となっている。
-+
-+このコンテナクラスは、ランダムアクセスイテレータをサポートする。
-+
-+
-+### ほかの連想コンテナとの要件の違い
-+このクラスは要件として、コンテナクラスと、逆順コンテナクラスであることは満たすが、連想コンテナの要件としては以下を満たさない：
-+
-+- node handleに関する要件
-+- イテレータ無効化に関する要件
-+- 単一要素の挿入と削除に線形時間かかる (挿入位置のイテレータを指定したとしても)
-+
-+また、このコンテナはメモリアロケータを指定できない設計にもなっている。
-+
-+## テンプレートパラメータ制約
-+- `KeyContainer`に指定するコンテナ型は、
-+    - シーケンスコンテナの要件を満たし、
-+    - ランダムアクセスイテレータをもつこと
-+
-+
-+## 適格要件
-+- `Key`が`KeyContainer::value_type`と同じ型であること
- 
- 
- ## メンバ関数
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>flat_set -- flat_set / flat_multiset : 概要文章を追加 #1448</title>
-      <link href="https://cpprefjp.github.io/reference/flat_set/flat_set.html"/>
-      <id>f529f5d9fea79c03660a64477e0afacfc787351a:reference/flat_set/flat_set.md</id>
-      <updated>2025-05-14T16:24:04+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_set/flat_set.md b/reference/flat_set/flat_set.md
-index ece18174a..50e95d4bd 100644
---- a/reference/flat_set/flat_set.md
-+++ b/reference/flat_set/flat_set.md
-@@ -16,6 +16,32 @@ namespace std {
- * vector[link /reference/vector/vector.md]
- 
- ## 概要
-+`std::flat_set`は、重複しない要素を格納する連想コンテナの一種であり、要素自身がキーとなる、集合を表すクラスである。
-+
-+`std::flat_set`は、ノードベースで実装される[`std::set`](/reference/set/set.md)、ハッシュテーブルで実装される[`std::unordered_set`](/reference/unordered_set/unordered_set.md)とは異なり、ソート済み配列と二分探索の組み合わせで実装される。これはほかの実装と比較して、メモリ使用量と列挙速度において優位であり、一方で挿入速度と検索速度はほかの実装に劣る。
-+
-+また、このクラスは分類としては[`std::queue`](/reference/queue/queue.md)や[`std::skack`](/reference/stack/stack.md)と同様のコンテナアダプタに分類され、キーの配列をラップして扱う実装となっている。
-+
-+このコンテナクラスは、ランダムアクセスイテレータをサポートする。
-+
-+
-+### ほかの連想コンテナとの要件の違い
-+このクラスは要件として、コンテナクラスと、逆順コンテナクラスであることは満たすが、連想コンテナの要件としては以下を満たさない：
-+
-+- node handleに関する要件
-+- イテレータ無効化に関する要件
-+- 単一要素の挿入と削除に線形時間かかる (挿入位置のイテレータを指定したとしても)
-+
-+また、このコンテナはメモリアロケータを指定できない設計にもなっている。
-+
-+## テンプレートパラメータ制約
-+- `KeyContainer`に指定するコンテナ型は、
-+    - シーケンスコンテナの要件を満たし、
-+    - ランダムアクセスイテレータをもつこと
-+
-+
-+## 適格要件
-+- `Key`が`KeyContainer::value_type`と同じ型であること
- 
- 
- ## メンバ関数
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
