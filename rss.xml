@@ -2,9 +2,132 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-05-15T06:35:04.882598</updated>
-  <id>7c19b4d4-22f1-457e-b0cc-053e51b1f44a</id>
+  <updated>2025-05-15T06:55:04.556195</updated>
+  <id>85843dd8-b3b7-4929-85f4-2c30788d63a0</id>
 
+  
+    <entry>
+      <title>try_emplace -- map::try_emplace : C++26の異種混合ルックアップに対応 #1189</title>
+      <link href="https://cpprefjp.github.io/reference/map/map/try_emplace.html"/>
+      <id>c0573256bbe5a21bdf1c2d073a17b679eb27b092:reference/map/map/try_emplace.md</id>
+      <updated>2025-05-15T15:51:25+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/map/map/try_emplace.md b/reference/map/map/try_emplace.md
+index f43067b02..7bb94f5dd 100644
+--- a/reference/map/map/try_emplace.md
++++ b/reference/map/map/try_emplace.md
+@@ -7,16 +7,34 @@
+ 
+ ```cpp
+ template &amp;lt;class... Args&amp;gt;
+-pair&amp;lt;iterator, bool&amp;gt; try_emplace(const key_type&amp;amp; k, Args&amp;amp;&amp;amp;... args);            // (1)
++pair&amp;lt;iterator, bool&amp;gt;
++  try_emplace(const key_type&amp;amp; k, Args&amp;amp;&amp;amp;... args); // (1) C++17
+ 
+ template &amp;lt;class... Args&amp;gt;
+-pair&amp;lt;iterator, bool&amp;gt; try_emplace(key_type&amp;amp;&amp;amp; k, Args&amp;amp;&amp;amp;... args);                 // (2)
++pair&amp;lt;iterator, bool&amp;gt;
++  try_emplace(key_type&amp;amp;&amp;amp; k, Args&amp;amp;&amp;amp;... args);      // (2) C++17
+ 
+ template &amp;lt;class... Args&amp;gt;
+-iterator try_emplace(const_iterator hint, const key_type&amp;amp; k, Args&amp;amp;&amp;amp;... args);   // (3)
++iterator
++  try_emplace(const_iterator hint,
++              const key_type&amp;amp; k,
++              Args&amp;amp;&amp;amp;... args);        // (3) C++17
+ 
+ template &amp;lt;class... Args&amp;gt;
+-iterator try_emplace(const_iterator hint, key_type&amp;amp;&amp;amp; k, Args&amp;amp;&amp;amp;... args);        // (4)
++iterator
++  try_emplace(const_iterator hint,
++              key_type&amp;amp;&amp;amp; k,
++              Args&amp;amp;&amp;amp;... args);        // (4) C++17
++
++template &amp;lt;class K, class... Args&amp;gt;
++pair&amp;lt;iterator, bool&amp;gt;
++  try_emplace(K&amp;amp;&amp;amp; k, Args&amp;amp;&amp;amp;... args); // (5) C++26
++
++template &amp;lt;class K, class... Args&amp;gt;
++iterator
++  try_emplace(const_iterator hint,
++              K&amp;amp;&amp;amp; k,
++              Args&amp;amp;&amp;amp;... args);        // (6) C++26
+ ```
+ * pair[link /reference/utility/pair.md]
+ 
+@@ -32,44 +50,43 @@ iterator try_emplace(const_iterator hint, key_type&amp;amp;&amp;amp; k, Args&amp;amp;&amp;amp;... args);
+ - (2) : 指定された一時オブジェクトのキーが存在しない場合に、要素を直接構築で挿入する
+ - (3) : キーを検索するヒントを指定し、指定されたキーが存在しない場合に、要素を直接構築で挿入する
+ - (4) : キーを検索するヒントを指定し、指定された一時オブジェクトのキーが存在しない場合に、要素を直接構築で挿入する
++- (5) : `key_type`型と比較可能なキーが存在しない場合に、要素を直接構築で挿入する
++- (6) : キーを検索するヒントを指定し、指定された`key_type`型と比較可能なキーが存在しない場合に、要素を直接構築で挿入する
+ 
+ 
+ ## テンプレートパラメータ制約
+-- (1)、(3) : `value_type` は、[`piecewise_construct`](/reference/utility/piecewise_construct_t.md), [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(k)`, [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(`[`forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...)` から `map` に直接構築可能であること
+-- (2)、(4) : `value_type` は、[`piecewise_construct`](/reference/utility/piecewise_construct_t.md), [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(`[`move`](/reference/utility/move.md)`(k))`, [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(`[`forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...)` から `map` に直接構築可能であること
++- (1)、(3)、(5) : `value_type` は、[`piecewise_construct`](/reference/utility/piecewise_construct_t.md), [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(k)`, [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(`[`forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...)` から `map` に直接構築可能であること
++- (2)、(4)、(6) : `value_type` は、[`piecewise_construct`](/reference/utility/piecewise_construct_t.md), [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(`[`move`](/reference/utility/move.md)`(k))`, [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(`[`forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...)` から `map` に直接構築可能であること
++- (5), (6) : `key_compare::is_transparent` が妥当な式であること
+ 
+ なお、規格に記載はないが、`hint` は [`emplace_hint`](emplace_hint.md) と同様、コンテナの有効な読み取り専用イテレータである必要があるものと思われる。
+ 
+ 
+ ## 効果
+-- (1)、(3) : `map` が `k` と同値のキーを持つ要素を持っている場合、何もしない（引数への副作用もない）。そうでなければ、[`piecewise_construct`](/reference/utility/piecewise_construct_t.md), [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(k)`, [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(`[`forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...)` から構築した `value_type` 型のオブジェクトを挿入する。
+-- (2)、(4) : `map` が `k` と同値のキーを持つ要素を持っている場合、何もしない（引数への副作用もない）。そうでなければ、[`piecewise_construct`](/reference/utility/piecewise_construct_t.md), [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(`[`move`](/reference/utility/move.md)`(k))`, [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(`[`forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...)` から構築した `value_type` 型のオブジェクトを挿入する。
++- (1)、(3)、(5) : `map` が `k` と同値のキーを持つ要素を持っている場合、何もしない（引数への副作用もない）。そうでなければ、[`piecewise_construct`](/reference/utility/piecewise_construct_t.md), [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(k)`, [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(`[`forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...)` から構築した `value_type` 型のオブジェクトを挿入する。
++- (2)、(4)、(6) : `map` が `k` と同値のキーを持つ要素を持っている場合、何もしない（引数への副作用もない）。そうでなければ、[`piecewise_construct`](/reference/utility/piecewise_construct_t.md), [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(`[`move`](/reference/utility/move.md)`(k))`, [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(`[`forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...)` から構築した `value_type` 型のオブジェクトを挿入する。
+ 
+ 
+ ## 戻り値
+-- (1)、(2) : イテレータと `bool` 値の [`pair`](/reference/utility/pair.md) を返す。
++- (1)、(2)、(5) : イテレータと `bool` 値の [`pair`](/reference/utility/pair.md) を返す。
+     - 挿入された場合には、`first` に挿入された要素へのイテレータ、`second` に `true` が設定される。
+     - 挿入されなかった場合には、`first` に `k` と等価のキーを持つ既存の要素へのイテレータ、`second` に `false` が設定される。
+-- (3)、(4) :
++- (3)、(4)、(6) :
+     - 挿入された場合には、挿入された要素へのイテレータを返す。
+     - 挿入されなかった場合には、`k` と等価のキーを持つ既存の要素へのイテレータを返す。
+ 
+ 
+ ## 計算量
+-- (1)、(2) : [`emplace`](emplace.md) と同じ。
+-- (3)、(4) : [`emplace_hint`](emplace_hint.md) と同じ。
++- (1)、(2)、(5) : [`emplace`](emplace.md) と同じ。
++- (3)、(4)、(6) : [`emplace_hint`](emplace_hint.md) と同じ。
+ 
+ 
+ ## 備考
+ - 概要に記載されているように、本メンバ関数は指定されたキーと等価の要素が既に存在する場合には、引数に副作用が発生しない。  
+-    一方、[`emplace`](emplace.md)、[`emplace_hint`](emplace_hint.md)、[`insert`](insert.md) にはそのような規定は無く、挿入がされなかった場合でも引数に副作用（引数からのムーブ）が発生してしまう可能性があるため、注意が必要である。
+-
+-- このメンバ関数の機能テストマクロは以下の通り。  
+-
+-    | マクロ名                    | 値       |
+-    |-----------------------------|----------|
+-    | `__cpp_lib_map_try_emplace` | `201411` |
+-
++    - 一方、[`emplace`](emplace.md)、[`emplace_hint`](emplace_hint.md)、[`insert`](insert.md) にはそのような規定は無く、挿入がされなかった場合でも引数に副作用（引数からのムーブ）が発生してしまう可能性があるため、注意が必要である。
++- (5), (6) :
++    - `is_transparent`は、標準ライブラリの[`std::less`](/reference/functional/less.md)、[`std::greater`](/reference/functional/greater.md)といった関数オブジェクトの、`void`に対する特殊化で定義される。それ以外のテンプレートパラメータで`is_transparent`が定義されないのは、互換性のためである。
++    - これらのオーバーロードは、`map&amp;lt;string, int&amp;gt;`のようなコンテナに対し、検索操作で文字列リテラルを渡した際に、キー型の一時オブジェクトが生成されるコストを減らすためにある。
+ 
+ 
+ ## 例
+@@ -129,3 +146,5 @@ false, 114, false
+ - [N4006 An improved emplace() for unique-key maps](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4006.html)
+ - [N4240 Improved insertion interface for unique-key maps (Revision 2)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4240.html)
+ - [N4279 Improved insertion interface for unique-key maps (Revision 2.3)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4279.html)
++- [P2363R5: Extending associative containers with the remaining heterogeneous overloads](https://open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2363r5.html)
++    - C++26で`template &amp;lt;class K&amp;gt;`のバージョンが追加された
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>at -- map::operator[ ]とat : C++26対応として異種混合ルックアップに対応 #1189</title>
@@ -346,285 +469,6 @@ index 0df1bcae2..297c74b20 100644
  - [P0896R4 The One Ranges Proposal (was Merging the Ranges TS)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0896r4.pdf)
 +- [P2520R0 `move_iterator&amp;lt;T*&amp;gt;` should be a random access iterator](https://wg21.link/p2520r0)
 +    - C++23で`iterator_concept`がランダムアクセスイテレータにできるようになった
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>move_iterator -- move_iterator : メンバ型の表を整理してバージョン差異があるものは個別ページを用意した</title>
-      <link href="https://cpprefjp.github.io/reference/iterator/move_iterator.html"/>
-      <id>b1ce4365524d542e92d772ce35a6d422cd7463eb:reference/iterator/move_iterator.md</id>
-      <updated>2025-05-15T12:25:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/move_iterator.md b/reference/iterator/move_iterator.md
-index 56f23972f..29b57543f 100644
---- a/reference/iterator/move_iterator.md
-+++ b/reference/iterator/move_iterator.md
-@@ -42,28 +42,15 @@ namespace std {
- 
- ## メンバ型
- 
--### C++17まで
--
--| 名前 | 説明 | 対応バージョン |
--|------------------------------------------------------|-------------|-------|
--| `iterator_type` | `Iterator` | C++11 |
--| `difference_type` | [`iterator_traits`](/reference/iterator/iterator_traits.md)`&amp;lt;Iterator&amp;gt;::difference_type` | C++11 |
--| `pointer` | `Iterator` | C++11 |
--| `value_type` | [`iterator_traits`](/reference/iterator/iterator_traits.md)`&amp;lt;Iterator&amp;gt;::value_type` | C++11 |
--| `iterator_category` | [`iterator_traits`](/reference/iterator/iterator_traits.md)`&amp;lt;Iterator&amp;gt;::iterator_category` | C++11 |
--| `reference` | `value_type&amp;amp;&amp;amp;` | C++11 |
--
--### C++20
--
- | 名前 | 説明 | 対応バージョン |
- |------------------------------------------------------|-------------|-------|
--| `iterator_type` | `Iterator` | C++11 |
--| `difference_type` | [`iter_difference_t`](/reference/iterator/iter_difference_t.md)`&amp;lt;Iterator&amp;gt;` | C++20 |
--| `pointer` | `Iterator` | C++11 |
--| `value_type` | [`iter_value_t`](/reference/iterator/iter_value_t.md)`&amp;lt;Iterator&amp;gt;` | C++20 |
--| `iterator_category` | [`iterator_traits`](/reference/iterator/iterator_traits.md)`&amp;lt;Iterator&amp;gt;::iterator_category` &amp;lt;br/&amp;gt; ただし、[`contiguous_iterator_tag`](/reference/iterator/iterator_tag.md)となるときは`random_access_iterator_tag` | C++20 |
--| `iterator_concept` | [`input_iterator_tag`](/reference/iterator/iterator_tag.md) | C++20 |
--| `reference` | [`iter_rvalue_reference_t`](/reference/iterator/iter_rvalue_reference_t.md)`&amp;lt;Iterator&amp;gt;`  | C++20 |
-+| `iterator_type` | 元となるイテレータ型 `Iterator` | C++11 |
-+| [`difference_type`](move_iterator/type-deferrence_type.md) | イテレータ間の差を表す数値型 | C++11 |
-+| `pointer` | ポインタ型 `Iterator` | C++11 |
-+| [`value_type`](move_iterator/type-value_type.md) | イテレータが指す値型 | C++11 |
-+| [`iterator_category`](move_iterator/type-iterator_category.md) | イテレータの分類を表す型 | C++11 |
-+| [`iterator_concept`](move_iterator/type-iterator_concept.md) | イテレータコンセプトを表す型 | C++20 |
-+| [`reference`](move_iterator/type-reference.md) | イテレータを間接参照する型 | C++11 |
- 
- 
- ## 非メンバ関数
-@@ -137,6 +124,9 @@ int main()
- - [Visual C++](/implementation.md#visual_cpp): ??
- 
- 
--## 参照
-+## 関連項目
- - [C++11 右辺値参照・ムーブセマンティクス](/lang/cpp11/rvalue_ref_and_move_semantics.md)
-+
-+
-+## 参照
- - [P0896R4 The One Ranges Proposal (was Merging the Ranges TS)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0896r4.pdf)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>deferrence_type -- move_iterator : メンバ型の表を整理してバージョン差異があるものは個別ページを用意した</title>
-      <link href="https://cpprefjp.github.io/reference/iterator/move_iterator/type-deferrence_type.html"/>
-      <id>b1ce4365524d542e92d772ce35a6d422cd7463eb:reference/iterator/move_iterator/type-deferrence_type.md</id>
-      <updated>2025-05-15T12:25:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/move_iterator/type-deferrence_type.md b/reference/iterator/move_iterator/type-deferrence_type.md
-new file mode 100644
-index 000000000..1278ae8d0
---- /dev/null
-+++ b/reference/iterator/move_iterator/type-deferrence_type.md
-@@ -0,0 +1,22 @@
-+# deferrence_type
-+* iterator[meta header]
-+* std[meta namespace]
-+* move_iterator[meta class]
-+* type-alias[meta id-type]
-+* cpp11[meta cpp]
-+
-+```cpp
-+using difference_type = iterator_traits&amp;lt;Iterator&amp;gt;::difference_type; // (1) C++11
-+using difference_type = iter_difference_t&amp;lt;Iterator&amp;gt;;                // (1) C++20
-+```
-+
-+## 概要
-+イテレータの差を表す型。
-+
-+
-+## バージョン
-+### 言語
-+- C++11
-+
-+## 参照
-+- [P0896R4 The One Ranges Proposal (was Merging the Ranges TS)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0896r4.pdf)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>iterator_category -- move_iterator : メンバ型の表を整理してバージョン差異があるものは個別ページを用意した</title>
-      <link href="https://cpprefjp.github.io/reference/iterator/move_iterator/type-iterator_category.html"/>
-      <id>b1ce4365524d542e92d772ce35a6d422cd7463eb:reference/iterator/move_iterator/type-iterator_category.md</id>
-      <updated>2025-05-15T12:25:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/move_iterator/type-iterator_category.md b/reference/iterator/move_iterator/type-iterator_category.md
-new file mode 100644
-index 000000000..a7cbce247
---- /dev/null
-+++ b/reference/iterator/move_iterator/type-iterator_category.md
-@@ -0,0 +1,27 @@
-+# iterator_category
-+* iterator[meta header]
-+* std[meta namespace]
-+* move_iterator[meta class]
-+* type-alias[meta id-type]
-+* cpp11[meta cpp]
-+
-+```cpp
-+using iterator_category = 以下参照; // (1) C++11
-+```
-+
-+## 概要
-+イテレータの分類を表す型。
-+
-+- C++11:
-+    - [`iterator_traits`](/reference/iterator/iterator_traits.md)`&amp;lt;Iterator&amp;gt;::iterator_category`
-+- C++20:
-+    - [`iterator_traits`](/reference/iterator/iterator_traits.md)`&amp;lt;Iterator&amp;gt;::iterator_category`
-+    - ただし、[`contiguous_iterator_tag`](/reference/iterator/iterator_tag.md)となる場合は[`random_access_iterator_tag`](/reference/iterator/iterator_tag.md)
-+
-+
-+## バージョン
-+### 言語
-+- C++11
-+
-+## 参照
-+- [P0896R4 The One Ranges Proposal (was Merging the Ranges TS)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0896r4.pdf)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>iterator_concept -- move_iterator : メンバ型の表を整理してバージョン差異があるものは個別ページを用意した</title>
-      <link href="https://cpprefjp.github.io/reference/iterator/move_iterator/type-iterator_concept.html"/>
-      <id>b1ce4365524d542e92d772ce35a6d422cd7463eb:reference/iterator/move_iterator/type-iterator_concept.md</id>
-      <updated>2025-05-15T12:25:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/move_iterator/type-iterator_concept.md b/reference/iterator/move_iterator/type-iterator_concept.md
-new file mode 100644
-index 000000000..0df1bcae2
---- /dev/null
-+++ b/reference/iterator/move_iterator/type-iterator_concept.md
-@@ -0,0 +1,21 @@
-+# iterator_concept
-+* iterator[meta header]
-+* std[meta namespace]
-+* move_iterator[meta class]
-+* type-alias[meta id-type]
-+* cpp20[meta cpp]
-+
-+```cpp
-+using iterator_concept = input_iterator_tag; // (1) C++20
-+```
-+* input_iterator_tag[link /reference/iterator/iterator_tag.md]
-+
-+## 概要
-+イテレータコンセプトを表す型。
-+
-+## バージョン
-+### 言語
-+- C++20
-+
-+## 参照
-+- [P0896R4 The One Ranges Proposal (was Merging the Ranges TS)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0896r4.pdf)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>reference -- move_iterator : メンバ型の表を整理してバージョン差異があるものは個別ページを用意した</title>
-      <link href="https://cpprefjp.github.io/reference/iterator/move_iterator/type-reference.html"/>
-      <id>b1ce4365524d542e92d772ce35a6d422cd7463eb:reference/iterator/move_iterator/type-reference.md</id>
-      <updated>2025-05-15T12:25:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/move_iterator/type-reference.md b/reference/iterator/move_iterator/type-reference.md
-new file mode 100644
-index 000000000..2b96ab2d1
---- /dev/null
-+++ b/reference/iterator/move_iterator/type-reference.md
-@@ -0,0 +1,22 @@
-+# reference
-+* iterator[meta header]
-+* std[meta namespace]
-+* move_iterator[meta class]
-+* type-alias[meta id-type]
-+* cpp11[meta cpp]
-+
-+```cpp
-+using difference_type = value_type&amp;amp;&amp;amp;;                      // (1) C++11
-+using difference_type = iter_rvalue_reference_t&amp;lt;Iterator&amp;gt;; // (1) C++20
-+```
-+
-+## 概要
-+イテレータを間接参照する型。
-+
-+
-+## バージョン
-+### 言語
-+- C++11
-+
-+## 参照
-+- [P0896R4 The One Ranges Proposal (was Merging the Ranges TS)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0896r4.pdf)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>value_type -- move_iterator : メンバ型の表を整理してバージョン差異があるものは個別ページを用意した</title>
-      <link href="https://cpprefjp.github.io/reference/iterator/move_iterator/type-value_type.html"/>
-      <id>b1ce4365524d542e92d772ce35a6d422cd7463eb:reference/iterator/move_iterator/type-value_type.md</id>
-      <updated>2025-05-15T12:25:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/iterator/move_iterator/type-value_type.md b/reference/iterator/move_iterator/type-value_type.md
-new file mode 100644
-index 000000000..983dd2b73
---- /dev/null
-+++ b/reference/iterator/move_iterator/type-value_type.md
-@@ -0,0 +1,22 @@
-+# value_type
-+* iterator[meta header]
-+* std[meta namespace]
-+* move_iterator[meta class]
-+* type-alias[meta id-type]
-+* cpp11[meta cpp]
-+
-+```cpp
-+using difference_type = iterator_traits&amp;lt;Iterator&amp;gt;::value_type; // (1) C++11
-+using difference_type = iter_value_t&amp;lt;Iterator&amp;gt;;                // (1) C++20
-+```
-+
-+## 概要
-+イテレータが指す値型。
-+
-+
-+## バージョン
-+### 言語
-+- C++11
-+
-+## 参照
-+- [P0896R4 The One Ranges Proposal (was Merging the Ranges TS)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0896r4.pdf)
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
