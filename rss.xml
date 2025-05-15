@@ -2,9 +2,155 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-05-15T06:55:04.556195</updated>
-  <id>85843dd8-b3b7-4929-85f4-2c30788d63a0</id>
+  <updated>2025-05-15T10:09:07.203918</updated>
+  <id>905ef12c-2314-43db-90d7-322cb1e03c60</id>
 
+  
+    <entry>
+      <title>at -- map::insert_or_assign : C++26の異種混合ルックアップに対応 #1189</title>
+      <link href="https://cpprefjp.github.io/reference/map/map/at.html"/>
+      <id>302be0fb1814097dedf1a2b1a93dc7367f6c54aa:reference/map/map/at.md</id>
+      <updated>2025-05-15T19:05:30+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/map/map/at.md b/reference/map/map/at.md
+index fc8ffd247..a73dc3c21 100644
+--- a/reference/map/map/at.md
++++ b/reference/map/map/at.md
+@@ -104,6 +104,5 @@ exception std::out_of_range
+ 
+ ## 参照
+ - [LWG Issue 464. Suggestion for new member functions in standard containers](http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#464)
+-## 参照
+ - [P2363R5 Extending associative containers with the remaining heterogeneous overloads](http://open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2363r5.html)
+     - C++26で`template &amp;lt;class K&amp;gt;`のバージョンが追加された
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>insert_or_assign -- map::insert_or_assign : C++26の異種混合ルックアップに対応 #1189</title>
+      <link href="https://cpprefjp.github.io/reference/map/map/insert_or_assign.html"/>
+      <id>302be0fb1814097dedf1a2b1a93dc7367f6c54aa:reference/map/map/insert_or_assign.md</id>
+      <updated>2025-05-15T19:05:30+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/map/map/insert_or_assign.md b/reference/map/map/insert_or_assign.md
+index 6825c7d2a..9fddf5c7e 100644
+--- a/reference/map/map/insert_or_assign.md
++++ b/reference/map/map/insert_or_assign.md
+@@ -7,16 +7,33 @@
+ 
+ ```cpp
+ template &amp;lt;class M&amp;gt;
+-pair&amp;lt;iterator, bool&amp;gt; insert_or_assign(const key_type&amp;amp; k, M&amp;amp;&amp;amp; obj);              // (1)
+-
++pair&amp;lt;iterator, bool&amp;gt;
++  insert_or_assign(const key_type&amp;amp; k,
++                   M&amp;amp;&amp;amp; obj);          // (1) C++17
+ template &amp;lt;class M&amp;gt;
+-pair&amp;lt;iterator, bool&amp;gt; insert_or_assign(key_type&amp;amp;&amp;amp; k, M&amp;amp;&amp;amp; obj);                   // (2)
+-
++pair&amp;lt;iterator, bool&amp;gt;
++  insert_or_assign(key_type&amp;amp;&amp;amp; k,
++                   M&amp;amp;&amp;amp; obj);          // (2) C++17
+ template &amp;lt;class M&amp;gt;
+-iterator insert_or_assign(const_iterator hint, const key_type&amp;amp; k, M&amp;amp;&amp;amp; obj);     // (3)
+-
++iterator
++  insert_or_assign(const_iterator hint,
++                   const key_type&amp;amp; k,
++                   M&amp;amp;&amp;amp; obj);          // (3) C++17
+ template &amp;lt;class M&amp;gt;
+-iterator insert_or_assign(const_iterator hint, key_type&amp;amp;&amp;amp; k, M&amp;amp;&amp;amp; obj);          // (4)
++iterator
++  insert_or_assign(const_iterator hint,
++                   key_type&amp;amp;&amp;amp; k,
++                   M&amp;amp;&amp;amp; obj);          // (4) C++17
++
++template &amp;lt;class K, class M&amp;gt;
++pair&amp;lt;iterator, bool&amp;gt;
++  insert_or_assign(K&amp;amp;&amp;amp; k,
++                   M&amp;amp;&amp;amp; obj);          // (5) C++26
++template &amp;lt;class K, class M&amp;gt;
++iterator
++  insert_or_assign(const_iterator hint,
++                   K&amp;amp;&amp;amp; k,
++                   M&amp;amp;&amp;amp; obj);          // (6) C++26
+ ```
+ * pair[link /reference/utility/pair.md]
+ 
+@@ -29,40 +46,44 @@ iterator insert_or_assign(const_iterator hint, key_type&amp;amp;&amp;amp; k, M&amp;amp;&amp;amp; obj);
+ - (2) : `key_type`型の一時オブジェクトのキーをとって挿入もしくは代入する
+ - (3) : 挿入位置のヒントをともない、`key_type`型のキーをとって挿入もしくは代入する
+ - (4) : 挿入位置のヒントをともない、`key_type`型の一時オブジェクトのキーをとって挿入もしくは代入する
++- (5) : `key_type`と比較可能な`K`型のキーをとって挿入もしくは代入する
++- (6) : 挿入位置のヒントをともない、`key_type`と比較可能な`K`型のキーをとって挿入もしくは代入する
+ 
+ 
+ ## テンプレートパラメータ制約
+-- (1)、(3) : [`is_assignable_v`](/reference/type_traits/is_assignable.md)`&amp;lt;mapped_type&amp;amp;, M&amp;amp;&amp;amp;&amp;gt;` が `true` であること。`value_type` は、`k`, [`forward`](/reference/utility/forward.md)`&amp;lt;M&amp;gt;(obj)` から `map` に直接構築可能であること
++- (5), (6) : `key_compare::is_transparent` が妥当な式であること
++
++
++## 適格要件
++- (1)、(3)、(5)、(6) : [`is_assignable_v`](/reference/type_traits/is_assignable.md)`&amp;lt;mapped_type&amp;amp;, M&amp;amp;&amp;amp;&amp;gt;` が `true` であること。`value_type` は、`k`, [`forward`](/reference/utility/forward.md)`&amp;lt;M&amp;gt;(obj)` から `map` に直接構築可能であること
+ - (2)、(4) : [`is_assignable_v`](/reference/type_traits/is_assignable.md)`&amp;lt;mapped_type&amp;amp;, M&amp;amp;&amp;amp;&amp;gt;` が `true` であること。`value_type` は、[`move`](/reference/utility/move.md)`(k)`, [`forward`](/reference/utility/forward.md)`&amp;lt;M&amp;gt;(obj)` から `map` に直接構築可能であること
+ 
+ なお、規格に記載はないが、`hint` は [`emplace_hint`](emplace_hint.md) と同様、コンテナの有効な読み取り専用イテレータである必要があるものと思われる。
+ 
+ 
+ ## 効果
+-- (1)、(3) : `map` が `k` と同値のキーを持つ要素 `e` を持っている場合、`e.second` に [`forward`](/reference/utility/forward.md)`&amp;lt;M&amp;gt;(obj)` を代入する。そうでなければ、`k`, [`forward`](/reference/utility/forward.md)`&amp;lt;M&amp;gt;(obj)` から構築した `value_type` 型のオブジェクトを挿入する。
++- (1)、(3)、(5)、(6) : `map` が `k` と同値のキーを持つ要素 `e` を持っている場合、`e.second` に [`forward`](/reference/utility/forward.md)`&amp;lt;M&amp;gt;(obj)` を代入する。そうでなければ、`k`, [`forward`](/reference/utility/forward.md)`&amp;lt;M&amp;gt;(obj)` から構築した `value_type` 型のオブジェクトを挿入する。
+ - (2)、(4) : `map` が `k` と同値のキーを持つ要素 `e` を持っている場合、`e.second` に [`forward`](/reference/utility/forward.md)`&amp;lt;M&amp;gt;(obj)` を代入する。そうでなければ、[`move`](/reference/utility/move.md)`(k)`, [`forward`](/reference/utility/forward.md)`&amp;lt;M&amp;gt;(obj)` から構築した `value_type` 型のオブジェクトを挿入する。
+ 
+ 
+ ## 戻り値
+-- (1)、(2) : イテレータと `bool` 値の [`pair`](/reference/utility/pair.md) を返す。
++- (1)、(2)、(5) : イテレータと `bool` 値の [`pair`](/reference/utility/pair.md) を返す。
+     - 挿入された場合には、`first` に挿入された要素へのイテレータ、`second` に `true` が設定される。
+     - 代入された場合には、`first` に代入された要素へのイテレータ、`second` に `false` が設定される。
+-- (3)、(4) :
++- (3)、(4)、(6) :
+     - 挿入された場合には、挿入された要素へのイテレータを返す。
+     - 代入された場合には、代入された要素へのイテレータを返す。
+ 
+ 
+ ## 計算量
+-- (1)、(2) : [`emplace`](emplace.md) と同じ。
+-- (3)、(4) : [`emplace_hint`](emplace_hint.md) と同じ。
++- (1)、(2)、(5) : [`emplace`](emplace.md) と同じ。
++- (3)、(4)、(6) : [`emplace_hint`](emplace_hint.md) と同じ。
+ 
+ 
+ ## 備考
+-このメンバ関数の機能テストマクロは以下の通り。
+-
+-| マクロ名                    | 値       |
+-|-----------------------------|----------|
+-| `__cpp_lib_map_try_emplace` | `201411` |
++- (5), (6) :
++    - `is_transparent`は、標準ライブラリの[`std::less`](/reference/functional/less.md)、[`std::greater`](/reference/functional/greater.md)といった関数オブジェクトの、`void`に対する特殊化で定義される。それ以外のテンプレートパラメータで`is_transparent`が定義されないのは、互換性のためである。
++    - これらのオーバーロードは、`map&amp;lt;string, int&amp;gt;`のようなコンテナに対し、検索操作で文字列リテラルを渡した際に、キー型の一時オブジェクトが生成されるコストを減らすためにある。
+ 
+ 
+ ## 例
+@@ -116,3 +137,5 @@ int main()
+ - [N4006 An improved emplace() for unique-key maps](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4006.html)
+ - [N4240 Improved insertion interface for unique-key maps (Revision 2)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4240.html)
+ - [N4279 Improved insertion interface for unique-key maps (Revision 2.3)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4279.html)
++- [P2363R5 Extending associative containers with the remaining heterogeneous overloads](http://open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2363r5.html)
++    - C++26で`template &amp;lt;class K&amp;gt;`のバージョンが追加された
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>try_emplace -- map::try_emplace : C++26の異種混合ルックアップに対応 #1189</title>
