@@ -2,9 +2,148 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-05-22T05:45:00.969779</updated>
-  <id>31574751-f68a-472b-9713-e856fdae155e</id>
+  <updated>2025-05-22T05:51:21.799420</updated>
+  <id>7a834daf-9d4e-4e83-9871-c36c9ff66b40</id>
 
+  
+    <entry>
+      <title>insert_or_assign -- unordered_map::insert_or_assign : C++26の異種混合ルックアップに対応 #1189</title>
+      <link href="https://cpprefjp.github.io/reference/unordered_map/unordered_map/insert_or_assign.html"/>
+      <id>6580bd966e200af44dc548b313e93b0a3f84340e:reference/unordered_map/unordered_map/insert_or_assign.md</id>
+      <updated>2025-05-22T14:47:43+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/unordered_map/unordered_map/insert_or_assign.md b/reference/unordered_map/unordered_map/insert_or_assign.md
+index a1fc699bd..259f0ef98 100644
+--- a/reference/unordered_map/unordered_map/insert_or_assign.md
++++ b/reference/unordered_map/unordered_map/insert_or_assign.md
+@@ -7,16 +7,37 @@
+ 
+ ```cpp
+ template &amp;lt;class M&amp;gt;
+-pair&amp;lt;iterator, bool&amp;gt; insert_or_assign(const key_type&amp;amp; k, M&amp;amp;&amp;amp; obj);              // (1)
++pair&amp;lt;iterator, bool&amp;gt;
++  insert_or_assign(const key_type&amp;amp; k,
++                   M&amp;amp;&amp;amp; obj);            // (1) C++17
+ 
+ template &amp;lt;class M&amp;gt;
+-pair&amp;lt;iterator, bool&amp;gt; insert_or_assign(key_type&amp;amp;&amp;amp; k, M&amp;amp;&amp;amp; obj);                   // (2)
++pair&amp;lt;iterator, bool&amp;gt;
++  insert_or_assign(key_type&amp;amp;&amp;amp; k,
++                   M&amp;amp;&amp;amp; obj);            // (2) C++17
++
++template &amp;lt;class K, class M&amp;gt;
++pair&amp;lt;iterator, bool&amp;gt;
++  insert_or_assign(K&amp;amp;&amp;amp; k,
++                   M&amp;amp;&amp;amp; obj);            // (3) C++26
+ 
+ template &amp;lt;class M&amp;gt;
+-iterator insert_or_assign(const_iterator hint, const key_type&amp;amp; k, M&amp;amp;&amp;amp; obj);     // (3)
++iterator
++  insert_or_assign(const_iterator hint,
++                   const key_type&amp;amp; k,
++                   M&amp;amp;&amp;amp; obj);            // (4) C++17
+ 
+ template &amp;lt;class M&amp;gt;
+-iterator insert_or_assign(const_iterator hint, key_type&amp;amp;&amp;amp; k, M&amp;amp;&amp;amp; obj);          // (4)
++iterator
++  insert_or_assign(const_iterator hint,
++                   key_type&amp;amp;&amp;amp; k,
++                   M&amp;amp;&amp;amp; obj);            // (5) C++17
++
++template &amp;lt;class K, class M&amp;gt;
++iterator
++  insert_or_assign(const_iterator hint,
++                   K&amp;amp;&amp;amp; k,
++                   M&amp;amp;&amp;amp; obj);            // (6) C++26
+ ```
+ * pair[link /reference/utility/pair.md]
+ 
+@@ -25,41 +46,48 @@ iterator insert_or_assign(const_iterator hint, key_type&amp;amp;&amp;amp; k, M&amp;amp;&amp;amp; obj);
+ 
+ 引数 `hint` は、`k` を検索する際のヒントに使用される。（が、実際に使用されることはないものと思われる。[`emplace_hint`](emplace_hint.md) の備考を参照）
+ 
++- (1) : `key_type`型のキーをとって挿入もしくは代入する
++- (2) : `key_type`型の一時オブジェクトのキーをとって挿入もしくは代入する
++- (3) : `key_type`と比較可能な`K`型のキーをとって挿入もしくは代入する
++- (4) : 挿入位置のヒントをともない、`key_type`型のキーをとって挿入もしくは代入する
++- (5) : 挿入位置のヒントをともない、`key_type`型の一時オブジェクトのキーをとって挿入もしくは代入する
++- (6) : 挿入位置のヒントをともない、`key_type`と比較可能な`K`型のキーをとって挿入もしくは代入する
++
+ 
+ ## テンプレートパラメータ制約
+-- (1)、(3) : [`is_assignable_v`](/reference/type_traits/is_assignable.md)`&amp;lt;mapped_type&amp;amp;, M&amp;amp;&amp;amp;&amp;gt;` が `true` であること。`value_type` は、`k`, [`forward`](/reference/utility/forward.md)`&amp;lt;M&amp;gt;(obj)` から `map` に直接構築可能であること
+-- (2)、(4) : [`is_assignable_v`](/reference/type_traits/is_assignable.md)`&amp;lt;mapped_type&amp;amp;, M&amp;amp;&amp;amp;&amp;gt;` が `true` であること。`value_type` は、[`move`](/reference/utility/move.md)`(k)`, [`forward`](/reference/utility/forward.md)`&amp;lt;M&amp;gt;(obj)` から `map` に直接構築可能であること
++- (3), (6) : `key_compare::is_transparent` が妥当な式であること
++
++
++## 適格要件
++- (1)、(3)、(4)、(6) : [`is_assignable_v`](/reference/type_traits/is_assignable.md)`&amp;lt;mapped_type&amp;amp;, M&amp;amp;&amp;amp;&amp;gt;` が `true` であること。`value_type` は、`k`, [`forward`](/reference/utility/forward.md)`&amp;lt;M&amp;gt;(obj)` から `map` に直接構築可能であること
++- (2)、(5) : [`is_assignable_v`](/reference/type_traits/is_assignable.md)`&amp;lt;mapped_type&amp;amp;, M&amp;amp;&amp;amp;&amp;gt;` が `true` であること。`value_type` は、[`move`](/reference/utility/move.md)`(k)`, [`forward`](/reference/utility/forward.md)`&amp;lt;M&amp;gt;(obj)` から `map` に直接構築可能であること
+ 
+ 
+ ## 効果
+-- (1)、(3) : `unordered_map` が `k` と同値のキーを持つ要素 `e` を持っている場合、`e.second` に [`forward`](/reference/utility/forward.md)`&amp;lt;M&amp;gt;(obj)` を代入する。そうでなければ、`k`, [`forward`](/reference/utility/forward.md)`&amp;lt;M&amp;gt;(obj)` から構築した `value_type` 型のオブジェクトを挿入する。
+-- (2)、(4) : `unordered_map` が `k` と同値のキーを持つ要素 `e` を持っている場合、`e.second` に [`forward`](/reference/utility/forward.md)`&amp;lt;M&amp;gt;(obj)` を代入する。そうでなければ、[`move`](/reference/utility/move.md)`(k)`, [`forward`](/reference/utility/forward.md)`&amp;lt;M&amp;gt;(obj)` から構築した `value_type` 型のオブジェクトを挿入する。
++- (1)、(3)、(4)、(6) : `unordered_map` が `k` と同値のキーを持つ要素 `e` を持っている場合、`e.second` に [`forward`](/reference/utility/forward.md)`&amp;lt;M&amp;gt;(obj)` を代入する。そうでなければ、`k`, [`forward`](/reference/utility/forward.md)`&amp;lt;M&amp;gt;(obj)` から構築した `value_type` 型のオブジェクトを挿入する。
++- (2)、(5) : `unordered_map` が `k` と同値のキーを持つ要素 `e` を持っている場合、`e.second` に [`forward`](/reference/utility/forward.md)`&amp;lt;M&amp;gt;(obj)` を代入する。そうでなければ、[`move`](/reference/utility/move.md)`(k)`, [`forward`](/reference/utility/forward.md)`&amp;lt;M&amp;gt;(obj)` から構築した `value_type` 型のオブジェクトを挿入する。
+ 
+ 
+ ## 戻り値
+-- (1)、(2) : イテレータと `bool` 値の [`pair`](/reference/utility/pair.md) を返す。
++- (1)、(2)、(3) : イテレータと `bool` 値の [`pair`](/reference/utility/pair.md) を返す。
+     - 挿入された場合には、`first` に挿入された要素へのイテレータ、`second` に `true` が設定される。
+     - 代入された場合には、`first` に代入された要素へのイテレータ、`second` に `false` が設定される。
+-- (3)、(4) :
++- (4)、(5)、(6) :
+     - 挿入された場合には、挿入された要素へのイテレータを返す。
+     - 代入された場合には、代入された要素へのイテレータを返す。
+ 
+ 
+ ## 計算量
+-- (1)、(2) : [`emplace`](emplace.md) と同じ。
+-- (3)、(4) : [`emplace_hint`](emplace_hint.md) と同じ。
++- (1)、(2)、(3) : [`emplace`](emplace.md) と同じ。
++- (4)、(5)、(6) : [`emplace_hint`](emplace_hint.md) と同じ。
+ 
+ 
+ ## 備考
+ - 規格にはこの関数の例外安全性についての記載が無いが、[`emplace`](emplace.md) や [`emplace_hint`](emplace_hint.md) と等価と考えて問題ないと思われる。
+-
+ - 規格にはこの関数が呼ばれた後のイテレータや要素へのポインタ・参照の有効性についての記載が無いが、[`emplace`](emplace.md) や [`emplace_hint`](emplace_hint.md) と等価と考えて問題ないと思われる。
+-
+-- このメンバ関数の[`機能テストマクロ`](/lang/cpp17/feature_test_macros.md)は以下の通り。
+-
+-    | マクロ名                              | 値       |
+-    |---------------------------------------|----------|
+-    | `__cpp_lib_unordered_map_try_emplace` | `201411` |
++- (3), (6) :
++    - `is_transparent`は、標準ライブラリの[`std::less`](/reference/functional/less.md)、[`std::greater`](/reference/functional/greater.md)といった関数オブジェクトの、`void`に対する特殊化で定義される。それ以外のテンプレートパラメータで`is_transparent`が定義されないのは、互換性のためである。
++    - これらのオーバーロードは、`map&amp;lt;string, int&amp;gt;`のようなコンテナに対し、検索操作で文字列リテラルを渡した際に、キー型の一時オブジェクトが生成されるコストを減らすためにある。
+ 
+ 
+ ## 例
+@@ -107,8 +135,6 @@ key = two, value = 42, is inserted = false, is empty = true
+ ```
+ 
+ 
+-
+-
+ ## バージョン
+ ### 言語
+ - C++17
+@@ -142,3 +168,5 @@ key = two, value = 42, is inserted = false, is empty = true
+ - [N4006 An improved emplace() for unique-key maps](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4006.html)
+ - [N4240 Improved insertion interface for unique-key maps (Revision 2)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4240.html)
+ - [N4279 Improved insertion interface for unique-key maps (Revision 2.3)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4279.html)
++- [P2363R5 Extending associative containers with the remaining heterogeneous overloads](http://open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2363r5.html)
++    - C++26で`template &amp;lt;class K&amp;gt;`のバージョンが追加された
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>insert_or_assign -- map::insert_or_assign : オーバーロード番号を振り直し #1189</title>
@@ -408,48 +547,6 @@ index 498af971b..c6b4b178b 100644
  
  なお、規格に記載はないが、`hint` は [`emplace_hint`](emplace_hint.md) と同様、コンテナの有効な読み取り専用イテレータである必要があるものと思われる。
  
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>try_emplace -- map::try_emplace : 要件を修正 #1189</title>
-      <link href="https://cpprefjp.github.io/reference/map/map/try_emplace.html"/>
-      <id>3175722cafabd80cce386bdfb2de0656b1ac46b8:reference/map/map/try_emplace.md</id>
-      <updated>2025-05-18T14:59:17+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/map/map/try_emplace.md b/reference/map/map/try_emplace.md
-index 7bb94f5dd..498af971b 100644
---- a/reference/map/map/try_emplace.md
-+++ b/reference/map/map/try_emplace.md
-@@ -55,16 +55,19 @@ iterator
- 
- 
- ## テンプレートパラメータ制約
--- (1)、(3)、(5) : `value_type` は、[`piecewise_construct`](/reference/utility/piecewise_construct_t.md), [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(k)`, [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(`[`forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...)` から `map` に直接構築可能であること
--- (2)、(4)、(6) : `value_type` は、[`piecewise_construct`](/reference/utility/piecewise_construct_t.md), [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(`[`move`](/reference/utility/move.md)`(k))`, [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(`[`forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...)` から `map` に直接構築可能であること
-+- (1)、(3)、(5)、(6) : `value_type` は、[`piecewise_construct`](/reference/utility/piecewise_construct_t.md), [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(k)`, [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(`[`forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...)` から `map` に直接構築可能であること
-+- (2)、(4) : `value_type` は、[`piecewise_construct`](/reference/utility/piecewise_construct_t.md), [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(`[`move`](/reference/utility/move.md)`(k))`, [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(`[`forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...)` から `map` に直接構築可能であること
- - (5), (6) : `key_compare::is_transparent` が妥当な式であること
-+- (5) : 以下のすべてを満たすこと：
-+    - [`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;K&amp;amp;&amp;amp;, const_iterator&amp;gt; == false`
-+    - [`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;K&amp;amp;&amp;amp;, iterator&amp;gt; == false`
- 
- なお、規格に記載はないが、`hint` は [`emplace_hint`](emplace_hint.md) と同様、コンテナの有効な読み取り専用イテレータである必要があるものと思われる。
- 
- 
- ## 効果
--- (1)、(3)、(5) : `map` が `k` と同値のキーを持つ要素を持っている場合、何もしない（引数への副作用もない）。そうでなければ、[`piecewise_construct`](/reference/utility/piecewise_construct_t.md), [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(k)`, [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(`[`forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...)` から構築した `value_type` 型のオブジェクトを挿入する。
--- (2)、(4)、(6) : `map` が `k` と同値のキーを持つ要素を持っている場合、何もしない（引数への副作用もない）。そうでなければ、[`piecewise_construct`](/reference/utility/piecewise_construct_t.md), [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(`[`move`](/reference/utility/move.md)`(k))`, [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(`[`forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...)` から構築した `value_type` 型のオブジェクトを挿入する。
-+- (1)、(3)、(5)、(6) : `map` が `k` と同値のキーを持つ要素を持っている場合、何もしない（引数への副作用もない）。そうでなければ、[`piecewise_construct`](/reference/utility/piecewise_construct_t.md), [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(k)`, [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(`[`forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...)` から構築した `value_type` 型のオブジェクトを挿入する。
-+- (2)、(4) : `map` が `k` と同値のキーを持つ要素を持っている場合、何もしない（引数への副作用もない）。そうでなければ、[`piecewise_construct`](/reference/utility/piecewise_construct_t.md), [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(`[`move`](/reference/utility/move.md)`(k))`, [`forward_as_tuple`](/reference/tuple/forward_as_tuple.md)`(`[`forward`](/reference/utility/forward.md)`&amp;lt;Args&amp;gt;(args)...)` から構築した `value_type` 型のオブジェクトを挿入する。
- 
- 
- ## 戻り値
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
