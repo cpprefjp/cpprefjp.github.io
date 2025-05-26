@@ -2,9 +2,524 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-05-26T07:52:35.257712</updated>
-  <id>b0770312-1fb8-4366-a578-f8fd5512b9dd</id>
+  <updated>2025-05-26T08:19:15.646494</updated>
+  <id>a21241aa-c092-4dd2-af0c-953176e7c6a5</id>
 
+  
+    <entry>
+      <title>replace_copy -- ranges::replace_copy : サンプルコードのミスを修正 #1311</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_replace_copy.html"/>
+      <id>a2bacbe63b0c1af074a06d1dbfca46289ab492d3:reference/algorithm/ranges_replace_copy.md</id>
+      <updated>2025-05-26T17:15:23+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_replace_copy.md b/reference/algorithm/ranges_replace_copy.md
+index fc6c6e3f6..9630d53bd 100644
+--- a/reference/algorithm/ranges_replace_copy.md
++++ b/reference/algorithm/ranges_replace_copy.md
+@@ -123,7 +123,7 @@ namespace std::ranges {
+     - C++26 : 引数として波カッコ初期化`{}`を受け付ける
+         ```cpp
+         std::vector&amp;lt;T&amp;gt; v;
+-        std::ranges::replace_copy_if(v, result, {a, b}, {c, d});
++        std::ranges::replace_copy(v, result, {a, b}, {c, d});
+         ```
+ 
+ 
+@@ -176,9 +176,8 @@ int main() {
+   };
+ 
+   // 値が{1, 2}の要素をすべて{9, 9}に置き換えたものを出力する
+-  std::replace_copy(
+-    v.begin(),
+-    v.end(),
++  std::ranges::replace_copy(
++    v,
+     std::ostream_iterator&amp;lt;int&amp;gt;(std::cout, &amp;#34;\n&amp;#34;),
+     {1, 2},
+     {9, 9}
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>replace_copy -- replace_copy(_if) : C++26波カッコ初期化に対応 #1311</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_replace_copy.html"/>
+      <id>4c8f46515766f4d4dab7f34ad65e0675ce966c37:reference/algorithm/ranges_replace_copy.md</id>
+      <updated>2025-05-26T17:12:34+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_replace_copy.md b/reference/algorithm/ranges_replace_copy.md
+index 108231a70..fc6c6e3f6 100644
+--- a/reference/algorithm/ranges_replace_copy.md
++++ b/reference/algorithm/ranges_replace_copy.md
+@@ -25,6 +25,25 @@ namespace std::ranges {
+                  const T1&amp;amp; old_value,
+                  const T2&amp;amp; new_value,
+                  Proj proj = {}); // (1) C++20
++  template &amp;lt;input_iterator I,
++            sentinel_for&amp;lt;I&amp;gt; S,
++            class O,
++            class Proj = identity,
++            class T1 = projected_value_t&amp;lt;I, Proj&amp;gt;,
++            class T2 = iter_value_t&amp;lt;O&amp;gt;&amp;gt;
++    requires indirectly_copyable&amp;lt;I, O&amp;gt; &amp;amp;&amp;amp;
++             indirect_binary_predicate&amp;lt;
++               ranges::equal_to,
++               projected&amp;lt;I, Proj&amp;gt;,
++               const T1*
++             &amp;gt;
++  constexpr replace_copy_result&amp;lt;I, O&amp;gt;
++    replace_copy(I first,
++                 S last,
++                 O result,
++                 const T1&amp;amp; old_value,
++                 const T2&amp;amp; new_value,
++                 Proj proj = {}); // (1) C++26
+ 
+   template &amp;lt;input_range R,
+             class T1,
+@@ -36,13 +55,32 @@ namespace std::ranges {
+                ranges::equal_to,
+                projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;,
+                const T1*
+-             &amp;gt;
++             &amp;gt; &amp;amp;&amp;amp;
++             output_iterator&amp;lt;O, const T2&amp;amp;&amp;gt;
+   constexpr replace_copy_result&amp;lt;borrowed_iterator_t&amp;lt;R&amp;gt;, O&amp;gt;
+     replace_copy(R&amp;amp;&amp;amp; r,
+                  O result,
+                  const T1&amp;amp; old_value,
+                  const T2&amp;amp; new_value,
+                  Proj proj = {}); // (2) C++20
++  template &amp;lt;input_range R,
++            class O,
++            class Proj = identity,
++            class T1 = projected_value_t&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;,
++            class T2 = iter_value_t&amp;lt;O&amp;gt;&amp;gt;
++    requires indirectly_copyable&amp;lt;iterator_t&amp;lt;R&amp;gt;, O&amp;gt; &amp;amp;&amp;amp;
++             indirect_binary_predicate&amp;lt;
++               ranges::equal_to,
++               projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;,
++               const T1*
++             &amp;gt; &amp;amp;&amp;amp;
++             output_iterator&amp;lt;O, const T2&amp;amp;&amp;gt;
++  constexpr replace_copy_result&amp;lt;borrowed_iterator_t&amp;lt;R&amp;gt;, O&amp;gt;
++    replace_copy(R&amp;amp;&amp;amp; r,
++                 O result,
++                 const T1&amp;amp; old_value,
++                 const T2&amp;amp; new_value,
++                 Proj proj = {}); // (2) C++26
+ }
+ ```
+ * input_iterator[link /reference/iterator/input_iterator.md]
+@@ -80,7 +118,17 @@ namespace std::ranges {
+ 正確に `last - first` 回の比較を行う
+ 
+ 
++## 備考
++- (1), (2) :
++    - C++26 : 引数として波カッコ初期化`{}`を受け付ける
++        ```cpp
++        std::vector&amp;lt;T&amp;gt; v;
++        std::ranges::replace_copy_if(v, result, {a, b}, {c, d});
++        ```
++
++
+ ## 例
++### 基本的な使い方
+ ```cpp example
+ #include &amp;lt;algorithm&amp;gt;
+ #include &amp;lt;iostream&amp;gt;
+@@ -96,11 +144,57 @@ int main() {
+ ```
+ * std::ranges::replace_copy[color ff0000]
+ 
+-### 出力
++#### 出力
+ ```
+ 3,10,2,10,2,
+ ```
+ 
++### 波カッコ初期化を入力として使用する (C++26)
++```cpp example
++#include &amp;lt;algorithm&amp;gt;
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;vector&amp;gt;
++#include &amp;lt;iterator&amp;gt;
++
++struct Point {
++  int x;
++  int y;
++
++  bool operator==(const Point&amp;amp; other) const = default;
++};
++
++std::ostream&amp;amp; operator&amp;lt;&amp;lt;(std::ostream&amp;amp; os, const Point&amp;amp; p) {
++  return os &amp;lt;&amp;lt; p.x &amp;lt;&amp;lt; &amp;#39;,&amp;#39; &amp;lt;&amp;lt; p.y &amp;lt;&amp;lt; std::endl;
++}
++
++int main() {
++  std::vector&amp;lt;Point&amp;gt; v = {
++    {1, 2},
++    {3, 4},
++    {5, 6},
++    {1, 2},
++  };
++
++  // 値が{1, 2}の要素をすべて{9, 9}に置き換えたものを出力する
++  std::replace_copy(
++    v.begin(),
++    v.end(),
++    std::ostream_iterator&amp;lt;int&amp;gt;(std::cout, &amp;#34;\n&amp;#34;),
++    {1, 2},
++    {9, 9}
++  );
++}
++```
++* std::ranges::replace_copy[color ff0000]
++
++#### 出力
++```
++9,9
++3,4
++5,6
++9,9
++```
++
+ ## バージョン
+ ### 言語
+ - C++20
+@@ -113,3 +207,5 @@ int main() {
+ 
+ ## 参照
+ - [N4861 25 Algorithms library](https://timsong-cpp.github.io/cppwp/n4861/algorithms)
++- [P2248R8 Enabling list-initialization for algorithms](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2248r8.html)
++    - C++26で波カッコ初期化 (リスト初期化) に対応した
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>replace_copy_if -- replace_copy(_if) : C++26波カッコ初期化に対応 #1311</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_replace_copy_if.html"/>
+      <id>4c8f46515766f4d4dab7f34ad65e0675ce966c37:reference/algorithm/ranges_replace_copy_if.md</id>
+      <updated>2025-05-26T17:12:34+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_replace_copy_if.md b/reference/algorithm/ranges_replace_copy_if.md
+index 3d6e5bbe1..75cd00256 100644
+--- a/reference/algorithm/ranges_replace_copy_if.md
++++ b/reference/algorithm/ranges_replace_copy_if.md
+@@ -20,6 +20,22 @@ namespace std::ranges {
+                     Pred pred,
+                     const T&amp;amp; new_value,
+                     Proj proj = {}); // (1) C++20
++  template &amp;lt;input_iterator I,
++            sentinel_for&amp;lt;I&amp;gt; S,
++            class O,
++            class T = iter_value_t&amp;lt;O&amp;gt;,
++            class Proj = identity,
++            indirect_unary_predicate&amp;lt;projected&amp;lt;I, Proj&amp;gt;&amp;gt; Pred&amp;gt;
++    requires
++      indirectly_copyable&amp;lt;I, O&amp;gt; &amp;amp;&amp;amp;
++      output_iterator&amp;lt;O, const T&amp;amp;&amp;gt;
++  constexpr replace_copy_if_result&amp;lt;I, O&amp;gt;
++    replace_copy_if(I first,
++                    S last,
++                    O result,
++                    Pred pred,
++                    const T&amp;amp; new_value,
++                    Proj proj = {}); // (1) C++26
+ 
+   template &amp;lt;input_range R,
+             class T,
+@@ -33,6 +49,20 @@ namespace std::ranges {
+                     Pred pred,
+                     const T&amp;amp; new_value,
+                     Proj proj = {}); // (2) C++20
++  template &amp;lt;input_range R,
++            class O,
++            class T = iter_value_t&amp;lt;O&amp;gt;,
++            class Proj = identity,
++            indirect_unary_predicate&amp;lt;projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;&amp;gt; Pred&amp;gt;
++    requires
++      indirectly_copyable&amp;lt;iterator_t&amp;lt;R&amp;gt;, O&amp;gt; &amp;amp;&amp;amp;
++      output_iterator&amp;lt;O, const T&amp;amp;&amp;gt;
++  constexpr replace_copy_if_result&amp;lt;borrowed_iterator_t&amp;lt;R&amp;gt;, O&amp;gt;
++    replace_copy_if(R&amp;amp;&amp;amp; r,
++                    O result,
++                    Pred pred,
++                    const T&amp;amp; new_value,
++                    Proj proj = {}); // (2) C++26
+ }
+ ```
+ * input_iterator[link /reference/iterator/input_iterator.md]
+@@ -69,7 +99,17 @@ namespace std::ranges {
+ 正確に `last - first` 回の述語の適用を行う
+ 
+ 
++## 備考
++- (1), (2) :
++    - C++26 : 引数として波カッコ初期化`{}`を受け付ける
++        ```cpp
++        std::vector&amp;lt;T&amp;gt; v;
++        std::ranges::replace_copy_if(v, result, pred, {a, b});
++        ```
++
++
+ ## 例
++### 基本的な使い方
+ ```cpp example
+ #include &amp;lt;algorithm&amp;gt;
+ #include &amp;lt;iostream&amp;gt;
+@@ -80,16 +120,65 @@ int main() {
+   std::vector&amp;lt;int&amp;gt; v = { 3,1,2,1,2 };
+ 
+   // 奇数の要素を全部 10 に置き換えたものを出力する
+-  std::ranges::replace_copy_if(v, std::ostream_iterator&amp;lt;int&amp;gt;(std::cout, &amp;#34;,&amp;#34;), [](int x) { return x%2 != 0; }, 10);
++  std::ranges::replace_copy_if(
++    v,
++    std::ostream_iterator&amp;lt;int&amp;gt;(std::cout, &amp;#34;,&amp;#34;),
++    [](int x) { return x%2 != 0; },
++    10
++  );
+ }
+ ```
+ * std::ranges::replace_copy_if[color ff0000]
+ 
+-### 出力
++#### 出力
+ ```
+ 10,10,2,10,2,
+ ```
+ 
++### 波カッコ初期化を入力として使用する (C++26)
++```cpp example
++#include &amp;lt;algorithm&amp;gt;
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;vector&amp;gt;
++#include &amp;lt;iterator&amp;gt;
++
++struct Point {
++  int x;
++  int y;
++
++  bool operator==(const Point&amp;amp; other) const = default;
++};
++
++std::ostream&amp;amp; operator&amp;lt;&amp;lt;(std::ostream&amp;amp; os, const Point&amp;amp; p) {
++  return os &amp;lt;&amp;lt; p.x &amp;lt;&amp;lt; &amp;#39;,&amp;#39; &amp;lt;&amp;lt; p.y &amp;lt;&amp;lt; std::endl;
++}
++
++int main() {
++  std::vector&amp;lt;Point&amp;gt; v = {
++    {1, 2},
++    {3, 4},
++    {5, 6},
++    {1, 2},
++  };
++
++  // 値が{1, 2}の要素をすべて{9, 9}に置き換えたものを出力する
++  std::ranges::replace_copy_if(
++    v,
++    std::ostream_iterator&amp;lt;int&amp;gt;(std::cout, &amp;#34;\n&amp;#34;),
++    [](const Point&amp;amp; p) { return p.x == 1 &amp;amp;&amp;amp; p.y == 2; },
++    {9, 9}
++  );
++}
++```
++* std::ranges::replace_copy_if[color ff0000]
++
++#### 出力
++```
++9,9
++3,4
++5,6
++9,9
++```
+ 
+ ## バージョン
+ ### 言語
+@@ -103,3 +192,5 @@ int main() {
+ 
+ ## 参照
+ - [N4861 25 Algorithms library](https://timsong-cpp.github.io/cppwp/n4861/algorithms)
++- [P2248R8 Enabling list-initialization for algorithms](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2248r8.html)
++    - C++26で波カッコ初期化 (リスト初期化) に対応した
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>replace_copy_if -- replace_copy(_if) : C++26波カッコ初期化に対応 #1311</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm/replace_copy_if.html"/>
+      <id>4c8f46515766f4d4dab7f34ad65e0675ce966c37:reference/algorithm/replace_copy_if.md</id>
+      <updated>2025-05-26T17:12:34+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/replace_copy_if.md b/reference/algorithm/replace_copy_if.md
+index 82635adc8..afcf0e642 100644
+--- a/reference/algorithm/replace_copy_if.md
++++ b/reference/algorithm/replace_copy_if.md
+@@ -15,7 +15,6 @@ namespace std {
+                     OutputIterator result,
+                     Predicate pred,
+                     const T&amp;amp; new_value);     // (1) C++03
+-
+   template &amp;lt;class InputIterator,
+             class OutputIterator,
+             class Predicate,
+@@ -26,11 +25,22 @@ namespace std {
+                     OutputIterator result,
+                     Predicate pred,
+                     const T&amp;amp; new_value);     // (1) C++20
++  template &amp;lt;class InputIterator,
++            class OutputIterator,
++            class Predicate,
++            class T = typename iterator_traits&amp;lt;OutputIterator&amp;gt;::value_type&amp;gt;
++  constexpr OutputIterator
++    replace_copy_if(InputIterator first,
++                    InputIterator last,
++                    OutputIterator result,
++                    Predicate pred,
++                    const T&amp;amp; new_value);     // (1) C++26
+ 
+   template &amp;lt;class ExecutionPolicy,
+             class ForwardIterator1,
+             class ForwardIterator2,
+-            class Predicate, class T&amp;gt;
++            class Predicate,
++            class T&amp;gt;
+   ForwardIterator2
+     replace_copy_if(ExecutionPolicy&amp;amp;&amp;amp; exec,
+                     ForwardIterator1 first,
+@@ -38,6 +48,18 @@ namespace std {
+                     ForwardIterator2 result,
+                     Predicate pred,
+                     const T&amp;amp; new_value);     // (2) C++17
++  template &amp;lt;class ExecutionPolicy,
++            class ForwardIterator1,
++            class ForwardIterator2,
++            class Predicate,
++            class T = typename iterator_traits&amp;lt;ForwardIterator2&amp;gt;::value_type&amp;gt;
++  ForwardIterator2
++    replace_copy_if(ExecutionPolicy&amp;amp;&amp;amp; exec,
++                    ForwardIterator1 first,
++                    ForwardIterator1 last,
++                    ForwardIterator2 result,
++                    Predicate pred,
++                    const T&amp;amp; new_value);     // (2) C++26
+ }
+ ```
+ 
+@@ -45,7 +67,7 @@ namespace std {
+ イテレータ範囲`[first, last)`のうち、条件を満たす要素を指定された値に置き換え、その結果を出力の範囲へコピーする。
+ 
+ 
+-## テンプレートパラメータ制約
++## 適格要件
+ - `*first` と `new_value` は `result` へ書き込み可能であること
+ 
+ 
+@@ -65,7 +87,17 @@ namespace std {
+ 正確に `last - first` 回の述語の適用を行う
+ 
+ 
++## 備考
++- (1), (2) :
++    - C++26 : 引数として波カッコ初期化`{}`を受け付ける
++        ```cpp
++        std::vector&amp;lt;T&amp;gt; v;
++        std::replace_copy_if(v.begin(), v.end(), result, pred, {a, b});
++        ```
++
++
+ ## 例
++### 基本的な使い方
+ ```cpp example
+ #include &amp;lt;algorithm&amp;gt;
+ #include &amp;lt;iostream&amp;gt;
+@@ -83,11 +115,57 @@ int main() {
+ ```
+ * std::replace_copy_if[color ff0000]
+ 
+-### 出力
++#### 出力
+ ```
+ 10,10,2,10,2,
+ ```
+ 
++### 波カッコ初期化を入力として使用する (C++26)
++```cpp example
++#include &amp;lt;algorithm&amp;gt;
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;vector&amp;gt;
++#include &amp;lt;iterator&amp;gt;
++
++struct Point {
++  int x;
++  int y;
++
++  bool operator==(const Point&amp;amp; other) const = default;
++};
++
++std::ostream&amp;amp; operator&amp;lt;&amp;lt;(std::ostream&amp;amp; os, const Point&amp;amp; p) {
++  return os &amp;lt;&amp;lt; p.x &amp;lt;&amp;lt; &amp;#39;,&amp;#39; &amp;lt;&amp;lt; p.y &amp;lt;&amp;lt; std::endl;
++}
++
++int main() {
++  std::vector&amp;lt;Point&amp;gt; v = {
++    {1, 2},
++    {3, 4},
++    {5, 6},
++    {1, 2},
++  };
++
++  // 値が{1, 2}の要素をすべて{9, 9}に置き換えたものを出力する
++  std::replace_copy_if(
++    v.begin(),
++    v.end(),
++    std::ostream_iterator&amp;lt;int&amp;gt;(std::cout, &amp;#34;\n&amp;#34;),
++    [](const Point&amp;amp; p) { return p.x == 1 &amp;amp;&amp;amp; p.y == 2; },
++    {9, 9}
++  );
++}
++```
++* std::replace_copy_if[color ff0000]
++
++#### 出力
++```
++9,9
++3,4
++5,6
++9,9
++```
++
+ ## 実装例
+ ```cpp
+ template &amp;lt;class InputIterator, class OutputIterator, class Predicate, class T&amp;gt;
+@@ -103,3 +181,5 @@ OutputIterator replace_copy_if(InputIterator first, InputIterator last, OutputIt
+ ## 参照
+ - [P0202R3 Add Constexpr Modifiers to Functions in `&amp;lt;algorithm&amp;gt;` and `&amp;lt;utility&amp;gt;` Headers](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0202r3.html)
+ - [P0467R2 Iterator Concerns for Parallel Algorithms](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0467r2.html)
++- [P2248R8 Enabling list-initialization for algorithms](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2248r8.html)
++    - C++26で波カッコ初期化 (リスト初期化) に対応した
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>replace -- replace(_if) : 例のミスを修正</title>
@@ -698,656 +1213,6 @@ index 9bb02b88c..1581d2576 100644
       <author>
         <name>Akira Takahashi</name>
         <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>count -- count, find, search_n : 例のイテレータ範囲ミスを修正</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/count.html"/>
-      <id>1fe8918bfff93e305e8a33cdfd52f11dfb7f665b:reference/algorithm/count.md</id>
-      <updated>2025-05-26T16:38:51+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/count.md b/reference/algorithm/count.md
-index 8a9e8ba34..c79512c96 100644
---- a/reference/algorithm/count.md
-+++ b/reference/algorithm/count.md
-@@ -60,8 +60,8 @@ namespace std {
- - (1), (2) :
-     - C++26 : 引数として波カッコ初期化`{}`を受け付ける
-         ```cpp
--		    std::vector&amp;lt;T&amp;gt; v;
--        int n = std::count(v.begin(), v.begin(), {a, b});
-+        std::vector&amp;lt;T&amp;gt; v;
-+        int n = std::count(v.begin(), v.end(), {a, b});
-         ```
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>find -- count, find, search_n : 例のイテレータ範囲ミスを修正</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/find.html"/>
-      <id>1fe8918bfff93e305e8a33cdfd52f11dfb7f665b:reference/algorithm/find.md</id>
-      <updated>2025-05-26T16:38:51+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/find.md b/reference/algorithm/find.md
-index 41aecc838..2eb04c2dd 100644
---- a/reference/algorithm/find.md
-+++ b/reference/algorithm/find.md
-@@ -59,8 +59,8 @@ namespace std {
- - (1), (2) :
-     - C++26 : 引数として波カッコ初期化`{}`を受け付ける
-         ```cpp
--		std::vector&amp;lt;T&amp;gt; v;
--        auto it = std::find(v.begin(), v.begin(), {a, b});
-+        std::vector&amp;lt;T&amp;gt; v;
-+        auto it = std::find(v.begin(), v.end(), {a, b});
-         ```
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>count -- count, find, search_n : 例のイテレータ範囲ミスを修正</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_count.html"/>
-      <id>1fe8918bfff93e305e8a33cdfd52f11dfb7f665b:reference/algorithm/ranges_count.md</id>
-      <updated>2025-05-26T16:38:51+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_count.md b/reference/algorithm/ranges_count.md
-index ef745e41e..0c3504815 100644
---- a/reference/algorithm/ranges_count.md
-+++ b/reference/algorithm/ranges_count.md
-@@ -82,7 +82,7 @@ namespace std::ranges {
- - (1), (2) :
-     - C++26 : 引数として波カッコ初期化`{}`を受け付ける
-         ```cpp
--		    std::vector&amp;lt;T&amp;gt; v;
-+        std::vector&amp;lt;T&amp;gt; v;
-         int n = std::ranges::count(v, {a, b});
-         ```
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>find -- count, find, search_n : 例のイテレータ範囲ミスを修正</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_find.html"/>
-      <id>1fe8918bfff93e305e8a33cdfd52f11dfb7f665b:reference/algorithm/ranges_find.md</id>
-      <updated>2025-05-26T16:38:51+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_find.md b/reference/algorithm/ranges_find.md
-index bfb96b38a..7f76d5976 100644
---- a/reference/algorithm/ranges_find.md
-+++ b/reference/algorithm/ranges_find.md
-@@ -73,7 +73,7 @@ namespace std::ranges {
- - (1), (2) :
-     - C++26 : 引数として波カッコ初期化`{}`を受け付ける
-         ```cpp
--		    std::vector&amp;lt;T&amp;gt; v;
-+        std::vector&amp;lt;T&amp;gt; v;
-         auto it = std::ranges::find(r, {a, b});
-         ```
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>search_n -- count, find, search_n : 例のイテレータ範囲ミスを修正</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_search_n.html"/>
-      <id>1fe8918bfff93e305e8a33cdfd52f11dfb7f665b:reference/algorithm/ranges_search_n.md</id>
-      <updated>2025-05-26T16:38:51+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_search_n.md b/reference/algorithm/ranges_search_n.md
-index 5d6bdd59f..eef1aa2a1 100644
---- a/reference/algorithm/ranges_search_n.md
-+++ b/reference/algorithm/ranges_search_n.md
-@@ -89,7 +89,7 @@ namespace std::ranges {
- - (1), (2) :
-     - C++26 : パラメータ`value`として波カッコ初期化`{}`を受け付ける
-         ```cpp
--		    std::vector&amp;lt;T&amp;gt; v;
-+        std::vector&amp;lt;T&amp;gt; v;
-         auto sr = std::ranges::search_n(v, 3, {a, b});
-         ```
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>search_n -- count, find, search_n : 例のイテレータ範囲ミスを修正</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/search_n.html"/>
-      <id>1fe8918bfff93e305e8a33cdfd52f11dfb7f665b:reference/algorithm/search_n.md</id>
-      <updated>2025-05-26T16:38:51+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/search_n.md b/reference/algorithm/search_n.md
-index 0bae94860..14ed10727 100644
---- a/reference/algorithm/search_n.md
-+++ b/reference/algorithm/search_n.md
-@@ -136,8 +136,8 @@ namespace std {
- - (1), (2), (3), (4) :
-     - C++26 : パラメータ`value`として波カッコ初期化`{}`を受け付ける
-         ```cpp
--		    std::vector&amp;lt;T&amp;gt; v;
--        auto it = std::search_n(v.begin(), v.begin(), 3, {a, b});
-+        std::vector&amp;lt;T&amp;gt; v;
-+        auto it = std::search_n(v.begin(), v.end(), 3, {a, b});
-         ```
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>execution -- execution: when_all_with_variant (#1384)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution.html"/>
-      <id>78b4c319e202ff61afaafdfc3a49381c973213d5:reference/execution/execution.md</id>
-      <updated>2025-05-26T16:21:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution.md b/reference/execution/execution.md
-index fbd7bf5d4..ff06aaaa9 100644
---- a/reference/execution/execution.md
-+++ b/reference/execution/execution.md
-@@ -124,7 +124,7 @@ namespace std::execution {
- | [`execution::bulk`](execution/bulk.md.nolink) | インデクス空間上で指定関数を連続実行 (customization point object) | C++26 |
- | [`execution::split`](execution/split.md.nolink) | 入力Senderの値を複製送信 (customization point object) | C++26 |
- | [`execution::when_all`](execution/when_all.md) | 全ての入力Sender完了を待機 (customization point object) | C++26 |
--| [`execution::when_all_with_variant`](execution/when_all_with_variant.md.nolink) | 複数の値完了シグネチャをもつ全ての入力Sender完了を待機 (customization point object) | C++26 |
-+| [`execution::when_all_with_variant`](execution/when_all_with_variant.md) | 複数の値完了シグネチャをもつ全ての入力Sender完了を待機 (customization point object) | C++26 |
- | [`execution::into_variant`](execution/into_variant.md) | 複数の値完了シグネチャを単一[`variant`](/reference/variant/variant.md)型の値完了シグネチャに変換 (customization point object) | C++26 |
- | [`execution::stopped_as_optional`](execution/stopped_as_optional.md.nolink) | 入力Senderの停止完了を[`optional`](/reference/optional/optional.md)型の値完了に変換 (customization point object) | C++26 |
- | [`execution::stopped_as_error`](execution/stopped_as_error.md.nolink) | 入力Senderの停止完了をエラー完了に変換 (customization point object) | C++26 |
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>continues_on -- execution: when_all_with_variant (#1384)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/continues_on.html"/>
-      <id>78b4c319e202ff61afaafdfc3a49381c973213d5:reference/execution/execution/continues_on.md</id>
-      <updated>2025-05-26T16:21:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/continues_on.md b/reference/execution/execution/continues_on.md
-index a43586be4..1ac47acb2 100644
---- a/reference/execution/execution/continues_on.md
-+++ b/reference/execution/execution/continues_on.md
-@@ -66,10 +66,10 @@ return schedule_from(std::move(data), std::move(child));
- 
- ## カスタマイゼーションポイント
- Senderアルゴリズム構築時に、[Sender](sender.md)`sndr`に[関連付けられた実行ドメイン](get-domain-early.md)に対して[`execution::transform_sender`](transform_sender.md)経由でSender変換が行われる。
--[デフォルト実行ドメイン](../execution/default_domain.md)では無変換。
-+[デフォルト実行ドメイン](default_domain.md)では無変換。
- 
- [Receiver](receiver.md)との[接続(connect)](connect.md)時に、[Scheduler](scheduler.md)`sch`に[関連付けられた実行ドメイン](get-domain-late.md)に対して[`execution::transform_sender`](transform_sender.md)経由でSender変換が行われる。
--[デフォルト実行ドメイン](../execution/default_domain.md)では`continues_on.transform_sender(out_sndr, env)`が呼ばれ、[`schedule_from`](schedule_from.md)Senderへと変換される。
-+[デフォルト実行ドメイン](default_domain.md)では`continues_on.transform_sender(out_sndr, env)`が呼ばれ、[`schedule_from`](schedule_from.md)Senderへと変換される。
- 
- 説明用の式`out_sndr`を`continues_on(sndr, sch)`の戻り値[Sender](sender.md)とし、型`OutSndr`を`decltype((out_sndr))`とする。式`out_rcvr`を[`sender_in`](sender_in.md)`&amp;lt;OutSndr, Env&amp;gt; == true`となる[環境](../queryable.md)`Env`に関連付けられた[Receiver](receiver.md)とする。`out_sndr`と`out_rcvr`との[接続(connect)](connect.md)結果[Operation State](operation_state.md)への左辺値参照を`op`としたとき、
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>into_variant -- execution: when_all_with_variant (#1384)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/into_variant.html"/>
-      <id>78b4c319e202ff61afaafdfc3a49381c973213d5:reference/execution/execution/into_variant.md</id>
-      <updated>2025-05-26T16:21:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/into_variant.md b/reference/execution/execution/into_variant.md
-index 85d5ffb37..3e912ee22 100644
---- a/reference/execution/execution/into_variant.md
-+++ b/reference/execution/execution/into_variant.md
-@@ -86,7 +86,7 @@ namespace std::execution {
- 
- ## カスタマイゼーションポイント
- Senderアルゴリズム構築時および[Receiver](receiver.md)接続時に、関連付けられた実行ドメインに対して[`execution::transform_sender`](transform_sender.md)経由でSender変換が行われる。
--[デフォルト実行ドメイン](../execution/default_domain.md)では無変換。
-+[デフォルト実行ドメイン](default_domain.md)では無変換。
- 
- 
- ## 例
-@@ -198,7 +198,7 @@ int main()
- 
- 
- ## 関連項目
--- [`execution::when_all_with_variant`](when_all_with_variant.md.nolink)
-+- [`execution::when_all_with_variant`](when_all_with_variant.md)
- - [`this_thread::sync_wait_with_variant`](../this_thread/sync_wait_with_variant.md)
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>let_value -- execution: when_all_with_variant (#1384)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/let_value.html"/>
-      <id>78b4c319e202ff61afaafdfc3a49381c973213d5:reference/execution/execution/let_value.md</id>
-      <updated>2025-05-26T16:21:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/let_value.md b/reference/execution/execution/let_value.md
-index 6bb79a7a5..0ed009957 100644
---- a/reference/execution/execution/let_value.md
-+++ b/reference/execution/execution/let_value.md
-@@ -207,7 +207,7 @@ namespace std::execution {
- 
- ## カスタマイゼーションポイント
- Senderアルゴリズム構築時および[Receiver](receiver.md)接続時に、関連付けられた実行ドメインに対して[`execution::transform_sender`](transform_sender.md)経由でSender変換が行われる。
--[デフォルト実行ドメイン](../execution/default_domain.md)では無変換。
-+[デフォルト実行ドメイン](default_domain.md)では無変換。
- 
- 説明用の式`out_sndr`を`let_value(sndr, f)`の戻り値[Sender](sender.md)とし、式`rcvr`を式[`connect`](connect.md)`(out_sndr, rcvr)`が適格となる[Receiver](receiver.md)とする。式[`connect`](connect.md)`(out_sndr, rcvr)`は[開始(start)](start.md)時に下記を満たす非同期操作を生成しない場合、動作は未定義となる。
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>on -- execution: when_all_with_variant (#1384)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/on.html"/>
-      <id>78b4c319e202ff61afaafdfc3a49381c973213d5:reference/execution/execution/on.md</id>
-      <updated>2025-05-26T16:21:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/on.md b/reference/execution/execution/on.md
-index f8afd7065..431ef4feb 100644
---- a/reference/execution/execution/on.md
-+++ b/reference/execution/execution/on.md
-@@ -151,13 +151,13 @@ struct not-a-sender {
- 
- ## カスタマイゼーションポイント
- Senderアルゴリズム構築時に、関連付けられた実行ドメインに対して[`execution::transform_sender`](transform_sender.md)経由でSender変換が行われる。
--[デフォルト実行ドメイン](../execution/default_domain.md)では無変換。
-+[デフォルト実行ドメイン](default_domain.md)では無変換。
- 
- - 呼び出し式`on(sch, sndr)` : [Scheduler](scheduler.md)`sch`に[関連付けられた実行ドメイン](query-or-default.md.nolink)
- - 呼び出し式`on(sndr, sch, closure)` : [Sender](sender.md)`sndr`に[関連付けられた実行ドメイン](get-domain-early.md)
- 
- [Receiver](receiver.md)との[接続(connect)](connect.md)時に、[関連付けられた実行ドメイン](get-domain-late.md)に対して[`execution::transform_sender`](transform_sender.md)経由でSender変換が行われる。
--[デフォルト実行ドメイン](../execution/default_domain.md)では`on.transform_sender(out_sndr, env)`が呼ばれ、前述仕様通りのSenderへと変換される。
-+[デフォルト実行ドメイン](default_domain.md)では`on.transform_sender(out_sndr, env)`が呼ばれ、前述仕様通りのSenderへと変換される。
- 
- 
- ### 呼び出し式 `on(sch, sndr)`
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>starts_on -- execution: when_all_with_variant (#1384)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/starts_on.html"/>
-      <id>78b4c319e202ff61afaafdfc3a49381c973213d5:reference/execution/execution/starts_on.md</id>
-      <updated>2025-05-26T16:21:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/starts_on.md b/reference/execution/execution/starts_on.md
-index 169c24ac5..9b7603c13 100644
---- a/reference/execution/execution/starts_on.md
-+++ b/reference/execution/execution/starts_on.md
-@@ -68,10 +68,10 @@ transform_sender(
- 
- ## カスタマイゼーションポイント
- Senderアルゴリズム構築時に、[Scheduler](scheduler.md)`sch`に[関連付けられた実行ドメイン](query-or-default.md.nolink)に対して[`execution::transform_sender`](transform_sender.md)経由でSender変換が行われる。
--[デフォルト実行ドメイン](../execution/default_domain.md)では無変換。
-+[デフォルト実行ドメイン](default_domain.md)では無変換。
- 
- [Receiver](receiver.md)との[接続(connect)](connect.md)時に、[関連付けられた実行ドメイン](get-domain-late.md)に対して[`execution::transform_sender`](transform_sender.md)経由でSender変換が行われる。
--[デフォルト実行ドメイン](../execution/default_domain.md)では`starts_on.transform_sender(out_sndr, env)`が呼ばれ、前述仕様通りのSenderへと変換される。
-+[デフォルト実行ドメイン](default_domain.md)では`starts_on.transform_sender(out_sndr, env)`が呼ばれ、前述仕様通りのSenderへと変換される。
- 
- 説明用の式`out_sndr`を`starts_on(sch, sndr)`の戻り値[Sender](sender.md)とし、型`OutSndr`を`decltype((out_sndr))`とする。式`out_rcvr`を[`sender_in`](sender_in.md)`&amp;lt;OutSndr, Env&amp;gt; == true`となる[環境](../queryable.md)`Env`に関連付けられた[Receiver](receiver.md)とする。`out_sndr`と`out_rcvr`との[接続(connect)](connect.md)結果[Operation State](operation_state.md)への左辺値参照を`op`としたとき、
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>then -- execution: when_all_with_variant (#1384)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/then.html"/>
-      <id>78b4c319e202ff61afaafdfc3a49381c973213d5:reference/execution/execution/then.md</id>
-      <updated>2025-05-26T16:21:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/then.md b/reference/execution/execution/then.md
-index 997e4288f..bdbbdb2a6 100644
---- a/reference/execution/execution/then.md
-+++ b/reference/execution/execution/then.md
-@@ -61,7 +61,7 @@ namespace std::execution {
- 
- ## カスタマイゼーションポイント
- Senderアルゴリズム構築時および[Receiver](receiver.md)接続時に、関連付けられた実行ドメインに対して[`execution::transform_sender`](transform_sender.md)経由でSender変換が行われる。
--[デフォルト実行ドメイン](../execution/default_domain.md)では無変換。
-+[デフォルト実行ドメイン](default_domain.md)では無変換。
- 
- 戻り値の[Sender](sender.md)`out_sndr`が下記を満たさない場合、呼び出し式`then(sndr, f)`の動作は未定義となる。
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>when_all -- execution: when_all_with_variant (#1384)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/when_all.html"/>
-      <id>78b4c319e202ff61afaafdfc3a49381c973213d5:reference/execution/execution/when_all.md</id>
-      <updated>2025-05-26T16:21:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/when_all.md b/reference/execution/execution/when_all.md
-index 9a727719a..d22c00b32 100644
---- a/reference/execution/execution/when_all.md
-+++ b/reference/execution/execution/when_all.md
-@@ -15,6 +15,9 @@ namespace std::execution {
- ## 概要
- `when_all`は、複数の入力[Sender](sender.md)が全て完了するまで待機するSenderアダプタである。
- 
-+`when_all`は全ての入力Senderが[値完了シグネチャ](set_value.md)を1個だけ持つことを要求する。
-+値完了シグネチャが複数存在する場合は[`when_all_with_variant`](when_all_with_variant.md)アルゴリズムを利用する
-+
- - 入力Sender全てが値完了のとき、全ての値完了結果を[`tuple`](/reference/tuple/tuple.md)に結合して値完了操作を行う。
- - いずれかがエラー完了のとき、同エラー値をもってエラー完了操作を行う。このとき停止要求が作成される。
- - いずれかが停止完了のとき、停止完了操作を行う。このとき停止要求が作成される。
-@@ -85,7 +88,7 @@ namespace std::execution {
- ラムダ式は下記を満たすオブジェクト`e`を返す。
- 
- - `decltype(e)`が[`queryable`](../queryable.md)のモデル、かつ
--- 式`e.query(`[`get_stop_token`](../get_stop_token.md)`)`が`state.stop-src.get_token()`と等価、かつ
-+- 式`e.query(`[`get_stop_token`](../get_stop_token.md)`)`が`state.stop-src.`[`get_token()`](/reference/stop_token/inplace_stop_source/get_token.md)と等価、かつ
- - [`get_stop_token`](../get_stop_token.md)以外の[クエリオブジェクト](../queryable.md)`q`に対して、式`e.query(q)`は[`get_env`](get_env.md)`(rcvr).query(q)`と等価。
- 
- `impls-for&amp;lt;when_all_t&amp;gt;::get-state`メンバは、下記ラムダ式と等価な関数呼び出し可能なオブジェクトで初期化される。
-@@ -126,7 +129,7 @@ std::forward&amp;lt;Sndr&amp;gt;(sndr).apply(make-state&amp;lt;Rcvr&amp;gt;())
- * start[link start.md]
- * emplace[link /reference/optional/optional/emplace.md]
- * reset()[link /reference/optional/optional/reset.md]
--* stop_requested()[link /reference/stop_token/inplace_stop_token/stop_requested.md]
-+* stop_requested()[link /reference/stop_token/inplace_stop_source/stop_requested.md]
- * std::move[link /reference/utility/move.md]
- 
- `impls-for&amp;lt;when_all_t&amp;gt;::complete`メンバは、下記ラムダ式と等価な関数呼び出し可能なオブジェクトで初期化される。
-@@ -320,7 +323,7 @@ variant&amp;lt;none-such, copy-fail, Es...&amp;gt;
- 
- ## カスタマイゼーションポイント
- Senderアルゴリズム構築時および[Receiver](receiver.md)接続時に、関連付けられた実行ドメインに対して[`execution::transform_sender`](transform_sender.md)経由でSender変換が行われる。
--[デフォルト実行ドメイン](../execution/default_domain.md)では無変換。
-+[デフォルト実行ドメイン](default_domain.md)では無変換。
- 
- 
- ## 例
-@@ -471,7 +474,7 @@ error=-2
- 
- 
- ## 関連項目
--- [`execution::when_all_with_variant`](when_all_with_variant.md.nolink)
-+- [`execution::when_all_with_variant`](when_all_with_variant.md)
- 
- 
- ## 参照
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>when_all_with_variant -- execution: when_all_with_variant (#1384)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/when_all_with_variant.html"/>
-      <id>78b4c319e202ff61afaafdfc3a49381c973213d5:reference/execution/execution/when_all_with_variant.md</id>
-      <updated>2025-05-26T16:21:10+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/when_all_with_variant.md b/reference/execution/execution/when_all_with_variant.md
-new file mode 100644
-index 000000000..7aef2d143
---- /dev/null
-+++ b/reference/execution/execution/when_all_with_variant.md
-@@ -0,0 +1,185 @@
-+# when_all_with_variant
-+* execution[meta header]
-+* cpo[meta id-type]
-+* std::execution[meta namespace]
-+* cpp26[meta cpp]
-+
-+```cpp
-+namespace std::execution {
-+  struct when_all_with_variant_t { unspecified };
-+  inline constexpr when_all_with_variant_t when_all_with_variant{};
-+}
-+```
-+* unspecified[italic]
-+
-+## 概要
-+`when_all_with_variant`は、複数の入力[Sender](sender.md)が全て完了するまで待機するSenderアダプタである。
-+
-+`when_all_with_variant`は入力Senderが複数の[値完了シグネチャ](set_value.md)を持つケースに対応する。
-+全入力Senderの値完了シグネチャが1個だけの場合は[`when_all`](when_all.md)アルゴリズムを利用する
-+
-+- 入力Sender全てが値完了のとき、全ての値完了結果を[`variant`](/reference/variant/variant.md)の[`tuple`](/reference/tuple/tuple.md)に結合して値完了操作を行う。
-+- いずれかがエラー完了のとき、同エラー値をもってエラー完了操作を行う。このとき停止要求が作成される。
-+- いずれかが停止完了のとき、停止完了操作を行う。このとき停止要求が作成される。
-+
-+
-+## 効果
-+説明用のパック`sndrs`に対してパック`Sndrs`を`decltype((sndrs))...`としたとき、型`CD`を[`common_type_t`](/reference/type_traits/common_type.md)`&amp;lt;decltype(`[`get-domain-early`](get-domain-early.md)`(sndrs))...&amp;gt;`とする。
-+
-+下記いずれかが`true`となるとき、呼び出し式`when_all_with_variant(sndrs...)`は不適格となる。
-+
-+- `sizeof...(sndrs) == 0`、または
-+- `(`[`sender`](sender.md)`&amp;lt;Sndrs&amp;gt; &amp;amp;&amp;amp; ...) == false`、または
-+- 型`CD`が不適格
-+
-+そうでなければ、呼び出し式`when_all_with_variant(sndrs...)`は下記と等価。
-+
-+```cpp
-+transform_sender(CD(), make-sender(when_all_with_variant, {}, sndrs...))
-+```
-+* transform_sender[link transform_sender.md]
-+* make-sender[link make-sender.md]
-+
-+
-+### Senderアルゴリズムタグ `when_all_with_variant`
-+説明用の式`sndr`と`env`に対して、[`sender-for`](sender-for.md)`&amp;lt;decltype((sndr)), when_all_with_variant_t&amp;gt; == false`のとき、式`when_all_with_variant.transform_sender(sndr, env)`は不適格となる。
-+
-+そうでなければ、式`when_all_with_variant.transform_sender(sndr, env)`は下記と等価。
-+
-+```cpp
-+auto&amp;amp;&amp;amp; [_, _, ...child] = sndr;
-+return when_all(into_variant(std::forward_like&amp;lt;decltype((sndr))&amp;gt;(child))...);
-+```
-+* when_all[link when_all.md]
-+* into_variant[link into_variant.md]
-+
-+
-+## カスタマイゼーションポイント
-+Senderアルゴリズム構築時に、関連付けられた実行ドメインに対して[`execution::transform_sender`](transform_sender.md)経由でSender変換が行われる。
-+[デフォルト実行ドメイン](default_domain.md)では無変換。
-+
-+[Receiver](receiver.md)との[接続(connect)](connect.md)時に、関連付けられた実行ドメインに対して[`execution::transform_sender`](transform_sender.md)経由でSender変換が行われる。
-+[デフォルト実行ドメイン](default_domain.md)では`when_all_with_variant.transform_sender(sndr, env)`が呼ばれ、前述仕様通りのSenderへと変換される。
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;print&amp;gt;
-+#include &amp;lt;string&amp;gt;
-+#include &amp;lt;execution&amp;gt;
-+namespace ex = std::execution;
-+
-+// MySenderは下記いずれかの完了操作を行う
-+//   値完了     set_value(int), set_value(string)
-+//   エラー完了 set_error(int)
-+struct MySender {
-+  using sender_concept = ex::sender_t;
-+  using completion_signatures = ex::completion_signatures&amp;lt;
-+    ex::set_value_t(int),
-+    ex::set_value_t(std::string),
-+    ex::set_error_t(int)
-+  &amp;gt;;
-+
-+  template &amp;lt;typename Rcvr&amp;gt;
-+  struct state {
-+    using operation_state_concept = ex::operation_state_t;
-+
-+    state(Rcvr rcvr, int val)
-+      : rcvr_{std::move(rcvr)}, val_{val} {}
-+
-+    void start() noexcept {
-+      using namespace std::string_literals;
-+      switch (val_) {
-+      case 1:
-+        ex::set_value(std::move(rcvr_), 100);
-+        break;
-+      case 2:
-+        ex::set_value(std::move(rcvr_), &amp;#34;C++&amp;#34;s);
-+        break;
-+      default:
-+        ex::set_error(std::move(rcvr_), val_);
-+        break;
-+      }
-+    }
-+
-+    Rcvr rcvr_;
-+    int val_;
-+  };
-+
-+  template &amp;lt;typename Rcvr&amp;gt;
-+  auto connect(Rcvr rcvr) noexcept {
-+    return state{std::move(rcvr), val_};
-+  }
-+
-+  int val_;
-+};
-+
-+int main()
-+{
-+  ex::sender auto snd1 = MySender{1};
-+  ex::sender auto snd2 = MySender{2};
-+  ex::sender auto sndr = ex::when_all_with_variant(snd1, snd2);
-+
-+  auto result = std::this_thread::sync_wait(sndr);
-+  // result := optional&amp;lt;
-+  //             tuple&amp;lt;
-+  //               variant&amp;lt;tuple&amp;lt;int&amp;gt;, tuple&amp;lt;string&amp;gt;&amp;gt;,
-+  //               variant&amp;lt;tuple&amp;lt;int&amp;gt;, tuple&amp;lt;string&amp;gt;&amp;gt;
-+  //             &amp;gt;
-+  //           &amp;gt;型
-+
-+  auto [val1, val2] = result.value();
-+  // val1,val2 := variant&amp;lt;tuple&amp;lt;int&amp;gt;, tuple&amp;lt;string&amp;gt;&amp;gt;型
-+
-+  struct DumpVal {
-+    void operator()(std::tuple&amp;lt;int&amp;gt; n) {
-+      std::println(&amp;#34;(int) {}&amp;#34;, get&amp;lt;0&amp;gt;(n));
-+    }
-+    void operator()(std::tuple&amp;lt;std::string&amp;gt; s) {
-+      std::println(&amp;#34;(str) {}&amp;#34;, get&amp;lt;0&amp;gt;(s));
-+    }
-+  };
-+  std::visit(DumpVal{}, val1);
-+  std::visit(DumpVal{}, val2);
-+}
-+```
-+* ex::when_all_with_variant[color ff0000]
-+* ex::sender_t[link sender.md]
-+* ex::sender[link sender.md]
-+* ex::completion_signatures[link completion_signatures.md]
-+* ex::set_value_t[link set_value.md]
-+* ex::set_value[link set_value.md]
-+* ex::set_error_t[link set_error.md]
-+* ex::set_error[link set_error.md]
-+* ex::operation_state_t[link operation_state.md]
-+* std::this_thread::sync_wait[link ../this_thread/sync_wait.md]
-+* value()[link /reference/optional/optional/value.md]
-+* std::move[link /reference/utility/move.md]
-+* std::visit[link /reference/variant/visit.md]
-+* get&amp;lt;0&amp;gt;[link /reference/tuple/tuple/get.md]
-+
-+### 出力
-+```
-+(int) 100
-+(str) C++
-+```
-+
-+
-+## バージョン
-+### 言語
-+- C++26
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): ??
-+- [ICC](/implementation.md#icc): ??
-+- [Visual C++](/implementation.md#visual_cpp): ??
-+
-+
-+## 関連項目
-+- [`execution::when_all`](when_all.md)
-+- [`execution::into_variant`](into_variant.md)
-+
-+
-+## 参照
-+- [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
       </author>
     </entry>
   
