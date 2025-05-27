@@ -2,9 +2,317 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-05-26T14:46:26.065764</updated>
-  <id>016c2e11-a152-40f9-8caa-1547a8bb8085</id>
+  <updated>2025-05-27T05:17:10.251484</updated>
+  <id>28f7fa7f-26a1-408f-ab0d-a3c8fff92a3b</id>
 
+  
+    <entry>
+      <title>remove_copy -- algorithm/remove_copy : C++26波カッコ初期化に対応 #1311</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_remove_copy.html"/>
+      <id>260bfc553044c57089e17e64687fd428d2c49e4c:reference/algorithm/ranges_remove_copy.md</id>
+      <updated>2025-05-27T14:13:34+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_remove_copy.md b/reference/algorithm/ranges_remove_copy.md
+index baf9c7334..d47feda88 100644
+--- a/reference/algorithm/ranges_remove_copy.md
++++ b/reference/algorithm/ranges_remove_copy.md
+@@ -23,6 +23,23 @@ namespace std::ranges {
+                 O result,
+                 const T&amp;amp; value,
+                 Proj proj = {}); // (1) C++20
++  template &amp;lt;input_iterator I,
++            sentinel_for&amp;lt;I&amp;gt; S,
++            weakly_incrementable O,
++            class Proj = identity,
++            class T = projected_value_t&amp;lt;I, Proj&amp;gt;&amp;gt;
++    requires indirectly_copyable&amp;lt;I, O&amp;gt; &amp;amp;&amp;amp;
++             indirect_binary_predicate&amp;lt;
++               ranges::equal_to,
++               projected&amp;lt;I, Proj&amp;gt;,
++               const T*
++             &amp;gt;
++  constexpr remove_copy_result&amp;lt;I, O&amp;gt;
++    remove_copy(I first,
++                S last,
++                O result,
++                const T&amp;amp; value,
++                Proj proj = {}); // (1) C++26
+ 
+   template &amp;lt;input_range R,
+             weakly_incrementable O,
+@@ -39,6 +56,21 @@ namespace std::ranges {
+                 O result,
+                 const T&amp;amp; value,
+                 Proj proj = {}); // (2) C++20
++  template &amp;lt;input_range R,
++            weakly_incrementable O,
++            class Proj = identity,
++            class T = projected_value_t&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;&amp;gt;
++    requires indirectly_copyable&amp;lt;iterator_t&amp;lt;R&amp;gt;, O&amp;gt; &amp;amp;&amp;amp;
++             indirect_binary_predicate&amp;lt;
++               ranges::equal_to,
++               projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;,
++               const T*
++             &amp;gt;
++  constexpr remove_copy_result&amp;lt;borrowed_iterator_t&amp;lt;R&amp;gt;, O&amp;gt;
++    remove_copy(R&amp;amp;&amp;amp; r,
++                O result,
++                const T&amp;amp; value,
++                Proj proj = {}); // (2) C++26
+ }
+ ```
+ * input_iterator[link /reference/iterator/input_iterator.md]
+@@ -76,10 +108,17 @@ namespace std::ranges {
+ 
+ 
+ ## 備考
+-安定。
++- 安定。
++- (1), (2) :
++    - C++26 : 引数として波カッコ初期化`{}`を受け付ける
++        ```cpp
++        std::vector&amp;lt;T&amp;gt; v;
++        std::ranges::remove_copy(v, result, {a, b});
++        ```
+ 
+ 
+ ## 例
++### 基本的な使い方
+ ```cpp example
+ #include &amp;lt;algorithm&amp;gt;
+ #include &amp;lt;iostream&amp;gt;
+@@ -95,11 +134,53 @@ int main() {
+ ```
+ * std::ranges::remove_copy[color ff0000]
+ 
+-### 出力
++#### 出力
+ ```
+ 2,3,2,
+ ```
+ 
++### 波カッコ初期化を入力として使用する (C++26)
++```cpp example
++#include &amp;lt;algorithm&amp;gt;
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;vector&amp;gt;
++#include &amp;lt;iterator&amp;gt;
++
++struct Point {
++  int x;
++  int y;
++
++  bool operator==(const Point&amp;amp; other) const = default;
++};
++
++std::ostream&amp;amp; operator&amp;lt;&amp;lt;(std::ostream&amp;amp; os, const Point&amp;amp; p) {
++  return os &amp;lt;&amp;lt; p.x &amp;lt;&amp;lt; &amp;#34;,&amp;#34; &amp;lt;&amp;lt; p.y;
++}
++
++int main() {
++  std::vector&amp;lt;Point&amp;gt; v = {
++    {1, 2},
++    {3, 4},
++    {5, 6},
++    {1, 2},
++  };
++
++  // 値{1, 2}を除去した結果を出力する
++  std::ranges::remove_copy(
++    v,
++    std::ostream_iterator&amp;lt;Point&amp;gt;(std::cout, &amp;#34;\n&amp;#34;),
++    {1, 2}
++  );
++}
++```
++* std::ranges::remove_copy[color ff0000]
++
++#### 出力
++```
++3,4
++5,6
++```
++
+ 
+ ## バージョン
+ ### 言語
+@@ -113,3 +194,5 @@ int main() {
+ 
+ ## 参照
+ - [N4861 25 Algorithms library](https://timsong-cpp.github.io/cppwp/n4861/algorithms)
++- [P2248R8 Enabling list-initialization for algorithms](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2248r8.html)
++    - C++26で波カッコ初期化 (リスト初期化) に対応した
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>remove_copy -- algorithm/remove_copy : C++26波カッコ初期化に対応 #1311</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm/remove_copy.html"/>
+      <id>260bfc553044c57089e17e64687fd428d2c49e4c:reference/algorithm/remove_copy.md</id>
+      <updated>2025-05-27T14:13:34+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/remove_copy.md b/reference/algorithm/remove_copy.md
+index 2e9046c39..a7d0807a7 100644
+--- a/reference/algorithm/remove_copy.md
++++ b/reference/algorithm/remove_copy.md
+@@ -5,21 +5,34 @@
+ 
+ ```cpp
+ namespace std {
+-  template &amp;lt;class InputIterator, class OutputIterator, class T&amp;gt;
++  template &amp;lt;class InputIterator,
++            class OutputIterator,
++            class T&amp;gt;
+   OutputIterator
+     remove_copy(InputIterator first,
+                 InputIterator last,
+                 OutputIterator result,
+                 const T&amp;amp; value);         // (1) C++03
+-
+-  template &amp;lt;class InputIterator, class OutputIterator, class T&amp;gt;
++  template &amp;lt;class InputIterator,
++            class OutputIterator,
++            class T&amp;gt;
+   constexpr OutputIterator
+     remove_copy(InputIterator first,
+                 InputIterator last,
+                 OutputIterator result,
+                 const T&amp;amp; value);         // (1) C++20
++  template &amp;lt;class InputIterator,
++            class OutputIterator,
++            class T = typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type&amp;gt;
++  constexpr OutputIterator
++    remove_copy(InputIterator first,
++                InputIterator last,
++                OutputIterator result,
++                const T&amp;amp; value);         // (1) C++26
+ 
+-  template &amp;lt;class ExecutionPolicy, class ForwardIterator1, class ForwardIterator2,
++  template &amp;lt;class ExecutionPolicy,
++            class ForwardIterator1,
++            class ForwardIterator2,
+             class T&amp;gt;
+   ForwardIterator2
+     remove_copy(ExecutionPolicy&amp;amp;&amp;amp; exec,
+@@ -27,6 +40,16 @@ namespace std {
+                 ForwardIterator1 last,
+                 ForwardIterator2 result,
+                 const T&amp;amp; value);         // (2) C++17
++  template &amp;lt;class ExecutionPolicy,
++            class ForwardIterator1,
++            class ForwardIterator2,
++            class T = typename iterator_traits&amp;lt;ForwardIterator1&amp;gt;::value_type&amp;gt;
++  ForwardIterator2
++    remove_copy(ExecutionPolicy&amp;amp;&amp;amp; exec,
++                ForwardIterator1 first,
++                ForwardIterator1 last,
++                ForwardIterator2 result,
++                const T&amp;amp; value);         // (2) C++26
+ }
+ ```
+ 
+@@ -34,7 +57,7 @@ namespace std {
+ イテレータ範囲`[first, last)`から指定された要素を除け、その結果を出力の範囲へコピーする。
+ 
+ 
+-## テンプレートパラメータ制約
++## 適格要件
+ - `*result = *first` という式が有効であること
+ 
+ 
+@@ -55,10 +78,17 @@ namespace std {
+ 
+ 
+ ## 備考
+-安定。
++- 安定。
++- (1), (2) :
++    - C++26 : 引数として波カッコ初期化`{}`を受け付ける
++        ```cpp
++        std::vector&amp;lt;T&amp;gt; v;
++        std::remove_copy(v.begin(), v.end(), result, {a, b});
++        ```
+ 
+ 
+ ## 例
++### 基本的な使い方
+ ```cpp example
+ #include &amp;lt;algorithm&amp;gt;
+ #include &amp;lt;iostream&amp;gt;
+@@ -75,11 +105,54 @@ int main() {
+ ```
+ * std::remove_copy[color ff0000]
+ 
+-### 出力
++#### 出力
+ ```
+ 2,3,2,
+ ```
+ 
++### 波カッコ初期化を入力として使用する (C++26)
++```cpp example
++#include &amp;lt;algorithm&amp;gt;
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;vector&amp;gt;
++#include &amp;lt;iterator&amp;gt;
++
++struct Point {
++  int x;
++  int y;
++
++  bool operator==(const Point&amp;amp; other) const = default;
++};
++
++std::ostream&amp;amp; operator&amp;lt;&amp;lt;(std::ostream&amp;amp; os, const Point&amp;amp; p) {
++  return os &amp;lt;&amp;lt; p.x &amp;lt;&amp;lt; &amp;#34;,&amp;#34; &amp;lt;&amp;lt; p.y;
++}
++
++int main() {
++  std::vector&amp;lt;Point&amp;gt; v = {
++    {1, 2},
++    {3, 4},
++    {5, 6},
++    {1, 2},
++  };
++
++  // 値{1, 2}を除去した結果を出力する
++  std::remove_copy(
++    v.begin(),
++    v.end(),
++    std::ostream_iterator&amp;lt;Point&amp;gt;(std::cout, &amp;#34;\n&amp;#34;),
++    {1, 2}
++  );
++}
++```
++* std::remove_copy[color ff0000]
++
++#### 出力
++```
++3,4
++5,6
++```
++
+ 
+ ## 実装例
+ ```cpp
+@@ -97,3 +170,5 @@ OutputIterator remove_copy(InputIterator first, InputIterator last,
+ ## 参照
+ - [P0202R3 Add Constexpr Modifiers to Functions in `&amp;lt;algorithm&amp;gt;` and `&amp;lt;utility&amp;gt;` Headers](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0202r3.html)
+ - [P0467R2 Iterator Concerns for Parallel Algorithms](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0467r2.html)
++- [P2248R8 Enabling list-initialization for algorithms](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2248r8.html)
++    - C++26で波カッコ初期化 (リスト初期化) に対応した
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>remove -- algorithm/remove : C++26波カッコ初期化に対応 #1311</title>
@@ -882,482 +1190,6 @@ index fc6c6e3f6..9630d53bd 100644
      std::ostream_iterator&amp;lt;int&amp;gt;(std::cout, &amp;#34;\n&amp;#34;),
      {1, 2},
      {9, 9}
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>replace_copy -- replace_copy(_if) : C++26波カッコ初期化に対応 #1311</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_replace_copy.html"/>
-      <id>4c8f46515766f4d4dab7f34ad65e0675ce966c37:reference/algorithm/ranges_replace_copy.md</id>
-      <updated>2025-05-26T17:12:34+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_replace_copy.md b/reference/algorithm/ranges_replace_copy.md
-index 108231a70..fc6c6e3f6 100644
---- a/reference/algorithm/ranges_replace_copy.md
-+++ b/reference/algorithm/ranges_replace_copy.md
-@@ -25,6 +25,25 @@ namespace std::ranges {
-                  const T1&amp;amp; old_value,
-                  const T2&amp;amp; new_value,
-                  Proj proj = {}); // (1) C++20
-+  template &amp;lt;input_iterator I,
-+            sentinel_for&amp;lt;I&amp;gt; S,
-+            class O,
-+            class Proj = identity,
-+            class T1 = projected_value_t&amp;lt;I, Proj&amp;gt;,
-+            class T2 = iter_value_t&amp;lt;O&amp;gt;&amp;gt;
-+    requires indirectly_copyable&amp;lt;I, O&amp;gt; &amp;amp;&amp;amp;
-+             indirect_binary_predicate&amp;lt;
-+               ranges::equal_to,
-+               projected&amp;lt;I, Proj&amp;gt;,
-+               const T1*
-+             &amp;gt;
-+  constexpr replace_copy_result&amp;lt;I, O&amp;gt;
-+    replace_copy(I first,
-+                 S last,
-+                 O result,
-+                 const T1&amp;amp; old_value,
-+                 const T2&amp;amp; new_value,
-+                 Proj proj = {}); // (1) C++26
- 
-   template &amp;lt;input_range R,
-             class T1,
-@@ -36,13 +55,32 @@ namespace std::ranges {
-                ranges::equal_to,
-                projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;,
-                const T1*
--             &amp;gt;
-+             &amp;gt; &amp;amp;&amp;amp;
-+             output_iterator&amp;lt;O, const T2&amp;amp;&amp;gt;
-   constexpr replace_copy_result&amp;lt;borrowed_iterator_t&amp;lt;R&amp;gt;, O&amp;gt;
-     replace_copy(R&amp;amp;&amp;amp; r,
-                  O result,
-                  const T1&amp;amp; old_value,
-                  const T2&amp;amp; new_value,
-                  Proj proj = {}); // (2) C++20
-+  template &amp;lt;input_range R,
-+            class O,
-+            class Proj = identity,
-+            class T1 = projected_value_t&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;,
-+            class T2 = iter_value_t&amp;lt;O&amp;gt;&amp;gt;
-+    requires indirectly_copyable&amp;lt;iterator_t&amp;lt;R&amp;gt;, O&amp;gt; &amp;amp;&amp;amp;
-+             indirect_binary_predicate&amp;lt;
-+               ranges::equal_to,
-+               projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;,
-+               const T1*
-+             &amp;gt; &amp;amp;&amp;amp;
-+             output_iterator&amp;lt;O, const T2&amp;amp;&amp;gt;
-+  constexpr replace_copy_result&amp;lt;borrowed_iterator_t&amp;lt;R&amp;gt;, O&amp;gt;
-+    replace_copy(R&amp;amp;&amp;amp; r,
-+                 O result,
-+                 const T1&amp;amp; old_value,
-+                 const T2&amp;amp; new_value,
-+                 Proj proj = {}); // (2) C++26
- }
- ```
- * input_iterator[link /reference/iterator/input_iterator.md]
-@@ -80,7 +118,17 @@ namespace std::ranges {
- 正確に `last - first` 回の比較を行う
- 
- 
-+## 備考
-+- (1), (2) :
-+    - C++26 : 引数として波カッコ初期化`{}`を受け付ける
-+        ```cpp
-+        std::vector&amp;lt;T&amp;gt; v;
-+        std::ranges::replace_copy_if(v, result, {a, b}, {c, d});
-+        ```
-+
-+
- ## 例
-+### 基本的な使い方
- ```cpp example
- #include &amp;lt;algorithm&amp;gt;
- #include &amp;lt;iostream&amp;gt;
-@@ -96,11 +144,57 @@ int main() {
- ```
- * std::ranges::replace_copy[color ff0000]
- 
--### 出力
-+#### 出力
- ```
- 3,10,2,10,2,
- ```
- 
-+### 波カッコ初期化を入力として使用する (C++26)
-+```cpp example
-+#include &amp;lt;algorithm&amp;gt;
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;vector&amp;gt;
-+#include &amp;lt;iterator&amp;gt;
-+
-+struct Point {
-+  int x;
-+  int y;
-+
-+  bool operator==(const Point&amp;amp; other) const = default;
-+};
-+
-+std::ostream&amp;amp; operator&amp;lt;&amp;lt;(std::ostream&amp;amp; os, const Point&amp;amp; p) {
-+  return os &amp;lt;&amp;lt; p.x &amp;lt;&amp;lt; &amp;#39;,&amp;#39; &amp;lt;&amp;lt; p.y &amp;lt;&amp;lt; std::endl;
-+}
-+
-+int main() {
-+  std::vector&amp;lt;Point&amp;gt; v = {
-+    {1, 2},
-+    {3, 4},
-+    {5, 6},
-+    {1, 2},
-+  };
-+
-+  // 値が{1, 2}の要素をすべて{9, 9}に置き換えたものを出力する
-+  std::replace_copy(
-+    v.begin(),
-+    v.end(),
-+    std::ostream_iterator&amp;lt;int&amp;gt;(std::cout, &amp;#34;\n&amp;#34;),
-+    {1, 2},
-+    {9, 9}
-+  );
-+}
-+```
-+* std::ranges::replace_copy[color ff0000]
-+
-+#### 出力
-+```
-+9,9
-+3,4
-+5,6
-+9,9
-+```
-+
- ## バージョン
- ### 言語
- - C++20
-@@ -113,3 +207,5 @@ int main() {
- 
- ## 参照
- - [N4861 25 Algorithms library](https://timsong-cpp.github.io/cppwp/n4861/algorithms)
-+- [P2248R8 Enabling list-initialization for algorithms](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2248r8.html)
-+    - C++26で波カッコ初期化 (リスト初期化) に対応した
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>replace_copy_if -- replace_copy(_if) : C++26波カッコ初期化に対応 #1311</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_replace_copy_if.html"/>
-      <id>4c8f46515766f4d4dab7f34ad65e0675ce966c37:reference/algorithm/ranges_replace_copy_if.md</id>
-      <updated>2025-05-26T17:12:34+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_replace_copy_if.md b/reference/algorithm/ranges_replace_copy_if.md
-index 3d6e5bbe1..75cd00256 100644
---- a/reference/algorithm/ranges_replace_copy_if.md
-+++ b/reference/algorithm/ranges_replace_copy_if.md
-@@ -20,6 +20,22 @@ namespace std::ranges {
-                     Pred pred,
-                     const T&amp;amp; new_value,
-                     Proj proj = {}); // (1) C++20
-+  template &amp;lt;input_iterator I,
-+            sentinel_for&amp;lt;I&amp;gt; S,
-+            class O,
-+            class T = iter_value_t&amp;lt;O&amp;gt;,
-+            class Proj = identity,
-+            indirect_unary_predicate&amp;lt;projected&amp;lt;I, Proj&amp;gt;&amp;gt; Pred&amp;gt;
-+    requires
-+      indirectly_copyable&amp;lt;I, O&amp;gt; &amp;amp;&amp;amp;
-+      output_iterator&amp;lt;O, const T&amp;amp;&amp;gt;
-+  constexpr replace_copy_if_result&amp;lt;I, O&amp;gt;
-+    replace_copy_if(I first,
-+                    S last,
-+                    O result,
-+                    Pred pred,
-+                    const T&amp;amp; new_value,
-+                    Proj proj = {}); // (1) C++26
- 
-   template &amp;lt;input_range R,
-             class T,
-@@ -33,6 +49,20 @@ namespace std::ranges {
-                     Pred pred,
-                     const T&amp;amp; new_value,
-                     Proj proj = {}); // (2) C++20
-+  template &amp;lt;input_range R,
-+            class O,
-+            class T = iter_value_t&amp;lt;O&amp;gt;,
-+            class Proj = identity,
-+            indirect_unary_predicate&amp;lt;projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;&amp;gt; Pred&amp;gt;
-+    requires
-+      indirectly_copyable&amp;lt;iterator_t&amp;lt;R&amp;gt;, O&amp;gt; &amp;amp;&amp;amp;
-+      output_iterator&amp;lt;O, const T&amp;amp;&amp;gt;
-+  constexpr replace_copy_if_result&amp;lt;borrowed_iterator_t&amp;lt;R&amp;gt;, O&amp;gt;
-+    replace_copy_if(R&amp;amp;&amp;amp; r,
-+                    O result,
-+                    Pred pred,
-+                    const T&amp;amp; new_value,
-+                    Proj proj = {}); // (2) C++26
- }
- ```
- * input_iterator[link /reference/iterator/input_iterator.md]
-@@ -69,7 +99,17 @@ namespace std::ranges {
- 正確に `last - first` 回の述語の適用を行う
- 
- 
-+## 備考
-+- (1), (2) :
-+    - C++26 : 引数として波カッコ初期化`{}`を受け付ける
-+        ```cpp
-+        std::vector&amp;lt;T&amp;gt; v;
-+        std::ranges::replace_copy_if(v, result, pred, {a, b});
-+        ```
-+
-+
- ## 例
-+### 基本的な使い方
- ```cpp example
- #include &amp;lt;algorithm&amp;gt;
- #include &amp;lt;iostream&amp;gt;
-@@ -80,16 +120,65 @@ int main() {
-   std::vector&amp;lt;int&amp;gt; v = { 3,1,2,1,2 };
- 
-   // 奇数の要素を全部 10 に置き換えたものを出力する
--  std::ranges::replace_copy_if(v, std::ostream_iterator&amp;lt;int&amp;gt;(std::cout, &amp;#34;,&amp;#34;), [](int x) { return x%2 != 0; }, 10);
-+  std::ranges::replace_copy_if(
-+    v,
-+    std::ostream_iterator&amp;lt;int&amp;gt;(std::cout, &amp;#34;,&amp;#34;),
-+    [](int x) { return x%2 != 0; },
-+    10
-+  );
- }
- ```
- * std::ranges::replace_copy_if[color ff0000]
- 
--### 出力
-+#### 出力
- ```
- 10,10,2,10,2,
- ```
- 
-+### 波カッコ初期化を入力として使用する (C++26)
-+```cpp example
-+#include &amp;lt;algorithm&amp;gt;
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;vector&amp;gt;
-+#include &amp;lt;iterator&amp;gt;
-+
-+struct Point {
-+  int x;
-+  int y;
-+
-+  bool operator==(const Point&amp;amp; other) const = default;
-+};
-+
-+std::ostream&amp;amp; operator&amp;lt;&amp;lt;(std::ostream&amp;amp; os, const Point&amp;amp; p) {
-+  return os &amp;lt;&amp;lt; p.x &amp;lt;&amp;lt; &amp;#39;,&amp;#39; &amp;lt;&amp;lt; p.y &amp;lt;&amp;lt; std::endl;
-+}
-+
-+int main() {
-+  std::vector&amp;lt;Point&amp;gt; v = {
-+    {1, 2},
-+    {3, 4},
-+    {5, 6},
-+    {1, 2},
-+  };
-+
-+  // 値が{1, 2}の要素をすべて{9, 9}に置き換えたものを出力する
-+  std::ranges::replace_copy_if(
-+    v,
-+    std::ostream_iterator&amp;lt;int&amp;gt;(std::cout, &amp;#34;\n&amp;#34;),
-+    [](const Point&amp;amp; p) { return p.x == 1 &amp;amp;&amp;amp; p.y == 2; },
-+    {9, 9}
-+  );
-+}
-+```
-+* std::ranges::replace_copy_if[color ff0000]
-+
-+#### 出力
-+```
-+9,9
-+3,4
-+5,6
-+9,9
-+```
- 
- ## バージョン
- ### 言語
-@@ -103,3 +192,5 @@ int main() {
- 
- ## 参照
- - [N4861 25 Algorithms library](https://timsong-cpp.github.io/cppwp/n4861/algorithms)
-+- [P2248R8 Enabling list-initialization for algorithms](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2248r8.html)
-+    - C++26で波カッコ初期化 (リスト初期化) に対応した
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>replace_copy_if -- replace_copy(_if) : C++26波カッコ初期化に対応 #1311</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/replace_copy_if.html"/>
-      <id>4c8f46515766f4d4dab7f34ad65e0675ce966c37:reference/algorithm/replace_copy_if.md</id>
-      <updated>2025-05-26T17:12:34+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/replace_copy_if.md b/reference/algorithm/replace_copy_if.md
-index 82635adc8..afcf0e642 100644
---- a/reference/algorithm/replace_copy_if.md
-+++ b/reference/algorithm/replace_copy_if.md
-@@ -15,7 +15,6 @@ namespace std {
-                     OutputIterator result,
-                     Predicate pred,
-                     const T&amp;amp; new_value);     // (1) C++03
--
-   template &amp;lt;class InputIterator,
-             class OutputIterator,
-             class Predicate,
-@@ -26,11 +25,22 @@ namespace std {
-                     OutputIterator result,
-                     Predicate pred,
-                     const T&amp;amp; new_value);     // (1) C++20
-+  template &amp;lt;class InputIterator,
-+            class OutputIterator,
-+            class Predicate,
-+            class T = typename iterator_traits&amp;lt;OutputIterator&amp;gt;::value_type&amp;gt;
-+  constexpr OutputIterator
-+    replace_copy_if(InputIterator first,
-+                    InputIterator last,
-+                    OutputIterator result,
-+                    Predicate pred,
-+                    const T&amp;amp; new_value);     // (1) C++26
- 
-   template &amp;lt;class ExecutionPolicy,
-             class ForwardIterator1,
-             class ForwardIterator2,
--            class Predicate, class T&amp;gt;
-+            class Predicate,
-+            class T&amp;gt;
-   ForwardIterator2
-     replace_copy_if(ExecutionPolicy&amp;amp;&amp;amp; exec,
-                     ForwardIterator1 first,
-@@ -38,6 +48,18 @@ namespace std {
-                     ForwardIterator2 result,
-                     Predicate pred,
-                     const T&amp;amp; new_value);     // (2) C++17
-+  template &amp;lt;class ExecutionPolicy,
-+            class ForwardIterator1,
-+            class ForwardIterator2,
-+            class Predicate,
-+            class T = typename iterator_traits&amp;lt;ForwardIterator2&amp;gt;::value_type&amp;gt;
-+  ForwardIterator2
-+    replace_copy_if(ExecutionPolicy&amp;amp;&amp;amp; exec,
-+                    ForwardIterator1 first,
-+                    ForwardIterator1 last,
-+                    ForwardIterator2 result,
-+                    Predicate pred,
-+                    const T&amp;amp; new_value);     // (2) C++26
- }
- ```
- 
-@@ -45,7 +67,7 @@ namespace std {
- イテレータ範囲`[first, last)`のうち、条件を満たす要素を指定された値に置き換え、その結果を出力の範囲へコピーする。
- 
- 
--## テンプレートパラメータ制約
-+## 適格要件
- - `*first` と `new_value` は `result` へ書き込み可能であること
- 
- 
-@@ -65,7 +87,17 @@ namespace std {
- 正確に `last - first` 回の述語の適用を行う
- 
- 
-+## 備考
-+- (1), (2) :
-+    - C++26 : 引数として波カッコ初期化`{}`を受け付ける
-+        ```cpp
-+        std::vector&amp;lt;T&amp;gt; v;
-+        std::replace_copy_if(v.begin(), v.end(), result, pred, {a, b});
-+        ```
-+
-+
- ## 例
-+### 基本的な使い方
- ```cpp example
- #include &amp;lt;algorithm&amp;gt;
- #include &amp;lt;iostream&amp;gt;
-@@ -83,11 +115,57 @@ int main() {
- ```
- * std::replace_copy_if[color ff0000]
- 
--### 出力
-+#### 出力
- ```
- 10,10,2,10,2,
- ```
- 
-+### 波カッコ初期化を入力として使用する (C++26)
-+```cpp example
-+#include &amp;lt;algorithm&amp;gt;
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;vector&amp;gt;
-+#include &amp;lt;iterator&amp;gt;
-+
-+struct Point {
-+  int x;
-+  int y;
-+
-+  bool operator==(const Point&amp;amp; other) const = default;
-+};
-+
-+std::ostream&amp;amp; operator&amp;lt;&amp;lt;(std::ostream&amp;amp; os, const Point&amp;amp; p) {
-+  return os &amp;lt;&amp;lt; p.x &amp;lt;&amp;lt; &amp;#39;,&amp;#39; &amp;lt;&amp;lt; p.y &amp;lt;&amp;lt; std::endl;
-+}
-+
-+int main() {
-+  std::vector&amp;lt;Point&amp;gt; v = {
-+    {1, 2},
-+    {3, 4},
-+    {5, 6},
-+    {1, 2},
-+  };
-+
-+  // 値が{1, 2}の要素をすべて{9, 9}に置き換えたものを出力する
-+  std::replace_copy_if(
-+    v.begin(),
-+    v.end(),
-+    std::ostream_iterator&amp;lt;int&amp;gt;(std::cout, &amp;#34;\n&amp;#34;),
-+    [](const Point&amp;amp; p) { return p.x == 1 &amp;amp;&amp;amp; p.y == 2; },
-+    {9, 9}
-+  );
-+}
-+```
-+* std::replace_copy_if[color ff0000]
-+
-+#### 出力
-+```
-+9,9
-+3,4
-+5,6
-+9,9
-+```
-+
- ## 実装例
- ```cpp
- template &amp;lt;class InputIterator, class OutputIterator, class Predicate, class T&amp;gt;
-@@ -103,3 +181,5 @@ OutputIterator replace_copy_if(InputIterator first, InputIterator last, OutputIt
- ## 参照
- - [P0202R3 Add Constexpr Modifiers to Functions in `&amp;lt;algorithm&amp;gt;` and `&amp;lt;utility&amp;gt;` Headers](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0202r3.html)
- - [P0467R2 Iterator Concerns for Parallel Algorithms](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0467r2.html)
-+- [P2248R8 Enabling list-initialization for algorithms](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2248r8.html)
-+    - C++26で波カッコ初期化 (リスト初期化) に対応した
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
