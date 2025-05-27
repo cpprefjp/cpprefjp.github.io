@@ -2,9 +2,472 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-05-27T06:10:24.254228</updated>
-  <id>a7665c02-1455-4d28-9f03-83721485842b</id>
+  <updated>2025-05-27T07:39:37.755999</updated>
+  <id>a50a47ad-6f6f-447e-b34a-c1f6b86783e6</id>
 
+  
+    <entry>
+      <title>fold_left -- fold関係 : C++26波カッコ初期化に対応 #1311</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_fold_left.html"/>
+      <id>18c5fd30b91a20479cf45076a4b48e3b59b7fd6e:reference/algorithm/ranges_fold_left.md</id>
+      <updated>2025-05-27T16:36:03+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_fold_left.md b/reference/algorithm/ranges_fold_left.md
+index 3477c8c6d..8c7651f38 100644
+--- a/reference/algorithm/ranges_fold_left.md
++++ b/reference/algorithm/ranges_fold_left.md
+@@ -6,13 +6,39 @@
+ 
+ ```cpp
+ namespace std::ranges {
+-  template&amp;lt;input_iterator I, sentinel_for&amp;lt;I&amp;gt; S, class T,
+-           indirectly-binary-left-foldable&amp;lt;T, I&amp;gt; F&amp;gt;
+-  constexpr auto fold_left(I first, S last, T init, F f);       // (1)
+-
+-  template&amp;lt;input_range R, class T, 
+-           indirectly-binary-left-foldable&amp;lt;T, iterator_t&amp;lt;R&amp;gt;&amp;gt; F&amp;gt;
+-  constexpr auto fold_left(R&amp;amp;&amp;amp; r, T init, F f);                 // (2)
++  template &amp;lt;input_iterator I,
++            sentinel_for&amp;lt;I&amp;gt; S,
++            class T,
++            indirectly-binary-left-foldable&amp;lt;T, I&amp;gt; F&amp;gt;
++  constexpr auto
++    fold_left(I first,
++              S last,
++              T init,
++              F f);   // (1) C++23
++  template &amp;lt;input_iterator I,
++            sentinel_for&amp;lt;I&amp;gt; S,
++            class T = iter_value_t&amp;lt;I&amp;gt;,
++            indirectly-binary-left-foldable&amp;lt;T, I&amp;gt; F&amp;gt;
++  constexpr auto
++    fold_left(I first,
++              S last,
++              T init,
++              F f);   // (1) C++26
++
++  template &amp;lt;input_range R,
++            class T, 
++            indirectly-binary-left-foldable&amp;lt;T, iterator_t&amp;lt;R&amp;gt;&amp;gt; F&amp;gt;
++  constexpr auto
++    fold_left(R&amp;amp;&amp;amp; r,
++              T init,
++              F f);   // (2) C++23
++  template &amp;lt;input_range R,
++            class T = range_value_t&amp;lt;R&amp;gt;, 
++            indirectly-binary-left-foldable&amp;lt;T, iterator_t&amp;lt;R&amp;gt;&amp;gt; F&amp;gt;
++  constexpr auto
++    fold_left(R&amp;amp;&amp;amp; r,
++              T init,
++              F f);   // (2) C++26
+ }
+ ```
+ * input_iterator[link /reference/iterator/input_iterator.md]
+@@ -116,19 +142,22 @@ concept indirectly-binary-left-foldable =
+ 入力範囲`r`（`[first, last)`）の要素数を`N`とすると、正確に`N`回の`f`の適用が行われる。
+ 
+ ## 備考
+-
+-この関数の戻り値型は、入力の型`F, T, I`から次のような`U`として取得される
+-
+-```cpp
+-using U = decay_t&amp;lt;invoke_result_t&amp;lt;F&amp;amp;, T, iter_reference_t&amp;lt;I&amp;gt;&amp;gt;&amp;gt;;
+-```
+-* decay_t[link /reference/type_traits/decay.md]
+-* invoke_result_t[link /reference/type_traits/invoke_result.md]
+-* iter_reference_t[link /reference/iterator/iter_reference_t.md]
+-
+-すなわち、指定した二項演算を初期値とイテレータによって`f(std::move(init), *first)`のように呼び出した時の戻り値型がこの関数の戻り値型となる。
+-
+-また、この型`U`は`fold_left`の処理内部で積算値の型として使用されるものでもあり、`f`は`init`の代わりに`U`の右辺値も受け取れる必要がある。二項演算の呼び出しにおいては、第一引数に初期値もしくは積算値が渡され、第二引数にイテレータの間接参照結果が直接渡される。そして、二項演算の適用結果は積算値を保存する変数に直接代入される（つまり、結果を次のステップに引き継ぎたい場合は積算処理も二項演算内で行う必要がある）。詳細は下の実装例を参照。
++- この関数の戻り値型は、入力の型`F, T, I`から次のような`U`として取得される
++    ```cpp
++    using U = decay_t&amp;lt;invoke_result_t&amp;lt;F&amp;amp;, T, iter_reference_t&amp;lt;I&amp;gt;&amp;gt;&amp;gt;;
++    ```
++    * decay_t[link /reference/type_traits/decay.md]
++    * invoke_result_t[link /reference/type_traits/invoke_result.md]
++    * iter_reference_t[link /reference/iterator/iter_reference_t.md]
++
++    - すなわち、指定した二項演算を初期値とイテレータによって`f(std::move(init), *first)`のように呼び出した時の戻り値型がこの関数の戻り値型となる。
++    - また、この型`U`は`fold_left`の処理内部で積算値の型として使用されるものでもあり、`f`は`init`の代わりに`U`の右辺値も受け取れる必要がある。二項演算の呼び出しにおいては、第一引数に初期値もしくは積算値が渡され、第二引数にイテレータの間接参照結果が直接渡される。そして、二項演算の適用結果は積算値を保存する変数に直接代入される（つまり、結果を次のステップに引き継ぎたい場合は積算処理も二項演算内で行う必要がある）。詳細は下の実装例を参照。
++- (1), (2) :
++    - C++26 : 引数として波カッコ初期化`{}`を受け付ける
++        ```cpp
++        std::vector&amp;lt;T&amp;gt; v;
++        T sum = std::ranges::fold_left(v, {a, b}, op);
++        ```
+ 
+ ## 例
+ 
+@@ -172,7 +201,7 @@ int main() {
+ * plus[link /reference/functional/plus.md]
+ * println[link /reference/print/println.md]
+ 
+-### 出力
++#### 出力
+ ```
+ 55
+ 1.125
+@@ -217,12 +246,36 @@ int main() {
+ * println[link /reference/print/println.md]
+ * fold_right[link ranges_fold_right.md]
+ 
+-### 出力
++#### 出力
+ ```
+ init -&amp;gt; a -&amp;gt; b -&amp;gt; c -&amp;gt; d -&amp;gt; e -&amp;gt; f
+ init -&amp;gt; f -&amp;gt; e -&amp;gt; d -&amp;gt; c -&amp;gt; b -&amp;gt; a
+ ```
+ 
++### 波カッコ初期化を入力として使用する (C++26)
++```cpp example
++#include &amp;lt;algorithm&amp;gt;
++#include &amp;lt;print&amp;gt;
++#include &amp;lt;vector&amp;gt;
++
++int main() {
++  std::vector&amp;lt;int&amp;gt; v = {1, 2, 3};
++
++  int sum = std::ranges::fold_left(
++    v,
++    {},
++    [](auto&amp;amp;&amp;amp; a, auto&amp;amp;&amp;amp; b) { return a + b; }
++  );
++  std::println(&amp;#34;{}&amp;#34;, sum);
++}
++```
++* std::ranges::fold_left[color ff0000]
++
++#### 出力
++```
++6
++```
++
+ ## 実装例
+ 
+ ```cpp
+@@ -273,3 +326,5 @@ constexpr auto fold_left(I first, S last, T init, F f) {
+ 
+ - [P2322R6 `ranges::fold`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2322r6.html)
+ - [プログラミングHaskellのfoldr, foldlの説明が秀逸だった件 - あと味](https://taiju.hatenablog.com/entry/20130202/1359773888)
++- [P2248R8 Enabling list-initialization for algorithms](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2248r8.html)
++    - C++26で波カッコ初期化 (リスト初期化) に対応した
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>fold_left_with_iter -- fold関係 : C++26波カッコ初期化に対応 #1311</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_fold_left_with_iter.html"/>
+      <id>18c5fd30b91a20479cf45076a4b48e3b59b7fd6e:reference/algorithm/ranges_fold_left_with_iter.md</id>
+      <updated>2025-05-27T16:36:03+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_fold_left_with_iter.md b/reference/algorithm/ranges_fold_left_with_iter.md
+index a1e264bbc..1646732ec 100644
+--- a/reference/algorithm/ranges_fold_left_with_iter.md
++++ b/reference/algorithm/ranges_fold_left_with_iter.md
+@@ -6,13 +6,39 @@
+ 
+ ```cpp
+ namespace std::ranges {
+-  template&amp;lt;input_iterator I, sentinel_for&amp;lt;I&amp;gt; S, class T,
+-           indirectly-binary-left-foldable&amp;lt;T, I&amp;gt; F&amp;gt;
+-  constexpr auto fold_left_with_iter(I first, S last, T init, F f); // (1)
+-
+-  template&amp;lt;input_range R, class T,
+-           indirectly-binary-left-foldable&amp;lt;T, iterator_t&amp;lt;R&amp;gt;&amp;gt; F&amp;gt;
+-  constexpr auto fold_left_with_iter(R&amp;amp;&amp;amp; r, T init, F f);           // (2)
++  template &amp;lt;input_iterator I,
++            sentinel_for&amp;lt;I&amp;gt; S,
++            class T,
++            indirectly-binary-left-foldable&amp;lt;T, I&amp;gt; F&amp;gt;
++  constexpr auto
++    fold_left_with_iter(I first,
++                        S last,
++                        T init,
++                        F f); // (1) C++23
++  template &amp;lt;input_iterator I,
++            sentinel_for&amp;lt;I&amp;gt; S,
++            class T = iter_value_t&amp;lt;I&amp;gt;,
++            indirectly-binary-left-foldable&amp;lt;T, I&amp;gt; F&amp;gt;
++  constexpr auto
++    fold_left_with_iter(I first,
++                        S last,
++                        T init,
++                        F f); // (1) C++26
++
++  template &amp;lt;input_range R,
++            class T,
++            indirectly-binary-left-foldable&amp;lt;T, iterator_t&amp;lt;R&amp;gt;&amp;gt; F&amp;gt;
++  constexpr auto
++    fold_left_with_iter(R&amp;amp;&amp;amp; r,
++                        T init,
++                        F f); // (2) C++23
++  template &amp;lt;input_range R,
++            class T = range_value_t&amp;lt;R&amp;gt;,
++            indirectly-binary-left-foldable&amp;lt;T, iterator_t&amp;lt;R&amp;gt;&amp;gt; F&amp;gt;
++  constexpr auto
++    fold_left_with_iter(R&amp;amp;&amp;amp; r,
++                        T init,
++                        F f); // (2) C++26
+ }
+ ```
+ * input_iterator[link /reference/iterator/input_iterator.md]
+@@ -96,10 +122,15 @@ constexpr fold_left_with_iter_result&amp;lt;borrowed_iterator_t&amp;lt;R&amp;gt;, U&amp;gt;
+ 入力範囲`r`（`[first, last)`）の要素数を`N`とすると、正確に`N`回の`f`の適用が行われる。
+ 
+ ## 備考
++- 戻り値の項で使用している`U`は、指定した二項演算を初期値とイテレータによって`f(std::move(init), *first)`のように呼び出した時の戻り値型であり、`fold_left_with_iter()`の処理内部で積算値の型として使用されるものでもある。
++- `fold_left`同様に、`f`は`init`の代わりに`U`の右辺値も受け取れる必要がある。二項演算の呼び出しにおいては、第一引数に初期値もしくは積算値が渡され、第二引数にイテレータの間接参照結果が直接渡される。そして、二項演算の適用結果は積算値を保存する変数に直接代入される（つまり、結果を次のステップに引き継ぎたい場合は積算処理も二項演算内で行う必要がある）。詳細は下の実装例を参照。
++- (1), (2) :
++    - C++26 : 引数として波カッコ初期化`{}`を受け付ける
++        ```cpp
++        std::vector&amp;lt;T&amp;gt; v;
++        auto [end, sum] = std::ranges::fold_left_with_iter(v, {a, b}, op);
++        ```
+ 
+-戻り値の項で使用している`U`は、指定した二項演算を初期値とイテレータによって`f(std::move(init), *first)`のように呼び出した時の戻り値型であり、`fold_left_with_iter()`の処理内部で積算値の型として使用されるものでもある。
+-
+-`fold_left`同様に、`f`は`init`の代わりに`U`の右辺値も受け取れる必要がある。二項演算の呼び出しにおいては、第一引数に初期値もしくは積算値が渡され、第二引数にイテレータの間接参照結果が直接渡される。そして、二項演算の適用結果は積算値を保存する変数に直接代入される（つまり、結果を次のステップに引き継ぎたい場合は積算処理も二項演算内で行う必要がある）。詳細は下の実装例を参照。
+ 
+ ## 例
+ 
+@@ -141,7 +172,7 @@ int main() {
+ * plus[link /reference/functional/plus.md]
+ * println[link /reference/print/println.md]
+ 
+-### 出力
++#### 出力
+ ```
+ { true, 55 }
+ { true, 1.125 }
+@@ -178,7 +209,7 @@ int main() {
+ * println[link /reference/print/println.md]
+ * value_or[link /reference/optional/optional/value_or.md]
+ 
+-### 出力
++#### 出力
+ ```
+ -1
+ -1
+@@ -222,13 +253,37 @@ int main() {
+ * subrange[link /reference/ranges/subrange.md]
+ * println[link /reference/print/println.md]
+ 
+-### 出力
++#### 出力
+ 
+ ```
+ sum = 36
+ mul = 36288, 36288
+ ```
+ 
++### 波カッコ初期化を入力として使用する (C++26)
++```cpp example
++#include &amp;lt;algorithm&amp;gt;
++#include &amp;lt;print&amp;gt;
++#include &amp;lt;vector&amp;gt;
++
++int main() {
++  std::vector&amp;lt;int&amp;gt; v = {1, 2, 3};
++
++  auto [end, sum] = std::ranges::fold_left_with_iter(
++    v,
++    {},
++    [](auto&amp;amp;&amp;amp; a, auto&amp;amp;&amp;amp; b) { return a + b; }
++  );
++  std::println(&amp;#34;{} {}&amp;#34;, end == v.end(), sum);
++}
++```
++* std::ranges::fold_left_with_iter[color ff0000]
++
++#### 出力
++```
++true 6
++```
++
+ ## 実装例
+ 
+ ```cpp
+@@ -282,3 +337,5 @@ constexpr auto fold_left_with_iter(I first, S last, T init, F f) -&amp;gt; fold_left_wi
+ ## 参照
+ 
+ - [P2322R6 `ranges::fold`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2322r6.html)
++- [P2248R8 Enabling list-initialization for algorithms](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2248r8.html)
++    - C++26で波カッコ初期化 (リスト初期化) に対応した
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>fold_right -- fold関係 : C++26波カッコ初期化に対応 #1311</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_fold_right.html"/>
+      <id>18c5fd30b91a20479cf45076a4b48e3b59b7fd6e:reference/algorithm/ranges_fold_right.md</id>
+      <updated>2025-05-27T16:36:03+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_fold_right.md b/reference/algorithm/ranges_fold_right.md
+index 96a13edc2..2c418690b 100644
+--- a/reference/algorithm/ranges_fold_right.md
++++ b/reference/algorithm/ranges_fold_right.md
+@@ -6,13 +6,39 @@
+ 
+ ```cpp
+ namespace std::ranges {
+-  template&amp;lt;bidirectional_iterator I, sentinel_for&amp;lt;I&amp;gt; S, class T,
+-           indirectly-binary-right-foldable&amp;lt;T, I&amp;gt; F&amp;gt;
+-  constexpr auto fold_right(I first, S last, T init, F f);       // (1)
+-
+-  template&amp;lt;bidirectional_range R, class T,
+-           indirectly-binary-right-foldable&amp;lt;T, iterator_t&amp;lt;R&amp;gt;&amp;gt; F&amp;gt;
+-  constexpr auto fold_right(R&amp;amp;&amp;amp; r, T init, F f);                 // (2)
++  template &amp;lt;bidirectional_iterator I,
++            sentinel_for&amp;lt;I&amp;gt; S,
++            class T,
++            indirectly-binary-right-foldable&amp;lt;T, I&amp;gt; F&amp;gt;
++  constexpr auto
++    fold_right(I first,
++               S last,
++               T init,
++               F f);    // (1) C++23
++  template &amp;lt;bidirectional_iterator I,
++            sentinel_for&amp;lt;I&amp;gt; S,
++            class T = iter_value_t&amp;lt;I&amp;gt;,
++            indirectly-binary-right-foldable&amp;lt;T, I&amp;gt; F&amp;gt;
++  constexpr auto
++    fold_right(I first,
++               S last,
++               T init,
++               F f);    // (1) C++23
++
++  template &amp;lt;bidirectional_range R,
++            class T,
++            indirectly-binary-right-foldable&amp;lt;T, iterator_t&amp;lt;R&amp;gt;&amp;gt; F&amp;gt;
++  constexpr auto
++    fold_right(R&amp;amp;&amp;amp; r,
++               T init,
++               F f);    // (2) C++23
++  template &amp;lt;bidirectional_range R,
++            class T = range_value_t&amp;lt;R&amp;gt;,
++            indirectly-binary-right-foldable&amp;lt;T, iterator_t&amp;lt;R&amp;gt;&amp;gt; F&amp;gt;
++  constexpr auto
++    fold_right(R&amp;amp;&amp;amp; r,
++               T init,
++               F f);    // (2) C++26
+ }
+ ```
+ * bidirectional_iterator[link /reference/iterator/bidirectional_iterator.md]
+@@ -113,19 +139,23 @@ return accum;
+ 入力範囲`r`（`[first, last)`）の要素数を`N`とすると、正確に`N`回の`f`の適用が行われる。
+ 
+ ## 備考
++- この関数の戻り値型は、入力の型`F, T, I`から次のような`U`として取得される
++    ```cpp
++    using U = decay_t&amp;lt;invoke_result_t&amp;lt;F&amp;amp;, iter_reference_t&amp;lt;I&amp;gt;, T&amp;gt;&amp;gt;;
++    ```
++    * decay_t[link /reference/type_traits/decay.md]
++    * invoke_result_t[link /reference/type_traits/invoke_result.md]
++    * iter_reference_t[link /reference/iterator/iter_reference_t.md]
++
++    - すなわち、指定した二項演算をイテレータと初期値によって`f(*first, std::move(init))`のように呼び出した時の戻り値型がこの関数の戻り値型となる。
++    - また、この型`U`は`fold_right`の処理内部で積算値の型として使用されるものでもあり、`f`は`init`の代わりに`U`の右辺値も受け取れる必要がある。二項演算の呼び出しにおいては、第一引数にイテレータの間接参照結果が直接渡され、第二引数に初期値もしくは積算値が渡される。そして、二項演算の適用結果は積算値を保存する変数に直接代入される（つまり、結果を次のステップに引き継ぎたい場合は積算処理も二項演算内で行う必要がある）。詳細は下の実装例を参照。
++- (1), (2) :
++    - C++26 : 引数として波カッコ初期化`{}`を受け付ける
++        ```cpp
++        std::vector&amp;lt;T&amp;gt; v;
++        T sum = std::ranges::fold_right(v, {a, b}, op);
++        ```
+ 
+-この関数の戻り値型は、入力の型`F, T, I`から次のような`U`として取得される
+-
+-```cpp
+-using U = decay_t&amp;lt;invoke_result_t&amp;lt;F&amp;amp;, iter_reference_t&amp;lt;I&amp;gt;, T&amp;gt;&amp;gt;;
+-```
+-* decay_t[link /reference/type_traits/decay.md]
+-* invoke_result_t[link /reference/type_traits/invoke_result.md]
+-* iter_reference_t[link /reference/iterator/iter_reference_t.md]
+-
+-すなわち、指定した二項演算をイテレータと初期値によって`f(*first, std::move(init))`のように呼び出した時の戻り値型がこの関数の戻り値型となる。
+-
+-また、この型`U`は`fold_right`の処理内部で積算値の型として使用されるものでもあり、`f`は`init`の代わりに`U`の右辺値も受け取れる必要がある。二項演算の呼び出しにおいては、第一引数にイテレータの間接参照結果が直接渡され、第二引数に初期値もしくは積算値が渡される。そして、二項演算の適用結果は積算値を保存する変数に直接代入される（つまり、結果を次のステップに引き継ぎたい場合は積算処理も二項演算内で行う必要がある）。詳細は下の実装例を参照。
+ 
+ ## 例
+ 
+@@ -170,7 +200,7 @@ int main() {
+ * plus[link /reference/functional/plus.md]
+ * println[link /reference/print/println.md]
+ 
+-### 出力
++#### 出力
+ ```
+ 55
+ 1.125
+@@ -217,7 +247,7 @@ int main() {
+ * println[link /reference/print/println.md]
+ * fold_left[link /reference/algorithm/ranges_fold_left.md]
+ 
+-### 出力
++#### 出力
+ ```
+ init -&amp;gt; a -&amp;gt; b -&amp;gt; c -&amp;gt; d -&amp;gt; e -&amp;gt; f
+ init -&amp;gt; f -&amp;gt; e -&amp;gt; d -&amp;gt; c -&amp;gt; b -&amp;gt; a
+@@ -255,11 +285,35 @@ int main() {
+ * iota[link /reference/ranges/iota_view.md]
+ * println[link /reference/print/println.md]
+ 
+-### 出力
++#### 出力
+ ```
+ [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+ ```
+ 
++### 波カッコ初期化を入力として使用する (C++26)
++```cpp example
++#include &amp;lt;algorithm&amp;gt;
++#include &amp;lt;print&amp;gt;
++#include &amp;lt;vector&amp;gt;
++
++int main() {
++  std::vector&amp;lt;int&amp;gt; v = {1, 2, 3};
++
++  int sum = std::ranges::fold_right(
++    v,
++    {},
++    [](auto&amp;amp;&amp;amp; a, auto&amp;amp;&amp;amp; b) { return a + b; }
++  );
++  std::println(&amp;#34;{}&amp;#34;, sum);
++}
++```
++* std::ranges::fold_right[color ff0000]
++
++#### 出力
++```
++6
++```
++
+ ## 実装例
+ 
+ ```cpp
+@@ -309,3 +363,5 @@ constexpr auto fold_right(I first, S last, T init, F f) {
+ 
+ - [P2322R6 `ranges::fold`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2322r6.html)
+ - [プログラミングHaskellのfoldr, foldlの説明が秀逸だった件 - あと味](https://taiju.hatenablog.com/entry/20130202/1359773888)
++- [P2248R8 Enabling list-initialization for algorithms](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2248r8.html)
++    - C++26で波カッコ初期化 (リスト初期化) に対応した
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>binary_search -- binary_search : C++26波カッコ初期化に対応 #1311</title>
@@ -1252,314 +1715,6 @@ index afcf0e642..39692570c 100644
      [](const Point&amp;amp; p) { return p.x == 1 &amp;amp;&amp;amp; p.y == 2; },
      {9, 9}
    );
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>remove_copy -- algorithm/remove_copy : C++26波カッコ初期化に対応 #1311</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_remove_copy.html"/>
-      <id>260bfc553044c57089e17e64687fd428d2c49e4c:reference/algorithm/ranges_remove_copy.md</id>
-      <updated>2025-05-27T14:13:34+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_remove_copy.md b/reference/algorithm/ranges_remove_copy.md
-index baf9c7334..d47feda88 100644
---- a/reference/algorithm/ranges_remove_copy.md
-+++ b/reference/algorithm/ranges_remove_copy.md
-@@ -23,6 +23,23 @@ namespace std::ranges {
-                 O result,
-                 const T&amp;amp; value,
-                 Proj proj = {}); // (1) C++20
-+  template &amp;lt;input_iterator I,
-+            sentinel_for&amp;lt;I&amp;gt; S,
-+            weakly_incrementable O,
-+            class Proj = identity,
-+            class T = projected_value_t&amp;lt;I, Proj&amp;gt;&amp;gt;
-+    requires indirectly_copyable&amp;lt;I, O&amp;gt; &amp;amp;&amp;amp;
-+             indirect_binary_predicate&amp;lt;
-+               ranges::equal_to,
-+               projected&amp;lt;I, Proj&amp;gt;,
-+               const T*
-+             &amp;gt;
-+  constexpr remove_copy_result&amp;lt;I, O&amp;gt;
-+    remove_copy(I first,
-+                S last,
-+                O result,
-+                const T&amp;amp; value,
-+                Proj proj = {}); // (1) C++26
- 
-   template &amp;lt;input_range R,
-             weakly_incrementable O,
-@@ -39,6 +56,21 @@ namespace std::ranges {
-                 O result,
-                 const T&amp;amp; value,
-                 Proj proj = {}); // (2) C++20
-+  template &amp;lt;input_range R,
-+            weakly_incrementable O,
-+            class Proj = identity,
-+            class T = projected_value_t&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;&amp;gt;
-+    requires indirectly_copyable&amp;lt;iterator_t&amp;lt;R&amp;gt;, O&amp;gt; &amp;amp;&amp;amp;
-+             indirect_binary_predicate&amp;lt;
-+               ranges::equal_to,
-+               projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;,
-+               const T*
-+             &amp;gt;
-+  constexpr remove_copy_result&amp;lt;borrowed_iterator_t&amp;lt;R&amp;gt;, O&amp;gt;
-+    remove_copy(R&amp;amp;&amp;amp; r,
-+                O result,
-+                const T&amp;amp; value,
-+                Proj proj = {}); // (2) C++26
- }
- ```
- * input_iterator[link /reference/iterator/input_iterator.md]
-@@ -76,10 +108,17 @@ namespace std::ranges {
- 
- 
- ## 備考
--安定。
-+- 安定。
-+- (1), (2) :
-+    - C++26 : 引数として波カッコ初期化`{}`を受け付ける
-+        ```cpp
-+        std::vector&amp;lt;T&amp;gt; v;
-+        std::ranges::remove_copy(v, result, {a, b});
-+        ```
- 
- 
- ## 例
-+### 基本的な使い方
- ```cpp example
- #include &amp;lt;algorithm&amp;gt;
- #include &amp;lt;iostream&amp;gt;
-@@ -95,11 +134,53 @@ int main() {
- ```
- * std::ranges::remove_copy[color ff0000]
- 
--### 出力
-+#### 出力
- ```
- 2,3,2,
- ```
- 
-+### 波カッコ初期化を入力として使用する (C++26)
-+```cpp example
-+#include &amp;lt;algorithm&amp;gt;
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;vector&amp;gt;
-+#include &amp;lt;iterator&amp;gt;
-+
-+struct Point {
-+  int x;
-+  int y;
-+
-+  bool operator==(const Point&amp;amp; other) const = default;
-+};
-+
-+std::ostream&amp;amp; operator&amp;lt;&amp;lt;(std::ostream&amp;amp; os, const Point&amp;amp; p) {
-+  return os &amp;lt;&amp;lt; p.x &amp;lt;&amp;lt; &amp;#34;,&amp;#34; &amp;lt;&amp;lt; p.y;
-+}
-+
-+int main() {
-+  std::vector&amp;lt;Point&amp;gt; v = {
-+    {1, 2},
-+    {3, 4},
-+    {5, 6},
-+    {1, 2},
-+  };
-+
-+  // 値{1, 2}を除去した結果を出力する
-+  std::ranges::remove_copy(
-+    v,
-+    std::ostream_iterator&amp;lt;Point&amp;gt;(std::cout, &amp;#34;\n&amp;#34;),
-+    {1, 2}
-+  );
-+}
-+```
-+* std::ranges::remove_copy[color ff0000]
-+
-+#### 出力
-+```
-+3,4
-+5,6
-+```
-+
- 
- ## バージョン
- ### 言語
-@@ -113,3 +194,5 @@ int main() {
- 
- ## 参照
- - [N4861 25 Algorithms library](https://timsong-cpp.github.io/cppwp/n4861/algorithms)
-+- [P2248R8 Enabling list-initialization for algorithms](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2248r8.html)
-+    - C++26で波カッコ初期化 (リスト初期化) に対応した
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>remove_copy -- algorithm/remove_copy : C++26波カッコ初期化に対応 #1311</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/remove_copy.html"/>
-      <id>260bfc553044c57089e17e64687fd428d2c49e4c:reference/algorithm/remove_copy.md</id>
-      <updated>2025-05-27T14:13:34+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/remove_copy.md b/reference/algorithm/remove_copy.md
-index 2e9046c39..a7d0807a7 100644
---- a/reference/algorithm/remove_copy.md
-+++ b/reference/algorithm/remove_copy.md
-@@ -5,21 +5,34 @@
- 
- ```cpp
- namespace std {
--  template &amp;lt;class InputIterator, class OutputIterator, class T&amp;gt;
-+  template &amp;lt;class InputIterator,
-+            class OutputIterator,
-+            class T&amp;gt;
-   OutputIterator
-     remove_copy(InputIterator first,
-                 InputIterator last,
-                 OutputIterator result,
-                 const T&amp;amp; value);         // (1) C++03
--
--  template &amp;lt;class InputIterator, class OutputIterator, class T&amp;gt;
-+  template &amp;lt;class InputIterator,
-+            class OutputIterator,
-+            class T&amp;gt;
-   constexpr OutputIterator
-     remove_copy(InputIterator first,
-                 InputIterator last,
-                 OutputIterator result,
-                 const T&amp;amp; value);         // (1) C++20
-+  template &amp;lt;class InputIterator,
-+            class OutputIterator,
-+            class T = typename iterator_traits&amp;lt;InputIterator&amp;gt;::value_type&amp;gt;
-+  constexpr OutputIterator
-+    remove_copy(InputIterator first,
-+                InputIterator last,
-+                OutputIterator result,
-+                const T&amp;amp; value);         // (1) C++26
- 
--  template &amp;lt;class ExecutionPolicy, class ForwardIterator1, class ForwardIterator2,
-+  template &amp;lt;class ExecutionPolicy,
-+            class ForwardIterator1,
-+            class ForwardIterator2,
-             class T&amp;gt;
-   ForwardIterator2
-     remove_copy(ExecutionPolicy&amp;amp;&amp;amp; exec,
-@@ -27,6 +40,16 @@ namespace std {
-                 ForwardIterator1 last,
-                 ForwardIterator2 result,
-                 const T&amp;amp; value);         // (2) C++17
-+  template &amp;lt;class ExecutionPolicy,
-+            class ForwardIterator1,
-+            class ForwardIterator2,
-+            class T = typename iterator_traits&amp;lt;ForwardIterator1&amp;gt;::value_type&amp;gt;
-+  ForwardIterator2
-+    remove_copy(ExecutionPolicy&amp;amp;&amp;amp; exec,
-+                ForwardIterator1 first,
-+                ForwardIterator1 last,
-+                ForwardIterator2 result,
-+                const T&amp;amp; value);         // (2) C++26
- }
- ```
- 
-@@ -34,7 +57,7 @@ namespace std {
- イテレータ範囲`[first, last)`から指定された要素を除け、その結果を出力の範囲へコピーする。
- 
- 
--## テンプレートパラメータ制約
-+## 適格要件
- - `*result = *first` という式が有効であること
- 
- 
-@@ -55,10 +78,17 @@ namespace std {
- 
- 
- ## 備考
--安定。
-+- 安定。
-+- (1), (2) :
-+    - C++26 : 引数として波カッコ初期化`{}`を受け付ける
-+        ```cpp
-+        std::vector&amp;lt;T&amp;gt; v;
-+        std::remove_copy(v.begin(), v.end(), result, {a, b});
-+        ```
- 
- 
- ## 例
-+### 基本的な使い方
- ```cpp example
- #include &amp;lt;algorithm&amp;gt;
- #include &amp;lt;iostream&amp;gt;
-@@ -75,11 +105,54 @@ int main() {
- ```
- * std::remove_copy[color ff0000]
- 
--### 出力
-+#### 出力
- ```
- 2,3,2,
- ```
- 
-+### 波カッコ初期化を入力として使用する (C++26)
-+```cpp example
-+#include &amp;lt;algorithm&amp;gt;
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;vector&amp;gt;
-+#include &amp;lt;iterator&amp;gt;
-+
-+struct Point {
-+  int x;
-+  int y;
-+
-+  bool operator==(const Point&amp;amp; other) const = default;
-+};
-+
-+std::ostream&amp;amp; operator&amp;lt;&amp;lt;(std::ostream&amp;amp; os, const Point&amp;amp; p) {
-+  return os &amp;lt;&amp;lt; p.x &amp;lt;&amp;lt; &amp;#34;,&amp;#34; &amp;lt;&amp;lt; p.y;
-+}
-+
-+int main() {
-+  std::vector&amp;lt;Point&amp;gt; v = {
-+    {1, 2},
-+    {3, 4},
-+    {5, 6},
-+    {1, 2},
-+  };
-+
-+  // 値{1, 2}を除去した結果を出力する
-+  std::remove_copy(
-+    v.begin(),
-+    v.end(),
-+    std::ostream_iterator&amp;lt;Point&amp;gt;(std::cout, &amp;#34;\n&amp;#34;),
-+    {1, 2}
-+  );
-+}
-+```
-+* std::remove_copy[color ff0000]
-+
-+#### 出力
-+```
-+3,4
-+5,6
-+```
-+
- 
- ## 実装例
- ```cpp
-@@ -97,3 +170,5 @@ OutputIterator remove_copy(InputIterator first, InputIterator last,
- ## 参照
- - [P0202R3 Add Constexpr Modifiers to Functions in `&amp;lt;algorithm&amp;gt;` and `&amp;lt;utility&amp;gt;` Headers](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0202r3.html)
- - [P0467R2 Iterator Concerns for Parallel Algorithms](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0467r2.html)
-+- [P2248R8 Enabling list-initialization for algorithms](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2248r8.html)
-+    - C++26で波カッコ初期化 (リスト初期化) に対応した
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
