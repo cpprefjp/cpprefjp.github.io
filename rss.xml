@@ -2,9 +2,361 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-05-27T07:39:37.755999</updated>
-  <id>a50a47ad-6f6f-447e-b34a-c1f6b86783e6</id>
+  <updated>2025-05-27T07:56:21.247649</updated>
+  <id>fb1bee6f-8978-4252-868f-2f5f4a044652</id>
 
+  
+    <entry>
+      <title>contains -- find_last, contains : C++26波カッコ初期化に対応 #1311</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_contains.html"/>
+      <id>1350ce71a23944efb2f73e7eabded20f52930d17:reference/algorithm/ranges_contains.md</id>
+      <updated>2025-05-27T16:52:49+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_contains.md b/reference/algorithm/ranges_contains.md
+index be782ad08..2f3e2ded3 100644
+--- a/reference/algorithm/ranges_contains.md
++++ b/reference/algorithm/ranges_contains.md
+@@ -6,16 +6,59 @@
+ 
+ ```cpp
+ namespace ranges {
+-  // (1)
+-  template&amp;lt;input_iterator I, sentinel_for&amp;lt;I&amp;gt; S, class T, class Proj = identity&amp;gt;
+-    requires indirect_binary_predicate&amp;lt;ranges::equal_to, projected&amp;lt;I, Proj&amp;gt;, const T*&amp;gt;
+-    constexpr bool contains(I first, S last, const T&amp;amp; value, Proj proj = {});
+-
+-  // (2)
+-  template&amp;lt;input_range R, class T, class Proj = identity&amp;gt;
+-    requires
+-      indirect_binary_predicate&amp;lt;ranges::equal_to, projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;, const T*&amp;gt;
+-    constexpr bool contains(R&amp;amp;&amp;amp; r, const T&amp;amp; value, Proj proj = {});
++  template &amp;lt;input_iterator I,
++            sentinel_for&amp;lt;I&amp;gt; S,
++            class T,
++            class Proj = identity&amp;gt;
++    requires indirect_binary_predicate&amp;lt;
++               ranges::equal_to,
++               projected&amp;lt;I, Proj&amp;gt;,
++               const T*
++             &amp;gt;
++  constexpr bool
++    contains(I first,
++             S last,
++             const T&amp;amp; value,
++             Proj proj = {}); // (1) C++23
++  template &amp;lt;input_iterator I,
++            sentinel_for&amp;lt;I&amp;gt; S,
++            class Proj = identity,
++            class T = projected_value_t&amp;lt;I, Proj&amp;gt;&amp;gt;
++    requires indirect_binary_predicate&amp;lt;
++               ranges::equal_to,
++               projected&amp;lt;I, Proj&amp;gt;,
++               const T*
++             &amp;gt;
++  constexpr bool
++    contains(I first,
++             S last,
++             const T&amp;amp; value,
++             Proj proj = {}); // (1) C++26
++
++  template &amp;lt;input_range R,
++            class T,
++            class Proj = identity&amp;gt;
++    requires indirect_binary_predicate&amp;lt;
++               ranges::equal_to,
++               projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;,
++               const T*
++             &amp;gt;
++  constexpr bool
++    contains(R&amp;amp;&amp;amp; r,
++             const T&amp;amp; value,
++             Proj proj = {}); // (2) C++23
++  template &amp;lt;input_range R,
++            class Proj = identity,
++            class T = projected_value_t&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;&amp;gt;
++    requires indirect_binary_predicate&amp;lt;
++               ranges::equal_to,
++               projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;,
++               const T*
++             &amp;gt;
++  constexpr bool
++    contains(R&amp;amp;&amp;amp; r,
++             const T&amp;amp; value,
++             Proj proj = {}); // (2) C++26
+ }
+ ```
+ 
+@@ -25,25 +68,72 @@ namespace ranges {
+ - (1): イテレータ範囲を指定する
+ - (2): Rangeを直接指定する
+ 
++
+ ## 戻り値
+ ```cpp
+ ranges::find(std::move(first), last, value, proj) != last
+ ```
+ * ranges::find[link ranges_find.md]
+ 
++
+ ## 計算量
+ 最大で `last - first` 回比較を行う
+ 
+ 
++## 備考
++- (1), (2) :
++    - C++26 : 引数として波カッコ初期化`{}`を受け付ける
++        ```cpp
++        std::vector&amp;lt;T&amp;gt; v;
++        bool found = std::ranges::contains(r, {a, b});
++        ```
++
++
+ ## 例
++### 基本的な使い方
+ ```cpp example
+ #include &amp;lt;algorithm&amp;gt;
+ #include &amp;lt;print&amp;gt;
+ #include &amp;lt;array&amp;gt;
+ 
+ int main() {
+-  constexpr std::array v = { 3, 1, 4 };
+-  if (std::ranges::contains(v, 1)) {
++  constexpr std::array ar = { 3, 1, 4 };
++  if (std::ranges::contains(ar, 1)) {
++    std::println(&amp;#34;found&amp;#34;);
++  } else {
++    std::println(&amp;#34;not found&amp;#34;);
++  }
++}
++```
++* std::ranges::contains[color ff0000]
++
++#### 出力
++```
++found
++```
++
++### 波カッコ初期化を入力として使用する (C++26)
++```cpp example
++#include &amp;lt;algorithm&amp;gt;
++#include &amp;lt;print&amp;gt;
++#include &amp;lt;vector&amp;gt;
++
++struct Point {
++  int x;
++  int y;
++
++  bool operator==(const Point&amp;amp; other) const = default;
++};
++
++int main() {
++  std::vector&amp;lt;Point&amp;gt; v = {
++	{1, 2},
++	{3, 4},
++	{5, 6}
++  };
++
++  bool found = std::ranges::contains(v, {3, 4});
++  if (found) {
+     std::println(&amp;#34;found&amp;#34;);
+   } else {
+     std::println(&amp;#34;not found&amp;#34;);
+@@ -52,7 +142,7 @@ int main() {
+ ```
+ * std::ranges::contains[color ff0000]
+ 
+-### 出力
++#### 出力
+ ```
+ found
+ ```
+@@ -90,3 +180,5 @@ inline constexpr contains_impl contains;
+ 
+ ## 参照
+ - [N4950 27 Algorithms library](https://timsong-cpp.github.io/cppwp/n4950/algorithms)
++- [P2248R8 Enabling list-initialization for algorithms](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2248r8.html)
++    - C++26で波カッコ初期化 (リスト初期化) に対応した
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>find_last -- find_last, contains : C++26波カッコ初期化に対応 #1311</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_find_last.html"/>
+      <id>1350ce71a23944efb2f73e7eabded20f52930d17:reference/algorithm/ranges_find_last.md</id>
+      <updated>2025-05-27T16:52:49+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_find_last.md b/reference/algorithm/ranges_find_last.md
+index 47afea8da..a2c7878bc 100644
+--- a/reference/algorithm/ranges_find_last.md
++++ b/reference/algorithm/ranges_find_last.md
+@@ -10,21 +10,55 @@ namespace std::ranges {
+             sentinel_for&amp;lt;I&amp;gt; S,
+             class T,
+             class Proj = identity&amp;gt;
+-    requires indirect_binary_predicate&amp;lt;ranges::equal_to, projected&amp;lt;I, Proj&amp;gt;, const T*&amp;gt;
++    requires indirect_binary_predicate&amp;lt;
++               ranges::equal_to,
++               projected&amp;lt;I, Proj&amp;gt;,
++               const T*
++             &amp;gt;
+   constexpr ranges::subrange&amp;lt;I&amp;gt;
+     find_last(I first,
+               S last,
+               const T&amp;amp; value,
+               Proj proj = {}); // (1) C++23
++  template &amp;lt;forward_iterator I,
++            sentinel_for&amp;lt;I&amp;gt; S,
++            class Proj = identity,
++            class T = projected_value_t&amp;lt;I, Proj&amp;gt;&amp;gt;
++    requires indirect_binary_predicate&amp;lt;
++               ranges::equal_to,
++               projected&amp;lt;I, Proj&amp;gt;,
++               const T*
++             &amp;gt;
++  constexpr ranges::subrange&amp;lt;I&amp;gt;
++    find_last(I first,
++              S last,
++              const T&amp;amp; value,
++              Proj proj = {}); // (1) C++26
+ 
+   template &amp;lt;forward_range R,
+             class T,
+             class Proj = identity&amp;gt;
+-    requires indirect_binary_predicate&amp;lt;ranges::equal_to, projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;, const T*&amp;gt;
++    requires indirect_binary_predicate&amp;lt;
++               ranges::equal_to,
++               projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;,
++               const T*
++             &amp;gt;
+   constexpr ranges::borrowed_subrange_t&amp;lt;R&amp;gt;
+     find_last(R&amp;amp;&amp;amp; r,
+               const T&amp;amp; value,
+               Proj proj = {}); // (2) C++23
++  template &amp;lt;forward_range R,
++            class Proj = identity,
++            class T = projected_value_t&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;&amp;gt;
++    requires indirect_binary_predicate&amp;lt;
++               ranges::equal_to,
++               projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;,
++               const T*
++             &amp;gt;
++  constexpr ranges::borrowed_subrange_t&amp;lt;R&amp;gt;
++    find_last(R&amp;amp;&amp;amp; r,
++              const T&amp;amp; value,
++              Proj proj = {}); // (2) C++26
+ }
+ ```
+ * forward_iterator[link /reference/iterator/forward_iterator.md]
+@@ -50,31 +84,82 @@ namespace std::ranges {
+ 最大で `last - first` 回比較を行う
+ 
+ 
++## 備考
++- (1), (2) :
++    - C++26 : 引数として波カッコ初期化`{}`を受け付ける
++        ```cpp
++        std::vector&amp;lt;T&amp;gt; v;
++        bool found = std::ranges::find_last(r, {a, b});
++        ```
++
++
+ ## 例
++### 基本的な使い方
+ ```cpp example
+ #include &amp;lt;algorithm&amp;gt;
+ #include &amp;lt;array&amp;gt;
+ #include &amp;lt;iostream&amp;gt;
+ 
+ int main() {
+-  constexpr std::array v = { 3, 1, 4, 1, 5 };
+-  const auto result = std::ranges::find_last(v, 1);
+-  if (result.begin() == v.end()) {
++  constexpr std::array ar = { 3, 1, 4, 1, 5 };
++  const std::ranges::subrange result = std::ranges::find_last(ar, 1);
++  if (result.begin() == ar.end()) {
+     std::cout &amp;lt;&amp;lt; &amp;#34;not found&amp;#34; &amp;lt;&amp;lt; std::endl;
+   } else {
+     std::cout &amp;lt;&amp;lt; &amp;#34;found: &amp;#34; &amp;lt;&amp;lt; *result.begin() &amp;lt;&amp;lt; std::endl;
+-    std::cout &amp;lt;&amp;lt; &amp;#34;  pos: &amp;#34; &amp;lt;&amp;lt; std::distance(v.begin(), result.begin()) &amp;lt;&amp;lt; std::endl;
++    std::cout &amp;lt;&amp;lt; &amp;#34;  pos: &amp;#34; &amp;lt;&amp;lt; std::distance(ar.begin(), result.begin()) &amp;lt;&amp;lt; std::endl;
+   }
+ }
+ ```
+ * std::ranges::find_last[color ff0000]
+ 
+-### 出力
++#### 出力
+ ```
+ found: 1
+   pos: 3
+ ```
+ 
++### 波カッコ初期化を入力として使用する (C++26)
++```cpp example
++#include &amp;lt;algorithm&amp;gt;
++#include &amp;lt;array&amp;gt;
++#include &amp;lt;iostream&amp;gt;
++
++struct Point {
++  int x;
++  int y;
++
++  bool operator==(const Point&amp;amp; other) const = default;
++};
++
++std::ostream&amp;amp; operator&amp;lt;&amp;lt;(std::ostream&amp;amp; os, const Point&amp;amp; p) {
++  return os &amp;lt;&amp;lt; p.x &amp;lt;&amp;lt; &amp;#39;,&amp;#39; &amp;lt;&amp;lt; p.y;
++}
++
++int main() {
++  constexpr std::array&amp;lt;Point, 3&amp;gt; ar = {{
++    {1, 2},
++	{3, 4},
++	{5, 6}
++  }};
++
++  const std::ranges::subrange result = std::ranges::find_last(ar, {3, 4});
++  if (result.begin() == ar.end()) {
++    std::cout &amp;lt;&amp;lt; &amp;#34;not found&amp;#34; &amp;lt;&amp;lt; std::endl;
++  } else {
++    std::cout &amp;lt;&amp;lt; &amp;#34;found: &amp;#34; &amp;lt;&amp;lt; *result.begin() &amp;lt;&amp;lt; std::endl;
++    std::cout &amp;lt;&amp;lt; &amp;#34;  pos: &amp;#34; &amp;lt;&amp;lt; std::distance(ar.begin(), result.begin()) &amp;lt;&amp;lt; std::endl;
++  }
++}
++```
++* std::ranges::find_last[color ff0000]
++
++#### 出力
++```
++found: 3,4
++  pos: 1
++```
++
+ 
+ ## バージョン
+ ### 言語
+@@ -87,4 +172,8 @@ found: 1
+ - [Visual C++](/implementation.md#visual_cpp): ??
+ 
+ ## 参照
+-- [P1223R5 find_last](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1223r5.pdf)
++- [P1223R5 `find_last`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1223r5.pdf)
++- [P3217R0 Adjoints to &amp;#34;Enabling list-initialization for algorithms&amp;#34;: `find_last`](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3217r0.html)
++    - C++26で波カッコ初期化 (リスト初期化) に対応した
++    - 関連文書：
++        - [P2248R8 Enabling list-initialization for algorithms](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2248r8.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>fold_left -- fold関係 : C++26波カッコ初期化に対応 #1311</title>
@@ -1661,60 +2013,6 @@ index 3ce4be90a..2f86c5121 100644
  - [P0202R3 Add Constexpr Modifiers to Functions in `&amp;lt;algorithm&amp;gt;` and `&amp;lt;utility&amp;gt;` Headers](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0202r3.html)
 +- [P2248R8 Enabling list-initialization for algorithms](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2248r8.html)
 +    - C++26で波カッコ初期化 (リスト初期化) に対応した
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>replace_copy_if -- replace_copy_if : コンパイルエラー修正 #1311</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_replace_copy_if.html"/>
-      <id>bd1ef79d48ec9fd9f3ac5a7950ab86ea82844b83:reference/algorithm/ranges_replace_copy_if.md</id>
-      <updated>2025-05-27T14:19:16+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_replace_copy_if.md b/reference/algorithm/ranges_replace_copy_if.md
-index 75cd00256..1993964cd 100644
---- a/reference/algorithm/ranges_replace_copy_if.md
-+++ b/reference/algorithm/ranges_replace_copy_if.md
-@@ -164,7 +164,7 @@ int main() {
-   // 値が{1, 2}の要素をすべて{9, 9}に置き換えたものを出力する
-   std::ranges::replace_copy_if(
-     v,
--    std::ostream_iterator&amp;lt;int&amp;gt;(std::cout, &amp;#34;\n&amp;#34;),
-+    std::ostream_iterator&amp;lt;Point&amp;gt;(std::cout, &amp;#34;\n&amp;#34;),
-     [](const Point&amp;amp; p) { return p.x == 1 &amp;amp;&amp;amp; p.y == 2; },
-     {9, 9}
-   );
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>replace_copy_if -- replace_copy_if : コンパイルエラー修正 #1311</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/replace_copy_if.html"/>
-      <id>bd1ef79d48ec9fd9f3ac5a7950ab86ea82844b83:reference/algorithm/replace_copy_if.md</id>
-      <updated>2025-05-27T14:19:16+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/replace_copy_if.md b/reference/algorithm/replace_copy_if.md
-index afcf0e642..39692570c 100644
---- a/reference/algorithm/replace_copy_if.md
-+++ b/reference/algorithm/replace_copy_if.md
-@@ -150,7 +150,7 @@ int main() {
-   std::replace_copy_if(
-     v.begin(),
-     v.end(),
--    std::ostream_iterator&amp;lt;int&amp;gt;(std::cout, &amp;#34;\n&amp;#34;),
-+    std::ostream_iterator&amp;lt;Point&amp;gt;(std::cout, &amp;#34;\n&amp;#34;),
-     [](const Point&amp;amp; p) { return p.x == 1 &amp;amp;&amp;amp; p.y == 2; },
-     {9, 9}
-   );
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
