@@ -2,9 +2,314 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-05-27T05:47:18.472860</updated>
-  <id>fc8bfc21-596d-4ff8-bf4b-c28747619925</id>
+  <updated>2025-05-27T05:56:42.736501</updated>
+  <id>8752ca1b-e214-4b71-abab-3ad417b92034</id>
 
+  
+    <entry>
+      <title>equal_range -- equal_range : C++26波カッコ初期化に対応 #1311</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm/equal_range.html"/>
+      <id>1a1278ca88432498e33f6f87618e96f03a99c948:reference/algorithm/equal_range.md</id>
+      <updated>2025-05-27T14:53:08+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/equal_range.md b/reference/algorithm/equal_range.md
+index 9e1add89e..63b841b0f 100644
+--- a/reference/algorithm/equal_range.md
++++ b/reference/algorithm/equal_range.md
+@@ -5,31 +5,49 @@
+ 
+ ```cpp
+ namespace std {
+-  template &amp;lt;class ForwardIterator, class T&amp;gt;
++  template &amp;lt;class ForwardIterator,
++            class T&amp;gt;
+   pair&amp;lt;ForwardIterator, ForwardIterator&amp;gt;
+     equal_range(ForwardIterator first,
+                 ForwardIterator last,
+                 const T&amp;amp; value);      // (1) C++03
+-
+-  template &amp;lt;class ForwardIterator, class T&amp;gt;
++  template &amp;lt;class ForwardIterator,
++            class T&amp;gt;
+   constexpr pair&amp;lt;ForwardIterator, ForwardIterator&amp;gt;
+     equal_range(ForwardIterator first,
+                 ForwardIterator last,
+                 const T&amp;amp; value);      // (1) C++20
++  template &amp;lt;class ForwardIterator,
++            class T = typename iterator_traits&amp;lt;ForwardIterator&amp;gt;::value_type&amp;gt;
++  constexpr pair&amp;lt;ForwardIterator, ForwardIterator&amp;gt;
++    equal_range(ForwardIterator first,
++                ForwardIterator last,
++                const T&amp;amp; value);      // (1) C++26
+ 
+-  template &amp;lt;class ForwardIterator, class T, class Compare&amp;gt;
++  template &amp;lt;class ForwardIterator,
++            class T,
++            class Compare&amp;gt;
+   pair&amp;lt;ForwardIterator, ForwardIterator&amp;gt;
+     equal_range(ForwardIterator first,
+                 ForwardIterator last,
+                 const T&amp;amp; value,
+                 Compare comp);        // (2) C++03
+-
+-  template &amp;lt;class ForwardIterator, class T, class Compare&amp;gt;
++  template &amp;lt;class ForwardIterator,
++            class T,
++            class Compare&amp;gt;
+   constexpr pair&amp;lt;ForwardIterator, ForwardIterator&amp;gt;
+     equal_range(ForwardIterator first,
+                 ForwardIterator last,
+                 const T&amp;amp; value,
+                 Compare comp);        // (2) C++20
++  template &amp;lt;class ForwardIterator,
++            class T = typename iterator_traits&amp;lt;ForwardIterator&amp;gt;::value_type,
++            class Compare&amp;gt;
++  constexpr pair&amp;lt;ForwardIterator, ForwardIterator&amp;gt;
++    equal_range(ForwardIterator first,
++                ForwardIterator last,
++                const T&amp;amp; value,
++                Compare comp);        // (2) C++26
+ }
+ ```
+ * pair[link /reference/utility/pair.md]
+@@ -54,7 +72,17 @@ namespace std {
+ 最大で 2 * log2(`last - first`) + O(1) 回の比較を行う
+ 
+ 
++## 備考
++- (1), (2) :
++    - C++26 : 引数として波カッコ初期化`{}`を受け付ける
++        ```cpp
++        std::vector&amp;lt;T&amp;gt; v;
++        auto result = std::equal_range(v.begin(), v.end(), {a, b});
++        ```
++
++
+ ## 例
++### 基本的な使い方
+ ```cpp example
+ #include &amp;lt;iostream&amp;gt;
+ #include &amp;lt;vector&amp;gt;
+@@ -75,13 +103,53 @@ int main()
+ ```
+ * equal_range[color ff0000]
+ 
+-### 出力
++#### 出力
+ ```
+ 3
+ 4
+ ```
+ 
++### 波カッコ初期化を入力として使用する (C++26)
++```cpp example
++#include &amp;lt;algorithm&amp;gt;
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;vector&amp;gt;
++
++struct Point {
++  int x;
++  int y;
++
++  bool operator==(const Point&amp;amp; other) const = default;
++  auto operator&amp;lt;=&amp;gt;(const Point&amp;amp; other) const = default;
++};
++
++int main() {
++  std::vector&amp;lt;Point&amp;gt; v = {
++    {1, 2},
++    {3, 4},
++    {3, 4},
++    {5, 6},
++  };
++
++  // 値{3, 4}が見つかる範囲を取得
++  auto result = std::equal_range(v.begin(), v.end(), {3, 4});
++
++  while (result.first != result.second) {
++    std::cout &amp;lt;&amp;lt; result.first-&amp;gt;x &amp;lt;&amp;lt; &amp;#34;,&amp;#34; &amp;lt;&amp;lt; result.first-&amp;gt;y &amp;lt;&amp;lt; std::endl;
++    ++result.first;
++  }
++}
++```
++* std::equal_range[color ff0000]
++
++#### 出力
++```
++3,4
++3,4
++```
+ 
+ ## 参照
+ - [LWG Issue 384. `equal_range` has unimplementable runtime complexity](http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#384)
+ - [P0202R3 Add Constexpr Modifiers to Functions in `&amp;lt;algorithm&amp;gt;` and `&amp;lt;utility&amp;gt;` Headers](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0202r3.html)
++- [P2248R8 Enabling list-initialization for algorithms](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2248r8.html)
++    - C++26で波カッコ初期化 (リスト初期化) に対応した
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>equal_range -- equal_range : C++26波カッコ初期化に対応 #1311</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_equal_range.html"/>
+      <id>1a1278ca88432498e33f6f87618e96f03a99c948:reference/algorithm/ranges_equal_range.md</id>
+      <updated>2025-05-27T14:53:08+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_equal_range.md b/reference/algorithm/ranges_equal_range.md
+index a580318ff..225f563da 100644
+--- a/reference/algorithm/ranges_equal_range.md
++++ b/reference/algorithm/ranges_equal_range.md
+@@ -10,23 +10,55 @@ namespace std::ranges {
+             sentinel_for&amp;lt;I&amp;gt; S,
+             class T,
+             class Proj = identity,
+-            indirect_strict_weak_order&amp;lt;const T*, projected&amp;lt;I, Proj&amp;gt;&amp;gt; Comp = ranges::less&amp;gt;
++            indirect_strict_weak_order&amp;lt;
++              const T*,
++              projected&amp;lt;I, Proj&amp;gt;
++            &amp;gt; Comp = ranges::less&amp;gt;
+   constexpr subrange&amp;lt;I&amp;gt;
+     equal_range(I first,
+                 S last,
+                 const T&amp;amp; value,
+                 Comp comp = {},
+                 Proj proj = {}); // (1) C++20
++  template &amp;lt;forward_iterator I,
++            sentinel_for&amp;lt;I&amp;gt; S,
++            class Proj = identity,
++            class T = projected_value_t&amp;lt;I, Proj&amp;gt;,
++            indirect_strict_weak_order&amp;lt;
++              const T*,
++              projected&amp;lt;I, Proj&amp;gt;
++            &amp;gt; Comp = ranges::less&amp;gt;
++  constexpr subrange&amp;lt;I&amp;gt;
++    equal_range(I first,
++                S last,
++                const T&amp;amp; value,
++                Comp comp = {},
++                Proj proj = {}); // (1) C++26
+ 
+   template &amp;lt;forward_range R,
+             class T,
+             class Proj = identity,
+-            indirect_strict_weak_order&amp;lt;const T*, projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;&amp;gt; Comp = ranges::less&amp;gt;
++            indirect_strict_weak_order&amp;lt;
++              const T*,
++              projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;
++            &amp;gt; Comp = ranges::less&amp;gt;
+   constexpr borrowed_subrange_t&amp;lt;R&amp;gt;
+     equal_range(R&amp;amp;&amp;amp; r,
+                 const T&amp;amp; value,
+                 Comp comp = {},
+                 Proj proj = {}); // (2) C++20
++  template &amp;lt;forward_range R,
++            class Proj = identity,
++            class T = projected_value_t&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;,
++            indirect_strict_weak_order&amp;lt;
++              const T*,
++              projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;
++            &amp;gt; Comp = ranges::less&amp;gt;
++  constexpr borrowed_subrange_t&amp;lt;R&amp;gt;
++    equal_range(R&amp;amp;&amp;amp; r,
++                const T&amp;amp; value,
++                Comp comp = {},
++                Proj proj = {}); // (2) C++26
+ }
+ ```
+ * forward_iterator[link /reference/iterator/forward_iterator.md]
+@@ -57,11 +89,21 @@ namespace std::ranges {
+ ## 戻り値
+ `{`[`ranges::lower_bound`](ranges_lower_bound.md)`(first, last, value, comp, proj), `[`ranges::upper_bound`](ranges_upper_bound.md)`(first, last, value, comp, proj)}`
+ 
++
+ ## 計算量
+ 最大で 2 * log2(`last - first`) + O(1) 回の比較を行う
+ 
+ 
++## 備考
++- (1), (2) :
++    - C++26 : 引数として波カッコ初期化`{}`を受け付ける
++        ```cpp
++        std::vector&amp;lt;T&amp;gt; v;
++        auto result = std::ranges::equal_range(v, {a, b});
++        ```
++
+ ## 例
++### 基本的な使い方
+ ```cpp example
+ #include &amp;lt;iostream&amp;gt;
+ #include &amp;lt;vector&amp;gt;
+@@ -93,7 +135,7 @@ int main()
+ * std::ranges::sort[link ranges_sort.md]
+ * std::ranges::equal_range[color ff0000]
+ 
+-### 出力
++#### 出力
+ ```
+ size: 2
+ 3
+@@ -102,6 +144,44 @@ size: 2
+ size: 0
+ ```
+ 
++### 波カッコ初期化を入力として使用する (C++26)
++```cpp example
++#include &amp;lt;algorithm&amp;gt;
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;vector&amp;gt;
++
++struct Point {
++  int x;
++  int y;
++
++  bool operator==(const Point&amp;amp; other) const = default;
++  auto operator&amp;lt;=&amp;gt;(const Point&amp;amp; other) const = default;
++};
++
++int main() {
++  std::vector&amp;lt;Point&amp;gt; v = {
++    {1, 2},
++    {3, 4},
++    {3, 4},
++    {5, 6},
++  };
++
++  // 値{3, 4}が見つかる範囲を取得
++  auto result = std::ranges::equal_range(v, {3, 4});
++
++  for (const Point&amp;amp; p : result) {
++    std::cout &amp;lt;&amp;lt; p.x &amp;lt;&amp;lt; &amp;#34;,&amp;#34; &amp;lt;&amp;lt; p.y &amp;lt;&amp;lt; std::endl;
++  }
++}
++```
++* std::ranges::equal_range[color ff0000]
++
++#### 出力
++```
++3,4
++3,4
++```
++
+ ## バージョン
+ ### 言語
+ - C++20
+@@ -114,3 +194,5 @@ size: 0
+ 
+ ## 参照
+ - [N4861 25 Algorithms library](https://timsong-cpp.github.io/cppwp/n4861/algorithms)
++- [P2248R8 Enabling list-initialization for algorithms](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2248r8.html)
++    - C++26で波カッコ初期化 (リスト初期化) に対応した
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>lower_bound -- lower_bound / upper_bound : C++26波カッコ初期化に対応 #1311</title>
@@ -1266,290 +1571,6 @@ index fbbca8269..425eb8894 100644
  - [LWG Issue 2110. `remove` can&amp;#39;t swap but note says it might](http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#2110)
      - C++11までのこのアルゴリズムは、要素の移動にswap操作が行われるかもしれない、と書いていた。だが、このアルゴリズムの要件は`MoveAssignable`のみであるため、swapはできない。そのため、C++14からは、ムーブのみで要素の移動が行われるようになった。
  - [P0202R3 Add Constexpr Modifiers to Functions in `&amp;lt;algorithm&amp;gt;` and `&amp;lt;utility&amp;gt;` Headers](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0202r3.html)
-+- [P2248R8 Enabling list-initialization for algorithms](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2248r8.html)
-+    - C++26で波カッコ初期化 (リスト初期化) に対応した
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>fill_n -- algorithm/fill_n : C++26波カッコ初期化に対応 #1311</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/fill_n.html"/>
-      <id>e463c2f1b30245bf44d5d57c3eaa3cfb0e5dbb9a:reference/algorithm/fill_n.md</id>
-      <updated>2025-05-26T18:42:51+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/fill_n.md b/reference/algorithm/fill_n.md
-index d737860ca..d79e725d8 100644
---- a/reference/algorithm/fill_n.md
-+++ b/reference/algorithm/fill_n.md
-@@ -5,31 +5,53 @@
- 
- ```cpp
- namespace std {
--  template &amp;lt;class OutputIterator, class Size, class T&amp;gt;
-+  template &amp;lt;class OutputIterator,
-+            class Size,
-+            class T&amp;gt;
-   void
-     fill_n(OutputIterator first,
-            Size n,
-            const T&amp;amp; value);        // (1) C++03
--
--  template &amp;lt;class OutputIterator, class Size, class T&amp;gt;
-+  template &amp;lt;class OutputIterator,
-+            class Size,
-+            class T&amp;gt;
-   OutputIterator
-     fill_n(OutputIterator first,
-            Size n,
-            const T&amp;amp; value);        // (1) C++11
--
--  template &amp;lt;class OutputIterator, class Size, class T&amp;gt;
-+  template &amp;lt;class OutputIterator,
-+            class Size,
-+            class T&amp;gt;
-   constexpr OutputIterator
-     fill_n(OutputIterator first,
-            Size n,
-            const T&amp;amp; value);        // (1) C++20
-+  template &amp;lt;class OutputIterator,
-+            class Size,
-+            class T = typename iterator_traits&amp;lt;OutputIterator&amp;gt;::value_type&amp;gt;
-+  constexpr OutputIterator
-+    fill_n(OutputIterator first,
-+           Size n,
-+           const T&amp;amp; value);        // (1) C++26
- 
--  template &amp;lt;class ExecutionPolicy, class ForwardIterator,
--            class Size, class T&amp;gt;
-+  template &amp;lt;class ExecutionPolicy,
-+            class ForwardIterator,
-+            class Size,
-+            class T&amp;gt;
-   ForwardIterator
-     fill_n(ExecutionPolicy&amp;amp;&amp;amp; exec,
-            ForwardIterator first,
-            Size n,
-            const T&amp;amp; value);        // (2) C++17
-+  template &amp;lt;class ExecutionPolicy,
-+            class ForwardIterator,
-+            class Size,
-+            class T = typename iterator_traits&amp;lt;ForwardIterator&amp;gt;::value_type&amp;gt;
-+  ForwardIterator
-+    fill_n(ExecutionPolicy&amp;amp;&amp;amp; exec,
-+           ForwardIterator first,
-+           Size n,
-+           const T&amp;amp; value);        // (2) C++26
- }
- ```
- 
-@@ -37,7 +59,7 @@ namespace std {
- イテレータ範囲`[first, first + n)`のすべての要素に指定された値を書き込む。
- 
- 
--## 要件
-+## 適格要件
- - `value` は `output iterator` へ書き込み可能でなければならない。
- - `Size` は `integral type` に変換可能でなければならない。
- 
-@@ -57,24 +79,69 @@ namespace std {
- `n` が 1 以上の場合は `n` 回、そうでない場合は 0 回の代入を行う。
- 
- 
-+## 備考
-+- (1), (2) :
-+    - C++26 : `value`パラメータとして波カッコ初期化`{}`を受け付ける
-+        ```cpp
-+        std::vector&amp;lt;T&amp;gt; v;
-+        std::fill_n(v.begin(), n, {a, b});
-+        ```
-+
-+
- ## 例
-+### 基本的な使い方
- ```cpp example
- #include &amp;lt;algorithm&amp;gt;
- #include &amp;lt;iostream&amp;gt;
- #include &amp;lt;iterator&amp;gt;
- 
- int main() {
--  // 3 を出力しまくる
-+  // 値3を10個出力する
-   std::fill_n(std::ostream_iterator&amp;lt;int&amp;gt;(std::cout, &amp;#34;,&amp;#34;), 10, 3);
- }
- ```
- * std::fill_n[color ff0000]
- 
--### 出力
-+#### 出力
- ```
- 3,3,3,3,3,3,3,3,3,3,
- ```
- 
-+### 波カッコ初期化を入力として使用する (C++26)
-+```cpp example
-+#include &amp;lt;algorithm&amp;gt;
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;vector&amp;gt;
-+
-+struct Point {
-+  int x;
-+  int y;
-+
-+  bool operator==(const Point&amp;amp; other) const = default;
-+};
-+
-+int main() {
-+  std::vector&amp;lt;Point&amp;gt; v(5);
-+
-+  // 先頭3個の要素を値{1, 2}で埋める
-+  std::fill_n(v.begin(), 3, {1, 2});
-+
-+  for (const Point&amp;amp; p : v) {
-+    std::cout &amp;lt;&amp;lt; p.x &amp;lt;&amp;lt; &amp;#34;,&amp;#34; &amp;lt;&amp;lt; p.y &amp;lt;&amp;lt; std::endl;
-+  }
-+}
-+```
-+* std::fill_n[color ff0000]
-+
-+#### 出力
-+```
-+1,2
-+1,2
-+1,2
-+0,0
-+0,0
-+```
-+
- 
- ## 実装例
- ```cpp
-@@ -107,3 +174,5 @@ fill_n(OutputIterator first, Size n, const T&amp;amp; value) {
- 	戻り値が追加されるきっかけとなったレポート
- - [P0202R3 Add Constexpr Modifiers to Functions in `&amp;lt;algorithm&amp;gt;` and `&amp;lt;utility&amp;gt;` Headers](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0202r3.html)
- - [P0467R2 Iterator Concerns for Parallel Algorithms](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0467r2.html)
-+- [P2248R8 Enabling list-initialization for algorithms](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2248r8.html)
-+    - C++26で波カッコ初期化 (リスト初期化) に対応した
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>fill_n -- algorithm/fill_n : C++26波カッコ初期化に対応 #1311</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_fill_n.html"/>
-      <id>e463c2f1b30245bf44d5d57c3eaa3cfb0e5dbb9a:reference/algorithm/ranges_fill_n.md</id>
-      <updated>2025-05-26T18:42:51+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_fill_n.md b/reference/algorithm/ranges_fill_n.md
-index 4ccd268ed..6a89db71c 100644
---- a/reference/algorithm/ranges_fill_n.md
-+++ b/reference/algorithm/ranges_fill_n.md
-@@ -6,9 +6,19 @@
- 
- ```cpp
- namespace std::ranges {
--  template&amp;lt;class T, output_iterator&amp;lt;const T&amp;amp;&amp;gt; O&amp;gt;
-+  template &amp;lt;class T,
-+            output_iterator&amp;lt;const T&amp;amp;&amp;gt; O&amp;gt;
-   constexpr O
--    fill_n(O first, iter_difference_t&amp;lt;O&amp;gt; n, const T&amp;amp; value); // (1) C++20
-+    fill_n(O first,
-+           iter_difference_t&amp;lt;O&amp;gt; n,
-+           const T&amp;amp; value);   // (1) C++20
-+  template &amp;lt;class O,
-+            class T = iter_value_t&amp;lt;O&amp;gt;&amp;gt;
-+    requires output_iterator&amp;lt;O, const T&amp;amp;&amp;gt;
-+  constexpr O
-+    fill_n(O first,
-+           iter_difference_t&amp;lt;O&amp;gt; n,
-+           const T&amp;amp; value);   // (1) C++26
- }
- ```
- * output_iterator[link /reference/iterator/output_iterator.md]
-@@ -30,24 +40,69 @@ namespace std::ranges {
- `n` が 1 以上の場合は `n` 回、そうでない場合は 0 回の代入を行う。
- 
- 
-+## 備考
-+- (1) :
-+    - C++26 : `value`パラメータとして波カッコ初期化`{}`を受け付ける
-+        ```cpp
-+        std::vector&amp;lt;T&amp;gt; v;
-+        std::ranges::fill_n(v.begin(), n, {a, b});
-+        ```
-+
-+
- ## 例
-+### 基本的な使い方
- ```cpp example
- #include &amp;lt;algorithm&amp;gt;
- #include &amp;lt;iostream&amp;gt;
- #include &amp;lt;iterator&amp;gt;
- 
- int main() {
--  // 3 を10回出力する
-+  // 値3を10個出力する
-   std::ranges::fill_n(std::ostream_iterator&amp;lt;int&amp;gt;(std::cout, &amp;#34;,&amp;#34;), 10, 3);
- }
- ```
- * std::ranges::fill_n[color ff0000]
- 
--### 出力
-+#### 出力
- ```
- 3,3,3,3,3,3,3,3,3,3,
- ```
- 
-+### 波カッコ初期化を入力として使用する (C++26)
-+```cpp example
-+#include &amp;lt;algorithm&amp;gt;
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;vector&amp;gt;
-+
-+struct Point {
-+  int x;
-+  int y;
-+
-+  bool operator==(const Point&amp;amp; other) const = default;
-+};
-+
-+int main() {
-+  std::vector&amp;lt;Point&amp;gt; v(5);
-+
-+  // 先頭3個の要素を値{1, 2}で埋める
-+  std::ranges::fill_n(v.begin(), 3, {1, 2});
-+
-+  for (const Point&amp;amp; p : v) {
-+    std::cout &amp;lt;&amp;lt; p.x &amp;lt;&amp;lt; &amp;#34;,&amp;#34; &amp;lt;&amp;lt; p.y &amp;lt;&amp;lt; std::endl;
-+  }
-+}
-+```
-+* std::ranges::fill_n[color ff0000]
-+
-+#### 出力
-+```
-+1,2
-+1,2
-+1,2
-+0,0
-+0,0
-+```
-+
- 
- ## バージョン
- ### 言語
-@@ -61,3 +116,5 @@ int main() {
- 
- ## 参照
- - [N4861 25 Algorithms library](https://timsong-cpp.github.io/cppwp/n4861/algorithms)
 +- [P2248R8 Enabling list-initialization for algorithms](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2248r8.html)
 +    - C++26で波カッコ初期化 (リスト初期化) に対応した
 &lt;/code&gt;&lt;/pre&gt;</summary>
