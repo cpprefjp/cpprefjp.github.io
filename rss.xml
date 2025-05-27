@@ -2,9 +2,233 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-05-27T08:11:57.136195</updated>
-  <id>c8595c11-94a9-4bcb-a257-00060664dd68</id>
+  <updated>2025-05-27T08:26:55.053411</updated>
+  <id>8255da7b-651d-464d-9372-382d2be045a9</id>
 
+  
+    <entry>
+      <title>count -- ranges::count, equal_range, lower_bound : 射影変換の例を追加</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_count.html"/>
+      <id>1f87d6a9e341dd8e5fe7a0f74d7545a804e9895a:reference/algorithm/ranges_count.md</id>
+      <updated>2025-05-27T17:23:04+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_count.md b/reference/algorithm/ranges_count.md
+index 0c3504815..294f0855b 100644
+--- a/reference/algorithm/ranges_count.md
++++ b/reference/algorithm/ranges_count.md
+@@ -142,6 +142,43 @@ int main() {
+ count of {1,2}: 2
+ ```
+ 
++### 射影変換を使用した例
++```cpp example
++#include &amp;lt;algorithm&amp;gt;
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;vector&amp;gt;
++#include &amp;lt;string&amp;gt;
++
++struct Item {
++  int id;
++  std::string label;
++};
++
++int main() {
++  std::vector&amp;lt;Point&amp;gt; v = {
++    {1, &amp;#34;foo&amp;#34;},
++    {3, &amp;#34;bar&amp;#34;},
++    {5, &amp;#34;foo&amp;#34;},
++    {2, &amp;#34;baz&amp;#34;},
++  };
++
++  // メンバ変数ポインタを使って label==&amp;#34;foo&amp;#34; の要素数を数える
++  int n1 = std::ranges::count(v, std::string(&amp;#34;foo&amp;#34;), &amp;amp;Item::label);
++  std::cout &amp;lt;&amp;lt; &amp;#34;count of label==\&amp;#34;foo\&amp;#34;: &amp;#34; &amp;lt;&amp;lt; n1 &amp;lt;&amp;lt; std::endl;
++
++  // ラムダ式を使って id==1 の要素数を数える
++  int n2 = std::ranges::count(v, 1, [](const Item&amp;amp; p) { return p.id; });
++  std::cout &amp;lt;&amp;lt; &amp;#34;count of id==1: &amp;#34; &amp;lt;&amp;lt; n2 &amp;lt;&amp;lt; std::endl;
++}
++```
++* std::ranges::count[color ff0000]
++
++#### 出力
++```
++count of label==&amp;#34;foo&amp;#34;: 2
++count of id==1: 2
++```
++
+ 
+ ## 実装例
+ ```cpp
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>equal_range -- ranges::count, equal_range, lower_bound : 射影変換の例を追加</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_equal_range.html"/>
+      <id>1f87d6a9e341dd8e5fe7a0f74d7545a804e9895a:reference/algorithm/ranges_equal_range.md</id>
+      <updated>2025-05-27T17:23:04+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_equal_range.md b/reference/algorithm/ranges_equal_range.md
+index 225f563da..fa5266fb4 100644
+--- a/reference/algorithm/ranges_equal_range.md
++++ b/reference/algorithm/ranges_equal_range.md
+@@ -182,6 +182,62 @@ int main() {
+ 3,4
+ ```
+ 
++### 射影変換を使用した例
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;vector&amp;gt;
++#include &amp;lt;algorithm&amp;gt;
++#include &amp;lt;string&amp;gt;
++
++struct X {
++  int id;
++  std::string name;
++};
++
++int main() {
++  std::vector&amp;lt;X&amp;gt; v = {
++    {1, &amp;#34;Carol&amp;#34;},
++    {3, &amp;#34;Alice&amp;#34;},
++    {4, &amp;#34;Bob&amp;#34;},
++    {4, &amp;#34;Bob&amp;#34;},
++    {5, &amp;#34;Eve&amp;#34;},
++    {6, &amp;#34;Dave&amp;#34;}
++  };
++  const std::string key = &amp;#34;Bob&amp;#34;;
++
++  // メンバ変数nameをキーとして検索
++  // 1. メンバ変数ポインタを使う方法
++  auto result1 = std::ranges::equal_range(v, key, {}, &amp;amp;X::name);
++  std::cout &amp;lt;&amp;lt; &amp;#34;[メンバ変数ポインタ]&amp;#34; &amp;lt;&amp;lt; std::endl;
++  for (const X&amp;amp; x : result1) {
++    std::cout &amp;lt;&amp;lt; &amp;#34;id=&amp;#34; &amp;lt;&amp;lt; x.id &amp;lt;&amp;lt; &amp;#34; name=&amp;#34; &amp;lt;&amp;lt; x.name &amp;lt;&amp;lt; std::endl;
++  }
++
++  // 2. ラムダ式を使う方法
++  auto result2 = std::ranges::equal_range(
++    v,
++    key,
++    {},
++    [](const X&amp;amp; x) { return x.name; }
++);
++  std::cout &amp;lt;&amp;lt; &amp;#34;[ラムダ式]&amp;#34; &amp;lt;&amp;lt; std::endl;
++  for (const X&amp;amp; x : result2) {
++    std::cout &amp;lt;&amp;lt; &amp;#34;id=&amp;#34; &amp;lt;&amp;lt; x.id &amp;lt;&amp;lt; &amp;#34; name=&amp;#34; &amp;lt;&amp;lt; x.name &amp;lt;&amp;lt; std::endl;
++  }
++}
++```
++* std::ranges::equal_range[color ff0000]
++
++#### 出力
++```
++[メンバ変数ポインタ]
++id=4 name=Bob
++id=4 name=Bob
++[ラムダ式]
++id=4 name=Bob
++id=4 name=Bob
++```
++
+ ## バージョン
+ ### 言語
+ - C++20
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>lower_bound -- ranges::count, equal_range, lower_bound : 射影変換の例を追加</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_lower_bound.html"/>
+      <id>1f87d6a9e341dd8e5fe7a0f74d7545a804e9895a:reference/algorithm/ranges_lower_bound.md</id>
+      <updated>2025-05-27T17:23:04+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_lower_bound.md b/reference/algorithm/ranges_lower_bound.md
+index 9fb2c5659..9b4d1be4f 100644
+--- a/reference/algorithm/ranges_lower_bound.md
++++ b/reference/algorithm/ranges_lower_bound.md
+@@ -230,6 +230,62 @@ int main() {
+ pos=2
+ ```
+ 
++### 射影変換を使用した例
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;algorithm&amp;gt;
++#include &amp;lt;vector&amp;gt;
++#include &amp;lt;string&amp;gt;
++
++struct X {
++  int id;
++  std::string name;
++};
++
++int main() {
++  std::vector&amp;lt;X&amp;gt; v = {
++    {1, &amp;#34;Carol&amp;#34;},
++    {3, &amp;#34;Alice&amp;#34;},
++    {4, &amp;#34;Bob&amp;#34;},
++    {5, &amp;#34;Eve&amp;#34;},
++    {6, &amp;#34;Dave&amp;#34;}
++  };
++  const std::string key = &amp;#34;Bob&amp;#34;;
++
++  // nameメンバ変数をキーとして検索
++  // 1. メンバ変数ポインタを使う方法
++  auto it1 = std::ranges::lower_bound(v, key, {}, &amp;amp;X::name);
++  if (it1 != v.end() &amp;amp;&amp;amp; it1-&amp;gt;name == key) {
++    std::size_t pos = std::ranges::distance(v.begin(), it1);
++    std::cout &amp;lt;&amp;lt; &amp;#34;id=&amp;#34; &amp;lt;&amp;lt; it1-&amp;gt;id
++              &amp;lt;&amp;lt; &amp;#34; name=&amp;#34; &amp;lt;&amp;lt; it1-&amp;gt;name
++              &amp;lt;&amp;lt; &amp;#34; pos=&amp;#34; &amp;lt;&amp;lt; pos &amp;lt;&amp;lt; std::endl;
++  }
++
++  // 2. ラムダ式を使う方法
++  auto it2 = std::ranges::lower_bound(
++    v,
++    key,
++    {},
++    [](const X&amp;amp; x) { return x.name; }
++  );
++  if (it2 != v.end() &amp;amp;&amp;amp; it2-&amp;gt;name == key) {
++    std::size_t pos = std::ranges::distance(v.begin(), it2);
++    std::cout &amp;lt;&amp;lt; &amp;#34;id=&amp;#34; &amp;lt;&amp;lt; it2-&amp;gt;id
++              &amp;lt;&amp;lt; &amp;#34; name=&amp;#34; &amp;lt;&amp;lt; it2-&amp;gt;name
++              &amp;lt;&amp;lt; &amp;#34; pos=&amp;#34; &amp;lt;&amp;lt; pos &amp;lt;&amp;lt; std::endl;
++  }
++}
++```
++* std::ranges::lower_bound[color ff0000]
++* std::ranges::distance[link /reference/iterator/ranges_distance.md]
++
++#### 出力
++```
++id=4 name=Bob pos=2
++id=4 name=Bob pos=2
++```
++
+ ## バージョン
+ ### 言語
+ - C++20
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>find -- ranges::find : 射影変換の例を追加</title>
@@ -1169,311 +1393,6 @@ index 54df91313..7c950f41a 100644
  ```
  found
 @@ -107,3 +180,5 @@ found
- 
- ## 参照
- - [N4861 25 Algorithms library](https://timsong-cpp.github.io/cppwp/n4861/algorithms)
-+- [P2248R8 Enabling list-initialization for algorithms](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2248r8.html)
-+    - C++26で波カッコ初期化 (リスト初期化) に対応した
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>equal_range -- equal_range : C++26波カッコ初期化に対応 #1311</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/equal_range.html"/>
-      <id>1a1278ca88432498e33f6f87618e96f03a99c948:reference/algorithm/equal_range.md</id>
-      <updated>2025-05-27T14:53:08+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/equal_range.md b/reference/algorithm/equal_range.md
-index 9e1add89e..63b841b0f 100644
---- a/reference/algorithm/equal_range.md
-+++ b/reference/algorithm/equal_range.md
-@@ -5,31 +5,49 @@
- 
- ```cpp
- namespace std {
--  template &amp;lt;class ForwardIterator, class T&amp;gt;
-+  template &amp;lt;class ForwardIterator,
-+            class T&amp;gt;
-   pair&amp;lt;ForwardIterator, ForwardIterator&amp;gt;
-     equal_range(ForwardIterator first,
-                 ForwardIterator last,
-                 const T&amp;amp; value);      // (1) C++03
--
--  template &amp;lt;class ForwardIterator, class T&amp;gt;
-+  template &amp;lt;class ForwardIterator,
-+            class T&amp;gt;
-   constexpr pair&amp;lt;ForwardIterator, ForwardIterator&amp;gt;
-     equal_range(ForwardIterator first,
-                 ForwardIterator last,
-                 const T&amp;amp; value);      // (1) C++20
-+  template &amp;lt;class ForwardIterator,
-+            class T = typename iterator_traits&amp;lt;ForwardIterator&amp;gt;::value_type&amp;gt;
-+  constexpr pair&amp;lt;ForwardIterator, ForwardIterator&amp;gt;
-+    equal_range(ForwardIterator first,
-+                ForwardIterator last,
-+                const T&amp;amp; value);      // (1) C++26
- 
--  template &amp;lt;class ForwardIterator, class T, class Compare&amp;gt;
-+  template &amp;lt;class ForwardIterator,
-+            class T,
-+            class Compare&amp;gt;
-   pair&amp;lt;ForwardIterator, ForwardIterator&amp;gt;
-     equal_range(ForwardIterator first,
-                 ForwardIterator last,
-                 const T&amp;amp; value,
-                 Compare comp);        // (2) C++03
--
--  template &amp;lt;class ForwardIterator, class T, class Compare&amp;gt;
-+  template &amp;lt;class ForwardIterator,
-+            class T,
-+            class Compare&amp;gt;
-   constexpr pair&amp;lt;ForwardIterator, ForwardIterator&amp;gt;
-     equal_range(ForwardIterator first,
-                 ForwardIterator last,
-                 const T&amp;amp; value,
-                 Compare comp);        // (2) C++20
-+  template &amp;lt;class ForwardIterator,
-+            class T = typename iterator_traits&amp;lt;ForwardIterator&amp;gt;::value_type,
-+            class Compare&amp;gt;
-+  constexpr pair&amp;lt;ForwardIterator, ForwardIterator&amp;gt;
-+    equal_range(ForwardIterator first,
-+                ForwardIterator last,
-+                const T&amp;amp; value,
-+                Compare comp);        // (2) C++26
- }
- ```
- * pair[link /reference/utility/pair.md]
-@@ -54,7 +72,17 @@ namespace std {
- 最大で 2 * log2(`last - first`) + O(1) 回の比較を行う
- 
- 
-+## 備考
-+- (1), (2) :
-+    - C++26 : 引数として波カッコ初期化`{}`を受け付ける
-+        ```cpp
-+        std::vector&amp;lt;T&amp;gt; v;
-+        auto result = std::equal_range(v.begin(), v.end(), {a, b});
-+        ```
-+
-+
- ## 例
-+### 基本的な使い方
- ```cpp example
- #include &amp;lt;iostream&amp;gt;
- #include &amp;lt;vector&amp;gt;
-@@ -75,13 +103,53 @@ int main()
- ```
- * equal_range[color ff0000]
- 
--### 出力
-+#### 出力
- ```
- 3
- 4
- ```
- 
-+### 波カッコ初期化を入力として使用する (C++26)
-+```cpp example
-+#include &amp;lt;algorithm&amp;gt;
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;vector&amp;gt;
-+
-+struct Point {
-+  int x;
-+  int y;
-+
-+  bool operator==(const Point&amp;amp; other) const = default;
-+  auto operator&amp;lt;=&amp;gt;(const Point&amp;amp; other) const = default;
-+};
-+
-+int main() {
-+  std::vector&amp;lt;Point&amp;gt; v = {
-+    {1, 2},
-+    {3, 4},
-+    {3, 4},
-+    {5, 6},
-+  };
-+
-+  // 値{3, 4}が見つかる範囲を取得
-+  auto result = std::equal_range(v.begin(), v.end(), {3, 4});
-+
-+  while (result.first != result.second) {
-+    std::cout &amp;lt;&amp;lt; result.first-&amp;gt;x &amp;lt;&amp;lt; &amp;#34;,&amp;#34; &amp;lt;&amp;lt; result.first-&amp;gt;y &amp;lt;&amp;lt; std::endl;
-+    ++result.first;
-+  }
-+}
-+```
-+* std::equal_range[color ff0000]
-+
-+#### 出力
-+```
-+3,4
-+3,4
-+```
- 
- ## 参照
- - [LWG Issue 384. `equal_range` has unimplementable runtime complexity](http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#384)
- - [P0202R3 Add Constexpr Modifiers to Functions in `&amp;lt;algorithm&amp;gt;` and `&amp;lt;utility&amp;gt;` Headers](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0202r3.html)
-+- [P2248R8 Enabling list-initialization for algorithms](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2248r8.html)
-+    - C++26で波カッコ初期化 (リスト初期化) に対応した
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>equal_range -- equal_range : C++26波カッコ初期化に対応 #1311</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_equal_range.html"/>
-      <id>1a1278ca88432498e33f6f87618e96f03a99c948:reference/algorithm/ranges_equal_range.md</id>
-      <updated>2025-05-27T14:53:08+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_equal_range.md b/reference/algorithm/ranges_equal_range.md
-index a580318ff..225f563da 100644
---- a/reference/algorithm/ranges_equal_range.md
-+++ b/reference/algorithm/ranges_equal_range.md
-@@ -10,23 +10,55 @@ namespace std::ranges {
-             sentinel_for&amp;lt;I&amp;gt; S,
-             class T,
-             class Proj = identity,
--            indirect_strict_weak_order&amp;lt;const T*, projected&amp;lt;I, Proj&amp;gt;&amp;gt; Comp = ranges::less&amp;gt;
-+            indirect_strict_weak_order&amp;lt;
-+              const T*,
-+              projected&amp;lt;I, Proj&amp;gt;
-+            &amp;gt; Comp = ranges::less&amp;gt;
-   constexpr subrange&amp;lt;I&amp;gt;
-     equal_range(I first,
-                 S last,
-                 const T&amp;amp; value,
-                 Comp comp = {},
-                 Proj proj = {}); // (1) C++20
-+  template &amp;lt;forward_iterator I,
-+            sentinel_for&amp;lt;I&amp;gt; S,
-+            class Proj = identity,
-+            class T = projected_value_t&amp;lt;I, Proj&amp;gt;,
-+            indirect_strict_weak_order&amp;lt;
-+              const T*,
-+              projected&amp;lt;I, Proj&amp;gt;
-+            &amp;gt; Comp = ranges::less&amp;gt;
-+  constexpr subrange&amp;lt;I&amp;gt;
-+    equal_range(I first,
-+                S last,
-+                const T&amp;amp; value,
-+                Comp comp = {},
-+                Proj proj = {}); // (1) C++26
- 
-   template &amp;lt;forward_range R,
-             class T,
-             class Proj = identity,
--            indirect_strict_weak_order&amp;lt;const T*, projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;&amp;gt; Comp = ranges::less&amp;gt;
-+            indirect_strict_weak_order&amp;lt;
-+              const T*,
-+              projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;
-+            &amp;gt; Comp = ranges::less&amp;gt;
-   constexpr borrowed_subrange_t&amp;lt;R&amp;gt;
-     equal_range(R&amp;amp;&amp;amp; r,
-                 const T&amp;amp; value,
-                 Comp comp = {},
-                 Proj proj = {}); // (2) C++20
-+  template &amp;lt;forward_range R,
-+            class Proj = identity,
-+            class T = projected_value_t&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;,
-+            indirect_strict_weak_order&amp;lt;
-+              const T*,
-+              projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;
-+            &amp;gt; Comp = ranges::less&amp;gt;
-+  constexpr borrowed_subrange_t&amp;lt;R&amp;gt;
-+    equal_range(R&amp;amp;&amp;amp; r,
-+                const T&amp;amp; value,
-+                Comp comp = {},
-+                Proj proj = {}); // (2) C++26
- }
- ```
- * forward_iterator[link /reference/iterator/forward_iterator.md]
-@@ -57,11 +89,21 @@ namespace std::ranges {
- ## 戻り値
- `{`[`ranges::lower_bound`](ranges_lower_bound.md)`(first, last, value, comp, proj), `[`ranges::upper_bound`](ranges_upper_bound.md)`(first, last, value, comp, proj)}`
- 
-+
- ## 計算量
- 最大で 2 * log2(`last - first`) + O(1) 回の比較を行う
- 
- 
-+## 備考
-+- (1), (2) :
-+    - C++26 : 引数として波カッコ初期化`{}`を受け付ける
-+        ```cpp
-+        std::vector&amp;lt;T&amp;gt; v;
-+        auto result = std::ranges::equal_range(v, {a, b});
-+        ```
-+
- ## 例
-+### 基本的な使い方
- ```cpp example
- #include &amp;lt;iostream&amp;gt;
- #include &amp;lt;vector&amp;gt;
-@@ -93,7 +135,7 @@ int main()
- * std::ranges::sort[link ranges_sort.md]
- * std::ranges::equal_range[color ff0000]
- 
--### 出力
-+#### 出力
- ```
- size: 2
- 3
-@@ -102,6 +144,44 @@ size: 2
- size: 0
- ```
- 
-+### 波カッコ初期化を入力として使用する (C++26)
-+```cpp example
-+#include &amp;lt;algorithm&amp;gt;
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;vector&amp;gt;
-+
-+struct Point {
-+  int x;
-+  int y;
-+
-+  bool operator==(const Point&amp;amp; other) const = default;
-+  auto operator&amp;lt;=&amp;gt;(const Point&amp;amp; other) const = default;
-+};
-+
-+int main() {
-+  std::vector&amp;lt;Point&amp;gt; v = {
-+    {1, 2},
-+    {3, 4},
-+    {3, 4},
-+    {5, 6},
-+  };
-+
-+  // 値{3, 4}が見つかる範囲を取得
-+  auto result = std::ranges::equal_range(v, {3, 4});
-+
-+  for (const Point&amp;amp; p : result) {
-+    std::cout &amp;lt;&amp;lt; p.x &amp;lt;&amp;lt; &amp;#34;,&amp;#34; &amp;lt;&amp;lt; p.y &amp;lt;&amp;lt; std::endl;
-+  }
-+}
-+```
-+* std::ranges::equal_range[color ff0000]
-+
-+#### 出力
-+```
-+3,4
-+3,4
-+```
-+
- ## バージョン
- ### 言語
- - C++20
-@@ -114,3 +194,5 @@ size: 0
  
  ## 参照
  - [N4861 25 Algorithms library](https://timsong-cpp.github.io/cppwp/n4861/algorithms)
