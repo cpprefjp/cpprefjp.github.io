@@ -2,9 +2,289 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-05-27T05:56:42.736501</updated>
-  <id>8752ca1b-e214-4b71-abab-3ad417b92034</id>
+  <updated>2025-05-27T06:10:24.254228</updated>
+  <id>a7665c02-1455-4d28-9f03-83721485842b</id>
 
+  
+    <entry>
+      <title>binary_search -- binary_search : C++26波カッコ初期化に対応 #1311</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm/binary_search.html"/>
+      <id>93b8c47923f9c1090573b00a071cad863607d0a1:reference/algorithm/binary_search.md</id>
+      <updated>2025-05-27T15:06:45+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/binary_search.md b/reference/algorithm/binary_search.md
+index 342f67c3d..a1c10635e 100644
+--- a/reference/algorithm/binary_search.md
++++ b/reference/algorithm/binary_search.md
+@@ -5,27 +5,35 @@
+ 
+ ```cpp
+ namespace std {
+-  template &amp;lt;class ForwardIterator, class T&amp;gt;
+-  bool binary_search(ForwardIterator first,
+-                     ForwardIterator last,
+-                     const T&amp;amp; value);                 // (1) C++03
+-
+-  template &amp;lt;class ForwardIterator, class T&amp;gt;
+-  constexpr bool binary_search(ForwardIterator first,
+-                               ForwardIterator last,
+-                               const T&amp;amp; value);       // (1) C++20
+-
+-  template &amp;lt;class ForwardIterator, class T, class Compare&amp;gt;
+-  bool binary_search(ForwardIterator first,
+-                     ForwardIterator last,
+-                     const T&amp;amp; value,
+-                     Compare comp);                   // (2) C++03
+-
+-  template &amp;lt;class ForwardIterator, class T, class Compare&amp;gt;
+-  constexpr bool binary_search(ForwardIterator first,
+-                               ForwardIterator last,
+-                               const T&amp;amp; value,
+-                               Compare comp);         // (2) C++20
++  template &amp;lt;class ForwardIterator,
++            class T&amp;gt;
++  bool
++    binary_search(ForwardIterator first,
++                  ForwardIterator last,
++                  const T&amp;amp; value);       // (1) C++03
++  template &amp;lt;class ForwardIterator,
++            class T&amp;gt;
++  constexpr bool
++    binary_search(ForwardIterator first,
++                  ForwardIterator last,
++                  const T&amp;amp; value);       // (1) C++20
++
++  template &amp;lt;class ForwardIterator,
++            class T,
++            class Compare&amp;gt;
++  bool
++    binary_search(ForwardIterator first,
++                  ForwardIterator last,
++                  const T&amp;amp; value,
++                  Compare comp);         // (2) C++03
++  template &amp;lt;class ForwardIterator,
++            class T,
++            class Compare&amp;gt;
++  constexpr bool
++    binary_search(ForwardIterator first,
++                  ForwardIterator last,
++                  const T&amp;amp; value,
++                  Compare comp);         // (2) C++20
+ }
+ ```
+ 
+@@ -49,9 +57,16 @@ namespace std {
+ 
+ ## 備考
+ - `comp` は 2 引数の関数オブジェクトで、1 番目の引数が 2 番目の引数「より小さい」場合に `true` を、そうでない場合に `false` を返すものとして扱われる。
++- (1), (2) :
++    - C++26 : 引数として波カッコ初期化`{}`を受け付ける
++        ```cpp
++        std::vector&amp;lt;T&amp;gt; v;
++        bool found = std::binary_search(v.begin(), v.end(), {a, b});
++        ```
+ 
+ 
+ ## 例
++### 基本的な使い方
+ ```cpp example
+ #include &amp;lt;iostream&amp;gt;
+ #include &amp;lt;vector&amp;gt;
+@@ -74,6 +89,44 @@ int main()
+ ```
+ * std::binary_search[color ff0000]
+ 
++#### 出力
++```
++found
++```
++
++### 波カッコ初期化を入力として使用する (C++26)
++```cpp example
++#include &amp;lt;algorithm&amp;gt;
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;vector&amp;gt;
++
++struct Point {
++  int x;
++  int y;
++
++  bool operator==(const Point&amp;amp; other) const = default;
++  auto operator&amp;lt;=&amp;gt;(const Point&amp;amp; other) const = default;
++};
++
++int main() {
++  std::vector&amp;lt;Point&amp;gt; v = {
++    {1, 2},
++    {3, 4},
++    {5, 6},
++  };
++
++  // 値{3, 4}を二分検索
++  bool found = std::binary_search(v.begin(), v.end(), {3, 4});
++  if (found) {
++    std::cout &amp;lt;&amp;lt; &amp;#34;found&amp;#34; &amp;lt;&amp;lt; std::endl;
++  }
++  else {
++    std::cout &amp;lt;&amp;lt; &amp;#34;not found&amp;#34; &amp;lt;&amp;lt; std::endl;
++  }
++}
++```
++* std::binary_search[color ff0000]
++
+ ### 出力
+ ```
+ found
+@@ -114,3 +167,5 @@ bool binary_search(ForwardIterator first, ForwardIterator last,
+ - [LWG Issue 787. complexity of `binary_search`](http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#787)
+     - C++03までの計算量が間違っていたので、C++11で修正。
+ - [P0202R3 Add Constexpr Modifiers to Functions in `&amp;lt;algorithm&amp;gt;` and `&amp;lt;utility&amp;gt;` Headers](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0202r3.html)
++- [P2248R8 Enabling list-initialization for algorithms](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2248r8.html)
++    - C++26で波カッコ初期化 (リスト初期化) に対応した
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>binary_search -- binary_search : C++26波カッコ初期化に対応 #1311</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_binary_search.html"/>
+      <id>93b8c47923f9c1090573b00a071cad863607d0a1:reference/algorithm/ranges_binary_search.md</id>
+      <updated>2025-05-27T15:06:45+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_binary_search.md b/reference/algorithm/ranges_binary_search.md
+index 54df91313..7c950f41a 100644
+--- a/reference/algorithm/ranges_binary_search.md
++++ b/reference/algorithm/ranges_binary_search.md
+@@ -10,13 +10,30 @@ namespace std::ranges {
+             sentinel_for&amp;lt;I&amp;gt; S,
+             class T,
+             class Proj = identity,
+-            indirect_strict_weak_order&amp;lt;const T*, projected&amp;lt;I, Proj&amp;gt;&amp;gt; Comp = ranges::less&amp;gt;
++            indirect_strict_weak_order&amp;lt;
++              const T*,
++              projected&amp;lt;I, Proj&amp;gt;
++            &amp;gt; Comp = ranges::less&amp;gt;
+   constexpr bool
+     binary_search(I first,
+                   S last,
+                   const T&amp;amp; value,
+                   Comp comp = {},
+                   Proj proj = {}); // (1) C++20
++  template &amp;lt;forward_iterator I,
++            sentinel_for&amp;lt;I&amp;gt; S,
++            class Proj = identity,
++            class T = projected_value_t&amp;lt;I, Proj&amp;gt;,
++            indirect_strict_weak_order&amp;lt;
++              const T*,
++              projected&amp;lt;I, Proj&amp;gt;
++            &amp;gt; Comp = ranges::less&amp;gt;
++  constexpr bool
++    binary_search(I first,
++                  S last,
++                  const T&amp;amp; value,
++                  Comp comp = {},
++                  Proj proj = {}); // (1) C++26
+ 
+   template &amp;lt;forward_range R,
+             class T,
+@@ -30,6 +47,18 @@ namespace std::ranges {
+                   const T&amp;amp; value,
+                   Comp comp = {},
+                   Proj proj = {}); // (2) C++20
++  template &amp;lt;forward_range R,
++            class Proj = identity,
++            class T = projected_value_t&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;,
++            indirect_strict_weak_order&amp;lt;
++              const T*,
++              projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;
++            &amp;gt; Comp = ranges::less&amp;gt;
++  constexpr bool
++    binary_search(R&amp;amp;&amp;amp; r,
++                  const T&amp;amp; value,
++                  Comp comp = {},
++                  Proj proj = {}); // (2) C++26
+ }
+ ```
+ * forward_iterator[link /reference/iterator/forward_iterator.md]
+@@ -65,9 +94,15 @@ namespace std::ranges {
+ 
+ ## 備考
+ - `comp` は 2 引数の関数オブジェクトで、1 番目の引数が 2 番目の引数「より小さい」場合に `true` を、そうでない場合に `false` を返すものとして扱われる。
+-
++- (1), (2) :
++    - C++26 : 引数として波カッコ初期化`{}`を受け付ける
++        ```cpp
++        std::vector&amp;lt;T&amp;gt; v;
++        bool found = std::ranges::binary_search(v, {a, b});
++        ```
+ 
+ ## 例
++### 基本的な使い方
+ ```cpp example
+ #include &amp;lt;iostream&amp;gt;
+ #include &amp;lt;vector&amp;gt;
+@@ -90,6 +125,44 @@ int main()
+ ```
+ * std::ranges::binary_search[color ff0000]
+ 
++#### 出力
++```
++found
++```
++
++### 波カッコ初期化を入力として使用する (C++26)
++```cpp example
++#include &amp;lt;algorithm&amp;gt;
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;vector&amp;gt;
++
++struct Point {
++  int x;
++  int y;
++
++  bool operator==(const Point&amp;amp; other) const = default;
++  auto operator&amp;lt;=&amp;gt;(const Point&amp;amp; other) const = default;
++};
++
++int main() {
++  std::vector&amp;lt;Point&amp;gt; v = {
++    {1, 2},
++    {3, 4},
++    {5, 6},
++  };
++
++  // 値{3, 4}を二分検索
++  bool found = std::ranges::binary_search(v, {3, 4});
++  if (found) {
++    std::cout &amp;lt;&amp;lt; &amp;#34;found&amp;#34; &amp;lt;&amp;lt; std::endl;
++  }
++  else {
++    std::cout &amp;lt;&amp;lt; &amp;#34;not found&amp;#34; &amp;lt;&amp;lt; std::endl;
++  }
++}
++```
++* std::ranges::binary_search[color ff0000]
++
+ ### 出力
+ ```
+ found
+@@ -107,3 +180,5 @@ found
+ 
+ ## 参照
+ - [N4861 25 Algorithms library](https://timsong-cpp.github.io/cppwp/n4861/algorithms)
++- [P2248R8 Enabling list-initialization for algorithms](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2248r8.html)
++    - C++26で波カッコ初期化 (リスト初期化) に対応した
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>equal_range -- equal_range : C++26波カッコ初期化に対応 #1311</title>
@@ -1278,299 +1558,6 @@ index 2e9046c39..a7d0807a7 100644
  ## 参照
  - [P0202R3 Add Constexpr Modifiers to Functions in `&amp;lt;algorithm&amp;gt;` and `&amp;lt;utility&amp;gt;` Headers](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0202r3.html)
  - [P0467R2 Iterator Concerns for Parallel Algorithms](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0467r2.html)
-+- [P2248R8 Enabling list-initialization for algorithms](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2248r8.html)
-+    - C++26で波カッコ初期化 (リスト初期化) に対応した
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>remove -- algorithm/remove : C++26波カッコ初期化に対応 #1311</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_remove.html"/>
-      <id>b810699ddaff07d777dd421a8600be32cb5df601:reference/algorithm/ranges_remove.md</id>
-      <updated>2025-05-26T19:08:03+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_remove.md b/reference/algorithm/ranges_remove.md
-index 515d89247..5a3564710 100644
---- a/reference/algorithm/ranges_remove.md
-+++ b/reference/algorithm/ranges_remove.md
-@@ -16,6 +16,16 @@ namespace std::ranges {
-            S last,
-            const T&amp;amp; value,
-            Proj proj = {}); // (1) C++20
-+  template &amp;lt;permutable I,
-+            sentinel_for&amp;lt;I&amp;gt; S,
-+            class Proj = identity,
-+            class T = projected_value_t&amp;lt;I, Proj&amp;gt;&amp;gt;
-+    requires indirect_binary_predicate&amp;lt;ranges::equal_to, projected&amp;lt;I, Proj&amp;gt;, const T*&amp;gt;
-+  constexpr subrange&amp;lt;I&amp;gt;
-+    remove(I first,
-+           S last,
-+           const T&amp;amp; value,
-+           Proj proj = {}); // (1) C++26
- 
-   template &amp;lt;forward_range R,
-             class T,
-@@ -30,6 +40,19 @@ namespace std::ranges {
-     remove(R&amp;amp;&amp;amp; r,
-            const T&amp;amp; value,
-            Proj proj = {}); // (2) C++20
-+  template &amp;lt;forward_range R,
-+            class Proj = identity,
-+            class T = projected_value_t&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;&amp;gt;
-+    requires permutable&amp;lt;iterator_t&amp;lt;R&amp;gt;&amp;gt; &amp;amp;&amp;amp;
-+             indirect_binary_predicate&amp;lt;
-+               ranges::equal_to,
-+               projected&amp;lt;iterator_t&amp;lt;R&amp;gt;, Proj&amp;gt;,
-+               const T*
-+             &amp;gt;
-+  constexpr borrowed_subrange_t&amp;lt;R&amp;gt;
-+    remove(R&amp;amp;&amp;amp; r,
-+           const T&amp;amp; value,
-+           Proj proj = {}); // (2) C++26
- }
- ```
- * permutable[link /reference/iterator/permutable.md]
-@@ -67,12 +90,18 @@ namespace std::ranges {
- 
- 
- ## 備考
--有効な要素を範囲の前方に集める処理には、ムーブを使用する。
--
--取り除いた要素の先頭を指すイテレータを`ret`とし、範囲`[ret, last)`の各要素には、有効な要素からムーブされた値が設定される。それらの値は、「有効だが未規定な値」となる。
-+- 有効な要素を範囲の前方に集める処理には、ムーブが使用される
-+    - 取り除いた要素の先頭を指すイテレータを`ret`とし、範囲`[ret, last)`の各要素には、有効な要素からムーブされた値が設定される。それらの値は、「有効だが未規定な値」となる
-+- (1), (2) :
-+    - C++26 : 引数として波カッコ初期化`{}`を受け付ける
-+        ```cpp
-+        std::vector&amp;lt;T&amp;gt; v;
-+        auto sr = std::ranges::remove(v, {a, b});
-+        ```
- 
- 
- ## 例
-+### 基本的な使い方
- ```cpp example
- #include &amp;lt;algorithm&amp;gt;
- #include &amp;lt;iostream&amp;gt;
-@@ -101,17 +130,57 @@ int main() {
- ```
- * result[color ff0000]
- * std::ranges::remove[color ff0000]
--* v.erase[color ff0000][link /reference/vector/vector/erase.md]
-+* v.erase[link /reference/vector/vector/erase.md]
- * std::ranges::subrange[link /reference/ranges/subrange.md]
- * Erase-remove イディオム[link https://ja.wikibooks.org/wiki/More_C%2B%2B_Idioms/%E6%B6%88%E5%8E%BB%E3%83%BB%E5%89%8A%E9%99%A4(Erase-Remove)]
- 
--### 出力
-+#### 出力
- ```
- 2,3,2,
- size before: 5
- size after: 3
- ```
- 
-+### 波カッコ初期化を入力として使用する (C++26)
-+```cpp example
-+#include &amp;lt;algorithm&amp;gt;
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;vector&amp;gt;
-+
-+struct Point {
-+  int x;
-+  int y;
-+
-+  bool operator==(const Point&amp;amp; other) const = default;
-+};
-+
-+int main() {
-+  std::vector&amp;lt;Point&amp;gt; v = {
-+    {1, 2},
-+    {3, 4},
-+    {5, 6},
-+    {1, 2},
-+  };
-+
-+  // 値{1, 2}を除去する
-+  std::ranges::subrange sr = std::ranges::remove(v, {1, 2});
-+  v.erase(sr.begin(), v.end());
-+
-+  for (const Point&amp;amp; p : v) {
-+    std::cout &amp;lt;&amp;lt; p.x &amp;lt;&amp;lt; &amp;#34;,&amp;#34; &amp;lt;&amp;lt; p.y &amp;lt;&amp;lt; std::endl;
-+  }
-+}
-+```
-+* std::ranges::remove[color ff0000]
-+* v.erase[link /reference/vector/vector/erase.md]
-+* std::ranges::subrange[link /reference/ranges/subrange.md]
-+
-+#### 出力
-+```
-+3,4
-+5,6
-+```
-+
- ## バージョン
- ### 言語
- - C++20
-@@ -124,3 +193,5 @@ size after: 3
- 
- ## 参照
- - [N4861 25 Algorithms library](https://timsong-cpp.github.io/cppwp/n4861/algorithms)
-+- [P2248R8 Enabling list-initialization for algorithms](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2248r8.html)
-+    - C++26で波カッコ初期化 (リスト初期化) に対応した
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>remove -- algorithm/remove : C++26波カッコ初期化に対応 #1311</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/remove.html"/>
-      <id>b810699ddaff07d777dd421a8600be32cb5df601:reference/algorithm/remove.md</id>
-      <updated>2025-05-26T19:08:03+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/remove.md b/reference/algorithm/remove.md
-index fbbca8269..425eb8894 100644
---- a/reference/algorithm/remove.md
-+++ b/reference/algorithm/remove.md
-@@ -5,24 +5,41 @@
- 
- ```cpp
- namespace std {
--  template &amp;lt;class ForwardIterator, class T&amp;gt;
-+  template &amp;lt;class ForwardIterator,
-+            class T&amp;gt;
-   ForwardIterator
-     remove(ForwardIterator first,
-            ForwardIterator last,
-            const T&amp;amp; value);        // (1) C++03
--
--  template &amp;lt;class ForwardIterator, class T&amp;gt;
-+  template &amp;lt;class ForwardIterator,
-+            class T&amp;gt;
-   constexpr ForwardIterator
-     remove(ForwardIterator first,
-            ForwardIterator last,
-            const T&amp;amp; value);        // (1) C++20
-+  template &amp;lt;class ForwardIterator,
-+            class T = typename iterator_traits&amp;lt;ForwardIterator&amp;gt;::value_type&amp;gt;
-+  constexpr ForwardIterator
-+    remove(ForwardIterator first,
-+           ForwardIterator last,
-+           const T&amp;amp; value);        // (1) C++26
- 
--  template &amp;lt;class ExecutionPolicy, class ForwardIterator, class T&amp;gt;
-+  template &amp;lt;class ExecutionPolicy,
-+            class ForwardIterator,
-+            class T&amp;gt;
-   ForwardIterator
-     remove(ExecutionPolicy&amp;amp;&amp;amp; exec,
-            ForwardIterator first,
-            ForwardIterator last,
-            const T&amp;amp; value);        // (2) C++17
-+  template &amp;lt;class ExecutionPolicy,
-+            class ForwardIterator,
-+            class T = typename iterator_traits&amp;lt;ForwardIterator&amp;gt;::value_type&amp;gt;
-+  ForwardIterator
-+    remove(ExecutionPolicy&amp;amp;&amp;amp; exec,
-+           ForwardIterator first,
-+           ForwardIterator last,
-+           const T&amp;amp; value);        // (2) C++26
- }
- ```
- 
-@@ -51,12 +68,18 @@ namespace std {
- 
- 
- ## 備考
--有効な要素を範囲の前方に集める処理には、ムーブを使用する。
--
--取り除いた要素の先頭を指すイテレータを`ret`とし、範囲`[ret, last)`の各要素には、有効な要素からムーブされた値が設定される。それらの値は、「有効だが未規定な値」となる。
-+- 有効な要素を範囲の前方に集める処理には、ムーブが使用される
-+    - 取り除いた要素の先頭を指すイテレータを`ret`とし、範囲`[ret, last)`の各要素には、有効な要素からムーブされた値が設定される。それらの値は、「有効だが未規定な値」となる
-+- (1), (2) :
-+    - C++26 : 引数として波カッコ初期化`{}`を受け付ける
-+        ```cpp
-+        std::vector&amp;lt;T&amp;gt; v;
-+        auto it = std::remove(v.begin(), v.end(), {a, b});
-+        ```
- 
- 
- ## 例
-+### 基本的な使い方
- ```cpp example
- #include &amp;lt;algorithm&amp;gt;
- #include &amp;lt;iostream&amp;gt;
-@@ -83,16 +106,55 @@ int main() {
- ```
- * result[color ff0000]
- * std::remove[color ff0000]
--* v.erase[color ff0000][link /reference/vector/vector/erase.md]
-+* v.erase[link /reference/vector/vector/erase.md]
- * Erase-remove イディオム[link https://ja.wikibooks.org/wiki/More_C%2B%2B_Idioms/%E6%B6%88%E5%8E%BB%E3%83%BB%E5%89%8A%E9%99%A4(Erase-Remove)]
- 
--### 出力
-+#### 出力
- ```
- 2,3,2,
- size before: 5
- size after: 3
- ```
- 
-+### 波カッコ初期化を入力として使用する (C++26)
-+```cpp example
-+#include &amp;lt;algorithm&amp;gt;
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;vector&amp;gt;
-+
-+struct Point {
-+  int x;
-+  int y;
-+
-+  bool operator==(const Point&amp;amp; other) const = default;
-+};
-+
-+int main() {
-+  std::vector&amp;lt;Point&amp;gt; v = {
-+    {1, 2},
-+    {3, 4},
-+    {5, 6},
-+    {1, 2},
-+  };
-+
-+  // 値{1, 2}を除去する
-+  auto it = std::remove(v.begin(), v.end(), {1, 2});
-+  v.erase(it, v.end());
-+
-+  for (const Point&amp;amp; p : v) {
-+    std::cout &amp;lt;&amp;lt; p.x &amp;lt;&amp;lt; &amp;#34;,&amp;#34; &amp;lt;&amp;lt; p.y &amp;lt;&amp;lt; std::endl;
-+  }
-+}
-+```
-+* std::remove[color ff0000]
-+* v.erase[link /reference/vector/vector/erase.md]
-+
-+#### 出力
-+```
-+3,4
-+5,6
-+```
-+
- 
- ## 実装例
- ```cpp
-@@ -113,3 +175,5 @@ ForwardIterator remove(ForwardIterator first, ForwardIterator last, const T&amp;amp; val
- - [LWG Issue 2110. `remove` can&amp;#39;t swap but note says it might](http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#2110)
-     - C++11までのこのアルゴリズムは、要素の移動にswap操作が行われるかもしれない、と書いていた。だが、このアルゴリズムの要件は`MoveAssignable`のみであるため、swapはできない。そのため、C++14からは、ムーブのみで要素の移動が行われるようになった。
- - [P0202R3 Add Constexpr Modifiers to Functions in `&amp;lt;algorithm&amp;gt;` and `&amp;lt;utility&amp;gt;` Headers](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0202r3.html)
 +- [P2248R8 Enabling list-initialization for algorithms](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2248r8.html)
 +    - C++26で波カッコ初期化 (リスト初期化) に対応した
 &lt;/code&gt;&lt;/pre&gt;</summary>
