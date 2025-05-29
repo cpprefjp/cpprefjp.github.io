@@ -2,9 +2,512 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-05-29T06:18:32.434107</updated>
-  <id>1c4a1a14-13bd-49a7-82cc-f55a47a4d749</id>
+  <updated>2025-05-29T06:59:46.558436</updated>
+  <id>8815e283-4cd9-41b5-afe1-7c4858eb550d</id>
 
+  
+    <entry>
+      <title>execution -- execution: just_error,just_stopped (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution.html"/>
+      <id>d134ea8c1cc43660d7f61bf4844fae87085d1a5e:reference/execution/execution.md</id>
+      <updated>2025-05-29T15:55:34+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution.md b/reference/execution/execution.md
+index ef8fdbfc6..24fc001d0 100644
+--- a/reference/execution/execution.md
++++ b/reference/execution/execution.md
+@@ -100,8 +100,8 @@ namespace std::execution {
+ | 名前 | 説明 | 対応バージョン |
+ |------|------|----------------|
+ | [`execution::just`](execution/just.md) | 値を送信するSender (customization point object) | C++26 |
+-| [`execution::just_error`](execution/just_error.md.nolink) | エラーを送信するSender (customization point object) | C++26 |
+-| [`execution::just_stopped`](execution/just_stopped.md.nolink) | 停止を送信するSender (customization point object) | C++26 |
++| [`execution::just_error`](execution/just_error.md) | エラーを送信するSender (customization point object) | C++26 |
++| [`execution::just_stopped`](execution/just_stopped.md) | 停止を送信するSender (customization point object) | C++26 |
+ | [`execution::read_env`](execution/read_env.md) | Receiver環境からクエリオブジェクトで値を読み取るSender (customization point object) | C++26 |
+ | [`execution::schedule`](execution/schedule.md) | Scheduler上で実行されるSender (customization point object) | C++26 |
+ | [`execution::schedule_result_t`](execution/schedule_result_t.md) | [`schedule`](execution/schedule.md)結果型を取得 (alias template) | C++26 |
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>error_types_of_t -- execution: just_error,just_stopped (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/error_types_of_t.html"/>
+      <id>d134ea8c1cc43660d7f61bf4844fae87085d1a5e:reference/execution/execution/error_types_of_t.md</id>
+      <updated>2025-05-29T15:55:34+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/error_types_of_t.md b/reference/execution/execution/error_types_of_t.md
+index d3e6fe645..c6e5f147b 100644
+--- a/reference/execution/execution/error_types_of_t.md
++++ b/reference/execution/execution/error_types_of_t.md
+@@ -53,7 +53,7 @@ int main()
+ * ex::error_types_of_t[color ff0000]
+ * ex::sender[link sender.md]
+ * ex::just[link just.md]
+-* ex::just_error[link just_error.md.nolink]
++* ex::just_error[link just_error.md]
+ 
+ ### 出力
+ ```
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>just -- execution: just_error,just_stopped (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/just.html"/>
+      <id>d134ea8c1cc43660d7f61bf4844fae87085d1a5e:reference/execution/execution/just.md</id>
+      <updated>2025-05-29T15:55:34+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/just.md b/reference/execution/execution/just.md
+index dedcc340c..f5a6c1861 100644
+--- a/reference/execution/execution/just.md
++++ b/reference/execution/execution/just.md
+@@ -17,8 +17,17 @@ namespace std::execution {
+ 
+ 
+ ## 効果
+-- 呼び出し式`just(ts...)`は、`(`[`movable-value`](../movable-value.md)`&amp;lt;Ts&amp;gt; &amp;amp;&amp;amp;...) == false`のとき不適格となる。
+-- そうでなければ、式[`make-sender`](make-sender.md)`(just,` [`product-type`](product-type.md)`{ts...})`と等価。
++説明用のパック`ts`に対して、パック`Ts`を`decltype((ts))`とする。下記いずれかの条件をみたすとき、呼び出し式`just(ts...)`は不適格となる。
++
++- `(`[`movable-value`](../movable-value.md)`&amp;lt;Ts&amp;gt; &amp;amp;&amp;amp;...) == false`
++
++そうでなければ、呼び出し式`just(ts...)`は下記と等価。
++
++```cpp
++make-sender(just, product-type{ts...})
++```
++* make-sender[link make-sender.md]
++* product-type[link product-type.md]
+ 
+ 
+ ### Senderアルゴリズムタグ `just`
+@@ -43,22 +52,34 @@ namespace std::execution {
+ * std::move[link /reference/utility/move.md]
+ 
+ 
++## カスタマイゼーションポイント
++[Receiver](receiver.md)との[接続(connect)](connect.md)時に、[関連付けられた実行ドメイン](get-domain-late.md)に対して[`execution::transform_sender`](transform_sender.md)経由でSender変換が行われる。
++[デフォルト実行ドメイン](default_domain.md)では無変換。
++
++
+ ## 例
+ ```cpp example
++#include &amp;lt;string&amp;gt;
+ #include &amp;lt;print&amp;gt;
+ #include &amp;lt;execution&amp;gt;
+ namespace ex = std::execution;
++using namespace std::string_literals;
+ 
+ int main()
+ {
+-  // 値(123,&amp;#39;X&amp;#39;)の送信結果は tuple&amp;lt;int,char&amp;gt; 型で受け取る
+-  ex::sender auto snd1 = ex::just(123, &amp;#39;X&amp;#39;);
+-  std::tuple&amp;lt;int, char&amp;gt; result1 = std::this_thread::sync_wait(snd1).value();
++  // 空の値を送信するSender
++  ex::sender auto snd0 = ex::just();
++  std::tuple&amp;lt;&amp;gt; result0 = std::this_thread::sync_wait(snd0).value();
++  std::println(&amp;#34;result0={}&amp;#34;, result0);
++
++  // 値&amp;#34;C++&amp;#34;を送信するSender
++  ex::sender auto snd1 = ex::just(&amp;#34;C++&amp;#34;s);
++  std::tuple&amp;lt;std::string&amp;gt; result1 = std::this_thread::sync_wait(snd1).value();
+   std::println(&amp;#34;result1={}&amp;#34;, result1);
+ 
+-  // 空値の送信結果は tuple&amp;lt;&amp;gt; 型で受け取る
+-  ex::sender auto snd2 = ex::just();
+-  std::tuple&amp;lt;&amp;gt; result2 = std::this_thread::sync_wait(snd2).value();
++  // 値(123,&amp;#39;X&amp;#39;)を送信するSender
++  ex::sender auto snd2 = ex::just(123, &amp;#39;X&amp;#39;);
++  std::tuple&amp;lt;int, char&amp;gt; result2 = std::this_thread::sync_wait(snd2).value();
+   std::println(&amp;#34;result2={}&amp;#34;, result2);
+ }
+ ```
+@@ -69,8 +90,9 @@ int main()
+ 
+ ### 出力
+ ```
+-result1=(123, &amp;#39;X&amp;#39;)
+-result2=()
++result0=()
++result1=(&amp;#34;C++&amp;#34;)
++result2=(123, &amp;#39;X&amp;#39;)
+ ```
+ 
+ 
+@@ -86,9 +108,10 @@ result2=()
+ 
+ 
+ ## 関連項目
+-- [`execution::just_error`](just_error.md.nolink)
+-- [`execution::just_stopped`](just_stopped.md.nolink)
++- [`execution::just_error`](just_error.md)
++- [`execution::just_stopped`](just_stopped.md)
+ 
+ 
+ ## 参照
++- [P2999R3 Sender Algorithm Customization](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2999r3.html)
+ - [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>just_error -- execution: just_error,just_stopped (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/just_error.html"/>
+      <id>d134ea8c1cc43660d7f61bf4844fae87085d1a5e:reference/execution/execution/just_error.md</id>
+      <updated>2025-05-29T15:55:34+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/just_error.md b/reference/execution/execution/just_error.md
+new file mode 100644
+index 000000000..840f2c3a9
+--- /dev/null
++++ b/reference/execution/execution/just_error.md
+@@ -0,0 +1,98 @@
++# just_error
++* execution[meta header]
++* cpo[meta id-type]
++* std::execution[meta namespace]
++* cpp26[meta cpp]
++
++```cpp
++namespace std::execution {
++  struct just_error_t { unspecified };
++  inline constexpr just_error_t just_error{};
++}
++```
++* unspecified[italic]
++
++## 概要
++`just_error`は、非同期操作の[開始(start)](start.md)で[エラー完了関数](set_error.md)を呼び出すSenderファクトリである。
++
++
++## 効果
++説明用のパック`ts`に対して、パック`Ts`を`decltype((ts))`とする。下記いずれかの条件をみたすとき、呼び出し式`just_error(ts...)`は不適格となる。
++
++- `(`[`movable-value`](../movable-value.md)`&amp;lt;Ts&amp;gt; &amp;amp;&amp;amp;...) == false`、もしくは
++- `sizeof...(ts) == 1`が`false`
++
++そうでなければ、呼び出し式`just_error(ts...)`は下記と等価。
++
++```cpp
++make-sender(just_error, product-type{ts...})
++```
++* make-sender[link make-sender.md]
++* product-type[link product-type.md]
++
++
++### Senderアルゴリズムタグ `just_error`
++Senderアルゴリズム動作説明用のクラステンプレート[`impls-for`](impls-for.md)に対して、下記の特殊化が定義される。
++
++```cpp
++namespace std::execution {
++  template&amp;lt;&amp;gt;
++  struct impls-for&amp;lt;decayed-typeof&amp;lt;just_error&amp;gt;&amp;gt; : default-impls {
++    static constexpr auto start =
++      [](auto&amp;amp; state, auto&amp;amp; rcvr) noexcept -&amp;gt; void {
++        auto&amp;amp; [...ts] = state;
++        set_error(std::move(rcvr), std::move(ts)...);
++      };
++  };
++}
++```
++* decayed-typeof[link decayed-typeof.md.nolink]
++* impls-for[link impls-for.md]
++* default-impls[link impls-for.md]
++* set_error[link set_error.md]
++* std::move[link /reference/utility/move.md]
++
++
++## カスタマイゼーションポイント
++[Receiver](receiver.md)との[接続(connect)](connect.md)時に、[関連付けられた実行ドメイン](get-domain-late.md)に対して[`execution::transform_sender`](transform_sender.md)経由でSender変換が行われる。
++[デフォルト実行ドメイン](default_domain.md)では無変換。
++
++
++## 例
++```cpp example
++#include &amp;lt;execution&amp;gt;
++namespace ex = std::execution;
++
++int main()
++{
++  // エラー(42)を送信するSender
++  ex::sender auto sndr = ex::just_error(42);
++}
++```
++* ex::just_error[color ff0000]
++* ex::sender[link sender.md]
++
++### 出力
++```
++```
++
++
++## バージョン
++### 言語
++- C++26
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): ??
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 関連項目
++- [`execution::just`](just.md)
++- [`execution::just_stopped`](just_stopped.md)
++
++
++## 参照
++- [P2999R3 Sender Algorithm Customization](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2999r3.html)
++- [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>just_stopped -- execution: just_error,just_stopped (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/just_stopped.html"/>
+      <id>d134ea8c1cc43660d7f61bf4844fae87085d1a5e:reference/execution/execution/just_stopped.md</id>
+      <updated>2025-05-29T15:55:34+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/just_stopped.md b/reference/execution/execution/just_stopped.md
+new file mode 100644
+index 000000000..a48ed153f
+--- /dev/null
++++ b/reference/execution/execution/just_stopped.md
+@@ -0,0 +1,93 @@
++# just_stopped
++* execution[meta header]
++* cpo[meta id-type]
++* std::execution[meta namespace]
++* cpp26[meta cpp]
++
++```cpp
++namespace std::execution {
++  struct just_stopped_t { unspecified };
++  inline constexpr just_stopped_t just_stopped{};
++}
++```
++* unspecified[italic]
++
++## 概要
++`just_stopped`は、非同期操作の[開始(start)](start.md)で[停止完了関数](set_stopped.md)を呼び出すSenderファクトリである。
++
++
++## 効果
++呼び出し式`just_stopped()`は下記と等価。
++
++```cpp
++make-sender(just_stopped, product-type{})
++```
++* make-sender[link make-sender.md]
++* product-type[link product-type.md]
++
++
++### Senderアルゴリズムタグ `just_stopped`
++Senderアルゴリズム動作説明用のクラステンプレート[`impls-for`](impls-for.md)に対して、下記の特殊化が定義される。
++
++```cpp
++namespace std::execution {
++  template&amp;lt;&amp;gt;
++  struct impls-for&amp;lt;decayed-typeof&amp;lt;just_stopped&amp;gt;&amp;gt; : default-impls {
++    static constexpr auto start =
++      [](auto&amp;amp; state, auto&amp;amp; rcvr) noexcept -&amp;gt; void {
++        /*auto&amp;amp; [...ts] = state;*/
++        set_stopped(std::move(rcvr));
++      };
++  };
++}
++```
++* decayed-typeof[link decayed-typeof.md.nolink]
++* impls-for[link impls-for.md]
++* default-impls[link impls-for.md]
++* set_stopped[link set_stopped.md]
++* std::move[link /reference/utility/move.md]
++
++
++## カスタマイゼーションポイント
++[Receiver](receiver.md)との[接続(connect)](connect.md)時に、[関連付けられた実行ドメイン](get-domain-late.md)に対して[`execution::transform_sender`](transform_sender.md)経由でSender変換が行われる。
++[デフォルト実行ドメイン](default_domain.md)では無変換。
++
++
++## 例
++```cpp example
++#include &amp;lt;execution&amp;gt;
++namespace ex = std::execution;
++
++int main()
++{
++  // 停止を送信するSender
++  ex::sender auto sndr = ex::just_stopped();
++}
++```
++* ex::just_stopped[color ff0000]
++* ex::sender[link sender.md]
++
++### 出力
++```
++```
++
++
++## バージョン
++### 言語
++- C++26
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): ??
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 関連項目
++- [`execution::just`](just.md)
++- [`execution::just_error`](just_error.md)
++
++
++## 参照
++- [P2999R3 Sender Algorithm Customization](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2999r3.html)
++- [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>let_value -- execution: just_error,just_stopped (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/let_value.html"/>
+      <id>d134ea8c1cc43660d7f61bf4844fae87085d1a5e:reference/execution/execution/let_value.md</id>
+      <updated>2025-05-29T15:55:34+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/let_value.md b/reference/execution/execution/let_value.md
+index 5a216c85f..728a686fa 100644
+--- a/reference/execution/execution/let_value.md
++++ b/reference/execution/execution/let_value.md
+@@ -361,7 +361,7 @@ int main()
+ * ex::set_value[link set_value.md]
+ * ex::set_error_t[link set_error.md]
+ * ex::set_error[link set_error.md]
+-* ex::just_stopped[link just_stopped.md.nolink]
++* ex::just_stopped[link just_stopped.md]
+ * ex::operation_state_t[link operation_state.md]
+ * std::this_thread::sync_wait_with_variant[link ../this_thread/sync_wait_with_variant.md]
+ * std::move[link /reference/utility/move.md]
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>sends_stopped -- execution: just_error,just_stopped (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/sends_stopped.html"/>
+      <id>d134ea8c1cc43660d7f61bf4844fae87085d1a5e:reference/execution/execution/sends_stopped.md</id>
+      <updated>2025-05-29T15:55:34+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/sends_stopped.md b/reference/execution/execution/sends_stopped.md
+index d4cbda9e0..810f929f8 100644
+--- a/reference/execution/execution/sends_stopped.md
++++ b/reference/execution/execution/sends_stopped.md
+@@ -44,7 +44,7 @@ int main()
+ * ex::sends_stopped[color ff0000]
+ * ex::sender[link sender.md]
+ * ex::just[link just.md]
+-* ex::just_stopped[link just_stopped.md.nolink]
++* ex::just_stopped[link just_stopped.md]
+ 
+ ### 出力
+ ```
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>value_types_of_t -- execution: just_error,just_stopped (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/value_types_of_t.html"/>
+      <id>d134ea8c1cc43660d7f61bf4844fae87085d1a5e:reference/execution/execution/value_types_of_t.md</id>
+      <updated>2025-05-29T15:55:34+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/value_types_of_t.md b/reference/execution/execution/value_types_of_t.md
+index d2f0ec8b4..4b082d771 100644
+--- a/reference/execution/execution/value_types_of_t.md
++++ b/reference/execution/execution/value_types_of_t.md
+@@ -55,7 +55,7 @@ int main()
+ * ex::value_types_of_t[color ff0000]
+ * ex::sender[link sender.md]
+ * ex::just[link just.md]
+-* ex::just_error[link just_error.md.nolink]
++* ex::just_error[link just_error.md]
+ 
+ ### 出力
+ ```
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>when_all_with_variant -- execution: just_error,just_stopped (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/when_all_with_variant.html"/>
+      <id>d134ea8c1cc43660d7f61bf4844fae87085d1a5e:reference/execution/execution/when_all_with_variant.md</id>
+      <updated>2025-05-29T15:55:34+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/when_all_with_variant.md b/reference/execution/execution/when_all_with_variant.md
+index fb413fec8..1329f52b6 100644
+--- a/reference/execution/execution/when_all_with_variant.md
++++ b/reference/execution/execution/when_all_with_variant.md
+@@ -55,10 +55,10 @@ return when_all(into_variant(std::forward_like&amp;lt;decltype((sndr))&amp;gt;(child))...);
+ 
+ 
+ ## カスタマイゼーションポイント
+-Senderアルゴリズム構築時に、関連付けられた実行ドメインに対して[`execution::transform_sender`](transform_sender.md)経由でSender変換が行われる。
++Senderアルゴリズム構築時に、全入力Senderに関連付けられた共通の実行ドメイン`CD`に対して[`execution::transform_sender`](transform_sender.md)経由でSender変換が行われる。
+ [デフォルト実行ドメイン](default_domain.md)では無変換。
+ 
+-[Receiver](receiver.md)との[接続(connect)](connect.md)時に、関連付けられた実行ドメインに対して[`execution::transform_sender`](transform_sender.md)経由でSender変換が行われる。
++[Receiver](receiver.md)との[接続(connect)](connect.md)時に、[関連付けられた実行ドメイン](get-domain-late.md)に対して[`execution::transform_sender`](transform_sender.md)経由でSender変換が行われる。
+ [デフォルト実行ドメイン](default_domain.md)では`when_all_with_variant.transform_sender(sndr, env)`が呼ばれ、前述仕様通りのSenderへと変換される。
+ 
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>filter_view -- filter_view : emptyは継承してた #713</title>
@@ -668,312 +1171,6 @@ index 77a31f852..00d8cc509 100644
  
  ## カスタマイゼーション
  
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>empty_view -- empty_view : メンバ関数を追加 #713</title>
-      <link href="https://cpprefjp.github.io/reference/ranges/empty_view.html"/>
-      <id>2a23e4da72a0e01764cf681b2f45f7823955cc16:reference/ranges/empty_view.md</id>
-      <updated>2025-05-29T13:50:36+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/empty_view.md b/reference/ranges/empty_view.md
-index 6be4b3008..77a31f852 100644
---- a/reference/ranges/empty_view.md
-+++ b/reference/ranges/empty_view.md
-@@ -8,14 +8,7 @@
- namespace std::ranges {
-   template&amp;lt;class T&amp;gt;
-     requires is_object_v&amp;lt;T&amp;gt;
--  class empty_view : public view_interface&amp;lt;empty_view&amp;lt;T&amp;gt;&amp;gt; { // (1)
--  public:
--    static constexpr T* begin() noexcept { return nullptr; }
--    static constexpr T* end() noexcept { return nullptr; }
--    static constexpr T* data() noexcept { return nullptr; }
--    static constexpr size_t size() noexcept { return 0; }
--    static constexpr bool empty() noexcept { return true; }
--  };
-+  class empty_view : public view_interface&amp;lt;empty_view&amp;lt;T&amp;gt;&amp;gt; { …… }; // (1)
- 
-   namespace views {
-     template&amp;lt;class T&amp;gt;
-@@ -42,13 +35,13 @@ namespace std::ranges {
- 
- ## 静的メンバ関数
- 
--| 名前                                             | 説明                             | 対応バージョン |
--|--------------------------------------------------|----------------------------------|----------------|
--| [`begin`](empty_view/begin.md.nolink)                   | 先頭を指すイテレータを取得する   | C++20          |
--| [`end`](empty_view/end.md.nolink)                       | 番兵を取得する                   | C++20          |
--| [`data`](empty_view/data.md.nolink)                     | 配列の先頭へのポインタを取得する | C++20          |
--| [`size`](empty_view/size.md.nolink)                     | 要素数を取得する                 | C++20          |
--| [`empty`](empty_view/empty.md.nolink)                   | Rangeが空かどうかを判定する       | C++20          |
-+| 名前                           | 説明                             | 対応バージョン |
-+|--------------------------------|----------------------------------|----------------|
-+| [`begin`](empty_view/begin.md) | 先頭を指すイテレータを取得する   | C++20          |
-+| [`end`](empty_view/end.md)     | 番兵を取得する                   | C++20          |
-+| [`data`](empty_view/data.md)   | 配列の先頭へのポインタを取得する | C++20          |
-+| [`size`](empty_view/size.md)   | 要素数を取得する                 | C++20          |
-+| [`empty`](empty_view/empty.md) | Rangeが空かどうかを判定する      | C++20          |
- 
- ## 継承しているメンバ関数
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>begin -- empty_view : メンバ関数を追加 #713</title>
-      <link href="https://cpprefjp.github.io/reference/ranges/empty_view/begin.html"/>
-      <id>2a23e4da72a0e01764cf681b2f45f7823955cc16:reference/ranges/empty_view/begin.md</id>
-      <updated>2025-05-29T13:50:36+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/empty_view/begin.md b/reference/ranges/empty_view/begin.md
-new file mode 100644
-index 000000000..eb5f274f5
---- /dev/null
-+++ b/reference/ranges/empty_view/begin.md
-@@ -0,0 +1,30 @@
-+# begin
-+* ranges[meta header]
-+* std::ranges[meta namespace]
-+* empty_view[meta class]
-+* function[meta id-type]
-+* cpp20[meta cpp]
-+
-+```cpp
-+static constexpr T* begin() noexcept; // (1) C++20
-+```
-+
-+## 概要
-+`view`の先頭要素を指すイテレータを取得する。
-+
-+## 戻り値
-+
-+```cpp
-+return nullptr;
-+```
-+
-+
-+## バージョン
-+### 言語
-+- C++20
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): 13.0.0 [mark verified]
-+- [GCC](/implementation.md#gcc): 10.1.0 [mark verified]
-+- [ICC](/implementation.md#icc): ?
-+- [Visual C++](/implementation.md#visual_cpp): 2019 Update 10 [mark verified]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>data -- empty_view : メンバ関数を追加 #713</title>
-      <link href="https://cpprefjp.github.io/reference/ranges/empty_view/data.html"/>
-      <id>2a23e4da72a0e01764cf681b2f45f7823955cc16:reference/ranges/empty_view/data.md</id>
-      <updated>2025-05-29T13:50:36+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/empty_view/data.md b/reference/ranges/empty_view/data.md
-new file mode 100644
-index 000000000..7ad10bd5e
---- /dev/null
-+++ b/reference/ranges/empty_view/data.md
-@@ -0,0 +1,30 @@
-+# data
-+* ranges[meta header]
-+* std::ranges[meta namespace]
-+* empty_view[meta class]
-+* function[meta id-type]
-+* cpp20[meta cpp]
-+
-+```cpp
-+static constexpr T* data() noexcept; // (1) C++20
-+```
-+
-+## 概要
-+配列の先頭へのポインタを取得する。
-+
-+## 戻り値
-+
-+```cpp
-+return nullptr;
-+```
-+
-+
-+## バージョン
-+### 言語
-+- C++20
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): 13.0.0 [mark verified]
-+- [GCC](/implementation.md#gcc): 10.1.0 [mark verified]
-+- [ICC](/implementation.md#icc): ?
-+- [Visual C++](/implementation.md#visual_cpp): 2019 Update 10 [mark verified]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>empty -- empty_view : メンバ関数を追加 #713</title>
-      <link href="https://cpprefjp.github.io/reference/ranges/empty_view/empty.html"/>
-      <id>2a23e4da72a0e01764cf681b2f45f7823955cc16:reference/ranges/empty_view/empty.md</id>
-      <updated>2025-05-29T13:50:36+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/empty_view/empty.md b/reference/ranges/empty_view/empty.md
-new file mode 100644
-index 000000000..fed7a28f0
---- /dev/null
-+++ b/reference/ranges/empty_view/empty.md
-@@ -0,0 +1,30 @@
-+# empty
-+* ranges[meta header]
-+* std::ranges[meta namespace]
-+* empty_view[meta class]
-+* function[meta id-type]
-+* cpp20[meta cpp]
-+
-+```cpp
-+static constexpr bool empty() noexcept; // (1) C++20
-+```
-+
-+## 概要
-+Rangeが空かどうかを判定する。
-+
-+## 戻り値
-+
-+```cpp
-+return true;
-+```
-+
-+
-+## バージョン
-+### 言語
-+- C++20
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): 13.0.0 [mark verified]
-+- [GCC](/implementation.md#gcc): 10.1.0 [mark verified]
-+- [ICC](/implementation.md#icc): ?
-+- [Visual C++](/implementation.md#visual_cpp): 2019 Update 10 [mark verified]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>end -- empty_view : メンバ関数を追加 #713</title>
-      <link href="https://cpprefjp.github.io/reference/ranges/empty_view/end.html"/>
-      <id>2a23e4da72a0e01764cf681b2f45f7823955cc16:reference/ranges/empty_view/end.md</id>
-      <updated>2025-05-29T13:50:36+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/empty_view/end.md b/reference/ranges/empty_view/end.md
-new file mode 100644
-index 000000000..6ac4b4399
---- /dev/null
-+++ b/reference/ranges/empty_view/end.md
-@@ -0,0 +1,31 @@
-+# end
-+* ranges[meta header]
-+* std::ranges[meta namespace]
-+* empty_view[meta class]
-+* function[meta id-type]
-+* cpp23[meta cpp]
-+
-+```cpp
-+static constexpr T* end() noexcept; // (1) C++20
-+```
-+
-+## 概要
-+
-+番兵を取得する。
-+
-+
-+## 戻り値
-+
-+```cpp
-+return nullptr;
-+```
-+
-+## バージョン
-+### 言語
-+- C++20
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): 13.0.0 [mark verified]
-+- [GCC](/implementation.md#gcc): 10.1.0 [mark verified]
-+- [ICC](/implementation.md#icc): ?
-+- [Visual C++](/implementation.md#visual_cpp): 2019 Update 10 [mark verified]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>size -- empty_view : メンバ関数を追加 #713</title>
-      <link href="https://cpprefjp.github.io/reference/ranges/empty_view/size.html"/>
-      <id>2a23e4da72a0e01764cf681b2f45f7823955cc16:reference/ranges/empty_view/size.md</id>
-      <updated>2025-05-29T13:50:36+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/empty_view/size.md b/reference/ranges/empty_view/size.md
-new file mode 100644
-index 000000000..f8adf916f
---- /dev/null
-+++ b/reference/ranges/empty_view/size.md
-@@ -0,0 +1,30 @@
-+# size
-+* ranges[meta header]
-+* std::ranges[meta namespace]
-+* empty_view[meta class]
-+* function[meta id-type]
-+* cpp20[meta cpp]
-+
-+```cpp
-+static constexpr size_t size() noexcept; // (1) C++20
-+```
-+
-+## 概要
-+要素数を取得する。
-+
-+## 戻り値
-+
-+```cpp
-+return 0;
-+```
-+
-+
-+## バージョン
-+### 言語
-+- C++20
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): 13.0.0 [mark verified]
-+- [GCC](/implementation.md#gcc): 10.1.0 [mark verified]
-+- [ICC](/implementation.md#icc): ?
-+- [Visual C++](/implementation.md#visual_cpp): 2019 Update 10 [mark verified]
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
