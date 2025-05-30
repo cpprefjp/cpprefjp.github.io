@@ -2,9 +2,92 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-05-30T14:46:46.645439</updated>
-  <id>194ee18a-3a5d-4072-9623-f1601230c457</id>
+  <updated>2025-05-30T15:44:19.949279</updated>
+  <id>20787424-1adb-434e-917e-07e5b8108395</id>
 
+  
+    <entry>
+      <title>as_awaitable -- execution/as_awaitable: 概要増補 (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/as_awaitable.html"/>
+      <id>1a6cd9cb028ec39fe556b218ffebd57039df314d:reference/execution/execution/as_awaitable.md</id>
+      <updated>2025-05-31T00:39:36+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/as_awaitable.md b/reference/execution/execution/as_awaitable.md
+index 96fb0d803..eede9fa1b 100644
+--- a/reference/execution/execution/as_awaitable.md
++++ b/reference/execution/execution/as_awaitable.md
+@@ -13,7 +13,19 @@ namespace std::execution {
+ * unspecified[italic]
+ 
+ ## 概要
+-`as_awaitable`は、オブジェクトを特定コルーチン内でAwaitableに変換するカスタマイゼーションポイントオブジェクトである。
++`as_awaitable`は、オブジェクトを特定の[コルーチン](/lang/cpp20/coroutines.md)内でAwaitableに変換するカスタマイゼーションポイントオブジェクトである。
++
++Promise型`p`をもつコルーチンにおいて、Await式`co_await as_awaitable(expr, p)`は下記のように動作する。
++
++- 式`expr.as_awaitable(p)`が有効ならば、同式が返すAwaitableオブジェクトに対してAwait式を実行する。
++- `expr`が[単一の値を送信するSender](single-sender.md)であり、Promise型が停止完了ハンドラを定義するならば、下記動作を行う。
++    - Senderを[接続(connect)](connect.md)し、結果[Operation State](operation_state.md)をAwaitableオブジェクトに格納する。
++    - コルーチンを中断し、Operation Stateを[開始(start)](start.md)する。
++    - [クエリオブジェクト](../queryable.md)による[Receiver](receiver.md)環境への問い合わせは、Promise型に関連付けられた環境(`get_env`)へと転送される。
++    - Senderが[値完了](set_value.md)した場合、送信値をAwait式の結果としてコルーチンを再開する。
++    - Senderが[エラー完了](set_error.md)した場合、エラー値を例外としてコルーチンから再スローする。
++    - Senderが[停止完了](set_stopped.md)した場合、停止完了ハンドラ(`unhandled_stopped`)が返す別のコルーチンを再開させる。
++- そうでなければ、式`expr`に対してAwait式を実行する。
+ 
+ 
+ ## 効果
+@@ -43,6 +55,7 @@ namespace std::execution {
+ }
+ ```
+ * single-sender[link single-sender.md]
++* env_of_t[link env_of_t.md]
+ * sender_to[link sender_to.md]
+ * convertible_to[link /reference/concepts/convertible_to.md]
+ * coroutine_handle&amp;lt;&amp;gt;[link /reference/coroutine/coroutine_handle.md]
+@@ -102,7 +115,7 @@ struct awaitable-receiver {
+ 
+ 説明用の式`rcvr`を`awaitable-reciever`型の右辺値、`crcvr`を`rcvr`をconst参照する左辺値、`vs`を式パック、`err`を`Err`型の式とする。このとき
+ 
+-- [`constructible_from`](/reference/concepts/constructible_from.md)`&amp;lt;result-type, decltype((vs))...&amp;gt;`を満たすとき、式`set_value(rcvr, vs...)`は下記と等価。そうでなければ、式`set_value(rcvr, vs...)`は不適格となる。
++- [`constructible_from`](/reference/concepts/constructible_from.md)`&amp;lt;result-type, decltype((vs))...&amp;gt;`を満たすとき、式[`set_value`](set_value.md)`(rcvr, vs...)`は下記と等価。そうでなければ、式`set_value(rcvr, vs...)`は不適格となる。
+ 
+     ```cpp
+     try {
+@@ -116,7 +129,7 @@ struct awaitable-receiver {
+     * current_exception()[link /reference/exception/current_exception.md]
+     * resume()[link /reference/coroutine/coroutine_handle/resume.md]
+ 
+-- 式`set_error(rcvr, err)`は下記と等価。
++- 式[`set_error`](set_error.md)`(rcvr, err)`は下記と等価。
+ 
+     ```cpp
+     rcvr.result-ptr-&amp;gt;template emplace&amp;lt;2&amp;gt;(AS-EXCEPT-PTR(err));
+@@ -125,7 +138,7 @@ struct awaitable-receiver {
+     * template emplace[link /reference/variant/variant/emplace.md]
+     * resume()[link /reference/coroutine/coroutine_handle/resume.md]
+ 
+-- 式`set_stopped(rcvr)`は下記と等価。
++- 式[`set_stopped`](set_stopped.md)`(rcvr)`は下記と等価。
+ 
+     ```cpp
+     static_cast&amp;lt;coroutine_handle&amp;lt;&amp;gt;&amp;gt;(rcvr.continuation.promise().unhandled_stopped()).resume();
+@@ -134,7 +147,7 @@ struct awaitable-receiver {
+     * promise()[link /reference/coroutine/coroutine_handle/promise.md]
+     * resume()[link /reference/coroutine/coroutine_handle/resume.md]
+ 
+-- [`forwarding-query`](../forwarding-query.md)を満たす型の式`tag`とパック式`as`に対して、[`get_env`](get_env.md)`(crcvr).query(tag, as...)`は下記と等価。
++- [`forwarding-query`](../forwarding-query.md)を満たす型の式`tag`とパック式`as`に対して、式[`get_env`](get_env.md)`(crcvr).query(tag, as...)`は下記と等価。
+ 
+     ```cpp
+     tag(get_env(as_const(crcvr.continuation.promise())), as...)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>class-type -- execution: as_awaitable (#1384)</title>
@@ -1381,33 +1464,6 @@ index 000000000..c03171959
       <author>
         <name>Akira Takahashi</name>
         <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>with_awaitable_senders -- execution/with_awaitable_senders: remove forbid chars</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/with_awaitable_senders.html"/>
-      <id>a1eaff0ecb6591461ea27f6eb861a47fdb57d1d9:reference/execution/execution/with_awaitable_senders.md</id>
-      <updated>2025-05-30T17:17:23+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/with_awaitable_senders.md b/reference/execution/execution/with_awaitable_senders.md
-index 429e09102..ec76e23ad 100644
---- a/reference/execution/execution/with_awaitable_senders.md
-+++ b/reference/execution/execution/with_awaitable_senders.md
-@@ -173,7 +173,7 @@ value=42
- 
- 
- ## 関連項目
--- [`execution::​as_awaitable`](​as_awaitable.md.nolink)
-+- [`execution::as_awaitable`](as_awaitable.md.nolink)
- - [コルーチン](/lang/cpp20/coroutines.md)
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
       </author>
     </entry>
   
