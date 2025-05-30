@@ -2,9 +2,412 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-05-29T14:46:34.162895</updated>
-  <id>4e9c09f4-8019-433b-add9-9539aa4e93d9</id>
+  <updated>2025-05-30T01:46:22.460456</updated>
+  <id>f9607ec7-aa8c-4d44-919f-d40289e9edab</id>
 
+  
+    <entry>
+      <title>execution -- execution: stopped_as_{error,optional} (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution.html"/>
+      <id>b272152786f1bf6578039bc74ac6d7e05a9c6aed:reference/execution/execution.md</id>
+      <updated>2025-05-30T10:42:05+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution.md b/reference/execution/execution.md
+index ad7cf4d46..16b4448d7 100644
+--- a/reference/execution/execution.md
++++ b/reference/execution/execution.md
+@@ -126,8 +126,8 @@ namespace std::execution {
+ | [`execution::when_all`](execution/when_all.md) | 全ての入力Sender完了を待機 (customization point object) | C++26 |
+ | [`execution::when_all_with_variant`](execution/when_all_with_variant.md) | 複数の値完了シグネチャをもつ全ての入力Sender完了を待機 (customization point object) | C++26 |
+ | [`execution::into_variant`](execution/into_variant.md) | 複数の値完了シグネチャを単一[`variant`](/reference/variant/variant.md)型の値完了シグネチャに変換 (customization point object) | C++26 |
+-| [`execution::stopped_as_optional`](execution/stopped_as_optional.md.nolink) | 入力Senderの停止完了を[`optional`](/reference/optional/optional.md)型の値完了に変換 (customization point object) | C++26 |
+-| [`execution::stopped_as_error`](execution/stopped_as_error.md.nolink) | 入力Senderの停止完了をエラー完了に変換 (customization point object) | C++26 |
++| [`execution::stopped_as_optional`](execution/stopped_as_optional.md) | 入力Senderの停止完了を空の[`optional`](/reference/optional/optional.md)値完了に変換 (customization point object) | C++26 |
++| [`execution::stopped_as_error`](execution/stopped_as_error.md) | 入力Senderの停止完了をエラー完了に変換 (customization point object) | C++26 |
+ 
+ ### Senderコンシューマ
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>stopped_as_error -- execution: stopped_as_{error,optional} (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/stopped_as_error.html"/>
+      <id>b272152786f1bf6578039bc74ac6d7e05a9c6aed:reference/execution/execution/stopped_as_error.md</id>
+      <updated>2025-05-30T10:42:05+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/stopped_as_error.md b/reference/execution/execution/stopped_as_error.md
+new file mode 100644
+index 000000000..c815f9729
+--- /dev/null
++++ b/reference/execution/execution/stopped_as_error.md
+@@ -0,0 +1,167 @@
++# stopped_as_error
++* execution[meta header]
++* cpo[meta id-type]
++* std::execution[meta namespace]
++* cpp26[meta cpp]
++
++```cpp
++namespace std::execution {
++  struct stopped_as_error_t { unspecified };
++  inline constexpr stopped_as_error_t stopped_as_error{};
++}
++```
++* unspecified[italic]
++
++## 概要
++`stopped_as_error`は、入力[Sender](sender.md)の[停止完了](set_stopped.md)をカスタムエラー型の[エラー完了](set_error.md)にマップするSenderアダプタである。
++
++`stopped_as_error`は[パイプ可能Senderアダプタオブジェクト](sender_adaptor_closure.md)であり、パイプライン記法をサポートする。
++
++
++## 効果
++説明用の式`sndr`と`err`に対して、型`Sndr`を`decltype((sndr))`、型`Err`を`decltype((err))`とする。`Sndr`が[`sender`](sender.md)を満たさない、もしくは`Err`が[`moveable-value`](../movable-value.md)を満たさないとき、呼び出し式`stopped_as_error(sndr, err)`は不適格となる。
++
++そうでなければ、呼び出し式`stopped_as_error(sndr, err)`は`sndr`が1回だけ評価されることを除いて、下記と等価。
++
++```cpp
++transform_sender(get-domain-early(sndr), make-sender(stopped_as_error, err, sndr))
++```
++* transform_sender[link transform_sender.md]
++* get-domain-early[link get-domain-early.md]
++* make-sender[link make-sender.md]
++
++
++### Senderアルゴリズムタグ `stopped_as_error`
++説明用の式`sndr`と`env`に対して、型`Sndr`を`decltype((sndr))`、型`Env`を`decltype((env))`とする。[`sender-for`](sender-for.md)`&amp;lt;Sndr, stopped_as_error_t&amp;gt; == false`、もしくは[`single-sender-value-type`](single-sender-value-type.md.nolink)`&amp;lt;Sndr, Env&amp;gt;`が不適格または`void`のとき、式`stopped_as_error.transform_sender(sndr, env)`は不適格となる。
++
++そうでなければ、式`stopped_as_error.transform_sender(sndr, env)`は下記と等価。
++
++```cpp
++auto&amp;amp;&amp;amp; [_, err, child] = sndr;
++using E = decltype(auto(err));
++return let_stopped(
++    std::forward_like&amp;lt;Sndr&amp;gt;(child),
++    [err = std::forward_like&amp;lt;Sndr&amp;gt;(err)]() mutable noexcept(is_nothrow_move_constructible_v&amp;lt;E&amp;gt;) {
++      return just_error(std::move(err));
++    });
++```
++* let_stopped[link let_stopped.md.nolink]
++* just_error[link just_error.md]
++* is_nothrow_move_constructible_v[link /reference/type_traits/is_nothrow_move_constructible.md]
++* std::move[link /reference/utility/move.md]
++
++
++## カスタマイゼーションポイント
++Senderアルゴリズム構築時に、[Sender](sender.md)`sndr`に[関連付けられた実行ドメイン](get-domain-early.md)に対して[`execution::transform_sender`](transform_sender.md)経由でSender変換が行われる。
++[デフォルト実行ドメイン](default_domain.md)では無変換。
++
++[Receiver](receiver.md)との[接続(connect)](connect.md)時に、[関連付けられた実行ドメイン](get-domain-late.md)に対して[`execution::transform_sender`](transform_sender.md)経由でSender変換が行われる。
++[デフォルト実行ドメイン](default_domain.md)では`stopped_as_error.transform_sender(sndr, env)`が呼ばれ、前述仕様通りのSenderへと変換される。
++
++
++## 例
++```cpp example
++#include &amp;lt;cassert&amp;gt;
++#include &amp;lt;execution&amp;gt;
++namespace ex = std::execution;
++
++// MySenderは下記いずれかの完了操作を行う
++//   値完了   set_value(int)
++//   停止完了 set_stopped()
++struct MySender {
++  using sender_concept = ex::sender_t;
++  using completion_signatures = ex::completion_signatures&amp;lt;
++    ex::set_value_t(int),
++    ex::set_stopped_t()
++  &amp;gt;;
++
++  template &amp;lt;typename Rcvr&amp;gt;
++  struct state {
++    using operation_state_concept = ex::operation_state_t;
++
++    state(Rcvr rcvr, int val)
++      : rcvr_{std::move(rcvr)}, val_{val} {}
++
++    void start() noexcept {
++      if (0 &amp;lt; val_) {
++        ex::set_value(std::move(rcvr_), val_);
++      } else {
++        ex::set_stopped(std::move(rcvr_));
++      }
++    }
++
++    Rcvr rcvr_;
++    int val_;
++  };
++
++  template &amp;lt;typename Rcvr&amp;gt;
++  auto connect(Rcvr rcvr) noexcept {
++    return state{std::move(rcvr), val_};
++  }
++
++  int val_;
++};
++
++int main()
++{
++  { // 関数呼び出し
++    ex::sender auto snd0 = MySender{-1};
++    ex::sender auto snd1 = ex::stopped_as_error(snd0, MyStoppedError{});
++    try {
++      auto result = std::this_thread::sync_wait(snd1).value();
++      std::println(&amp;#34;(int) {}&amp;#34;, result);
++    } catch (MyStoppedError) {
++      std::println(&amp;#34;stopped&amp;#34;);
++    }
++  }
++
++  { // パイプライン記法
++    ex::sender auto sndr =
++      MySender{-1}
++      | ex::stopped_as_error(MyStoppedError{});
++    try {
++      auto result = std::this_thread::sync_wait(sndr).value();
++      std::println(&amp;#34;(int) {}&amp;#34;, result);
++    } catch (MyStoppedError) {
++      std::println(&amp;#34;stopped&amp;#34;);
++    }
++  }
++}
++```
++* ex::stopped_as_error[color ff0000]
++* ex::sender_t[link sender.md]
++* ex::sender[link sender.md]
++* ex::completion_signatures[link completion_signatures.md]
++* ex::set_value_t[link set_value.md]
++* ex::set_value[link set_value.md]
++* ex::set_stopped_t[link set_stopped.md]
++* ex::set_stopped[link set_stopped.md]
++* ex::operation_state_t[link operation_state.md]
++* std::this_thread::sync_wait[link ../this_thread/sync_wait.md]
++* std::move[link /reference/utility/move.md]
++
++### 出力
++```
++stopped
++stopped
++```
++
++
++## バージョン
++### 言語
++- C++26
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): ??
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 関連項目
++- [`execution::stopped_as_optional`](stopped_as_optional.md)
++
++
++## 参照
++- [P2999R3 Sender Algorithm Customization](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2999r3.html)
++- [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>stopped_as_optional -- execution: stopped_as_{error,optional} (#1384)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/stopped_as_optional.html"/>
+      <id>b272152786f1bf6578039bc74ac6d7e05a9c6aed:reference/execution/execution/stopped_as_optional.md</id>
+      <updated>2025-05-30T10:42:05+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/stopped_as_optional.md b/reference/execution/execution/stopped_as_optional.md
+new file mode 100644
+index 000000000..1f056d35f
+--- /dev/null
++++ b/reference/execution/execution/stopped_as_optional.md
+@@ -0,0 +1,167 @@
++# stopped_as_optional
++* execution[meta header]
++* cpo[meta id-type]
++* std::execution[meta namespace]
++* cpp26[meta cpp]
++
++```cpp
++namespace std::execution {
++  struct stopped_as_optional_t { unspecified };
++  inline constexpr stopped_as_optional_t stopped_as_optional{};
++}
++```
++* unspecified[italic]
++
++## 概要
++`stopped_as_optional`は、入力[Sender](sender.md)の[停止完了](set_stopped.md)を空の[`optional`](/reference/optional/optional.md)による[値完了](set_value.md)にマップするSenderアダプタである。入力Senderの値完了操作も[`optional`](/reference/optional/optional.md)へと変換される。
++
++`stopped_as_optional`は[パイプ可能Senderアダプタオブジェクト](sender_adaptor_closure.md)であり、パイプライン記法をサポートする。
++
++
++## 効果
++説明用の式`sndr`に対して、型`Sndr`を`decltype((sndr))`とする。呼び出し式`stopped_as_optional(sndr)`は`sndr`が1回だけ評価されることを除いて、下記と等価。
++
++```cpp
++transform_sender(get-domain-early(sndr), make-sender(stopped_as_optional, {}, sndr))
++```
++* transform_sender[link transform_sender.md]
++* get-domain-early[link get-domain-early.md]
++* make-sender[link make-sender.md]
++
++
++### Senderアルゴリズムタグ `stopped_as_optional`
++説明用の式`sndr`と`env`に対して、型`Sndr`を`decltype((sndr))`、型`Env`を`decltype((env))`とする。[`sender-for`](sender-for.md)`&amp;lt;Sndr, stopped_as_optional_t&amp;gt; == false`、もしくは[`single-sender-value-type`](single-sender-value-type.md.nolink)`&amp;lt;Sndr, Env&amp;gt;`が不適格または`void`のとき、式`stopped_as_optional.transform_sender(sndr, env)`は不適格となる。
++
++そうでなければ、式`stopped_as_optional.transform_sender(sndr, env)`は下記と等価。
++
++```cpp
++auto&amp;amp;&amp;amp; [_, _, child] = sndr;
++using V = single-sender-value-type&amp;lt;Sndr, Env&amp;gt;;
++return let_stopped(
++    then(std::forward_like&amp;lt;Sndr&amp;gt;(child),
++         []&amp;lt;class... Ts&amp;gt;(Ts&amp;amp;&amp;amp;... ts) noexcept(is_nothrow_constructible_v&amp;lt;V, Ts...&amp;gt;) {
++           return optional&amp;lt;V&amp;gt;(in_place, std::forward&amp;lt;Ts&amp;gt;(ts)...);
++         }),
++    []() noexcept { return just(optional&amp;lt;V&amp;gt;()); });
++```
++* single-sender-value-type[link single-sender-value-type.md.nolink]
++* let_stopped[link let_stopped.md.nolink]
++* then[link then.md]
++* just[link just.md]
++* is_nothrow_constructible_v[link /reference/type_traits/is_nothrow_constructible.md]
++* optional[link /reference/optional/optional.md]
++* in_place[link /reference/utility/in_place_t.md]
++
++
++## カスタマイゼーションポイント
++Senderアルゴリズム構築時に、[Sender](sender.md)`sndr`に[関連付けられた実行ドメイン](get-domain-early.md)に対して[`execution::transform_sender`](transform_sender.md)経由でSender変換が行われる。
++[デフォルト実行ドメイン](default_domain.md)では無変換。
++
++[Receiver](receiver.md)との[接続(connect)](connect.md)時に、[関連付けられた実行ドメイン](get-domain-late.md)に対して[`execution::transform_sender`](transform_sender.md)経由でSender変換が行われる。
++[デフォルト実行ドメイン](default_domain.md)では`stopped_as_optional.transform_sender(sndr, env)`が呼ばれ、前述仕様通りのSenderへと変換される。
++
++
++## 例
++```cpp example
++#include &amp;lt;cassert&amp;gt;
++#include &amp;lt;execution&amp;gt;
++namespace ex = std::execution;
++
++// MySenderは下記いずれかの完了操作を行う
++//   値完了   set_value(int)
++//   停止完了 set_stopped()
++struct MySender {
++  using sender_concept = ex::sender_t;
++  using completion_signatures = ex::completion_signatures&amp;lt;
++    ex::set_value_t(int),
++    ex::set_stopped_t()
++  &amp;gt;;
++
++  template &amp;lt;typename Rcvr&amp;gt;
++  struct state {
++    using operation_state_concept = ex::operation_state_t;
++
++    state(Rcvr rcvr, int val)
++      : rcvr_{std::move(rcvr)}, val_{val} {}
++
++    void start() noexcept {
++      if (0 &amp;lt; val_) {
++        ex::set_value(std::move(rcvr_), val_);
++      } else {
++        ex::set_stopped(std::move(rcvr_));
++      }
++    }
++
++    Rcvr rcvr_;
++    int val_;
++  };
++
++  template &amp;lt;typename Rcvr&amp;gt;
++  auto connect(Rcvr rcvr) noexcept {
++    return state{std::move(rcvr), val_};
++  }
++
++  int val_;
++};
++
++int main()
++{
++  { // 関数呼び出し
++    ex::sender auto snd0 = MySender{-1};
++    ex::sender auto snd1 = ex::stopped_as_optional(snd0);
++    auto [result] = std::this_thread::sync_wait(snd1).value();
++    if (result) {
++      std::println(&amp;#34;(int) {}&amp;#34;, *result);
++    } else {
++      std::println(&amp;#34;stopped&amp;#34;);
++    }
++  }
++
++  { // パイプライン記法
++    ex::sender auto sndr = MySender{-1} | ex::stopped_as_optional();
++    auto [result] = std::this_thread::sync_wait(sndr).value();
++    if (result) {
++      std::println(&amp;#34;(int) {}&amp;#34;, *result);
++    } else {
++      std::println(&amp;#34;stopped&amp;#34;);
++    }
++  }
++}
++```
++* ex::stopped_as_optional[color ff0000]
++* ex::sender_t[link sender.md]
++* ex::sender[link sender.md]
++* ex::completion_signatures[link completion_signatures.md]
++* ex::set_value_t[link set_value.md]
++* ex::set_value[link set_value.md]
++* ex::set_stopped_t[link set_stopped.md]
++* ex::set_stopped[link set_stopped.md]
++* ex::operation_state_t[link operation_state.md]
++* std::this_thread::sync_wait[link ../this_thread/sync_wait.md]
++* std::move[link /reference/utility/move.md]
++
++### 出力
++```
++stopped
++stopped
++```
++
++
++## バージョン
++### 言語
++- C++26
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): ??
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 関連項目
++- [`execution::stopped_as_error`](stopped_as_error.md)
++
++
++## 参照
++- [P2999R3 Sender Algorithm Customization](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2999r3.html)
++- [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>execution -- execution: sender_adaptor_closure (#1384)</title>
@@ -1555,187 +1958,6 @@ index 6cbf94292..df9e737f1 100644
       <author>
         <name>Akira Takahashi</name>
         <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>let_value -- execution: 微調整 (#1384)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/let_value.html"/>
-      <id>82881a7387799eeb154f46dc7cf93f733f8fdea6:reference/execution/execution/let_value.md</id>
-      <updated>2025-05-29T16:49:32+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/let_value.md b/reference/execution/execution/let_value.md
-index 728a686fa..becaf6055 100644
---- a/reference/execution/execution/let_value.md
-+++ b/reference/execution/execution/let_value.md
-@@ -227,8 +227,8 @@ namespace ex = std::execution;
- int main()
- {
-   { // 関数呼び出し
--    ex::sender snd0 = ex::just(21);
--    ex::sender snd1 = ex::let_value(
-+    ex::sender auto snd0 = ex::just(21);
-+    ex::sender auto snd1 = ex::let_value(
-       snd0,
-       [](int n) -&amp;gt; ex::sender auto {
-         return ex::just(n * 2);
-@@ -238,7 +238,7 @@ int main()
-   }
- 
-   { // パイプライン記法
--    ex::sender sndr = ex::just(21)
-+    ex::sender auto sndr = ex::just(21)
-       | ex::let_value(
-           [](int n) -&amp;gt; ex::sender auto {
-             return ex::just(n * 2);
-@@ -361,6 +361,7 @@ int main()
- * ex::set_value[link set_value.md]
- * ex::set_error_t[link set_error.md]
- * ex::set_error[link set_error.md]
-+* ex::just[link just.md]
- * ex::just_stopped[link just_stopped.md]
- * ex::operation_state_t[link operation_state.md]
- * std::this_thread::sync_wait_with_variant[link ../this_thread/sync_wait_with_variant.md]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>read_env -- execution: 微調整 (#1384)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/read_env.html"/>
-      <id>82881a7387799eeb154f46dc7cf93f733f8fdea6:reference/execution/execution/read_env.md</id>
-      <updated>2025-05-29T16:49:32+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/read_env.md b/reference/execution/execution/read_env.md
-index ca8e9dfbe..b679a92b3 100644
---- a/reference/execution/execution/read_env.md
-+++ b/reference/execution/execution/read_env.md
-@@ -57,7 +57,7 @@ int main()
-   ex::sender auto sndr = ex::read_env(ex::get_scheduler)
-     | ex::let_value([](auto sch) -&amp;gt; ex::sender auto {
-         // sch := sync_wait内部のScheduler
--        return ex::starts_on(sch, std::just(42));
-+        return ex::starts_on(sch, ex::just(42));
-       });
-   auto [val] = std::this_thread::sync_wait(sndr).value();
-   std::println(&amp;#34;{}&amp;#34;, val);
-@@ -66,7 +66,9 @@ int main()
- * ex::read_env[color ff0000]
- * ex::sender[link sender.md]
- * ex::get_scheduler[link get_scheduler.md]
-+* ex::let_value[lin let_value.md]
- * ex::starts_on[link starts_on.md]
-+* ex::just[lin just.md]
- * std::this_thread::sync_wait[link ../this_thread/sync_wait.md]
- * value()[link /reference/optional/optional/value.md]
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>schedule -- execution: 微調整 (#1384)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/schedule.html"/>
-      <id>82881a7387799eeb154f46dc7cf93f733f8fdea6:reference/execution/execution/schedule.md</id>
-      <updated>2025-05-29T16:49:32+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/schedule.md b/reference/execution/execution/schedule.md
-index 915d9e716..ed254fc64 100644
---- a/reference/execution/execution/schedule.md
-+++ b/reference/execution/execution/schedule.md
-@@ -73,6 +73,8 @@ int main()
- * finish()[link run_loop/finish.md]
- * std::move[link /reference/utility/move.md]
- * std::this_thread::get_id()[link /reference/thread/this_thread/get_id.md]
-+* std::this_thread::sync_wait[link ../this_thread/sync_wait.md]
-+* value()[link /reference/optional/optional/value.md]
- 
- ### 出力例
- ```
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>schedule_from -- execution: 微調整 (#1384)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/schedule_from.html"/>
-      <id>82881a7387799eeb154f46dc7cf93f733f8fdea6:reference/execution/execution/schedule_from.md</id>
-      <updated>2025-05-29T16:49:32+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/schedule_from.md b/reference/execution/execution/schedule_from.md
-index b72a43225..6c3014d2c 100644
---- a/reference/execution/execution/schedule_from.md
-+++ b/reference/execution/execution/schedule_from.md
-@@ -52,7 +52,7 @@ namespace std::execution {
- * default-impls[link impls-for.md]
- * see below[italic]
- 
--`impls-for&amp;lt;decayed-typeof&amp;lt;schedule_from_t&amp;gt;&amp;gt;::get-attrs`メンバは、下記ラムダ式と等価な関数呼び出し可能なオブジェクトで初期化される。
-+`impls-for&amp;lt;schedule_from_t&amp;gt;::get-attrs`メンバは、下記ラムダ式と等価な関数呼び出し可能なオブジェクトで初期化される。
- 
- ```cpp
- [](const auto&amp;amp; data, const auto&amp;amp; child) noexcept -&amp;gt; decltype(auto) {
-@@ -64,7 +64,7 @@ namespace std::execution {
- * FWD-ENV[link ../forwarding_query.md]
- * get_env[link get_env.md]
- 
--`impls-for&amp;lt;decayed-typeof&amp;lt;schedule_from_t&amp;gt;&amp;gt;::get-state`メンバは、下記ラムダ式と等価な関数呼び出し可能なオブジェクトで初期化される。
-+`impls-for&amp;lt;schedule_from_t&amp;gt;::get-state`メンバは、下記ラムダ式と等価な関数呼び出し可能なオブジェクトで初期化される。
- 
- ```cpp
- []&amp;lt;class Sndr, class Rcvr&amp;gt;(Sndr&amp;amp;&amp;amp; sndr, Rcvr&amp;amp; rcvr) noexcept(see below)
-@@ -110,7 +110,7 @@ namespace std::execution {
- 
- - `receiver_t`は説明専用クラス`receiver-type`のエイリアスとする。
- 
--`impls-for&amp;lt;decayed-typeof&amp;lt;schedule_from_t&amp;gt;&amp;gt;::complete`メンバは、下記ラムダ式と等価な関数呼び出し可能なオブジェクトで初期化される。
-+`impls-for&amp;lt;schedule_from_t&amp;gt;::complete`メンバは、下記ラムダ式と等価な関数呼び出し可能なオブジェクトで初期化される。
- 
- ```cpp
- []&amp;lt;class Tag, class... Args&amp;gt;(auto, auto&amp;amp; state, auto&amp;amp; rcvr, Tag, Args&amp;amp;&amp;amp;... args) noexcept
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>starts_on -- execution: 微調整 (#1384)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/starts_on.html"/>
-      <id>82881a7387799eeb154f46dc7cf93f733f8fdea6:reference/execution/execution/starts_on.md</id>
-      <updated>2025-05-29T16:49:32+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/starts_on.md b/reference/execution/execution/starts_on.md
-index 9b7603c13..4f23445fb 100644
---- a/reference/execution/execution/starts_on.md
-+++ b/reference/execution/execution/starts_on.md
-@@ -114,6 +114,7 @@ int main()
- * ex::run_loop[link run_loop.md]
- * ex::sender[link sender.md]
- * ex::scheduler[link scheduler.md]
-+* ex::just[link just.md]
- * ex::then[link then.md]
- * get_scheduler()[link run_loop/get_scheduler.md]
- * run()[link run_loop/run.md]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
       </author>
     </entry>
   
