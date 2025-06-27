@@ -394,7 +394,7 @@ var DOM = /*#__PURE__*/function () {
     value: function () {
       var _createHeaderContent = (0,asyncToGenerator/* default */.A)(/*#__PURE__*/regenerator_default().mark(function _callee5(h) {
         var _this = this;
-        var empty, elem, classes, others;
+        var empty, elem, classes, classBatchSize, i, batch, batchElements, others, otherBatchSize, _i, _batch, _batchElements;
         return regenerator_default().wrap(function _callee5$(_context5) {
           while (1) {
             switch (_context5.prev = _context5.next) {
@@ -403,16 +403,23 @@ var DOM = /*#__PURE__*/function () {
                 empty = true;
                 elem = this.indexElems.get(h.self.id);
                 if (!(h.classes && h.classes.length)) {
-                  _context5.next = 10;
+                  _context5.next = 19;
                   break;
                 }
                 empty = false;
                 classes = treeview_$('<ul>', {
                   class: 'classes'
-                }).appendTo(elem);
-                _context5.t0 = classes;
-                _context5.next = 8;
-                return Promise.all(h.classes.map(/*#__PURE__*/function () {
+                }).appendTo(elem); // バッチ処理で段階的に要素を追加
+                classBatchSize = 10;
+                i = 0;
+              case 7:
+                if (!(i < h.classes.length)) {
+                  _context5.next = 19;
+                  break;
+                }
+                batch = h.classes.slice(i, i + classBatchSize);
+                _context5.next = 11;
+                return Promise.all(batch.map(/*#__PURE__*/function () {
                   var _ref = (0,asyncToGenerator/* default */.A)(/*#__PURE__*/regenerator_default().mark(function _callee2(c) {
                     return regenerator_default().wrap(function _callee2$(_context2) {
                       while (1) {
@@ -433,21 +440,42 @@ var DOM = /*#__PURE__*/function () {
                     return _ref.apply(this, arguments);
                   };
                 }()));
-              case 8:
-                _context5.t1 = _context5.sent;
-                _context5.t0.append.call(_context5.t0, _context5.t1);
-              case 10:
+              case 11:
+                batchElements = _context5.sent;
+                classes.append(batchElements);
+
+                // iOS Safariに処理時間を与える
+                if (!(i + classBatchSize < h.classes.length)) {
+                  _context5.next = 16;
+                  break;
+                }
+                _context5.next = 16;
+                return new Promise(function (resolve) {
+                  return setTimeout(resolve, 0);
+                });
+              case 16:
+                i += classBatchSize;
+                _context5.next = 7;
+                break;
+              case 19:
                 if (!(h.others && h.others.length)) {
-                  _context5.next = 18;
+                  _context5.next = 36;
                   break;
                 }
                 empty = false;
                 others = treeview_$('<ul>', {
                   class: 'others'
-                }).appendTo(elem);
-                _context5.t2 = others;
-                _context5.next = 16;
-                return Promise.all(h.others.map(/*#__PURE__*/function () {
+                }).appendTo(elem); // バッチ処理で段階的に要素を追加
+                otherBatchSize = 10;
+                _i = 0;
+              case 24:
+                if (!(_i < h.others.length)) {
+                  _context5.next = 36;
+                  break;
+                }
+                _batch = h.others.slice(_i, _i + otherBatchSize);
+                _context5.next = 28;
+                return Promise.all(_batch.map(/*#__PURE__*/function () {
                   var _ref2 = (0,asyncToGenerator/* default */.A)(/*#__PURE__*/regenerator_default().mark(function _callee3(o) {
                     return regenerator_default().wrap(function _callee3$(_context3) {
                       while (1) {
@@ -468,10 +496,24 @@ var DOM = /*#__PURE__*/function () {
                     return _ref2.apply(this, arguments);
                   };
                 }()));
-              case 16:
-                _context5.t3 = _context5.sent;
-                _context5.t2.append.call(_context5.t2, _context5.t3);
-              case 18:
+              case 28:
+                _batchElements = _context5.sent;
+                others.append(_batchElements);
+
+                // iOS Safariに処理時間を与える
+                if (!(_i + otherBatchSize < h.others.length)) {
+                  _context5.next = 33;
+                  break;
+                }
+                _context5.next = 33;
+                return new Promise(function (resolve) {
+                  return setTimeout(resolve, 0);
+                });
+              case 33:
+                _i += otherBatchSize;
+                _context5.next = 24;
+                break;
+              case 36:
                 if (empty) {
                   elem.addClass('empty');
                 }
@@ -491,7 +533,7 @@ var DOM = /*#__PURE__*/function () {
                     }
                   }, _callee4);
                 })));
-              case 20:
+              case 38:
               case "end":
                 return _context5.stop();
             }
@@ -1202,7 +1244,7 @@ var Treeview = /*#__PURE__*/function () {
     value: function () {
       var _onDataImpl = (0,asyncToGenerator/* default */.A)(/*#__PURE__*/regenerator_default().mark(function _callee27() {
         var _this6 = this;
-        var root, cats;
+        var root, cats, filteredTops, batchSize, i, batch, batchElements;
         return regenerator_default().wrap(function _callee27$(_context27) {
           while (1) {
             switch (_context27.prev = _context27.next) {
@@ -1211,12 +1253,20 @@ var Treeview = /*#__PURE__*/function () {
                 root = treeview_$('<ul>', {
                   class: 'root stackable'
                 }).appendTo(this.root);
-                cats = this.kc.categories();
-                _context27.t0 = root;
-                _context27.next = 6;
-                return Promise.all(this.tree.filter(function (top) {
+                cats = this.kc.categories(); // バッチ処理で段階的にDOM要素を生成
+                filteredTops = this.tree.filter(function (top) {
                   return top.category.index !== cats.get('index').index;
-                }).map(/*#__PURE__*/function () {
+                });
+                batchSize = 5; // 一度に処理する要素数
+                i = 0;
+              case 6:
+                if (!(i < filteredTops.length)) {
+                  _context27.next = 18;
+                  break;
+                }
+                batch = filteredTops.slice(i, i + batchSize);
+                _context27.next = 10;
+                return Promise.all(batch.map(/*#__PURE__*/function () {
                   var _ref8 = (0,asyncToGenerator/* default */.A)(/*#__PURE__*/regenerator_default().mark(function _callee26(top) {
                     var topID, stack, content_wrapper, content, is_not_empty;
                     return regenerator_default().wrap(function _callee26$(_context26) {
@@ -1291,10 +1341,25 @@ var Treeview = /*#__PURE__*/function () {
                     return _ref8.apply(this, arguments);
                   };
                 }()));
-              case 6:
-                _context27.t1 = _context27.sent;
-                _context27.t0.append.call(_context27.t0, _context27.t1);
-              case 8:
+              case 10:
+                batchElements = _context27.sent;
+                // バッチごとにDOMに追加
+                root.append(batchElements);
+
+                // iOS Safariに処理時間を与える
+                if (!(i + batchSize < filteredTops.length)) {
+                  _context27.next = 15;
+                  break;
+                }
+                _context27.next = 15;
+                return new Promise(function (resolve) {
+                  return setTimeout(resolve, 0);
+                });
+              case 15:
+                i += batchSize;
+                _context27.next = 6;
+                break;
+              case 18:
               case "end":
                 return _context27.stop();
             }
@@ -1311,22 +1376,30 @@ var Treeview = /*#__PURE__*/function () {
     value: function () {
       var _processTop = (0,asyncToGenerator/* default */.A)(/*#__PURE__*/regenerator_default().mark(function _callee30(top, e) {
         var _this7 = this;
-        var is_empty, self, _self;
+        var is_empty, self, articleBatchSize, i, batch, batchElements, _self;
         return regenerator_default().wrap(function _callee30$(_context30) {
           while (1) {
             switch (_context30.prev = _context30.next) {
               case 0:
                 is_empty = true;
                 if (!(top.articles && top.articles.length)) {
-                  _context30.next = 13;
+                  _context30.next = 23;
                   break;
                 }
                 is_empty = false;
-                _context30.t0 = treeview_$('<ul>', {
+                self = treeview_$('<ul>', {
                   class: 'articles'
-                });
-                _context30.next = 6;
-                return Promise.all(top.articles.map(/*#__PURE__*/function () {
+                }); // バッチ処理で段階的に要素を追加
+                articleBatchSize = 10;
+                i = 0;
+              case 6:
+                if (!(i < top.articles.length)) {
+                  _context30.next = 18;
+                  break;
+                }
+                batch = top.articles.slice(i, i + articleBatchSize);
+                _context30.next = 10;
+                return Promise.all(batch.map(/*#__PURE__*/function () {
                   var _ref10 = (0,asyncToGenerator/* default */.A)(/*#__PURE__*/regenerator_default().mark(function _callee28(ar) {
                     return regenerator_default().wrap(function _callee28$(_context28) {
                       while (1) {
@@ -1347,25 +1420,40 @@ var Treeview = /*#__PURE__*/function () {
                     return _ref10.apply(this, arguments);
                   };
                 }()));
-              case 6:
-                _context30.t1 = _context30.sent;
-                self = _context30.t0.append.call(_context30.t0, _context30.t1);
-                _context30.t2 = e;
-                _context30.next = 11;
+              case 10:
+                batchElements = _context30.sent;
+                self.append(batchElements);
+
+                // iOS Safariに処理時間を与える
+                if (!(i + articleBatchSize < top.articles.length)) {
+                  _context30.next = 15;
+                  break;
+                }
+                _context30.next = 15;
+                return new Promise(function (resolve) {
+                  return setTimeout(resolve, 0);
+                });
+              case 15:
+                i += articleBatchSize;
+                _context30.next = 6;
+                break;
+              case 18:
+                _context30.t0 = e;
+                _context30.next = 21;
                 return this.dom.kunaiBranch(self, 'articles');
-              case 11:
-                _context30.t3 = _context30.sent;
-                _context30.t2.append.call(_context30.t2, _context30.t3);
-              case 13:
+              case 21:
+                _context30.t1 = _context30.sent;
+                _context30.t0.append.call(_context30.t0, _context30.t1);
+              case 23:
                 if (!(top.headers && top.headers.length)) {
-                  _context30.next = 25;
+                  _context30.next = 35;
                   break;
                 }
                 is_empty = false;
-                _context30.t4 = treeview_$('<ul>', {
+                _context30.t2 = treeview_$('<ul>', {
                   class: 'headers'
                 });
-                _context30.next = 18;
+                _context30.next = 28;
                 return Promise.all(top.headers.map(/*#__PURE__*/function () {
                   var _ref11 = (0,asyncToGenerator/* default */.A)(/*#__PURE__*/regenerator_default().mark(function _callee29(h) {
                     return regenerator_default().wrap(function _callee29$(_context29) {
@@ -1387,18 +1475,18 @@ var Treeview = /*#__PURE__*/function () {
                     return _ref11.apply(this, arguments);
                   };
                 }()));
-              case 18:
-                _context30.t5 = _context30.sent;
-                _self = _context30.t4.append.call(_context30.t4, _context30.t5);
-                _context30.t6 = e;
-                _context30.next = 23;
+              case 28:
+                _context30.t3 = _context30.sent;
+                _self = _context30.t2.append.call(_context30.t2, _context30.t3);
+                _context30.t4 = e;
+                _context30.next = 33;
                 return this.dom.kunaiBranch(_self, 'headers');
-              case 23:
-                _context30.t7 = _context30.sent;
-                _context30.t6.append.call(_context30.t6, _context30.t7);
-              case 25:
+              case 33:
+                _context30.t5 = _context30.sent;
+                _context30.t4.append.call(_context30.t4, _context30.t5);
+              case 35:
                 return _context30.abrupt("return", !is_empty);
-              case 26:
+              case 36:
               case "end":
                 return _context30.stop();
             }
@@ -2302,7 +2390,7 @@ var Yata = /*#__PURE__*/function () {
     value: function () {
       var _autoRefresh = (0,asyncToGenerator/* default */.A)(/*#__PURE__*/regenerator_default().mark(function _callee() {
         var _this2 = this;
-        var id, info;
+        var id, i, info, timerId;
         return regenerator_default().wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
@@ -2312,32 +2400,54 @@ var Yata = /*#__PURE__*/function () {
                 // 生成されてからしばらく経ってから強制再描画しないと
                 // 何も表示されない
                 // †最大の闇†
-                id = this.cmRefreshTimers.size;
-              case 1:
-                if (false) {}
-                ++id;
-                if (this.cmRefreshTimers.has(id)) {
-                  _context.next = 5;
+                id = 0; // より安全なID生成方法に変更
+                i = 0;
+              case 2:
+                if (!(i <= this.cmRefreshTimers.size + 1)) {
+                  _context.next = 9;
                   break;
                 }
-                return _context.abrupt("break", 7);
-              case 5:
-                _context.next = 1;
+                if (this.cmRefreshTimers.has(i)) {
+                  _context.next = 6;
+                  break;
+                }
+                id = i;
+                return _context.abrupt("break", 9);
+              case 6:
+                i++;
+                _context.next = 2;
                 break;
-              case 7:
+              case 9:
                 info = new RefreshTimerInfo(id);
                 this.log.debug("autoRefresh engaged (id: #".concat(id, ")"));
                 this.cmRefreshTimers.set(id, info);
-                this.cmRefreshTimers.get(id).realID = setInterval(function (e) {
-                  ++info.count;
-                  _this2.cm.refresh();
-                  if (info.count > 10) {
-                    _this2.cmRefreshTimers.delete(id);
-                    _this2.log.debug("removing autoRefresh timer (id: #".concat(id, ", realID: #").concat(info.realID, ")"));
-                    clearInterval(info.realID);
+                timerId = setInterval(function () {
+                  // infoがまだ存在するか確認
+                  if (!_this2.cmRefreshTimers.has(id)) {
+                    clearInterval(timerId);
+                    return;
                   }
-                }, 200);
-              case 11:
+                  ++info.count;
+
+                  // CodeMirrorインスタンスが有効か確認
+                  if (_this2.cm && typeof _this2.cm.refresh === 'function') {
+                    try {
+                      _this2.cm.refresh();
+                    } catch (e) {
+                      _this2.log.error("Failed to refresh CodeMirror: ".concat(e));
+                      clearInterval(timerId);
+                      _this2.cmRefreshTimers.delete(id);
+                      return;
+                    }
+                  }
+                  if (info.count > 10) {
+                    _this2.log.debug("removing autoRefresh timer (id: #".concat(id, ", realID: #").concat(timerId, ")"));
+                    clearInterval(timerId);
+                    _this2.cmRefreshTimers.delete(id);
+                  }
+                }, 200); // タイマーIDを保存
+                info.realID = timerId;
+              case 14:
               case "end":
                 return _context.stop();
             }
@@ -2854,6 +2964,7 @@ var Kunai = /*#__PURE__*/function () {
     key: "initCRSearch",
     value: function () {
       var _initCRSearch = (0,asyncToGenerator/* default */.A)(/*#__PURE__*/regenerator_default().mark(function _callee6(isEnabled) {
+        var _this = this;
         var dynamic_base_url, online_base_url, database_url, crs, e;
         return regenerator_default().wrap(function _callee6$(_context6) {
           while (1) {
@@ -2900,17 +3011,22 @@ var Kunai = /*#__PURE__*/function () {
                     // HTML in a local file system is directly opened in a Web browser,
                     // "static/crsearch/crsearch.json" cannot be read using XHR due to the
                     // CORS (cross-origin resource sharing) policy for the local files.
-                    if (/^file:\/\//.test(current_script.src)) {
-                      var _url_kunai = current_script.getAttribute("src");
+                    try {
+                      if (/^file:\/\//.test(current_script.src)) {
+                        var _url_kunai = current_script.getAttribute("src");
 
-                      // When the current script file (kunai.js) is located in an expected
-                      // path in the tree, we try to load the local database file
-                      // "crsearch/crsearch.js" in JSONP format.
-                      var _url = _url_kunai.replace(/\bkunai\/js\/kunai\.js([?#].*)?$/, "crsearch/crsearch.js");
-                      if (_url != _url_kunai) return _url;
+                        // When the current script file (kunai.js) is located in an expected
+                        // path in the tree, we try to load the local database file
+                        // "crsearch/crsearch.js" in JSONP format.
+                        var _url = _url_kunai.replace(/\bkunai\/js\/kunai\.js([?#].*)?$/, "crsearch/crsearch.js");
+                        if (_url != _url_kunai) return _url;
 
-                      // Try to download "crsearch.json" from the project website.
-                      if (online_base_url) return online_base_url + "static/crsearch/crsearch.json";
+                        // Try to download "crsearch.json" from the project website.
+                        if (online_base_url) return online_base_url + "static/crsearch/crsearch.json";
+                      }
+                    } catch (e) {
+                      _this.log.warn('Failed to handle file:// protocol:', e);
+                      // フォールバックとして通常のURLを使用
                     }
 
                     // Try to determine the position of crsearch.json
