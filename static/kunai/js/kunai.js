@@ -323,15 +323,12 @@ var Content = /*#__PURE__*/function () {
   return Content;
 }();
 
-// EXTERNAL MODULE: ../node_modules/@babel/runtime/helpers/esm/toConsumableArray.js + 3 modules
-var toConsumableArray = __webpack_require__(4300);
 // EXTERNAL MODULE: ../node_modules/@babel/runtime/helpers/esm/slicedToArray.js + 3 modules
 var slicedToArray = __webpack_require__(7850);
 // EXTERNAL MODULE: ../node_modules/crsearch/js/crsearch.js + 10 modules
 var crsearch = __webpack_require__(2091);
 ;// ./kunai/ui/treeview.js
 /* provided dependency */ var treeview_$ = __webpack_require__(5616);
-
 
 
 
@@ -401,7 +398,7 @@ var DOM = /*#__PURE__*/function () {
               case 0:
                 // this.log.debug(`createHeaderContent (${h.self.id.join()})`, e, elem, h)
                 empty = true;
-                elem = this.indexElems.get(h.self.id);
+                elem = this.indexElems.get(h.self);
                 if (!(h.classes && h.classes.length)) {
                   _context5.next = 19;
                   break;
@@ -517,7 +514,7 @@ var DOM = /*#__PURE__*/function () {
                 if (empty) {
                   elem.addClass('empty');
                 }
-                this.lazyLoaders.set(h.self.id, /*#__PURE__*/(0,asyncToGenerator/* default */.A)(/*#__PURE__*/regenerator_default().mark(function _callee4() {
+                this.lazyLoaders.set(h.self, /*#__PURE__*/(0,asyncToGenerator/* default */.A)(/*#__PURE__*/regenerator_default().mark(function _callee4() {
                   return regenerator_default().wrap(function _callee4$(_context4) {
                     while (1) {
                       switch (_context4.prev = _context4.next) {
@@ -569,16 +566,16 @@ var DOM = /*#__PURE__*/function () {
   }, {
     key: "doExpand",
     value: function () {
-      var _doExpand = (0,asyncToGenerator/* default */.A)(/*#__PURE__*/regenerator_default().mark(function _callee7(id) {
+      var _doExpand = (0,asyncToGenerator/* default */.A)(/*#__PURE__*/regenerator_default().mark(function _callee7(idx) {
         var elem;
         return regenerator_default().wrap(function _callee7$(_context7) {
           while (1) {
             switch (_context7.prev = _context7.next) {
               case 0:
                 _context7.next = 2;
-                return this.lazyLoaders.get(id)();
+                return this.lazyLoaders.get(idx)();
               case 2:
-                elem = this.indexElems.get(id); // let content_wrapper = elem.closest('.content-wrapper')
+                elem = this.indexElems.get(idx); // let content_wrapper = elem.closest('.content-wrapper')
                 // let content = content_wrapper.children('.content')
                 // const wasExpanded = elem.hasClass('expanded')
                 // const oldSt = content_wrapper.scrollTop()
@@ -649,14 +646,14 @@ var DOM = /*#__PURE__*/function () {
   }, {
     key: "scrollAt",
     value: function () {
-      var _scrollAt = (0,asyncToGenerator/* default */.A)(/*#__PURE__*/regenerator_default().mark(function _callee9(id) {
+      var _scrollAt = (0,asyncToGenerator/* default */.A)(/*#__PURE__*/regenerator_default().mark(function _callee9(idx) {
         var e, broot, croot, wrapper;
         return regenerator_default().wrap(function _callee9$(_context9) {
           while (1) {
             switch (_context9.prev = _context9.next) {
               case 0:
-                this.log.info("scrollAt '".concat(id.join(), "'"), id);
-                e = this.indexElems.get(id);
+                this.log.info("scrollAt '".concat(idx.id.join(), "'"), idx.id);
+                e = this.indexElems.get(idx);
                 broot = e.closest('.kunai-branch');
                 croot = broot.closest('.content');
                 wrapper = croot.closest('.content-wrapper'); // this.log.debug(`wrapper`, wrapper)
@@ -751,7 +748,7 @@ var DOM = /*#__PURE__*/function () {
                 }).append(treeview_$('<a>', {
                   href: idx.url()
                 }).text(idx.id.join()));
-                this.indexElems.set(idx.id, li);
+                this.indexElems.set(idx, li);
                 return _context12.abrupt("return", li);
               case 3:
               case "end":
@@ -786,7 +783,7 @@ var DOM = /*#__PURE__*/function () {
                 _context13.t2 = _context13.sent;
                 _context13.t3 = _context13.t1.html.call(_context13.t1, _context13.t2);
                 li = _context13.t0.append.call(_context13.t0, _context13.t3);
-                this.indexElems.set(m.id, li);
+                this.indexElems.set(m, li);
                 if (this.kc.getPriorityForIndex(m).index !== this.kc.prioSpecials.get('__functions__').index) {
                   li.addClass('special');
                 }
@@ -816,7 +813,7 @@ var DOM = /*#__PURE__*/function () {
                 li = treeview_$('<li>', {
                   class: 'class classy'
                 });
-                this.indexElems.set(c.self.id, li);
+                this.indexElems.set(c.self, li);
                 _context15.t0 = treeview_$('<a>', {
                   class: 'self'
                 }).attr('href', c.self.url());
@@ -889,7 +886,7 @@ var DOM = /*#__PURE__*/function () {
                 li = treeview_$('<li>', {
                   class: "other ".concat(o.id.type)
                 });
-                this.indexElems.set(o.id, li);
+                this.indexElems.set(o, li);
                 if (crsearch/* IndexID */.ku.isClassy(o.id.type)) {
                   li.addClass('classy');
                 }
@@ -990,8 +987,8 @@ var DOM = /*#__PURE__*/function () {
             switch (_context21.prev = _context21.next) {
               case 0:
                 // this.log.debug(`makeExpandable '${obj.self.id.join()}'`, elem, obj)
-                this.indexElems.set(obj.self.id, elem);
-                this.lazyLoaders.set(obj.self.id, /*#__PURE__*/(0,asyncToGenerator/* default */.A)(/*#__PURE__*/regenerator_default().mark(function _callee19() {
+                this.indexElems.set(obj.self, elem);
+                this.lazyLoaders.set(obj.self, /*#__PURE__*/(0,asyncToGenerator/* default */.A)(/*#__PURE__*/regenerator_default().mark(function _callee19() {
                   return regenerator_default().wrap(function _callee19$(_context19) {
                     while (1) {
                       switch (_context19.prev = _context19.next) {
@@ -1016,7 +1013,7 @@ var DOM = /*#__PURE__*/function () {
                       switch (_context20.prev = _context20.next) {
                         case 0:
                           _context20.next = 2;
-                          return _this4.doExpand(obj.self.id);
+                          return _this4.doExpand(obj.self);
                         case 2:
                         case "end":
                           return _context20.stop();
@@ -1115,8 +1112,7 @@ var Treeview = /*#__PURE__*/function () {
     key: "onPageID",
     value: function () {
       var _onPageID = (0,asyncToGenerator/* default */.A)(/*#__PURE__*/regenerator_default().mark(function _callee23(ids) {
-        var _this5 = this;
-        var h, selector, article;
+        var h;
         return regenerator_default().wrap(function _callee23$(_context23) {
           while (1) {
             switch (_context23.prev = _context23.next) {
@@ -1140,7 +1136,7 @@ var Treeview = /*#__PURE__*/function () {
                 h = this.page_idx.in_header;
                 this.log.info("expanding current page header '".concat(h.id.join(), "'"), h, this.page_idx);
                 _context23.next = 12;
-                return this.dom.doExpand(h.id);
+                return this.dom.doExpand(h);
               case 12:
                 _context23.next = 20;
                 break;
@@ -1150,7 +1146,7 @@ var Treeview = /*#__PURE__*/function () {
                   break;
                 }
                 _context23.next = 17;
-                return this.dom.doExpand(this.page_idx.id);
+                return this.dom.doExpand(this.page_idx);
               case 17:
                 _context23.next = 20;
                 break;
@@ -1158,36 +1154,28 @@ var Treeview = /*#__PURE__*/function () {
                 this.log.info("current page '".concat(this.page_idx.id.join(), "' is not classy. nothing left to expand"));
               case 20:
                 if (!(ids.length > 1)) {
-                  _context23.next = 25;
+                  _context23.next = 24;
                   break;
                 }
-                if (this.page_idx.id.type === 'article' && this.page_idx.id.indexes.length > 1) {
-                  selector = "[data-lang-id=\"C++".concat(this.page_idx.cpp_version, "\"] li.article");
-                  article = (0,toConsumableArray/* default */.A)(treeview_$(selector)).find(function (li) {
-                    return li.innerText === _this5.page_idx.name;
-                  });
-                  this.dom.indexElems.set(this.page_idx.id, treeview_$(article));
-                }
-
                 // highlight self
-                this.dom.indexElems.get(this.page_idx.id).addClass('current-page');
+                this.dom.indexElems.get(this.page_idx).addClass('current-page');
 
                 // finally, always scroll to self
-                _context23.next = 25;
-                return this.dom.scrollAt(this.page_idx.id);
-              case 25:
-                _context23.next = 30;
+                _context23.next = 24;
+                return this.dom.scrollAt(this.page_idx);
+              case 24:
+                _context23.next = 29;
                 break;
-              case 27:
-                _context23.prev = 27;
+              case 26:
+                _context23.prev = 26;
                 _context23.t0 = _context23["catch"](0);
                 this.log.error("Failed to determine current page for id '".concat(ids.join('/'), "'. Sidebar will NOT work properly! (").concat(_context23.t0, ")"), ids);
-              case 30:
+              case 29:
               case "end":
                 return _context23.stop();
             }
           }
-        }, _callee23, this, [[0, 27]]);
+        }, _callee23, this, [[0, 26]]);
       }));
       function onPageID(_x23) {
         return _onPageID.apply(this, arguments);
@@ -1243,7 +1231,7 @@ var Treeview = /*#__PURE__*/function () {
     key: "onDataImpl",
     value: function () {
       var _onDataImpl = (0,asyncToGenerator/* default */.A)(/*#__PURE__*/regenerator_default().mark(function _callee27() {
-        var _this6 = this;
+        var _this5 = this;
         var root, cats, filteredTops, batchSize, i, batch, batchElements;
         return regenerator_default().wrap(function _callee27$(_context27) {
           while (1) {
@@ -1278,7 +1266,7 @@ var Treeview = /*#__PURE__*/function () {
                               class: 'top stack',
                               'data-top-id': topID
                             });
-                            _this6.dom.topElems.set(topID, stack);
+                            _this5.dom.topElems.set(topID, stack);
                             _context26.t0 = stack;
                             _context26.t1 = treeview_$('<div>', {
                               class: 'heading'
@@ -1289,7 +1277,7 @@ var Treeview = /*#__PURE__*/function () {
                                 while (1) {
                                   switch (_context25.prev = _context25.next) {
                                     case 0:
-                                      _this6.dom.doStackExpand(topID);
+                                      _this5.dom.doStackExpand(topID);
                                     case 1:
                                     case "end":
                                       return _context25.stop();
@@ -1298,7 +1286,7 @@ var Treeview = /*#__PURE__*/function () {
                               }, _callee25);
                             }))));
                             _context26.next = 7;
-                            return _this6.dom.makeTitle(top);
+                            return _this5.dom.makeTitle(top);
                           case 7:
                             _context26.t2 = _context26.sent;
                             _context26.t3 = _context26.t1.append.call(_context26.t1, _context26.t2);
@@ -1315,14 +1303,14 @@ var Treeview = /*#__PURE__*/function () {
                               break;
                             }
                             _context26.next = 16;
-                            return _this6.processLangTop(top, content);
+                            return _this5.processLangTop(top, content);
                           case 16:
                             is_not_empty = _context26.sent;
                             _context26.next = 22;
                             break;
                           case 19:
                             _context26.next = 21;
-                            return _this6.processTop(top, content);
+                            return _this5.processTop(top, content);
                           case 21:
                             is_not_empty = _context26.sent;
                           case 22:
@@ -1375,7 +1363,7 @@ var Treeview = /*#__PURE__*/function () {
     key: "processTop",
     value: function () {
       var _processTop = (0,asyncToGenerator/* default */.A)(/*#__PURE__*/regenerator_default().mark(function _callee30(top, e) {
-        var _this7 = this;
+        var _this6 = this;
         var is_empty, self, articleBatchSize, i, batch, batchElements, _self;
         return regenerator_default().wrap(function _callee30$(_context30) {
           while (1) {
@@ -1406,7 +1394,7 @@ var Treeview = /*#__PURE__*/function () {
                         switch (_context28.prev = _context28.next) {
                           case 0:
                             _context28.next = 2;
-                            return _this7.dom.makeArticle(ar);
+                            return _this6.dom.makeArticle(ar);
                           case 2:
                             return _context28.abrupt("return", _context28.sent);
                           case 3:
@@ -1461,7 +1449,7 @@ var Treeview = /*#__PURE__*/function () {
                         switch (_context29.prev = _context29.next) {
                           case 0:
                             _context29.next = 2;
-                            return _this7.dom.makeHeader(h);
+                            return _this6.dom.makeHeader(h);
                           case 2:
                             return _context29.abrupt("return", _context29.sent);
                           case 3:
@@ -1502,7 +1490,7 @@ var Treeview = /*#__PURE__*/function () {
     key: "processLangTop",
     value: function () {
       var _processLangTop = (0,asyncToGenerator/* default */.A)(/*#__PURE__*/regenerator_default().mark(function _callee32(top, e) {
-        var _this8 = this;
+        var _this7 = this;
         var ars, ltops, _iterator3, _step3, ar, langs;
         return regenerator_default().wrap(function _callee32$(_context32) {
           while (1) {
@@ -1557,7 +1545,7 @@ var Treeview = /*#__PURE__*/function () {
                           case 0:
                             _ref18 = (0,slicedToArray/* default */.A)(_ref17, 2), id = _ref18[0], t = _ref18[1];
                             _context31.next = 3;
-                            return _this8.dom.makeLang(t);
+                            return _this7.dom.makeLang(t);
                           case 3:
                             return _context31.abrupt("return", _context31.sent);
                           case 4:
@@ -2007,6 +1995,8 @@ var Meta = /*#__PURE__*/function () {
 ;// ./kunai/meta.js
 
 
+// EXTERNAL MODULE: ../node_modules/@babel/runtime/helpers/esm/toConsumableArray.js + 3 modules
+var toConsumableArray = __webpack_require__(4300);
 // EXTERNAL MODULE: ../node_modules/numeral/numeral.js
 var numeral = __webpack_require__(4951);
 var numeral_default = /*#__PURE__*/__webpack_require__.n(numeral);
