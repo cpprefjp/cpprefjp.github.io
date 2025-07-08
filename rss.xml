@@ -2,9 +2,36 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-07-08T13:36:47.897782</updated>
-  <id>4ea53472-a487-4a5f-a3fd-53f09d8bc0ed</id>
+  <updated>2025-07-08T13:53:28.636802</updated>
+  <id>a6a9c0ba-bfd8-4bca-8623-1a36903edca2</id>
 
+  
+    <entry>
+      <title>erase -- deque::erase(): イテレータと参照の無効化について微修正</title>
+      <link href="https://cpprefjp.github.io/reference/deque/deque/erase.html"/>
+      <id>b7d05c0d904106c98c194f1a9cac27ad71253e8e:reference/deque/deque/erase.md</id>
+      <updated>2025-07-08T22:49:10+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/deque/deque/erase.md b/reference/deque/deque/erase.md
+index 303d0facb..8d3174777 100644
+--- a/reference/deque/deque/erase.md
++++ b/reference/deque/deque/erase.md
+@@ -20,7 +20,7 @@ iterator erase(const_iterator first, const_iterator last); // (2) C++11
+ - (1) : `position`が指す要素を削除する。
+ - (2) : イテレータ範囲`[first, last)`の要素を削除する。
+ 
+-もし削除がシーケンスの先頭または末尾から行われた場合、削除された要素へのイテレータと参照は無効化される。もし削除が中間位置から行われた場合、全てのイテレータと削除は無効化される。
++もし削除がシーケンスの先頭または末尾から行われた場合、削除された要素へのイテレータと参照だけが無効化される（そのほかの要素への参照/イテレータは有効であり続ける）。一方、削除が中間位置から行われた場合は全てのイテレータと参照が無効化される。
+ 
+ 
+ ## 戻り値
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>onihusube</name>
+        <email>44743040+onihusube@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>derived_from -- improve std::derived_from</title>
@@ -467,105 +494,6 @@ index 8d785c808..5ebd2ff78 100644
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>K10-K10</name>
-        <email>keito.tottori@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>realloc -- new page `cstdlib/realloc`</title>
-      <link href="https://cpprefjp.github.io/reference/cstdlib/realloc.html"/>
-      <id>f52245801379796df95cd3829341795846bfd15b:reference/cstdlib/realloc.md</id>
-      <updated>2025-07-08T19:57:31+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/cstdlib/realloc.md b/reference/cstdlib/realloc.md
-new file mode 100644
-index 000000000..3b807a5b8
---- /dev/null
-+++ b/reference/cstdlib/realloc.md
-@@ -0,0 +1,79 @@
-+# realloc
-+* cstdlib[meta header]
-+* std[meta namespace]
-+* function[meta id-type]
-+
-+```cpp
-+namespace std {
-+  void* realloc(void* ptr, size_t new_size);
-+}
-+```
-+
-+## 概要
-+確保済みの領域`ptr`を`new_size`に再確保する。
-+
-+`ptr`は、`calloc`、`malloc`、`realloc`で事前に確保され、なおかつ`free`で解放されていないメモリである必要がある。
-+
-+それ以外のメモリの場合、動作は未定義である。
-+
-+`ptr`に`nullptr`を渡した場合、`malloc(new_size)`として動作する。
-+
-+## 効果
-+メモリの確保は次のいずれかの方法で行われる。
-+
-+  - 既存のメモリを拡張、縮小する。
-+
-+    縮小した場合、再確保されたメモリのサイズまでの領域の内容が保持される。
-+
-+    拡張した場合、新しい領域の内容は未定義である。
-+
-+  - 新しいサイズの領域を確保、割り当てする。その後、新しいサイズと古いサイズのいずれか小さい方のサイズに等しいメモリ領域をコピーし、古いブロックを解放する。
-+
-+  - メモリが不足している場合、`nullpte`が返される。
-+
-+## 備考
-+`new_size`が0の場合の動作は定義されていない。
-+
-+## 戻り値
-+再確保できた場合、その領域の先頭のポインタを返す。
-+
-+なお、その領域はメモリリークを避けるため、`free`、`realloc`で解放する必要がある。
-+
-+失敗した場合、`nullptr`を返す。もとのポインタは有効なままで、解放する必要がある。
-+
-+## 例
-+```cpp example
-+#include &amp;lt;cstdlib&amp;gt;
-+#include &amp;lt;iostream&amp;gt;
-+
-+int main() {
-+  // 初期サイズでメモリを確保
-+  int* p = static_cast&amp;lt;int*&amp;gt;(std::malloc(5 * sizeof(int)));
-+  if (!p) return 1;
-+  for (int i = 0; i &amp;lt; 5; ++i) {
-+    p[i] = i;
-+  }
-+  // サイズを再確保（拡張）
-+  int* q = static_cast&amp;lt;int*&amp;gt;(std::realloc(p, 10 * sizeof(int)));
-+  if (!q) {
-+    std::free(p);
-+    std::cerr &amp;lt;&amp;lt; &amp;#34;realloc failed&amp;#34; &amp;lt;&amp;lt; std::endl;
-+    return 1;
-+  }// 拡張後の内容を出力（追加領域の値は未定義）
-+  for (int i = 0; i &amp;lt; 10; ++i) {
-+    std::cout &amp;lt;&amp;lt; q[i] &amp;lt;&amp;lt; &amp;#39; &amp;#39;;
-+  }
-+  std::cout &amp;lt;&amp;lt; std::endl;
-+  std::free(q);
-+}
-+```
-+## 出力例
-+```
-+0 1 2 3 4 0 0 0 0 0
-+```
-+
-+
-+## 関連項目
-+- [`calloc`](calloc.md): メモリを確保する
-+- [`malloc`](malloc.md): メモリを確保し、領域をゼロ初期化する
-+- [`free`](free.md): 確保したメモリを解放する
-&lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
         <name>K10-K10</name>
