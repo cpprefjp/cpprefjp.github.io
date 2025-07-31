@@ -200,12 +200,12 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2025-07-08T15:33:39">
-        2025年07月08日 15時33分39秒
+      <span itemprop="datePublished" content="2025-07-31T12:34:14">
+        2025年07月31日 12時34分14秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">Akira Takahashi</span>
+        <span itemprop="name">yoh</span>
       </span>
       が更新
     </small></p>
@@ -230,6 +230,9 @@
   <span class="n">concept</span> <span class="n">sender</span><span class="p">;</span>
 
   <span class="k">struct</span> <span class="n">sender_t</span> <span class="p">{};</span>  <span class="c1">// タグ型</span>
+
+  <span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">Sndr</span><span class="o">&gt;</span>
+  <span class="kr">inline</span> <span class="k">constexpr</span> <span class="kt">bool</span> <span class="n">enable_sender</span> <span class="o">=</span> <span class="n"><i>see below</i></span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div>
 </p>
@@ -239,6 +242,7 @@
 <ul>
 <li>下記いずれかを満たす<ul>
 <li><code>sender_t</code>をメンバ型<code>Sndr::sender_concept</code>として定義する</li>
+<li><code>enable_sender</code>変数テンプレートを<code>true</code>で特殊化する</li>
 <li><a href="../../../lang/cpp20/coroutines.html">コルーチンのAwaitable型</a></li>
 </ul>
 </li>
@@ -257,10 +261,15 @@
   <span class="n"><a href="../is-awaitable.html">is-awaitable</a></span><span class="o">&lt;</span><span class="n">Sndr</span><span class="p">,</span> <span class="n"><a href="env-promise.html">env-promise</a></span><span class="o">&lt;</span><span class="n"><a href="env.html">env&lt;&gt;</a></span><span class="o">&gt;&gt;</span><span class="p">;</span>
 </code></pre></div>
 </p>
+<p><code>enable_sender</code>変数テンプレートを以下のように定義する。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">Sndr</span><span class="o">&gt;</span>
+<span class="kr">inline</span> <span class="k">constexpr</span> <span class="kt">bool</span> <span class="n">enable_sender</span> <span class="o">=</span> <span class="n">enable</span><span class="o">-</span><span class="n">sender</span><span class="o">&lt;</span><span class="n">Sndr</span><span class="o">&gt;</span><span class="p">;</span>
+</code></pre></div>
+</p>
 <p><code>sender</code>コンセプトは、以下のように定義される。</p>
 <p><div class="codehilite"><pre><span></span><code><span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">Sndr</span><span class="o">&gt;</span>
 <span class="n">concept</span> <span class="n">sender</span> <span class="o">=</span>
-  <span class="kt">bool</span><span class="p">(</span><span class="n">enable</span><span class="o">-</span><span class="n">sender</span><span class="o">&lt;</span><span class="n"><a href="../../type_traits/remove_cvref.html">remove_cvref_t</a></span><span class="o">&lt;</span><span class="n">Sndr</span><span class="o">&gt;&gt;</span><span class="p">)</span> <span class="o">&amp;&amp;</span>
+  <span class="n">enable_sender</span><span class="o">&lt;</span><span class="n"><a href="../../type_traits/remove_cvref.html">remove_cvref_t</a></span><span class="o">&lt;</span><span class="n">Sndr</span><span class="o">&gt;&gt;</span><span class="p">)</span> <span class="o">&amp;&amp;</span>
   <span class="n">requires</span> <span class="p">(</span><span class="k">const</span> <span class="n"><a href="../../type_traits/remove_cvref.html">remove_cvref_t</a></span><span class="o">&lt;</span><span class="n">Sndr</span><span class="o">&gt;&amp;</span> <span class="n">sndr</span><span class="p">)</span> <span class="p">{</span>
     <span class="p">{</span> <span class="n"><a href="get_env.html">get_env</a></span><span class="p">(</span><span class="n">sndr</span><span class="p">)</span> <span class="p">}</span> <span class="o">-&gt;</span> <span class="n"><a href="../queryable.html">queryable</a></span><span class="p">;</span>
   <span class="p">}</span> <span class="o">&amp;&amp;</span>
@@ -269,8 +278,7 @@
 </code></pre></div>
 </p>
 <h2>備考</h2>
-<p><code>sender</code>コンセプトの制約式に現れる第1項<code>bool(enable-sender&lt;...&gt;)</code>は<a href="../../../lang/cpp20/concepts.html">原子制約(atomic constraint)</a>を構成する。
-これにより<a class="cpprefjp-defined-word" data-desc="関数呼び出し時に、同名の関数の中から実際に呼び出す関数を決定する処理。このときの候補になることを、オーバーロード解決に参加するという">オーバーロード解決</a>時の優先順比較において<code>enable-sender</code>コンセプトの<code>||</code>を単純なOR条件とみなせ、コンパイル時の複雑な包摂関係計算コストを抑制できる。</p>
+<p><a class="cpprefjp-defined-word" data-desc="標準ライブラリの型を除く、ユーザー（プログラマ）によって定義された型のこと">プログラム定義型</a>が<code>sender</code>コンセプトを満たす場合、ユーザは<code>enable_sender</code>変数テンプレートを<code>true</code>として特殊化してもよい。そのような特殊化は定数式で利用可能かつ<code>const bool</code>型をもつこと。</p>
 <h2>例</h2>
 <p><div class="yata" id="9fb3672febf2b77ff6503fb5eca8be069ea578ff"><div class="codehilite"><pre><span></span><code><span class="cp">#include</span> <span class="cpf"><a href="../../execution.html">&lt;execution&gt;</a></span><span class="cp"></span>
 <span class="k">namespace</span> <span class="n">ex</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">execution</span><span class="p">;</span>
@@ -305,6 +313,7 @@
 <h2>参照</h2>
 <ul>
 <li><a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html" target="_blank">P2300R10 <code>std::execution</code></a></li>
+<li><a href="https://cplusplus.github.io/LWG/issue4202" target="_blank">LWG 4202. enable-sender should be a variable template</a></li>
 </ul></div>
 
       </div>
