@@ -2,9 +2,484 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-08-08T14:51:26.877159</updated>
-  <id>f807b483-69d6-4b40-ae81-a27e42fa5091</id>
+  <updated>2025-08-08T16:03:48.109058</updated>
+  <id>d7a22203-5601-4dd1-a3eb-0a847095f948</id>
 
+  
+    <entry>
+      <title>execution -- execution/split: P3682R0 remove split algorithm</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution.html"/>
+      <id>0f7b8bc4d3a5f7206ad82b85162098ebbd0e026c:reference/execution/execution.md</id>
+      <updated>2025-08-09T00:56:58+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution.md b/reference/execution/execution.md
+index 352d5fec1..634592a36 100644
+--- a/reference/execution/execution.md
++++ b/reference/execution/execution.md
+@@ -122,7 +122,6 @@ namespace std::execution {
+ | [`execution::let_error`](execution/let_error.md) | エラー完了結果から入れ子の非同期操作へ変換 (customization point object) | C++26 |
+ | [`execution::let_stopped`](execution/let_stopped.md) | 停止完了を入れ子の非同期操作へ変換 (customization point object) | C++26 |
+ | [`execution::bulk`](execution/bulk.md) | インデクス空間上で指定関数を反復実行 (customization point object) | C++26 |
+-| [`execution::split`](execution/split.md) | 入力Senderの値を複製回送信可能とする (customization point object) | C++26 |
+ | [`execution::when_all`](execution/when_all.md) | 全ての入力Sender完了を待機 (customization point object) | C++26 |
+ | [`execution::when_all_with_variant`](execution/when_all_with_variant.md) | 複数の値完了シグネチャをもつ全ての入力Sender完了を待機 (customization point object) | C++26 |
+ | [`execution::into_variant`](execution/into_variant.md) | 複数の値完了シグネチャを単一[`variant`](/reference/variant/variant.md)型の値完了シグネチャに変換 (customization point object) | C++26 |
+@@ -163,3 +162,4 @@ Senderコンシューマは名前空間 `std::this_thread` で定義される。
+ ## 参照
+ - [P0024R2 The Parallelism TS Should be Standardized](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0024r2.html)
+ - [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
++- [P3682R0 Remove `std::execution::split`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3682r0.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>on-stop-request -- execution/split: P3682R0 remove split algorithm</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/on-stop-request.html"/>
+      <id>0f7b8bc4d3a5f7206ad82b85162098ebbd0e026c:reference/execution/execution/on-stop-request.md</id>
+      <updated>2025-08-09T00:56:58+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/on-stop-request.md b/reference/execution/execution/on-stop-request.md
+index 447aa6986..06ad7d68c 100644
+--- a/reference/execution/execution/on-stop-request.md
++++ b/reference/execution/execution/on-stop-request.md
+@@ -24,7 +24,6 @@ struct on-stop-request {
+ 
+ ## 関連項目
+ - [`execution::when_all`](when_all.md)
+-- [`execution::split`](split.md)
+ 
+ 
+ ## 参照
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>split.md -- execution/split: P3682R0 remove split algorithm</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/split.html"/>
+      <id>0f7b8bc4d3a5f7206ad82b85162098ebbd0e026c:reference/execution/execution/split.md</id>
+      <updated>2025-08-09T00:56:58+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/split.md b/reference/execution/execution/split.md
+deleted file mode 100644
+index cbbfd3013..000000000
+--- a/reference/execution/execution/split.md
++++ /dev/null
+@@ -1,398 +0,0 @@
+-# split
+-* execution[meta header]
+-* cpo[meta id-type]
+-* std::execution[meta namespace]
+-* cpp26[meta cpp]
+-
+-```cpp
+-namespace std::execution {
+-  struct split_t { unspecified };
+-  inline constexpr split_t split{};
+-}
+-```
+-* unspecified[italic]
+-
+-## 概要
+-`split`は、任意の入力[Sender](sender.md)を複数回[接続(connect)](connect.md)可能とするSenderアダプタである。
+-
+-`split`は[パイプ可能Senderアダプタオブジェクト](sender_adaptor_closure.md)であり、パイプライン記法をサポートする。
+-
+-
+-## 効果
+-説明用の型`split-env`を、インスタンス`env`に対して式[`get_stop_token`](../get_stop_token.md)`(env)`が適格かつ型[`inplace_stop_token`](/reference/stop_token/inplace_stop_token.md)をもつ型とする。
+-
+-説明用の式`sndr`に対して、型`Sndr`を`decltype((sndr))`とする。[`sender_in`](sender_in.md)`&amp;lt;Sndr, split-env&amp;gt; == false`のとき、呼び出し式`split(sndr)`は不適格となる。
+-
+-そうでなければ、呼び出し式`split(sndr)`は`sndr`が1回だけ評価されることを除いて、下記と等価。
+-
+-```cpp
+-transform_sender(get-domain-early(sndr), make-sender(split, {}, sndr))
+-```
+-* transform_sender[link transform_sender.md]
+-* get-domain-early[link get-domain-early.md]
+-* make-sender[link make-sender.md]
+-
+-
+-### Senderアルゴリズムタグ `split`
+-説明用のSenderアルゴリズムタグ型`split-impl-tag`を空の型とする。説明用の式`sndr`に対して、式`split.transform_sender(sndr)`は下記と等価。
+-
+-```cpp
+-auto&amp;amp;&amp;amp; [tag, _, child] = sndr;
+-auto* sh_state = new shared-state{std::forward_like&amp;lt;decltype((sndr))&amp;gt;(child)};
+-return make-sender(split-impl-tag(), shared-wrapper{sh_state, tag});
+-```
+-* make-sender[link make-sender.md]
+-
+-説明用の型`shared-wrapper`は、`sh_state`が指す`shared-state`オブジェクトの参照カウントを管理するクラスである。
+-
+-- `shared-wrapper`は[`copyable`](/reference/concepts/copyable.md)のモデルである。
+-- ムーブ操作 : 移動済みオブジェクトをヌルとする。
+-- コピー操作 : `sh_state-&amp;gt;inc-ref()`を呼び出して参照カウントをインクリメントする。
+-- 代入操作 : Copy-And-Swap操作を行う。
+-- デストラクタ : `sh_state`がヌルのときは何もしない。そうでないとき、`sh_state-&amp;gt;dec-ref()`を評価して参照カウントをデクリメントする。
+-
+-
+-### Senderアルゴリズムタグ `split-impl-tag`
+-Senderアルゴリズム動作説明用のクラステンプレート[`impls-for`](impls-for.md)に対して、下記の特殊化が定義される。
+-
+-```cpp
+-namespace std::execution {
+-  template&amp;lt;&amp;gt;
+-  struct impls-for&amp;lt;split-impl-tag&amp;gt; : default-impls {
+-    static constexpr auto get-state = see below;
+-    static constexpr auto start = see below;
+-  };
+-}
+-```
+-* impls-for[link impls-for.md]
+-* default-impls[link impls-for.md]
+-
+-`impls-for&amp;lt;split-impl-tag&amp;gt;::get-state`メンバは、下記ラムダ式と等価な関数呼び出し可能なオブジェクトで初期化される。
+-
+-```cpp
+-[]&amp;lt;class Sndr&amp;gt;(Sndr&amp;amp;&amp;amp; sndr, auto&amp;amp; rcvr) noexcept {
+-  return local-state{std::forward&amp;lt;Sndr&amp;gt;(sndr), rcvr};
+-}
+-```
+-
+-`impls-for&amp;lt;split-impl-tag&amp;gt;::start`メンバは、下記の関数呼び出し演算子をもつオブジェクトで初期化される。
+-
+-```cpp
+-template&amp;lt;class Sndr, class Rcvr&amp;gt;
+-void operator()(local-state&amp;lt;Sndr, Rcvr&amp;gt;&amp;amp; state, Rcvr&amp;amp; rcvr) const noexcept;
+-```
+-
+-効果 : `state.sh_state-&amp;gt;completed == true`のとき、`state.notify()`を評価してリターンする。そうでなければ、下記を順番に行う。
+-
+-- 以下を評価する。
+-
+-    ```cpp
+-    state.on_stop.emplace(
+-      get_stop_token(get_env(rcvr)),
+-      on-stop-request{state.sh_state-&amp;gt;stop_src});
+-    ```
+-    * emplace[link /reference/optional/optional/emplace.md]
+-    * get_stop_token[link ../get_stop_token.md]
+-    * get_env[link get_env.md]
+-    * on-stop-request[link on-stop-request.md]
+-
+-- 下記をアトミックに行う。
+-    - `state.sh_state-&amp;gt;completed`の値`c`を読み取り
+-    - `c == false`のとき、`state.sh_state-&amp;gt;waiting_state`に[`addressof`](/reference/memory/addressof.md)`(state)`を挿入する
+-- `c == true`ならば、`state.notify()`を呼び出してリターンする。
+-- そうではなく、[`addressof`](/reference/memory/addressof.md)`(state)`が`state.sh_state-&amp;gt;waiting_state`に最初に追加されるアイテムならば、`state.sh_state-&amp;gt;start-op()`を評価する。
+-
+-
+-## 説明専用エンティティ
+-### クラステンプレート`local-state`
+-
+-```cpp
+-namespace std::execution {
+-  struct local-state-base {                // exposition only
+-    virtual ~local-state-base() = default;
+-    virtual void notify() noexcept = 0;    // exposition only
+-  };
+-
+-  template&amp;lt;class Sndr, class Rcvr&amp;gt;
+-  struct local-state : local-state-base {  // exposition only
+-    using on-stop-callback =               // exposition only
+-      stop_callback_for_t&amp;lt;stop_token_of_t&amp;lt;env_of_t&amp;lt;Rcvr&amp;gt;&amp;gt;, on-stop-request&amp;gt;;
+-
+-    local-state(Sndr&amp;amp;&amp;amp; sndr, Rcvr&amp;amp; rcvr) noexcept;
+-    ~local-state();
+-
+-    void notify() noexcept override;
+-
+-  private:
+-    optional&amp;lt;on-stop-callback&amp;gt; on_stop;    // exposition only
+-    shared-state&amp;lt;Sndr&amp;gt;* sh_state;          // exposition only
+-    Rcvr* rcvr;                            // exposition only
+-  };
+-}
+-```
+-* stop_callback_for_t[link /reference/stop_token/stop_callback_for_t.md]
+-* stop_token_of_t[link ../stop_token_of_t.md]
+-* env_of_t[link env_of_t.md]
+-* on-stop-request[link on-stop-request.md]
+-* optional[link /reference/optional/optional.md]
+-
+-```cpp
+-local-state(Sndr&amp;amp;&amp;amp; sndr, Rcvr&amp;amp; rcvr) noexcept;
+-```
+-
+-- 効果 : 下記と等価。
+-
+-    ```cpp
+-    auto&amp;amp; [_, data, _] = sndr;
+-    this-&amp;gt;sh_state = data.sh_state.get();
+-    this-&amp;gt;sh_state-&amp;gt;inc-ref();
+-    this-&amp;gt;rcvr = addressof(rcvr);
+-    ```
+-
+-```cpp
+-~local-state();
+-```
+-
+-- 効果 : 下記と等価。
+-
+-    ```cpp
+-    sh_state-&amp;gt;dec-ref();
+-    ```
+-
+-```cpp
+-void notify() noexcept override;
+-```
+-
+-- 効果 : 下記と等価。
+-
+-    ```cpp
+-    on_stop.reset();
+-    visit(
+-      [this](const auto&amp;amp; tupl) noexcept -&amp;gt; void {
+-        apply(
+-          [this](auto tag, const auto&amp;amp;... args) noexcept -&amp;gt; void {
+-            tag(std::move(*rcvr), args...);
+-          },
+-          tupl);
+-      },
+-      sh_state-&amp;gt;result);
+-    ```
+-    * reset()[link /reference/optional/optional/reset.md]
+-    * visit[link /reference/variant/visit.md]
+-    * apply[link /reference/tuple/apply.md]
+-    * std::move[link /reference/utility/move.md]
+-
+-### クラステンプレート`split-receiver`
+-
+-```cpp
+-namespace std::execution {
+-  template&amp;lt;class Sndr&amp;gt;
+-  struct split-receiver {  // exposition only
+-    using receiver_concept = receiver_t;
+-
+-    template&amp;lt;class Tag, class... Args&amp;gt;
+-    void complete(Tag, Args&amp;amp;&amp;amp;... args) noexcept {  // exposition only
+-      using tuple_t = decayed-tuple&amp;lt;Tag, Args...&amp;gt;;
+-      try {
+-        sh_state-&amp;gt;result.template emplace&amp;lt;tuple_t&amp;gt;(Tag(), std::forward&amp;lt;Args&amp;gt;(args)...);
+-      } catch (...) {
+-        using tuple_t = tuple&amp;lt;set_error_t, exception_ptr&amp;gt;;
+-        sh_state-&amp;gt;result.template emplace&amp;lt;tuple_t&amp;gt;(set_error, current_exception());
+-      }
+-      sh_state-&amp;gt;notify();
+-    }
+-
+-    template&amp;lt;class... Args&amp;gt;
+-    void set_value(Args&amp;amp;&amp;amp;... args) &amp;amp;&amp;amp; noexcept {
+-      complete(execution::set_value, std::forward&amp;lt;Args&amp;gt;(args)...);
+-    }
+-
+-    template&amp;lt;class Error&amp;gt;
+-    void set_error(Error&amp;amp;&amp;amp; err) &amp;amp;&amp;amp; noexcept {
+-      complete(execution::set_error, std::forward&amp;lt;Error&amp;gt;(err));
+-    }
+-
+-    void set_stopped() &amp;amp;&amp;amp; noexcept {
+-      complete(execution::set_stopped);
+-    }
+-
+-    struct env {                     // exposition only
+-      shared-state&amp;lt;Sndr&amp;gt;* sh-state;  // exposition only
+-
+-      inplace_stop_token query(get_stop_token_t) const noexcept {
+-        return sh-state-&amp;gt;stop_src.get_token();
+-      }
+-    };
+-
+-    env get_env() const noexcept {
+-      return env{sh_state};
+-    }
+-
+-    shared-state&amp;lt;Sndr&amp;gt;* sh_state;    // exposition only
+-  };
+-}
+-```
+-* receiver_t[link receiver.md]
+-* decayed-tuple[link decayed-tuple.md]
+-* template emplace[link /reference/variant/variant/emplace.md]
+-* set_error_t[link set_error.md]
+-* exception_ptr[link /reference/exception/exception_ptr.md]
+-* current_exception()[link /reference/exception/current_exception.md]
+-* execution::set_value[link set_value.md]
+-* execution::set_error[link set_error.md]
+-* execution::set_stopped[link set_stopped.md]
+-* inplace_stop_token[link /reference/stop_token/inplace_stop_token.md]
+-* get_stop_token_t[link ../get_stop_token.md]
+-* get_token()[link /reference/stop_token/inplace_stop_source/get_token.md]
+-
+-### クラステンプレート`shared-state`
+-
+-```cpp
+-namespace std::execution {
+-  template&amp;lt;class Sndr&amp;gt;
+-  struct shared-state {
+-    using variant-type = see below;     // exposition only
+-    using state-list-type = see below;  // exposition only
+-
+-    explicit shared-state(Sndr&amp;amp;&amp;amp; sndr);
+-
+-    void start-op() noexcept;           // exposition only
+-    void notify() noexcept;             // exposition only
+-    void inc-ref() noexcept;            // exposition only
+-    void dec-ref() noexcept;            // exposition only
+-
+-    inplace_stop_source stop_src{};     // exposition only
+-    variant-type result{};              // exposition only
+-    state-list-type waiting_states;     // exposition only
+-    atomic&amp;lt;bool&amp;gt; completed{false};      // exposition only
+-    atomic&amp;lt;size_t&amp;gt; ref_count{1};        // exposition only
+-    connect_result_t&amp;lt;Sndr, split-receiver&amp;lt;Sndr&amp;gt;&amp;gt; op_state;  // exposition only
+-  };
+-}
+-```
+-* inplace_stop_source[link /reference/stop_token/inplace_stop_source.md]
+-* atomic[link /reference/atomic/atomic.md]
+-* connect_result_t[link connect_result_t.md]
+-
+-- 説明用のパック`Sigs`を[`completion_signatures_of_t`](completion_signatures_of_t.md)`&amp;lt;Sndr&amp;gt;`による[`completion_signatures`](completion_signatures.md)特殊化のテンプレートパラメータと定義する。説明用の型`Tag`とパック`Args`に対して、説明用のエイリアステンプレート`as-tuple&amp;lt;Tag(Args...)&amp;gt;`を[`decayed-tuple`](decayed-tuple.md)`&amp;lt;Tag, Args...&amp;gt;`と定義する。型`variant-type`は下記定義において重複削除した型となる。
+-
+-    ```cpp
+-    variant&amp;lt;tuple&amp;lt;set_stopped_t&amp;gt;, tuple&amp;lt;set_error_t, exception_ptr&amp;gt;, as-tuple&amp;lt;Sigs&amp;gt;...&amp;gt;
+-    ```
+-    * variant[link /reference/variant/variant.md]
+-    * set_stopped_t[link set_stopped.md]
+-    * set_error_t[link set_error.md]
+-    * exception_ptr[link /reference/exception/exception_ptr.md]
+-
+-- 型`state-list-type`を、`local-state-base`オブジェクトへのポインタのリストを格納し、アトミックに要素挿入できる型とする。
+-
+-```cpp
+-explicit shared-state(Sndr&amp;amp;&amp;amp; sndr);
+-```
+-
+-- 効果 : `op_state`を[`connect`](connect.md)`(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;Sndr&amp;gt;(sndr), split-receiver{this})`の結果で初期化する。
+-- 事後条件 : `waiting_states`が空、かつ`completed == false`
+-
+-```cpp
+-void start-op() noexcept;
+-```
+-
+-- 効果 : `inc-ref()`を評価する。`stop_src.`[`stop_requested()`](/reference/stop_token/inplace_stop_source/stop_requested.md) `== true`のとき`notify()`を評価する。そうでなければ、[`start`](start.md)`(op_state)`を評価する。
+-
+-```cpp
+-void notify() noexcept;
+-```
+-
+-- 効果 : 下記をアトミックに行い、ローカル変数`prior_states`の各ポインタ`p`に対して`p-&amp;gt;notify()`を評価し、最後に`dec-ref()`を評価する。
+-    - `completed`に`true`を設定し、
+-    - `waiting_states`を空のリストと交換し、古い値をローカル変数`prior_states`に格納する。
+-
+-```cpp
+-void inc-ref() noexcept;
+-```
+-
+-- 効果 : `ref_count`をインクリメントする。
+-
+-```cpp
+-void dec-ref() noexcept;
+-```
+-
+-- 効果 : `ref_count`をデクリメントする。`ref_count`の新たな値が`0`のとき、`delete this`を呼び出す。
+-- 同期操作 : `dec-ref()`の評価が`ref_count`を値`0`にデクリメントしないとき、`ref_count`を値`0`へデクリメントする`dec-ref()`の評価に対して同期する。
+-
+-
+-## カスタマイゼーションポイント
+-Senderアルゴリズム構築時に、[Sender](sender.md)`sndr`に[関連付けられた実行ドメイン](get-domain-early.md)に対して[`execution::transform_sender`](transform_sender.md)経由でSender変換が行われる。
+-[デフォルト実行ドメイン](default_domain.md)では`split.transform_sender(sndr)`が呼ばれ、前述仕様通りのSenderへと変換される。
+-
+-
+-## 例
+-```cpp example
+-#include &amp;lt;print&amp;gt;
+-#include &amp;lt;execution&amp;gt;
+-namespace ex = std::execution;
+-
+-int main()
+-{
+-  { // 関数呼び出し
+-    ex::sender auto snd0 = ex::just(21);
+-    ex::sender auto snd1 = ex::then(snd0, [](int n) {
+-        std::println(&amp;#34;then&amp;#34;);
+-        return 2 * n;
+-      });
+-    ex::sender auto sndr = ex::split(snd1);
+-
+-    auto [val1] = std::this_thread::sync_wait(sndr).value();
+-    std::println(&amp;#34;{}&amp;#34;, val1);
+-    auto [val2] = std::this_thread::sync_wait(sndr).value();
+-    std::println(&amp;#34;{}&amp;#34;, val2);
+-  }
+-
+-  { // パイプライン記法
+-    ex::sender auto sndr =
+-      ex::just(21)
+-      | ex::then([](int n) {
+-          std::println(&amp;#34;then&amp;#34;);
+-          return 2 * n;
+-        })
+-      | ex::split();
+-
+-    auto [val1] = std::this_thread::sync_wait(sndr).value();
+-    std::println(&amp;#34;{}&amp;#34;, val1);
+-    auto [val2] = std::this_thread::sync_wait(sndr).value();
+-    std::println(&amp;#34;{}&amp;#34;, val2);
+-  }
+-}
+-```
+-* ex::split[color ff0000]
+-* ex::sender[link sender.md]
+-* ex::just[link just.md]
+-* ex::then[link then.md]
+-* std::this_thread::sync_wait[link ../this_thread/sync_wait.md]
+-* value()[link /reference/optional/optional/value.md]
+-
+-### 出力
+-```
+-then
+-42
+-42
+-then
+-42
+-42
+-```
+-
+-
+-## バージョン
+-### 言語
+-- C++26
+-
+-### 処理系
+-- [Clang](/implementation.md#clang): ??
+-- [GCC](/implementation.md#gcc): ??
+-- [ICC](/implementation.md#icc): ??
+-- [Visual C++](/implementation.md#visual_cpp): ??
+-
+-
+-## 参照
+-- [P2999R3 Sender Algorithm Customization](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2999r3.html)
+-- [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>upon_stopped -- execution/upon_stopped: fix typo</title>
