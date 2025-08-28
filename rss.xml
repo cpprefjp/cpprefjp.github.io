@@ -2,9 +2,76 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-08-28T04:48:43.366233</updated>
-  <id>08e81ae5-fa9a-42c7-863f-b9fae53318b5</id>
+  <updated>2025-08-28T11:33:29.304421</updated>
+  <id>a0beb39a-b3da-4512-91f5-de47f3a8be4a</id>
 
+  
+    <entry>
+      <title>parallel_scheduler -- execution/parallel_scheduler: 説明増補(#1511)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/parallel_scheduler.html"/>
+      <id>ab280be5a6bc2524c08105e2194e26bd05fa5c1a:reference/execution/execution/parallel_scheduler.md</id>
+      <updated>2025-08-28T20:28:56+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/parallel_scheduler.md b/reference/execution/execution/parallel_scheduler.md
+index 02f38a2a2..35c8b1396 100644
+--- a/reference/execution/execution/parallel_scheduler.md
++++ b/reference/execution/execution/parallel_scheduler.md
+@@ -12,13 +12,17 @@ namespace std::execution {
+ * unspecified[italic]
+ 
+ ## 概要
+-`parallel_scheduler`は、実行制御ライブラリ上で並列処理を実現する並列Schedulerクラスである。
++`parallel_scheduler`は、実行制御ライブラリ上でタスクの並列実行を可能とする並列[Scheduler](scheduler.md)である。
+ 
+-次のSenderアルゴリズムに対してカスタマイズ実装を提供することで、インデクス空間の各要素に対する処理を並列実行する。
++`parallel_scheduler`はシステムグローバルなスレッドプール（実行リソース）に関連付けられ、[`schedule`](schedule.md)操作により得られる[Sender](sender.md)はスレッドプールに属する任意のスレッド（実行エージェント）上で実行される。
+ 
+-- [`execution::bulk`](bulk.md) : 既定動作では`bulk_chunked`へ変換
+-- [`execution::bulk_chunked`](bulk_chunked.md) : チャンク単位で並列実行
+-- [`execution::bulk_unchunked`](bulk_unchunked.md) : 要素単位で並列実行
++下記のSenderアルゴリズムに対してカスタマイズ実装を提供することで、タスクの一括(bulk)実行をスレッドプールを利用したタスク並列(parallel)実行に変換する。
++
++- [`execution::bulk`](bulk.md) : `bulk_chunked`に変換してタスク並列実行
++- [`execution::bulk_chunked`](bulk_chunked.md) : インデクス範囲をチャンク単位でタスク並列実行
++- [`execution::bulk_unchunked`](bulk_unchunked.md) : インデクス範囲を要素単位でタスク並列実行
++
++[`execution::system_context_replaceability`](system_context_replaceability.md) 名前空間で定義されるインタフェースを介して、スレッドプール実装をユーザ定義の並列Schedulerバックエンドに置き換えることもできる。
+ 
+ 
+ ## クラス仕様
+@@ -44,6 +48,8 @@ namespace std::execution {
+ 呼び出し可能オブジェクト`f`と引数`arg`を持つ`rcvr`のバルク非チャンク化プロキシ(bulk unchunked proxy)は、基底
+ [`system_context_replaceability::bulk_item_receiver_proxy`](system_context_replaceability/bulk_item_receiver_proxy.md.nolink)を持つ`rcvr`のプロキシ`r`であり、インデクス`i`に対する`r.execute(i, i + 1)`は`f(i, args...)`と同じ効果を持つ。
+ 
++
++### `schedule` ファクトリ
+ 説明用の`b`を`BACKEND-OF(sch)`、`sndr`を[`schedule`](schedule.md)`(sch)`が返すオブジェクト、`rcvr`を[Receiver](receiver.md)とする。`rcvr`が`sndr`に[接続(connect)](connect.md)され、結果の[Operation State](operation_state.md)が[開始(start)](start.md)されたとき、
+ 
+ - `sndr`が値完了するならば、[`b.schedule`](system_context_replaceability/parallel_scheduler_backend/schedule.md.nolink)`(r, s)`が呼ばれる。このとき、
+@@ -51,6 +57,8 @@ namespace std::execution {
+     - `s`は`r`に対する事前確保バックエンドストレージである。
+ - 他の全ての完了操作は、変更なしに転送される。
+ 
++
++### `bulk_chunked` アダプタ
+ `parallel_scheduler`は[`bulk_chunked`](bulk_chunked.md)アルゴリズムのカスタマイズ実装を提供する。[Receiver](receiver.md)`rcvr`が`bulk_chunked(sndr, pol, shape, f)`が返す[Sender](sender.md)に[接続(connect)](connect.md)され、結果の[Operation State](operation_state.md)が[開始(start)](start.md)されたとき、
+ 
+ - `sndr`が値`vals`で値完了するならば、`args`を`vals`を指す左辺値式のパックとして、[`b.schedule_bulk_chunked`](system_context_replaceability/parallel_scheduler_backend/schedule_bulk_chunked.md.nolink)`(shape, r, s)`が呼ばれる。このとき、
+@@ -58,6 +66,7 @@ namespace std::execution {
+     - `s`は`r`に対する事前確保バックエンドストレージである。
+ - 他の全ての完了操作は、変更なしに転送される。
+ 
++### `bulk_unchunked` アダプタ
+ `parallel_scheduler`は[`bulk_unchunked`](bulk_unchunked.md)アルゴリズムのカスタマイズ実装を提供する。[Receiver](receiver.md)`rcvr`が`bulk_unchunked(sndr, pol, shape, f)`が返す[Sender](sender.md)に[接続(connect)](connect.md)され、結果の[Operation State](operation_state.md)が[開始(start)](start.md)されたとき、
+ 
+ - `sndr`が値`vals`で値完了するならば、`args`を`vals`を指す左辺値式のパックとして、[`b.schedule_bulk_unchunked`](system_context_replaceability/parallel_scheduler_backend/schedule_bulk_unchunked.md.nolink)`(shape, r, s)`が呼ばれる。このとき、
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>forwarding_query -- execution/forwarding_query: get_await_completion_adaptor追記(#1507)</title>
@@ -717,496 +784,6 @@ index 72c19345d..3bc388e08 100644
       <author>
         <name>yoh</name>
         <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>atomic_flag_wait_explicit -- コード修飾のリンクを修正</title>
-      <link href="https://cpprefjp.github.io/reference/atomic/atomic_flag_wait_explicit.html"/>
-      <id>a34f4268996ec81d3638d7a0dbdb75d866bc709c:reference/atomic/atomic_flag_wait_explicit.md</id>
-      <updated>2025-08-26T18:12:52+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/atomic/atomic_flag_wait_explicit.md b/reference/atomic/atomic_flag_wait_explicit.md
-index 7baa5cd5f..bf2c1275a 100644
---- a/reference/atomic/atomic_flag_wait_explicit.md
-+++ b/reference/atomic/atomic_flag_wait_explicit.md
-@@ -106,8 +106,8 @@ int main()
- }
- ```
- * std::atomic_flag_wait_explicit[color ff0000]
--* std::atomic_flag_test_and_set_explicit[link atomic_flag_test_and_set.md]
--* std::atomic_flag_clear_explicit[link atomic_flag_clear.md]
-+* std::atomic_flag_test_and_set_explicit[link atomic_flag_test_and_set_explicit.md]
-+* std::atomic_flag_clear_explicit[link atomic_flag_clear_explicit.md]
- * std::atomic_flag_notify_one[link /reference/atomic/atomic_flag_notify_one.md]
- * ATOMIC_FLAG_INIT[link /reference/atomic/atomic_flag_init.md]
- * std::memory_order[link /reference/atomic/memory_order.md]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>sender-in-of -- コード修飾のリンクを修正</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/sender-in-of.html"/>
-      <id>a34f4268996ec81d3638d7a0dbdb75d866bc709c:reference/execution/execution/sender-in-of.md</id>
-      <updated>2025-08-26T18:12:52+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/sender-in-of.md b/reference/execution/execution/sender-in-of.md
-index 50fbb1aff..72721a6a4 100644
---- a/reference/execution/execution/sender-in-of.md
-+++ b/reference/execution/execution/sender-in-of.md
-@@ -47,7 +47,7 @@ namespace std::execution {
- * MATCHING-SIG[link get_completion_signatures.md]
- * gather-signatures[link gather-signatures.md]
- * completion_signatures_of_t[link completion_signatures_of_t.md]
--* type_identity_t[link /reference/type_traits/true_type.md]
-+* type_identity_t[link /reference/type_traits/type_identity.md]
- 
- 
- ## バージョン
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>upon_error -- コード修飾のリンクを修正</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/upon_error.html"/>
-      <id>a34f4268996ec81d3638d7a0dbdb75d866bc709c:reference/execution/execution/upon_error.md</id>
-      <updated>2025-08-26T18:12:52+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/upon_error.md b/reference/execution/execution/upon_error.md
-index 7303d018e..0bf0b74df 100644
---- a/reference/execution/execution/upon_error.md
-+++ b/reference/execution/execution/upon_error.md
-@@ -50,7 +50,7 @@ int main()
- ```
- * ex::upon_error[color ff0000]
- * ex::sender[link sender.md]
--* ex::just_error[link just.md]
-+* ex::just_error[link just_error.md]
- * std::this_thread::sync_wait[link ../this_thread/sync_wait.md]
- * value()[link /reference/optional/optional/value.md]
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>upon_stopped -- コード修飾のリンクを修正</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/upon_stopped.html"/>
-      <id>a34f4268996ec81d3638d7a0dbdb75d866bc709c:reference/execution/execution/upon_stopped.md</id>
-      <updated>2025-08-26T18:12:52+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/upon_stopped.md b/reference/execution/execution/upon_stopped.md
-index 2dc21cde4..be0deec45 100644
---- a/reference/execution/execution/upon_stopped.md
-+++ b/reference/execution/execution/upon_stopped.md
-@@ -49,7 +49,7 @@ int main()
- ```
- * ex::upon_stopped[color ff0000]
- * ex::sender[link sender.md]
--* ex::just_stopped[link just.md]
-+* ex::just_stopped[link just_stopped.md]
- * std::this_thread::sync_wait[link ../this_thread/sync_wait.md]
- * value()[link /reference/optional/optional/value.md]
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>unexpect_t -- コード修飾のリンクを修正</title>
-      <link href="https://cpprefjp.github.io/reference/expected/unexpect_t.html"/>
-      <id>a34f4268996ec81d3638d7a0dbdb75d866bc709c:reference/expected/unexpect_t.md</id>
-      <updated>2025-08-26T18:12:52+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/expected/unexpect_t.md b/reference/expected/unexpect_t.md
-index f64b2c48b..698d436fb 100644
---- a/reference/expected/unexpect_t.md
-+++ b/reference/expected/unexpect_t.md
-@@ -35,7 +35,7 @@ int main()
- }
- ```
- * std::unexpect[color ff0000]
--* ETIMEDOUT[link /reference/system_error/errc.md]
-+* ETIMEDOUT[link /reference/cerrno.md]
- 
- ### 出力
- ```
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>basic_format_parse_context -- コード修飾のリンクを修正</title>
-      <link href="https://cpprefjp.github.io/reference/format/basic_format_parse_context.html"/>
-      <id>a34f4268996ec81d3638d7a0dbdb75d866bc709c:reference/format/basic_format_parse_context.md</id>
-      <updated>2025-08-26T18:12:52+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/basic_format_parse_context.md b/reference/format/basic_format_parse_context.md
-index 552f6ef5e..e1211f92f 100644
---- a/reference/format/basic_format_parse_context.md
-+++ b/reference/format/basic_format_parse_context.md
-@@ -110,7 +110,7 @@ namespace std {
-   };
- }
- ```
--* format_error[link /reference/string_view/basic_string_view.md]
-+* format_error[link /reference/format/format_error.md]
- 
- ## バージョン
- ### 言語
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>format_to -- コード修飾のリンクを修正</title>
-      <link href="https://cpprefjp.github.io/reference/format/format_to.html"/>
-      <id>a34f4268996ec81d3638d7a0dbdb75d866bc709c:reference/format/format_to.md</id>
-      <updated>2025-08-26T18:12:52+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/format_to.md b/reference/format/format_to.md
-index a71fa82e9..482c3af2f 100644
---- a/reference/format/format_to.md
-+++ b/reference/format/format_to.md
-@@ -138,7 +138,7 @@ wstring format_to(Out out, const locale&amp;amp; loc, wformat_string&amp;lt;Args...&amp;gt; fmt, const
- * wformat_string[link basic_format_string.md]
- * str[italic]
- * basic_format_context[link basic_format_context.md]
--* vformat_to[link vformat.md]
-+* vformat_to[link vformat_to.md]
- * make_format_args[link make_format_args.md]
- * locale[link /reference/locale/locale.md]
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>forward_list -- コード修飾のリンクを修正</title>
-      <link href="https://cpprefjp.github.io/reference/forward_list/forward_list.html"/>
-      <id>a34f4268996ec81d3638d7a0dbdb75d866bc709c:reference/forward_list/forward_list.md</id>
-      <updated>2025-08-26T18:12:52+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/forward_list/forward_list.md b/reference/forward_list/forward_list.md
-index 097248912..0b7fdb8ee 100644
---- a/reference/forward_list/forward_list.md
-+++ b/reference/forward_list/forward_list.md
-@@ -193,7 +193,7 @@ int main()
- * ls.insert_after[link forward_list/insert_after.md]
- * ls.begin()[link forward_list/begin.md]
- * ls.cbegin()[link forward_list/cbegin.md]
--* ls.cend()[link forward_list/end.md]
-+* ls.cend()[link forward_list/cend.md]
- 
- #### 出力
- ```
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>tie -- コード修飾のリンクを修正</title>
-      <link href="https://cpprefjp.github.io/reference/ios/basic_ios/tie.html"/>
-      <id>a34f4268996ec81d3638d7a0dbdb75d866bc709c:reference/ios/basic_ios/tie.md</id>
-      <updated>2025-08-26T18:12:52+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ios/basic_ios/tie.md b/reference/ios/basic_ios/tie.md
-index 81b9c72e9..84a466cad 100644
---- a/reference/ios/basic_ios/tie.md
-+++ b/reference/ios/basic_ios/tie.md
-@@ -78,8 +78,8 @@ int main()
- ```
- * tie[color ff0000]
- * std::istream[link ../../istream/basic_istream.md]
--* std::ifstream[link ../../fstream/basic_ifilestream.md.nolink]
--* std::ofstream[link ../../fstream/basic_ofilestream.md.nolink]
-+* std::ifstream[link ../../fstream/basic_ifstream.md]
-+* std::ofstream[link ../../fstream/basic_ofstream.md]
- * clear()[link clear.md]
- * rdstate[link rdstate.md]
- * std::ios_base[link ../ios_base.md]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>getline -- コード修飾のリンクを修正</title>
-      <link href="https://cpprefjp.github.io/reference/istream/basic_istream/getline.html"/>
-      <id>a34f4268996ec81d3638d7a0dbdb75d866bc709c:reference/istream/basic_istream/getline.md</id>
-      <updated>2025-08-26T18:12:52+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/istream/basic_istream/getline.md b/reference/istream/basic_istream/getline.md
-index 4175fd4e9..3431208e5 100644
---- a/reference/istream/basic_istream/getline.md
-+++ b/reference/istream/basic_istream/getline.md
-@@ -62,7 +62,7 @@ int main() {
- * fail()[link /reference/ios/basic_ios/fail.md]
- * clear[link /reference/ios/basic_ios/clear.md]
- * rdstate()[link /reference/ios/basic_ios/rdstate.md]
--* std::ios_base[link /reference/ios/ios_base/type-iostate.md]
-+* std::ios_base::failbit[link /reference/ios/ios_base/type-iostate.md]
- 
- 1度で1行すべての入力が行えなかった場合の処理を追いかけやすくするため、この例はわざと`buffer_size`を少なくしている。
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>コンストラクタ -- コード修飾のリンクを修正</title>
-      <link href="https://cpprefjp.github.io/reference/mdspan/mdspan/op_constructor.html"/>
-      <id>a34f4268996ec81d3638d7a0dbdb75d866bc709c:reference/mdspan/mdspan/op_constructor.md</id>
-      <updated>2025-08-26T18:12:52+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/mdspan/mdspan/op_constructor.md b/reference/mdspan/mdspan/op_constructor.md
-index 2a1c92661..9b87d9e79 100644
---- a/reference/mdspan/mdspan/op_constructor.md
-+++ b/reference/mdspan/mdspan/op_constructor.md
-@@ -234,7 +234,7 @@ int main()
- * data_handle()[link data_handle.md]
- * mapping()[link mapping.md]
- * size()[link size.md]
--* std::layout_stride::mapping[link ../layout_stride/mapping.md]]
-+* std::layout_stride::mapping[link ../layout_stride/mapping.md]
- * std::layout_stride[link ../layout_stride.md]
- * std::layout_left::mapping[link ../layout_left/mapping.md]
- * std::default_accessor[link ../default_accessor.md]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>submdspan -- コード修飾のリンクを修正</title>
-      <link href="https://cpprefjp.github.io/reference/mdspan/submdspan.html"/>
-      <id>a34f4268996ec81d3638d7a0dbdb75d866bc709c:reference/mdspan/submdspan.md</id>
-      <updated>2025-08-26T18:12:52+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/mdspan/submdspan.md b/reference/mdspan/submdspan.md
-index 8d8c4bd4b..faeaf0c4a 100644
---- a/reference/mdspan/submdspan.md
-+++ b/reference/mdspan/submdspan.md
-@@ -77,7 +77,7 @@ return mdspan(src.accessor().offset(src.data_handle(), sub_map_offset.offset),
- * mdspan[link mdspan.md]
- * sub_map_offset[link submdspan_mapping_result.md]
- * src.mapping()[link mdspan/mapping.md]
--* src.data_handle()[link mdspan/mapping.md]
-+* src.data_handle()[link mdspan/data_handle.md]
- * src.accessor()[link mdspan/accessor.md]
- * AccessorPolicy::offset_policy[link AccessorPolicy.md]
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>atomic_exchange -- コード修飾のリンクを修正</title>
-      <link href="https://cpprefjp.github.io/reference/memory/shared_ptr/atomic_exchange.html"/>
-      <id>a34f4268996ec81d3638d7a0dbdb75d866bc709c:reference/memory/shared_ptr/atomic_exchange.md</id>
-      <updated>2025-08-26T18:12:52+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/shared_ptr/atomic_exchange.md b/reference/memory/shared_ptr/atomic_exchange.md
-index 68a150dcd..5d0ff1a89 100644
---- a/reference/memory/shared_ptr/atomic_exchange.md
-+++ b/reference/memory/shared_ptr/atomic_exchange.md
-@@ -27,7 +27,7 @@ namespace std {
- ```cpp
- atomic_exchange_explicit(p, r, memory_order_seq_cst)
- ```
--* atomic_exchange_explicit[link atomic_load_explicit.md]
-+* atomic_exchange_explicit[link atomic_exchange_explicit.md]
- * memory_order_seq_cst[link /reference/atomic/memory_order.md]
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>size -- コード修飾のリンクを修正</title>
-      <link href="https://cpprefjp.github.io/reference/ranges/iota_view/size.html"/>
-      <id>a34f4268996ec81d3638d7a0dbdb75d866bc709c:reference/ranges/iota_view/size.md</id>
-      <updated>2025-08-26T18:12:52+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/iota_view/size.md b/reference/ranges/iota_view/size.md
-index 9b7361f60..91090b89c 100644
---- a/reference/ranges/iota_view/size.md
-+++ b/reference/ranges/iota_view/size.md
-@@ -9,7 +9,7 @@
- constexpr auto size() const
-   requires (same_as&amp;lt;W, Bound&amp;gt; &amp;amp;&amp;amp; advanceable&amp;lt;W&amp;gt;) || (integral&amp;lt;W&amp;gt; &amp;amp;&amp;amp; integral&amp;lt;Bound&amp;gt;) || sized_sentinel_for&amp;lt;Bound, W&amp;gt;;
- ```
--* integral[link /reference/concepts/same_as.md]
-+* integral[link /reference/concepts/integral.md]
- * advanceable[italic][link iterator.md]
- * sized_sentinel_for[link /reference/iterator/sized_sentinel_for.md]
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>tuple_element -- コード修飾のリンクを修正</title>
-      <link href="https://cpprefjp.github.io/reference/ranges/subrange/tuple_element.html"/>
-      <id>a34f4268996ec81d3638d7a0dbdb75d866bc709c:reference/ranges/subrange/tuple_element.md</id>
-      <updated>2025-08-26T18:12:52+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/subrange/tuple_element.md b/reference/ranges/subrange/tuple_element.md
-index 4d692b184..3397ee454 100644
---- a/reference/ranges/subrange/tuple_element.md
-+++ b/reference/ranges/subrange/tuple_element.md
-@@ -52,7 +52,7 @@ int main()
- ```
- * std::tuple_element_t[link /reference/tuple/tuple_element.md]
- * std::ranges::subrange[link /reference/ranges/subrange.md]
--* std::same_as[link /reference/ranges/subrange.md]
-+* std::same_as[link /reference/concepts/same_as.md]
- * std::ranges::iterator_t[link /reference/ranges/iterator_t.md]
- * std::ranges::sentinel_t[link /reference/ranges/sentinel_t.md]
- * std::views::empty[link /reference/ranges/empty_view.md]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>get_token -- コード修飾のリンクを修正</title>
-      <link href="https://cpprefjp.github.io/reference/stop_token/stop_source/get_token.html"/>
-      <id>a34f4268996ec81d3638d7a0dbdb75d866bc709c:reference/stop_token/stop_source/get_token.md</id>
-      <updated>2025-08-26T18:12:52+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/stop_token/stop_source/get_token.md b/reference/stop_token/stop_source/get_token.md
-index bfd0c76f1..f0066c1e9 100644
---- a/reference/stop_token/stop_source/get_token.md
-+++ b/reference/stop_token/stop_source/get_token.md
-@@ -41,7 +41,7 @@ int main()
- * std::stop_token[link ../stop_token.md]
- * std::stop_source[link ../stop_source.md]
- * std::nostopstate[link ../nostopstate.md]
--* stop_possible()[link ../stop_token/stop_requested.md]
-+* stop_possible()[link ../stop_token/stop_possible.md]
- 
- ### 出力
- ```
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>make_error_condition -- コード修飾のリンクを修正</title>
-      <link href="https://cpprefjp.github.io/reference/system_error/make_error_condition.html"/>
-      <id>a34f4268996ec81d3638d7a0dbdb75d866bc709c:reference/system_error/make_error_condition.md</id>
-      <updated>2025-08-26T18:12:52+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/system_error/make_error_condition.md b/reference/system_error/make_error_condition.md
-index caa157746..81032deed 100644
---- a/reference/system_error/make_error_condition.md
-+++ b/reference/system_error/make_error_condition.md
-@@ -40,7 +40,7 @@ int main()
- }
- ```
- * std::make_error_condition[color ff0000]
--* std::error_condition[link error_code.md]
-+* std::error_condition[link error_condition.md]
- * std::errc::invalid_argument[link errc.md]
- * econd.category()[link error_condition/category.md]
- * name()[link error_category/name.md]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>コンストラクタ -- コード修飾のリンクを修正</title>
-      <link href="https://cpprefjp.github.io/reference/utility/pair/op_constructor.html"/>
-      <id>a34f4268996ec81d3638d7a0dbdb75d866bc709c:reference/utility/pair/op_constructor.md</id>
-      <updated>2025-08-26T18:12:52+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/utility/pair/op_constructor.md b/reference/utility/pair/op_constructor.md
-index 418405e3a..f85c5c9fe 100644
---- a/reference/utility/pair/op_constructor.md
-+++ b/reference/utility/pair/op_constructor.md
-@@ -66,7 +66,7 @@ constexpr pair(piecewise_construct_t,
-                tuple&amp;lt;Args2...&amp;gt; second_args);                  // (11) C++20
- ```
- * EXPLICIT[italic]
--* pair-like[link /reference/tuple/tuple-like.md]
-+* pair-like[link /reference/tuple/pair-like.md]
- 
- ## 概要
- [`pair`](../pair.md)オブジェクトを構築する。
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
       </author>
     </entry>
   

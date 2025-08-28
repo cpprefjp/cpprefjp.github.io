@@ -28,11 +28,11 @@
         <meta property="og:url" content="https://cpprefjp.github.io/reference/execution/execution/parallel_scheduler.html" />
         <meta property="og:site_name" content="cpprefjp - C++日本語リファレンス" />
         <meta property="og:type" content="article" />
-        <meta property="og:description" content="`parallel_scheduler`は、実行制御ライブラリ上で並列処理を実現する並列Schedulerクラスである。" />
+        <meta property="og:description" content="`parallel_scheduler`は、実行制御ライブラリ上でタスクの並列実行を可能とする並列[Scheduler](scheduler.md)である。" />
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:title" content="parallel_scheduler - cpprefjp C++日本語リファレンス" />
         <meta name="twitter:url" content="https://cpprefjp.github.io/reference/execution/execution/parallel_scheduler.html" />
-        <meta name="twitter:description" content="`parallel_scheduler`は、実行制御ライブラリ上で並列処理を実現する並列Schedulerクラスである。" />
+        <meta name="twitter:description" content="`parallel_scheduler`は、実行制御ライブラリ上でタスクの並列実行を可能とする並列[Scheduler](scheduler.md)である。" />
 
         
   <link rel="alternate" type="application/atom+xml" title="Atom" href="https://cpprefjp.github.io/rss.xml" />
@@ -200,8 +200,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2025-08-27T16:34:45">
-        2025年08月27日 16時34分45秒
+      <span itemprop="datePublished" content="2025-08-28T11:28:56">
+        2025年08月28日 11時28分56秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -231,13 +231,15 @@
 </code></pre></div>
 </p>
 <h2>概要</h2>
-<p><code>parallel_scheduler</code>は、実行制御ライブラリ上で並列処理を実現する並列Schedulerクラスである。</p>
-<p>次のSenderアルゴリズムに対してカスタマイズ実装を提供することで、インデクス空間の各要素に対する処理を並列実行する。</p>
+<p><code>parallel_scheduler</code>は、実行制御ライブラリ上でタスクの並列実行を可能とする並列<a href="scheduler.html">Scheduler</a>である。</p>
+<p><code>parallel_scheduler</code>はシステムグローバルなスレッドプール（実行リソース）に関連付けられ、<code><a href="schedule.html">schedule</a></code>操作により得られる<a href="sender.html">Sender</a>はスレッドプールに属する任意のスレッド（実行エージェント）上で実行される。</p>
+<p>下記のSenderアルゴリズムに対してカスタマイズ実装を提供することで、タスクの一括(bulk)実行をスレッドプールを利用したタスク並列(parallel)実行に変換する。</p>
 <ul>
-<li><code><a href="bulk.html">execution::bulk</a></code> : 既定動作では<code>bulk_chunked</code>へ変換</li>
-<li><code><a href="bulk_chunked.html">execution::bulk_chunked</a></code> : チャンク単位で並列実行</li>
-<li><code><a href="bulk_unchunked.html">execution::bulk_unchunked</a></code> : 要素単位で並列実行</li>
+<li><code><a href="bulk.html">execution::bulk</a></code> : <code>bulk_chunked</code>に変換してタスク並列実行</li>
+<li><code><a href="bulk_chunked.html">execution::bulk_chunked</a></code> : インデクス範囲をチャンク単位でタスク並列実行</li>
+<li><code><a href="bulk_unchunked.html">execution::bulk_unchunked</a></code> : インデクス範囲を要素単位でタスク並列実行</li>
 </ul>
+<p><code><a href="system_context_replaceability.html">execution::system_context_replaceability</a></code> 名前空間で定義されるインタフェースを介して、スレッドプール実装をユーザ定義の並列Schedulerバックエンドに置き換えることもできる。</p>
 <h2>クラス仕様</h2>
 <p><code>parallel_scheduler</code>は<code><a href="scheduler.html">scheduler</a></code>のモデルである。</p>
 <p>説明用の<code>sch</code>を<code>parallel_scheduler</code>型のオブジェクト、<code>sch</code>が<code>ptr</code>と関連付けられるとき<code>BACKEND-OF(sch)</code>を<code>*ptr</code>とする。</p>
@@ -254,6 +256,7 @@
 <code><span href="https://cpprefjp.github.io/reference/execution/execution/system_context_replaceability/bulk_item_receiver_proxy.md.nolink">system_context_replaceability::bulk_item_receiver_proxy</span></code>を持つ<code>rcvr</code>のプロキシ<code>r</code>であり、インデクス<code>i</code>, <code>j</code>に対する<code>r.execute(i, j)</code>は<code>f(i, j, args...)</code>と同じ効果を持つ。</p>
 <p>呼び出し可能オブジェクト<code>f</code>と引数<code>arg</code>を持つ<code>rcvr</code>のバルク非チャンク化プロキシ(bulk unchunked proxy)は、基底
 <code><span href="https://cpprefjp.github.io/reference/execution/execution/system_context_replaceability/bulk_item_receiver_proxy.md.nolink">system_context_replaceability::bulk_item_receiver_proxy</span></code>を持つ<code>rcvr</code>のプロキシ<code>r</code>であり、インデクス<code>i</code>に対する<code>r.execute(i, i + 1)</code>は<code>f(i, args...)</code>と同じ効果を持つ。</p>
+<h3><code>schedule</code> ファクトリ</h3>
 <p>説明用の<code>b</code>を<code>BACKEND-OF(sch)</code>、<code>sndr</code>を<code><a href="schedule.html">schedule</a>(sch)</code>が返すオブジェクト、<code>rcvr</code>を<a href="receiver.html">Receiver</a>とする。<code>rcvr</code>が<code>sndr</code>に<a href="connect.html">接続(connect)</a>され、結果の<a href="operation_state.html">Operation State</a>が<a href="start.html">開始(start)</a>されたとき、</p>
 <ul>
 <li><code>sndr</code>が値完了するならば、<code><span href="https://cpprefjp.github.io/reference/execution/execution/system_context_replaceability/parallel_scheduler_backend/schedule.md.nolink">b.schedule</span>(r, s)</code>が呼ばれる。このとき、<ul>
@@ -263,6 +266,7 @@
 </li>
 <li>他の全ての完了操作は、変更なしに転送される。</li>
 </ul>
+<h3><code>bulk_chunked</code> アダプタ</h3>
 <p><code>parallel_scheduler</code>は<code><a href="bulk_chunked.html">bulk_chunked</a></code>アルゴリズムのカスタマイズ実装を提供する。<a href="receiver.html">Receiver</a><code>rcvr</code>が<code>bulk_chunked(sndr, pol, shape, f)</code>が返す<a href="sender.html">Sender</a>に<a href="connect.html">接続(connect)</a>され、結果の<a href="operation_state.html">Operation State</a>が<a href="start.html">開始(start)</a>されたとき、</p>
 <ul>
 <li><code>sndr</code>が値<code>vals</code>で値完了するならば、<code>args</code>を<code>vals</code>を指す左辺値式のパックとして、<code><span href="https://cpprefjp.github.io/reference/execution/execution/system_context_replaceability/parallel_scheduler_backend/schedule_bulk_chunked.md.nolink">b.schedule_bulk_chunked</span>(shape, r, s)</code>が呼ばれる。このとき、<ul>
@@ -272,6 +276,7 @@
 </li>
 <li>他の全ての完了操作は、変更なしに転送される。</li>
 </ul>
+<h3><code>bulk_unchunked</code> アダプタ</h3>
 <p><code>parallel_scheduler</code>は<code><a href="bulk_unchunked.html">bulk_unchunked</a></code>アルゴリズムのカスタマイズ実装を提供する。<a href="receiver.html">Receiver</a><code>rcvr</code>が<code>bulk_unchunked(sndr, pol, shape, f)</code>が返す<a href="sender.html">Sender</a>に<a href="connect.html">接続(connect)</a>され、結果の<a href="operation_state.html">Operation State</a>が<a href="start.html">開始(start)</a>されたとき、</p>
 <ul>
 <li><code>sndr</code>が値<code>vals</code>で値完了するならば、<code>args</code>を<code>vals</code>を指す左辺値式のパックとして、<code><span href="https://cpprefjp.github.io/reference/execution/execution/system_context_replaceability/parallel_scheduler_backend/schedule_bulk_unchunked.md.nolink">b.schedule_bulk_unchunked</span>(shape, r, s)</code>が呼ばれる。このとき、<ul>
