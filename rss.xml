@@ -2,9 +2,146 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-08-29T14:47:08.041014</updated>
-  <id>5193410a-4568-4a9e-89c6-3f7d585e39c9</id>
+  <updated>2025-08-29T15:42:16.772891</updated>
+  <id>4fa29113-fe2b-4cb8-9700-01293e3fa37f</id>
 
+  
+    <entry>
+      <title>allocator-aware-forward -- execution: C++26 P3433R1 (#1509)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/allocator-aware-forward.html"/>
+      <id>b11575f63626e1deb7184935d36a7a3de01bb47e:reference/execution/execution/allocator-aware-forward.md</id>
+      <updated>2025-08-30T00:37:44+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/allocator-aware-forward.md b/reference/execution/execution/allocator-aware-forward.md
+new file mode 100644
+index 000000000..f44627569
+--- /dev/null
++++ b/reference/execution/execution/allocator-aware-forward.md
+@@ -0,0 +1,42 @@
++# allocator-aware-forward
++* execution[meta header]
++* function template[meta id-type]
++* std::execution[meta namespace]
++* cpp26[meta cpp]
++
++```cpp
++template&amp;lt;class T, class Context&amp;gt;
++decltype(auto) allocator-aware-forward(T&amp;amp;&amp;amp; obj, Context&amp;amp;&amp;amp; context);
++```
++
++## 概要
++`allocator-aware-forward`は、Senderアルゴリズム動作仕様定義で用いられる説明専用の関数テンプレートである。
++
++アロケータの利用可否に応じて、`obj`から`T`型の新規オブジェクトを作成するか、`obj`を転送する。
++`context`に関連付けられた[環境](../queryable.md)がアロケータを提供する（つまり、式[`get_allocator`](../get_allocator.md)`(`[`get_env`](get_env.md)`(context))`が有効である）とき、同式の結果を`alloc`、型`P`を[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;T&amp;gt;`とする。
++
++
++## 戻り値
++- `alloc`が定義されなければ、[`std::forward`](/reference/utility/forward.md)`&amp;lt;T&amp;gt;(obj)`を返す。
++- そうではなく、`P`が`product-type`の特殊化のときは、`obj`の要素を`e`としたとき各要素が次の通り初期化された`P`型のオブジェクトを返す。
++
++    ```cpp
++    make_obj_using_allocator&amp;lt;decltype(e)&amp;gt;(std::forward_like&amp;lt;T&amp;gt;(e), alloc)
++    ```
++    * make_obj_using_allocator[link /reference/memory/make_obj_using_allocator.md]
++
++- そうでなければ、[`make_obj_using_allocator`](/reference/memory/make_obj_using_allocator.md)`&amp;lt;P&amp;gt;(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;T&amp;gt;(e), alloc)`を返す。
++
++
++## バージョン
++### 言語
++- C++26
++
++
++## 関連項目
++- [`execution::impls-for`](impls-for.md)
++- [`execution::let_value`](let_value.md)
++
++
++## 参照
++- [P3433R1 Allocator Support for Operation States](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3433r1.pdf0)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>impls-for -- execution: C++26 P3433R1 (#1509)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/impls-for.html"/>
+      <id>b11575f63626e1deb7184935d36a7a3de01bb47e:reference/execution/execution/impls-for.md</id>
+      <updated>2025-08-30T00:37:44+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/impls-for.md b/reference/execution/execution/impls-for.md
+index f875fb8a3..13639a940 100644
+--- a/reference/execution/execution/impls-for.md
++++ b/reference/execution/execution/impls-for.md
+@@ -75,9 +75,10 @@ namespace std::execution {
+ ```cpp
+ []&amp;lt;class Sndr, class Rcvr&amp;gt;(Sndr&amp;amp;&amp;amp; sndr, Rcvr&amp;amp; rcvr) noexcept -&amp;gt; decltype(auto) {
+   auto&amp;amp; [_, data, ...child] = sndr;
+-  return std::forward_like&amp;lt;Sndr&amp;gt;(data);
++  return allocator-aware-forward(std::forward_like&amp;lt;Sndr&amp;gt;(data), rcvr);
+ }
+ ```
++* allocator-aware-forward[link allocator-aware-forward.md]
+ 
+ ### `start`メンバ
+ `start`は、[`basic-operation`](basic-operation.md)実装における[開始(start)](start.md)のカスタマイゼーションポイントとして機能する。
+@@ -146,4 +147,5 @@ static consteval void default-impls::check-types();
+ 
+ ## 参照
+ - [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
++- [P3433R1 Allocator Support for Operation States](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3433r1.pdf0)
+ - [P3557R3 High-Quality Sender Diagnostics with Constexpr Exceptions](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3557r3.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>let_value -- execution: C++26 P3433R1 (#1509)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/let_value.html"/>
+      <id>b11575f63626e1deb7184935d36a7a3de01bb47e:reference/execution/execution/let_value.md</id>
+      <updated>2025-08-30T00:37:44+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/let_value.md b/reference/execution/execution/let_value.md
+index a92609bdc..04eb86aa8 100644
+--- a/reference/execution/execution/let_value.md
++++ b/reference/execution/execution/let_value.md
+@@ -83,9 +83,11 @@ namespace std::execution {
+     args_variant_t args;  // exposition only
+     ops2_variant_t ops2;  // exposition only
+   };
+-  return state-type{std::forward_like&amp;lt;Sndr&amp;gt;(fn), let-env(child), {}, {}};
++  return state-type{allocator-aware-forward(std::forward_like&amp;lt;Sndr&amp;gt;(fn), rcvr),
++                    let-env(child), {}, {}};
+ }
+ ```
++* allocator-aware-forward[link allocator-aware-forward.md]
+ 
+ - 説明用のパック`Sigs`を[`completion_signatures_of_t`](completion_signatures_of_t.md)`&amp;lt;`[`child-type`](child-type.md)`&amp;lt;Sndr&amp;gt;,` [`FWD-ENV-T`](../forwarding_query.md)`(`[`env_of_t`](env_of_t.md)`&amp;lt;Rcvr&amp;gt;)&amp;gt;`による[`completion_signatures`](completion_signatures.md)特殊化のテンプレートパラメータとし、パック`LetSigs`を`Sigs`に含まれる型のうち戻り値型が[`decayed-typeof`](/reference/functional/decayed-typeof.md)`&amp;lt;set-cpo&amp;gt;`に等しいものと定義する。説明用のエイリアステンプレート`as-tuple&amp;lt;Tag(Args...)&amp;gt;`を[`decayed-tuple`](decayed-tuple.md)`&amp;lt;Args...&amp;gt;`と定義する。型`args_variant_t`は下記定義において重複削除した型となる。
+ 
+@@ -438,6 +440,7 @@ catch 0
+ - [P2999R3 Sender Algorithm Customization](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2999r3.html)
+ - [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
+ - [P3396R1 std::execution wording fixes](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3396r1.html)
++- [P3433R1 Allocator Support for Operation States](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3433r1.pdf0)
+ - [P3557R3 High-Quality Sender Diagnostics with Constexpr Exceptions](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3557r3.html)
+ - [LWG 4203. Constraints on `get-state` functions are incorrect](https://cplusplus.github.io/LWG/issue4203)
+ - [LWG 4204. specification of `as-sndr2(Sig)` in [exec.let] is incomplete](https://cplusplus.github.io/LWG/issue4204)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>parallel_scheduler -- execution: P2079R10 調整(#1511)</title>
@@ -1139,73 +1276,6 @@ index c0a2d7c51..1088bd6de 100644
       <author>
         <name>Raclamusi</name>
         <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>parallel_scheduler -- execution/parallel_scheduler: 説明増補(#1511)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/parallel_scheduler.html"/>
-      <id>ab280be5a6bc2524c08105e2194e26bd05fa5c1a:reference/execution/execution/parallel_scheduler.md</id>
-      <updated>2025-08-28T20:28:56+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/parallel_scheduler.md b/reference/execution/execution/parallel_scheduler.md
-index 02f38a2a2..35c8b1396 100644
---- a/reference/execution/execution/parallel_scheduler.md
-+++ b/reference/execution/execution/parallel_scheduler.md
-@@ -12,13 +12,17 @@ namespace std::execution {
- * unspecified[italic]
- 
- ## 概要
--`parallel_scheduler`は、実行制御ライブラリ上で並列処理を実現する並列Schedulerクラスである。
-+`parallel_scheduler`は、実行制御ライブラリ上でタスクの並列実行を可能とする並列[Scheduler](scheduler.md)である。
- 
--次のSenderアルゴリズムに対してカスタマイズ実装を提供することで、インデクス空間の各要素に対する処理を並列実行する。
-+`parallel_scheduler`はシステムグローバルなスレッドプール（実行リソース）に関連付けられ、[`schedule`](schedule.md)操作により得られる[Sender](sender.md)はスレッドプールに属する任意のスレッド（実行エージェント）上で実行される。
- 
--- [`execution::bulk`](bulk.md) : 既定動作では`bulk_chunked`へ変換
--- [`execution::bulk_chunked`](bulk_chunked.md) : チャンク単位で並列実行
--- [`execution::bulk_unchunked`](bulk_unchunked.md) : 要素単位で並列実行
-+下記のSenderアルゴリズムに対してカスタマイズ実装を提供することで、タスクの一括(bulk)実行をスレッドプールを利用したタスク並列(parallel)実行に変換する。
-+
-+- [`execution::bulk`](bulk.md) : `bulk_chunked`に変換してタスク並列実行
-+- [`execution::bulk_chunked`](bulk_chunked.md) : インデクス範囲をチャンク単位でタスク並列実行
-+- [`execution::bulk_unchunked`](bulk_unchunked.md) : インデクス範囲を要素単位でタスク並列実行
-+
-+[`execution::system_context_replaceability`](system_context_replaceability.md) 名前空間で定義されるインタフェースを介して、スレッドプール実装をユーザ定義の並列Schedulerバックエンドに置き換えることもできる。
- 
- 
- ## クラス仕様
-@@ -44,6 +48,8 @@ namespace std::execution {
- 呼び出し可能オブジェクト`f`と引数`arg`を持つ`rcvr`のバルク非チャンク化プロキシ(bulk unchunked proxy)は、基底
- [`system_context_replaceability::bulk_item_receiver_proxy`](system_context_replaceability/bulk_item_receiver_proxy.md.nolink)を持つ`rcvr`のプロキシ`r`であり、インデクス`i`に対する`r.execute(i, i + 1)`は`f(i, args...)`と同じ効果を持つ。
- 
-+
-+### `schedule` ファクトリ
- 説明用の`b`を`BACKEND-OF(sch)`、`sndr`を[`schedule`](schedule.md)`(sch)`が返すオブジェクト、`rcvr`を[Receiver](receiver.md)とする。`rcvr`が`sndr`に[接続(connect)](connect.md)され、結果の[Operation State](operation_state.md)が[開始(start)](start.md)されたとき、
- 
- - `sndr`が値完了するならば、[`b.schedule`](system_context_replaceability/parallel_scheduler_backend/schedule.md.nolink)`(r, s)`が呼ばれる。このとき、
-@@ -51,6 +57,8 @@ namespace std::execution {
-     - `s`は`r`に対する事前確保バックエンドストレージである。
- - 他の全ての完了操作は、変更なしに転送される。
- 
-+
-+### `bulk_chunked` アダプタ
- `parallel_scheduler`は[`bulk_chunked`](bulk_chunked.md)アルゴリズムのカスタマイズ実装を提供する。[Receiver](receiver.md)`rcvr`が`bulk_chunked(sndr, pol, shape, f)`が返す[Sender](sender.md)に[接続(connect)](connect.md)され、結果の[Operation State](operation_state.md)が[開始(start)](start.md)されたとき、
- 
- - `sndr`が値`vals`で値完了するならば、`args`を`vals`を指す左辺値式のパックとして、[`b.schedule_bulk_chunked`](system_context_replaceability/parallel_scheduler_backend/schedule_bulk_chunked.md.nolink)`(shape, r, s)`が呼ばれる。このとき、
-@@ -58,6 +66,7 @@ namespace std::execution {
-     - `s`は`r`に対する事前確保バックエンドストレージである。
- - 他の全ての完了操作は、変更なしに転送される。
- 
-+### `bulk_unchunked` アダプタ
- `parallel_scheduler`は[`bulk_unchunked`](bulk_unchunked.md)アルゴリズムのカスタマイズ実装を提供する。[Receiver](receiver.md)`rcvr`が`bulk_unchunked(sndr, pol, shape, f)`が返す[Sender](sender.md)に[接続(connect)](connect.md)され、結果の[Operation State](operation_state.md)が[開始(start)](start.md)されたとき、
- 
- - `sndr`が値`vals`で値完了するならば、`args`を`vals`を指す左辺値式のパックとして、[`b.schedule_bulk_unchunked`](system_context_replaceability/parallel_scheduler_backend/schedule_bulk_unchunked.md.nolink)`(shape, r, s)`が呼ばれる。このとき、
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
       </author>
     </entry>
   
