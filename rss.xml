@@ -2,9 +2,133 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-08-29T13:49:49.534916</updated>
-  <id>c52091b7-9c01-4e1a-8cd9-39179a4f6fbf</id>
+  <updated>2025-08-29T14:47:08.041014</updated>
+  <id>5193410a-4568-4a9e-89c6-3f7d585e39c9</id>
 
+  
+    <entry>
+      <title>parallel_scheduler -- execution: P2079R10 調整(#1511)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/parallel_scheduler.html"/>
+      <id>bdd426b245b4df9048734349463769e794ad2b1e:reference/execution/execution/parallel_scheduler.md</id>
+      <updated>2025-08-29T23:39:34+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/parallel_scheduler.md b/reference/execution/execution/parallel_scheduler.md
+index 416c59a49..47dc63b2a 100644
+--- a/reference/execution/execution/parallel_scheduler.md
++++ b/reference/execution/execution/parallel_scheduler.md
+@@ -76,6 +76,27 @@ namespace std::execution {
+ - 他の全ての完了操作は、変更なしに転送される。
+ 
+ 
++## 例
++```cpp example
++#include &amp;lt;concepts&amp;gt;
++#include &amp;lt;execution&amp;gt;
++namespace ex = std::execution;
++
++int main()
++{
++　ex::scheduler auto sch = ex::get_parallel_scheduler();
++  static_assert(std::same_as&amp;lt;decltype(sch), ex::parallel_scheduler&amp;gt;);
++}
++```
++* ex::parallel_scheduler[color ff0000]
++* ex::scheduler[link scheduler.md]
++* ex::get_parallel_scheduler()[link get_parallel_scheduler.md]
++
++### 出力
++```
++```
++
++
+ ## バージョン
+ ### 言語
+ - C++26
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>system_context_replaceability -- execution: P2079R10 調整(#1511)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/system_context_replaceability.html"/>
+      <id>bdd426b245b4df9048734349463769e794ad2b1e:reference/execution/execution/system_context_replaceability.md</id>
+      <updated>2025-08-29T23:39:34+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/system_context_replaceability.md b/reference/execution/execution/system_context_replaceability.md
+index 66395c6fc..c52b84ff4 100644
+--- a/reference/execution/execution/system_context_replaceability.md
++++ b/reference/execution/execution/system_context_replaceability.md
+@@ -12,6 +12,12 @@ namespace std::execution::system_context_replaceability {
+ }
+ ```
+ 
++[並列Scheduler](parallel_scheduler.md)をユーザ実装で置き換える場合、下記が必要となる。
++
++- [`system_context_replaceability::parallel_scheduler_backend`](system_context_replaceability/parallel_scheduler_backend.md)インターフェースをバックエンドにもつ並列Schedulerを実装する。
++- 処理系の手順に従って、[`system_context_replaceability::query_parallel_scheduler_backend`](system_context_replaceability/query_parallel_scheduler_backend.md)シンボルを自前バックエンド実装を返す関数で置き換える。
++
++
+ | 名前 | 説明 | 対応バージョン |
+ |------|------|----------------|
+ | [`receiver_proxy`](system_context_replaceability/receiver_proxy.md) | バックエンド実装用のReceiverプロキシ (class) | C++26 |
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>try_query -- execution: P2079R10 調整(#1511)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/system_context_replaceability/receiver_proxy/try_query.html"/>
+      <id>bdd426b245b4df9048734349463769e794ad2b1e:reference/execution/execution/system_context_replaceability/receiver_proxy/try_query.md</id>
+      <updated>2025-08-29T23:39:34+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/system_context_replaceability/receiver_proxy/try_query.md b/reference/execution/execution/system_context_replaceability/receiver_proxy/try_query.md
+index b007d8fe1..e12337398 100644
+--- a/reference/execution/execution/system_context_replaceability/receiver_proxy/try_query.md
++++ b/reference/execution/execution/system_context_replaceability/receiver_proxy/try_query.md
+@@ -24,8 +24,8 @@ optional&amp;lt;P&amp;gt; try_query(Query q) noexcept;
+ 説明用の`env`を`*this`が表現する[Receiver](../../receiver.md)の環境とする。
+ 下記を満たす場合は[`nullopt`](/reference/optional/nullopt_t.md)を返す。そうでなければ、`q(env)`を返す。
+ 
+-- `Query`が実装定義のサポートされたクエリ集合のメンバではない、または
+-- `P`が実装定義のサポートされた`Query`の結果型集合のメンバではない、または
++- `Query`が実装定義でサポートされるクエリ集合のメンバではない、または
++- `P`が実装定義でサポートされる`Query`の結果型集合のメンバではない、または
+ - 式`q(env)`が適格でないか、cv修飾された`P`型を持たない。
+ 
+ 
+@@ -34,7 +34,7 @@ optional&amp;lt;P&amp;gt; try_query(Query q) noexcept;
+ 
+ 
+ ## 備考
+-[`get_stop_token_t`](../../../get_stop_token.md)は実装定義のサポートされたクエリ集合に含まれ、[`inplace_stop_token`](/reference/stop_token/inplace_stop_token.md)は`get_stop_token_t`の実装定義のサポートされた結果型集合のメンバである。
++[`get_stop_token_t`](../../../get_stop_token.md)は実装定義でサポートるクエリ集合に含まれ、[`inplace_stop_token`](/reference/stop_token/inplace_stop_token.md)は`get_stop_token_t`の実装定義でサポートされる結果型集合のメンバである。
+ 
+ 
+ ## バージョン
+@@ -50,7 +50,7 @@ optional&amp;lt;P&amp;gt; try_query(Query q) noexcept;
+ 
+ ## 関連項目
+ - [`execution::parallel_scheduler`](../../parallel_scheduler.md)
+-- [`execution::parallel_scheduler_backend::parallel_scheduler_backend`](../parallel_scheduler_backend.md)
++- [`execution::system_context_replaceability::parallel_scheduler_backend`](../parallel_scheduler_backend.md)
+ 
+ 
+ ## 参照
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>parallel_scheduler -- execution: P2079R10 Replaceability API (#1511)</title>
@@ -1077,32 +1201,6 @@ index 02f38a2a2..35c8b1396 100644
  `parallel_scheduler`は[`bulk_unchunked`](bulk_unchunked.md)アルゴリズムのカスタマイズ実装を提供する。[Receiver](receiver.md)`rcvr`が`bulk_unchunked(sndr, pol, shape, f)`が返す[Sender](sender.md)に[接続(connect)](connect.md)され、結果の[Operation State](operation_state.md)が[開始(start)](start.md)されたとき、
  
  - `sndr`が値`vals`で値完了するならば、`args`を`vals`を指す左辺値式のパックとして、[`b.schedule_bulk_unchunked`](system_context_replaceability/parallel_scheduler_backend/schedule_bulk_unchunked.md.nolink)`(shape, r, s)`が呼ばれる。このとき、
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>forwarding_query -- execution/forwarding_query: get_await_completion_adaptor追記(#1507)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/forwarding_query.html"/>
-      <id>d53cd4ce406463315760b17a7bb9b9058e2bc759:reference/execution/forwarding_query.md</id>
-      <updated>2025-08-28T13:44:50+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/forwarding_query.md b/reference/execution/forwarding_query.md
-index 8b5e23a84..6a8735bdf 100644
---- a/reference/execution/forwarding_query.md
-+++ b/reference/execution/forwarding_query.md
-@@ -49,6 +49,7 @@ namespace std {
- - [`execution::get_scheduler`](execution/get_scheduler.md)
- - [`execution::get_delegation_scheduler`](execution/get_delegation_scheduler.md)
- - [`execution::get_completion_scheduler`](execution/get_completion_scheduler.md)
-+- [`execution::get_await_completion_adaptor`](execution/get_await_completion_adaptor.md)
- 
- 下記[クエリオブジェクト](queryable.md)に対する問い合わせは、`FWD-ENV`経由で転送されない。
- 
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
