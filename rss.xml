@@ -2,9 +2,475 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-08-28T16:45:47.743902</updated>
-  <id>a7e7e384-306e-4866-8497-5151b1eeba02</id>
+  <updated>2025-08-29T13:49:49.534916</updated>
+  <id>c52091b7-9c01-4e1a-8cd9-39179a4f6fbf</id>
 
+  
+    <entry>
+      <title>parallel_scheduler -- execution: P2079R10 Replaceability API (#1511)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/parallel_scheduler.html"/>
+      <id>a4d3b95095cd98351e9844ca05c0a0dd3d65d562:reference/execution/execution/parallel_scheduler.md</id>
+      <updated>2025-08-29T22:44:49+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/parallel_scheduler.md b/reference/execution/execution/parallel_scheduler.md
+index 4b87f2a1c..416c59a49 100644
+--- a/reference/execution/execution/parallel_scheduler.md
++++ b/reference/execution/execution/parallel_scheduler.md
+@@ -34,7 +34,7 @@ namespace std::execution {
+ 
+ 説明用の`sch2`を`parallel_scheduler`型のオブジェクトとしたとき、`BACKEND-OF(sch)`と`BACKEND-OF(sch2)`が同一オブジェクトを指す場合に限って、2つのオブジェクト`sch`と`sch2`は等しい。
+ 
+-`rcvr`を[Receiver](receiver.md)としたとき、基底`B`を持つ`rcvr`のプロキシ(proxy for `rcvr` with base `B`)は下記を満たす`B`型の左辺値`r`となる。
++`rcvr`を[Receiver](receiver.md)としたとき、基底`B`を持つ`rcvr`のプロキシは下記を満たす`B`型の左辺値`r`となる。
+ 
+ - `r.set_value()`は、[`set_value`](set_value.md)`(std::move(rcvr))`と同じ効果。
+ - `r.set_error(e)`は、`e`を[`exception_ptr`](/reference/exception/exception_ptr.md)として、[`set_error`](set_error.md)`(std::move(rcvr), std::move(e))`と同じ効果。
+@@ -43,22 +43,22 @@ namespace std::execution {
+ プロキシ`r`に対する事前確保バックエンドストレージ(preallocated backend storage)は、[`span`](/reference/span/span.md)`&amp;lt;`[`byte`](/reference/cstddef/byte.md)`&amp;gt;`型のオブジェクト`s`であり、`r`に対して[`set_value`](set_value.md)／[`set_error`](set_error.md)／[`set_stopped`](set_stopped.md)いずれかが呼び出されるまで範囲`s`は有効かつ上書き可能である。
+ 
+ 呼び出し可能オブジェクト`f`と引数`arg`を持つ`rcvr`のバルクチャンク化プロキシ(bulk chunked proxy)は、基底
+-[`system_context_replaceability::bulk_item_receiver_proxy`](system_context_replaceability/bulk_item_receiver_proxy.md.nolink)を持つ`rcvr`のプロキシ`r`であり、インデクス`i`, `j`に対する`r.execute(i, j)`は`f(i, j, args...)`と同じ効果を持つ。
++[`system_context_replaceability::bulk_item_receiver_proxy`](system_context_replaceability/bulk_item_receiver_proxy.md)を持つ`rcvr`のプロキシ`r`であり、インデクス`i`, `j`に対する`r.execute(i, j)`は`f(i, j, args...)`と同じ効果を持つ。
+ 
+ 呼び出し可能オブジェクト`f`と引数`arg`を持つ`rcvr`のバルク非チャンク化プロキシ(bulk unchunked proxy)は、基底
+-[`system_context_replaceability::bulk_item_receiver_proxy`](system_context_replaceability/bulk_item_receiver_proxy.md.nolink)を持つ`rcvr`のプロキシ`r`であり、インデクス`i`に対する`r.execute(i, i + 1)`は`f(i, args...)`と同じ効果を持つ。
++[`system_context_replaceability::bulk_item_receiver_proxy`](system_context_replaceability/bulk_item_receiver_proxy.md)を持つ`rcvr`のプロキシ`r`であり、インデクス`i`に対する`r.execute(i, i + 1)`は`f(i, args...)`と同じ効果を持つ。
+ 
+ 
+-### `schedule` ファクトリ
++### `schedule`アルゴリズム
+ 説明用の`b`を`BACKEND-OF(sch)`、`sndr`を[`schedule`](schedule.md)`(sch)`が返すオブジェクト、`rcvr`を[Receiver](receiver.md)とする。`rcvr`が`sndr`に[接続(connect)](connect.md)され、結果の[Operation State](operation_state.md)が[開始(start)](start.md)されたとき、
+ 
+ - `sndr`が値完了するならば、[`b.schedule`](system_context_replaceability/parallel_scheduler_backend/schedule.md)`(r, s)`が呼ばれる。このとき、
+-    - `r`は基底[`system_context_replaceability::receiver_proxy`](system_context_replaceability/receiver_proxy.md.nolink)を持つ`rcvr`のプロキシであり、かつ
++    - `r`は基底[`system_context_replaceability::receiver_proxy`](system_context_replaceability/receiver_proxy.md)を持つ`rcvr`のプロキシであり、かつ
+     - `s`は`r`に対する事前確保バックエンドストレージである。
+ - 他の全ての完了操作は、変更なしに転送される。
+ 
+ 
+-### `bulk_chunked` アダプタ
++### `bulk_chunked`アルゴリズム
+ `parallel_scheduler`は[`bulk_chunked`](bulk_chunked.md)アルゴリズムのカスタマイズ実装を提供する。[Receiver](receiver.md)`rcvr`が`bulk_chunked(sndr, pol, shape, f)`が返す[Sender](sender.md)に[接続(connect)](connect.md)され、結果の[Operation State](operation_state.md)が[開始(start)](start.md)されたとき、
+ 
+ - `sndr`が値`vals`で値完了するならば、`args`を`vals`を指す左辺値式のパックとして、[`b.schedule_bulk_chunked`](system_context_replaceability/parallel_scheduler_backend/schedule_bulk_chunked.md)`(shape, r, s)`が呼ばれる。このとき、
+@@ -67,7 +67,7 @@ namespace std::execution {
+ - 他の全ての完了操作は、変更なしに転送される。
+ 
+ 
+-### `bulk_unchunked` アダプタ
++### `bulk_unchunked`アルゴリズム
+ `parallel_scheduler`は[`bulk_unchunked`](bulk_unchunked.md)アルゴリズムのカスタマイズ実装を提供する。[Receiver](receiver.md)`rcvr`が`bulk_unchunked(sndr, pol, shape, f)`が返す[Sender](sender.md)に[接続(connect)](connect.md)され、結果の[Operation State](operation_state.md)が[開始(start)](start.md)されたとき、
+ 
+ - `sndr`が値`vals`で値完了するならば、`args`を`vals`を指す左辺値式のパックとして、[`b.schedule_bulk_unchunked`](system_context_replaceability/parallel_scheduler_backend/schedule_bulk_unchunked.md)`(shape, r, s)`が呼ばれる。このとき、
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>system_context_replaceability -- execution: P2079R10 Replaceability API (#1511)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/system_context_replaceability.html"/>
+      <id>a4d3b95095cd98351e9844ca05c0a0dd3d65d562:reference/execution/execution/system_context_replaceability.md</id>
+      <updated>2025-08-29T22:44:49+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/system_context_replaceability.md b/reference/execution/execution/system_context_replaceability.md
+index c33fed812..66395c6fc 100644
+--- a/reference/execution/execution/system_context_replaceability.md
++++ b/reference/execution/execution/system_context_replaceability.md
+@@ -14,8 +14,8 @@ namespace std::execution::system_context_replaceability {
+ 
+ | 名前 | 説明 | 対応バージョン |
+ |------|------|----------------|
+-| [`receiver_proxy`](system_context_replaceability/receiver_proxy.md.nolink) | バックエンド実装用のReceiverプロキシ (class) | C++26 |
+-| [`bulk_item_receiver_proxy`](system_context_replaceability/bulk_item_receiver_proxy.md.nolink) | バックエンド実装用のバルク処理Receiverプロキシ (class) | C++26 |
++| [`receiver_proxy`](system_context_replaceability/receiver_proxy.md) | バックエンド実装用のReceiverプロキシ (class) | C++26 |
++| [`bulk_item_receiver_proxy`](system_context_replaceability/bulk_item_receiver_proxy.md) | バックエンド実装用のバルク処理Receiverプロキシ (class) | C++26 |
+ | [`parallel_scheduler_backend`](system_context_replaceability/parallel_scheduler_backend.md) | 並列Schedulerバックエンド (class) | C++26 |
+ | [`query_parallel_scheduler_backend`](system_context_replaceability/query_parallel_scheduler_backend.md) | 並列Schedulerバックエンドを問い合わせ (function) | C++26 |
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>bulk_item_receiver_proxy -- execution: P2079R10 Replaceability API (#1511)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/system_context_replaceability/bulk_item_receiver_proxy.html"/>
+      <id>a4d3b95095cd98351e9844ca05c0a0dd3d65d562:reference/execution/execution/system_context_replaceability/bulk_item_receiver_proxy.md</id>
+      <updated>2025-08-29T22:44:49+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/system_context_replaceability/bulk_item_receiver_proxy.md b/reference/execution/execution/system_context_replaceability/bulk_item_receiver_proxy.md
+new file mode 100644
+index 000000000..941bc8593
+--- /dev/null
++++ b/reference/execution/execution/system_context_replaceability/bulk_item_receiver_proxy.md
+@@ -0,0 +1,42 @@
++# bulk_item_receiver_proxy
++* execution[meta header]
++* class[meta id-type]
++* std::execution::system_context_replaceability[meta namespace]
++* cpp26[meta cpp]
++
++```cpp
++namespace std::execution::system_context_replaceability {
++  struct bulk_item_receiver_proxy : receiver_proxy { see below };
++}
++```
++* receiver_proxy[link receiver_proxy.md]
++
++## 概要
++`bulk_item_receiver_proxy`は、[`receiver_proxy`](receiver_proxy.md)から派生したクラス。
++[`bulk_chunked`](../bulk_chunked.md)および[`bulk_unchunked`](../bulk_unchunked.md)のカスタマイズで用いられ、異なる反復に対応する[`parallel_scheduler_backend`](parallel_scheduler_backend.md)実装から通知も受信する。
++
++
++## メンバ関数
++
++| 名前 | 説明 | 対応バージョン |
++|------|------|----------------|
++| `virtual void execute(size_t, size_t) noexcept = 0;` | 要素範囲の作業ハンドラ | C++26 |
++
++
++## バージョン
++### 言語
++- C++26
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): ??
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 関連項目
++- [`execution::parallel_scheduler`](../parallel_scheduler.md)
++
++
++## 参照
++- [P2079R10 Parallel scheduler](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2079r10.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>parallel_scheduler_backend -- execution: P2079R10 Replaceability API (#1511)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/system_context_replaceability/parallel_scheduler_backend.html"/>
+      <id>a4d3b95095cd98351e9844ca05c0a0dd3d65d562:reference/execution/execution/system_context_replaceability/parallel_scheduler_backend.md</id>
+      <updated>2025-08-29T22:44:49+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/system_context_replaceability/parallel_scheduler_backend.md b/reference/execution/execution/system_context_replaceability/parallel_scheduler_backend.md
+index 43097c515..20db9b766 100644
+--- a/reference/execution/execution/system_context_replaceability/parallel_scheduler_backend.md
++++ b/reference/execution/execution/system_context_replaceability/parallel_scheduler_backend.md
+@@ -11,7 +11,7 @@ namespace std::execution::system_context_replaceability {
+ ```
+ 
+ ## 概要
+-[並列Scheduler](../parallel_scheduler.md)バックエンドのインタフェース（純粋仮想関数）を定義するクラス。
++`parallel_scheduler_backend`は、[並列Scheduler](../parallel_scheduler.md)バックエンド実装者向けのインタフェースを定義する。
+ 
+ 
+ ## メンバ関数
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>schedule -- execution: P2079R10 Replaceability API (#1511)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/system_context_replaceability/parallel_scheduler_backend/schedule.html"/>
+      <id>a4d3b95095cd98351e9844ca05c0a0dd3d65d562:reference/execution/execution/system_context_replaceability/parallel_scheduler_backend/schedule.md</id>
+      <updated>2025-08-29T22:44:49+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/system_context_replaceability/parallel_scheduler_backend/schedule.md b/reference/execution/execution/system_context_replaceability/parallel_scheduler_backend/schedule.md
+index dfae56c97..56b1a53f9 100644
+--- a/reference/execution/execution/system_context_replaceability/parallel_scheduler_backend/schedule.md
++++ b/reference/execution/execution/system_context_replaceability/parallel_scheduler_backend/schedule.md
+@@ -8,7 +8,8 @@
+ ```cpp
+ virtual void schedule(receiver_proxy&amp;amp; r, span&amp;lt;byte&amp;gt; s) noexcept = 0;
+ ```
+-* receiver_proxy[link ../receiver_proxy.md.nolink]
++* receiver_proxy[link ../receiver_proxy.md]
++* span[link /reference/span/span.md]
+ * byte[link /reference/cstddef/byte.md]
+ 
+ ## 概要
+@@ -23,9 +24,9 @@ virtual void schedule(receiver_proxy&amp;amp; r, span&amp;lt;byte&amp;gt; s) noexcept = 0;
+ 派生クラスでは、この関数を下記のように実装すべきである。
+ 
+ - 下記いずれかの式が評価される
+-    - エラーが発生せず作業が成功したとき、`r.set_value()`
+-    - エラーが発生したとき、`eptr`を[`exception_ptr`](/reference/exception/exception_ptr.md)型のオブジェクトとして、`r.set_error(eptr)`
+-    - 作業がキャンセルされたとき、`r.set_stopped()`
++    - エラーが発生せず作業が成功したとき、[`r.set_value()`](../receiver_proxy.md)
++    - エラーが発生したとき、`eptr`を[`exception_ptr`](/reference/exception/exception_ptr.md)型のオブジェクトとして、[`r.set_error`](../receiver_proxy.md)`(eptr)`
++    - 作業がキャンセルされたとき、[`r.set_stopped()`](../receiver_proxy.md)
+ - 任意の`r.set_value()`呼び出しは、`*this`で表される実行コンテキストの実行エージェント上で発生する。
+ 
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>schedule_bulk_chunked -- execution: P2079R10 Replaceability API (#1511)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/system_context_replaceability/parallel_scheduler_backend/schedule_bulk_chunked.html"/>
+      <id>a4d3b95095cd98351e9844ca05c0a0dd3d65d562:reference/execution/execution/system_context_replaceability/parallel_scheduler_backend/schedule_bulk_chunked.md</id>
+      <updated>2025-08-29T22:44:49+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/system_context_replaceability/parallel_scheduler_backend/schedule_bulk_chunked.md b/reference/execution/execution/system_context_replaceability/parallel_scheduler_backend/schedule_bulk_chunked.md
+index 4ee6689e2..809730d13 100644
+--- a/reference/execution/execution/system_context_replaceability/parallel_scheduler_backend/schedule_bulk_chunked.md
++++ b/reference/execution/execution/system_context_replaceability/parallel_scheduler_backend/schedule_bulk_chunked.md
+@@ -6,10 +6,12 @@
+ * cpp26[meta cpp]
+ 
+ ```cpp
+-virtual void schedule_bulk_chunked(size_t n, bulk_item_receiver_proxy&amp;amp; r,
++virtual void schedule_bulk_chunked(size_t n,
++                                   bulk_item_receiver_proxy&amp;amp; r,
+                                    span&amp;lt;byte&amp;gt; s) noexcept = 0;
+ ```
+-* bulk_item_receiver_proxy[link ../bulk_item_receiver_proxy.md.nolink]
++* bulk_item_receiver_proxy[link ../bulk_item_receiver_proxy.md]
++* span[link /reference/span/span.md]
+ * byte[link /reference/cstddef/byte.md]
+ 
+ ## 概要
+@@ -24,12 +26,12 @@ virtual void schedule_bulk_chunked(size_t n, bulk_item_receiver_proxy&amp;amp; r,
+ 派生クラスでは、この関数を下記のように実装すべきである。
+ 
+ - 下記いずれかの式が評価される
+-    - エラーが発生せず作業が成功したとき、`r.set_value()`
+-    - エラーが発生したとき、`eptr`を[`exception_ptr`](/reference/exception/exception_ptr.md)型のオブジェクトとして、`r.set_error(eptr)`
+-    - 作業がキャンセルされたとき、`r.set_stopped()`
+-- `r.execute(b, e)`が呼ばれたとき、`b`と`e`は範囲`[0, n)`内かつ`b &amp;lt; e`である
+-- 範囲`[0, n)`の各`i`について、`i`が`[b, e)`の範囲内にある`r.execute(b, e)`の呼び出しが最大で1つだけ存在する。
+-- `r.set_value()`が呼び出されたとき、`[0, n)`の各`i`に対して、`i`が`[b, e)`の範囲内となる`r.execute(b, e)`の呼び出しが正確に1つだけ存在する。
++    - エラーが発生せず作業が成功したとき、[`r.set_value()`](../receiver_proxy.md)
++    - エラーが発生したとき、`eptr`を[`exception_ptr`](/reference/exception/exception_ptr.md)型のオブジェクトとして、[`r.set_error`](../receiver_proxy.md)`(eptr)`
++    - 作業がキャンセルされたとき、[`r.set_stopped()`](../receiver_proxy.md)
++- [`r.execute`](../bulk_item_receiver_proxy.md)`(b, e)`が呼ばれたとき、`b`と`e`は範囲`[0, n)`内かつ`b &amp;lt; e`である
++- 範囲`[0, n)`の各`i`について、`i`が`[b, e)`の範囲内にある[`r.execute`](../bulk_item_receiver_proxy.md)`(b, e)`の呼び出しが最大で1つだけ存在する。
++- `r.set_value()`が呼び出されたとき、`[0, n)`の各`i`に対して、`i`が`[b, e)`の範囲内となる[`r.execute`](../bulk_item_receiver_proxy.md)`(b, e)`の呼び出しが正確に1つだけ存在する。
+ - `r`上での全ての`execute`呼び出しは、`r`上での`set_value`／`set_error`／`set_stopped`いずれかの呼び出しよりも前に発生する。
+ - `r`上での全ての`execute`および`set_value`呼び出しは、`*this`で表される実行コンテキストの実行エージェント上で行われる。
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>schedule_bulk_unchunked -- execution: P2079R10 Replaceability API (#1511)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/system_context_replaceability/parallel_scheduler_backend/schedule_bulk_unchunked.html"/>
+      <id>a4d3b95095cd98351e9844ca05c0a0dd3d65d562:reference/execution/execution/system_context_replaceability/parallel_scheduler_backend/schedule_bulk_unchunked.md</id>
+      <updated>2025-08-29T22:44:49+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/system_context_replaceability/parallel_scheduler_backend/schedule_bulk_unchunked.md b/reference/execution/execution/system_context_replaceability/parallel_scheduler_backend/schedule_bulk_unchunked.md
+index d78a582d0..b85483f7d 100644
+--- a/reference/execution/execution/system_context_replaceability/parallel_scheduler_backend/schedule_bulk_unchunked.md
++++ b/reference/execution/execution/system_context_replaceability/parallel_scheduler_backend/schedule_bulk_unchunked.md
+@@ -6,10 +6,12 @@
+ * cpp26[meta cpp]
+ 
+ ```cpp
+-virtual void schedule_bulk_unchunked(size_t n, bulk_item_receiver_proxy&amp;amp; r,
++virtual void schedule_bulk_unchunked(size_t n,
++                                     bulk_item_receiver_proxy&amp;amp; r,
+                                      span&amp;lt;byte&amp;gt; s) noexcept = 0;
+ ```
+-* bulk_item_receiver_proxy[link ../bulk_item_receiver_proxy.md.nolink]
++* bulk_item_receiver_proxy[link ../bulk_item_receiver_proxy.md]
++* span[link /reference/span/span.md]
+ * byte[link /reference/cstddef/byte.md]
+ 
+ ## 概要
+@@ -24,11 +26,11 @@ virtual void schedule_bulk_unchunked(size_t n, bulk_item_receiver_proxy&amp;amp; r,
+ 派生クラスでは、この関数を下記のように実装すべきである。
+ 
+ - 下記いずれかの式が評価される
+-    - エラーが発生せず作業が成功したとき、`r.set_value()`
+-    - エラーが発生したとき、`eptr`を[`exception_ptr`](/reference/exception/exception_ptr.md)型のオブジェクトとして、`r.set_error(eptr)`
+-    - 作業がキャンセルされたとき、`r.set_stopped()`
+-- `r.execute(b, e)`が呼ばれたとき、`b`は範囲`[0, n)`内かつ`e`は`b + 1`に等しい。`[0, n)`の各`i`について、`r.execute(i, i + 1)`の呼び出しが最大で1つだけ存在する。
+-- `r.set_value()`が呼び出されたとき、`[0, n)`の各`i`に対して、`r.execute(i, i + 1)`の呼び出しが正確に1つだけ存在する。
++    - エラーが発生せず作業が成功したとき、[`r.set_value()`](../receiver_proxy.md)
++    - エラーが発生したとき、`eptr`を[`exception_ptr`](/reference/exception/exception_ptr.md)型のオブジェクトとして、[`r.set_error`](../receiver_proxy.md)`(eptr)`
++    - 作業がキャンセルされたとき、[`r.set_stopped()`](../receiver_proxy.md)
++- [`r.execute`](../bulk_item_receiver_proxy.md)`(b, e)`が呼ばれたとき、`b`は範囲`[0, n)`内かつ`e`は`b + 1`に等しい。`[0, n)`の各`i`について、[`r.execute`](../bulk_item_receiver_proxy.md)`(i, i + 1)`の呼び出しが最大で1つだけ存在する。
++- `r.set_value()`が呼び出されたとき、`[0, n)`の各`i`に対して、[`r.execute`](../bulk_item_receiver_proxy.md)`(i, i + 1)`の呼び出しが正確に1つだけ存在する。
+ - `r`上での全ての`execute`呼び出しは、`r`上での`set_value`／`set_error`／`set_stopped`いずれかの呼び出しよりも前に発生する。
+ - `r`上での全ての`execute`および`set_value`呼び出しは、`*this`で表される実行コンテキストの実行エージェント上で行われる。
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>receiver_proxy -- execution: P2079R10 Replaceability API (#1511)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/system_context_replaceability/receiver_proxy.html"/>
+      <id>a4d3b95095cd98351e9844ca05c0a0dd3d65d562:reference/execution/execution/system_context_replaceability/receiver_proxy.md</id>
+      <updated>2025-08-29T22:44:49+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/system_context_replaceability/receiver_proxy.md b/reference/execution/execution/system_context_replaceability/receiver_proxy.md
+new file mode 100644
+index 000000000..21ddce22f
+--- /dev/null
++++ b/reference/execution/execution/system_context_replaceability/receiver_proxy.md
+@@ -0,0 +1,44 @@
++# receiver_proxy
++* execution[meta header]
++* class[meta id-type]
++* std::execution::system_context_replaceability[meta namespace]
++* cpp26[meta cpp]
++
++```cpp
++namespace std::execution::system_context_replaceability {
++  struct receiver_proxy;
++}
++```
++
++## 概要
++`receiver_proxy`は、[`parallel_scheduler_backend`](parallel_scheduler_backend.md)実装から完了操作のトリガー通知を受け取る[`Receiver`](../receiver.md)を表現する。
++
++
++## メンバ関数
++
++| 名前 | 説明 | 対応バージョン |
++|------|------|----------------|
++| `virtual ~receiver_proxy() = default;` | デストラクタ | C++26 |
++| `virtual void set_value() noexcept = 0;` | 値完了ハンドラ | C++26 |
++| `virtual void set_error(exception_ptr) noexcept = 0;` | エラー完了ハンドラ | C++26 |
++| `virtual void set_stopped() noexcept = 0;` | 停止完了ハンドラ | C++26 |
++| [`try_query`](receiver_proxy/try_query.md) | クエリオブジェクト問い合わせ | C++26 |
++
++
++## バージョン
++### 言語
++- C++26
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): ??
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 関連項目
++- [`execution::parallel_scheduler`](../parallel_scheduler.md)
++
++
++## 参照
++- [P2079R10 Parallel scheduler](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2079r10.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>try_query -- execution: P2079R10 Replaceability API (#1511)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/system_context_replaceability/receiver_proxy/try_query.html"/>
+      <id>a4d3b95095cd98351e9844ca05c0a0dd3d65d562:reference/execution/execution/system_context_replaceability/receiver_proxy/try_query.md</id>
+      <updated>2025-08-29T22:44:49+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/system_context_replaceability/receiver_proxy/try_query.md b/reference/execution/execution/system_context_replaceability/receiver_proxy/try_query.md
+new file mode 100644
+index 000000000..b007d8fe1
+--- /dev/null
++++ b/reference/execution/execution/system_context_replaceability/receiver_proxy/try_query.md
+@@ -0,0 +1,57 @@
++# try_query
++* execution[meta header]
++* std::execution::system_context_replaceability[meta namespace]
++* receiver_proxy[meta class]
++* function template[meta id-type]
++* cpp26[meta cpp]
++
++```cpp
++template&amp;lt;class P, class-type Query&amp;gt;
++optional&amp;lt;P&amp;gt; try_query(Query q) noexcept;
++```
++* class-type[link ../../../class-type.md]
++* optional[link /reference/optional/optional.md]
++
++## 概要
++[`parallel_scheduler`](../../parallel_scheduler.md)バックエンド実装側から[Receiver](../../receiver.md)環境にアクセスするための補助関数。
++
++
++## 適格要件
++`P`はcv修飾された非配列オブジェクト型。
++
++
++## 戻り値
++説明用の`env`を`*this`が表現する[Receiver](../../receiver.md)の環境とする。
++下記を満たす場合は[`nullopt`](/reference/optional/nullopt_t.md)を返す。そうでなければ、`q(env)`を返す。
++
++- `Query`が実装定義のサポートされたクエリ集合のメンバではない、または
++- `P`が実装定義のサポートされた`Query`の結果型集合のメンバではない、または
++- 式`q(env)`が適格でないか、cv修飾された`P`型を持たない。
++
++
++## 例外
++投げない
++
++
++## 備考
++[`get_stop_token_t`](../../../get_stop_token.md)は実装定義のサポートされたクエリ集合に含まれ、[`inplace_stop_token`](/reference/stop_token/inplace_stop_token.md)は`get_stop_token_t`の実装定義のサポートされた結果型集合のメンバである。
++
++
++## バージョン
++### 言語
++- C++26
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): ??
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 関連項目
++- [`execution::parallel_scheduler`](../../parallel_scheduler.md)
++- [`execution::parallel_scheduler_backend::parallel_scheduler_backend`](../parallel_scheduler_backend.md)
++
++
++## 参照
++- [P2079R10 Parallel scheduler](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2079r10.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>get_parallel_scheduler -- execution: P2079R10 Replaceability API (#1511)</title>
@@ -637,481 +1103,6 @@ index 8b5e23a84..6a8735bdf 100644
  
  下記[クエリオブジェクト](queryable.md)に対する問い合わせは、`FWD-ENV`経由で転送されない。
  
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>execution -- execution: P2079R10 User facing API (#1511)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution.html"/>
-      <id>61e00530569341cc0cfcff74b448918b5b024582:reference/execution/execution.md</id>
-      <updated>2025-08-28T01:34:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution.md b/reference/execution/execution.md
-index 747d47c02..8c2b21edb 100644
---- a/reference/execution/execution.md
-+++ b/reference/execution/execution.md
-@@ -123,9 +123,9 @@ namespace std::execution {
- | [`execution::let_value`](execution/let_value.md) | 値完了結果から入れ子の非同期操作へ変換 (customization point object) | C++26 |
- | [`execution::let_error`](execution/let_error.md) | エラー完了結果から入れ子の非同期操作へ変換 (customization point object) | C++26 |
- | [`execution::let_stopped`](execution/let_stopped.md) | 停止完了を入れ子の非同期操作へ変換 (customization point object) | C++26 |
--| [`execution::bulk`](execution/bulk.md) | インデクス空間上で指定関数を反復実行 (customization point object) | C++26 |
--| [`execution::bulk_chunked`](execution/bulk_chunked.md) | インデクス空間を分割チャンク単位で指定関数を反復実行 (customization point object) | C++26 |
--| [`execution::bulk_unchunked`](execution/bulk_unchunked.md) | インデクス空間の各インデクス単位で指定関数を反復実行 (customization point object) | C++26 |
-+| [`execution::bulk`](execution/bulk.md) | インデクス空間上で指定関数を一括実行 (customization point object) | C++26 |
-+| [`execution::bulk_chunked`](execution/bulk_chunked.md) | インデクス空間を分割チャンク単位で指定関数を一括実行 (customization point object) | C++26 |
-+| [`execution::bulk_unchunked`](execution/bulk_unchunked.md) | インデクス空間の各インデクス単位で指定関数を一括実行 (customization point object) | C++26 |
- | [`execution::when_all`](execution/when_all.md) | 全ての入力Sender完了を待機 (customization point object) | C++26 |
- | [`execution::when_all_with_variant`](execution/when_all_with_variant.md) | 複数の値完了シグネチャをもつ全ての入力Sender完了を待機 (customization point object) | C++26 |
- | [`execution::into_variant`](execution/into_variant.md) | 複数の値完了シグネチャを単一[`variant`](/reference/variant/variant.md)型の値完了シグネチャに変換 (customization point object) | C++26 |
-@@ -158,12 +158,12 @@ Senderコンシューマは名前空間 `std::this_thread` で定義される。
- | [`execution::as_awaitable`](execution/as_awaitable.md) | Senderを[Awaitable型](/lang/cpp20/coroutines.md)へ変換 (customization point object) | C++26 |
- | [`execution::with_awaitable_senders`](execution/with_awaitable_senders.md) | [Promise型](/lang/cpp20/coroutines.md)の基底クラス (class template) | C++26 |
- 
--### 並列スケジューラ
-+### 並列Scheduler
- 
- | 名前 | 説明 | 対応バージョン |
- |------|------|----------------|
--| [`execution::parallel_scheduler`](execution/parallel_scheduler.md.nolink) | 並列スケジューラ (class) | C++26 |
--| [`execution::get_parallel_scheduler`](execution/get_parallel_scheduler.md.nolink) | 並列スケジューラを取得 (function) | C++26 |
-+| [`execution::parallel_scheduler`](execution/parallel_scheduler.md) | 並列Scheduler (class) | C++26 |
-+| [`execution::get_parallel_scheduler`](execution/get_parallel_scheduler.md) | 並列Schedulerを取得 (function) | C++26 |
- | [`execution::system_context_replaceability`](execution/system_context_replaceability.md) | `parallel_scheduler`動作カスタマイズ用の名前空間 (namespace) | C++26 |
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>bulk -- execution: P2079R10 User facing API (#1511)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/bulk.html"/>
-      <id>61e00530569341cc0cfcff74b448918b5b024582:reference/execution/execution/bulk.md</id>
-      <updated>2025-08-28T01:34:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/bulk.md b/reference/execution/execution/bulk.md
-index 62552deb3..c0a2d7c51 100644
---- a/reference/execution/execution/bulk.md
-+++ b/reference/execution/execution/bulk.md
-@@ -13,10 +13,15 @@ namespace std::execution {
- * unspecified[italic]
- 
- ## 概要
--`bulk`は、インデクス空間の各インデクスに対してタスクを反復実行するSenderアダプタである。
-+`bulk`は、インデクス空間の各インデクスに対してタスクを一括実行するSenderアダプタである。
- 
- `bulk`は[パイプ可能Senderアダプタオブジェクト](sender_adaptor_closure.md)であり、パイプライン記法をサポートする。
- 
-+実行制御ライブラリのデフォルト動作では、`bulk`は[`bulk_chukned`](bulk_chunked.md)に変換され、下記のように振る舞う。
-+
-+- [並列Scheduler](parallel_scheduler.md)上では、インデクス空間を区間分割されたチャンク単位で並列実行される。
-+- 明示的にカスタマイズされていなければ、各インデクスに対する処理は逐次実行される。
-+
- 
- ## 効果
- 説明用の式`sndr`, `policy`, `shape`, `f`に対して、型`Policy`を[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;decltype(policy)&amp;gt;`、型`Shape`を`decltype(auto(shape))`、型`Func`を[`decay_t`](/reference/type_traits/decay.md)`&amp;lt;decltype((f))&amp;gt;`とする。下記いずれかの条件をみたすとき、呼び出し式`bulk(sndr, policy, shape, f)`は不適格となる。
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>bulk_chunked -- execution: P2079R10 User facing API (#1511)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/bulk_chunked.html"/>
-      <id>61e00530569341cc0cfcff74b448918b5b024582:reference/execution/execution/bulk_chunked.md</id>
-      <updated>2025-08-28T01:34:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/bulk_chunked.md b/reference/execution/execution/bulk_chunked.md
-index 425801f6e..33242087f 100644
---- a/reference/execution/execution/bulk_chunked.md
-+++ b/reference/execution/execution/bulk_chunked.md
-@@ -13,10 +13,15 @@ namespace std::execution {
- * unspecified[italic]
- 
- ## 概要
--`bulk_chunked`は、インデクス空間を区間分割したチャンク単位でタスクを反復実行するSenderアダプタである。
-+`bulk_chunked`は、インデクス空間を区間分割したチャンク単位でタスクを一括実行するSenderアダプタである。
- 
- `bulk_chunked`は[パイプ可能Senderアダプタオブジェクト](sender_adaptor_closure.md)であり、パイプライン記法をサポートする。
- 
-+実行制御ライブラリのデフォルト動作では、下記のように振る舞う。
-+
-+- [並列Scheduler](parallel_scheduler.md)上では、インデクス空間を区間分割されたチャンク単位で並列実行される。
-+- 明示的にカスタマイズされていなければ、各インデクスに対する処理は逐次実行される。
-+
- 
- ## 効果
- 説明用の式`sndr`, `policy`, `shape`, `f`に対して、型`Policy`を[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;decltype(policy)&amp;gt;`、型`Shape`を`decltype(auto(shape))`、型`Func`を[`decay_t`](/reference/type_traits/decay.md)`&amp;lt;decltype((f))&amp;gt;`とする。下記いずれかの条件をみたすとき、呼び出し式`bulk_chunked(sndr, policy, shape, f)`は不適格となる。
-@@ -168,10 +173,12 @@ int main()
- ## 関連項目
- - [`execution::bulk`](bulk.md)
- - [`execution::bulk_unchunked`](bulk_unchunked.md)
-+- [`execution::parallel_scheduler`](parallel_scheduler.md)
- 
- 
- ## 参照
- - [P2999R3 Sender Algorithm Customization](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2999r3.html)
- - [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
-+- [P2079R10 Parallel scheduler](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2079r10.html)
- - [P3481R5 `std::execution::bulk()` issues](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3481r5.html)
- - [P3557R3 High-Quality Sender Diagnostics with Constexpr Exceptions](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3557r3.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>bulk_unchunked -- execution: P2079R10 User facing API (#1511)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/bulk_unchunked.html"/>
-      <id>61e00530569341cc0cfcff74b448918b5b024582:reference/execution/execution/bulk_unchunked.md</id>
-      <updated>2025-08-28T01:34:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/bulk_unchunked.md b/reference/execution/execution/bulk_unchunked.md
-index 3bc388e08..a460e8c4e 100644
---- a/reference/execution/execution/bulk_unchunked.md
-+++ b/reference/execution/execution/bulk_unchunked.md
-@@ -13,10 +13,15 @@ namespace std::execution {
- * unspecified[italic]
- 
- ## 概要
--`bulk_unchunked`は、インデクス空間の各インデクスに対してタスクを反復実行するSenderアダプタである。
-+`bulk_unchunked`は、インデクス空間の各インデクスに対してタスクを一括実行するSenderアダプタである。
- 
- `bulk_unchunked`は[パイプ可能Senderアダプタオブジェクト](sender_adaptor_closure.md)であり、パイプライン記法をサポートする。
- 
-+実行制御ライブラリのデフォルト動作では、下記のように振る舞う。
-+
-+- [並列Scheduler](parallel_scheduler.md)上では、各インデクスに対する処理は個別の実行エージェント上で並列実行される。
-+- 明示的にカスタマイズされていなければ、各インデクスに対する処理は逐次実行される。
-+
- 
- ## 効果
- 説明用の式`sndr`, `policy`, `shape`, `f`に対して、型`Policy`を[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;decltype(policy)&amp;gt;`、型`Shape`を`decltype(auto(shape))`、型`Func`を[`decay_t`](/reference/type_traits/decay.md)`&amp;lt;decltype((f))&amp;gt;`とする。下記いずれかの条件をみたすとき、呼び出し式`bulk_unchunked(sndr, policy, shape, f)`は不適格となる。
-@@ -90,7 +95,7 @@ Senderアルゴリズム構築時および[Receiver](receiver.md)接続時に、
- 
- - 説明用の`args`を`sndr`の値完了結果を参照する左辺値式のパック、または[`copy_constructible`](/reference/concepts/copy_constructible.md)のモデルであるならばそれらの値のdecayコピーのパックとする。`sndr`が値完了したとき、
-     - `out_sndr`もまた値完了するとき、`0`から`shape`までの型`Shape`の全ての`i`に対して`f(i, args...)`を呼び出す。
--        - スケジューラ実装者は、各イテレーションを独立した実行エージェント上で実行することが推奨される。
-+        - [Scheduler](scheduler.md)実装者は、各イテレーションを独立した実行エージェント上で実行することが推奨される。
-     - `out_sndr`が[`set_error`](set_error.md)`(rcvr, eptr)`で完了するとき、エラー完了ハンドラが呼び出される前に非同期操作は`f`呼び出しのサブセットを呼び出す可能性があり、`eptr`は下記いずれかを指す[`exception_ptr`](/reference/exception/exception_ptr.md)となる。
-         - `f`呼び出しから送出された例外、または
-         - 処理系が要求リソースの確保に失敗したときは[`bad_alloc`](/reference/new/bad_alloc.md)例外、または
-@@ -144,9 +149,11 @@ int main()
- ## 関連項目
- - [`execution::bulk`](bulk.md)
- - [`execution::bulk_chunked`](bulk_chunked.md)
-+- [`execution::parallel_scheduler`](parallel_scheduler.md)
- 
- 
- ## 参照
- - [P2999R3 Sender Algorithm Customization](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2999r3.html)
- - [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
-+- [P2079R10 Parallel scheduler](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2079r10.html)
- - [P3481R5 `std::execution::bulk()` issues](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3481r5.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>get_parallel_scheduler -- execution: P2079R10 User facing API (#1511)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/get_parallel_scheduler.html"/>
-      <id>61e00530569341cc0cfcff74b448918b5b024582:reference/execution/execution/get_parallel_scheduler.md</id>
-      <updated>2025-08-28T01:34:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/get_parallel_scheduler.md b/reference/execution/execution/get_parallel_scheduler.md
-new file mode 100644
-index 000000000..af069b686
---- /dev/null
-+++ b/reference/execution/execution/get_parallel_scheduler.md
-@@ -0,0 +1,60 @@
-+# get_parallel_scheduler
-+* execution[meta header]
-+* function[meta id-type]
-+* std::execution[meta namespace]
-+* cpp26[meta cpp]
-+
-+```cpp
-+namespace std::execution {
-+  parallel_scheduler get_parallel_scheduler();
-+}
-+```
-+* parallel_scheduler[link parallel_scheduler.md]
-+
-+## 概要
-+システムの[並列Scheduler](parallel_scheduler.md)を取得する。
-+
-+
-+## 効果
-+説明用の`eb`を[`system_context_replaceability::query_parallel_scheduler_backend()`](system_context_replaceability/query_parallel_scheduler_backend.md.nolink)の結果とする。
-+
-+もし`eb == nullptr`ならば、[`terminate`](/reference/exception/terminate.md)を呼び出す。そうでなければ、`eb`に関連付けられた[`parallel_scheduler`](parallel_scheduler.md)オブジェクトを返す。
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;execution&amp;gt;
-+namespace ex = std::execution;
-+
-+int main()
-+{
-+  ex::scheduler auto sch = ex::get_parallel_scheduler();
-+}
-+```
-+* ex::get_parallel_scheduler[color ff0000]
-+* ex::scheduler[link scheduler.md]
-+
-+### 出力
-+```
-+```
-+
-+
-+## バージョン
-+### 言語
-+- C++26
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): ??
-+- [ICC](/implementation.md#icc): ??
-+- [Visual C++](/implementation.md#visual_cpp): ??
-+
-+
-+## 関連項目
-+- [`execution::parallel_scheduler`](parallel_scheduler.md)
-+- [`execution::system_context_replaceability`](system_context_replaceability.md)
-+
-+
-+## 参照
-+- [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
-+- [P2079R10 Parallel scheduler](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2079r10.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>parallel_scheduler -- execution: P2079R10 User facing API (#1511)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/parallel_scheduler.html"/>
-      <id>61e00530569341cc0cfcff74b448918b5b024582:reference/execution/execution/parallel_scheduler.md</id>
-      <updated>2025-08-28T01:34:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/parallel_scheduler.md b/reference/execution/execution/parallel_scheduler.md
-new file mode 100644
-index 000000000..02f38a2a2
---- /dev/null
-+++ b/reference/execution/execution/parallel_scheduler.md
-@@ -0,0 +1,87 @@
-+# parallel_scheduler
-+* execution[meta header]
-+* class[meta id-type]
-+* std::execution[meta namespace]
-+* cpp26[meta cpp]
-+
-+```cpp
-+namespace std::execution {
-+  class parallel_scheduler { unspecified };
-+}
-+```
-+* unspecified[italic]
-+
-+## 概要
-+`parallel_scheduler`は、実行制御ライブラリ上で並列処理を実現する並列Schedulerクラスである。
-+
-+次のSenderアルゴリズムに対してカスタマイズ実装を提供することで、インデクス空間の各要素に対する処理を並列実行する。
-+
-+- [`execution::bulk`](bulk.md) : 既定動作では`bulk_chunked`へ変換
-+- [`execution::bulk_chunked`](bulk_chunked.md) : チャンク単位で並列実行
-+- [`execution::bulk_unchunked`](bulk_unchunked.md) : 要素単位で並列実行
-+
-+
-+## クラス仕様
-+`parallel_scheduler`は[`scheduler`](scheduler.md)のモデルである。
-+
-+説明用の`sch`を`parallel_scheduler`型のオブジェクト、`sch`が`ptr`と関連付けられるとき`BACKEND-OF(sch)`を`*ptr`とする。
-+
-+式[`get_forward_progress_guarantee`](get_forward_progress_guarantee.md)`(sch)`は[`forward_progress_guarantee::parallel`](forward_progress_guarantee.md)を返す。
-+
-+説明用の`sch2`を`parallel_scheduler`型のオブジェクトとしたとき、`BACKEND-OF(sch)`と`BACKEND-OF(sch2)`が同一オブジェクトを指す場合に限って、2つのオブジェクト`sch`と`sch2`は等しい。
-+
-+`rcvr`を[Receiver](receiver.md)としたとき、基底`B`を持つ`rcvr`のプロキシ(proxy for `rcvr` with base `B`)は下記を満たす`B`型の左辺値`r`となる。
-+
-+- `r.set_value()は、[`set_value`](set_value.md)`(std::move(rcvr))`と同じ効果。
-+- `r.set_error(e)`は、`e`を[`exception_ptr`](/reference/exception/exception_ptr.md)として、[`set_error`](set_error.md)`(std::move(rcvr), std::move(e))`と同じ効果。
-+- `r.set_stopped()`は、[`set_stopped`](set_stopped.md)`(std::move(rcvr))`と同じ効果。
-+
-+プロキシ`r`に対する事前確保バックエンドストレージ(preallocated backend storage)は、[`span`](/reference/span/span.md)`&amp;lt;`[`byte`](/reference/cstddef.md)`&amp;gt;`型のオブジェクト`s`であり、`r`に対して[`set_value`](set_value.md)／[`set_error`](set_error.md)／[`set_stopped`](set_stopped.md)いずれかが呼び出されるまで範囲`s`は有効かつ上書き可能である。
-+
-+呼び出し可能オブジェクト`f`と引数`arg`を持つ`rcvr`のバルクチャンク化プロキシ(bulk chunked proxy)は、基底
-+[`system_context_replaceability::bulk_item_receiver_proxy`](system_context_replaceability/bulk_item_receiver_proxy.md.nolink)を持つ`rcvr`のプロキシ`r`であり、インデクス`i`, `j`に対する`r.execute(i, j)`は`f(i, j, args...)`と同じ効果を持つ。
-+
-+呼び出し可能オブジェクト`f`と引数`arg`を持つ`rcvr`のバルク非チャンク化プロキシ(bulk unchunked proxy)は、基底
-+[`system_context_replaceability::bulk_item_receiver_proxy`](system_context_replaceability/bulk_item_receiver_proxy.md.nolink)を持つ`rcvr`のプロキシ`r`であり、インデクス`i`に対する`r.execute(i, i + 1)`は`f(i, args...)`と同じ効果を持つ。
-+
-+説明用の`b`を`BACKEND-OF(sch)`、`sndr`を[`schedule`](schedule.md)`(sch)`が返すオブジェクト、`rcvr`を[Receiver](receiver.md)とする。`rcvr`が`sndr`に[接続(connect)](connect.md)され、結果の[Operation State](operation_state.md)が[開始(start)](start.md)されたとき、
-+
-+- `sndr`が値完了するならば、[`b.schedule`](system_context_replaceability/parallel_scheduler_backend/schedule.md.nolink)`(r, s)`が呼ばれる。このとき、
-+    - `r`は基底[`system_context_replaceability::receiver_proxy`](system_context_replaceability/receiver_proxy.md.nolink)を持つ`rcvr`のプロキシであり、かつ
-+    - `s`は`r`に対する事前確保バックエンドストレージである。
-+- 他の全ての完了操作は、変更なしに転送される。
-+
-+`parallel_scheduler`は[`bulk_chunked`](bulk_chunked.md)アルゴリズムのカスタマイズ実装を提供する。[Receiver](receiver.md)`rcvr`が`bulk_chunked(sndr, pol, shape, f)`が返す[Sender](sender.md)に[接続(connect)](connect.md)され、結果の[Operation State](operation_state.md)が[開始(start)](start.md)されたとき、
-+
-+- `sndr`が値`vals`で値完了するならば、`args`を`vals`を指す左辺値式のパックとして、[`b.schedule_bulk_chunked`](system_context_replaceability/parallel_scheduler_backend/schedule_bulk_chunked.md.nolink)`(shape, r, s)`が呼ばれる。このとき、
-+    - `r`は呼び出し可能オブジェクト`f`と引数`arg`を持つ`rcvr`のバルクチャンク化プロキシであり、かつ
-+    - `s`は`r`に対する事前確保バックエンドストレージである。
-+- 他の全ての完了操作は、変更なしに転送される。
-+
-+`parallel_scheduler`は[`bulk_unchunked`](bulk_unchunked.md)アルゴリズムのカスタマイズ実装を提供する。[Receiver](receiver.md)`rcvr`が`bulk_unchunked(sndr, pol, shape, f)`が返す[Sender](sender.md)に[接続(connect)](connect.md)され、結果の[Operation State](operation_state.md)が[開始(start)](start.md)されたとき、
-+
-+- `sndr`が値`vals`で値完了するならば、`args`を`vals`を指す左辺値式のパックとして、[`b.schedule_bulk_unchunked`](system_context_replaceability/parallel_scheduler_backend/schedule_bulk_unchunked.md.nolink)`(shape, r, s)`が呼ばれる。このとき、
-+    - `r`は呼び出し可能オブジェクト`f`と引数`arg`を持つ`rcvr`のバルク非チャンク化プロキシであり、かつ
-+    - `s`は`r`に対する事前確保バックエンドストレージである。
-+- 他の全ての完了操作は、変更なしに転送される。
-+
-+
-+## バージョン
-+### 言語
-+- C++26
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): ??
-+- [ICC](/implementation.md#icc): ??
-+- [Visual C++](/implementation.md#visual_cpp): ??
-+
-+
-+## 関連項目
-+- [`execution::get_parallel_scheduler`](get_parallel_scheduler.md)
-+- [`execution::system_context_replaceability`](system_context_replaceability.md)
-+
-+
-+## 参照
-+- [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
-+- [P2079R10 Parallel scheduler](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2079r10.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>get_scheduler -- execution: P2079R10 User facing API (#1511)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/run_loop/get_scheduler.html"/>
-      <id>61e00530569341cc0cfcff74b448918b5b024582:reference/execution/execution/run_loop/get_scheduler.md</id>
-      <updated>2025-08-28T01:34:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/run_loop/get_scheduler.md b/reference/execution/execution/run_loop/get_scheduler.md
-index cf45a1648..cde02aa02 100644
---- a/reference/execution/execution/run_loop/get_scheduler.md
-+++ b/reference/execution/execution/run_loop/get_scheduler.md
-@@ -40,7 +40,7 @@ int main()
-                               ex::set_error_t(std::exception_ptr),
-                               ex::set_stopped_t()&amp;gt;&amp;gt;);
- 
--  // スケジュールSender属性の値完了スケジューラを確認
-+  // スケジュールSender属性の値完了Schedulerを確認
-   auto compl_sch = ex::get_completion_scheduler&amp;lt;ex::set_value_t&amp;gt;(ex::get_env(sndr));
-   assert(compl_sch == sch);
- }
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>scheduler -- execution: P2079R10 User facing API (#1511)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/scheduler.html"/>
-      <id>61e00530569341cc0cfcff74b448918b5b024582:reference/execution/execution/scheduler.md</id>
-      <updated>2025-08-28T01:34:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/scheduler.md b/reference/execution/execution/scheduler.md
-index 5c0fd70dc..8b908529a 100644
---- a/reference/execution/execution/scheduler.md
-+++ b/reference/execution/execution/scheduler.md
-@@ -107,6 +107,7 @@ int main()
- ## 関連項目
- - [`execution::schedule`](schedule.md)
- - [`execution::get_completion_scheduler`](get_completion_scheduler.md)
-+- [`execution::get_parallel_scheduler`](get_parallel_scheduler.md)
- 
- 
- ## 参照
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>system_context_replaceability -- execution: P2079R10 User facing API (#1511)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/system_context_replaceability.html"/>
-      <id>61e00530569341cc0cfcff74b448918b5b024582:reference/execution/execution/system_context_replaceability.md</id>
-      <updated>2025-08-28T01:34:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/system_context_replaceability.md b/reference/execution/execution/system_context_replaceability.md
-index 927ded2d9..fe2402522 100644
---- a/reference/execution/execution/system_context_replaceability.md
-+++ b/reference/execution/execution/system_context_replaceability.md
-@@ -4,7 +4,7 @@
- * namespace[meta id-type]
- * cpp26[meta cpp]
- 
--名前空間 `std::execution::system_context_replaceability` では、[実行制御ライブラリ](../execution.md)が提供する[並列スケジューラ](parallel_scheduler.md.nolink)動作をユーザ差し替え可能とするためのエンティティ群を定義する。
-+名前空間 `std::execution::system_context_replaceability` では、[並列Scheduler](parallel_scheduler.md)動作をユーザが差し替えるためのインタフェースを定義する。
- 
- ```cpp
- namespace std::execution::system_context_replaceability {
-@@ -16,14 +16,19 @@ namespace std::execution::system_context_replaceability {
- |------|------|----------------|
- | [`receiver_proxy`](system_context_replaceability/receiver_proxy.md.nolink) | バックエンド実装用のReceiverプロキシ (class) | C++26 |
- | [`bulk_item_receiver_proxy`](system_context_replaceability/bulk_item_receiver_proxy.md.nolink) | バックエンド実装用のバルク処理Receiverプロキシ (class) | C++26 |
--| [`parallel_scheduler_backend`](system_context_replaceability/parallel_scheduler_backend.md.nolink) | 並列スケジューラバックエンド (class) | C++26 |
--| [`query_parallel_scheduler_backend`](system_context_replaceability/query_parallel_scheduler_backend.md.nolink) | 並列スケジューラバックエンドを問い合わせ (function) | C++26 |
-+| [`parallel_scheduler_backend`](system_context_replaceability/parallel_scheduler_backend.md.nolink) | 並列Schedulerバックエンド (class) | C++26 |
-+| [`query_parallel_scheduler_backend`](system_context_replaceability/query_parallel_scheduler_backend.md.nolink) | 並列Schedulerバックエンドを問い合わせ (function) | C++26 |
- 
- 
- ## バージョン
- ### 言語
- - C++26
- 
-+
-+## 関連項目
-+- [`execution::parallel_scheduler`](parallel_scheduler.md)
-+
-+
- ## 参照
- - [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
- - [P2079R10 Parallel scheduler](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2079r10.html)
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
