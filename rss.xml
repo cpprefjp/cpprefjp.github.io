@@ -2,9 +2,559 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-09-20T14:41:02.781861</updated>
-  <id>f15054d9-76e2-4537-8678-741abbff838b</id>
+  <updated>2025-09-20T16:23:50.068444</updated>
+  <id>5434c6f9-6cea-47d8-ae71-80cf26460559</id>
 
+  
+    <entry>
+      <title>execution -- execution: P3149R11 associate(#1510)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution.html"/>
+      <id>5ee535663bd10487f16bca44cfce00cecebee232:reference/execution/execution.md</id>
+      <updated>2025-09-21T01:19:24+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution.md b/reference/execution/execution.md
+index dd27c311b..74cc78afc 100644
+--- a/reference/execution/execution.md
++++ b/reference/execution/execution.md
+@@ -131,7 +131,7 @@ namespace std::execution {
+ | [`execution::into_variant`](execution/into_variant.md) | 複数の値完了シグネチャを単一[`variant`](/reference/variant/variant.md)型の値完了シグネチャに変換 (customization point object) | C++26 |
+ | [`execution::stopped_as_optional`](execution/stopped_as_optional.md) | 入力Senderの停止完了を空の[`optional`](/reference/optional/optional.md)値完了に変換 (customization point object) | C++26 |
+ | [`execution::stopped_as_error`](execution/stopped_as_error.md) | 入力Senderの停止完了をエラー完了に変換 (customization point object) | C++26 |
+-| [`execution::associate`](execution/associate.md.nolink) | 非同期スコープへの関連付け (customization point object) | C++26 |
++| [`execution::associate`](execution/associate.md) | 非同期スコープへの関連付け (customization point object) | C++26 |
+ | [`execution::spawn_future`](execution/spawn_future.md.nolink) | 非同期操作を早期開始 (customization point object) | C++26 |
+ 
+ ### Senderコンシューマ
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>associate -- execution: P3149R11 associate(#1510)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/associate.html"/>
+      <id>5ee535663bd10487f16bca44cfce00cecebee232:reference/execution/execution/associate.md</id>
+      <updated>2025-09-21T01:19:24+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/associate.md b/reference/execution/execution/associate.md
+new file mode 100644
+index 000000000..e3dd9d841
+--- /dev/null
++++ b/reference/execution/execution/associate.md
+@@ -0,0 +1,287 @@
++# associate
++* execution[meta header]
++* cpo[meta id-type]
++* std::execution[meta namespace]
++* cpp26[meta cpp]
++
++```cpp
++namespace std::execution {
++  struct associate_t { unspecified };
++  inline constexpr associate_t associate{};
++}
++```
++* unspecified[italic]
++
++## 概要
++`associate`は、入力[Sender](sender.md)と非同期スコープとの関連付けを行うSenderアダプタである。
++関連付けられた非同期スコープは、Senderが作成した非同期操作の生存期間を追跡できる。
++
++`associate`は[パイプ可能Senderアダプタオブジェクト](sender_adaptor_closure.md)であり、パイプライン記法をサポートする。
++
++
++## 効果
++説明用の式`sndr`と`token`に対して、`decltype((sndr))`が[`sender`](sender.md)を満たさない、もしくは[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;decltype((token))&amp;gt;`が[`scope_token`](scope_token.md)を満たさないとき、呼び出し式`associate(sndr, token)`は不適格となる。
++
++そうでなければ、呼び出し式`associate(sndr, token)`は`sndr`が1回だけ評価されることを除いて、下記と等価。
++
++```cpp
++transform_sender(get-domain-early(sndr),
++                 make-sender(associate, associate-data(token, sndr)))
++```
++* transform_sender[link transform_sender.md]
++* get-domain-early[link get-domain-early.md]
++* make-sender[link make-sender.md]
++* associate-data[italic]
++
++`associate(sndr, token)`の評価は、`token`に関連付けられた非同期スコープオブジェクトを介して観測可能な副作用を引き起こす可能性がある。
++
++
++### Senderアルゴリズムタグ `associate`
++Senderアルゴリズム動作説明用のクラステンプレート[`impls-for`](impls-for.md)に対して、下記の特殊化が定義される。
++
++```cpp
++namespace std::execution {
++  template&amp;lt;&amp;gt;
++  struct impls-for&amp;lt;associate_t&amp;gt; : default-impls {
++    static constexpr auto get-state = see below;  // exposition only
++    static constexpr auto start = see below;      // exposition only
++
++    template&amp;lt;class Sndr, class... Env&amp;gt;
++      static consteval void check-types() {       // exposition only
++        using associate_data_t = remove_cvref_t&amp;lt;data-type&amp;lt;Sndr&amp;gt;&amp;gt;;
++        using child_type_t = typename associate_data_t::wrap-sender;
++        (void)get_completion_signatures&amp;lt;child_type_t, FWD-ENV-T(Env)...&amp;gt;();
++    }
++  };
++}
++```
++* impls-for[link impls-for.md]
++* default-impls[link impls-for.md]
++* data-type[link data-type.md]
++* get_completion_signatures[link get_completion_signatures.md]
++* FWD-ENV-T[link ../forwarding_query.md]
++
++`impls-for&amp;lt;associate_t&amp;gt;::get-state`メンバは、下記ラムダ式と等価な関数呼び出し可能なオブジェクトで初期化される。
++
++```cpp
++[]&amp;lt;class Sndr, class Rcvr&amp;gt;(Sndr&amp;amp;&amp;amp; sndr, Rcvr&amp;amp; rcvr) noexcept(see below) {
++  auto [_, data] = std::forward&amp;lt;Sndr&amp;gt;(sndr);
++  auto dataParts = std::move(data).release();
++
++  using scope_tkn = decltype(dataParts-&amp;gt;first);
++  using wrap_sender = decltype(dataParts-&amp;gt;second);
++  using op_t = connect_result_t&amp;lt;wrap_sender, Rcvr&amp;gt;;
++
++  struct op_state {
++    bool associated = false;    // exposition only
++    union {
++      Rcvr* rcvr;               // exposition only
++      struct {
++        scope_tkn token;        // exposition only
++        op_t op;                // exposition only
++      } assoc;                  // exposition only
++    };
++
++    explicit op_state(Rcvr&amp;amp; r) noexcept
++      : rcvr(addressof(r)) {}
++
++    explicit op_state(scope_tkn tkn, wrap_sender&amp;amp;&amp;amp; sndr, Rcvr&amp;amp; r) try
++      : associated(true),
++        assoc(tkn, connect(std::move(sndr), std::move(r))) {
++    }
++    catch (...) {
++      tkn.disassociate();
++      throw;
++    }
++
++    op_state(op_state&amp;amp;&amp;amp;) = delete;
++
++    ~op_state() {
++      if (associated) {
++        assoc.op.~op_t();
++        assoc.token.disassociate();
++        assoc.token.~scope_tkn();
++      }
++    }
++
++    void run() noexcept {       // exposition only
++      if (associated)
++        start(assoc.op);
++      else
++        set_stopped(std::move(*rcvr));
++    }
++  };
++
++  if (dataParts)
++    return op_state{std::move(dataParts-&amp;gt;first), std::move(dataParts-&amp;gt;second), rcvr};
++  else
++    return op_state{rcvr};
++}
++```
++* connect_result_t[link connect_result_t.md]
++* connect[link connect.md]
++* start[link start.md]
++* set_stopped[link set_stopped.md]
++* first[link /reference/utility/pair/first.md]
++* second[link /reference/utility/pair/second.md]
++* std::move[link /reference/utility/move.md]
++
++`impls-for&amp;lt;associate_t&amp;gt;::get-state`の`noexcept`節の式は下記の通り。
++
++```cpp
++is_nothrow_constructible_v&amp;lt;remove_cvref_t&amp;lt;Sndr&amp;gt;, Sndr&amp;gt; &amp;amp;&amp;amp;
++is_nothrow_move_constructible_v&amp;lt;wrap-sender&amp;gt; &amp;amp;&amp;amp;
++nothrow-callable&amp;lt;connect_t, wrap-sender, Rcvr&amp;gt;
++```
++* is_nothrow_constructible_v[link /reference/type_traits/is_nothrow_constructible.md]
++* is_nothrow_move_constructible_v[link /reference/type_traits/is_nothrow_move_constructible.md]
++* connect_t[link connect.md]
++* nothrow-callable[link /reference/functional/nothrow-callable.md]
++
++`impls-for&amp;lt;associate_t&amp;gt;::start`メンバは、下記ラムダ式と等価な関数呼び出し可能なオブジェクトで初期化される。
++
++```cpp
++[](auto&amp;amp; state, auto&amp;amp;) noexcept -&amp;gt; void {
++  state.run();
++}
++```
++
++
++## 説明専用エンティティ
++説明専用の`associate-data`クラスを下記の通り定義する。
++
++```cpp
++namespace std::execution {
++  template&amp;lt;scope_token Token, sender Sender&amp;gt;
++  struct associate-data {        // exposition only
++    using wrap-sender =          // exposition only
++      remove_cvref_t&amp;lt;decltype(declval&amp;lt;Token&amp;amp;&amp;gt;().wrap(declval&amp;lt;Sender&amp;gt;()))&amp;gt;;
++
++    explicit associate-data(Token t, Sender&amp;amp;&amp;amp; s)
++      : sndr(t.wrap(std::forward&amp;lt;Sender&amp;gt;(s))),
++        token(t) {
++      if (!token.try_associate())
++        sndr.reset();
++    }
++
++    associate-data(const associate-data&amp;amp; other)
++      noexcept(is_nothrow_copy_constructible_v&amp;lt;wrap-sender&amp;gt; &amp;amp;&amp;amp;
++               noexcept(other.token.try_associate()));
++
++    associate-data(associate-data&amp;amp;&amp;amp; other)
++      noexcept(is_nothrow_move_constructible_v&amp;lt;wrap-sender&amp;gt;);
++
++    ~associate-data();
++
++    optional&amp;lt;pair&amp;lt;Token, wrap-sender&amp;gt;&amp;gt;
++      release() &amp;amp;&amp;amp; noexcept(is_nothrow_move_constructible_v&amp;lt;wrap-sender&amp;gt;);
++
++  private:
++    optional&amp;lt;wrap-sender&amp;gt; sndr;  // exposition only
++    Token token;                 // exposition only
++  };
++
++  template&amp;lt;scope_token Token, sender Sender&amp;gt;
++  associate-data(Token, Sender&amp;amp;&amp;amp;) -&amp;gt; associate-data&amp;lt;Token, Sender&amp;gt;;
++}
++```
++* scope_token[link scope_token.md]
++* sender[link sender.md]
++* is_nothrow_copy_constructible_v[link /reference/type_traits/is_nothrow_copy_constructible.md]
++* is_nothrow_move_constructible_v[link /reference/type_traits/is_nothrow_move_constructible.md]
++* optional[link /reference/optional/optional.md]
++
++`associate-data`型のオブジェクト`a`に対して、関連付けが正常に行われかつ`a`により所有される場合に限って、`a.sndr.`[`has_value()`](/reference/optional/optional/has_value.md)は`true`となる。
++
++```cpp
++associate-data(const associate-data&amp;amp; other)
++  noexcept(is_nothrow_copy_constructible_v&amp;lt;wrap-sender&amp;gt; &amp;amp;&amp;amp;
++           noexcept(other.token.try_associate()));
++```
++* is_nothrow_copy_constructible_v[link /reference/type_traits/is_nothrow_copy_constructible.md]
++
++- テンプレートパラメータ制約 : [`copy_constructible`](/reference/concepts/copy_constructible.md)`&amp;lt;wrap-sender&amp;gt; == true`
++- 効果 : `sndr`を値初期化し、`token`を`other.token`で初期化する。`other.sndr.`[`has_value()`](/reference/optional/optional/has_value.md) `== false`ならば、それ以上の効果を持たない。そうでなければ、`token.try_associate()`を呼び出し、戻り値が`true`ならば`sndr.`[`emplace`](/reference/optional/optional/emplace.md)`(*other.sndr)`を呼び出し、例外で終了するときは例外を伝播させる前に`token.disassociate()`を呼び出す。
++
++```cpp
++associate-data(associate-data&amp;amp;&amp;amp; other)
++  noexcept(is_nothrow_move_constructible_v&amp;lt;wrap-sender&amp;gt;);
++```
++* is_nothrow_move_constructible_v[link /reference/type_traits/is_nothrow_move_constructible.md]
++
++- 効果 : `sndr`を[`std::move`](/reference/utility/move.md)`(other.sndr)`で、`token`を`std::move(otehr.token)`で初期化したのち、`other.sndr.`[`reset()`](/reference/optional/optional/reset.md)を呼び出す。
++
++```cpp
++~associate-data();
++```
++
++- 効果 : `sndr.`[`has_value()`](/reference/optional/optional/has_value.md)が`false`を返すとき、何もしない。そうでなければ、`token.disassociate()`呼び出しの前に`sndr.`[`reset()`](/reference/optional/optional/reset.md)を呼び出す。
++
++```cpp
++optional&amp;lt;pair&amp;lt;Token, wrap-sender&amp;gt;&amp;gt;
++  release() &amp;amp;&amp;amp; noexcept(is_nothrow_move_constructible_v&amp;lt;wrap-sender&amp;gt;);
++```
++* optional[link /reference/optional/optional.md]
++* is_nothrow_move_constructible_v[link /reference/type_traits/is_nothrow_move_constructible.md]
++
++- 効果 : `sndr.`[`has_value()`](/reference/optional/optional/has_value.md)が`false`を返すとき、値を保持しない[`optional`](/reference/optional/optional.md)を返す。そうでなければ、次のように[`pair`](/reference/utility/pair.md)`&amp;lt;Token, warp-sender&amp;gt;`型の値を保持する`optional`を返す。
++
++    ```cpp
++    return optional(pair(token, std::move(*sndr)));
++    ```
++    * optional[link /reference/optional/optional.md]
++    * std::move[link /reference/utility/move.md]
++
++- 事後条件 : `sndr`は値を保持しない。
++
++
++## カスタマイゼーションポイント
++Senderアルゴリズム構築時および[Receiver](receiver.md)接続時に、関連付けられた実行ドメインに対して[`execution::transform_sender`](transform_sender.md)経由でSender変換が行われる。
++[デフォルト実行ドメイン](default_domain.md)では無変換。
++
++
++## 例
++```cpp example
++#include &amp;lt;execution&amp;gt;
++namespace ex = std::execution;
++
++int main()
++{
++  ex::counting_scope scope;
++  ex::sender auto sndr =
++    ex::just(42)
++    | ex::associate(scope.get_token());
++
++  std::this_thread::sync_wait(sndr);
++}
++```
++* ex::associate[color ff0000]
++* ex::counting_scope[link counting_scope.md]
++* ex::just[link just.md]
++* ex::sender[link sender.md]
++* std::this_thread::sync_wait[link ../this_thread/sync_wait.md]
++
++### 出力
++```
++```
++
++
++## バージョン
++### 言語
++- C++26
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): ??
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 関連項目
++- [`execution::scope_token`](scope_token.md)
++
++
++## 参照
++- [P2999R3 Sender Algorithm Customization](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2999r3.html)
++- [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
++- [P3149R11 `async_scope` - Creating scopes for non-sequential concurrency](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3149r11.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>disassociate -- execution: P3149R11 associate(#1510)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/counting_scope/token/disassociate.html"/>
+      <id>5ee535663bd10487f16bca44cfce00cecebee232:reference/execution/execution/counting_scope/token/disassociate.md</id>
+      <updated>2025-09-21T01:19:24+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/counting_scope/token/disassociate.md b/reference/execution/execution/counting_scope/token/disassociate.md
+index 164c4e12b..fc09036bb 100644
+--- a/reference/execution/execution/counting_scope/token/disassociate.md
++++ b/reference/execution/execution/counting_scope/token/disassociate.md
+@@ -38,7 +38,7 @@ scope-&amp;gt;disassociate()
+ 
+ 
+ ## 関連項目
+-- [`execution::associate`](../../associate.md.nolink)
++- [`execution::associate`](../../associate.md)
+ - [`execution::spawn_future`](../../spawn_future.md.nolink)
+ - [`execution::spawn`](../../spawn.md.nolink)
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>try_associate -- execution: P3149R11 associate(#1510)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/counting_scope/token/try_associate.html"/>
+      <id>5ee535663bd10487f16bca44cfce00cecebee232:reference/execution/execution/counting_scope/token/try_associate.md</id>
+      <updated>2025-09-21T01:19:24+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/counting_scope/token/try_associate.md b/reference/execution/execution/counting_scope/token/try_associate.md
+index 0d4dc5a4b..5bde327af 100644
+--- a/reference/execution/execution/counting_scope/token/try_associate.md
++++ b/reference/execution/execution/counting_scope/token/try_associate.md
+@@ -38,7 +38,7 @@ return scope-&amp;gt;try-associate();
+ 
+ 
+ ## 関連項目
+-- [`execution::associate`](../../associate.md.nolink)
++- [`execution::associate`](../../associate.md)
+ - [`execution::spawn_future`](../../spawn_future.md.nolink)
+ - [`execution::spawn`](../../spawn.md.nolink)
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>wrap -- execution: P3149R11 associate(#1510)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/counting_scope/token/wrap.html"/>
+      <id>5ee535663bd10487f16bca44cfce00cecebee232:reference/execution/execution/counting_scope/token/wrap.md</id>
+      <updated>2025-09-21T01:19:24+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/counting_scope/token/wrap.md b/reference/execution/execution/counting_scope/token/wrap.md
+index 6f76a6d95..73588bf95 100644
+--- a/reference/execution/execution/counting_scope/token/wrap.md
++++ b/reference/execution/execution/counting_scope/token/wrap.md
+@@ -39,7 +39,7 @@ return stop-when(std::forward&amp;lt;Sender&amp;gt;(snd), scope-&amp;gt;s_source.get_token());
+ 
+ 
+ ## 関連項目
+-- [`execution::associate`](../../associate.md.nolink)
++- [`execution::associate`](../../associate.md)
+ - [`execution::spawn_future`](../../spawn_future.md.nolink)
+ - [`execution::spawn`](../../spawn.md.nolink)
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>get-domain-early -- execution: P3149R11 associate(#1510)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/get-domain-early.html"/>
+      <id>5ee535663bd10487f16bca44cfce00cecebee232:reference/execution/execution/get-domain-early.md</id>
+      <updated>2025-09-21T01:19:24+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/get-domain-early.md b/reference/execution/execution/get-domain-early.md
+index 57875cca8..b0f50fc3a 100644
+--- a/reference/execution/execution/get-domain-early.md
++++ b/reference/execution/execution/get-domain-early.md
+@@ -45,7 +45,7 @@ constexpr auto get-domain-early(const Sndr&amp;amp; sndr) noexcept;
+ - [`execution::into_variant`](into_variant.md)
+ - [`execution::stopped_as_optional`](stopped_as_optional.md)
+ - [`execution::stopped_as_error`](stopped_as_error.md)
+-- [`execution::associate`](associate.md.nolink)
++- [`execution::associate`](associate.md)
+ - [`execution::affine_on`](affine_on.md.nolink)
+ - [`this_thread::sync_wait`](../this_thread/sync_wait.md)
+ - [`this_thread::sync_wait_with_variant`](../this_thread/sync_wait_with_variant.md)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>scope_token -- execution: P3149R11 associate(#1510)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/scope_token.html"/>
+      <id>5ee535663bd10487f16bca44cfce00cecebee232:reference/execution/execution/scope_token.md</id>
+      <updated>2025-09-21T01:19:24+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/scope_token.md b/reference/execution/execution/scope_token.md
+index f44f23393..297e25d02 100644
+--- a/reference/execution/execution/scope_token.md
++++ b/reference/execution/execution/scope_token.md
+@@ -68,7 +68,7 @@ int main()
+ 
+ 
+ ## 関連項目
+-- [`execution::associate`](associate.md.nolink)
++- [`execution::associate`](associate.md)
+ - [`execution::spawn_future`](spawn_future.md.nolink)
+ - [`execution::spawn`](spawn.md.nolink)
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>disassociate -- execution: P3149R11 associate(#1510)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/simple_counting_scope/token/disassociate.html"/>
+      <id>5ee535663bd10487f16bca44cfce00cecebee232:reference/execution/execution/simple_counting_scope/token/disassociate.md</id>
+      <updated>2025-09-21T01:19:24+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/simple_counting_scope/token/disassociate.md b/reference/execution/execution/simple_counting_scope/token/disassociate.md
+index 1c9e3414a..6aa05a177 100644
+--- a/reference/execution/execution/simple_counting_scope/token/disassociate.md
++++ b/reference/execution/execution/simple_counting_scope/token/disassociate.md
+@@ -38,7 +38,7 @@ scope-&amp;gt;disassociate()
+ 
+ 
+ ## 関連項目
+-- [`execution::associate`](../../associate.md.nolink)
++- [`execution::associate`](../../associate.md)
+ - [`execution::spawn_future`](../../spawn_future.md.nolink)
+ - [`execution::spawn`](../../spawn.md.nolink)
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>try_associate -- execution: P3149R11 associate(#1510)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/simple_counting_scope/token/try_associate.html"/>
+      <id>5ee535663bd10487f16bca44cfce00cecebee232:reference/execution/execution/simple_counting_scope/token/try_associate.md</id>
+      <updated>2025-09-21T01:19:24+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/simple_counting_scope/token/try_associate.md b/reference/execution/execution/simple_counting_scope/token/try_associate.md
+index 3784a3070..5b0f184c4 100644
+--- a/reference/execution/execution/simple_counting_scope/token/try_associate.md
++++ b/reference/execution/execution/simple_counting_scope/token/try_associate.md
+@@ -38,7 +38,7 @@ return scope-&amp;gt;try-associate();
+ 
+ 
+ ## 関連項目
+-- [`execution::associate`](../../associate.md.nolink)
++- [`execution::associate`](../../associate.md)
+ - [`execution::spawn_future`](../../spawn_future.md.nolink)
+ - [`execution::spawn`](../../spawn.md.nolink)
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>wrap -- execution: P3149R11 associate(#1510)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/simple_counting_scope/token/wrap.html"/>
+      <id>5ee535663bd10487f16bca44cfce00cecebee232:reference/execution/execution/simple_counting_scope/token/wrap.md</id>
+      <updated>2025-09-21T01:19:24+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/simple_counting_scope/token/wrap.md b/reference/execution/execution/simple_counting_scope/token/wrap.md
+index ce95016e5..495fa0075 100644
+--- a/reference/execution/execution/simple_counting_scope/token/wrap.md
++++ b/reference/execution/execution/simple_counting_scope/token/wrap.md
+@@ -35,7 +35,7 @@ Sender&amp;amp;&amp;amp; wrap(Sender&amp;amp;&amp;amp; snd) const noexcept;
+ 
+ 
+ ## 関連項目
+-- [`execution::associate`](../../associate.md.nolink)
++- [`execution::associate`](../../associate.md)
+ - [`execution::spawn_future`](../../spawn_future.md.nolink)
+ - [`execution::spawn`](../../spawn.md.nolink)
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>cstdio -- Create page: fopen_max (#1530)</title>
@@ -1903,33 +2453,6 @@ index 0166940cf..5f24afbbf 100644
  
  
  ## 効果
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>stoppable-source -- stop_token/stoppable-source: fix typo</title>
-      <link href="https://cpprefjp.github.io/reference/stop_token/stoppable-source.html"/>
-      <id>4fbde58e0fe9cf97d3bf8c510ea4cc0c5a4b1b86:reference/stop_token/stoppable-source.md</id>
-      <updated>2025-09-20T10:37:34+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/stop_token/stoppable-source.md b/reference/stop_token/stoppable-source.md
-index c258860e0..909dc19f5 100644
---- a/reference/stop_token/stoppable-source.md
-+++ b/reference/stop_token/stoppable-source.md
-@@ -5,7 +5,7 @@
- * cpp26[meta cpp]
- 
- ```cpp
--mplate&amp;lt;class Source&amp;gt;
-+template&amp;lt;class Source&amp;gt;
- concept stoppable-source =
-   requires (Source&amp;amp; src, const Source csrc) {
-     { csrc.get_token() } -&amp;gt; stoppable_token;
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
