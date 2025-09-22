@@ -68,7 +68,7 @@
 
     </head>
     <body>
-<header data-kunai-mdinfo="{&#34;meta&#34;: {&#34;header&#34;: [&#34;execution&#34;], &#34;id-type&#34;: [&#34;cpo&#34;], &#34;namespace&#34;: [&#34;std::execution&#34;], &#34;cpp&#34;: [&#34;cpp26&#34;]}, &#34;sources&#34;: [{&#34;id&#34;: &#34;160fcf1daa366e1a586a2f52e89673ed76b36f87&#34;, &#34;source&#34;: &#34;#include &lt;execution&gt;\nnamespace ex = std::execution;\n\nint main()\n{\n  ex::counting_scope scope;\n  ex::sender auto sndr =\n    ex::just(42)\n    | ex::associate(scope.get_token());\n\n  std::this_thread::sync_wait(sndr);\n}\n&#34;}], &#34;page_id&#34;: [&#34;reference&#34;, &#34;execution&#34;, &#34;execution&#34;, &#34;associate&#34;]}">
+<header data-kunai-mdinfo="{&#34;meta&#34;: {&#34;header&#34;: [&#34;execution&#34;], &#34;id-type&#34;: [&#34;cpo&#34;], &#34;namespace&#34;: [&#34;std::execution&#34;], &#34;cpp&#34;: [&#34;cpp26&#34;]}, &#34;sources&#34;: [{&#34;id&#34;: &#34;07c3b1623cbb97fb841cb8eb72aa4b49c5cdd48e&#34;, &#34;source&#34;: &#34;#include &lt;execution&gt;\n#include &lt;print&gt;\nnamespace ex = std::execution;\n\nint main()\n{\n  // \u975e\u540c\u671f\u30b9\u30b3\u30fc\u30d7\u3092\u5b9a\u7fa9\n  ex::counting_scope scope;\n\n  // Sender\u3068\u975e\u540c\u671f\u30b9\u30b3\u30fc\u30d7\u3092\u95a2\u9023\u4ed8\u3051\n  ex::sender auto sndr =\n    ex::just(42)\n    | ex::associate(scope.get_token());\n\n  // \u30bf\u30b9\u30af\u958b\u59cb\u3068\u5b8c\u4e86\u5f85\u6a5f\n  auto result = std::this_thread::sync_wait(std::move(sndr));\n  std::println(\&#34;value={}\&#34;, *result);\n\n  // \u975e\u540c\u671f\u30b9\u30b3\u30fc\u30d7\u306e\u5408\u6d41\u5f85\u6a5f\n  std::this_thread::sync_wait(scope.join());\n}\n&#34;}], &#34;page_id&#34;: [&#34;reference&#34;, &#34;execution&#34;, &#34;execution&#34;, &#34;associate&#34;]}">
   <nav class="navbar navbar-default" role="navigation">
     <div class="container-fluid">
       <div class="navbar-header">
@@ -200,8 +200,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2025-09-20T16:19:24">
-        2025年09月20日 16時19分24秒
+      <span itemprop="datePublished" content="2025-09-22T02:51:16">
+        2025年09月22日 02時51分16秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -235,6 +235,30 @@
 <p><code>associate</code>は、入力<a href="sender.html">Sender</a>と非同期スコープとの関連付けを行うSenderアダプタである。
 関連付けられた非同期スコープは、Senderが作成した非<a class="cpprefjp-defined-word" data-desc="マルチスレッド実行時にリソースの所有権に基づいて実行順序を制御する操作">同期操作</a>の生存期間を追跡できる。</p>
 <p><code>associate</code>は<a href="sender_adaptor_closure.html">パイプ可能Senderアダプタオブジェクト</a>であり、パイプライン記法をサポートする。</p>
+<p><code>associate</code>アルゴリズムが返す関連Sender(associate-sender)は、<a href="scope_token.html">非同期スコープトークン</a>を介した関連付け試行(<code>try_associate</code>)の結果に応じてassociated／unassociatedいずれかの状態となり、入力Senderの動作を継承したうえで下記のように振る舞う。</p>
+<ul>
+<li>associated状態<ul>
+<li>関連Senderは入力Senderと同じ完了シグネチャを持ち、関連Senderとの<a href="connect.html">接続(connect)</a>や<a href="start.html">開始(start)</a>によって入力Senderとの接続や開始が行われる。</li>
+<li>関連Senderオブジェクトが破棄、もしくは接続後の<a href="operation_state.html">Operation State</a>が破棄されたとき、関連付けを解除する。</li>
+<li><a href="scope_token.html">非同期スコープトークン</a>の<code>wrap</code>メンバ関数で追加される処理を行う。</li>
+</ul>
+</li>
+<li>unassociated状態 :<ul>
+<li>入力Senderは破棄され、<a href="connect.html">接続(connect)</a>も<a href="start.html">開始(start)</a>もされない。</li>
+<li>関連Senderは<a href="set_stopped.html">set_stopped</a>のみで完了する。</li>
+</ul>
+</li>
+</ul>
+<p>associated状態の関連Senderに対する<a href="connect.html">接続(connect)</a>操作は、下記いずれかの結果となる。</p>
+<ul>
+<li>右辺値接続(rvalue connected)のとき、入力Senderとの関連付けは<a href="operation_state.html">Operation State</a>へ移動する。</li>
+<li>左辺値接続(lvalue connected)のとき、<a href="operation_state.html">Operation State</a>は非同期スコープとの新たな関連付けを必要とするため、<a href="scope_token.html">非同期スコープトークン</a>の<code>try_associate</code>を呼び出して下記のいずれかの結果となる。<ul>
+<li>新たな関連付けに成功する（<a class="cpprefjp-defined-word" data-desc="関数呼び出し式の評価結果となるオブジェクト・値">戻り値</a>が<code>true</code>）。</li>
+<li>関連付けに失敗し（<a class="cpprefjp-defined-word" data-desc="関数呼び出し式の評価結果となるオブジェクト・値">戻り値</a>が<code>false</code>）、<a href="operation_state.html">Operation State</a>はunassociated状態の関連Senderから構築されたかのように振る舞う（<a href="start.html">開始(start)</a>操作により即時で<a href="set_stopped.html">停止完了</a>する）。</li>
+<li><a class="cpprefjp-defined-word" data-desc="問題が発生したときに、現在実行位置を過去に通過・記録した位置に戻し、文脈情報を添えて紐づけられた処理(例外ハンドラー)を呼び出す仕組み。またはその事態">例外</a>送出によって接続操作に失敗する。</li>
+</ul>
+</li>
+</ul>
 <h2>効果</h2>
 <p>説明用の式<code>sndr</code>と<code>token</code>に対して、<code>decltype((sndr))</code>が<code><a href="sender.html">sender</a></code>を満たさない、もしくは<code><a href="../../type_traits/remove_cvref.html">remove_cvref_t</a>&lt;decltype((token))&gt;</code>が<code><a href="scope_token.html">scope_token</a></code>を満たさないとき、呼び出し式<code>associate(sndr, token)</code>は<a class="cpprefjp-defined-word" data-desc="プログラムが適格でないこと。コンパイルエラーなどになる" href="../../../implementation-compliance.html#dfn-ill-formed">不適格</a>となる。</p>
 <p>そうでなければ、呼び出し式<code>associate(sndr, token)</code>は<code>sndr</code>が1回だけ評価されることを除いて、下記と等価。</p>
@@ -252,10 +276,10 @@
     <span class="k">static</span> <span class="k">constexpr</span> <span class="k">auto</span> <span class="n">start</span> <span class="o">=</span> <span class="n"><i>see below</i></span><span class="p">;</span>      <span class="c1">// exposition only</span>
 
     <span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">Sndr</span><span class="p">,</span> <span class="n">class</span><span class="p">...</span> <span class="n">Env</span><span class="o">&gt;</span>
-      <span class="k">static</span> <span class="n">consteval</span> <span class="kt">void</span> <span class="n">check</span><span class="o">-</span><span class="n">types</span><span class="p">()</span> <span class="p">{</span>       <span class="c1">// exposition only</span>
-        <span class="k">using</span> <span class="n">associate_data_t</span> <span class="o">=</span> <span class="n"><a href="../../type_traits/remove_cvref.html">remove_cvref_t</a></span><span class="o">&lt;</span><span class="n"><a href="data-type.html">data-type</a></span><span class="o">&lt;</span><span class="n">Sndr</span><span class="o">&gt;&gt;</span><span class="p">;</span>
-        <span class="k">using</span> <span class="n">child_type_t</span> <span class="o">=</span> <span class="k">typename</span> <span class="n">associate_data_t</span><span class="o">::</span><span class="n">wrap</span><span class="o">-</span><span class="n">sender</span><span class="p">;</span>
-        <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n"><a href="get_completion_signatures.html">get_completion_signatures</a></span><span class="o">&lt;</span><span class="n">child_type_t</span><span class="p">,</span> <span class="n"><a href="../forwarding_query.html">FWD-ENV-T</a></span><span class="p">(</span><span class="n">Env</span><span class="p">)...</span><span class="o">&gt;</span><span class="p">();</span>
+    <span class="k">static</span> <span class="n">consteval</span> <span class="kt">void</span> <span class="n">check</span><span class="o">-</span><span class="n">types</span><span class="p">()</span> <span class="p">{</span>         <span class="c1">// exposition only</span>
+      <span class="k">using</span> <span class="n">associate_data_t</span> <span class="o">=</span> <span class="n"><a href="../../type_traits/remove_cvref.html">remove_cvref_t</a></span><span class="o">&lt;</span><span class="n"><a href="data-type.html">data-type</a></span><span class="o">&lt;</span><span class="n">Sndr</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+      <span class="k">using</span> <span class="n">child_type_t</span> <span class="o">=</span> <span class="k">typename</span> <span class="n">associate_data_t</span><span class="o">::</span><span class="n">wrap</span><span class="o">-</span><span class="n">sender</span><span class="p">;</span>
+      <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n"><a href="get_completion_signatures.html">get_completion_signatures</a></span><span class="o">&lt;</span><span class="n">child_type_t</span><span class="p">,</span> <span class="n"><a href="../forwarding_query.html">FWD-ENV-T</a></span><span class="p">(</span><span class="n">Env</span><span class="p">)...</span><span class="o">&gt;</span><span class="p">();</span>
     <span class="p">}</span>
   <span class="p">};</span>
 <span class="p">}</span>
@@ -341,7 +365,7 @@
       <span class="o">:</span> <span class="n">sndr</span><span class="p">(</span><span class="n">t</span><span class="p">.</span><span class="n">wrap</span><span class="p">(</span><span class="n"><a href="../../utility/forward.html">std::forward</a></span><span class="o">&lt;</span><span class="n">Sender</span><span class="o">&gt;</span><span class="p">(</span><span class="n">s</span><span class="p">))),</span>
         <span class="n">token</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="p">{</span>
       <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">token</span><span class="p">.</span><span class="n">try_associate</span><span class="p">())</span>
-        <span class="n">sndr</span><span class="p">.</span><span class="n">reset</span><span class="p">();</span>
+        <span class="n">sndr</span><span class="p">.</span><span class="n"><a href="../../optional/optional/reset.html">reset()</a></span><span class="p">;</span>
     <span class="p">}</span>
 
     <span class="n">associate</span><span class="o">-</span><span class="n">data</span><span class="p">(</span><span class="k">const</span> <span class="n">associate</span><span class="o">-</span><span class="n">data</span><span class="o">&amp;</span> <span class="n">other</span><span class="p">)</span>
@@ -408,22 +432,32 @@
 <p>Senderアルゴリズム構築時および<a href="receiver.html">Receiver</a>接続時に、関連付けられた実行ドメインに対して<code><a href="transform_sender.html">execution::transform_sender</a></code>経由でSender変換が行われる。
 <a href="default_domain.html">デフォルト実行ドメイン</a>では無変換。</p>
 <h2>例</h2>
-<p><div class="yata" id="160fcf1daa366e1a586a2f52e89673ed76b36f87"><div class="codehilite"><pre><span></span><code><span class="cp">#include</span> <span class="cpf"><a href="../../execution.html">&lt;execution&gt;</a></span><span class="cp"></span>
+<p><div class="yata" id="07c3b1623cbb97fb841cb8eb72aa4b49c5cdd48e"><div class="codehilite"><pre><span></span><code><span class="cp">#include</span> <span class="cpf"><a href="../../execution.html">&lt;execution&gt;</a></span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf"><a href="../../print.html">&lt;print&gt;</a></span><span class="cp"></span>
 <span class="k">namespace</span> <span class="n">ex</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">execution</span><span class="p">;</span>
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
 <span class="p">{</span>
+  <span class="c1">// 非同期スコープを定義</span>
   <span class="n"><a href="counting_scope.html">ex::counting_scope</a></span> <span class="n">scope</span><span class="p">;</span>
+
+  <span class="c1">// Senderと非同期スコープを関連付け</span>
   <span class="n"><a href="sender.html">ex::sender</a></span> <span class="k">auto</span> <span class="n">sndr</span> <span class="o">=</span>
     <span class="n"><a href="just.html">ex::just</a></span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
-    <span class="o">|</span> <span class="n"><span style="color:#ff0000">ex::associate</span></span><span class="p">(</span><span class="n">scope</span><span class="p">.</span><span class="n">get_token</span><span class="p">());</span>
+    <span class="o">|</span> <span class="n"><span style="color:#ff0000">ex::associate</span></span><span class="p">(</span><span class="n">scope</span><span class="p">.</span><span class="n"><a href="counting_scope/get_token.html">get_token()</a></span><span class="p">);</span>
 
-  <span class="n"><a href="../this_thread/sync_wait.html">std::this_thread::sync_wait</a></span><span class="p">(</span><span class="n">sndr</span><span class="p">);</span>
+  <span class="c1">// タスク開始と完了待機</span>
+  <span class="k">auto</span> <span class="n">result</span> <span class="o">=</span> <span class="n"><a href="../this_thread/sync_wait.html">std::this_thread::sync_wait</a></span><span class="p">(</span><span class="n"><a href="../../utility/move.html">std::move</a></span><span class="p">(</span><span class="n">sndr</span><span class="p">));</span>
+  <span class="n"><a href="../../print/println.html">std::println</a></span><span class="p">(</span><span class="s">"value={}"</span><span class="p">,</span> <span class="o">*</span><span class="n">result</span><span class="p">);</span>
+
+  <span class="c1">// 非同期スコープの合流待機</span>
+  <span class="n"><a href="../this_thread/sync_wait.html">std::this_thread::sync_wait</a></span><span class="p">(</span><span class="n">scope</span><span class="p">.</span><span class="n"><a href="counting_scope/join.html">join()</a></span><span class="p">);</span>
 <span class="p">}</span>
 </code></pre></div>
 </div></p>
 <h3>出力</h3>
-<p><pre><code></code></pre></p>
+<p><pre><code>value=42
+</code></pre></p>
 <h2>バージョン</h2>
 <h3>言語</h3>
 <ul>
