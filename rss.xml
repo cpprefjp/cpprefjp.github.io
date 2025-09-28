@@ -2,9 +2,181 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-09-27T16:08:38.991550</updated>
-  <id>b2508184-22b6-46b9-8b33-2c35da91c589</id>
+  <updated>2025-09-28T12:07:12.282031</updated>
+  <id>e133a789-3d9e-4cd5-9eda-22166187d679</id>
 
+  
+    <entry>
+      <title>range_formatter -- range_formatter のコード例を追加</title>
+      <link href="https://cpprefjp.github.io/reference/format/range_formatter.html"/>
+      <id>994a1052c1471dda72f5ad2a5e26c8ee89b57cab:reference/format/range_formatter.md</id>
+      <updated>2025-09-28T21:02:45+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/range_formatter.md b/reference/format/range_formatter.md
+index 44b66d3d0..4c524edc8 100644
+--- a/reference/format/range_formatter.md
++++ b/reference/format/range_formatter.md
+@@ -136,6 +136,57 @@ int main()
+ aa:bb:cc:dd:ee:ff
+ ```
+ 
++
++### オリジナル書式を定義する例（`set_separator`と`set_brackets`を使う場合）
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;format&amp;gt;
++#include &amp;lt;vector&amp;gt;
++
++template &amp;lt;class T&amp;gt;
++struct MyVector : std::vector&amp;lt;T&amp;gt; {
++    using std::vector&amp;lt;T&amp;gt;::vector;
++};
++
++template &amp;lt;class T&amp;gt;
++constexpr std::range_format std::format_kind&amp;lt;MyVector&amp;lt;T&amp;gt;&amp;gt; = std::range_format::sequence;
++
++template &amp;lt;class T&amp;gt;
++class std::formatter&amp;lt;MyVector&amp;lt;T&amp;gt;&amp;gt; : public std::range_formatter&amp;lt;T&amp;gt; {
++  using base_type = std::range_formatter&amp;lt;T&amp;gt;;
++public:
++  constexpr auto parse(std::format_parse_context&amp;amp; pctx) {
++    auto it = pctx.begin();
++    if (*it == &amp;#39;c&amp;#39;) {
++      this-&amp;gt;set_separator(&amp;#34;:&amp;#34;);  // 区切り文字を「:」に設定
++      this-&amp;gt;set_brackets(&amp;#34;&amp;#34;, &amp;#34;&amp;#34;);  // 囲み文字を空文字列に設定
++      ++it;
++    }
++    pctx.advance_to(it);
++    return base_type::parse(pctx);
++  }
++};
++
++#include &amp;lt;cstdint&amp;gt;
++
++int main()
++{
++  MyVector&amp;lt;std::uint8_t&amp;gt; v = {0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
++  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;{:c:02x}&amp;#34;, v) &amp;lt;&amp;lt; std::endl;
++}
++```
++* std::format_parse_context[link basic_format_parse_context.md]
++* pctx.begin()[link basic_format_parse_context/begin.md]
++* pctx.advance_to[link basic_format_parse_context/advance_to.md]
++* std::format[link format.md]
++
++
++#### 出力
++```
++aa:bb:cc:dd:ee:ff
++```
++
++
+ ## バージョン
+ ### 言語
+ - C++23
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Raclamusi</name>
+        <email>raclamusi@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>range_formatter -- range_formatter のコード例の修正と動作確認</title>
+      <link href="https://cpprefjp.github.io/reference/format/range_formatter.html"/>
+      <id>5c792ff69e2d818f159ee83de3c41e6c87f16eea:reference/format/range_formatter.md</id>
+      <updated>2025-09-28T20:38:10+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/range_formatter.md b/reference/format/range_formatter.md
+index f093eca86..44b66d3d0 100644
+--- a/reference/format/range_formatter.md
++++ b/reference/format/range_formatter.md
+@@ -48,7 +48,7 @@ class MyVector {
+ public:
+   using base_type = std::vector&amp;lt;T&amp;gt;;
+   using iterator = typename base_type::iterator;
+-  using const_iterator = typename base_type::iterator;
++  using const_iterator = typename base_type::const_iterator;
+   using value_type = typename base_type::value_type;
+   using reference = typename base_type::reference;
+   using const_reference = typename base_type::const_reference;
+@@ -57,11 +57,11 @@ public:
+   MyVector(std::initializer_list&amp;lt;T&amp;gt; init)
+       : v_(init.begin(), init.end()) {}
+ 
+-  iterator begin() { v_.begin(); }
+-  const_iterator begin() const { v_.begin(); }
++  iterator begin() { return v_.begin(); }
++  const_iterator begin() const { return v_.begin(); }
+ 
+-  iterator end() { v_.end(); }
+-  const_iterator end() const { v_.end(); }
++  iterator end() { return v_.end(); }
++  const_iterator end() const { return v_.end(); }
+ 
+   const std::vector&amp;lt;T&amp;gt;&amp;amp; base() const { return v_; }
+ };
+@@ -70,14 +70,14 @@ template &amp;lt;class T&amp;gt;
+ constexpr std::range_format std::format_kind&amp;lt;MyVector&amp;lt;T&amp;gt;&amp;gt; = std::range_format::sequence;
+ 
+ template &amp;lt;class T&amp;gt;
+-class std::range_formatter&amp;lt;MyVector&amp;lt;T&amp;gt;&amp;gt; : public std::range_formatter&amp;lt;std::vector&amp;lt;T&amp;gt;&amp;gt; {
++class std::formatter&amp;lt;MyVector&amp;lt;T&amp;gt;&amp;gt; : public std::range_formatter&amp;lt;T&amp;gt; {
+   bool is_colon = false;
+-  using base_type = std::range_formatter&amp;lt;std::vector&amp;lt;T&amp;gt;&amp;gt;;
++  using base_type = std::range_formatter&amp;lt;T&amp;gt;;
+ public:
+ 
+   // コンパイル時の書式文字列の解析があるため、
+   // constexprにする必要がある。
+-  // この関数に渡されるパラメータは、{:%j}の%以降。
++  // この関数に渡されるパラメータは、{:c:02x}のc以降。
+   // 解析がおわった場所を指すイテレータを返す。
+   constexpr auto parse(std::format_parse_context&amp;amp; pctx) {
+     auto it = pctx.begin();
+@@ -105,7 +105,7 @@ public:
+           ++out;
+         }
+         fctx.advance_to(out);
+-        out = underlying().format(x, fctx);
++        out = this-&amp;gt;underlying().format(x, fctx);
+       }
+       return out;
+     }
+@@ -117,7 +117,7 @@ public:
+ 
+ int main()
+ {
+-  std::vector&amp;lt;std::uint8_t&amp;gt; v = {0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
++  MyVector&amp;lt;std::uint8_t&amp;gt; v = {0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
+   std::cout &amp;lt;&amp;lt; std::format(&amp;#34;{:c:02x}&amp;#34;, v) &amp;lt;&amp;lt; std::endl;
+ }
+ ```
+@@ -136,15 +136,13 @@ int main()
+ aa:bb:cc:dd:ee:ff
+ ```
+ 
+-(動作確認はできていない)
+-
+ ## バージョン
+ ### 言語
+ - C++23
+ 
+ ### 処理系
+ - [Clang](/implementation.md#clang): ??
+-- [GCC](/implementation.md#gcc): ??
++- [GCC](/implementation.md#gcc): 15.1 [mark verified]
+ - [ICC](/implementation.md#icc): ??
+ - [Visual C++](/implementation.md#visual_cpp): ??
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Raclamusi</name>
+        <email>raclamusi@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>count -- いくつかのコード例のコンパイルエラーを修正</title>
@@ -940,560 +1112,6 @@ index 4ad843b46..92d6a2651 100644
  }
  ```
  * chrono::system_clock[link /reference/chrono/system_clock.md]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>choose -- chrono のいくつかのコード例のコンパイルエラーを修正</title>
-      <link href="https://cpprefjp.github.io/reference/chrono/choose.html"/>
-      <id>50237d0bdcd651724a53812e88e5a6ad9cae20f3:reference/chrono/choose.md</id>
-      <updated>2025-09-27T16:21:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/choose.md b/reference/chrono/choose.md
-index ba5913771..da02d5e38 100644
---- a/reference/chrono/choose.md
-+++ b/reference/chrono/choose.md
-@@ -43,13 +43,13 @@ int main()
-   // ここではlatestを指定することで、遅い時間 (06:30:00) を選択する
-   chrono::local_time local_now = chrono::local_days{2016y/11/6} + 1h + 30min;
- 
--  chrono::zoned_time zt{&amp;#34;America/New_York&amp;#34;, local_now, choose::latest};
-+  chrono::zoned_time zt{&amp;#34;America/New_York&amp;#34;, local_now, chrono::choose::latest};
-   chrono::sys_time st = zt.get_sys_time();
- 
-   std::cout &amp;lt;&amp;lt; st &amp;lt;&amp;lt; std::endl;
- }
- ```
--* choose::latest[color ff0000]
-+* chrono::choose::latest[color ff0000]
- * chrono::local_days[link local_time.md]
- * chrono::local_time[link local_time.md]
- * 2016y[link year/op_y.md]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>file_time -- chrono のいくつかのコード例のコンパイルエラーを修正</title>
-      <link href="https://cpprefjp.github.io/reference/chrono/file_time.html"/>
-      <id>50237d0bdcd651724a53812e88e5a6ad9cae20f3:reference/chrono/file_time.md</id>
-      <updated>2025-09-27T16:21:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/file_time.md b/reference/chrono/file_time.md
-index 78f642128..10e3d7a86 100644
---- a/reference/chrono/file_time.md
-+++ b/reference/chrono/file_time.md
-@@ -184,7 +184,7 @@ int main()
-   std::cout &amp;lt;&amp;lt; std::format(&amp;#34;5 : %F&amp;#34;, tp) &amp;lt;&amp;lt; std::endl;
- 
-   // 時間だけ出力
--  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;6 : %H時%M分%S秒&amp;#34;, lt) &amp;lt;&amp;lt; std::endl;
-+  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;6 : %H時%M分%S秒&amp;#34;, tp) &amp;lt;&amp;lt; std::endl;
-   std::cout &amp;lt;&amp;lt; std::format(&amp;#34;7 : %T&amp;#34;, tp) &amp;lt;&amp;lt; std::endl;
- }
- ```
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator&lt;&lt; -- chrono のいくつかのコード例のコンパイルエラーを修正</title>
-      <link href="https://cpprefjp.github.io/reference/chrono/hh_mm_ss/op_ostream.html"/>
-      <id>50237d0bdcd651724a53812e88e5a6ad9cae20f3:reference/chrono/hh_mm_ss/op_ostream.md</id>
-      <updated>2025-09-27T16:21:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/hh_mm_ss/op_ostream.md b/reference/chrono/hh_mm_ss/op_ostream.md
-index 915683021..98ca85a5f 100644
---- a/reference/chrono/hh_mm_ss/op_ostream.md
-+++ b/reference/chrono/hh_mm_ss/op_ostream.md
-@@ -38,6 +38,7 @@ namespace std::chrono {
- #include &amp;lt;iostream&amp;gt;
- #include &amp;lt;chrono&amp;gt;
- 
-+namespace chrono = std::chrono;
- using std::chrono::last;
- using namespace std::chrono_literals;
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>date -- chrono のいくつかのコード例のコンパイルエラーを修正</title>
-      <link href="https://cpprefjp.github.io/reference/chrono/leap_second/date.html"/>
-      <id>50237d0bdcd651724a53812e88e5a6ad9cae20f3:reference/chrono/leap_second/date.md</id>
-      <updated>2025-09-27T16:21:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/leap_second/date.md b/reference/chrono/leap_second/date.md
-index eab7f0d54..70e7a67dd 100644
---- a/reference/chrono/leap_second/date.md
-+++ b/reference/chrono/leap_second/date.md
-@@ -21,13 +21,14 @@ constexpr sys_seconds date() const noexcept; // (1) C++20
- ## 例
- ```cpp example
- #include &amp;lt;cassert&amp;gt;
-+#include &amp;lt;iostream&amp;gt;
- #include &amp;lt;chrono&amp;gt;
- 
- namespace chrono = std::chrono;
- 
- int main()
- {
--  for (const chrono::leap_seconds date : chrono::get_tzdb().leap_seconds) {
-+  for (const chrono::leap_second date : chrono::get_tzdb().leap_seconds) {
-     chrono::sys_seconds s = date.date();
-     std::cout &amp;lt;&amp;lt; s &amp;lt;&amp;lt; std::endl;
-   }
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>value -- chrono のいくつかのコード例のコンパイルエラーを修正</title>
-      <link href="https://cpprefjp.github.io/reference/chrono/leap_second/value.html"/>
-      <id>50237d0bdcd651724a53812e88e5a6ad9cae20f3:reference/chrono/leap_second/value.md</id>
-      <updated>2025-09-27T16:21:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/leap_second/value.md b/reference/chrono/leap_second/value.md
-index 9c16441bf..ad7d56b99 100644
---- a/reference/chrono/leap_second/value.md
-+++ b/reference/chrono/leap_second/value.md
-@@ -24,15 +24,16 @@ constexpr seconds value() const noexcept; // (1) C++20
- ## 例
- ```cpp example
- #include &amp;lt;cassert&amp;gt;
-+#include &amp;lt;iostream&amp;gt;
- #include &amp;lt;chrono&amp;gt;
- 
- namespace chrono = std::chrono;
- 
- int main()
- {
--  for (const chrono::leap_seconds date : chrono::get_tzdb().leap_seconds) {
-+  for (const chrono::leap_second date : chrono::get_tzdb().leap_seconds) {
-     chrono::seconds value = date.value();
--    std::cout &amp;lt;&amp;lt; date.date() &amp;lt;&amp;lt; &amp;lt;&amp;lt; &amp;#34;: &amp;#34; &amp;lt;&amp;lt; value &amp;lt;&amp;lt; std::endl;
-+    std::cout &amp;lt;&amp;lt; date.date() &amp;lt;&amp;lt; &amp;#34;: &amp;#34; &amp;lt;&amp;lt; value &amp;lt;&amp;lt; std::endl;
-   }
- }
- ```
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>local-time-format-t -- chrono のいくつかのコード例のコンパイルエラーを修正</title>
-      <link href="https://cpprefjp.github.io/reference/chrono/local-time-format-t.html"/>
-      <id>50237d0bdcd651724a53812e88e5a6ad9cae20f3:reference/chrono/local-time-format-t.md</id>
-      <updated>2025-09-27T16:21:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/local-time-format-t.md b/reference/chrono/local-time-format-t.md
-index f23666dc1..6f49a0d7a 100644
---- a/reference/chrono/local-time-format-t.md
-+++ b/reference/chrono/local-time-format-t.md
-@@ -55,7 +55,7 @@ int main()
-     std::cout &amp;lt;&amp;lt; std::format(&amp;#34;{:%Y/%m/%d %H:%M:%S %Z}&amp;#34;, ltf) &amp;lt;&amp;lt; std::endl;
-   }
-   {
--    auto ltf = chrono::local_time_format(lt, &amp;#34;JST&amp;#34;, &amp;amp;si.abbrev, &amp;amp;si.offset);
-+    auto ltf = chrono::local_time_format(lt, &amp;amp;si.abbrev, &amp;amp;si.offset);
-     std::cout &amp;lt;&amp;lt; std::format(&amp;#34;{:%Y/%m/%d %H:%M:%S %Z%z}&amp;#34;, ltf) &amp;lt;&amp;lt; std::endl;
-   }
- }
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>formatter -- chrono のいくつかのコード例のコンパイルエラーを修正</title>
-      <link href="https://cpprefjp.github.io/reference/chrono/local-time-format-t/formatter.html"/>
-      <id>50237d0bdcd651724a53812e88e5a6ad9cae20f3:reference/chrono/local-time-format-t/formatter.md</id>
-      <updated>2025-09-27T16:21:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/local-time-format-t/formatter.md b/reference/chrono/local-time-format-t/formatter.md
-index ed11489ae..251e5eb5a 100644
---- a/reference/chrono/local-time-format-t/formatter.md
-+++ b/reference/chrono/local-time-format-t/formatter.md
-@@ -44,7 +44,7 @@ int main()
-     std::cout &amp;lt;&amp;lt; std::format(&amp;#34;{:%Y/%m/%d %H:%M:%S %Z}&amp;#34;, ltf) &amp;lt;&amp;lt; std::endl;
-   }
-   {
--    auto ltf = chrono::local_time_format(lt, &amp;#34;JST&amp;#34;, &amp;amp;si.abbrev, &amp;amp;si.offset);
-+    auto ltf = chrono::local_time_format(lt, &amp;amp;si.abbrev, &amp;amp;si.offset);
-     std::cout &amp;lt;&amp;lt; std::format(&amp;#34;{:%Y/%m/%d %H:%M:%S %Z%z}&amp;#34;, ltf) &amp;lt;&amp;lt; std::endl;
-   }
- }
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>local_time -- chrono のいくつかのコード例のコンパイルエラーを修正</title>
-      <link href="https://cpprefjp.github.io/reference/chrono/local_time.html"/>
-      <id>50237d0bdcd651724a53812e88e5a6ad9cae20f3:reference/chrono/local_time.md</id>
-      <updated>2025-09-27T16:21:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/local_time.md b/reference/chrono/local_time.md
-index 3a6afb6ad..d1c47231c 100644
---- a/reference/chrono/local_time.md
-+++ b/reference/chrono/local_time.md
-@@ -81,6 +81,7 @@ namespace std {
- #include &amp;lt;chrono&amp;gt;
- 
- namespace chrono = std::chrono;
-+using namespace std::chrono_literals;
- 
- int main()
- {
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>local_time_format -- chrono のいくつかのコード例のコンパイルエラーを修正</title>
-      <link href="https://cpprefjp.github.io/reference/chrono/local_time_format.html"/>
-      <id>50237d0bdcd651724a53812e88e5a6ad9cae20f3:reference/chrono/local_time_format.md</id>
-      <updated>2025-09-27T16:21:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/local_time_format.md b/reference/chrono/local_time_format.md
-index c9161d682..153e7b798 100644
---- a/reference/chrono/local_time_format.md
-+++ b/reference/chrono/local_time_format.md
-@@ -50,7 +50,7 @@ int main()
-     std::cout &amp;lt;&amp;lt; std::format(&amp;#34;{:%Y/%m/%d %H:%M:%S %Z}&amp;#34;, ltf) &amp;lt;&amp;lt; std::endl;
-   }
-   {
--    auto ltf = chrono::local_time_format(lt, &amp;#34;JST&amp;#34;, &amp;amp;si.abbrev, &amp;amp;si.offset);
-+    auto ltf = chrono::local_time_format(lt, &amp;amp;si.abbrev, &amp;amp;si.offset);
-     std::cout &amp;lt;&amp;lt; std::format(&amp;#34;{:%Y/%m/%d %H:%M:%S %Z%z}&amp;#34;, ltf) &amp;lt;&amp;lt; std::endl;
-   }
- }
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>sys_time -- chrono のいくつかのコード例のコンパイルエラーを修正</title>
-      <link href="https://cpprefjp.github.io/reference/chrono/sys_time.html"/>
-      <id>50237d0bdcd651724a53812e88e5a6ad9cae20f3:reference/chrono/sys_time.md</id>
-      <updated>2025-09-27T16:21:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/sys_time.md b/reference/chrono/sys_time.md
-index 002c44c81..ccd499c6a 100644
---- a/reference/chrono/sys_time.md
-+++ b/reference/chrono/sys_time.md
-@@ -217,7 +217,7 @@ namespace chrono = std::chrono;
- int main()
- {
-   chrono::system_clock::time_point now = chrono::system_clock::now();
--  chrono::sys_seconds now_sec = chrono::floor&amp;lt;chrono::seconds&amp;gt;(tp);
-+  chrono::sys_seconds now_sec = chrono::floor&amp;lt;chrono::seconds&amp;gt;(now);
- 
-   // デフォルトフォーマット
-   std::cout &amp;lt;&amp;lt; std::format(&amp;#34;1 : {}&amp;#34;, now_sec) &amp;lt;&amp;lt; std::endl;
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>tai_time -- chrono のいくつかのコード例のコンパイルエラーを修正</title>
-      <link href="https://cpprefjp.github.io/reference/chrono/tai_time.html"/>
-      <id>50237d0bdcd651724a53812e88e5a6ad9cae20f3:reference/chrono/tai_time.md</id>
-      <updated>2025-09-27T16:21:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/tai_time.md b/reference/chrono/tai_time.md
-index 52cd89d3f..d780963d2 100644
---- a/reference/chrono/tai_time.md
-+++ b/reference/chrono/tai_time.md
-@@ -167,7 +167,7 @@ namespace chrono = std::chrono;
- int main()
- {
-   chrono::tai_clock::time_point now = chrono::tai_clock::now();
--  chrono::tai_seconds now_sec = chrono::floor&amp;lt;chrono::seconds&amp;gt;(tp);
-+  chrono::tai_seconds now_sec = chrono::floor&amp;lt;chrono::seconds&amp;gt;(now);
- 
-   // デフォルトフォーマット
-   std::cout &amp;lt;&amp;lt; std::format(&amp;#34;1 : {}&amp;#34;, now_sec) &amp;lt;&amp;lt; std::endl;
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>to_sys -- chrono のいくつかのコード例のコンパイルエラーを修正</title>
-      <link href="https://cpprefjp.github.io/reference/chrono/time_zone/to_sys.html"/>
-      <id>50237d0bdcd651724a53812e88e5a6ad9cae20f3:reference/chrono/time_zone/to_sys.md</id>
-      <updated>2025-09-27T16:21:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/time_zone/to_sys.md b/reference/chrono/time_zone/to_sys.md
-index f5fa21433..ef9ad6c7a 100644
---- a/reference/chrono/time_zone/to_sys.md
-+++ b/reference/chrono/time_zone/to_sys.md
-@@ -87,7 +87,7 @@ int main()
- 
-   // chooseを指定した場合は、早い時間か遅い時間のどちらかを返す。
-   // ここではlatestを指定しているため、遅い方の時間を返す
--  chrono::sys_time edt_to_utc = edt-&amp;gt;to_sys(edt_now, choose::latest);
-+  chrono::sys_time edt_to_utc = edt-&amp;gt;to_sys(edt_now, chrono::choose::latest);
-   std::cout &amp;lt;&amp;lt; edt_to_utc &amp;lt;&amp;lt; std::endl;
- }
- ```
-@@ -104,7 +104,7 @@ int main()
- * chrono::local_days[link /reference/chrono/local_time.md]
- * chrono::sys_time[link /reference/chrono/sys_time.md]
- * chrono::ambiguous_local_time[link /reference/chrono/ambiguous_local_time.md]
--* choose::latest[link /reference/chrono/choose.md]
-+* chrono::choose::latest[link /reference/chrono/choose.md]
- * chrono::floor[link /reference/chrono/time_point/floor.md]
- 
- ### 出力例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>utc_time -- chrono のいくつかのコード例のコンパイルエラーを修正</title>
-      <link href="https://cpprefjp.github.io/reference/chrono/utc_time.html"/>
-      <id>50237d0bdcd651724a53812e88e5a6ad9cae20f3:reference/chrono/utc_time.md</id>
-      <updated>2025-09-27T16:21:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/utc_time.md b/reference/chrono/utc_time.md
-index 59ccbf59b..2a16f9431 100644
---- a/reference/chrono/utc_time.md
-+++ b/reference/chrono/utc_time.md
-@@ -162,7 +162,7 @@ namespace chrono = std::chrono;
- int main()
- {
-   chrono::utc_clock::time_point now = chrono::utc_clock::now();
--  chrono::utc_seconds now_sec = chrono::floor&amp;lt;chrono::seconds&amp;gt;(tp);
-+  chrono::utc_seconds now_sec = chrono::floor&amp;lt;chrono::seconds&amp;gt;(now);
- 
-   // デフォルトフォーマット
-   std::cout &amp;lt;&amp;lt; std::format(&amp;#34;1 : {}&amp;#34;, now_sec) &amp;lt;&amp;lt; std::endl;
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator== -- leap_second の比較演算子のコード例を修正</title>
-      <link href="https://cpprefjp.github.io/reference/chrono/leap_second/op_equal.html"/>
-      <id>ea3453a88889866dde3276a430e03ae7a9820329:reference/chrono/leap_second/op_equal.md</id>
-      <updated>2025-09-27T16:11:47+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/leap_second/op_equal.md b/reference/chrono/leap_second/op_equal.md
-index f3e8cd5c5..7b1e22a5d 100644
---- a/reference/chrono/leap_second/op_equal.md
-+++ b/reference/chrono/leap_second/op_equal.md
-@@ -55,8 +55,9 @@ using namespace std::chrono_literals;
- 
- // うるう秒が挿入された日かを判定
- bool is_leap_second_day(chrono::year_month_day ymd) {
-+  chrono::sys_days days = ymd;
-   for (const chrono::leap_second&amp;amp; x : chrono::get_tzdb().leap_seconds) {
--    if (x == ymd) {
-+    if (x == days) {
-       return true;
-     }
-   }
-@@ -70,8 +71,9 @@ int main()
-   }
- }
- ```
--* x == ymd[color ff0000]
-+* x == days[color ff0000]
- * chrono::year_month_day[link /reference/chrono/year_month_day.md]
-+* chrono::sys_days[link /reference/chrono/sys_time.md]
- * chrono::get_tzdb()[link /reference/chrono/get_tzdb.md]
- * 1972y[link /reference/chrono/year/op_y.md]
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator&gt; -- leap_second の比較演算子のコード例を修正</title>
-      <link href="https://cpprefjp.github.io/reference/chrono/leap_second/op_greater.html"/>
-      <id>ea3453a88889866dde3276a430e03ae7a9820329:reference/chrono/leap_second/op_greater.md</id>
-      <updated>2025-09-27T16:11:47+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/leap_second/op_greater.md b/reference/chrono/leap_second/op_greater.md
-index 64c99f12c..10bab8c6b 100644
---- a/reference/chrono/leap_second/op_greater.md
-+++ b/reference/chrono/leap_second/op_greater.md
-@@ -53,12 +53,13 @@ int main()
- {
-   // 2000年1月1日よりあとにうるう秒が挿入された日を列挙する
-   for (const chrono::leap_second&amp;amp; date : chrono::get_tzdb().leap_seconds) {
--    if (date &amp;gt; 2000y/1/1)
-+    if (date &amp;gt; chrono::sys_days{2000y/1/1})
-       std::cout &amp;lt;&amp;lt; date.date() &amp;lt;&amp;lt; std::endl;
-   }
- }
- ```
- * chrono::get_tzdb()[link /reference/chrono/get_tzdb.md]
-+* chrono::sys_days[link /reference/chrono/sys_time.md]
- * 2000y[link /reference/chrono/year/op_y.md]
- * date()[link date.md]
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator&gt;= -- leap_second の比較演算子のコード例を修正</title>
-      <link href="https://cpprefjp.github.io/reference/chrono/leap_second/op_greater_equal.html"/>
-      <id>ea3453a88889866dde3276a430e03ae7a9820329:reference/chrono/leap_second/op_greater_equal.md</id>
-      <updated>2025-09-27T16:11:47+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/leap_second/op_greater_equal.md b/reference/chrono/leap_second/op_greater_equal.md
-index 21a4e79ff..13e8ca7a3 100644
---- a/reference/chrono/leap_second/op_greater_equal.md
-+++ b/reference/chrono/leap_second/op_greater_equal.md
-@@ -53,12 +53,13 @@ int main()
- {
-   // 2000年1月1日以降にうるう秒が挿入された日を列挙する
-   for (const chrono::leap_second&amp;amp; date : chrono::get_tzdb().leap_seconds) {
--    if (date &amp;gt;= 2000y/1/1)
-+    if (date &amp;gt;= chrono::sys_days{2000y/1/1})
-       std::cout &amp;lt;&amp;lt; date.date() &amp;lt;&amp;lt; std::endl;
-   }
- }
- ```
- * chrono::get_tzdb()[link /reference/chrono/get_tzdb.md]
-+* chrono::sys_days[link /reference/chrono/sys_time.md]
- * 2000y[link /reference/chrono/year/op_y.md]
- * date()[link date.md]
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator&lt; -- leap_second の比較演算子のコード例を修正</title>
-      <link href="https://cpprefjp.github.io/reference/chrono/leap_second/op_less.html"/>
-      <id>ea3453a88889866dde3276a430e03ae7a9820329:reference/chrono/leap_second/op_less.md</id>
-      <updated>2025-09-27T16:11:47+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/leap_second/op_less.md b/reference/chrono/leap_second/op_less.md
-index 3ba2b4cdb..40ce082b9 100644
---- a/reference/chrono/leap_second/op_less.md
-+++ b/reference/chrono/leap_second/op_less.md
-@@ -67,12 +67,13 @@ int main()
- {
-   // 2000年未満までにうるう秒が挿入された日を列挙する
-   for (const chrono::leap_second&amp;amp; date : chrono::get_tzdb().leap_seconds) {
--    if (date &amp;lt; 2000y/1/1)
-+    if (date &amp;lt; chrono::sys_days{2000y/1/1})
-       std::cout &amp;lt;&amp;lt; date.date() &amp;lt;&amp;lt; std::endl;
-   }
- }
- ```
- * chrono::get_tzdb()[link /reference/chrono/get_tzdb.md]
-+* chrono::sys_days[link /reference/chrono/sys_time.md]
- * 2000y[link /reference/chrono/year/op_y.md]
- * date()[link date.md]
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>operator&lt;= -- leap_second の比較演算子のコード例を修正</title>
-      <link href="https://cpprefjp.github.io/reference/chrono/leap_second/op_less_equal.html"/>
-      <id>ea3453a88889866dde3276a430e03ae7a9820329:reference/chrono/leap_second/op_less_equal.md</id>
-      <updated>2025-09-27T16:11:47+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/leap_second/op_less_equal.md b/reference/chrono/leap_second/op_less_equal.md
-index d6dd5fe28..3eba5ad6f 100644
---- a/reference/chrono/leap_second/op_less_equal.md
-+++ b/reference/chrono/leap_second/op_less_equal.md
-@@ -53,12 +53,13 @@ int main()
- {
-   // 2000年以下までにうるう秒が挿入された日を列挙する
-   for (const chrono::leap_second&amp;amp; date : chrono::get_tzdb().leap_seconds) {
--    if (date &amp;lt;= 2000y/1/1)
-+    if (date &amp;lt;= chrono::sys_days{2000y/1/1})
-       std::cout &amp;lt;&amp;lt; date.date() &amp;lt;&amp;lt; std::endl;
-   }
- }
- ```
- * chrono::get_tzdb()[link /reference/chrono/get_tzdb.md]
-+* chrono::sys_days[link /reference/chrono/sys_time.md]
- * 2000y[link /reference/chrono/year/op_y.md]
- * date()[link date.md]
- 
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
