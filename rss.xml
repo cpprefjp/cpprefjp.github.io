@@ -2,9 +2,88 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2025-10-14T05:45:33.049211</updated>
-  <id>af2be693-1f9b-4ad8-8869-b75cedea2541</id>
+  <updated>2025-10-14T12:55:01.644027</updated>
+  <id>c740e93c-7a05-49c1-bed6-296b2e82eed5</id>
 
+  
+    <entry>
+      <title>可変長データを扱うクラスの効率的なdelete [P0722R3] -- 可変長データを扱うクラスの効率的なdelete : コード例を修正</title>
+      <link href="https://cpprefjp.github.io/lang/cpp20/efficient_sized_delete_for_variable_sized_classes.html"/>
+      <id>71fab6aa524f83154f1c7ad81ff3aff60d7fd44f:lang/cpp20/efficient_sized_delete_for_variable_sized_classes.md</id>
+      <updated>2025-10-14T19:29:40+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/efficient_sized_delete_for_variable_sized_classes.md b/lang/cpp20/efficient_sized_delete_for_variable_sized_classes.md
+index 39a311846..ed1d91130 100644
+--- a/lang/cpp20/efficient_sized_delete_for_variable_sized_classes.md
++++ b/lang/cpp20/efficient_sized_delete_for_variable_sized_classes.md
+@@ -202,7 +202,7 @@ public:
+   inlined_fixed_string() = delete;
+ 
+   auto size() const -&amp;gt; std::size_t {
+-    return length;
++    return length - 1;
+   }
+ 
+   auto view() const -&amp;gt; std::string_view {
+@@ -232,12 +232,12 @@ public:
+     // 末尾領域の長さを取得
+     const std::size_t full_size = sizeof(inlined_fixed_string) + p-&amp;gt;length;
+ 
++    // char（トリビアルに破棄可能な）型はデストラクタ呼び出しを省略可能
++    std::ranges::destroy(reinterpret_cast&amp;lt;char*&amp;gt;(p + 1), reinterpret_cast&amp;lt;char*&amp;gt;(p + 1) + p-&amp;gt;length);
++
+     // デストラクタ呼び出し
+     std::destroy_at(p);
+ 
+-    // char（トリビアルに破棄可能な）型はデストラクタ呼び出しを省略可能
+-    std::ranges::destroy(p + 1, p + 1 + p-&amp;gt;length + 1);
+-
+     // メモリ解放
+     ::operator delete(p, full_size);
+     
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Raclamusi</name>
+        <email>raclamusi@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>spawn_future -- execution::spawn_future : Typo、リンクを修正</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/spawn_future.html"/>
+      <id>4e673b3e0c8b38e78c71560af53b492cb7727be6:reference/execution/execution/spawn_future.md</id>
+      <updated>2025-10-14T19:23:57+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/spawn_future.md b/reference/execution/execution/spawn_future.md
+index c11c232dd..d52b97629 100644
+--- a/reference/execution/execution/spawn_future.md
++++ b/reference/execution/execution/spawn_future.md
+@@ -141,7 +141,7 @@ namespace std::execution {
+ * exception_ptr[link /reference/exception/exception_ptr.md]
+ * current_exception()[link /reference/exception/current_exception.md]
+ 
+-型`ssource-t`を[`stoppabe-source`](/reference/stop_token/stoppable-source.md)のモデルである未規定の型、`ssource`を型`ssource-t`の左辺値とする。
++型`ssource-t`を[`stoppable-source`](/reference/stop_token/stoppable-source.md)のモデルである未規定の型、`ssource`を型`ssource-t`の左辺値とする。
+ 型`stoken-t`を`decltype(ssource.get_token())`とする。
+ 
+ ### エイリアステンプレート `future-spawned-sender`
+@@ -199,7 +199,7 @@ namespace std::execution {
+   };
+ }
+ ```
+-* scope_token[link /reference/stop_token/stop_token.md]
++* scope_token[link scope_token.md]
+ * sender[link sender.md]
+ * completion_signatures_of_t[link completion_signatures_of_t.md]
+ * receiver[link receiver.md]
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Raclamusi</name>
+        <email>raclamusi@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>allocate_shared -- C++26対応としてshared_ptr関連をconstexpr対応 #1500</title>
@@ -2732,755 +2811,6 @@ index 43d4e9c51..c11c232dd 100644
       <author>
         <name>yoh</name>
         <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>execution -- execution: P3149R11 spawn_future(#1510)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution.html"/>
-      <id>19dfdd71aa4a4804d2622963f30d6b58feda0e2b:reference/execution/execution.md</id>
-      <updated>2025-10-11T23:55:28+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution.md b/reference/execution/execution.md
-index c4c0adc76..4c1346b44 100644
---- a/reference/execution/execution.md
-+++ b/reference/execution/execution.md
-@@ -132,7 +132,7 @@ namespace std::execution {
- | [`execution::stopped_as_optional`](execution/stopped_as_optional.md) | 入力Senderの停止完了を空の[`optional`](/reference/optional/optional.md)値完了に変換 (customization point object) | C++26 |
- | [`execution::stopped_as_error`](execution/stopped_as_error.md) | 入力Senderの停止完了をエラー完了に変換 (customization point object) | C++26 |
- | [`execution::associate`](execution/associate.md) | 非同期スコープへの関連付け (customization point object) | C++26 |
--| [`execution::spawn_future`](execution/spawn_future.md.nolink) | 非同期操作を早期開始 (customization point object) | C++26 |
-+| [`execution::spawn_future`](execution/spawn_future.md) | 非同期操作を早期開始 (customization point object) | C++26 |
- 
- ### Senderコンシューマ
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>disassociate -- execution: P3149R11 spawn_future(#1510)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/counting_scope/token/disassociate.html"/>
-      <id>19dfdd71aa4a4804d2622963f30d6b58feda0e2b:reference/execution/execution/counting_scope/token/disassociate.md</id>
-      <updated>2025-10-11T23:55:28+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/counting_scope/token/disassociate.md b/reference/execution/execution/counting_scope/token/disassociate.md
-index 8ebf594ea..47f9b12a8 100644
---- a/reference/execution/execution/counting_scope/token/disassociate.md
-+++ b/reference/execution/execution/counting_scope/token/disassociate.md
-@@ -39,7 +39,7 @@ scope-&amp;gt;disassociate()
- 
- ## 関連項目
- - [`execution::associate`](../../associate.md)
--- [`execution::spawn_future`](../../spawn_future.md.nolink)
-+- [`execution::spawn_future`](../../spawn_future.md)
- - [`execution::spawn`](../../spawn.md)
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>try_associate -- execution: P3149R11 spawn_future(#1510)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/counting_scope/token/try_associate.html"/>
-      <id>19dfdd71aa4a4804d2622963f30d6b58feda0e2b:reference/execution/execution/counting_scope/token/try_associate.md</id>
-      <updated>2025-10-11T23:55:28+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/counting_scope/token/try_associate.md b/reference/execution/execution/counting_scope/token/try_associate.md
-index de9c2fd6c..d57181cc0 100644
---- a/reference/execution/execution/counting_scope/token/try_associate.md
-+++ b/reference/execution/execution/counting_scope/token/try_associate.md
-@@ -39,7 +39,7 @@ return scope-&amp;gt;try-associate();
- 
- ## 関連項目
- - [`execution::associate`](../../associate.md)
--- [`execution::spawn_future`](../../spawn_future.md.nolink)
-+- [`execution::spawn_future`](../../spawn_future.md)
- - [`execution::spawn`](../../spawn.md)
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>wrap -- execution: P3149R11 spawn_future(#1510)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/counting_scope/token/wrap.html"/>
-      <id>19dfdd71aa4a4804d2622963f30d6b58feda0e2b:reference/execution/execution/counting_scope/token/wrap.md</id>
-      <updated>2025-10-11T23:55:28+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/counting_scope/token/wrap.md b/reference/execution/execution/counting_scope/token/wrap.md
-index e69eef0d2..fee4f3901 100644
---- a/reference/execution/execution/counting_scope/token/wrap.md
-+++ b/reference/execution/execution/counting_scope/token/wrap.md
-@@ -40,7 +40,7 @@ return stop-when(std::forward&amp;lt;Sender&amp;gt;(snd), scope-&amp;gt;s_source.get_token());
- 
- ## 関連項目
- - [`execution::associate`](../../associate.md)
--- [`execution::spawn_future`](../../spawn_future.md.nolink)
-+- [`execution::spawn_future`](../../spawn_future.md)
- - [`execution::spawn`](../../spawn.md)
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>scope_token -- execution: P3149R11 spawn_future(#1510)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/scope_token.html"/>
-      <id>19dfdd71aa4a4804d2622963f30d6b58feda0e2b:reference/execution/execution/scope_token.md</id>
-      <updated>2025-10-11T23:55:28+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/scope_token.md b/reference/execution/execution/scope_token.md
-index 5aca3cc40..1a47563f3 100644
---- a/reference/execution/execution/scope_token.md
-+++ b/reference/execution/execution/scope_token.md
-@@ -70,7 +70,7 @@ int main()
- 
- ## 関連項目
- - [`execution::associate`](associate.md)
--- [`execution::spawn_future`](spawn_future.md.nolink)
-+- [`execution::spawn_future`](spawn_future.md)
- - [`execution::spawn`](spawn.md)
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>disassociate -- execution: P3149R11 spawn_future(#1510)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/simple_counting_scope/token/disassociate.html"/>
-      <id>19dfdd71aa4a4804d2622963f30d6b58feda0e2b:reference/execution/execution/simple_counting_scope/token/disassociate.md</id>
-      <updated>2025-10-11T23:55:28+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/simple_counting_scope/token/disassociate.md b/reference/execution/execution/simple_counting_scope/token/disassociate.md
-index 9943b7882..e91a100c7 100644
---- a/reference/execution/execution/simple_counting_scope/token/disassociate.md
-+++ b/reference/execution/execution/simple_counting_scope/token/disassociate.md
-@@ -39,7 +39,7 @@ scope-&amp;gt;disassociate()
- 
- ## 関連項目
- - [`execution::associate`](../../associate.md)
--- [`execution::spawn_future`](../../spawn_future.md.nolink)
-+- [`execution::spawn_future`](../../spawn_future.md)
- - [`execution::spawn`](../../spawn.md)
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>try_associate -- execution: P3149R11 spawn_future(#1510)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/simple_counting_scope/token/try_associate.html"/>
-      <id>19dfdd71aa4a4804d2622963f30d6b58feda0e2b:reference/execution/execution/simple_counting_scope/token/try_associate.md</id>
-      <updated>2025-10-11T23:55:28+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/simple_counting_scope/token/try_associate.md b/reference/execution/execution/simple_counting_scope/token/try_associate.md
-index 43631ed3d..492633f61 100644
---- a/reference/execution/execution/simple_counting_scope/token/try_associate.md
-+++ b/reference/execution/execution/simple_counting_scope/token/try_associate.md
-@@ -39,7 +39,7 @@ return scope-&amp;gt;try-associate();
- 
- ## 関連項目
- - [`execution::associate`](../../associate.md)
--- [`execution::spawn_future`](../../spawn_future.md.nolink)
-+- [`execution::spawn_future`](../../spawn_future.md)
- - [`execution::spawn`](../../spawn.md)
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>wrap -- execution: P3149R11 spawn_future(#1510)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/simple_counting_scope/token/wrap.html"/>
-      <id>19dfdd71aa4a4804d2622963f30d6b58feda0e2b:reference/execution/execution/simple_counting_scope/token/wrap.md</id>
-      <updated>2025-10-11T23:55:28+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/simple_counting_scope/token/wrap.md b/reference/execution/execution/simple_counting_scope/token/wrap.md
-index e29f11118..16b4d5053 100644
---- a/reference/execution/execution/simple_counting_scope/token/wrap.md
-+++ b/reference/execution/execution/simple_counting_scope/token/wrap.md
-@@ -36,7 +36,7 @@ Sender&amp;amp;&amp;amp; wrap(Sender&amp;amp;&amp;amp; snd) const noexcept;
- 
- ## 関連項目
- - [`execution::associate`](../../associate.md)
--- [`execution::spawn_future`](../../spawn_future.md.nolink)
-+- [`execution::spawn_future`](../../spawn_future.md)
- - [`execution::spawn`](../../spawn.md)
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>spawn -- execution: P3149R11 spawn_future(#1510)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/spawn.html"/>
-      <id>19dfdd71aa4a4804d2622963f30d6b58feda0e2b:reference/execution/execution/spawn.md</id>
-      <updated>2025-10-11T23:55:28+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/spawn.md b/reference/execution/execution/spawn.md
-index 4cba44ec7..51bc762ba 100644
---- a/reference/execution/execution/spawn.md
-+++ b/reference/execution/execution/spawn.md
-@@ -17,7 +17,7 @@ namespace std::execution {
- 
- 
- ## 効果
--説明用の式`sndr`, `token`, `env`に対して、下記の通り定義する。
-+説明用の式`sndr`, `token`, `env`を下記の通り定義する。
- 
- - `Sndr`型を`decltype((sndr))`、
- - `Token`型を[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;decltype((token))&amp;gt;`、
-@@ -33,14 +33,13 @@ namespace std::execution {
- 
- 呼び出し式`spawn(sndr, token, env)`は`void`型であり、次の効果をもつ。
- 
--- `alloc`を用いてメモリ確保し、`alloc`, [`write_env`](write_env.md)`(token.wrap(sndr), senv)`, `token`から特殊化された`spawn-state`型のオブジェクト`o`を構築し、`o.run()`を呼び出す。何らかのオブジェクト構築・破棄時に例外送出されたときは、確保されたメモリが解放される。
-+- `alloc`を用いてメモリ確保し、`alloc`, [`write_env`](write_env.md)`(token.wrap(sndr), senv)`, `token`から特殊化された`spawn-state`型のオブジェクト`o`を構築し、`o.run()`を呼び出す。いずれかのオブジェクト構築・破棄時に例外送出されたときは、確保されたメモリが解放される。
- 
--式`spawn(sndr, token)`は、式`spawn(sndr, token,` [`execution::env&amp;lt;&amp;gt;`](env.md)`())`と等価である。
-+呼び出し式`spawn(sndr, token)`は、式`spawn(sndr, token,` [`execution::env&amp;lt;&amp;gt;`](env.md)`())`と等価である。
- 
- 
- ## 説明専用エンティティ
--説明専用のクラス`spawn-state-base`を下記の通り定義する。
--
-+### クラス`spawn-state-base`
- ```cpp
- namespace std::execution {
-   struct spawn-state-base {                // exposition only
-@@ -49,8 +48,7 @@ namespace std::execution {
- }
- ```
- 
--説明専用のクラス`spawn-receiver`を下記の通り定義する。
--
-+### クラス`spawn-receiver`
- ```cpp
- namespace std::execution {
-   struct spawn-receiver {                  // exposition only
-@@ -65,8 +63,7 @@ namespace std::execution {
- * receiver_t[link receiver.md]
- * spawn-state-base[italic]
- 
--説明専用のクラステンプレート`spawn-state`を下記の通り定義する。
--
-+### クラステンプレート`spawn-state`
- ```cpp
- namespace std::execution {
-   template&amp;lt;class Alloc, scope_token Token, sender Sender&amp;gt;
-@@ -213,7 +210,7 @@ sync_wait
- 
- ## 関連項目
- - [`execution::scope_token`](scope_token.md)
--- [`execution::spawn_future`](spawn_future.md.nolink)
-+- [`execution::spawn_future`](spawn_future.md)
- 
- 
- ## 参照
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>spawn_future -- execution: P3149R11 spawn_future(#1510)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/spawn_future.html"/>
-      <id>19dfdd71aa4a4804d2622963f30d6b58feda0e2b:reference/execution/execution/spawn_future.md</id>
-      <updated>2025-10-11T23:55:28+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/spawn_future.md b/reference/execution/execution/spawn_future.md
-new file mode 100644
-index 000000000..43d4e9c51
---- /dev/null
-+++ b/reference/execution/execution/spawn_future.md
-@@ -0,0 +1,358 @@
-+# spawn_future
-+* execution[meta header]
-+* cpo[meta id-type]
-+* std::execution[meta namespace]
-+* cpp26[meta cpp]
-+
-+```cpp
-+namespace std::execution {
-+  struct spawn_future_t { unspecified };
-+  inline constexpr spawn_future_t spawn_future{};
-+}
-+```
-+* unspecified[italic]
-+
-+## 概要
-+`spawn_future`は、入力[Sender](sender.md)に対して[非同期トークンスコープ](scope_token.md)への関連付けを試み、成功時に入力Senderを早期開始(eagerly start)させるSenderアダプタである。
-+
-+戻り値Senderの[接続(connect)](connect.md)および[開始(start)](start.md)により、早期開始した入力Senderの戻り値を用いて値完了、もしくは入力Senderが開始していなければ[`set_stopped`](set_stopped.md)で完了する。
-+
-+
-+## 効果
-+説明用の式`sndr`, `token`, `env`を下記の通り定義する。
-+
-+- `Sndr`型を`decltype((sndr))`、
-+- `Token`型を[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;decltype((token))&amp;gt;`、
-+- `Env`型を[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;decltype((env))&amp;gt;`とする。
-+
-+[`sender`](sender.md)`&amp;lt;Sndr&amp;gt;`, [`scope_token`](scope_token.md)`&amp;lt;Token&amp;gt;`, [`queryable`](../queryable.md)`&amp;lt;Env&amp;gt;`のいずれかを満たさないとき、呼び出し式`spawn_future(sndr, token, env)`は不適格となる。
-+
-+そうでなければ、呼び出し式`spawn_future(sndr, token, env)`に対して、説明用の式`new_sender`を[`token.wrap`](scope_token.md)`(sndr)`とし、`alloc`と`senv`を次の通りとする。
-+
-+- 式[`get_allocator`](../get_allocator.md)`(env)`が適格なとき、`alloc`を[`get_allocator`](../get_allocator.md)`(env)`の結果、`senv`を式`env`とする。
-+- そうでなはく、式[`get_allocator`](../get_allocator.md)`(`[`get_env`](get_env.md)`(new_sender))`が適格なとき、`alloc`を[`get_allocator`](../get_allocator.md)`(`[`get_env`](get_env.md)`(new_sender))`の結果、`senv`を式[`JOIN-ENV`](../queryable.md)`(`[`prop`](prop.md)`(`[`get_allocator`](../get_allocator.md)`, alloc), env)`とする。
-+- そうではないとき、`alloc`を[`allocator`](/reference/memory/allocator.md)`&amp;lt;void&amp;gt;()`、`senv`を式`env`とする。
-+
-+呼び出し式`spawn_future(sndr, token, env)`は、次の効果をもつ。
-+
-+- `alloc`を用いてメモリ確保し、`alloc`, `token.wrap(sndr)`, `token`, `senv`から特殊化された`spawn-future-state`型のオブジェクト`s`を構築する。いずれかのオブジェクト構築・破棄時に例外送出されたときは、確保されたメモリが解放される。
-+- 下記を満たす[`unique_ptr`](/reference/memory/unique_ptr.md)の特殊化型のオブジェクト`u`を構築する。
-+    - `u.`[`get()`](/reference/memory/unique_ptr/get.md)は`s`のアドレスに等しく、かつ
-+    - `u.`[`get_deleter()`](/reference/memory/unique_ptr/get_deleter.md)`(u.`[`release()`](/reference/memory/unique_ptr/release.md)`)`は`u.release()-&amp;gt;abandon()`に等しい。
-+- [`make-sender`](make-sender.md)`(spawn_future,` [`std::move`](/reference/utility/move.md)`(u))`を返す。
-+
-+呼び出し式`spawn_future(sndr, token)`は、式`spawn_future(sndr, token,` [`execution::env&amp;lt;&amp;gt;`](env.md)`())`と等価である。
-+
-+
-+### Senderアルゴリズムタグ `spawn_future`
-+Senderアルゴリズム動作説明用のクラステンプレート[`impls-for`](impls-for.md)に対して、下記の特殊化が定義される。
-+
-+```cpp
-+namespace std::execution {
-+  template&amp;lt;&amp;gt;
-+  struct impls-for&amp;lt;spawn_future_t&amp;gt; : default-impls {
-+    static constexpr auto start = see below;  // exposition only
-+  };
-+}
-+```
-+* impls-for[link impls-for.md]
-+* default-impls[link impls-for.md]
-+
-+`impls-for&amp;lt;spawn_future_t&amp;gt;::start`メンバは、下記ラムダ式と等価な関数呼び出し可能なオブジェクトで初期化される。
-+
-+```cpp
-+[](auto&amp;amp; state, auto&amp;amp; rcvr) noexcept -&amp;gt; void {
-+  state-&amp;gt;consume(rcvr);
-+}
-+```
-+
-+
-+## 説明専用エンティティ
-+### クラステンプレート`spawn-future-state-base`
-+```cpp
-+namespace std::execution {
-+  template&amp;lt;class Completions&amp;gt;
-+  struct spawn-future-state-base;                                   // exposition only
-+
-+  template&amp;lt;class... Sigs&amp;gt;
-+  struct spawn-future-state-base&amp;lt;completion_signatures&amp;lt;Sigs...&amp;gt;&amp;gt; {  // exposition only
-+    using variant-t = see below;                                    // exposition only
-+    variant-t result;                                               // exposition only
-+    virtual void complete() noexcept = 0;                           // exposition only
-+  };
-+}
-+```
-+* completion_signatures[link completion_signatures.md]
-+
-+説明用のパック`Sigs`を、クラステンプレート`spawn-future-state-base`のパラメータに指定する[`completion_signatures`](completion_signatures.md)特殊化の引数パックと定義する。説明用のエイリアステンプレート`as-tuple&amp;lt;Tag(Args...)&amp;gt;`を[`decayed-tuple`](decayed-tuple.md)`&amp;lt;Tag, Args...&amp;gt;`と定義する。
-+
-+- `Sigs`に含まれる全ての完了シグニチャ`Tag(Args...)`における全てのパラメータパック`Args`の全ての型`Any`に対して[`is_nothrow_constructible_v`](/reference/type_traits/is_nothrow_constructible.md)`&amp;lt;`[`decay_t`](/reference/type_traits/decay.md)`&amp;lt;Arg&amp;gt;, Arg&amp;gt; == true`のとき、エイリアス`variant-t`は[`variant`](/reference/variant/variant.md)`&amp;lt;`[`monostate`](/reference/variant/monostate.md)`,` [`tuple`](/reference/tuple/tuple.md)`&amp;lt;`[`set_stopped_t`](set_stopped.md)`&amp;gt;, as-tuple&amp;lt;Sigs&amp;gt;...&amp;gt;`において重複削除した型となる。
-+- そうではないとき、エイリアス`variant-t`は[`variant`](/reference/variant/variant.md)`&amp;lt;`[`monostate`](/reference/variant/monostate.md)`,` [`tuple`](/reference/tuple/tuple.md)`&amp;lt;`[`set_stopped_t`](set_stopped.md)`&amp;gt;, tuple&amp;lt;`[`set_error_t`](set_error.md)`,` [`exception_ptr`](/reference/exception/exception_ptr.md)`&amp;gt;, as-tuple&amp;lt;Sigs&amp;gt;...&amp;gt;`において重複削除した型となる。
-+
-+### クラステンプレート`spawn-future-receiver`
-+```cpp
-+namespace std::execution {
-+  template&amp;lt;class Completions&amp;gt;
-+  struct spawn-future-receiver {                  // exposition only
-+    using receiver_concept = receiver_t;
-+
-+    spawn-future-state-base&amp;lt;Completions&amp;gt;* state;  // exposition only
-+
-+    template&amp;lt;class... T&amp;gt;
-+    void set_value(T&amp;amp;&amp;amp;... t) &amp;amp;&amp;amp; noexcept {
-+      set-complete&amp;lt;set_value_t&amp;gt;(std::forward&amp;lt;T&amp;gt;(t)...);
-+    }
-+
-+    template&amp;lt;class E&amp;gt;
-+    void set_error(E&amp;amp;&amp;amp; e) &amp;amp;&amp;amp; noexcept {
-+      set-complete&amp;lt;set_error_t&amp;gt;(std::forward&amp;lt;E&amp;gt;(e));
-+    }
-+
-+    void set_stopped() &amp;amp;&amp;amp; noexcept {
-+      set-complete&amp;lt;set_stopped_t&amp;gt;();
-+    }
-+
-+  private:
-+    template&amp;lt;class CPO, class... T&amp;gt;
-+      void set-complete(T&amp;amp;&amp;amp;... t) noexcept {      // exposition only
-+        constexpr bool nothrow = (is_nothrow_constructible_v&amp;lt;decay_t&amp;lt;T&amp;gt;, T&amp;gt; &amp;amp;&amp;amp; ...);
-+        try {
-+          state-&amp;gt;result.template emplace&amp;lt;decayed-tuple&amp;lt;CPO, T...&amp;gt;&amp;gt;(CPO{},
-+                                                                   std::forward&amp;lt;T&amp;gt;(t)...);
-+        }
-+        catch (...) {
-+          if constexpr (!nothrow) {
-+            using tuple_t = decayed-tuple&amp;lt;set_error_t, exception_ptr&amp;gt;;
-+            state-&amp;gt;result.template emplace&amp;lt;tuple_t&amp;gt;(set_error_t{}, current_exception());
-+          }
-+        }
-+        state-&amp;gt;complete();
-+      }
-+  };
-+}
-+```
-+* receiver_t[link receiver.md]
-+* set_value_t[link set_value.md]
-+* set_error_t[link set_error.md]
-+* set_stopped_t[link set_stopped.md]
-+* decayed-tuple[link decayed-tuple.md]
-+* is_nothrow_constructible_v[link /reference/type_traits/is_nothrow_constructible.md]
-+* template emplace[link /reference/variant/variant/emplace.md]
-+* exception_ptr[link /reference/exception/exception_ptr.md]
-+* current_exception()[link /reference/exception/current_exception.md]
-+
-+型`ssource-t`を[`stoppabe-source`](/reference/stop_token/stoppable-source.md)のモデルである未規定の型、`ssource`を型`ssource-t`の左辺値とする。
-+型`stoken-t`を`decltype(ssource.get_token())`とする。
-+
-+### エイリアステンプレート `future-spawned-sender`
-+
-+```cpp
-+template&amp;lt;sender Sender, class Env&amp;gt;
-+using future-spawned-sender =  // exposition only
-+  decltype(write_env(stop-when(declval&amp;lt;Sender&amp;gt;(), declval&amp;lt;stoken-t&amp;gt;()), declval&amp;lt;Env&amp;gt;()));
-+```
-+* write_env[link write_env.md]
-+* stop-when[link stop-when.md]
-+
-+### クラステンプレート`spawn-future-state`
-+
-+```cpp
-+namespace std::execution {
-+  template&amp;lt;class Alloc, scope_token Token, sender Sender, class Env&amp;gt;
-+  struct spawn-future-state                                                 // exposition only
-+    : spawn-future-state-base&amp;lt;completion_signatures_of_t&amp;lt;future-spawned-sender&amp;lt;Sender, Env&amp;gt;&amp;gt;&amp;gt; {
-+    using sigs-t =                                                          // exposition only
-+      completion_signatures_of_t&amp;lt;future-spawned-sender&amp;lt;Sender, Env&amp;gt;&amp;gt;;
-+    using receiver-t =                                                      // exposition only
-+      spawn-future-receiver&amp;lt;sigs-t&amp;gt;;
-+    using op-t =                                                            // exposition only
-+      connect_result_t&amp;lt;future-spawned-sender&amp;lt;Sender, Env&amp;gt;, receiver-t&amp;gt;;
-+
-+    spawn-future-state(Alloc alloc, Sender&amp;amp;&amp;amp; sndr, Token token, Env env)    // exposition only
-+      : alloc(std::move(alloc)),
-+        op(connect(
-+          write_env(stop-when(std::forward&amp;lt;Sender&amp;gt;(sndr), ssource.get_token()), std::move(env)),
-+          receiver-t(this))),
-+        token(std::move(token)),
-+        associated(token.try_associate()) {
-+          if (associated)
-+            start(op);
-+          else
-+            set_stopped(receiver-t(this));
-+        }
-+
-+    void complete() noexcept override;                                      // exposition only
-+    void consume(receiver auto&amp;amp; rcvr) noexcept;                             // exposition only
-+    void abandon() noexcept;                                                // exposition only
-+
-+  private:
-+    using alloc-t =                                                         // exposition only
-+      typename allocator_traits&amp;lt;Alloc&amp;gt;::template rebind_alloc&amp;lt;spawn-future-state&amp;gt;;
-+
-+    alloc-t alloc;                                                          // exposition only
-+    ssource-t ssource;                                                      // exposition only
-+    op-t op;                                                                // exposition only
-+    Token token;                                                            // exposition only
-+    bool associated;                                                        // exposition only
-+
-+    void destroy() noexcept;                                                // exposition only
-+  };
-+}
-+```
-+* completion_signatures_of_t[link completion_signatures_of_t.md]
-+* connect_result_t[link connect_result_t.md]
-+* connect[link connect.md]
-+* write_env[link write_env.md]
-+* stop-when[link stop-when.md]
-+* start[link start.md]
-+* set_stopped[link set_stopped.md]
-+* allocator_traits[link /reference/memory/allocator_traits.md]
-+* std::move[link /reference/utility/move.md]
-+
-+データ競合の存在を判定する目的において、`complete`, `consume`, `abandon`はアトミック操作として振る舞う。
-+`spawn-future-state`の特殊化である型の単一オブジェクトに対するこれらの操作は、単一の全順序で発生するように見える。
-+
-+```cpp
-+void complete() noexcept;
-+```
-+
-+- 効果 :
-+    - `*this`に対するこの`complete`の呼び出しが`consume`もしくは`abandon`の呼び出しよりも前に発生するならば、効果を持たない。
-+    - そうではなく、`*this`に対する`consume`の呼び出しがこの`complete`の呼び出しよりも前に発生するならば、[Receiver](receiver.md)`rcvr`が登録され、そのReceiverは`consume(rcvr)`によって完了する。
-+    - そうではないとき、`destroy`が呼び出される。
-+
-+```cpp
-+void consume(receiver auto&amp;amp; rcvr) noexcept;
-+```
-+* receiver[link receiver.md]
-+
-+- 効果 :
-+    - `*this`に対するこの`consume`の呼び出しが`complete`の呼び出しよりも前に発生するならば、`*this`に対してその後`complete`が呼び出されるとき`rcvr`が完了するよう登録される。
-+    - そうではないとき、下記のように`rcvr`が完了する :
-+
-+        ```cpp
-+        std::move(this-&amp;gt;result).visit(
-+          [&amp;amp;rcvr](auto&amp;amp;&amp;amp; tuple) noexcept {
-+            if constexpr (!same_as&amp;lt;remove_reference_t&amp;lt;decltype(tuple)&amp;gt;, monostate&amp;gt;) {
-+              apply([&amp;amp;rcvr](auto cpo, auto&amp;amp;&amp;amp;... vals) {
-+                cpo(std::move(rcvr), std::move(vals)...);
-+              }, std::move(tuple));
-+            }
-+          });
-+        ```
-+        * visit[link /reference/variant/visit.md]
-+        * monostate[link /reference/variant/monostate.md]
-+        * apply[link /reference/tuple/apply.md]
-+        * std::move[link /reference/utility/move.md]
-+
-+```cpp
-+void abandon() noexcept;
-+```
-+
-+- 効果 :
-+    - `*this`に対するこの`abandon`の呼び出しが`complete`の呼び出しより前に発生するならば、下記と等価。
-+
-+        ```cpp
-+        ssource.request_stop();
-+        ```
-+
-+    - そうでなければ、`destroy`が呼び出される。
-+
-+```cpp
-+void destroy() noexcept;
-+```
-+
-+- 効果 : 下記と等価。
-+
-+    ```cpp
-+    auto token = std::move(this-&amp;gt;token);
-+    bool associated = this-&amp;gt;associated;
-+
-+    {
-+      auto alloc = std::move(this-&amp;gt;alloc);
-+
-+      allocator_traits&amp;lt;alloc-t&amp;gt;::destroy(alloc, this);
-+      allocator_traits&amp;lt;alloc-t&amp;gt;::deallocate(alloc, this, 1);
-+    }
-+
-+    if (associated)
-+      token.disassociate();
-+    ```
-+    * allocator_traits[link /reference/memory/allocator_traits.md]
-+    * destroy[link /reference/memory/allocator_traits/destroy.md]
-+    * deallocate[link /reference/memory/allocator_traits/deallocate.md]
-+    * std::move[link /reference/utility/move.md]
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;print&amp;gt;
-+#include &amp;lt;execution&amp;gt;
-+namespace ex = std::execution;
-+
-+int main()
-+{
-+  // システムスレッドプール上の実行タスクを定義
-+  ex::scheduler auto sch = ex::get_parallel_scheduler();
-+  ex::sender auto snd0 =
-+    ex::schedule(sch)
-+    | ex::then([]{
-+        // ワーカースレッド処理
-+        std::println(&amp;#34;hello async&amp;#34;);
-+        return 42;
-+      });
-+
-+  // 非同期スコープを定義
-+  ex::counting_scope scope;
-+
-+  // タスクを早期開始させる
-+  std::println(&amp;#34;spawn&amp;#34;);
-+  ex::sender auto snd1 = ex::spawn_future(std::move(snd0), scope.get_token());
-+
-+  // (メインスレッド処理)
-+
-+  // 非同期スコープを合流
-+  auto result = std::this_thread::sync_wait(ex::when_all(std::move(snd1), scope.join()));
-+  auto [value] = *result;
-+  std::println(&amp;#34;value={}&amp;#34;, value);
-+}
-+```
-+* ex::spawn_future[color ff0000]
-+* ex::scheduler[link scheduler.md]
-+* ex::get_parallel_scheduler()[link get_parallel_scheduler.md]
-+* ex::sender[link sender.md]
-+* ex::schedule[link schedule.md]
-+* ex::then[link then.md]
-+* ex::counting_scope[link counting_scope.md]
-+* get_token()[link counting_scope/get_token.md]
-+* join()[link counting_scope/join.md]
-+* ex::when_all[link when_all.md]
-+* std::this_thread::sync_wait[link ../this_thread/sync_wait.md]
-+* std::move[link /reference/utility/move.md]
-+
-+### 出力
-+```
-+spawn
-+hello async
-+value=42
-+```
-+
-+
-+## バージョン
-+### 言語
-+- C++26
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): ??
-+- [ICC](/implementation.md#icc): ??
-+- [Visual C++](/implementation.md#visual_cpp): ??
-+
-+
-+## 関連項目
-+- [`execution::scope_token`](scope_token.md)
-+- [`execution::spawn`](spawn.md)
-+
-+
-+## 参照
-+- [P3149R11 `async_scope` - Creating scopes for non-sequential concurrency](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3149r11.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>stop-when -- execution: P3149R11 spawn_future(#1510)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/stop-when.html"/>
-      <id>19dfdd71aa4a4804d2622963f30d6b58feda0e2b:reference/execution/execution/stop-when.md</id>
-      <updated>2025-10-11T23:55:28+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/stop-when.md b/reference/execution/execution/stop-when.md
-index 15505771c..f1dcc62b2 100644
---- a/reference/execution/execution/stop-when.md
-+++ b/reference/execution/execution/stop-when.md
-@@ -33,7 +33,7 @@ namespace std::execution {
- 
- 
- ## 関連項目
--- [`execution::spawn_future`](spawn_future.md.nolink)
-+- [`execution::spawn_future`](spawn_future.md)
- - [`execution::counting_scope::token::wrap`](counting_scope/token/wrap.md)
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>basic_spanstream -- fix typo in spanstream</title>
-      <link href="https://cpprefjp.github.io/reference/spanstream/basic_spanstream.html"/>
-      <id>3c1eba532a8d1260a39626c01b69986796b17d70:reference/spanstream/basic_spanstream.md</id>
-      <updated>2025-10-11T12:33:07+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/spanstream/basic_spanstream.md b/reference/spanstream/basic_spanstream.md
-index 745e17a61..82b2a6548 100644
---- a/reference/spanstream/basic_spanstream.md
-+++ b/reference/spanstream/basic_spanstream.md
-@@ -97,7 +97,7 @@ int main()
- ```
- Hello 123 World 45.67
- 
--word1=Hello, num1=123, word3=World, num2=45.67
-+word1=&amp;#34;Hello&amp;#34;, num1=123, word2=&amp;#34;World&amp;#34;, num2=45.67
- ```
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>コンストラクタ -- fix typo in spanstream</title>
-      <link href="https://cpprefjp.github.io/reference/spanstream/basic_spanstream/op_constructor.html"/>
-      <id>3c1eba532a8d1260a39626c01b69986796b17d70:reference/spanstream/basic_spanstream/op_constructor.md</id>
-      <updated>2025-10-11T12:33:07+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/spanstream/basic_spanstream/op_constructor.md b/reference/spanstream/basic_spanstream/op_constructor.md
-index 5d92317c0..e40453842 100644
---- a/reference/spanstream/basic_spanstream/op_constructor.md
-+++ b/reference/spanstream/basic_spanstream/op_constructor.md
-@@ -21,7 +21,7 @@ basic_spanstream(basic_spanstream&amp;amp;&amp;amp; rhs);                   // (3)
- 
- ここで、初期値としてデータは、既存のファイルを上書きモードで開くことに似ており、ストリームの初期位置が先頭のまま、ストリーム内容の文字列を設定するものである。
- 
--- (1) : 初期データとして[`std::span&amp;lt;charT&amp;gt;`](/reference/span/span.md)オブジェクトの設定して構築する
-+- (1) : 初期データとして[`std::span&amp;lt;charT&amp;gt;`](/reference/span/span.md)オブジェクトを指定して構築する
- - (2) : （削除）コピーコンストラクタ
- - (3) : ムーブコンストラクタ
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>suomesta</name>
-        <email>shawn316michaels@gmail.com</email>
       </author>
     </entry>
   
