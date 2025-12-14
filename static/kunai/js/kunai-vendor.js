@@ -1609,12 +1609,29 @@ var Database = /*#__PURE__*/function () {
           var ns = _step4.value;
           targets.push.apply(targets, (0,toConsumableArray/* default */.A)(ns.query(q)));
         }
+
+        // 検索クエリとの完全一致を優先するソート
       } catch (err) {
         _iterator4.e(err);
       } finally {
         _iterator4.f();
       }
-      var grouped_targets = targets.sort(Index.compare).slice(0, max_count).reduce(function (gr, index) {
+      var grouped_targets = targets.sort(function (aidx, bidx) {
+        // 検索クエリとの完全一致を判定
+        var aExact = q._and.some(function (s) {
+          return aidx._name === s;
+        });
+        var bExact = q._and.some(function (s) {
+          return bidx._name === s;
+        });
+
+        // 完全一致を優先
+        if (aExact && !bExact) return -1;
+        if (!aExact && bExact) return 1;
+
+        // 完全一致でない場合、元のcompareロジックを使用
+        return Index.compare(aidx, bidx);
+      }).slice(0, max_count).reduce(function (gr, index) {
         var hdr = index.in_header;
         var indexes = gr.get(hdr);
         if (!indexes) {
@@ -2199,7 +2216,7 @@ var CRSearch = /*#__PURE__*/function () {
                 cr_info_link = crsearch_crsearch_$('<a />');
                 cr_info_link.attr('href', CRSearch._HOMEPAGE);
                 cr_info_link.attr('target', '_blank');
-                cr_info_link.text("".concat(CRSearch._APPNAME, " v").concat({"version":"3.0.23","bugs_url":"https://github.com/cpprefjp/crsearch/issues"}.version));
+                cr_info_link.text("".concat(CRSearch._APPNAME, " v").concat({"version":"3.0.25","bugs_url":"https://github.com/cpprefjp/crsearch/issues"}.version));
                 cr_info_link.appendTo(cr_info);
                 cr_info.appendTo(result_wrapper);
                 input.on('focusin', function () {
