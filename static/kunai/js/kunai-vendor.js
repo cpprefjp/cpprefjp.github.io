@@ -1617,17 +1617,35 @@ var Database = /*#__PURE__*/function () {
         _iterator4.f();
       }
       var grouped_targets = targets.sort(function (aidx, bidx) {
-        // 検索クエリとの完全一致を判定
-        var aExact = q._and.some(function (s) {
+        // 名前の最後の部分（名前空間を除いた部分）を取得
+        var getLastPart = function getLastPart(name) {
+          var parts = name.split('::');
+          return parts[parts.length - 1];
+        };
+
+        // 検索クエリとの完全一致を判定（フル名）
+        var aExactFull = q._and.some(function (s) {
           return aidx._name === s;
         });
-        var bExact = q._and.some(function (s) {
+        var bExactFull = q._and.some(function (s) {
           return bidx._name === s;
         });
 
-        // 完全一致を優先
-        if (aExact && !bExact) return -1;
-        if (!aExact && bExact) return 1;
+        // 完全一致（フル名）を最優先
+        if (aExactFull && !bExactFull) return -1;
+        if (!aExactFull && bExactFull) return 1;
+
+        // 名前空間を除いた部分での完全一致を判定
+        var aExactPart = q._and.some(function (s) {
+          return getLastPart(aidx._name) === s;
+        });
+        var bExactPart = q._and.some(function (s) {
+          return getLastPart(bidx._name) === s;
+        });
+
+        // 名前空間を除いた部分での完全一致を次に優先
+        if (aExactPart && !bExactPart) return -1;
+        if (!aExactPart && bExactPart) return 1;
 
         // 完全一致でない場合、元のcompareロジックを使用
         return Index.compare(aidx, bidx);
@@ -2216,7 +2234,7 @@ var CRSearch = /*#__PURE__*/function () {
                 cr_info_link = crsearch_crsearch_$('<a />');
                 cr_info_link.attr('href', CRSearch._HOMEPAGE);
                 cr_info_link.attr('target', '_blank');
-                cr_info_link.text("".concat(CRSearch._APPNAME, " v").concat({"version":"3.0.25","bugs_url":"https://github.com/cpprefjp/crsearch/issues"}.version));
+                cr_info_link.text("".concat(CRSearch._APPNAME, " v").concat({"version":"3.0.26","bugs_url":"https://github.com/cpprefjp/crsearch/issues"}.version));
                 cr_info_link.appendTo(cr_info);
                 cr_info.appendTo(result_wrapper);
                 input.on('focusin', function () {
