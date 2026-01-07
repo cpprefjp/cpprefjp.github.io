@@ -3733,9 +3733,26 @@ var Index = /*#__PURE__*/function () {
       this._related_to = json.related_to;
       this._nojump = !!json.nojump;
       this._attributes = json.attributes;
+      this._aliases = json.aliases || [];
     } else {
       // this._log.debug('fake Index created')
       this._page_id = id.keys.slice(-1);
+      this._aliases = [];
+    }
+
+    // 名前空間付きエイリアスを事前計算（例：['string'] -> ['std::string']）
+    if (index_type.isClassy(this._id.type)) {
+      var nsKeys = this._id.keys.slice(0, -1);
+      if (nsKeys.length > 0) {
+        var nsPrefix = nsKeys.join('::') + '::';
+        this._namespacedAliases = this._aliases.map(function (alias) {
+          return nsPrefix + alias;
+        });
+      } else {
+        this._namespacedAliases = this._aliases;
+      }
+    } else {
+      this._namespacedAliases = this._aliases;
     }
     Object.seal(this);
     id.add_index(this);
@@ -3788,17 +3805,27 @@ var Index = /*#__PURE__*/function () {
     key: "ambgMatch",
     value: function ambgMatch(q) {
       if (index_type.isArticles(this._id.type)) {
-        return this._name.toLowerCase().includes(q.toLowerCase());
+        var lowerQ = q.toLowerCase();
+        return this._name.toLowerCase().includes(lowerQ) || this._aliases.some(function (alias) {
+          return alias.toLowerCase().includes(lowerQ);
+        });
       }
-      return this._name.includes(q);
+      return this._name.includes(q) || this._namespacedAliases.some(function (alias) {
+        return alias.includes(q);
+      });
     }
   }, {
     key: "ambgMatchMulti",
     value: function ambgMatchMulti(q) {
       if (index_type.isArticles(this._id.type)) {
-        return this._name.toLowerCase().includes(q.toLowerCase());
+        var lowerQ = q.toLowerCase();
+        return this._name.toLowerCase().includes(lowerQ) || this._aliases.some(function (alias) {
+          return alias.toLowerCase().includes(lowerQ);
+        });
       }
-      return this._name.includes(q) || this._in_header && this._in_header._name.includes(q) || this._parent && this._parent._name.includes(q);
+      return this._name.includes(q) || this._namespacedAliases.some(function (alias) {
+        return alias.includes(q);
+      }) || this._in_header && this._in_header._name.includes(q) || this._parent && this._parent._name.includes(q);
     }
   }, {
     key: "in_header",
@@ -4273,6 +4300,30 @@ var Database = /*#__PURE__*/function () {
         // 完全一致（フル名）を最優先
         if (aExactFull && !bExactFull) return -1;
         if (!aExactFull && bExactFull) return 1;
+
+        // エイリアス（名前空間付き）での完全一致を判定
+        var aExactAlias = q._and.some(function (s) {
+          return aidx._namespacedAliases && aidx._namespacedAliases.includes(s);
+        });
+        var bExactAlias = q._and.some(function (s) {
+          return bidx._namespacedAliases && bidx._namespacedAliases.includes(s);
+        });
+
+        // エイリアス（名前空間付き）での完全一致を優先
+        if (aExactAlias && !bExactAlias) return -1;
+        if (!aExactAlias && bExactAlias) return 1;
+
+        // エイリアス（名前空間なし）での完全一致を判定
+        var aExactAliasShort = q._and.some(function (s) {
+          return aidx._aliases && aidx._aliases.includes(s);
+        });
+        var bExactAliasShort = q._and.some(function (s) {
+          return bidx._aliases && bidx._aliases.includes(s);
+        });
+
+        // エイリアス（名前空間なし）での完全一致を優先
+        if (aExactAliasShort && !bExactAliasShort) return -1;
+        if (!aExactAliasShort && bExactAliasShort) return 1;
 
         // 名前空間を除いた部分での完全一致を判定
         var aExactPart = q._and.some(function (s) {
