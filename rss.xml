@@ -2,9 +2,158 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2026-01-11T15:26:37.163407</updated>
-  <id>6391b526-302c-43ac-af73-38bee3fcc88b</id>
+  <updated>2026-01-12T03:57:57.535404</updated>
+  <id>1479cb97-1d27-4dab-a2c6-bce470d4025c</id>
 
+  
+    <entry>
+      <title>copysign -- feat(cmath): copysignやsignbitにinfやnanの例を追加 (#1559)</title>
+      <link href="https://cpprefjp.github.io/reference/cmath/copysign.html"/>
+      <id>48403c252deeb4fc1b3b718f0a1985f33acd5af3:reference/cmath/copysign.md</id>
+      <updated>2026-01-12T12:53:40+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/cmath/copysign.md b/reference/cmath/copysign.md
+index b4679ea14..e31b2c84b 100644
+--- a/reference/cmath/copysign.md
++++ b/reference/cmath/copysign.md
+@@ -64,6 +64,7 @@ namespace std {
+ 
+ ## 備考
+ - 符号付きゼロを表現するが負のゼロを取り扱わない実装では、この関数はゼロを正と見なす。
++- 浮動小数点数の符号ビットを検出したい場合は、[`std::signbit`](/reference/cmath/signbit.md)を使用できる。`NaN`の符号を検出できる移植性のある方法はこの2つのみである。
+ - C++23では、(1), (2), (3)が(4)に統合され、拡張浮動小数点数型を含む浮動小数点数型へのオーバーロードとして定義された
+ 
+ 
+@@ -71,22 +72,40 @@ namespace std {
+ ```cpp example
+ #include &amp;lt;iostream&amp;gt;
+ #include &amp;lt;cmath&amp;gt;
++#include &amp;lt;limits&amp;gt;
+ 
+ int main()
+ {
+-  float result1 = std::copysign(1.0f, 2.0f);
+-  float result2 = std::copysign(1.0f, -2.0f);
+-
+-  std::cout &amp;lt;&amp;lt; result1 &amp;lt;&amp;lt; std::endl;
+-  std::cout &amp;lt;&amp;lt; result2 &amp;lt;&amp;lt; std::endl;
++  // 通常の数値
++  std::cout &amp;lt;&amp;lt; &amp;#34;1.0f,  2.0f : &amp;#34; &amp;lt;&amp;lt; std::copysign(1.0f, 2.0f) &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; &amp;#34;0.0f, -2.0f : &amp;#34; &amp;lt;&amp;lt; std::copysign(0.0f, -2.0f) &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; &amp;#34;1.5f, -0.0f : &amp;#34; &amp;lt;&amp;lt; std::copysign(1.5f, -0.0f) &amp;lt;&amp;lt; std::endl;
++
++  // 無限大
++  const float inf = std::numeric_limits&amp;lt;float&amp;gt;::infinity();
++  std::cout &amp;lt;&amp;lt; &amp;#34;-inf,  3.0f : &amp;#34; &amp;lt;&amp;lt; std::copysign(-inf, 3.0f) &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; &amp;#34;3.0f,  -inf : &amp;#34; &amp;lt;&amp;lt; std::copysign(3.0f, -inf) &amp;lt;&amp;lt; std::endl;
++
++  // NaN (Not a Number)
++  // NaNの符号もコピーされる。
++  const float nan = std::numeric_limits&amp;lt;float&amp;gt;::quiet_NaN();
++  std::cout &amp;lt;&amp;lt; &amp;#34; nan, -4.2f : &amp;#34; &amp;lt;&amp;lt; std::copysign(nan, -4.2f) &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; &amp;#34;4.2f,  -nan : &amp;#34; &amp;lt;&amp;lt; std::copysign(4.2f, -nan) &amp;lt;&amp;lt; std::endl;
+ }
+ ```
+ * std::copysign[color ff0000]
++* infinity()[link /reference/limits/numeric_limits/infinity.md]
++* quiet_NaN()[link /reference/limits/numeric_limits/quiet_nan.md]
+ 
+ ### 出力
+ ```
+-1
+--1
++1.0f,  2.0f : 1
++0.0f, -2.0f : -0
++1.5f, -0.0f : -1.5
++-inf,  3.0f : inf
++3.0f,  -inf : -3
++ nan, -4.2f : -nan
++4.2f,  -nan : -4.2
+ ```
+ 
+ ### 備考
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>teruyamato0731</name>
+        <email>77840326+teruyamato0731@users.noreply.github.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>signbit -- feat(cmath): copysignやsignbitにinfやnanの例を追加 (#1559)</title>
+      <link href="https://cpprefjp.github.io/reference/cmath/signbit.html"/>
+      <id>48403c252deeb4fc1b3b718f0a1985f33acd5af3:reference/cmath/signbit.md</id>
+      <updated>2026-01-12T12:53:40+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/cmath/signbit.md b/reference/cmath/signbit.md
+index 9689541ea..4b575c401 100644
+--- a/reference/cmath/signbit.md
++++ b/reference/cmath/signbit.md
+@@ -45,26 +45,46 @@ namespace std {
+ 
+ ## 例
+ ```cpp example
+-#include &amp;lt;cassert&amp;gt;
++#include &amp;lt;iostream&amp;gt;
+ #include &amp;lt;cmath&amp;gt;
++#include &amp;lt;limits&amp;gt;
+ 
+ int main()
+ {
+-  assert(std::signbit(-1.0f));
+-  assert(std::signbit(-0.0f));
+-
+-  assert(!std::signbit(1.0f));
+-  assert(!std::signbit(0.0f));
+-
+-  constexpr float nan = std::numeric_limits&amp;lt;float&amp;gt;::quiet_NaN();
+-  assert(!std::signbit(nan));
+-  assert(std::signbit(-nan));
++  // 通常の数値
++  std::cout &amp;lt;&amp;lt; std::boolalpha;
++  std::cout &amp;lt;&amp;lt; &amp;#34;-1.0f : &amp;#34; &amp;lt;&amp;lt; std::signbit(-1.0f) &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; &amp;#34;-0.0f : &amp;#34; &amp;lt;&amp;lt; std::signbit(-0.0f) &amp;lt;&amp;lt; std::endl;
++
++  std::cout &amp;lt;&amp;lt; &amp;#34;1.0f  : &amp;#34; &amp;lt;&amp;lt; std::signbit(1.0f) &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; &amp;#34;0.0f  : &amp;#34; &amp;lt;&amp;lt; std::signbit(0.0f) &amp;lt;&amp;lt; std::endl;
++
++  // 無限大
++  const double inf = std::numeric_limits&amp;lt;double&amp;gt;::infinity();
++  std::cout &amp;lt;&amp;lt; &amp;#34;inf   : &amp;#34; &amp;lt;&amp;lt; std::signbit(inf) &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; &amp;#34;-inf  : &amp;#34; &amp;lt;&amp;lt; std::signbit(-inf) &amp;lt;&amp;lt; std::endl;
++
++  // NaN (Not a Number)
++  // NaNの符号ビットも検出できる
++  const double nan = std::numeric_limits&amp;lt;double&amp;gt;::quiet_NaN();
++  std::cout &amp;lt;&amp;lt; &amp;#34;nan   : &amp;#34; &amp;lt;&amp;lt; std::signbit(nan) &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; &amp;#34;-nan  : &amp;#34; &amp;lt;&amp;lt; std::signbit(-nan) &amp;lt;&amp;lt; std::endl;
+ }
+ ```
+ * std::signbit[color ff0000]
++* infinity()[link /reference/limits/numeric_limits/infinity.md]
++* quiet_NaN()[link /reference/limits/numeric_limits/quiet_nan.md]
+ 
+ ### 出力
+ ```
++-1.0f : true
++-0.0f : true
++1.0f  : false
++0.0f  : false
++inf   : false
++-inf  : true
++nan   : false
++-nan  : true
+ ```
+ 
+ ### 備考
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>teruyamato0731</name>
+        <email>77840326+teruyamato0731@users.noreply.github.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>execution -- execution: P3552R3 task_scheduler(#1521)</title>
@@ -677,32 +826,6 @@ index 000000000..53615c4f4
       <author>
         <name>KaiTomotake</name>
         <email>kaitomotake@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>論理反転関数オブジェクト -- 論理反転関数オブジェクト : meta alias タグを追加 #1545</title>
-      <link href="https://cpprefjp.github.io/reference/functional/negators.html"/>
-      <id>d39c9aa8732432ba0f0161c4efcb9d8ba99c8d65:reference/functional/negators.md</id>
-      <updated>2026-01-09T11:23:58+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/functional/negators.md b/reference/functional/negators.md
-index c5a790059..3a9d5260a 100644
---- a/reference/functional/negators.md
-+++ b/reference/functional/negators.md
-@@ -4,6 +4,7 @@
- * class template[meta id-type]
- * cpp17deprecated[meta cpp]
- * cpp20removed[meta cpp]
-+* unary_negate,binary_negate,not1,not2[meta alias]
- 
- ```cpp
- namespace std {
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
       </author>
     </entry>
   
