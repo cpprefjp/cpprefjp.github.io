@@ -2,9 +2,259 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2026-01-13T08:05:53.804643</updated>
-  <id>f97caccb-edb8-473d-83f6-e986ad62d76a</id>
+  <updated>2026-01-13T11:44:08.114502</updated>
+  <id>142f26f9-9fb8-480a-aa96-258e536d2d0b</id>
 
+  
+    <entry>
+      <title>task_scheduler -- execution/task_scheduler: 調整(#1521)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/task_scheduler.html"/>
+      <id>c54cea58c25294bc6b65fce0cb0df7453e5e6bb0:reference/execution/execution/task_scheduler.md</id>
+      <updated>2026-01-13T20:37:50+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/task_scheduler.md b/reference/execution/execution/task_scheduler.md
+index 96df8fa03..971a126b5 100644
+--- a/reference/execution/execution/task_scheduler.md
++++ b/reference/execution/execution/task_scheduler.md
+@@ -23,7 +23,7 @@ namespace std::execution {
+ 
+ - `sch_` : [`shared_ptr`](/reference/memory/shared_ptr.md)`&amp;lt;void&amp;gt;`型
+ 
+-`task_scheduler`型のオブジェクト`s`に対して、`SCHED(s)`を`s.sch_`により所有されるオブジェクトとする。
++`task_scheduler`型のオブジェクト`s`に対して、`SCHED(s)`を`s.sch_`が所有するポインタが指すオブジェクトとする。
+ 
+ 
+ ## メンバ関数
+@@ -32,6 +32,7 @@ namespace std::execution {
+ |------|------|----------------|
+ | [`(constructor)`](task_scheduler/op_constructor.md) | コンストラクタ | C++26 |
+ | `(destructor)` | デストラクタ | C++26 |
++| [`operator=`](task_scheduler/op_assign.md) | 代入演算子 | C++26 |
+ | [`schedule`](task_scheduler/schedule.md) | [スケジュールSender](schedule.md)を返す | C++26 |
+ 
+ 
+@@ -89,3 +90,4 @@ int main()
+ 
+ ## 参照
+ - [P3552R3 Add a Coroutine Task Type](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html)
++- [LWG4446. Bad phrasing for `SCHED(s)`](https://cplusplus.github.io/LWG/issue4446)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator= -- execution/task_scheduler: 調整(#1521)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/task_scheduler/op_assign.html"/>
+      <id>c54cea58c25294bc6b65fce0cb0df7453e5e6bb0:reference/execution/execution/task_scheduler/op_assign.md</id>
+      <updated>2026-01-13T20:37:50+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/task_scheduler/op_assign.md b/reference/execution/execution/task_scheduler/op_assign.md
+new file mode 100644
+index 000000000..c661b3b38
+--- /dev/null
++++ b/reference/execution/execution/task_scheduler/op_assign.md
+@@ -0,0 +1,30 @@
++# operator=
++* execution[meta header]
++* std::execution[meta namespace]
++* task_scheduler[meta class]
++* function[meta id-type]
++* cpp26[meta cpp]
++
++```cpp
++task_scheduler&amp;amp; operator=(const task_scheduler&amp;amp;) = default;
++```
++* task_scheduler[link ../task_scheduler.md]
++
++## 概要
++ムーブ代入演算子
++
++
++## バージョン
++### 言語
++- C++26
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): ??
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 参照
++- [P3552R3 Add a Coroutine Task Type](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html)
++- [LWG4445. `sch_` must not be in moved-from state](https://cplusplus.github.io/LWG/issue4445)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- execution/task_scheduler: 調整(#1521)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/task_scheduler/op_constructor.html"/>
+      <id>c54cea58c25294bc6b65fce0cb0df7453e5e6bb0:reference/execution/execution/task_scheduler/op_constructor.md</id>
+      <updated>2026-01-13T20:37:50+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/task_scheduler/op_constructor.md b/reference/execution/execution/task_scheduler/op_constructor.md
+index 6a38d98e7..cf797bda9 100644
+--- a/reference/execution/execution/task_scheduler/op_constructor.md
++++ b/reference/execution/execution/task_scheduler/op_constructor.md
+@@ -8,26 +8,29 @@
+ ```cpp
+ template &amp;lt;class Sch, class Allocator = allocator&amp;lt;void&amp;gt;&amp;gt;
+   requires(!same_as&amp;lt;task_scheduler, remove_cvref_t&amp;lt;Sch&amp;gt;&amp;gt;) &amp;amp;&amp;amp; scheduler&amp;lt;Sch&amp;gt;
+-explicit task_scheduler(Sch&amp;amp;&amp;amp; sch, Allocator alloc = {});
++explicit task_scheduler(Sch&amp;amp;&amp;amp; sch, Allocator alloc = {});  // (1)
++
++task_scheduler(const task_scheduler&amp;amp;) = default;  // (2)
+ ```
++* task_scheduler[link ../task_scheduler.md]
+ * scheduler[link ../scheduler.md]
+ 
+ ## 概要
+-[Scheduler](../scheduler.md)`sch`とアロケータ`alloc`を保持する`task_scheduler`オブジェクトを構築する。
+-
++- (1) : [Scheduler](../scheduler.md)`sch`とアロケータ`alloc`を保持する`task_scheduler`オブジェクトを構築する。
++- (2) : ムーブコンストラクタ
+ 
+ ## テンプレートパラメータ制約
+-`Sch`は`task_scheduler`ではなく、[`scheduler`](../scheduler.md)を満たす。
++(1) : `Sch`は`task_scheduler`ではなく、[`scheduler`](../scheduler.md)を満たす。
+ 
+ 
+ ## 効果
+-説明専用のメンバ変数`sch_`を[`allocate_shared`](/reference/memory/allocate_shared.md)`&amp;lt;`[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;Sch&amp;gt;&amp;gt;(alloc,` [`std::forward`](/reference/utility/forward.md)`&amp;lt;Sch&amp;gt;(sch))`で初期化する。
++(1) 説明専用のメンバ変数`sch_`を[`allocate_shared`](/reference/memory/allocate_shared.md)`&amp;lt;`[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;Sch&amp;gt;&amp;gt;(alloc,` [`std::forward`](/reference/utility/forward.md)`&amp;lt;Sch&amp;gt;(sch))`で初期化する。
+ 
+ 
+ ## 備考
+-処理系は小さなSchedulerオブジェクトに対して動的メモリ確保を避けることが推奨される。
++(1) 処理系は小さなSchedulerオブジェクトに対して動的メモリ確保を避けることが推奨される。
+ 
+-`*this`上の呼び出しによってえられる[`sender`や`state`オブジェクト](schedule.md)の構築では、`alloc`のコピーを用いてメモリ確保が行われる。
++`*this`上の呼び出しによってえられる[`ts-sender`や`state`オブジェクト](schedule.md)の構築では、`alloc`のコピーを用いてメモリ確保が行われる。
+ 
+ 
+ ## バージョン
+@@ -47,3 +50,4 @@ explicit task_scheduler(Sch&amp;amp;&amp;amp; sch, Allocator alloc = {});
+ 
+ ## 参照
+ - [P3552R3 Add a Coroutine Task Type](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html)
++- [LWG4445. `sch_` must not be in moved-from state](https://cplusplus.github.io/LWG/issue4445)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>schedule -- execution/task_scheduler: 調整(#1521)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/task_scheduler/schedule.html"/>
+      <id>c54cea58c25294bc6b65fce0cb0df7453e5e6bb0:reference/execution/execution/task_scheduler/schedule.md</id>
+      <updated>2026-01-13T20:37:50+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/task_scheduler/schedule.md b/reference/execution/execution/task_scheduler/schedule.md
+index 32771f880..5647fab8d 100644
+--- a/reference/execution/execution/task_scheduler/schedule.md
++++ b/reference/execution/execution/task_scheduler/schedule.md
+@@ -6,22 +6,24 @@
+ * cpp26[meta cpp]
+ 
+ ```cpp
+-sender schedule();
++ts-sender schedule();
+ ```
+-* sender[italic]
++* ts-sender[italic]
+ 
+ ## 概要
+ 保持中[Scheduler](../scheduler.md)の[スケジュールSender](../schedule.md)を返す。
+ 
+ 
+ ## 効果
+-[`schedue`](../schedule.md)`(SCHED(*this))`で初期化された[Sender](../sender.md)を保持する、説明専用の`sender`型オブジェクトを返す。
++[`schedue`](../schedule.md)`(SCHED(*this))`で初期化された[Sender](../sender.md)を保持する、説明専用の`ts-sender`型オブジェクトを返す。
+ 
+-### クラス`sender`
+-説明専用のクラス`task_scheduler::sender`は下記の通り定義される。
++
++## 説明専用エンティティ
++### クラス`ts-sender`
++説明専用のクラス`task_scheduler::ts-sender`は下記の通り定義される。
+ 
+ ```cpp
+-class task_scheduler::sender { // exposition only
++class task_scheduler::ts-sender { // exposition only
+ public:
+   using sender_concept = sender_t;
+ 
+@@ -33,7 +35,7 @@ public:
+ * receiver[link ../receiver.md]
+ * state[italic]
+ 
+-`sender`は[`sender`](../sender.md)のモデルであり、[`completion_signatures_of_t`](../completion_signatures_of_t.md)`&amp;lt;sender&amp;gt;`は下記となる :
++`ts-sender`は[`sender`](../sender.md)のモデルであり、[`completion_signatures_of_t`](../completion_signatures_of_t.md)`&amp;lt;ts-sender&amp;gt;`は下記となる :
+ 
+ ```cpp
+ completion_signatures&amp;lt;
+@@ -49,16 +51,16 @@ completion_signatures&amp;lt;
+ * error_code[link /reference/system_error/error_code.md]
+ * exception_ptr[link /reference/exception/exception_ptr.md]
+ 
+-説明用の`sch`を`task_sender`型のオブジェクト、`sndr`を[`schedule`](../schedule.md)`(sch)`により得られる`sender`型のオブジェクトとする。[`get_completion_scheduler`](../get_completion_scheduler.md)`&amp;lt;`[`set_value_t`](../set_value.md)`&amp;gt;(`[`get_env`](../get_env.md)`(sndr)) == sch`は`true`となる。オブジェクト`SENDER(sndr)`は、`sndr`または同オブジェクトからムーブ構築された[Sender](../sender.md)オブジェクトとする。
++説明用の`sch`を`task_sender`型のオブジェクト、`sndr`を[`schedule`](../schedule.md)`(sch)`により得られる`ts-sender`型のオブジェクトとする。[`get_completion_scheduler`](../get_completion_scheduler.md)`&amp;lt;`[`set_value_t`](../set_value.md)`&amp;gt;(`[`get_env`](../get_env.md)`(sndr)) == sch`は`true`となる。オブジェクト`SENDER(sndr)`は、`sndr`または同オブジェクトからムーブ構築された[Sender](../sender.md)オブジェクトとする。
+ 
+ ```cpp
+ template&amp;lt;receiver Rcvr&amp;gt;
+-state&amp;lt;Rcvr&amp;gt; connect(Rcvr&amp;amp;&amp;amp; rcvr);
++state&amp;lt;Rcvr&amp;gt; connect(Rcvr&amp;amp;&amp;amp; rcvr) &amp;amp;&amp;amp;;
+ ```
+ * state[italic]
+ 
+ - 効果 : `r`を[`receiver`](../receiver.md)のモデルである型のオブジェクトとし、その完了ハンドラは
+-`rcvr`またはそのコピーに対応する完了ハンドラを呼び出すものとする。[`connect`](../connect.md)`(SENDER(*this),` [`std::move`](/reference/utility/move.md)`(r))`で初期化された[OperationState](../operation_state.md)オブジェクトを保持する`state&amp;lt;Rcvr&amp;gt;`型のオブジェクトを返す。
++`rcvr`またはそのコピーに対応する完了ハンドラを呼び出すものとする。[`connect`](../connect.md)`(SENDER(*this),` [`std::move`](/reference/utility/move.md)`(r))`で初期化された[Operation State](../operation_state.md)オブジェクトを保持する`state&amp;lt;Rcvr&amp;gt;`型のオブジェクトを返す。
+ 
+ 
+ ### クラステンプレート`state`
+@@ -73,6 +75,7 @@ public:
+   void start() &amp;amp; noexcept;
+ };
+ ```
++* receiver[link ../receiver.md]
+ * operation_state_t[link ../operation_state.md]
+ 
+ `state`の特殊化は[`operation_state`](../operation_state.md)のモデルである。
+@@ -81,7 +84,7 @@ public:
+ void start() &amp;amp; noexcept;
+ ```
+ 
+-- 効果 : `s`を`*this`に含まれる[OperationState](../operation_state.md)オブジェクトとして、[`start`](../start.md)`(st)`と等価。
++- 効果 : `st`を`*this`に含まれる[Operation State](../operation_state.md)オブジェクトとして、[`start`](../start.md)`(st)`と等価。
+ 
+ 
+ ## バージョン
+@@ -101,3 +104,4 @@ void start() &amp;amp; noexcept;
+ 
+ ## 参照
+ - [P3552R3 Add a Coroutine Task Type](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html)
++- [4342. Missing rvalue reference qualification for `task_scheduler::ts-sender::connect()`](https://cplusplus.github.io/LWG/issue4342)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>page_title (1行目の見出し1はページのタイトルです。修飾なしで記載してください) -- 編集者向けドキュメント : 説明専用の機能につけるメタタグについて記載 #1558</title>
@@ -572,33 +822,6 @@ index 7d9970fe2..b21259576 100644
  - [LWG #2103 - `std::allocator_traits&amp;lt;std::allocator&amp;lt;T&amp;gt;&amp;gt;::propagate_on_container_move_assignment`](http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#2103)
  - [N2669 Thread-Safety in the Standard Library (Rev 2)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2669.htm)
  - [AllocatorAwareContainer: Introduction and pitfalls of `propagate_on_container_XXX` defaults](https://www.foonathan.net/2015/10/allocatorawarecontainer-propagation-pitfalls/)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>allocator_traits -- リンク切れを修正</title>
-      <link href="https://cpprefjp.github.io/reference/memory/allocator_traits.html"/>
-      <id>ca315ba7b089f5a8895fc1e0472c1e83c1ab3c07:reference/memory/allocator_traits.md</id>
-      <updated>2026-01-13T10:58:29+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/memory/allocator_traits.md b/reference/memory/allocator_traits.md
-index 0dbfbf3c2..0b4df91c7 100644
---- a/reference/memory/allocator_traits.md
-+++ b/reference/memory/allocator_traits.md
-@@ -208,7 +208,7 @@ int main() {
- 
- ## 参照
- - [Allocators@C++11 - Cryolite](http://www.slideshare.net/Cryolite/allocator11final)
--- [A visitor’s guide to C++ allocators](https://rawgit.com/google/cxx-std-draft/allocator-paper/allocator_user_guide.html)
-+- [A visitor’s guide to C++ allocators](https://htmlpreview.github.io/?https://github.com/google/cxx-std-draft/blob/allocator-paper/allocator_user_guide.html)
- - [N2982 Allocators post Removal of C++ Concepts (Rev 1)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2009/n2982.pdf)
- - [AllocatorAwareContainer: Introduction and pitfalls of `propagate_on_container_XXX` defaults](https://www.foonathan.net/2015/10/allocatorawarecontainer-propagation-pitfalls/)
- - [N4258 Cleaning-up noexcept in the Library, Rev 3](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4258.pdf)
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
