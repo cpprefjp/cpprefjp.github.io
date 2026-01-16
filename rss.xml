@@ -2,9 +2,269 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2026-01-16T00:15:02.734035</updated>
-  <id>15656bd2-f2b6-450f-a75d-768d3c9c89a5</id>
+  <updated>2026-01-16T02:23:06.380179</updated>
+  <id>9677be4a-444e-47b2-870d-b878645dfcef</id>
 
+  
+    <entry>
+      <title>execution -- execution: P3552R3 change_coroutine_scheduler(#1521)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution.html"/>
+      <id>3a507f9df2b8e0be9d9f507a66ea85e7b395326d:reference/execution/execution.md</id>
+      <updated>2026-01-16T11:18:46+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution.md b/reference/execution/execution.md
+index 364372be2..2789282d1 100644
+--- a/reference/execution/execution.md
++++ b/reference/execution/execution.md
+@@ -164,7 +164,7 @@ Senderコンシューマは名前空間 `std::this_thread` および名前空間
+ | [`execution::inline_scheduler`](execution/inline_scheduler.md) | インラインScheduler (class) | C++26 |
+ | [`execution::task_scheduler`](execution/task_scheduler.md) | 任意Scheduler型を保持するScheduler (class) | C++26 |
+ | [`execution::with_error`](execution/with_error.md) | タスクコルーチンからのエラー完了 (class template) | C++26 |
+-| [`execution::change_coroutine_scheduler`](execution/change_coroutine_scheduler.md.nolink) | タスクコルーチンのScheduler変更 (class template) | C++26 |
++| [`execution::change_coroutine_scheduler`](execution/change_coroutine_scheduler.md) | タスクコルーチンのScheduler変更 (class template) | C++26 |
+ | [`execution::task`](execution/task.md) | タスクコルーチン戻り値型 (class template) | C++26 |
+ 
+ ### 実行スコープユーティリティ
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>change_coroutine_scheduler -- execution: P3552R3 change_coroutine_scheduler(#1521)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/change_coroutine_scheduler.html"/>
+      <id>3a507f9df2b8e0be9d9f507a66ea85e7b395326d:reference/execution/execution/change_coroutine_scheduler.md</id>
+      <updated>2026-01-16T11:18:46+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/change_coroutine_scheduler.md b/reference/execution/execution/change_coroutine_scheduler.md
+new file mode 100644
+index 000000000..019b4d24e
+--- /dev/null
++++ b/reference/execution/execution/change_coroutine_scheduler.md
+@@ -0,0 +1,104 @@
++# change_coroutine_scheduler
++* execution[meta header]
++* class template[meta id-type]
++* std::execution[meta namespace]
++* cpp26[meta cpp]
++
++```cpp
++namespace std::execution {
++  template&amp;lt;scheduler Sch&amp;gt;
++  struct change_coroutine_scheduler {
++    using type = remove_cvref_t&amp;lt;Sch&amp;gt;;
++    type scheduler;
++  };
++
++  template&amp;lt;scheduler Sch&amp;gt;
++  change_coroutine_scheduler(Sch) -&amp;gt; change_coroutine_scheduler&amp;lt;Sch&amp;gt;;
++}
++```
++* scheduler[link scheduler.md]
++
++## 概要
++タスク[`execution::task`](task.md)を戻り値型とする[コルーチン](/lang/cpp20/coroutines.md)において、`co_await`式でタスク[Scheduler](scheduler.md)変更を表現するタグ型。
++
++```cpp
++co_await change_coroutine_scheduler{sch}
++```
++
++タスクコルーチンにおいて後続の非同期処理を実行するタスク[Scheduler](scheduler.md)を`sch`に変更する。同`co_await`式は変更前のタスクSchedulerを返す。
++
++詳細仕様は[`task::promise_type::await_transform`](./task/promise_type/await_transform.md)を参照のこと。
++
++
++## 例
++```cpp example
++#include &amp;lt;execution&amp;gt;
++#include &amp;lt;print&amp;gt;
++namespace ex = std::execution;
++
++ex::task&amp;lt;&amp;gt; work()
++{
++  // sch0 := 本コルーチン(Sender)を開始したScheduler
++  // shc1 := co_await式で利用する別Scheduler（並列Schedulerを利用）
++  std::println(&amp;#34;run on Scheduler#0&amp;#34;);
++  ex::scheduler auto sch1 = ex::get_parallel_scheduler();
++
++  co_await (ex::schedule(sch1) | ex::then([]{
++    // Scheduler sch1上で非同期処理を実行
++    std::println(&amp;#34;run on Scheduler#1&amp;#34;);
++  }));
++  // コルーチンタスクのデフォルト動作:
++  //   co_await式はScheduler Affinityを維持するため
++  //   コルーチン後続処理は元Scheduler上で実行される
++  std::println(&amp;#34;run on Scheduler#0&amp;#34;);
++ 
++  // 本コルーチンのタスクSchedulerをinline_schedulerへ変更
++  co_await ex::change_coroutine_scheduler{ex::inline_scheduler{}};
++
++  co_await (ex::schedule(sch) | ex::then([]{
++    // Scheduler sch1上で非同期処理を実行
++    std::println(&amp;#34;run on Scheduler#1&amp;#34;);
++  }));
++  // inline_scheduler動作:
++  //   co_await式のScheduler Affinity維持を抑止するため
++  //   同式中で変更したScheduler上でコルーチン後続処理が実行される
++  std::println(&amp;#34;run on Scheduler#1&amp;#34;);
++}
++
++int main()
++{
++  std::this_thread::sync_wait(work());
++}
++```
++* ex::change_coroutine_scheduler[color ff0000]
++* ex::task[link task.md]
++* ex::scheduler[link scheduler.md]
++* ex::then[link then.md]
++* ex::get_parallel_scheduler[link get_parallel_scheduler.md]
++* ex::inline_scheduler[link inline_scheduler.md]
++* std::this_thread::sync_wait[link ../this_thread/sync_wait.md]
++
++### 出力
++```
++```
++
++
++## バージョン
++### 言語
++- C++26
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): ??
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 関連項目
++- [`execution::task`](task.md)
++- [`execution::inline_scheduler`](inline_scheduler.md)
++
++
++## 参照
++- [P3552R3 Add a Coroutine Task Type](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html)
++- C++now 2025, [Getting The Lazy Task Done](https://schedule.cppnow.org/wp-content/uploads/2025/03/Getting_The_Lazy_Task_Done.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>task -- execution: P3552R3 change_coroutine_scheduler(#1521)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/task.html"/>
+      <id>3a507f9df2b8e0be9d9f507a66ea85e7b395326d:reference/execution/execution/task.md</id>
+      <updated>2026-01-16T11:18:46+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/task.md b/reference/execution/execution/task.md
+index 7c71b6891..adec68bfe 100644
+--- a/reference/execution/execution/task.md
++++ b/reference/execution/execution/task.md
+@@ -117,7 +117,7 @@ int main()
+ 
+ ## 関連項目
+ - [`execution::with_error`](with_error.md)
+-- [`execution::change_coroutine_scheduler`](change_coroutine_scheduler.md.nolink)
++- [`execution::change_coroutine_scheduler`](change_coroutine_scheduler.md)
+ - [`execution::task_scheduler`](task_scheduler.md)
+ 
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>await_transform -- execution: P3552R3 change_coroutine_scheduler(#1521)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/task/promise_type/await_transform.html"/>
+      <id>3a507f9df2b8e0be9d9f507a66ea85e7b395326d:reference/execution/execution/task/promise_type/await_transform.md</id>
+      <updated>2026-01-16T11:18:46+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/task/promise_type/await_transform.md b/reference/execution/execution/task/promise_type/await_transform.md
+index 8b94fbf43..5b473a780 100644
+--- a/reference/execution/execution/task/promise_type/await_transform.md
++++ b/reference/execution/execution/task/promise_type/await_transform.md
+@@ -13,7 +13,7 @@ template&amp;lt;class Sch&amp;gt;
+ auto await_transform(change_coroutine_scheduler&amp;lt;Sch&amp;gt; sch); // (2)
+ ```
+ * sender[link ../../sender.md]
+-* change_coroutine_scheduler[link ../../change_coroutine_scheduler.md.nolink]
++* change_coroutine_scheduler[link ../../change_coroutine_scheduler.md]
+ 
+ ## 概要
+ タスクコルーチンにおける[co_await式](/lang/cpp20/coroutines.md)の動作を制御する。
+@@ -31,7 +31,7 @@ auto await_transform(change_coroutine_scheduler&amp;lt;Sch&amp;gt; sch); // (2)
+     ```
+     * just[link ../../just.md]
+     * scheduler_type[link ../../task.md]
+-    * scheduler[link ../../change_coroutine_scheduler.md.nolink]
++    * scheduler[link ../../change_coroutine_scheduler.md]
+     * exchange[link /reference/utility/exchange.md]
+ 
+ 
+@@ -50,7 +50,7 @@ auto await_transform(change_coroutine_scheduler&amp;lt;Sch&amp;gt; sch); // (2)
+ - [`execution::as_awaitable`](../../as_awaitable.md)
+ - [`execution::affine_on`](../../affine_on.md.nolink)
+ - [`execution::inline_scheduler`](../../inline_scheduler.md)
+-- [`execution::change_coroutine_scheduler`](../../change_coroutine_scheduler.md.nolink)
++- [`execution::change_coroutine_scheduler`](../../change_coroutine_scheduler.md)
+ 
+ 
+ ## 参照
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>with_error -- execution: P3552R3 change_coroutine_scheduler(#1521)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/with_error.html"/>
+      <id>3a507f9df2b8e0be9d9f507a66ea85e7b395326d:reference/execution/execution/with_error.md</id>
+      <updated>2026-01-16T11:18:46+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/with_error.md b/reference/execution/execution/with_error.md
+index 155ecec11..95e9882ac 100644
+--- a/reference/execution/execution/with_error.md
++++ b/reference/execution/execution/with_error.md
+@@ -24,7 +24,9 @@ namespace std::execution {
+ co_yield with_error{err}
+ ```
+ 
+-型`Err`のエラー完了シグネチャ[`set_error_t`](set_error.md)`(Err)`を持つタスクコルーチンにおいて、非同期操作を`Err`型のエラー値`err`によってエラー完了させる。この`co_yield`式が再開(resume)することは決していない。
++型`Err`のエラー完了シグネチャ[`set_error_t`](set_error.md)`(Err)`を持つタスクコルーチンにおいて、非同期操作を`Err`型のエラー値`err`によってエラー完了させる。この`co_yield`式は決して再開(resume)されない。
++
++詳細仕様は[`task::promise_type::yield_value`](./task/promise_type/yield_value.md)を参照のこと。
+ 
+ 
+ ## 例
+@@ -62,6 +64,7 @@ int main()
+ * ex::set_error_t[link set_error.md]
+ * ex::task[link task.md]
+ * ex::upon_error[link upon_error.md]
++* std::this_thread::sync_wait[link ../this_thread/sync_wait.md]
+ 
+ ### 出力
+ ```
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>execution -- execution: P3552R3 with_error(#1521)</title>
@@ -1407,60 +1667,6 @@ index 89baa1078..f0d9ad975 100644
       <author>
         <name>yoh</name>
         <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>task::state -- typo修正とNGワード追加</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/task/state.html"/>
-      <id>10763a37b9ee4ebd784ffa4c87790c7fa4f3ba70:reference/execution/execution/task/state.md</id>
-      <updated>2026-01-14T17:30:27+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/task/state.md b/reference/execution/execution/task/state.md
-index c17485699..89baa1078 100644
---- a/reference/execution/execution/task/state.md
-+++ b/reference/execution/execution/task/state.md
-@@ -78,7 +78,7 @@ void start() &amp;amp; noexcept;
- 
-     - `prom.token.`[`stop_requested()`](/reference/stop_token/stoppable_token.md) : `st.stop_requested()`を返す。
-     - `prom.token.`[`stop_possible()`](/reference/stop_token/stoppable_token.md) : `st.stop_possible()`を返す。
--    ― 型`Fn`と型`Init`をそれぞれ[`invocalbe`](/reference/concepts/invocable.md)`&amp;lt;F&amp;gt;`と[`constructible_from`](/reference/concepts/constructible_from.md)`&amp;lt;Fn, Init&amp;gt;`のモデルとしたとき、[`stop_token::callback_type`](/reference/stop_token/stoppable_token.md)`&amp;lt;Fn&amp;gt;`は[`stoppable-callback-for`](/reference/stop_token/stoppable_token.md)`&amp;lt;Fn,` [`stop_token_type`](../task.md)`, Init&amp;gt;`のモデルである。
-+    ― 型`Fn`と型`Init`をそれぞれ[`invocable`](/reference/concepts/invocable.md)`&amp;lt;F&amp;gt;`と[`constructible_from`](/reference/concepts/constructible_from.md)`&amp;lt;Fn, Init&amp;gt;`のモデルとしたとき、[`stop_token::callback_type`](/reference/stop_token/stoppable_token.md)`&amp;lt;Fn&amp;gt;`は[`stoppable-callback-for`](/reference/stop_token/stoppable_token.md)`&amp;lt;Fn,` [`stop_token_type`](../task.md)`, Init&amp;gt;`のモデルである。
- 
-     その後、`handle.`[`resume()`](/reference/coroutine/coroutine_handle/resume.md)を呼び出す。
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>schedule -- typo修正とNGワード追加</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/task_scheduler/schedule.html"/>
-      <id>10763a37b9ee4ebd784ffa4c87790c7fa4f3ba70:reference/execution/execution/task_scheduler/schedule.md</id>
-      <updated>2026-01-14T17:30:27+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/task_scheduler/schedule.md b/reference/execution/execution/task_scheduler/schedule.md
-index 5647fab8d..6d64352a5 100644
---- a/reference/execution/execution/task_scheduler/schedule.md
-+++ b/reference/execution/execution/task_scheduler/schedule.md
-@@ -15,7 +15,7 @@ ts-sender schedule();
- 
- 
- ## 効果
--[`schedue`](../schedule.md)`(SCHED(*this))`で初期化された[Sender](../sender.md)を保持する、説明専用の`ts-sender`型オブジェクトを返す。
-+[`schedule`](../schedule.md)`(SCHED(*this))`で初期化された[Sender](../sender.md)を保持する、説明専用の`ts-sender`型オブジェクトを返す。
- 
- 
- ## 説明専用エンティティ
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
       </author>
     </entry>
   
