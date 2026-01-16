@@ -2,9 +2,212 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2026-01-16T14:52:51.170656</updated>
-  <id>16d4bc8a-1316-4056-baa6-e5043ee66e20</id>
+  <updated>2026-01-16T17:05:45.475861</updated>
+  <id>3e29062a-7347-43ac-8415-17397d1b291d</id>
 
+  
+    <entry>
+      <title>execution -- execution: P3552R3 affine_on(#1521)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution.html"/>
+      <id>a9f176508a00cd5873f5dae1b28a325d9ee8ce28:reference/execution/execution.md</id>
+      <updated>2026-01-17T02:01:12+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution.md b/reference/execution/execution.md
+index 2789282d1..2ab3e65dd 100644
+--- a/reference/execution/execution.md
++++ b/reference/execution/execution.md
+@@ -160,7 +160,7 @@ Senderコンシューマは名前空間 `std::this_thread` および名前空間
+ |------|------|----------------|
+ | [`execution::as_awaitable`](execution/as_awaitable.md) | Senderを[Awaitable型](/lang/cpp20/coroutines.md)へ変換 (customization point object) | C++26 |
+ | [`execution::with_awaitable_senders`](execution/with_awaitable_senders.md) | [Promise型](/lang/cpp20/coroutines.md)の基底クラス (class template) | C++26 |
+-| [`execution::affine_on`](execution/affine_on.md.nolink) | (customization point object) | C++26 |
++| [`execution::affine_on`](execution/affine_on.md) | タスクコルーチンのScheduler Affinityを実現 (customization point object) | C++26 |
+ | [`execution::inline_scheduler`](execution/inline_scheduler.md) | インラインScheduler (class) | C++26 |
+ | [`execution::task_scheduler`](execution/task_scheduler.md) | 任意Scheduler型を保持するScheduler (class) | C++26 |
+ | [`execution::with_error`](execution/with_error.md) | タスクコルーチンからのエラー完了 (class template) | C++26 |
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>affine_on -- execution: P3552R3 affine_on(#1521)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/affine_on.html"/>
+      <id>a9f176508a00cd5873f5dae1b28a325d9ee8ce28:reference/execution/execution/affine_on.md</id>
+      <updated>2026-01-17T02:01:12+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/affine_on.md b/reference/execution/execution/affine_on.md
+new file mode 100644
+index 000000000..fb44e610d
+--- /dev/null
++++ b/reference/execution/execution/affine_on.md
+@@ -0,0 +1,91 @@
++# affine_on
++* execution[meta header]
++* cpo[meta id-type]
++* std::execution[meta namespace]
++* cpp26[meta cpp]
++
++```cpp
++namespace std::execution {
++  struct affine_on_t { unspecified };
++  inline constexpr affine_on_t affine_on{};
++}
++```
++* unspecified[italic]
++
++## 概要
++`affine_on`は、指定[Scheduler](scheduler.md)上で完了させるSenderアダプタである。
++アダプト対象Senderが正しいScheduler上で完了すると判断できるとき、アルゴリズムはスケジューリング操作を回避できる。
++
++`affine_on`は[パイプ可能Senderアダプタオブジェクト](sender_adaptor_closure.md)であり、パイプライン記法をサポートする。
++
++
++## 効果
++説明用の式`sch`と`sndr`に対して、`decltype((sch))`が[`scheduler`](scheduler.md)を満たさない、もしくは`decltype((sndr))`が[`sender`](sender.md)を満たさないとき、呼び出し式`affine_on(sndr, sch)`は不適格となる。
++
++そうでなければ、呼び出し式`affine_on(sndr, sch)`は`sndr`が1回だけ評価されることを除いて、下記と等価。
++
++```cpp
++transform_sender(get-domain-early(sndr), make-sender(affine_on, sch, sndr))
++```
++* transform_sender[link transform_sender.md]
++* get-domain-early[link get-domain-early.md]
++* make-sender[link make-sender.md]
++
++
++### Senderアルゴリズムタグ `affine_on`
++Senderアルゴリズム動作説明用のクラステンプレート[`impls-for`](impls-for.md)に対して、下記の特殊化が定義される。
++
++```cpp
++namespace std::execution {
++  template&amp;lt;&amp;gt;
++  struct impls-for&amp;lt;affine_on_t&amp;gt; : default-impls {
++    static constexpr auto get-attrs =
++      [](const auto&amp;amp; data, const auto&amp;amp; child) noexcept -&amp;gt; decltype(auto) {
++        return JOIN-ENV(SCHED-ATTRS(data), FWD-ENV(get_env(child)));
++      };
++  };
++}
++```
++* impls-for[link impls-for.md]
++* default-impls[link impls-for.md]
++* JOIN-ENV[link ../queryable.md]
++* SCHED-ATTRS[link scheduler.md]
++* FWD-ENV[link ../forwarding_query.md]
++* get_env[link get_env.md]
++
++
++## カスタマイゼーションポイント
++Senderアルゴリズム構築時および[Receiver](receiver.md)接続時に、関連付けられた実行ドメインに対して[`execution::transform_sender`](transform_sender.md)経由でSender変換が行われる。
++[デフォルト実行ドメイン](default_domain.md)では無変換。
++
++説明用の式`out_sndr`を`affine_on(sndr, sch)`の戻り値[Sender](sender.md)とし、型`OutSndr`を`decltype((out_sndr))`とする。式`out_rcvr`を[`sender_in`](sender_in.md)`&amp;lt;OutSndr, Env&amp;gt; == true`となる[環境](../queryable.md)`Env`に関連付けられた[Receiver](receiver.md)とする。`out_sndr`と`out_rcvr`との[接続(connect)](connect.md)結果[Operation State](operation_state.md)への左辺値参照を`op`としたとき、
++
++- 呼び出し[`start`](start.md)`(op)`は、現在の実行エージェント上で入力[Sender](sender.md)`sndr`を開始し、[Scheduler](scheduler.md)`sch`に関連付けられた実行リソースに属する実行エージェント上で`out_rcvr`の完了操作が実行される。
++- 現在の実行リソースが`sch`に関連付けられた実行リソースと同一のとき、[`start`](start.md)`(op)`の完了よりも前に`out_rcvr`の完了操作が呼ばれる可能性がある。
++- `sch`上でのスケジューリングが失敗した場合、未規定の実行エージェント上で`out_rcvr`の[エラー完了](set_error.md)が行われるべき。
++
++
++## 備考
++`affine_on`アルゴリズムの動作は[`continues_on`](continues_on.md)と等価だが、処理系は不要なスケジューリング操作を省略（最適化）する可能性がある。
++
++`affine_on`は[タスクコルーチン](task.md)のScheduler Affinity実現に用いられる。
++詳細仕様は[`task::promise::await_transform`](task/promise_type/await_transform.md)を参照のこと。
++
++
++## バージョン
++### 言語
++- C++26
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): ??
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 関連項目
++- [`execution::task`](task.md)
++
++
++## 参照
++- [P3552R3 Add a Coroutine Task Type](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>get-domain-early -- execution: P3552R3 affine_on(#1521)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/get-domain-early.html"/>
+      <id>a9f176508a00cd5873f5dae1b28a325d9ee8ce28:reference/execution/execution/get-domain-early.md</id>
+      <updated>2026-01-17T02:01:12+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/get-domain-early.md b/reference/execution/execution/get-domain-early.md
+index b0f50fc3a..bdcfebfa0 100644
+--- a/reference/execution/execution/get-domain-early.md
++++ b/reference/execution/execution/get-domain-early.md
+@@ -46,7 +46,7 @@ constexpr auto get-domain-early(const Sndr&amp;amp; sndr) noexcept;
+ - [`execution::stopped_as_optional`](stopped_as_optional.md)
+ - [`execution::stopped_as_error`](stopped_as_error.md)
+ - [`execution::associate`](associate.md)
+-- [`execution::affine_on`](affine_on.md.nolink)
++- [`execution::affine_on`](affine_on.md)
+ - [`this_thread::sync_wait`](../this_thread/sync_wait.md)
+ - [`this_thread::sync_wait_with_variant`](../this_thread/sync_wait_with_variant.md)
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>await_transform -- execution: P3552R3 affine_on(#1521)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/task/promise_type/await_transform.html"/>
+      <id>a9f176508a00cd5873f5dae1b28a325d9ee8ce28:reference/execution/execution/task/promise_type/await_transform.md</id>
+      <updated>2026-01-17T02:01:12+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/task/promise_type/await_transform.md b/reference/execution/execution/task/promise_type/await_transform.md
+index 5b473a780..a232bad3c 100644
+--- a/reference/execution/execution/task/promise_type/await_transform.md
++++ b/reference/execution/execution/task/promise_type/await_transform.md
+@@ -22,8 +22,8 @@ auto await_transform(change_coroutine_scheduler&amp;lt;Sch&amp;gt; sch); // (2)
+ 
+ ## 効果
+ - (1) :
+-    - [`same_as`](/reference/concepts/same_as.md)`&amp;lt;`[`inline_scheduler`](../../inline_scheduler.md)`, `[`scheduler_type`](../../task.md)`&amp;gt; == true`ならば、[`as_awaitable`](../../as_awaitable.md)`(std::forward&amp;lt;Sender&amp;gt;(sndr), *this)`を返す。
+-    - そうでなければ、[`as_awaitable`](../../as_awaitable.md)`(`[`affine_on`](../../affine_on.md.nolink)`(std::forward&amp;lt;Sender&amp;gt;(sndr), SCHED(*this)), *this)`を返す。
++    - [`same_as`](/reference/concepts/same_as.md)`&amp;lt;`[`inline_scheduler`](../../inline_scheduler.md)`,` [`scheduler_type`](../../task.md)`&amp;gt; == true`ならば、[`as_awaitable`](../../as_awaitable.md)`(std::forward&amp;lt;Sender&amp;gt;(sndr), *this)`を返す。
++    - そうでなければ、[`as_awaitable`](../../as_awaitable.md)`(`[`affine_on`](../../affine_on.md)`(std::forward&amp;lt;Sender&amp;gt;(sndr), SCHED(*this)), *this)`を返す。
+ - (2) : 以下と等価
+ 
+     ```cpp
+@@ -48,7 +48,7 @@ auto await_transform(change_coroutine_scheduler&amp;lt;Sch&amp;gt; sch); // (2)
+ 
+ ## 関連項目
+ - [`execution::as_awaitable`](../../as_awaitable.md)
+-- [`execution::affine_on`](../../affine_on.md.nolink)
++- [`execution::affine_on`](../../affine_on.md)
+ - [`execution::inline_scheduler`](../../inline_scheduler.md)
+ - [`execution::change_coroutine_scheduler`](../../change_coroutine_scheduler.md)
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>logic_error -- fix logic_error.md</title>
@@ -511,39 +714,6 @@ index 000000000..155ecec11
 +
 +## 参照
 +- [P3552R3 Add a Coroutine Task Type](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>return_value -- execution/task/promise_type: LWG4345適用(#1521)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/task/promise_type/return_value.html"/>
-      <id>086802a0fe15b519173ff1093db58c3b9b1174bb:reference/execution/execution/task/promise_type/return_value.md</id>
-      <updated>2026-01-16T08:10:36+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/task/promise_type/return_value.md b/reference/execution/execution/task/promise_type/return_value.md
-index 1364540b6..a3b84244b 100644
---- a/reference/execution/execution/task/promise_type/return_value.md
-+++ b/reference/execution/execution/task/promise_type/return_value.md
-@@ -7,7 +7,7 @@
- 
- ```cpp
- // is_void_v&amp;lt;T&amp;gt; == false 時のみ存在
--template&amp;lt;class V&amp;gt;
-+template&amp;lt;class V = T&amp;gt;
- void return_value(V&amp;amp;&amp;amp; v);
- ```
- 
-@@ -33,4 +33,5 @@ void return_value(V&amp;amp;&amp;amp; v);
- 
- ## 参照
- - [P3552R3 Add a Coroutine Task Type](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html)
-+- [LWG4345. `task::promise_type::return_value` default template parameter](https://cplusplus.github.io/LWG/issue4345)
- - [LWG4346. `task::promise_type::return_void/value` lack a specification](https://cplusplus.github.io/LWG/issue4346)
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
