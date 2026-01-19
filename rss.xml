@@ -2,9 +2,100 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2026-01-18T14:44:45.754559</updated>
-  <id>5e24ee2e-175b-4385-95de-f11ac5117a31</id>
+  <updated>2026-01-19T03:08:06.232882</updated>
+  <id>c8f30124-8356-4cd3-a487-ccf5351f8624</id>
 
+  
+    <entry>
+      <title>connect -- exection: P3388R3対応 (#1568)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/connect.html"/>
+      <id>d7a98a9358747cb2ba43fff8d14b878b05952054:reference/execution/execution/connect.md</id>
+      <updated>2026-01-19T12:03:20+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/connect.md b/reference/execution/execution/connect.md
+index 5d4d76807..605110611 100644
+--- a/reference/execution/execution/connect.md
++++ b/reference/execution/execution/connect.md
+@@ -41,6 +41,16 @@ transform_sender(decltype(get-domain-late(sndr, get_env(rcvr))){}, sndr, get_env
+ - [`sender_in`](sender_in.md)`&amp;lt;Sndr,` [`env_of_t`](env_of_t.md)`&amp;lt;Rcvr&amp;gt;&amp;gt;`
+ - [`receiver_of`](receiver_of.md)`&amp;lt;Rcvr,` [`completion_signatures_of_t`](completion_signatures_of_t.md)`&amp;lt;Sndr,` [`env_of_t`](env_of_t.md)`&amp;lt;Rcvr&amp;gt;&amp;gt;&amp;gt;`
+ 
++下記を満たす右辺値式`rcvr2`が存在するとき、プログラムは不適格(診断不要)となる。
++
++- `decltype(rcvr2)`は[`receiver`](receiver.md)のモデルである
++- `noexcept(rcvr2)`が`true`
++- [`is_same_v`](/reference/type_traits/is_same.md)`&amp;lt;decltype(`[`get_env`](get_env.md)`(rcvr2)), decltype(get_env(rcvr))&amp;gt;`が`true`
++- `noexcept(execution::connect(sndr, rcvr))`が`true`
++- `noexcept(execution::connect(sndr, rcvr2))`が適格かつ`false`に評価される
++
++上記により[`get_completion_signatures`](get_completion_signatures.md)内部のように、環境のコンテキストのみから`connect`操作の例外送出有無を判断できるようになる。
++
+ 
+ ### Awaitable接続用へルパ
+ 説明用のクラス`connect-awaitable-promise`, `operation-state-task`をそれぞれ下記の通り定義する。
+@@ -243,4 +253,5 @@ int main()
+ - [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
+ - [P3396R1 std::execution wording fixes](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3396r1.html)
+ - [P3557R3 High-Quality Sender Diagnostics with Constexpr Exceptions](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3557r3.html)
++- [P3388R3 When Do You Know connect Doesn&amp;#39;t Throw?](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3388r3.pdf)
+ - [LWG 4208. Wording needs to ensure that in `connect(sndr, rcvr)` that `rcvr` expression is only evaluated once](https://cplusplus.github.io/LWG/issue4208)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>receiver -- exection: P3388R3対応 (#1568)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/receiver.html"/>
+      <id>d7a98a9358747cb2ba43fff8d14b878b05952054:reference/execution/execution/receiver.md</id>
+      <updated>2026-01-19T12:03:20+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/receiver.md b/reference/execution/execution/receiver.md
+index 7ba8cee15..6cd1942c3 100644
+--- a/reference/execution/execution/receiver.md
++++ b/reference/execution/execution/receiver.md
+@@ -13,7 +13,8 @@ namespace std::execution {
+       { get_env(rcvr) } -&amp;gt; queryable;
+     } &amp;amp;&amp;amp;
+     move_constructible&amp;lt;remove_cvref_t&amp;lt;Rcvr&amp;gt;&amp;gt; &amp;amp;&amp;amp;
+-    constructible_from&amp;lt;remove_cvref_t&amp;lt;Rcvr&amp;gt;, Rcvr&amp;gt;;
++    constructible_from&amp;lt;remove_cvref_t&amp;lt;Rcvr&amp;gt;, Rcvr&amp;gt; &amp;amp;&amp;amp;
++    is_nothrow_move_constructible_v&amp;lt;remove_cvref_t&amp;lt;Rcvr&amp;gt;&amp;gt;;
+ 
+   struct receiver_t {};  // タグ型
+ }
+@@ -22,6 +23,7 @@ namespace std::execution {
+ * queryable[link ../queryable.md]
+ * derived_from[link /reference/concepts/derived_from.md]
+ * constructible_from[link /reference/concepts/constructible_from.md]
++* is_nothrow_move_constructible_v[link /reference/type_traits/is_nothrow_move_constructible.md]
+ 
+ ## 概要
+ `receiver`は、型`Rcvr`がReceiver型の要件を満たすことを表すコンセプトである。
+@@ -30,7 +32,7 @@ namespace std::execution {
+ 
+ - `receiver_t`をメンバ型`Rcvr::receiver_concept`として定義する
+ - [`get_env`](get_env.md)で[環境](../queryable.md)を取得できる
+-- ムーブ可能
++- 例外送出せずにムーブ構築可能
+ 
+ 
+ ## モデル
+@@ -79,3 +81,4 @@ int main()
+ 
+ ## 参照
+ - [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
++- [P3388R3 When Do You Know connect Doesn&amp;#39;t Throw?](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3388r3.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>stdexcept -- add link to invalid_argument.md</title>
@@ -244,209 +335,6 @@ index cf7fafa84..c8d0d51d1 100644
 +&amp;lt;!-- 検索性向上のためキーワードを列挙 --&amp;gt;
  
  &amp;lt;!-- start lang caution --&amp;gt;
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>execution -- execution: P3552R3 affine_on(#1521)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution.html"/>
-      <id>a9f176508a00cd5873f5dae1b28a325d9ee8ce28:reference/execution/execution.md</id>
-      <updated>2026-01-17T02:01:12+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution.md b/reference/execution/execution.md
-index 2789282d1..2ab3e65dd 100644
---- a/reference/execution/execution.md
-+++ b/reference/execution/execution.md
-@@ -160,7 +160,7 @@ Senderコンシューマは名前空間 `std::this_thread` および名前空間
- |------|------|----------------|
- | [`execution::as_awaitable`](execution/as_awaitable.md) | Senderを[Awaitable型](/lang/cpp20/coroutines.md)へ変換 (customization point object) | C++26 |
- | [`execution::with_awaitable_senders`](execution/with_awaitable_senders.md) | [Promise型](/lang/cpp20/coroutines.md)の基底クラス (class template) | C++26 |
--| [`execution::affine_on`](execution/affine_on.md.nolink) | (customization point object) | C++26 |
-+| [`execution::affine_on`](execution/affine_on.md) | タスクコルーチンのScheduler Affinityを実現 (customization point object) | C++26 |
- | [`execution::inline_scheduler`](execution/inline_scheduler.md) | インラインScheduler (class) | C++26 |
- | [`execution::task_scheduler`](execution/task_scheduler.md) | 任意Scheduler型を保持するScheduler (class) | C++26 |
- | [`execution::with_error`](execution/with_error.md) | タスクコルーチンからのエラー完了 (class template) | C++26 |
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>affine_on -- execution: P3552R3 affine_on(#1521)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/affine_on.html"/>
-      <id>a9f176508a00cd5873f5dae1b28a325d9ee8ce28:reference/execution/execution/affine_on.md</id>
-      <updated>2026-01-17T02:01:12+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/affine_on.md b/reference/execution/execution/affine_on.md
-new file mode 100644
-index 000000000..fb44e610d
---- /dev/null
-+++ b/reference/execution/execution/affine_on.md
-@@ -0,0 +1,91 @@
-+# affine_on
-+* execution[meta header]
-+* cpo[meta id-type]
-+* std::execution[meta namespace]
-+* cpp26[meta cpp]
-+
-+```cpp
-+namespace std::execution {
-+  struct affine_on_t { unspecified };
-+  inline constexpr affine_on_t affine_on{};
-+}
-+```
-+* unspecified[italic]
-+
-+## 概要
-+`affine_on`は、指定[Scheduler](scheduler.md)上で完了させるSenderアダプタである。
-+アダプト対象Senderが正しいScheduler上で完了すると判断できるとき、アルゴリズムはスケジューリング操作を回避できる。
-+
-+`affine_on`は[パイプ可能Senderアダプタオブジェクト](sender_adaptor_closure.md)であり、パイプライン記法をサポートする。
-+
-+
-+## 効果
-+説明用の式`sch`と`sndr`に対して、`decltype((sch))`が[`scheduler`](scheduler.md)を満たさない、もしくは`decltype((sndr))`が[`sender`](sender.md)を満たさないとき、呼び出し式`affine_on(sndr, sch)`は不適格となる。
-+
-+そうでなければ、呼び出し式`affine_on(sndr, sch)`は`sndr`が1回だけ評価されることを除いて、下記と等価。
-+
-+```cpp
-+transform_sender(get-domain-early(sndr), make-sender(affine_on, sch, sndr))
-+```
-+* transform_sender[link transform_sender.md]
-+* get-domain-early[link get-domain-early.md]
-+* make-sender[link make-sender.md]
-+
-+
-+### Senderアルゴリズムタグ `affine_on`
-+Senderアルゴリズム動作説明用のクラステンプレート[`impls-for`](impls-for.md)に対して、下記の特殊化が定義される。
-+
-+```cpp
-+namespace std::execution {
-+  template&amp;lt;&amp;gt;
-+  struct impls-for&amp;lt;affine_on_t&amp;gt; : default-impls {
-+    static constexpr auto get-attrs =
-+      [](const auto&amp;amp; data, const auto&amp;amp; child) noexcept -&amp;gt; decltype(auto) {
-+        return JOIN-ENV(SCHED-ATTRS(data), FWD-ENV(get_env(child)));
-+      };
-+  };
-+}
-+```
-+* impls-for[link impls-for.md]
-+* default-impls[link impls-for.md]
-+* JOIN-ENV[link ../queryable.md]
-+* SCHED-ATTRS[link scheduler.md]
-+* FWD-ENV[link ../forwarding_query.md]
-+* get_env[link get_env.md]
-+
-+
-+## カスタマイゼーションポイント
-+Senderアルゴリズム構築時および[Receiver](receiver.md)接続時に、関連付けられた実行ドメインに対して[`execution::transform_sender`](transform_sender.md)経由でSender変換が行われる。
-+[デフォルト実行ドメイン](default_domain.md)では無変換。
-+
-+説明用の式`out_sndr`を`affine_on(sndr, sch)`の戻り値[Sender](sender.md)とし、型`OutSndr`を`decltype((out_sndr))`とする。式`out_rcvr`を[`sender_in`](sender_in.md)`&amp;lt;OutSndr, Env&amp;gt; == true`となる[環境](../queryable.md)`Env`に関連付けられた[Receiver](receiver.md)とする。`out_sndr`と`out_rcvr`との[接続(connect)](connect.md)結果[Operation State](operation_state.md)への左辺値参照を`op`としたとき、
-+
-+- 呼び出し[`start`](start.md)`(op)`は、現在の実行エージェント上で入力[Sender](sender.md)`sndr`を開始し、[Scheduler](scheduler.md)`sch`に関連付けられた実行リソースに属する実行エージェント上で`out_rcvr`の完了操作が実行される。
-+- 現在の実行リソースが`sch`に関連付けられた実行リソースと同一のとき、[`start`](start.md)`(op)`の完了よりも前に`out_rcvr`の完了操作が呼ばれる可能性がある。
-+- `sch`上でのスケジューリングが失敗した場合、未規定の実行エージェント上で`out_rcvr`の[エラー完了](set_error.md)が行われるべき。
-+
-+
-+## 備考
-+`affine_on`アルゴリズムの動作は[`continues_on`](continues_on.md)と等価だが、処理系は不要なスケジューリング操作を省略（最適化）する可能性がある。
-+
-+`affine_on`は[タスクコルーチン](task.md)のScheduler Affinity実現に用いられる。
-+詳細仕様は[`task::promise::await_transform`](task/promise_type/await_transform.md)を参照のこと。
-+
-+
-+## バージョン
-+### 言語
-+- C++26
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): ??
-+- [ICC](/implementation.md#icc): ??
-+- [Visual C++](/implementation.md#visual_cpp): ??
-+
-+
-+## 関連項目
-+- [`execution::task`](task.md)
-+
-+
-+## 参照
-+- [P3552R3 Add a Coroutine Task Type](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>get-domain-early -- execution: P3552R3 affine_on(#1521)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/get-domain-early.html"/>
-      <id>a9f176508a00cd5873f5dae1b28a325d9ee8ce28:reference/execution/execution/get-domain-early.md</id>
-      <updated>2026-01-17T02:01:12+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/get-domain-early.md b/reference/execution/execution/get-domain-early.md
-index b0f50fc3a..bdcfebfa0 100644
---- a/reference/execution/execution/get-domain-early.md
-+++ b/reference/execution/execution/get-domain-early.md
-@@ -46,7 +46,7 @@ constexpr auto get-domain-early(const Sndr&amp;amp; sndr) noexcept;
- - [`execution::stopped_as_optional`](stopped_as_optional.md)
- - [`execution::stopped_as_error`](stopped_as_error.md)
- - [`execution::associate`](associate.md)
--- [`execution::affine_on`](affine_on.md.nolink)
-+- [`execution::affine_on`](affine_on.md)
- - [`this_thread::sync_wait`](../this_thread/sync_wait.md)
- - [`this_thread::sync_wait_with_variant`](../this_thread/sync_wait_with_variant.md)
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>await_transform -- execution: P3552R3 affine_on(#1521)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/task/promise_type/await_transform.html"/>
-      <id>a9f176508a00cd5873f5dae1b28a325d9ee8ce28:reference/execution/execution/task/promise_type/await_transform.md</id>
-      <updated>2026-01-17T02:01:12+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/task/promise_type/await_transform.md b/reference/execution/execution/task/promise_type/await_transform.md
-index 5b473a780..a232bad3c 100644
---- a/reference/execution/execution/task/promise_type/await_transform.md
-+++ b/reference/execution/execution/task/promise_type/await_transform.md
-@@ -22,8 +22,8 @@ auto await_transform(change_coroutine_scheduler&amp;lt;Sch&amp;gt; sch); // (2)
- 
- ## 効果
- - (1) :
--    - [`same_as`](/reference/concepts/same_as.md)`&amp;lt;`[`inline_scheduler`](../../inline_scheduler.md)`, `[`scheduler_type`](../../task.md)`&amp;gt; == true`ならば、[`as_awaitable`](../../as_awaitable.md)`(std::forward&amp;lt;Sender&amp;gt;(sndr), *this)`を返す。
--    - そうでなければ、[`as_awaitable`](../../as_awaitable.md)`(`[`affine_on`](../../affine_on.md.nolink)`(std::forward&amp;lt;Sender&amp;gt;(sndr), SCHED(*this)), *this)`を返す。
-+    - [`same_as`](/reference/concepts/same_as.md)`&amp;lt;`[`inline_scheduler`](../../inline_scheduler.md)`,` [`scheduler_type`](../../task.md)`&amp;gt; == true`ならば、[`as_awaitable`](../../as_awaitable.md)`(std::forward&amp;lt;Sender&amp;gt;(sndr), *this)`を返す。
-+    - そうでなければ、[`as_awaitable`](../../as_awaitable.md)`(`[`affine_on`](../../affine_on.md)`(std::forward&amp;lt;Sender&amp;gt;(sndr), SCHED(*this)), *this)`を返す。
- - (2) : 以下と等価
- 
-     ```cpp
-@@ -48,7 +48,7 @@ auto await_transform(change_coroutine_scheduler&amp;lt;Sch&amp;gt; sch); // (2)
- 
- ## 関連項目
- - [`execution::as_awaitable`](../../as_awaitable.md)
--- [`execution::affine_on`](../../affine_on.md.nolink)
-+- [`execution::affine_on`](../../affine_on.md)
- - [`execution::inline_scheduler`](../../inline_scheduler.md)
- - [`execution::change_coroutine_scheduler`](../../change_coroutine_scheduler.md)
  
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
