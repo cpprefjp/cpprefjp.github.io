@@ -2,9 +2,229 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2026-01-20T10:58:41.693621</updated>
-  <id>34e77b2e-026b-4c4c-8047-2c90f3d4421e</id>
+  <updated>2026-01-20T11:24:00.089912</updated>
+  <id>1aaac246-db96-4d5c-a4b1-1bfb6bf05d8c</id>
 
+  
+    <entry>
+      <title>bulk_unchunked -- execution: P3923R0対応</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/bulk_unchunked.html"/>
+      <id>038d6dce58e4cf9c4faf57fc9653e1d918658188:reference/execution/execution/bulk_unchunked.md</id>
+      <updated>2026-01-20T20:10:28+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/bulk_unchunked.md b/reference/execution/execution/bulk_unchunked.md
+index a460e8c4e..60a68cd6d 100644
+--- a/reference/execution/execution/bulk_unchunked.md
++++ b/reference/execution/execution/bulk_unchunked.md
+@@ -54,6 +54,9 @@ namespace std::execution {
+   template&amp;lt;&amp;gt;
+   struct impls-for&amp;lt;bulk_unchunked_t&amp;gt; : default-impls {
+     static constexpr auto complete = see below;
++
++    template&amp;lt;class Sndr, class... Env&amp;gt;
++    static consteval void check-types();
+   };
+ }
+ ```
+@@ -86,6 +89,32 @@ namespace std::execution {
+ 
+ 型`Tag`が[`set_value_t`](set_value.md)以外の型であるとき、もしくは式`f(auto(shape), args...)`が適格なときに限って、上記ラムダ式のrequires節が満たされる。
+ 
++```cpp
++template&amp;lt;class Sndr, class... Env&amp;gt;
++static consteval void check-types();
++```
++
++効果 : 以下と等価
++
++    ```cpp
++    auto cs = get_completion_signatures&amp;lt;child-type&amp;lt;Sndr&amp;gt;, FWD-ENV-T(Env)...&amp;gt;();
++    auto fn = []&amp;lt;class... Ts&amp;gt;(set_value_t(*)(Ts...)) {
++      using data_type = data-type&amp;lt;Sndr&amp;gt;;
++      if constexpr (!invocable&amp;lt;remove_cvref_t&amp;lt;child-type&amp;lt;data_type&amp;gt;&amp;amp;,
++                               remove_cvref_t&amp;lt;data-type&amp;lt;data_type&amp;gt;&amp;gt;, Ts&amp;amp;...&amp;gt;)
++        throw unspecified-exception();
++    };
++    cs.for-each(overload-set(fn, [](auto){}));
++    ```
++    * get_completion_signatures[link get_completion_signatures.md]
++    * child-type[link child-type.md]
++    * FWD-ENV-T[link ../forwarding_query.md]
++    * set_value_t[link set_value.md]
++    * data-type[link data-type.md]
++    * unspecified-exception[link unspecified-exception.md]
++    * for-each[link completion_signatures.md]
++    * overload-set[link overload-set.md]
++
+ 
+ ## カスタマイゼーションポイント
+ Senderアルゴリズム構築時および[Receiver](receiver.md)接続時に、関連付けられた実行ドメインに対して[`execution::transform_sender`](transform_sender.md)経由でSender変換が行われる。
+@@ -157,3 +186,4 @@ int main()
+ - [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
+ - [P2079R10 Parallel scheduler](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2079r10.html)
+ - [P3481R5 `std::execution::bulk()` issues](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3481r5.html)
++- [P3923R0 Additional NB comment resolutions for Kona 2025](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3923r0.html), US 221-339
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>spawn -- execution: P3923R0対応</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/spawn.html"/>
+      <id>038d6dce58e4cf9c4faf57fc9653e1d918658188:reference/execution/execution/spawn.md</id>
+      <updated>2026-01-20T20:10:28+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/spawn.md b/reference/execution/execution/spawn.md
+index 71d20cf3a..4e9ab7ce8 100644
+--- a/reference/execution/execution/spawn.md
++++ b/reference/execution/execution/spawn.md
+@@ -33,7 +33,7 @@ namespace std::execution {
+ 
+ 呼び出し式`spawn(sndr, token, env)`は`void`型であり、次の効果をもつ。
+ 
+-- `alloc`を用いてメモリ確保し、`alloc`, [`write_env`](write_env.md)`(token.wrap(sndr), senv)`, `token`から特殊化された`spawn-state`型のオブジェクト`o`を構築し、`o.run()`を呼び出す。いずれかのオブジェクト構築・破棄時に例外送出されたときは、確保されたメモリが解放される。
++- `alloc`を用いてメモリ確保し、`alloc`, [`write_env`](write_env.md)`(token.wrap(sndr), senv)`, `token`から`decltype(spawn-state(alloc, write_env(token.wrap(sndr), senv), token))`型のオブジェクト`o`を構築し、`o.run()`を呼び出す。いずれかのオブジェクト構築・破棄時に例外送出されたときは、確保されたメモリが解放される。
+ 
+ 呼び出し式`spawn(sndr, token)`は、式`spawn(sndr, token,` [`execution::env&amp;lt;&amp;gt;`](env.md)`())`と等価である。
+ 
+@@ -75,12 +75,10 @@ namespace std::execution {
+     void run() noexcept;                                    // exposition only
+ 
+   private:
+-    using alloc-t =                                         // exposition only
+-      typename allocator_traits&amp;lt;Alloc&amp;gt;::template rebind_alloc&amp;lt;spawn-state&amp;gt;;
+     using assoc-t =                                         // exposition only
+       remove_cvref_t&amp;lt;decltype(declval&amp;lt;Token&amp;amp;&amp;gt;().try_associate())&amp;gt;;
+ 
+-    alloc-t alloc;                                          // exposition only
++    Alloc alloc;                                            // exposition only
+     op-t op;                                                // exposition only
+     assoc-t assoc;                                          // exposition only
+   };
+@@ -89,7 +87,6 @@ namespace std::execution {
+ * scope_token[link scope_token.md]
+ * sender[link sender.md]
+ * connect_result_t[link connect_result_t.md]
+-* allocator_traits[link /reference/memory/allocator_traits.md]
+ * spawn-state-base[italic]
+ * spawn-receiver[italic]
+ 
+@@ -127,10 +124,12 @@ void complete() noexcept override;
+ 
+     ```cpp
+     auto assoc = std::move(this-&amp;gt;assoc);
+-    auto alloc = std::move(this-&amp;gt;alloc);
+-
+-    allocator_traits&amp;lt;alloc-t&amp;gt;::destroy(alloc, this);
+-    allocator_traits&amp;lt;alloc-t&amp;gt;::deallocate(alloc, this, 1);
++    {
++      using traits = allocator_traits&amp;lt;Alloc&amp;gt;::template rebind_traits&amp;lt;spawn-state&amp;gt;;
++      typename traits::allocator_type alloc(this-&amp;gt;alloc);
++      traits::destroy(alloc, this);
++      traits::deallocate(alloc, this, 1);
++    }
+     ```
+     * allocator_traits[link /reference/memory/allocator_traits.md]
+     * destroy[link /reference/memory/allocator_traits/destroy.md]
+@@ -203,3 +202,4 @@ sync_wait
+ ## 参照
+ - [P3149R11 `async_scope` - Creating scopes for non-sequential concurrency](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3149r11.html)
+ - [P3815R1 Add `scope_association` concept to P3149](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3815r1.html)
++- [P3923R0 Additional NB comment resolutions for Kona 2025](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3923r0.html), US 227-346, 229-347
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>spawn_future -- execution: P3923R0対応</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/spawn_future.html"/>
+      <id>038d6dce58e4cf9c4faf57fc9653e1d918658188:reference/execution/execution/spawn_future.md</id>
+      <updated>2026-01-20T20:10:28+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/spawn_future.md b/reference/execution/execution/spawn_future.md
+index 14fb18c54..df9ec183d 100644
+--- a/reference/execution/execution/spawn_future.md
++++ b/reference/execution/execution/spawn_future.md
+@@ -35,7 +35,7 @@ namespace std::execution {
+ 
+ 呼び出し式`spawn_future(sndr, token, env)`は、次の効果をもつ。
+ 
+-- `alloc`を用いてメモリ確保し、`alloc`, `token.wrap(sndr)`, `token`, `senv`から特殊化された`spawn-future-state`型のオブジェクト`s`を構築する。いずれかのオブジェクト構築・破棄時に例外送出されたときは、確保されたメモリが解放される。
++- `alloc`を用いてメモリ確保し、`alloc`, `token.wrap(sndr)`, `token`, `senv`から`decltype(spawn-future-state(alloc, token.wrap(sndr), token, senv))`型のオブジェクト`s`を構築する。いずれかのオブジェクト構築・破棄時に例外送出されたときは、確保されたメモリが解放される。
+ - 下記を満たす[`unique_ptr`](/reference/memory/unique_ptr.md)の特殊化型のオブジェクト`u`を構築する。
+     - `u.`[`get()`](/reference/memory/unique_ptr/get.md)は`s`のアドレスに等しく、かつ
+     - `u.`[`get_deleter()`](/reference/memory/unique_ptr/get_deleter.md)`(u.`[`release()`](/reference/memory/unique_ptr/release.md)`)`は`u.release()-&amp;gt;abandon()`に等しい。
+@@ -186,18 +186,20 @@ namespace std::execution {
+     void abandon() noexcept;                                                // exposition only
+ 
+   private:
+-    using alloc-t =                                                         // exposition only
+-      typename allocator_traits&amp;lt;Alloc&amp;gt;::template rebind_alloc&amp;lt;spawn-future-state&amp;gt;;
+     using assoc-t =                                                         // exposition only
+       remove_cvref_t&amp;lt;decltype(declval&amp;lt;Token&amp;amp;&amp;gt;().try_associate())&amp;gt;;
+ 
+-    alloc-t alloc;                                                          // exposition only
++    Alloc alloc;                                                            // exposition only
+     ssource-t ssource;                                                      // exposition only
+     op-t op;                                                                // exposition only
+     assoc-t assoc;                                                          // exposition only
+ 
+     void destroy() noexcept;                                                // exposition only
+   };
++
++  template&amp;lt;class Alloc, scope_token Token, sender Sender, class Env&amp;gt;        // exposition only
++    spawn-future-state(Alloc alloc, Sender&amp;amp;&amp;amp; sndr, Token token, Env env)
++      -&amp;gt; spawn-future-state&amp;lt;Alloc, Token, Sender, Env&amp;gt;;
+ }
+ ```
+ * scope_token[link scope_token.md]
+@@ -210,7 +212,6 @@ namespace std::execution {
+ * stop-when[link stop-when.md]
+ * start[link start.md]
+ * set_stopped[link set_stopped.md]
+-* allocator_traits[link /reference/memory/allocator_traits.md]
+ * std::move[link /reference/utility/move.md]
+ 
+ データ競合の存在を判定する目的において、`complete`, `consume`, `abandon`はアトミック操作として振る舞う。
+@@ -269,11 +270,13 @@ void destroy() noexcept;
+ - 効果 : 下記と等価。
+ 
+     ```cpp
+-    bool assoc = std::move(this-&amp;gt;assoc);
+-    auto alloc = std::move(this-&amp;gt;alloc);
+-
+-    allocator_traits&amp;lt;alloc-t&amp;gt;::destroy(alloc, this);
+-    allocator_traits&amp;lt;alloc-t&amp;gt;::deallocate(alloc, this, 1);
++    auto associated = std::move(this-&amp;gt;associated);
++    {
++      using traits = allocator_traits&amp;lt;Alloc&amp;gt;::template rebind_traits&amp;lt;spawn-future-state&amp;gt;;
++      typename traits::allocator_type alloc(std::move(this-&amp;gt;alloc));
++      traits::destroy(alloc, this);
++      traits::deallocate(alloc, this, 1);
++    }
+     ```
+     * allocator_traits[link /reference/memory/allocator_traits.md]
+     * destroy[link /reference/memory/allocator_traits/destroy.md]
+@@ -355,3 +358,4 @@ value=42
+ - [P3149R11 `async_scope` - Creating scopes for non-sequential concurrency](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3149r11.html)
+ - [P3815R1 Add `scope_association` concept to P3149](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3815r1.html)
+ - [P3914R0 Assorted NB comment resolutions for Kona 2025](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3914r0.html), US 228-348
++- [P3923R0 Additional NB comment resolutions for Kona 2025](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3923r0.html), US 227-346, 229-347
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>bulk_chunked -- execution: P3914R0対応</title>
@@ -710,50 +930,6 @@ index 9d2ed1c67..96220a2f3 100644
  - [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
  - [P3557R3 High-Quality Sender Diagnostics with Constexpr Exceptions](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3557r3.html)
 +- [LWG4369 `check-types` function for `upon_error` and `upon_stopped` is wrong](https://cplusplus.github.io/LWG/issue4369)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>stop-when -- execution/stop-when: LWG4461適用+修正</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/stop-when.html"/>
-      <id>3eec057fe5968d1c3841086de3d2c71d3196342a:reference/execution/execution/stop-when.md</id>
-      <updated>2026-01-20T18:44:18+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/stop-when.md b/reference/execution/execution/stop-when.md
-index f1dcc62b2..fbe73234f 100644
---- a/reference/execution/execution/stop-when.md
-+++ b/reference/execution/execution/stop-when.md
-@@ -3,6 +3,7 @@
- * cpo[meta id-type]
- * std::execution[meta namespace]
- * cpp26[meta cpp]
-+* [meta exposition-only]
- 
- ```cpp
- namespace std::execution {
-@@ -16,9 +17,9 @@ namespace std::execution {
- 
- 説明用の式`sndr`と`token`に対して、
- 
--- `decltype((sndr))`が[`sender`](sender.md)を満たさない、もしくは[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;decltype((token))&amp;gt;`が[`stoppable_token`](/reference/stop_token/stoppable_token.md)を満たさないとき、式`stop-token(sndr, token)`は不適格となる。
--- そうでなく、[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;decltype((token))&amp;gt;`が[`unstoppable_token`](/reference/stop_token/unstoppable_token.md)のモデルであるとき、式`stop-token(sndr, token)`は`sndr`と等価となる。
--- そうでないとき、式`stop-token(sndr, token)`はSender`osndr`を返す。`osndr`が[Receiver](receiver.md)`r`と[接続(connect)](connect.md)されるとき、[`get_stop_token`](../get_stop_token.md)`(`[`get_env`](get_env.md)`(r))`の結果を`rtoken`とする。
-+- `decltype((sndr))`が[`sender`](sender.md)を満たさない、もしくは[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;decltype((token))&amp;gt;`が[`stoppable_token`](/reference/stop_token/stoppable_token.md)を満たさないとき、式`stop-when(sndr, token)`は不適格となる。
-+- そうでなく、[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;decltype((token))&amp;gt;`が[`unstoppable_token`](/reference/stop_token/unstoppable_token.md)のモデルであるとき、式`stop-when(sndr, token)`は、`token`と`sndr`が不定順で順序付けられることを除いて、`(void)token, sndr`と等価となる。
-+- そうでないとき、式`stop-when(sndr, token)`はSender`osndr`を返す。`osndr`が[Receiver](receiver.md)`r`と[接続(connect)](connect.md)されるとき、[`get_stop_token`](../get_stop_token.md)`(`[`get_env`](get_env.md)`(r))`の結果を`rtoken`とする。
-     - `rtoken`の型が[`unstoppable_token`](/reference/stop_token/unstoppable_token.md)のモデルであるとき、`osdnr`と`r`との接続の効果は[`connect`](connect.md)`(`[`write_env`](write_env.md)`(sndr,` [`prop`](prop.md)`(`[`get_stop_token`](../get_stop_token.md)`, token)), r)`に等しい。
-     - そうでないとき、下記のような説明専用の型`stoken-t`の`stoken`オブジェクトに対して、`osdnr`と`r`との接続の効果は[`connect`](connect.md)`(`[`write_env`](write_env.md)`(sndr,` [`prop`](prop.md)`(`[`get_stop_token`](../get_stop_token.md)`, stoken)), r)`に等しい。
-         - `stoken-t`は[`stoppable_token`](/reference/stop_token/stoppable_token.md)のモデルである。
-@@ -39,3 +40,4 @@ namespace std::execution {
- 
- ## 参照
- - [P3149R11 `async_scope` - Creating scopes for non-sequential concurrency](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3149r11.html)
-+- [LWG4461 `stop-when` needs to evaluate unstoppable tokens](https://cplusplus.github.io/LWG/issue4461)
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
