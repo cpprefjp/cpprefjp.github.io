@@ -2,9 +2,646 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2026-02-19T15:16:14.561164</updated>
-  <id>341aaada-d086-4ceb-a501-5ffb91036e31</id>
+  <updated>2026-02-20T06:54:32.724577</updated>
+  <id>9da36641-3393-40b4-a3f6-1a235cd08a5f</id>
 
+  
+    <entry>
+      <title>operator&gt;&gt; -- C++23対応として、入力ストリームのエラー処理をコンパイラの実装に即した仕様にした #1113</title>
+      <link href="https://cpprefjp.github.io/reference/bitset/bitset/op_istream.html"/>
+      <id>ac7082b8a07f09606cad2dab23a6874d6195613a:reference/bitset/bitset/op_istream.md</id>
+      <updated>2026-02-20T15:50:20+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/bitset/bitset/op_istream.md b/reference/bitset/bitset/op_istream.md
+index 9a10a8cfb..c6cc9cae1 100644
+--- a/reference/bitset/bitset/op_istream.md
++++ b/reference/bitset/bitset/op_istream.md
+@@ -22,7 +22,7 @@ namespace std {
+ 	- 次に読み込む文字が`is.widen(&amp;#39;0&amp;#39;)`と`is.widen(&amp;#39;1&amp;#39;)`のどちらでもなかった。
+ 2. 読み込んだ文字列`str`を`bitset`のコンストラクタに渡して構築し、`x`に代入する：`x = bitset&amp;lt;N&amp;gt;(str);`
+ 
+-`str`に1文字も入力が行われなかった場合、`is.`[`setstate`](/reference/ios/basic_ios/setstate.md)`(`[`ios_base`](/reference/ios/ios_base.md)`::failbit)`が呼び出される。
++1文字も入力が行われなかった場合、ローカルエラー状態に[`ios_base`](/reference/ios/ios_base.md)`::failbit`を設定する。
+ 
+ ## 戻り値
+ `is`
+@@ -53,3 +53,5 @@ int main()
+ 
+ 
+ ## 参照
++- [P1264R2 Revising the wording of stream input operations](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1264r2.pdf)
++    - C++23でローカルエラー状態の概念が導入され、入力関数のエラー処理セマンティクスが明確化された
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>basic_istream -- C++23対応として、入力ストリームのエラー処理をコンパイラの実装に即した仕様にした #1113</title>
+      <link href="https://cpprefjp.github.io/reference/istream/basic_istream.html"/>
+      <id>ac7082b8a07f09606cad2dab23a6874d6195613a:reference/istream/basic_istream.md</id>
+      <updated>2026-02-20T15:50:20+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/istream/basic_istream.md b/reference/istream/basic_istream.md
+index e93ba8c7e..282334181 100644
+--- a/reference/istream/basic_istream.md
++++ b/reference/istream/basic_istream.md
+@@ -55,13 +55,17 @@ namespace std {
+ 
+ 注意：書式化入力関数と非書式化入力関数すべてについて、「効果」の項目は以下の処理を前提として記載している。
+ 
+-書式化入力関数・非書式化入力関数は、入力処理に先立って`sentry`オブジェクトを構築し、関数から脱出する前に破棄する。
++書式化入力関数・非書式化入力関数は、まず`ios_base::iostate`型のオブジェクトであるローカルエラー状態を`ios_base::goodbit`で初期化して作成する。
++次に、`sentry`オブジェクトを構築し、関数から脱出する前に破棄する。
+ 
+ - 書式化入力関数は、`sentry`コンストラクタの2番目の仮引数`noskipws`に`false`を渡す。
+ - 非書式化入力関数は、`sentry`コンストラクタの2番目の仮引数`noskipws`に`true`を渡す。
+ 
+ 構築した`sentry`オブジェクトが`explicit operator bool`関数で`true`に変換できる場合のみ、実際の入力処理（各関数の「効果」として記載した処理）が実行される。
+ 
++入力処理中にエラーが検出された場合、対応するエラービットはローカルエラー状態に設定される。
++入力処理の完了後、ローカルエラー状態を実引数として`setstate()`を呼び出す。
++
+ 関数内部で例外が送出された場合、`ios_base::badbit`を設定する。
+ そして、`(exceptions() &amp;amp; badbit) != 0`であれば例外を再送出する。
+ 
+@@ -142,3 +146,5 @@ syncは非書式化入力関数である。
+ - `basic_istream&amp;lt;&amp;gt;`型のオブジェクト
+     - [`cin`](../iostream/cin.md)
+     - [`wcin`](../iostream/wcin.md.nolink)
++- [P1264R2 Revising the wording of stream input operations](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1264r2.pdf)
++    - C++23からローカルエラー状態の概念が導入され、入力関数のエラー処理セマンティクスが明確化された
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>get -- C++23対応として、入力ストリームのエラー処理をコンパイラの実装に即した仕様にした #1113</title>
+      <link href="https://cpprefjp.github.io/reference/istream/basic_istream/get.html"/>
+      <id>ac7082b8a07f09606cad2dab23a6874d6195613a:reference/istream/basic_istream/get.md</id>
+      <updated>2026-02-20T15:50:20+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/istream/basic_istream/get.md b/reference/istream/basic_istream/get.md
+index 4d5a8772d..207396d32 100644
+--- a/reference/istream/basic_istream/get.md
++++ b/reference/istream/basic_istream/get.md
+@@ -30,7 +30,7 @@ basic_istream&amp;lt;CharT, Traits&amp;gt;&amp;amp; get(basic_streambuf&amp;lt;char_type, Traits&amp;gt;&amp;amp; sb, char_t
+ ### 1文字
+ 1. `sentry`オブジェクトを構築する。`sentry`オブジェクトが失敗を示した場合、何もしない。
+ 1. ストリームバッファから1文字入力を行う。
+-1. 入力が行えなかった場合、`setstate(failbit)`を呼び出す。
++1. 入力が行えなかった場合、ローカルエラー状態に`failbit`を設定する。
+ 1. （引数`c`を受け取るもののみ）入力した文字を`c`に代入する。
+ 
+ ### 文字列
+@@ -46,15 +46,15 @@ basic_istream&amp;lt;CharT, Traits&amp;gt;&amp;amp; get(basic_streambuf&amp;lt;char_type, Traits&amp;gt;&amp;amp; sb, char_t
+ 1. 以下のいずれかを満たすまで、文字を入力して書き込む。
+     - 配列要素へのポインタ`s`を引数に取るもの
+         - 引数`n`文字より1文字少ない文字数まで入力した。
+-        - EOFに達した。この場合、`setstate(eofbit)`を呼び出す。
++        - EOFに達した。この場合、ローカルエラー状態に`eofbit`を設定する。
+         - 次に入力する文字を`c`として、`Traits::eq_int_type(Traits::to_int_type(c), delim)`が真となった。
+     - ストリームバッファへのポインタ`sb`を引数に取るもの
+-        - EOFに達した。この場合、`setstate(eofbit)`を呼び出す。
++        - EOFに達した。この場合、ローカルエラー状態に`eofbit`を設定する。
+         - `sb`への出力処理に失敗した。
+         - 次に入力する文字を`c`として、`Traits::eq_int_type(Traits::to_int_type(c), delim)`が真となった。
+         - 例外が送出された（例外は捕捉され、再送出されることはない）。
+ 
+-`str`に1文字も入力が行われなかった場合、`is.setstate(ios_base::failbit)`が呼び出される。
++1文字も入力が行われなかった場合、ローカルエラー状態に`failbit`を設定する。
+ 
+ 配列要素へのポインタ`s`を引数に取るものについては、入力の如何に関わらず末尾にヌル文字を書き込む処理が行われる。
+ 
+@@ -105,3 +105,5 @@ TBD
+ 
+ ## 参照
+ - [`basic_streambuf`](../../streambuf/basic_streambuf.md)
++- [P1264R2 Revising the wording of stream input operations](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1264r2.pdf)
++    - C++23でローカルエラー状態の概念が導入され、入力関数のエラー処理セマンティクスが明確化された
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>getline -- C++23対応として、入力ストリームのエラー処理をコンパイラの実装に即した仕様にした #1113</title>
+      <link href="https://cpprefjp.github.io/reference/istream/basic_istream/getline.html"/>
+      <id>ac7082b8a07f09606cad2dab23a6874d6195613a:reference/istream/basic_istream/getline.md</id>
+      <updated>2026-02-20T15:50:20+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/istream/basic_istream/getline.md b/reference/istream/basic_istream/getline.md
+index 3431208e5..12a51a2ef 100644
+--- a/reference/istream/basic_istream/getline.md
++++ b/reference/istream/basic_istream/getline.md
+@@ -19,10 +19,10 @@ basic_istream&amp;lt;CharT, Traits&amp;gt;&amp;amp; getline(char_type* s, streamsize n, char_type deli
+ 
+ 1. [`basic_istream&amp;lt;&amp;gt;::sentry`](../../istream/basic_istream/sentry.md)オブジェクトを構築する。`sentry`オブジェクトが失敗を示した場合、何もしない。
+ 1. 以下のいずれかを満たすまで、文字を入力して配列の要素へのポインタ`s`に書き込んでゆく。以下の条件判断はこの順で行う。
+-    1. EOFに達した。この場合、`is.setstate(ios_base::eofbit)`を呼び出す。
++    1. EOFに達した。この場合、ローカルエラー状態に`eofbit`を設定する。
+     1. `Traits::eq(c, delim)`が真となった。
+-    1. 読み取った文字数が`n - 1`になるまで書き込んだもしくは`n`が1未満であった。この場合、`is.setstate(ios_base::failbit)`を呼び出す。
+-1. （`sentry`オブジェクトを破棄したのち）1文字も入力がなされなかったら、`is.setstate(ios_base::failbit)`を呼び出す。
++    1. 読み取った文字数が`n - 1`になるまで書き込んだもしくは`n`が1未満であった。この場合、ローカルエラー状態に`failbit`を設定する。
++1. 1文字も入力がなされなかったら、ローカルエラー状態に`failbit`を設定する。
+     - 空行の場合はこれに該当しないことに注意。なぜなら、改行文字1文字を入力しているためである。
+ 
+ `n`が1以上の場合、必ず`s`の末尾にヌル文字を書き込む。
+@@ -85,3 +85,5 @@ TBD
+ 
+ ## 参照
+ - [`std::getline`](../../string/basic_string/getline.md): `std::basic_string`へ入力を行うもの。
++- [P1264R2 Revising the wording of stream input operations](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1264r2.pdf)
++    - C++23でローカルエラー状態の概念が導入され、入力関数のエラー処理セマンティクスが明確化された
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>ignore -- C++23対応として、入力ストリームのエラー処理をコンパイラの実装に即した仕様にした #1113</title>
+      <link href="https://cpprefjp.github.io/reference/istream/basic_istream/ignore.html"/>
+      <id>ac7082b8a07f09606cad2dab23a6874d6195613a:reference/istream/basic_istream/ignore.md</id>
+      <updated>2026-02-20T15:50:20+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/istream/basic_istream/ignore.md b/reference/istream/basic_istream/ignore.md
+index 62461e5e3..70130813c 100644
+--- a/reference/istream/basic_istream/ignore.md
++++ b/reference/istream/basic_istream/ignore.md
+@@ -27,7 +27,7 @@ basic_istream&amp;amp; ignore(streamsize n, char_type delim);  // (2) C++26
+ 2. 以下のいずれかを満たすまで、`this`内のストリームバッファから文字を入力する（どこへも出力することなく捨てる）。
+     - 実引数で指定された`n`文字まで入力した。
+         - `n == numeric_limits&amp;lt;streamsize&amp;gt;::max()`の場合、この条件は適用されない。
+-    - EOFに達した。この場合、`setstate(eofbit)`を呼び出す。
++    - EOFに達した。この場合、ローカルエラー状態に`eofbit`を設定する。
+     - 次に入力する文字が`delim`である。
+         - 次の文字を`c`として、`Traits::eq_int_type(Traits::to_int_type(c), delim)`が真の場合。
+         - `delim`が`Traits::eof()`である場合、この条件は適用されない。
+@@ -80,5 +80,7 @@ TBD
+ - C++98
+ 
+ ## 参照
++- [P1264R2 Revising the wording of stream input operations](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1264r2.pdf)
++    - C++23でローカルエラー状態の概念が導入され、入力関数のエラー処理セマンティクスが明確化された
+ - [P3223R2 Making std::istream::ignore less surprising](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3223r2.html)
+     - C++26からオーバーロード(2)が追加された
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator&gt;&gt; -- C++23対応として、入力ストリームのエラー処理をコンパイラの実装に即した仕様にした #1113</title>
+      <link href="https://cpprefjp.github.io/reference/istream/basic_istream/op_istream.html"/>
+      <id>ac7082b8a07f09606cad2dab23a6874d6195613a:reference/istream/basic_istream/op_istream.md</id>
+      <updated>2026-02-20T15:50:20+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/istream/basic_istream/op_istream.md b/reference/istream/basic_istream/op_istream.md
+index e2e9b6dd0..54f4589cf 100644
+--- a/reference/istream/basic_istream/op_istream.md
++++ b/reference/istream/basic_istream/op_istream.md
+@@ -55,27 +55,27 @@ basic_istream&amp;lt;CharT, Traits&amp;gt;&amp;amp;
+ 
+ 1. `sentry`オブジェクトを構築する。`sentry`オブジェクトが失敗を示した場合、何もしない
+ 1. `num_get::get`を使用して入力のパース・数値への変換を行う。
+-    - `int`と`short` : `long`を実引数に取るものを使用する。結果が`int`と`short`それぞれの範囲外の値になった場合、`failbit`を追加する
++    - `int`と`short` : `long`を実引数に取るものを使用する。結果が`int`と`short`それぞれの範囲外の値になった場合、ローカルエラー状態に`failbit`を設定する
+     - 拡張浮動小数点数型 :
+         - 拡張浮動小数点数型の変換順位が`long double`より大きい場合、条件付きサポートとなる
+         - そうでない場合、対応する標準浮動小数点数型`FP`を以下のように定義し、`FP`型の値として値を入力したあと、拡張浮動小数点数型にキャストして代入する
+             - 拡張浮動小数点数型の変換順位が`float`以下の場合、`FP`を`float`とする
+             - そうでなく、拡張浮動小数点数型の変換順位が`double`以下の場合、`FP`を`double`とする
+             - そうでない場合、`FP`を`long double`とする
+-1. `num_get::get`から得られた`iostate`値を実引数にして`setstate`関数を呼び出す
++1. `num_get::get`から得られた`iostate`値をローカルエラー状態に設定する
+ 
+ ### (18) : ストリームバッファ
+ 
+ ストリームからの入力を別のストリームバッファに出力する。
+ 
+-1. 仮引数`sb`がヌルポインタの場合、`setstate(failbit)`を呼び出して終了する
++1. 仮引数`sb`がヌルポインタの場合、ローカルエラー状態に`failbit`を設定して終了する
+ 1. `sentry`オブジェクトを構築する。`sentry`オブジェクトが失敗を示した場合、何もしない
+ 1. 以下のいずれかを満たすまで、`this`内のストリームバッファから文字を入力して`sb`へ出力する
+     - EOFに達した
+     - 出力処理に失敗した（この場合、失敗したときの文字は入力側のストリームバッファに戻される）
+     - 例外が発生した
+ 
+-入力がなされなかった場合、`setstate(failbit)`を呼び出す。
++入力がなされなかった場合、ローカルエラー状態に`failbit`を設定する。
+ 
+ 
+ ## 戻り値
+@@ -125,5 +125,7 @@ TBD
+ 
+ ## 参照
+ - [N2114 `long long` Goes to the Library, Revision 1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n2114.html)
++- [P1264R2 Revising the wording of stream input operations](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1264r2.pdf)
++    - C++23でローカルエラー状態の概念が導入され、入力関数のエラー処理セマンティクスが明確化された
+ - [P1467R9 Extended floating-point types and standard names](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1467r9.html)
+     - C++23で拡張浮動小数点数型の`istream`入力がサポートされた
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator&gt;&gt; (非メンバ関数) -- C++23対応として、入力ストリームのエラー処理をコンパイラの実装に即した仕様にした #1113</title>
+      <link href="https://cpprefjp.github.io/reference/istream/basic_istream/op_istream_free.html"/>
+      <id>ac7082b8a07f09606cad2dab23a6874d6195613a:reference/istream/basic_istream/op_istream_free.md</id>
+      <updated>2026-02-20T15:50:20+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/istream/basic_istream/op_istream_free.md b/reference/istream/basic_istream/op_istream_free.md
+index 152d4f5f0..517747048 100644
+--- a/reference/istream/basic_istream/op_istream_free.md
++++ b/reference/istream/basic_istream/op_istream_free.md
+@@ -59,7 +59,7 @@ namespace std {
+ 1. `sentry`オブジェクトを構築する。`sentry`オブジェクト構築が失敗を示した場合、何もしない。
+ 1. ストリームバッファから1文字取り出し、仮引数`c`に書き込む。
+ 
+-入力がなされなかった場合、`setstate(failbit)`を呼び出す。
++入力がなされなかった場合、ローカルエラー状態に`failbit`を設定する。
+ 
+ ### 文字列
+ 
+@@ -77,7 +77,7 @@ namespace std {
+ 1. `s`の末尾にヌル文字`CharT()`を書き込む。
+ 1. `width(0)`を呼び出す。
+ 
+-1文字も入力がなされなかった場合、`setstate(failbit)`を呼び出す。
++1文字も入力がなされなかった場合、ローカルエラー状態に`failbit`を設定する。
+ 
+ `width()`の値を変更するには、`setw`マニピュレータまたは`width()`メンバ関数を使用する。
+ 
+@@ -133,3 +133,5 @@ TBD
+ 
+ ## 参照
+ - [P0487R1 Fixing `operator&amp;gt;&amp;gt;(basic_istream&amp;amp;, CharT*)` (LWG 2499)](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0487r1.html)
++- [P1264R2 Revising the wording of stream input operations](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1264r2.pdf)
++    - C++23でローカルエラー状態の概念が導入され、入力関数のエラー処理セマンティクスが明確化された
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>peek -- C++23対応として、入力ストリームのエラー処理をコンパイラの実装に即した仕様にした #1113</title>
+      <link href="https://cpprefjp.github.io/reference/istream/basic_istream/peek.html"/>
+      <id>ac7082b8a07f09606cad2dab23a6874d6195613a:reference/istream/basic_istream/peek.md</id>
+      <updated>2026-02-20T15:50:20+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/istream/basic_istream/peek.md b/reference/istream/basic_istream/peek.md
+index 078840051..275fb3b2d 100644
+--- a/reference/istream/basic_istream/peek.md
++++ b/reference/istream/basic_istream/peek.md
+@@ -90,3 +90,5 @@ int_type peek() {
+ 
+ - [`basic_istream::get`](get.md)
+ - [`basic_streambuf::sgetc`](../../streambuf/basic_streambuf/sgetc.md)
++- [P1264R2 Revising the wording of stream input operations](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1264r2.pdf)
++    - C++23でローカルエラー状態の概念が導入され、入力関数のエラー処理セマンティクスが明確化された
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>putback -- C++23対応として、入力ストリームのエラー処理をコンパイラの実装に即した仕様にした #1113</title>
+      <link href="https://cpprefjp.github.io/reference/istream/basic_istream/putback.html"/>
+      <id>ac7082b8a07f09606cad2dab23a6874d6195613a:reference/istream/basic_istream/putback.md</id>
+      <updated>2026-02-20T15:50:20+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/istream/basic_istream/putback.md b/reference/istream/basic_istream/putback.md
+index aa5fd0fd4..c062cf290 100644
+--- a/reference/istream/basic_istream/putback.md
++++ b/reference/istream/basic_istream/putback.md
+@@ -17,9 +17,9 @@ basic_istream&amp;lt;CharT, Traits&amp;gt;&amp;amp; putback(char_type c);
+ ## 効果
+ 
+ 1. `sentry`オブジェクトを構築する。
+-1. `!good()`なら`setstate(failbit)`を呼び出して終わる。
++1. `!good()`ならローカルエラー状態に`failbit`を設定して終わる。
+ 1. `rdbuf()-&amp;gt;sputbackc()`を呼び出す。
+-    - `rdbuf()`がヌルポインタであるか、`sputbackc()`が`Traits::eof()`を返した場合、`setstate(badbit)`を呼び出す。
++    - `rdbuf()`がヌルポインタであるか、`sputbackc()`が`Traits::eof()`を返した場合、ローカルエラー状態に`badbit`を設定する。
+ 
+ ## 戻り値
+ `*this`。
+@@ -97,3 +97,5 @@ basic_istream&amp;lt;CharT, Traits&amp;gt;&amp;amp; putback(char_type c) {
+ 
+ - [`basic_istream::unget`](unget.md)
+ - [`basic_streambuf::sputbackc`](../../streambuf/basic_streambuf/sputbackc.md)
++- [P1264R2 Revising the wording of stream input operations](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1264r2.pdf)
++    - C++23でローカルエラー状態の概念が導入され、入力関数のエラー処理セマンティクスが明確化された
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>read -- C++23対応として、入力ストリームのエラー処理をコンパイラの実装に即した仕様にした #1113</title>
+      <link href="https://cpprefjp.github.io/reference/istream/basic_istream/read.html"/>
+      <id>ac7082b8a07f09606cad2dab23a6874d6195613a:reference/istream/basic_istream/read.md</id>
+      <updated>2026-02-20T15:50:20+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/istream/basic_istream/read.md b/reference/istream/basic_istream/read.md
+index 54546482c..125cd4b0c 100644
+--- a/reference/istream/basic_istream/read.md
++++ b/reference/istream/basic_istream/read.md
+@@ -19,10 +19,10 @@ basic_istream&amp;lt;CharT, Traits&amp;gt;&amp;amp; read(char_type* s, streamsize n);
+ 
+ ## 効果
+ 1. [`sentry`](sentry.md)オブジェクトを構築する。[`sentry`](sentry.md)オブジェクトが失敗を示した場合、何もしない。
+-1. [`good`](../../ios/basic_ios/good.md)`()`メンバ関数を呼び出して`false`であったら、[`setstate`](../../ios/basic_ios/setstate.md)`(`[`failbit`](../../ios/ios_base/type-iostate.md)`)`を呼び出して終了する。
++1. [`good`](../../ios/basic_ios/good.md)`()`メンバ関数を呼び出して`false`であったら、ローカルエラー状態に[`failbit`](../../ios/ios_base/type-iostate.md)を設定して終了する。
+ 1. 以下のいずれかを満たすまで、文字を入力して書き込む。
+     - 実引数で指定された`n`文字まで入力した。
+-    - EOFに達した。この場合、[`setstate`](../../ios/basic_ios/setstate.md)`(`[`failbit`](../../ios/ios_base/type-iostate.md) `|` [`eofbit`](../../ios/ios_base/type-iostate.md)`)`を呼び出す。
++    - EOFに達した。この場合、ローカルエラー状態に[`failbit`](../../ios/ios_base/type-iostate.md) `|` [`eofbit`](../../ios/ios_base/type-iostate.md)を設定する。
+ 
+ ## 戻り値
+ `*this`
+@@ -97,3 +97,5 @@ basic_istream&amp;lt;CharT, Traits&amp;gt;&amp;amp; read(char_type* s, streamsize n) {
+ 
+ ## 参照
+ - [readsome](readsome.md)
++- [P1264R2 Revising the wording of stream input operations](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1264r2.pdf)
++    - C++23でローカルエラー状態の概念が導入され、入力関数のエラー処理セマンティクスが明確化された
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>readsome -- C++23対応として、入力ストリームのエラー処理をコンパイラの実装に即した仕様にした #1113</title>
+      <link href="https://cpprefjp.github.io/reference/istream/basic_istream/readsome.html"/>
+      <id>ac7082b8a07f09606cad2dab23a6874d6195613a:reference/istream/basic_istream/readsome.md</id>
+      <updated>2026-02-20T15:50:20+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/istream/basic_istream/readsome.md b/reference/istream/basic_istream/readsome.md
+index 8c19828a5..810efd10a 100644
+--- a/reference/istream/basic_istream/readsome.md
++++ b/reference/istream/basic_istream/readsome.md
+@@ -15,11 +15,11 @@ streamsize readsome(char_type* s, streamsize n);
+ 
+ ## 効果
+ 1. `sentry`オブジェクトを構築する。
+-1. `good()`メンバ関数を呼び出して`false`であったら、`setstate(failbit)`を呼び出して終了する。
+-1. `rebuf()-&amp;gt;in_avail()`の値により以下のように処理を進める。
+-    - `-1`なら`setstate(eofbit)`を呼び出す。
++1. `good()`メンバ関数を呼び出して`false`であったら、ローカルエラー状態に`failbit`を設定して終了する。
++1. `rdbuf()-&amp;gt;in_avail()`の値により以下のように処理を進める。
++    - `-1`ならローカルエラー状態に`eofbit`を設定する。
+     - `0`なら何もしない。
+-    - `1`以上なら`min(rebuf()-&amp;gt;in_avail(), n)`だけの文字を読み込む（`n`は仮引数）。
++    - `1`以上なら`min(rdbuf()-&amp;gt;in_avail(), n)`だけの文字を読み込む（`n`は仮引数）。
+ 
+ ## 戻り値
+ `s`に読み込まれた文字数。
+@@ -57,3 +57,5 @@ TBD
+ 
+ ## 参照
+ - [`read`](read.md)
++- [P1264R2 Revising the wording of stream input operations](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1264r2.pdf)
++    - C++23でローカルエラー状態の概念が導入され、入力関数のエラー処理セマンティクスが明確化された
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>seekg -- C++23対応として、入力ストリームのエラー処理をコンパイラの実装に即した仕様にした #1113</title>
+      <link href="https://cpprefjp.github.io/reference/istream/basic_istream/seekg.html"/>
+      <id>ac7082b8a07f09606cad2dab23a6874d6195613a:reference/istream/basic_istream/seekg.md</id>
+      <updated>2026-02-20T15:50:20+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/istream/basic_istream/seekg.md b/reference/istream/basic_istream/seekg.md
+index 035ab52c8..cc1227adf 100644
+--- a/reference/istream/basic_istream/seekg.md
++++ b/reference/istream/basic_istream/seekg.md
+@@ -24,7 +24,7 @@ basic_istream&amp;lt;CharT, Traits&amp;gt;&amp;amp; seekg(off_type off, seekdir dir);
+ 1. 与えられた実引数により、以下のいずれかを実行する。
+     - `rdbuf()-&amp;gt;pubseekpos(pos, ios_base::in)`
+     - `rdbuf()-&amp;gt;pubseekoff(off, dir, ios_base::in)`
+-1. 失敗した場合、`setstate(failbit)`を呼び出す。
++1. 失敗した場合、ローカルエラー状態に`failbit`を設定する。
+ 
+ ## 戻り値
+ `*this`
+@@ -124,3 +124,5 @@ basic_istream&amp;lt;CharT, Traits&amp;gt;&amp;amp; seekg(off_type off, seekdir dir) {
+ - [`basic_streambuf::pubseekoff`](../../streambuf/basic_streambuf/pubseekoff.md)
+ - [`basic_streambuf::seekpos`](../../streambuf/basic_streambuf/seekpos.md)
+ - [`basic_streambuf::seekoff`](../../streambuf/basic_streambuf/seekoff.md)
++- [P1264R2 Revising the wording of stream input operations](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1264r2.pdf)
++    - C++23でローカルエラー状態の概念が導入され、入力関数のエラー処理セマンティクスが明確化された
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>sync -- C++23対応として、入力ストリームのエラー処理をコンパイラの実装に即した仕様にした #1113</title>
+      <link href="https://cpprefjp.github.io/reference/istream/basic_istream/sync.html"/>
+      <id>ac7082b8a07f09606cad2dab23a6874d6195613a:reference/istream/basic_istream/sync.md</id>
+      <updated>2026-02-20T15:50:20+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/istream/basic_istream/sync.md b/reference/istream/basic_istream/sync.md
+index 71cb5f62e..85bf4cb67 100644
+--- a/reference/istream/basic_istream/sync.md
++++ b/reference/istream/basic_istream/sync.md
+@@ -14,7 +14,7 @@ int sync();
+ ## 効果
+ 1. `sentry`オブジェクトを構築する。`sentry`オブジェクトが失敗を示した場合、何もしない。
+ 1. `rdbuf()-&amp;gt;pubsync()`を呼び出す。ただし、`rdbuf()`がヌルポインタなら何もしない。
+-1. `rdbuf()-&amp;gt;pubsync()`が`-1`を返した場合、`setstate(badbit)`を呼び出す。
++1. `rdbuf()-&amp;gt;pubsync()`が`-1`を返した場合、ローカルエラー状態に`badbit`を設定する。
+ 
+ ## 戻り値
+ - 成功した場合`0`。
+@@ -57,3 +57,5 @@ int sync() {
+ 
+ ## 参照
+ - [`basic_streambuf::pubsync`](../../streambuf/basic_streambuf/pubsync.md)
++- [P1264R2 Revising the wording of stream input operations](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1264r2.pdf)
++    - C++23でローカルエラー状態の概念が導入され、入力関数のエラー処理セマンティクスが明確化された
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>tellg -- C++23対応として、入力ストリームのエラー処理をコンパイラの実装に即した仕様にした #1113</title>
+      <link href="https://cpprefjp.github.io/reference/istream/basic_istream/tellg.html"/>
+      <id>ac7082b8a07f09606cad2dab23a6874d6195613a:reference/istream/basic_istream/tellg.md</id>
+      <updated>2026-02-20T15:50:20+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/istream/basic_istream/tellg.md b/reference/istream/basic_istream/tellg.md
+index dd8b2b945..bfc046a24 100644
+--- a/reference/istream/basic_istream/tellg.md
++++ b/reference/istream/basic_istream/tellg.md
+@@ -85,3 +85,5 @@ pos_type tellg(pos_type pos) {
+ - [`basic_istream::seekg`](seekg.md)
+ - [`basic_streambuf::pubseekoff`](../../streambuf/basic_streambuf/pubseekoff.md)
+ - [`basic_streambuf::seekoff`](../../streambuf/basic_streambuf/seekoff.md)
++- [P1264R2 Revising the wording of stream input operations](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1264r2.pdf)
++    - C++23でローカルエラー状態の概念が導入され、入力関数のエラー処理セマンティクスが明確化された
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>unget -- C++23対応として、入力ストリームのエラー処理をコンパイラの実装に即した仕様にした #1113</title>
+      <link href="https://cpprefjp.github.io/reference/istream/basic_istream/unget.html"/>
+      <id>ac7082b8a07f09606cad2dab23a6874d6195613a:reference/istream/basic_istream/unget.md</id>
+      <updated>2026-02-20T15:50:20+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/istream/basic_istream/unget.md b/reference/istream/basic_istream/unget.md
+index a69cac288..f7d7f92c0 100644
+--- a/reference/istream/basic_istream/unget.md
++++ b/reference/istream/basic_istream/unget.md
+@@ -16,9 +16,9 @@ basic_istream&amp;lt;CharT, Traits&amp;gt;&amp;amp; unget();
+ ## 効果
+ 1. `eofbit`を消去する。
+ 1. `sentry`オブジェクトを構築する。
+-1. `!good()`なら`setstate(failbit)`して終わる。
++1. `!good()`ならローカルエラー状態に`failbit`を設定して終わる。
+ 1. `rdbuf()-&amp;gt;sungetc()`を呼び出す。
+-    - `rdbuf()`がヌルポインタであるか、`sungetc()`が`Traits::eof()`を返した場合、`setstate(badbit)`を呼び出す。
++    - `rdbuf()`がヌルポインタであるか、`sungetc()`が`Traits::eof()`を返した場合、ローカルエラー状態に`badbit`を設定する。
+ 
+ ## 戻り値
+ `*this`。
+@@ -108,3 +108,5 @@ basic_istream&amp;lt;CharT, Traits&amp;gt;&amp;amp; unget() {
+ 
+ - [`basic_istream::putback`](putback.md)
+ - [`basic_streambuf::sungetc`](../../streambuf/basic_streambuf/sungetc.md)
++- [P1264R2 Revising the wording of stream input operations](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1264r2.pdf)
++    - C++23でローカルエラー状態の概念が導入され、入力関数のエラー処理セマンティクスが明確化された
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>getline -- C++23対応として、入力ストリームのエラー処理をコンパイラの実装に即した仕様にした #1113</title>
+      <link href="https://cpprefjp.github.io/reference/string/basic_string/getline.html"/>
+      <id>ac7082b8a07f09606cad2dab23a6874d6195613a:reference/string/basic_string/getline.md</id>
+      <updated>2026-02-20T15:50:20+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/basic_string/getline.md b/reference/string/basic_string/getline.md
+index 5aee517dc..c5afb540d 100644
+--- a/reference/string/basic_string/getline.md
++++ b/reference/string/basic_string/getline.md
+@@ -40,10 +40,10 @@ namespace std {
+ 1. [`basic_istream&amp;lt;&amp;gt;::sentry`](../../istream/basic_istream/sentry.md)オブジェクトを構築する。`sentry`オブジェクトが失敗を示した場合、何もしない。
+ 1. `str.erase()`を呼び出す。
+ 1. 以下のいずれかを満たすまで、文字を入力して`str.append(1, c)`と等価な方法で文字列に追加する。なお、`c`は入力した文字を表す。以下の条件判断はこの順で行う。
+-    1. EOFに達した。この場合、`is.setstate(ios_base::eofbit)`を呼び出す。
++    1. EOFに達した。この場合、ローカルエラー状態に`ios_base::eofbit`を設定する。
+     1. `Traits::eq(c, delim)`が真となった。
+-    1. 読み取った文字数が`str.max_size()`になるまで書き込んだ。この場合、`is.setstate(ios_base::failbit)`を呼び出す。
+-1. （`sentry`オブジェクトを破棄したのち）1文字も入力がなされなかったら、`is.setstate(ios_base::failbit)`を呼び出す。
++    1. 読み取った文字数が`str.max_size()`になるまで書き込んだ。この場合、ローカルエラー状態に`ios_base::failbit`を設定する。
++1. 1文字も入力がなされなかったら、ローカルエラー状態に`ios_base::failbit`を設定する。
+     - 空行の場合はこれに該当しないことに注意。なぜなら、改行文字1文字を入力しているためである。
+ 
+ この関数は[`basic_istream&amp;lt;&amp;gt;::gcount`](../../istream/basic_istream/gcount.md)には影響を及ぼさない。
+@@ -82,3 +82,7 @@ Haru wa akebono.
+ | 名前                  | 説明                           |
+ |-----------------------|--------------------------------|
+ | [`std::basic_istream&amp;lt;&amp;gt;::getline`](../../istream/basic_istream/getline.md) | 文字の配列へ入力を行うもの |
++
++## 参照
++- [P1264R2 Revising the wording of stream input operations](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1264r2.pdf)
++    - C++23でローカルエラー状態の概念が導入され、入力関数のエラー処理セマンティクスが明確化された
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>operator&gt;&gt; -- C++23対応として、入力ストリームのエラー処理をコンパイラの実装に即した仕様にした #1113</title>
+      <link href="https://cpprefjp.github.io/reference/string/basic_string/op_istream.html"/>
+      <id>ac7082b8a07f09606cad2dab23a6874d6195613a:reference/string/basic_string/op_istream.md</id>
+      <updated>2026-02-20T15:50:20+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/basic_string/op_istream.md b/reference/string/basic_string/op_istream.md
+index 55dcb46e4..d18ba3f7a 100644
+--- a/reference/string/basic_string/op_istream.md
++++ b/reference/string/basic_string/op_istream.md
+@@ -28,7 +28,7 @@ namespace std {
+     - 空白文字に達した。空白文字の判定にはストリームに設定されているロケールが考慮される。
+ 1. `is.width(0)`を呼び出す。
+ 
+-`str`に1文字も入力が行われなかった場合、`is.setstate(ios_base::failbit)`が呼び出される。
++1文字も入力が行われなかった場合、ローカルエラー状態に`ios_base::failbit`を設定する。
+ 
+ ## 戻り値
+ - 仮引数`is`。
+@@ -64,3 +64,5 @@ Banana
+ - [`getline`](getline.md): このほかの`basic_string`に対する入力関数。
+ - このほかの`&amp;gt;&amp;gt;`演算子関数
+     - [`&amp;lt;istream&amp;gt;`ヘッダで定義されているもの](../../istream/basic_istream/op_istream.md)
++- [P1264R2 Revising the wording of stream input operations](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1264r2.pdf)
++    - C++23でローカルエラー状態の概念が導入され、入力関数のエラー処理セマンティクスが明確化された
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>append_range -- C++26 vectorとstring以外のコンテナをconstexpr対応  (#1584)</title>
@@ -32461,66 +33098,6 @@ index 87a021b7d..5af284873 100644
          * make_format_args[link /reference/format/make_format_args.md]
  
  
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>ignore -- basic_istream/ignore: P3223R2対応 (#1518)</title>
-      <link href="https://cpprefjp.github.io/reference/istream/basic_istream/ignore.html"/>
-      <id>ebde68c411f604e2b07e91bea3d1debcf2a11df0:reference/istream/basic_istream/ignore.md</id>
-      <updated>2026-02-11T15:32:25+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/istream/basic_istream/ignore.md b/reference/istream/basic_istream/ignore.md
-index b31b96a0f..62461e5e3 100644
---- a/reference/istream/basic_istream/ignore.md
-+++ b/reference/istream/basic_istream/ignore.md
-@@ -5,7 +5,9 @@
- * function[meta id-type]
- 
- ```cpp
--basic_istream&amp;lt;CharT, Traits&amp;gt;&amp;amp; ignore(streamsize n = 1, int_type delim = Traits::eof());
-+basic_istream&amp;amp; ignore(streamsize n = 1, int_type delim = Traits::eof());  // (1)
-+
-+basic_istream&amp;amp; ignore(streamsize n, char_type delim);  // (2) C++26
- ```
- 
- ## 概要
-@@ -19,9 +21,10 @@ basic_istream&amp;lt;CharT, Traits&amp;gt;&amp;amp; ignore(streamsize n = 1, int_type delim = Traits::
- - 2番目の仮引数`delim`を与えると、その文字が現れるまで入力して捨てる処理を実行する。この指定が不要なら、`Traits::eof()`を実引数に与える。
- 
- ## 効果
-+(1) : 下記の動作を行う。
- 
- 1. `sentry`オブジェクトを構築する。`sentry`オブジェクトが失敗を示した場合、何もしない。
--1. 以下のいずれかを満たすまで、`this`内のストリームバッファから文字を入力する（どこへも出力することなく捨てる）。
-+2. 以下のいずれかを満たすまで、`this`内のストリームバッファから文字を入力する（どこへも出力することなく捨てる）。
-     - 実引数で指定された`n`文字まで入力した。
-         - `n == numeric_limits&amp;lt;streamsize&amp;gt;::max()`の場合、この条件は適用されない。
-     - EOFに達した。この場合、`setstate(eofbit)`を呼び出す。
-@@ -29,6 +32,12 @@ basic_istream&amp;lt;CharT, Traits&amp;gt;&amp;amp; ignore(streamsize n = 1, int_type delim = Traits::
-         - 次の文字を`c`として、`Traits::eq_int_type(Traits::to_int_type(c), delim)`が真の場合。
-         - `delim`が`Traits::eof()`である場合、この条件は適用されない。
- 
-+(2) : 下記と等価
-+```cpp
-+return ignore(n, traits::to_int_type(delim));
-+```
-+
-+
- ## 戻り値
- `*this`
- 
-@@ -71,3 +80,5 @@ TBD
- - C++98
- 
- ## 参照
-+- [P3223R2 Making std::istream::ignore less surprising](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3223r2.html)
-+    - C++26からオーバーロード(2)が追加された
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
