@@ -229,6 +229,7 @@ var sanitize = function sanitize(badges) {
       var deprecated_or_removed = false;
       var cppv = null;
       var named_version = null;
+      var exposition_only = false;
       var _iterator2 = _createForOfIteratorHelper(b_classes),
         _step2;
       try {
@@ -239,6 +240,10 @@ var sanitize = function sanitize(badges) {
             b.attr('data-named-version', c);
             classes.push('named-version-spec');
             continue;
+          }
+          if (c === 'exposition-only') {
+            exposition_only = true;
+            classes.push('exposition-only-spec');
           }
           var cppm = c.match(/^cpp(\d[\da-zA-Z])(.*)$/);
           if (!cppm) continue;
@@ -263,7 +268,7 @@ var sanitize = function sanitize(badges) {
         classes.push('added-in-spec');
       }
       b.addClass(classes.join(' '));
-      var lang_path = cppv ? "/lang/cpp".concat(cppv) : named_version ? "/lang/".concat(named_version) : "/lang";
+      var lang_path = cppv ? "/lang/cpp".concat(cppv) : named_version ? "/lang/".concat(named_version) : exposition_only ? '/reference/exposition-only' : "/lang";
       var a_elem = badge_$('<a>', {
         href: "".concat(lang_path, ".html")
       }).append(badge_$('<i>'))

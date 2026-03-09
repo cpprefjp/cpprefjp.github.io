@@ -3659,10 +3659,12 @@ var DOM = /*#__PURE__*/function () {
               li.addClass('added-in-spec').attr('title', "".concat(cppv, "\u3067\u8FFD\u52A0"));
             }
           } else {
-            name = attr == 'future' ? '将来' : attr == 'archive' ? '廃案' : null;
+            var name = attr == 'future' ? '将来' : attr == 'archive' ? '廃案' : null;
             if (name) {
               li.addClass('named-version-spec').attr('title', "C++ (".concat(name, ")"));
-              li.attr('named-version', attr);
+              li.attr('data-named-version', attr);
+            } else if (attr == 'exposition-only') {
+              li.addClass('exposition-only-spec').attr('title', '説明専用');
             }
           }
           if (['deprecated_in_latest', 'removed_in_latest', 'added_in_latest'].includes(attr)) {
@@ -3781,7 +3783,9 @@ var Index = /*#__PURE__*/function () {
       title.append(this._id.join_html(opts));
       var attrs = [];
       if (!opts.badges.noselfcpp && this._cpp_version) {
-        attrs.push("added-in-cpp".concat(this._cpp_version));
+        if (!/^(?:future|archive)$/.test(this._cpp_version)) {
+          attrs.push("added-in-cpp".concat(this._cpp_version));
+        }
       }
       if (this._attributes) {
         attrs.push.apply(attrs, (0,toConsumableArray/* default */.A)(this._attributes));
@@ -4922,7 +4926,7 @@ var CRSearch = /*#__PURE__*/function () {
               cr_info_link = crsearch_crsearch_$('<a />');
               cr_info_link.attr('href', CRSearch._HOMEPAGE);
               cr_info_link.attr('target', '_blank');
-              cr_info_link.text("".concat(CRSearch._APPNAME, " v").concat({"version":"3.0.26","bugs_url":"https://github.com/cpprefjp/crsearch/issues"}.version));
+              cr_info_link.text("".concat(CRSearch._APPNAME, " v").concat({"version":"3.0.27","bugs_url":"https://github.com/cpprefjp/crsearch/issues"}.version));
               cr_info_link.appendTo(cr_info);
               cr_info.appendTo(result_wrapper);
               input.on('focusin', function () {
