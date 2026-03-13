@@ -2,9 +2,745 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2026-03-12T15:32:01.083654</updated>
-  <id>ad5bcf9e-2700-495f-9fc7-95952866bd1a</id>
+  <updated>2026-03-13T02:29:57.238732</updated>
+  <id>668be31e-355f-4a12-80dd-bf32281e958a</id>
 
+  
+    <entry>
+      <title>flat_map -- C++26でのflat_map/set関連の仕様修正に対応 #1566</title>
+      <link href="https://cpprefjp.github.io/reference/flat_map/flat_map.html"/>
+      <id>8d9f9ce276cbf9b592ea4101ceda0d52a411fab6:reference/flat_map/flat_map.md</id>
+      <updated>2026-03-13T11:25:45+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_map/flat_map.md b/reference/flat_map/flat_map.md
+index b63924ae8..2db5af5af 100644
+--- a/reference/flat_map/flat_map.md
++++ b/reference/flat_map/flat_map.md
+@@ -44,7 +44,7 @@ namespace std {
+ 
+ `value_type`は、[`std::map`](/reference/map/map.md)では[`std::pair`](/reference/utility/pair.md)`&amp;lt;const Key, T&amp;gt;`だが、このクラスは[`std::pair`](/reference/utility/pair.md)`&amp;lt;Key, T&amp;gt;`である (`const`がつかない)。
+ 
+-以下の不変条件をもち、メンバ関数のいずれかが例外によって終了した場合には不変条件の状態に復元される (ただし、その復元操作によってコンテナが空になる可能性がある)：
++以下の不変条件をもち、メンバ関数のいずれかが例外によって終了した場合には不変条件の状態に復元される (ただし、その復元操作によってコンテナが空になる可能性がある)。ムーブコンストラクタとムーブ代入演算子の場合、両方の引数の不変条件が復元される：
+ 
+ - キーの配列と値の配列が、同じ要素数をもつ
+ - キーの配列が、指定された比較関数オブジェクトを尊重してソートを行う
+@@ -369,3 +369,5 @@ int main()
+     - C++23で`flat_map`が導入された経緯・動機・設計について記載されている
+ - [P0429R9 A Standard `flat_map`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p0429r9.pdf)
+     - C++23で導入された`flat_map`の仕様
++- [P3567R2 flat_meow Fixes](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3567r2.html)
++    - C++26で`swap`の条件付き`noexcept`、`insert_range`のソート済みオーバーロード追加などの修正が行われた
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>insert_range -- C++26でのflat_map/set関連の仕様修正に対応 #1566</title>
+      <link href="https://cpprefjp.github.io/reference/flat_map/flat_map/insert_range.html"/>
+      <id>8d9f9ce276cbf9b592ea4101ceda0d52a411fab6:reference/flat_map/flat_map/insert_range.md</id>
+      <updated>2026-03-13T11:25:45+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_map/flat_map/insert_range.md b/reference/flat_map/flat_map/insert_range.md
+index 4862be338..9c939b647 100644
+--- a/reference/flat_map/flat_map/insert_range.md
++++ b/reference/flat_map/flat_map/insert_range.md
+@@ -7,11 +7,15 @@
+ 
+ ```cpp
+ template&amp;lt;container-compatible-range&amp;lt;value_type&amp;gt; R&amp;gt;
+-void insert_range(R&amp;amp;&amp;amp; rg);           // (1) C++23
++void insert_range(R&amp;amp;&amp;amp; rg);                       // (1) C++23
+ template&amp;lt;container-compatible-range&amp;lt;value_type&amp;gt; R&amp;gt;
+-constexpr void insert_range(R&amp;amp;&amp;amp; rg); // (1) C++26
++constexpr void insert_range(R&amp;amp;&amp;amp; rg);             // (1) C++26
++
++template&amp;lt;container-compatible-range&amp;lt;value_type&amp;gt; R&amp;gt;
++constexpr void insert_range(sorted_unique_t, R&amp;amp;&amp;amp; rg); // (2) C++26
+ ```
+ * container-compatible-range[link /reference/exposition-only/container-compatible-range.md]
++* sorted_unique_t[link /reference/flat_map/sorted_unique_t.md]
+ 
+ ## 概要
+ Rangeを挿入し、コンテナを拡張する。
+@@ -26,17 +30,19 @@ Rangeを挿入し、コンテナを拡張する。
+ 
+ 
+ ## 効果
+-- メンバ変数として保持しているコンテナ`c`に、以下のように挿入する：
++- (1) : メンバ変数として保持しているコンテナ`c`に、以下のように挿入する：
+     ```cpp
+-    for (const auto&amp;amp; e : rg) {
+-      c.keys.insert(c.keys.end(), e.first);
+-      c.values.insert(c.values.end(), e.second);
+-    }
++    ranges::for_each(rg, [&amp;amp;](value_type e) {
++      c.keys.insert(c.keys.end(), std::move(e.first));
++      c.values.insert(c.values.end(), std::move(e.second));
++    });
+     ```
+     * c.keys[link containers.md]
+     * c.values[link containers.md]
++    * ranges::for_each[link /reference/algorithm/ranges_for_each.md]
+     * end()[link /reference/vector/vector/end.md]
+     * insert[link /reference/vector/vector/insert.md]
++    * std::move[link /reference/utility/move.md]
+     * first[link /reference/utility/pair/first.md]
+     * second[link /reference/utility/pair/second.md]
+ 
+@@ -58,13 +64,16 @@ Rangeを挿入し、コンテナを拡張する。
+     * key_equiv[link key_equiv.md]
+     * distance[link /reference/iterator/distance.md]
+ 
++- (2) : `insert_range(rg)`と等価
++
+ 
+ ## 戻り値
+ なし
+ 
+ 
+ ## 計算量
+-- Nをこの操作の前の[`size()`](size.md)、Mを[`ranges::distance`](/reference/iterator/ranges_distance.md)`(rg)`として、N + MlogM
++- (1) : Nをこの操作の前の[`size()`](size.md)、Mを[`ranges::distance`](/reference/iterator/ranges_distance.md)`(rg)`として、N + MlogM
++- (2) : 線形
+ 
+ 
+ ## 備考
+@@ -123,3 +132,6 @@ int main()
+ 
+ ## 参照
+ - [P3372R3 constexpr containers and adaptors](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3372r3.html)
++- [P3567R2 flat_meow Fixes](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3567r2.html)
++    - C++26で(2)の`sorted_unique_t`をとるオーバーロードが追加された
++    - C++26で(1)の効果が、要素のコピーではなくムーブを行うように修正された
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>swap -- C++26でのflat_map/set関連の仕様修正に対応 #1566</title>
+      <link href="https://cpprefjp.github.io/reference/flat_map/flat_map/swap.html"/>
+      <id>8d9f9ce276cbf9b592ea4101ceda0d52a411fab6:reference/flat_map/flat_map/swap.md</id>
+      <updated>2026-03-13T11:25:45+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_map/flat_map/swap.md b/reference/flat_map/flat_map/swap.md
+index 2936b8f8d..7a2c6a112 100644
+--- a/reference/flat_map/flat_map/swap.md
++++ b/reference/flat_map/flat_map/swap.md
+@@ -6,9 +6,13 @@
+ * cpp23[meta cpp]
+ 
+ ```cpp
+-void swap(flat_map&amp;amp; y) noexcept;           // (1) C++23
+-constexpr void swap(flat_map&amp;amp; y) noexcept; // (1) C++26
++void swap(flat_map&amp;amp; y) noexcept;                          // (1) C++23
++constexpr void swap(flat_map&amp;amp; y)
++  noexcept(is_nothrow_swappable_v&amp;lt;key_container_type&amp;gt; &amp;amp;&amp;amp;
++           is_nothrow_swappable_v&amp;lt;mapped_container_type&amp;gt; &amp;amp;&amp;amp;
++           is_nothrow_swappable_v&amp;lt;key_compare&amp;gt;);          // (1) C++26
+ ```
++* is_nothrow_swappable_v[link /reference/type_traits/is_nothrow_swappable.md]
+ 
+ ## 概要
+ コンテナ内のコンテンツを、同じ型の要素を保持する他の `flat_map` オブジェクトである `y` 内のコンテンツと交換する。
+@@ -84,3 +88,5 @@ fm2 : {[10,a], [20,b], [30,c]}
+ 
+ ## 参照
+ - [P3372R3 constexpr containers and adaptors](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3372r3.html)
++- [P3567R2 flat_meow Fixes](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3567r2.html)
++    - C++26で、`noexcept`指定が無条件から条件付きに変更された。内部コンテナと比較関数オブジェクトの`swap`が例外を送出しない場合にのみ`noexcept`となる
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>swap (非メンバ関数) -- C++26でのflat_map/set関連の仕様修正に対応 #1566</title>
+      <link href="https://cpprefjp.github.io/reference/flat_map/flat_map/swap_free.html"/>
+      <id>8d9f9ce276cbf9b592ea4101ceda0d52a411fab6:reference/flat_map/flat_map/swap_free.md</id>
+      <updated>2026-03-13T11:25:45+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_map/flat_map/swap_free.md b/reference/flat_map/flat_map/swap_free.md
+index 298884270..fed530423 100644
+--- a/reference/flat_map/flat_map/swap_free.md
++++ b/reference/flat_map/flat_map/swap_free.md
+@@ -13,7 +13,8 @@ namespace std {
+   template &amp;lt;class Key, class T, class Compare, class KeyContainer, class MappedContainer&amp;gt;
+   constexpr void
+     swap(flat_map&amp;lt;Key, T, Compare, KeyContainer, MappedContainer&amp;gt;&amp;amp; x,
+-         flat_map&amp;lt;Key, T, Compare, KeyContainer, MappedContainer&amp;gt;&amp;amp; y); // (1) C++26
++         flat_map&amp;lt;Key, T, Compare, KeyContainer, MappedContainer&amp;gt;&amp;amp; y)
++      noexcept(noexcept(x.swap(y)));                                   // (1) C++26
+ }
+ ```
+ 
+@@ -90,3 +91,5 @@ fm2 : {[10,a], [20,b], [30,c]}
+ 
+ ## 参照
+ - [P3372R3 constexpr containers and adaptors](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3372r3.html)
++- [P3567R2 flat_meow Fixes](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3567r2.html)
++    - C++26で、`noexcept`指定が条件付きに変更された。メンバ関数[`swap()`](swap.md)の`noexcept`条件に従う
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>flat_multimap -- C++26でのflat_map/set関連の仕様修正に対応 #1566</title>
+      <link href="https://cpprefjp.github.io/reference/flat_map/flat_multimap.html"/>
+      <id>8d9f9ce276cbf9b592ea4101ceda0d52a411fab6:reference/flat_map/flat_multimap.md</id>
+      <updated>2026-03-13T11:25:45+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_map/flat_multimap.md b/reference/flat_map/flat_multimap.md
+index f857ebef2..21c81b18a 100644
+--- a/reference/flat_map/flat_multimap.md
++++ b/reference/flat_map/flat_multimap.md
+@@ -44,7 +44,7 @@ namespace std {
+ 
+ `value_type`は、[`std::multimap`](/reference/map/multimap.md)では[`std::pair`](/reference/utility/pair.md)`&amp;lt;const Key, T&amp;gt;`だが、このクラスは[`std::pair`](/reference/utility/pair.md)`&amp;lt;Key, T&amp;gt;`である (`const`がつかない)。
+ 
+-以下の不変条件をもち、メンバ関数のいずれかが例外によって終了した場合には不変条件の状態に復元される (ただし、その復元操作によってコンテナが空になる可能性がある)：
++以下の不変条件をもち、メンバ関数のいずれかが例外によって終了した場合には不変条件の状態に復元される (ただし、その復元操作によってコンテナが空になる可能性がある)。ムーブコンストラクタとムーブ代入演算子の場合、両方の引数の不変条件が復元される：
+ 
+ - キーの配列と値の配列が、同じ要素数をもつ
+ - キーの配列が、指定された比較関数オブジェクトを尊重してソートを行う
+@@ -284,3 +284,5 @@ int main()
+     - C++23で`flat_map`が導入された経緯・動機・設計について記載されている
+ - [P0429R9 A Standard `flat_map`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p0429r9.pdf)
+     - C++23で導入された`flat_map`の仕様
++- [P3567R2 flat_meow Fixes](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3567r2.html)
++    - C++26で`swap`の条件付き`noexcept`、`insert_range`のソート済みオーバーロード追加などの修正が行われた
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>insert_range -- C++26でのflat_map/set関連の仕様修正に対応 #1566</title>
+      <link href="https://cpprefjp.github.io/reference/flat_map/flat_multimap/insert_range.html"/>
+      <id>8d9f9ce276cbf9b592ea4101ceda0d52a411fab6:reference/flat_map/flat_multimap/insert_range.md</id>
+      <updated>2026-03-13T11:25:45+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_map/flat_multimap/insert_range.md b/reference/flat_map/flat_multimap/insert_range.md
+index 40801e514..3ac0eb744 100644
+--- a/reference/flat_map/flat_multimap/insert_range.md
++++ b/reference/flat_map/flat_multimap/insert_range.md
+@@ -7,11 +7,15 @@
+ 
+ ```cpp
+ template&amp;lt;container-compatible-range&amp;lt;value_type&amp;gt; R&amp;gt;
+-void insert_range(R&amp;amp;&amp;amp; rg);           // (1) C++23
++void insert_range(R&amp;amp;&amp;amp; rg);                             // (1) C++23
+ template&amp;lt;container-compatible-range&amp;lt;value_type&amp;gt; R&amp;gt;
+-constexpr void insert_range(R&amp;amp;&amp;amp; rg); // (1) C++26
++constexpr void insert_range(R&amp;amp;&amp;amp; rg);                   // (1) C++26
++
++template&amp;lt;container-compatible-range&amp;lt;value_type&amp;gt; R&amp;gt;
++constexpr void insert_range(sorted_equivalent_t, R&amp;amp;&amp;amp; rg); // (2) C++26
+ ```
+ * container-compatible-range[link /reference/exposition-only/container-compatible-range.md]
++* sorted_equivalent_t[link /reference/flat_map/sorted_equivalent_t.md]
+ 
+ ## 概要
+ Rangeを挿入し、コンテナを拡張する。
+@@ -22,30 +26,35 @@ Rangeを挿入し、コンテナを拡張する。
+ 
+ 
+ ## 効果
+-- メンバ変数として保持しているコンテナ`c`に、以下のように挿入する：
++- (1) : メンバ変数として保持しているコンテナ`c`に、以下のように挿入する：
+     ```cpp
+-    for (const auto&amp;amp; e : rg) {
+-      c.keys.insert(c.keys.end(), e.first);
+-      c.values.insert(c.values.end(), e.second);
+-    }
++    ranges::for_each(rg, [&amp;amp;](value_type e) {
++      c.keys.insert(c.keys.end(), std::move(e.first));
++      c.values.insert(c.values.end(), std::move(e.second));
++    });
+     ```
+     * c.keys[link containers.md]
+     * c.values[link containers.md]
++    * ranges::for_each[link /reference/algorithm/ranges_for_each.md]
+     * end()[link /reference/vector/vector/end.md]
+     * insert[link /reference/vector/vector/insert.md]
++    * std::move[link /reference/utility/move.md]
+     * first[link /reference/utility/pair/first.md]
+     * second[link /reference/utility/pair/second.md]
+ 
+     - 次に、新しく挿入された要素の範囲を`value_comp()`を基準にソートする
+     - 次に、ソートされた結果の範囲と、既存の要素のソートされた範囲をひとつのソートされた範囲にマージする
+ 
++- (2) : `insert_range(rg)`と等価
++
+ 
+ ## 戻り値
+ なし
+ 
+ 
+ ## 計算量
+-- Nをこの操作の前の[`size()`](size.md)、Mを[`ranges::distance`](/reference/iterator/ranges_distance.md)`(rg)`として、N + MlogM
++- (1) : Nをこの操作の前の[`size()`](size.md)、Mを[`ranges::distance`](/reference/iterator/ranges_distance.md)`(rg)`として、N + MlogM
++- (2) : 線形
+ 
+ 
+ ## 備考
+@@ -103,3 +112,6 @@ int main()
+ 
+ ## 参照
+ - [P3372R3 constexpr containers and adaptors](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3372r3.html)
++- [P3567R2 flat_meow Fixes](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3567r2.html)
++    - C++26で(2)の`sorted_equivalent_t`をとるオーバーロードが追加された
++    - C++26で(1)の効果が、要素のコピーではなくムーブを行うように修正された
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>swap -- C++26でのflat_map/set関連の仕様修正に対応 #1566</title>
+      <link href="https://cpprefjp.github.io/reference/flat_map/flat_multimap/swap.html"/>
+      <id>8d9f9ce276cbf9b592ea4101ceda0d52a411fab6:reference/flat_map/flat_multimap/swap.md</id>
+      <updated>2026-03-13T11:25:45+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_map/flat_multimap/swap.md b/reference/flat_map/flat_multimap/swap.md
+index 18f86609a..9002d9952 100644
+--- a/reference/flat_map/flat_multimap/swap.md
++++ b/reference/flat_map/flat_multimap/swap.md
+@@ -6,9 +6,13 @@
+ * cpp23[meta cpp]
+ 
+ ```cpp
+-void swap(flat_multimap&amp;amp; y) noexcept;           // (1) C++23
+-constexpr void swap(flat_multimap&amp;amp; y) noexcept; // (1) C++26
++void swap(flat_multimap&amp;amp; y) noexcept;                          // (1) C++23
++constexpr void swap(flat_multimap&amp;amp; y)
++  noexcept(is_nothrow_swappable_v&amp;lt;key_container_type&amp;gt; &amp;amp;&amp;amp;
++           is_nothrow_swappable_v&amp;lt;mapped_container_type&amp;gt; &amp;amp;&amp;amp;
++           is_nothrow_swappable_v&amp;lt;key_compare&amp;gt;);               // (1) C++26
+ ```
++* is_nothrow_swappable_v[link /reference/type_traits/is_nothrow_swappable.md]
+ 
+ ## 概要
+ コンテナ内のコンテンツを、同じ型の要素を保持する他の `flat_multimap` オブジェクトである `y` 内のコンテンツと交換する。
+@@ -81,6 +85,7 @@ fm2 : {[10,a], [20,b], [30,c]}
+ - [GCC](/implementation.md#gcc): ??
+ - [Visual C++](/implementation.md#visual_cpp): ??
+ 
+-
+ ## 参照
+ - [P3372R3 constexpr containers and adaptors](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3372r3.html)
++- [P3567R2 flat_meow Fixes](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3567r2.html)
++    - C++26で、`noexcept`指定が無条件から条件付きに変更された。内部コンテナと比較関数オブジェクトの`swap`が例外を送出しない場合にのみ`noexcept`となる
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>swap (非メンバ関数) -- C++26でのflat_map/set関連の仕様修正に対応 #1566</title>
+      <link href="https://cpprefjp.github.io/reference/flat_map/flat_multimap/swap_free.html"/>
+      <id>8d9f9ce276cbf9b592ea4101ceda0d52a411fab6:reference/flat_map/flat_multimap/swap_free.md</id>
+      <updated>2026-03-13T11:25:45+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_map/flat_multimap/swap_free.md b/reference/flat_map/flat_multimap/swap_free.md
+index 7dbc1bda7..a21a02ec8 100644
+--- a/reference/flat_map/flat_multimap/swap_free.md
++++ b/reference/flat_map/flat_multimap/swap_free.md
+@@ -13,7 +13,8 @@ namespace std {
+   template &amp;lt;class Key, class T, class Compare, class KeyContainer, class MappedContainer&amp;gt;
+   constexpr void
+     swap(flat_multimap&amp;lt;Key, T, Compare, KeyContainer, MappedContainer&amp;gt;&amp;amp; x,
+-         flat_multimap&amp;lt;Key, T, Compare, KeyContainer, MappedContainer&amp;gt;&amp;amp; y); // (1) C++26
++         flat_multimap&amp;lt;Key, T, Compare, KeyContainer, MappedContainer&amp;gt;&amp;amp; y)
++      noexcept(noexcept(x.swap(y)));                                        // (1) C++26
+ }
+ ```
+ 
+@@ -87,6 +88,7 @@ fm2 : {[10,a], [20,b], [30,c]}
+ - [GCC](/implementation.md#gcc): ??
+ - [Visual C++](/implementation.md#visual_cpp): ??
+ 
+-
+ ## 参照
+ - [P3372R3 constexpr containers and adaptors](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3372r3.html)
++- [P3567R2 flat_meow Fixes](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3567r2.html)
++    - C++26で、`noexcept`指定が条件付きに変更された。メンバ関数[`swap()`](swap.md)の`noexcept`条件に従う
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>flat_multiset -- C++26でのflat_map/set関連の仕様修正に対応 #1566</title>
+      <link href="https://cpprefjp.github.io/reference/flat_set/flat_multiset.html"/>
+      <id>8d9f9ce276cbf9b592ea4101ceda0d52a411fab6:reference/flat_set/flat_multiset.md</id>
+      <updated>2026-03-13T11:25:45+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_set/flat_multiset.md b/reference/flat_set/flat_multiset.md
+index 3c6c273be..632700a36 100644
+--- a/reference/flat_set/flat_multiset.md
++++ b/reference/flat_set/flat_multiset.md
+@@ -260,3 +260,5 @@ int main()
+     - C++23で`flat_set`が導入された経緯・動機・設計について記載されている
+ - [P1222R4 A Standard `flat_set`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1222r4.pdf)
+     - C++23で導入された`flat_set`の仕様
++- [P3567R2 flat_meow Fixes](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3567r2.html)
++    - C++26で`swap`の条件付き`noexcept`、`insert_range`のソート済みオーバーロード追加などの修正が行われた
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>insert_range -- C++26でのflat_map/set関連の仕様修正に対応 #1566</title>
+      <link href="https://cpprefjp.github.io/reference/flat_set/flat_multiset/insert_range.html"/>
+      <id>8d9f9ce276cbf9b592ea4101ceda0d52a411fab6:reference/flat_set/flat_multiset/insert_range.md</id>
+      <updated>2026-03-13T11:25:45+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_set/flat_multiset/insert_range.md b/reference/flat_set/flat_multiset/insert_range.md
+index 93d22062d..6e11b15c3 100644
+--- a/reference/flat_set/flat_multiset/insert_range.md
++++ b/reference/flat_set/flat_multiset/insert_range.md
+@@ -7,11 +7,15 @@
+ 
+ ```cpp
+ template&amp;lt;container-compatible-range&amp;lt;value_type&amp;gt; R&amp;gt;
+-void insert_range(R&amp;amp;&amp;amp; rg);           // (1) C++23
++void insert_range(R&amp;amp;&amp;amp; rg);                             // (1) C++23
+ template&amp;lt;container-compatible-range&amp;lt;value_type&amp;gt; R&amp;gt;
+-constexpr void insert_range(R&amp;amp;&amp;amp; rg); // (1) C++26
++constexpr void insert_range(R&amp;amp;&amp;amp; rg);                   // (1) C++26
++
++template&amp;lt;container-compatible-range&amp;lt;value_type&amp;gt; R&amp;gt;
++constexpr void insert_range(sorted_equivalent_t, R&amp;amp;&amp;amp; rg); // (2) C++26
+ ```
+ * container-compatible-range[link /reference/exposition-only/container-compatible-range.md]
++* sorted_equivalent_t[link /reference/flat_set/sorted_equivalent_t.md]
+ 
+ ## 概要
+ Rangeを挿入し、コンテナを拡張する。
+@@ -21,12 +25,31 @@ Rangeを挿入し、コンテナを拡張する。
+ 内部的に `flat_multiset` コンテナは、コンストラクト時に指定された比較オブジェクトによって要素を下位から上位へとソートして保持する。
+ 
+ 
++## 効果
++- (1) : メンバ変数として保持しているコンテナ`c`に、以下のように挿入する：
++    ```cpp
++    ranges::for_each(rg, [&amp;amp;](auto&amp;amp;&amp;amp; e) {
++      c.insert(c.end(), std::forward&amp;lt;decltype(e)&amp;gt;(e));
++    });
++    ```
++    * ranges::for_each[link /reference/algorithm/ranges_for_each.md]
++    * end()[link /reference/vector/vector/end.md]
++    * insert[link /reference/vector/vector/insert.md]
++    * std::forward[link /reference/utility/forward.md]
++
++    - 次に、新しく挿入された要素の範囲を`value_comp()`を基準にソートする
++    - 次に、ソートされた結果の範囲と、既存の要素のソートされた範囲をひとつのソートされた範囲にマージする
++
++- (2) : `insert_range(rg)`と等価
++
++
+ ## 戻り値
+ なし
+ 
+ 
+ ## 計算量
+-- Nをこの操作の前の[`size()`](size.md)、Mを[`ranges::distance`](/reference/iterator/ranges_distance.md)`(rg)`として、N + MlogM
++- (1) : Nをこの操作の前の[`size()`](size.md)、Mを[`ranges::distance`](/reference/iterator/ranges_distance.md)`(rg)`として、N + MlogM
++- (2) : 線形
+ 
+ 
+ ## 備考
+@@ -77,3 +100,5 @@ int main()
+ 
+ ## 参照
+ - [P3372R3 constexpr containers and adaptors](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3372r3.html)
++- [P3567R2 flat_meow Fixes](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3567r2.html)
++    - C++26で(2)の`sorted_equivalent_t`をとるオーバーロードが追加された
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>swap -- C++26でのflat_map/set関連の仕様修正に対応 #1566</title>
+      <link href="https://cpprefjp.github.io/reference/flat_set/flat_multiset/swap.html"/>
+      <id>8d9f9ce276cbf9b592ea4101ceda0d52a411fab6:reference/flat_set/flat_multiset/swap.md</id>
+      <updated>2026-03-13T11:25:45+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_set/flat_multiset/swap.md b/reference/flat_set/flat_multiset/swap.md
+index 711279903..67ab777cd 100644
+--- a/reference/flat_set/flat_multiset/swap.md
++++ b/reference/flat_set/flat_multiset/swap.md
+@@ -6,9 +6,12 @@
+ * cpp23[meta cpp]
+ 
+ ```cpp
+-void swap(flat_multiset&amp;amp; y) noexcept;           // (1) C++23
+-constexpr void swap(flat_multiset&amp;amp; y) noexcept; // (1) C++26
++void swap(flat_multiset&amp;amp; y) noexcept;                 // (1) C++23
++constexpr void swap(flat_multiset&amp;amp; y)
++  noexcept(is_nothrow_swappable_v&amp;lt;container_type&amp;gt; &amp;amp;&amp;amp;
++           is_nothrow_swappable_v&amp;lt;key_compare&amp;gt;);      // (1) C++26
+ ```
++* is_nothrow_swappable_v[link /reference/type_traits/is_nothrow_swappable.md]
+ 
+ ## 概要
+ コンテナ内のコンテンツを、同じ型の要素を保持する他の `flat_multiset` オブジェクトである `y` 内のコンテンツと交換する。
+@@ -78,3 +81,5 @@ fs2 : {10, 20, 30}
+ 
+ ## 参照
+ - [P3372R3 constexpr containers and adaptors](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3372r3.html)
++- [P3567R2 flat_meow Fixes](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3567r2.html)
++    - C++26で、`noexcept`指定が無条件から条件付きに変更された。内部コンテナと比較関数オブジェクトの`swap`が例外を送出しない場合にのみ`noexcept`となる
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>swap (非メンバ関数) -- C++26でのflat_map/set関連の仕様修正に対応 #1566</title>
+      <link href="https://cpprefjp.github.io/reference/flat_set/flat_multiset/swap_free.html"/>
+      <id>8d9f9ce276cbf9b592ea4101ceda0d52a411fab6:reference/flat_set/flat_multiset/swap_free.md</id>
+      <updated>2026-03-13T11:25:45+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_set/flat_multiset/swap_free.md b/reference/flat_set/flat_multiset/swap_free.md
+index 0192721c2..4e991b768 100644
+--- a/reference/flat_set/flat_multiset/swap_free.md
++++ b/reference/flat_set/flat_multiset/swap_free.md
+@@ -13,7 +13,8 @@ namespace std {
+   template &amp;lt;class Key, class Compare, class KeyContainer&amp;gt;
+   constexpr void
+     swap(flat_multiset&amp;lt;Key, Compare, KeyContainer&amp;gt;&amp;amp; x,
+-         flat_multiset&amp;lt;Key, Compare, KeyContainer&amp;gt;&amp;amp; y); // (1) C++26
++         flat_multiset&amp;lt;Key, Compare, KeyContainer&amp;gt;&amp;amp; y)
++      noexcept(noexcept(x.swap(y)));                    // (1) C++26
+ }
+ ```
+ 
+@@ -83,3 +84,5 @@ fs2 : {10, 20, 30}
+ 
+ ## 参照
+ - [P3372R3 constexpr containers and adaptors](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3372r3.html)
++- [P3567R2 flat_meow Fixes](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3567r2.html)
++    - C++26で、`noexcept`指定が条件付きに変更された。メンバ関数[`swap()`](swap.md)の`noexcept`条件に従う
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>flat_set -- C++26でのflat_map/set関連の仕様修正に対応 #1566</title>
+      <link href="https://cpprefjp.github.io/reference/flat_set/flat_set.html"/>
+      <id>8d9f9ce276cbf9b592ea4101ceda0d52a411fab6:reference/flat_set/flat_set.md</id>
+      <updated>2026-03-13T11:25:45+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_set/flat_set.md b/reference/flat_set/flat_set.md
+index 13d6dd089..3b4957aaf 100644
+--- a/reference/flat_set/flat_set.md
++++ b/reference/flat_set/flat_set.md
+@@ -259,3 +259,5 @@ int main()
+     - C++23で`flat_set`が導入された経緯・動機・設計について記載されている
+ - [P1222R4 A Standard `flat_set`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1222r4.pdf)
+     - C++23で導入された`flat_set`の仕様
++- [P3567R2 flat_meow Fixes](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3567r2.html)
++    - C++26で`swap`の条件付き`noexcept`、`insert_range`のソート済みオーバーロード追加などの修正が行われた
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>insert_range -- C++26でのflat_map/set関連の仕様修正に対応 #1566</title>
+      <link href="https://cpprefjp.github.io/reference/flat_set/flat_set/insert_range.html"/>
+      <id>8d9f9ce276cbf9b592ea4101ceda0d52a411fab6:reference/flat_set/flat_set/insert_range.md</id>
+      <updated>2026-03-13T11:25:45+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_set/flat_set/insert_range.md b/reference/flat_set/flat_set/insert_range.md
+index 7a83eae38..b7565537d 100644
+--- a/reference/flat_set/flat_set/insert_range.md
++++ b/reference/flat_set/flat_set/insert_range.md
+@@ -7,11 +7,15 @@
+ 
+ ```cpp
+ template&amp;lt;container-compatible-range&amp;lt;value_type&amp;gt; R&amp;gt;
+-void insert_range(R&amp;amp;&amp;amp; rg);           // (1) C++23
++void insert_range(R&amp;amp;&amp;amp; rg);                       // (1) C++23
+ template&amp;lt;container-compatible-range&amp;lt;value_type&amp;gt; R&amp;gt;
+-constexpr void insert_range(R&amp;amp;&amp;amp; rg); // (1) C++26
++constexpr void insert_range(R&amp;amp;&amp;amp; rg);             // (1) C++26
++
++template&amp;lt;container-compatible-range&amp;lt;value_type&amp;gt; R&amp;gt;
++constexpr void insert_range(sorted_unique_t, R&amp;amp;&amp;amp; rg); // (2) C++26
+ ```
+ * container-compatible-range[link /reference/exposition-only/container-compatible-range.md]
++* sorted_unique_t[link /reference/flat_set/sorted_unique_t.md]
+ 
+ ## 概要
+ Rangeを挿入し、コンテナを拡張する。
+@@ -25,12 +29,32 @@ Rangeを挿入し、コンテナを拡張する。
+ 内部的に `flat_set` コンテナは、コンストラクト時に指定された比較オブジェクトによって要素を下位から上位へとソートして保持する。
+ 
+ 
++## 効果
++- (1) : メンバ変数として保持しているコンテナ`c`に、以下のように挿入する：
++    ```cpp
++    ranges::for_each(rg, [&amp;amp;](auto&amp;amp;&amp;amp; e) {
++      c.insert(c.end(), std::forward&amp;lt;decltype(e)&amp;gt;(e));
++    });
++    ```
++    * ranges::for_each[link /reference/algorithm/ranges_for_each.md]
++    * end()[link /reference/vector/vector/end.md]
++    * insert[link /reference/vector/vector/insert.md]
++    * std::forward[link /reference/utility/forward.md]
++
++    - 次に、新しく挿入された要素の範囲を`value_comp()`を基準にソートする
++    - 次に、ソートされた結果の範囲と、既存の要素のソートされた範囲をひとつのソートされた範囲にマージする
++    - 最後に、重複する要素を削除する
++
++- (2) : `insert_range(rg)`と等価
++
++
+ ## 戻り値
+ なし
+ 
+ 
+ ## 計算量
+-- Nをこの操作の前の[`size()`](size.md)、Mを[`ranges::distance`](/reference/iterator/ranges_distance.md)`(rg)`として、N + MlogM
++- (1) : Nをこの操作の前の[`size()`](size.md)、Mを[`ranges::distance`](/reference/iterator/ranges_distance.md)`(rg)`として、N + MlogM
++- (2) : 線形
+ 
+ 
+ ## 備考
+@@ -83,3 +107,5 @@ int main()
+ 
+ ## 参照
+ - [P3372R3 constexpr containers and adaptors](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3372r3.html)
++- [P3567R2 flat_meow Fixes](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3567r2.html)
++    - C++26で(2)の`sorted_unique_t`をとるオーバーロードが追加された
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>swap -- C++26でのflat_map/set関連の仕様修正に対応 #1566</title>
+      <link href="https://cpprefjp.github.io/reference/flat_set/flat_set/swap.html"/>
+      <id>8d9f9ce276cbf9b592ea4101ceda0d52a411fab6:reference/flat_set/flat_set/swap.md</id>
+      <updated>2026-03-13T11:25:45+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_set/flat_set/swap.md b/reference/flat_set/flat_set/swap.md
+index a7c466de9..2195c3446 100644
+--- a/reference/flat_set/flat_set/swap.md
++++ b/reference/flat_set/flat_set/swap.md
+@@ -6,9 +6,12 @@
+ * cpp23[meta cpp]
+ 
+ ```cpp
+-void swap(flat_set&amp;amp; y) noexcept;           // (1) C++23
+-constexpr void swap(flat_set&amp;amp; y) noexcept; // (1) C++26
++void swap(flat_set&amp;amp; y) noexcept;                      // (1) C++23
++constexpr void swap(flat_set&amp;amp; y)
++  noexcept(is_nothrow_swappable_v&amp;lt;container_type&amp;gt; &amp;amp;&amp;amp;
++           is_nothrow_swappable_v&amp;lt;key_compare&amp;gt;);      // (1) C++26
+ ```
++* is_nothrow_swappable_v[link /reference/type_traits/is_nothrow_swappable.md]
+ 
+ ## 概要
+ コンテナ内のコンテンツを、同じ型の要素を保持する他の `flat_sest` オブジェクトである `y` 内のコンテンツと交換する。
+@@ -78,3 +81,5 @@ fs2 : {10, 20, 30}
+ 
+ ## 参照
+ - [P3372R3 constexpr containers and adaptors](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3372r3.html)
++- [P3567R2 flat_meow Fixes](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3567r2.html)
++    - C++26で、`noexcept`指定が無条件から条件付きに変更された。内部コンテナと比較関数オブジェクトの`swap`が例外を送出しない場合にのみ`noexcept`となる
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>swap (非メンバ関数) -- C++26でのflat_map/set関連の仕様修正に対応 #1566</title>
+      <link href="https://cpprefjp.github.io/reference/flat_set/flat_set/swap_free.html"/>
+      <id>8d9f9ce276cbf9b592ea4101ceda0d52a411fab6:reference/flat_set/flat_set/swap_free.md</id>
+      <updated>2026-03-13T11:25:45+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/flat_set/flat_set/swap_free.md b/reference/flat_set/flat_set/swap_free.md
+index 2c3b707d9..fd2e418ef 100644
+--- a/reference/flat_set/flat_set/swap_free.md
++++ b/reference/flat_set/flat_set/swap_free.md
+@@ -13,7 +13,8 @@ namespace std {
+   template &amp;lt;class Key, class Compare, class KeyContainer&amp;gt;
+   constexpr void
+     swap(flat_set&amp;lt;Key, Compare, KeyContainer&amp;gt;&amp;amp; x,
+-         flat_set&amp;lt;Key, Compare, KeyContainer&amp;gt;&amp;amp; y); // (1) C++26
++         flat_set&amp;lt;Key, Compare, KeyContainer&amp;gt;&amp;amp; y)
++      noexcept(noexcept(x.swap(y)));               // (1) C++26
+ }
+ ```
+ 
+@@ -83,3 +84,5 @@ fs2 : {10, 20, 30}
+ 
+ ## 参照
+ - [P3372R3 constexpr containers and adaptors](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3372r3.html)
++- [P3567R2 flat_meow Fixes](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3567r2.html)
++    - C++26で、`noexcept`指定が条件付きに変更された。メンバ関数[`swap()`](swap.md)の`noexcept`条件に従う
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>C++26 -- C++26対応としてapplyの戻り値型を取得するメタ関数を追加 #1522</title>
@@ -2505,60 +3241,6 @@ index df9ec183d..f462903ff 100644
       <author>
         <name>Ryoga</name>
         <email>49950206+Ryoga-exe@users.noreply.github.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>spawn -- fix typo in reference/execution/execution/{spawn.md,spawn_future.md}</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/spawn.html"/>
-      <id>971dd4b9f6412a01304d2bd69523f86c8a0dc767:reference/execution/execution/spawn.md</id>
-      <updated>2026-03-09T19:10:28+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/spawn.md b/reference/execution/execution/spawn.md
-index 4e9ab7ce8..25bbfe118 100644
---- a/reference/execution/execution/spawn.md
-+++ b/reference/execution/execution/spawn.md
-@@ -28,7 +28,7 @@ namespace std::execution {
- そうでなければ、呼び出し式`spawn(sndr, token, env)`に対して、説明用の式`new_sender`を[`token.wrap`](scope_token.md)`(sndr)`とし、`alloc`と`senv`を次の通りとする。
- 
- - 式[`get_allocator`](../get_allocator.md)`(env)`が適格なとき、`alloc`を[`get_allocator`](../get_allocator.md)`(env)`の結果、`senv`を式`env`とする。
--- そうでなはく、式[`get_allocator`](../get_allocator.md)`(`[`get_env`](get_env.md)`(new_sender))`が適格なとき、`alloc`を[`get_allocator`](../get_allocator.md)`(`[`get_env`](get_env.md)`(new_sender))`の結果、`senv`を式[`JOIN-ENV`](../queryable.md)`(`[`prop`](prop.md)`(`[`get_allocator`](../get_allocator.md)`, alloc), env)`とする。
-+- そうではなく、式[`get_allocator`](../get_allocator.md)`(`[`get_env`](get_env.md)`(new_sender))`が適格なとき、`alloc`を[`get_allocator`](../get_allocator.md)`(`[`get_env`](get_env.md)`(new_sender))`の結果、`senv`を式[`JOIN-ENV`](../queryable.md)`(`[`prop`](prop.md)`(`[`get_allocator`](../get_allocator.md)`, alloc), env)`とする。
- - そうではないとき、`alloc`を[`allocator`](/reference/memory/allocator.md)`&amp;lt;void&amp;gt;()`、`senv`を式`env`とする。
- 
- 呼び出し式`spawn(sndr, token, env)`は`void`型であり、次の効果をもつ。
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Ryoga-exe</name>
-        <email>git@ryoga.dev</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>spawn_future -- fix typo in reference/execution/execution/{spawn.md,spawn_future.md}</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/spawn_future.html"/>
-      <id>971dd4b9f6412a01304d2bd69523f86c8a0dc767:reference/execution/execution/spawn_future.md</id>
-      <updated>2026-03-09T19:10:28+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/spawn_future.md b/reference/execution/execution/spawn_future.md
-index df9ec183d..f462903ff 100644
---- a/reference/execution/execution/spawn_future.md
-+++ b/reference/execution/execution/spawn_future.md
-@@ -30,7 +30,7 @@ namespace std::execution {
- そうでなければ、呼び出し式`spawn_future(sndr, token, env)`に対して、説明用の式`new_sender`を[`token.wrap`](scope_token.md)`(sndr)`とし、`alloc`と`senv`を次の通りとする。
- 
- - 式[`get_allocator`](../get_allocator.md)`(env)`が適格なとき、`alloc`を[`get_allocator`](../get_allocator.md)`(env)`の結果、`senv`を式`env`とする。
--- そうでなはく、式[`get_allocator`](../get_allocator.md)`(`[`get_env`](get_env.md)`(new_sender))`が適格なとき、`alloc`を[`get_allocator`](../get_allocator.md)`(`[`get_env`](get_env.md)`(new_sender))`の結果、`senv`を式[`JOIN-ENV`](../queryable.md)`(`[`prop`](prop.md)`(`[`get_allocator`](../get_allocator.md)`, alloc), env)`とする。
-+- そうではなく、式[`get_allocator`](../get_allocator.md)`(`[`get_env`](get_env.md)`(new_sender))`が適格なとき、`alloc`を[`get_allocator`](../get_allocator.md)`(`[`get_env`](get_env.md)`(new_sender))`の結果、`senv`を式[`JOIN-ENV`](../queryable.md)`(`[`prop`](prop.md)`(`[`get_allocator`](../get_allocator.md)`, alloc), env)`とする。
- - そうではないとき、`alloc`を[`allocator`](/reference/memory/allocator.md)`&amp;lt;void&amp;gt;()`、`senv`を式`env`とする。
- 
- 呼び出し式`spawn_future(sndr, token, env)`は、次の効果をもつ。
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Ryoga-exe</name>
-        <email>git@ryoga.dev</email>
       </author>
     </entry>
   
