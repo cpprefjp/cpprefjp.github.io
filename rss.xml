@@ -2,9 +2,71 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2026-03-26T01:36:51.338239</updated>
-  <id>a225ff43-e7d8-4100-a3d5-87e3566e82cb</id>
+  <updated>2026-03-26T01:51:43.893109</updated>
+  <id>fb82284f-9dd7-4d56-aa03-75b849592ac2</id>
 
+  
+    <entry>
+      <title>cmath -- cmath : NaNを受け取ったらNaNを返す仕様を記載 #373</title>
+      <link href="https://cpprefjp.github.io/reference/cmath.html"/>
+      <id>ee014a03a7ad925e7bcb66983976e0786e987f82:reference/cmath.md</id>
+      <updated>2026-03-26T10:47:34+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/cmath.md b/reference/cmath.md
+index e2402db78..8c440287f 100644
+--- a/reference/cmath.md
++++ b/reference/cmath.md
+@@ -20,6 +20,7 @@
+ - [乗算・加算](#floating-multiply-add)
+ - [線形補完](#linear-interpolation)
+ - [数値分類](#classification-functions)
++- [NaNの扱い](#nan-handling)
+ - [数値比較](#comparison-functions)
+ - [型](#types)
+ - [数値のマクロ](#value-macros)
+@@ -214,6 +215,35 @@ C++03 までの場合、[`errno`](cerrno/errno.md) でしか通知されない
+ - [`math_errhandling`](cmath/math_errhandling.md) `&amp;amp;` [`MATH_ERRNO`](cmath/math_errno.md)が真で、[`errno`](cerrno/errno.md)が設定された場合
+ 
+ 
++## &amp;lt;a id=&amp;#34;nan-handling&amp;#34; href=&amp;#34;#nan-handling&amp;#34;&amp;gt;NaN の扱い&amp;lt;/a&amp;gt;
++
++浮動小数点規格ISO/IEC 60559 (IEEE 754) に準拠する環境では、C言語規格の Annex F (F.10 paragraph 11) により、以下の一般規則が定められている：
++
++&amp;gt; NaN の引数をもつ関数は、NaN の結果を返し、浮動小数点例外を発生させない。ただし、個別に規定がある場合を除く。
++
++この規則は `__STDC_IEC_559__` が定義されている（ISO/IEC 60559 に準拠する）環境で適用される。
++
++また、推奨される実装として、ひとつ以上の NaN 引数をもつ関数が NaN を返す場合、その結果は入力の NaN 引数のいずれかと同じ値（型変換後、符号は異なる可能性がある）であることが望ましいとされている。
++
++### 例外となる関数
++
++以下の関数は、NaN の引数を受け取っても NaN を返さない場合がある：
++
++| 関数 | 条件 | 結果 |
++|------|------|------|
++| [`pow`](cmath/pow.md) | `pow(1.0, NaN)` | `1.0` |
++| [`pow`](cmath/pow.md) | `pow(NaN, ±0.0)` | `1.0` |
++| [`hypot`](cmath/hypot.md) | `hypot(±∞, NaN)` | `+∞` |
++| [`fmax`](cmath/fmax.md) | 一方のみが NaN | NaN でない方の引数 |
++| [`fmin`](cmath/fmin.md) | 一方のみが NaN | NaN でない方の引数 |
++
++[`pow`](cmath/pow.md) と [`hypot`](cmath/hypot.md) の例外は、NaN をどのような実数値に置き換えても結果が同じになるという原則に基づいている（任意の実数の 0 乗は 1、任意の実数と無限大の `hypot` は無限大）。
++
++[`fmax`](cmath/fmax.md) と [`fmin`](cmath/fmin.md) は、NaN を欠損値として扱い、有効な数値を優先して返す。ただし、両方の引数が NaN の場合は NaN を返す。
++
++なお、数値分類関数（[`fpclassify`](cmath/fpclassify.md)、[`isnan`](cmath/isnan.md)、[`isinf`](cmath/isinf.md) 等）は戻り値が整数型であるため、NaN の伝播規則の対象外である。
++
++
+ ## &amp;lt;a id=&amp;#34;trigonometric-functions&amp;#34; href=&amp;#34;#trigonometric-functions&amp;#34;&amp;gt;三角関数&amp;lt;/a&amp;gt;
+ 
+ | 名前                      | 説明                                             | 対応バージョン |
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>locale::encoding -- text_encoding : コード修飾を追加 #1191</title>
@@ -4940,41 +5002,6 @@ index 000000000..609dbae5e
       <author>
         <name>Akira Takahashi</name>
         <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>format -- format : サンプルコードの出力を修正</title>
-      <link href="https://cpprefjp.github.io/reference/format/format.html"/>
-      <id>0fd244266081c2ea7358d81398a03077aa872b07:reference/format/format.md</id>
-      <updated>2026-03-23T23:12:31+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/format/format.md b/reference/format/format.md
-index b4265b9d8..be84af4fe 100644
---- a/reference/format/format.md
-+++ b/reference/format/format.md
-@@ -581,11 +581,11 @@ int main()
- 
- #### 出力
- ```
--[1, 2, 3]
--[3, 2, 1]
--[1, 2, 3]
--{1: &amp;#34;aaa&amp;#34;, 2: &amp;#34;bbb&amp;#34;}
--{1, 2, 3}
-+queue: [1, 2, 3]
-+priority_queue: [3, 2, 1]
-+stack: [1, 2, 3]
-+flat_map: {1: &amp;#34;aaa&amp;#34;, 2: &amp;#34;bbb&amp;#34;}
-+flat_set: {1, 2, 3}
- ```
- 
- ### `vector&amp;lt;bool&amp;gt;`を出力する (C++23)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
       </author>
     </entry>
   
