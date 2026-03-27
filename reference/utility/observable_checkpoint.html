@@ -188,8 +188,8 @@
   
     <p class="text-right"><small>
       最終更新日時(UTC):
-      <span itemprop="datePublished" content="2026-03-27T06:07:12">
-        2026年03月27日 06時07分12秒
+      <span itemprop="datePublished" content="2026-03-27T06:23:25">
+        2026年03月27日 06時23分25秒
       </span>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -221,14 +221,12 @@
 <h2>概要</h2>
 <p>観測可能チェックポイント (observable checkpoint) を設置する。</p>
 <p>C++では<a class="cpprefjp-defined-word" data-desc="未定義の動作。処理系は予期せぬ動作をする可能性がある。要するに動作保証対象外。undefined behavior (UB)。" href="../../implementation-compliance.html#dfn-undefined-behavior">未定義動作</a>を含むプログラムに対して、コンパイラは<a class="cpprefjp-defined-word" data-desc="未定義の動作。処理系は予期せぬ動作をする可能性がある。要するに動作保証対象外。undefined behavior (UB)。" href="../../implementation-compliance.html#dfn-undefined-behavior">未定義動作</a>が「将来」発生することを根拠に、それより「前」の操作を削除・変更する最適化を行うことが許容される。これは「タイムトラベル最適化」と呼ばれる。</p>
-<p>例として以下のコードでは、(2)で<a class="cpprefjp-defined-word" data-desc="未定義の動作。処理系は予期せぬ動作をする可能性がある。要するに動作保証対象外。undefined behavior (UB)。" href="../../implementation-compliance.html#dfn-undefined-behavior">未定義動作</a>があるため、(1)の出力すら省略される可能性がある:</p>
+<p>例として以下のコードでは、nullポインタが渡された場合にエラーメッセージを出力してからデリファレンスに到達する意図だが、コンパイラは<code>++*p</code>が<a class="cpprefjp-defined-word" data-desc="未定義の動作。処理系は予期せぬ動作をする可能性がある。要するに動作保証対象外。undefined behavior (UB)。" href="../../implementation-compliance.html#dfn-undefined-behavior">未定義動作</a>にならないと仮定して<code>p</code>がnullでないと推論し、<code>if(!p)</code>の分岐ごと削除できる。その結果、エラーメッセージが出力されることなくクラッシュする可能性がある:</p>
 <p><div class="codehilite"><pre><span></span><code><span class="cp">#include <a href="../cstdio.html">&lt;cstdio&gt;</a></span>
 
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">"Hello, "</span><span class="p">);</span><span class="w">   </span><span class="c1">// (1) 出力</span>
-<span class="w">  </span><span class="kt">int</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">nullptr</span><span class="p">;</span>
-<span class="w">  </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">42</span><span class="p">;</span><span class="w">                  </span><span class="c1">// (2) 未定義動作（nullポインタのデリファレンス）</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">"World!</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w">  </span><span class="c1">// (3) 出力</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">inc</span><span class="p">(</span><span class="kt">int</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">fputs</span><span class="p">(</span><span class="s">"Null!</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">stderr</span><span class="p">);</span><span class="w">  </span><span class="c1">// (1) エラー出力（削除される可能性がある）</span>
+<span class="w">  </span><span class="o">++*</span><span class="n">p</span><span class="p">;</span><span class="w">                                   </span><span class="c1">// (2) pがnullなら未定義動作</span>
 <span class="p">}</span>
 </code></pre></div>
 </p>
@@ -236,16 +234,14 @@
 <p><div class="codehilite"><pre><span></span><code><span class="cp">#include <a href="../cstdio.html">&lt;cstdio&gt;</a></span>
 <span class="cp">#include <a href="../utility.html">&lt;utility&gt;</a></span>
 
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">"Hello, "</span><span class="p">);</span><span class="w">          </span><span class="c1">// (1) 出力</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">observable_checkpoint</span><span class="p">();</span><span class="w">    </span><span class="c1">// ここまでの観測可能な動作を保護</span>
-<span class="w">  </span><span class="kt">int</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">nullptr</span><span class="p">;</span>
-<span class="w">  </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">42</span><span class="p">;</span><span class="w">                         </span><span class="c1">// (2) 未定義動作</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">"World!</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w">         </span><span class="c1">// (3) 出力</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">inc</span><span class="p">(</span><span class="kt">int</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">fputs</span><span class="p">(</span><span class="s">"Null!</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">stderr</span><span class="p">);</span><span class="w">  </span><span class="c1">// (1) エラー出力</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">observable_checkpoint</span><span class="p">();</span><span class="w">           </span><span class="c1">// ここまでの観測可能な動作を保護</span>
+<span class="w">  </span><span class="o">++*</span><span class="n">p</span><span class="p">;</span><span class="w">                                   </span><span class="c1">// (2) pがnullなら未定義動作</span>
 <span class="p">}</span>
 </code></pre></div>
 </p>
-<p>この場合、<code>std::observable_checkpoint()</code>によって(1)の出力<code>"Hello, "</code>が保護され、(2)の<a class="cpprefjp-defined-word" data-desc="未定義の動作。処理系は予期せぬ動作をする可能性がある。要するに動作保証対象外。undefined behavior (UB)。" href="../../implementation-compliance.html#dfn-undefined-behavior">未定義動作</a>があっても遡って消去されない。</p>
+<p>この場合、<code>std::observable_checkpoint()</code>によって(1)のエラー出力が保護され、(2)の<a class="cpprefjp-defined-word" data-desc="未定義の動作。処理系は予期せぬ動作をする可能性がある。要するに動作保証対象外。undefined behavior (UB)。" href="../../implementation-compliance.html#dfn-undefined-behavior">未定義動作</a>があっても遡って消去されない。</p>
 <p><code>std::observable_checkpoint()</code>の明示的な呼び出しに加え、以下の操作も暗黙的に観測可能チェックポイントを設置する:</p>
 <ul>
 <li>C標準の入出力関数（<code><a href="../cstdio/printf.html">std::printf()</a></code>、<code><a href="../cstdio/fwrite.html">std::fwrite()</a></code>など）のうち、ファイルへのデータ書き込みを行う関数呼び出しからの復帰<ul>
@@ -253,7 +249,11 @@
 </ul>
 </li>
 <li><code><a href="../fstream/basic_ofstream.html">std::ofstream</a></code>などのファイルストリーム出力時の<code><a href="../fstream/basic_filebuf.html">std::basic_filebuf</a></code>のオーバーフロー操作（バッファの内容をファイルに書き出した時点）</li>
-<li>Unicode出力時の<code><a href="../print/print.html">std::print()</a></code> / <code><a href="../print/println.html">std::println()</a></code>の内部出力関数<code><a href="../print/vprint_unicode.html">std::vprint_unicode()</a></code>によるターミナルへの書き込み（<code><a href="../ostream.html">&lt;ostream&gt;</a></code>版および<code><a href="../print.html">&lt;print&gt;</a></code>版）</li>
+<li>Unicode出力時の<code><a href="../print/print.html">std::print()</a></code> / <code><a href="../print/println.html">std::println()</a></code>の内部出力関数<code><a href="../print/vprint_unicode.html">std::vprint_unicode()</a></code>によるターミナルへの書き込み（<code><a href="../ostream.html">&lt;ostream&gt;</a></code>版および<code><a href="../print.html">&lt;print&gt;</a></code>版）<ul>
+<li>Unicode出力時はネイティブのOS API（Windowsでの<code>WriteConsoleW()</code>など）を直接使用しC標準の入出力を経由しないため、このルールで明示的にカバーしている</li>
+<li>非Unicode出力時はC標準I/O関数を経由するため、上記のC標準入出力関数のルールでカバーされる</li>
+</ul>
+</li>
 </ul>
 <p>上記の例では<code>std::printf()</code>がC標準の入出力関数であるため、(1)の呼び出しの復帰が暗黙の観測可能チェックポイントとなり、<code>"Hello, "</code>の出力は(2)の<a class="cpprefjp-defined-word" data-desc="未定義の動作。処理系は予期せぬ動作をする可能性がある。要するに動作保証対象外。undefined behavior (UB)。" href="../../implementation-compliance.html#dfn-undefined-behavior">未定義動作</a>によって遡って消去されない。</p>
 <h2>効果</h2>

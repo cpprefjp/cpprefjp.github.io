@@ -2,9 +2,79 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2026-03-27T06:11:25.606127</updated>
-  <id>8388eb2f-2bbd-4a0f-99de-bb4fda2a3715</id>
+  <updated>2026-03-27T06:27:22.252115</updated>
+  <id>2a69506c-f73f-44ba-afb1-c09c9f87ccea</id>
 
+  
+    <entry>
+      <title>observable_checkpoint -- observable_checkpoint : ルールのカバー状況と動機となる例を記載 #1418</title>
+      <link href="https://cpprefjp.github.io/reference/utility/observable_checkpoint.html"/>
+      <id>d8f8beb93575d1d276829c2a84637f33777ed231:reference/utility/observable_checkpoint.md</id>
+      <updated>2026-03-27T15:23:25+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/utility/observable_checkpoint.md b/reference/utility/observable_checkpoint.md
+index 879bca256..ba08d559b 100644
+--- a/reference/utility/observable_checkpoint.md
++++ b/reference/utility/observable_checkpoint.md
+@@ -15,16 +15,14 @@ namespace std {
+ 
+ C++では未定義動作を含むプログラムに対して、コンパイラは未定義動作が「将来」発生することを根拠に、それより「前」の操作を削除・変更する最適化を行うことが許容される。これは「タイムトラベル最適化」と呼ばれる。
+ 
+-例として以下のコードでは、(2)で未定義動作があるため、(1)の出力すら省略される可能性がある:
++例として以下のコードでは、nullポインタが渡された場合にエラーメッセージを出力してからデリファレンスに到達する意図だが、コンパイラは`++*p`が未定義動作にならないと仮定して`p`がnullでないと推論し、`if(!p)`の分岐ごと削除できる。その結果、エラーメッセージが出力されることなくクラッシュする可能性がある:
+ 
+ ```cpp
+ #include &amp;lt;cstdio&amp;gt;
+ 
+-int main() {
+-  std::printf(&amp;#34;Hello, &amp;#34;);   // (1) 出力
+-  int* p = nullptr;
+-  *p = 42;                  // (2) 未定義動作（nullポインタのデリファレンス）
+-  std::printf(&amp;#34;World!\n&amp;#34;);  // (3) 出力
++void inc(int* p) {
++  if (!p) std::fputs(&amp;#34;Null!\n&amp;#34;, stderr);  // (1) エラー出力（削除される可能性がある）
++  ++*p;                                   // (2) pがnullなら未定義動作
+ }
+ ```
+ 
+@@ -34,16 +32,14 @@ int main() {
+ #include &amp;lt;cstdio&amp;gt;
+ #include &amp;lt;utility&amp;gt;
+ 
+-int main() {
+-  std::printf(&amp;#34;Hello, &amp;#34;);          // (1) 出力
+-  std::observable_checkpoint();    // ここまでの観測可能な動作を保護
+-  int* p = nullptr;
+-  *p = 42;                         // (2) 未定義動作
+-  std::printf(&amp;#34;World!\n&amp;#34;);         // (3) 出力
++void inc(int* p) {
++  if (!p) std::fputs(&amp;#34;Null!\n&amp;#34;, stderr);  // (1) エラー出力
++  std::observable_checkpoint();           // ここまでの観測可能な動作を保護
++  ++*p;                                   // (2) pがnullなら未定義動作
+ }
+ ```
+ 
+-この場合、`std::observable_checkpoint()`によって(1)の出力`&amp;#34;Hello, &amp;#34;`が保護され、(2)の未定義動作があっても遡って消去されない。
++この場合、`std::observable_checkpoint()`によって(1)のエラー出力が保護され、(2)の未定義動作があっても遡って消去されない。
+ 
+ `std::observable_checkpoint()`の明示的な呼び出しに加え、以下の操作も暗黙的に観測可能チェックポイントを設置する:
+ 
+@@ -51,6 +47,8 @@ int main() {
+     - デフォルトの[`sync_with_stdio(true)`](/reference/ios/ios_base/sync_with_stdio.md)の状態では、[`std::cout`](/reference/iostream/cout.md)などの標準ストリームは`stdout`と同期しているため、これに該当する
+ - [`std::ofstream`](/reference/fstream/basic_ofstream.md)などのファイルストリーム出力時の[`std::basic_filebuf`](/reference/fstream/basic_filebuf.md)のオーバーフロー操作（バッファの内容をファイルに書き出した時点）
+ - Unicode出力時の[`std::print()`](/reference/print/print.md) / [`std::println()`](/reference/print/println.md)の内部出力関数[`std::vprint_unicode()`](/reference/print/vprint_unicode.md)によるターミナルへの書き込み（[`&amp;lt;ostream&amp;gt;`](/reference/ostream.md)版および[`&amp;lt;print&amp;gt;`](/reference/print.md)版）
++    - Unicode出力時はネイティブのOS API（Windowsでの`WriteConsoleW()`など）を直接使用しC標準の入出力を経由しないため、このルールで明示的にカバーしている
++    - 非Unicode出力時はC標準I/O関数を経由するため、上記のC標準入出力関数のルールでカバーされる
+ 
+ 上記の例では`std::printf()`がC標準の入出力関数であるため、(1)の呼び出しの復帰が暗黙の観測可能チェックポイントとなり、`&amp;#34;Hello, &amp;#34;`の出力は(2)の未定義動作によって遡って消去されない。
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>observable_checkpoint -- observable_checkpoint : coutやfstreamの扱いを記載 #1418</title>
@@ -2469,32 +2539,6 @@ index 555ecf243..6f868b151 100644
  * cpp23[meta cpp]
  
  ```cpp
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>comp-name -- text_encoding::comp-name : meta exposition-only タグを追加</title>
-      <link href="https://cpprefjp.github.io/reference/text_encoding/text_encoding/comp-name.html"/>
-      <id>c08dfb5dce7d73795d1858dbc71a964b668e0c3c:reference/text_encoding/text_encoding/comp-name.md</id>
-      <updated>2026-03-26T13:51:34+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/text_encoding/text_encoding/comp-name.md b/reference/text_encoding/text_encoding/comp-name.md
-index 1a3b13317..4d55a9da0 100644
---- a/reference/text_encoding/text_encoding/comp-name.md
-+++ b/reference/text_encoding/text_encoding/comp-name.md
-@@ -4,6 +4,7 @@
- * text_encoding[meta class]
- * function[meta id-type]
- * cpp26[meta cpp]
-+* [meta exposition-only]
- 
- ```cpp
- static constexpr bool comp-name(string_view a, string_view b); // 説明専用
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
