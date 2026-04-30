@@ -2,9 +2,258 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2026-04-29T16:15:53.569866</updated>
-  <id>a6a7d3e3-6bcf-4c95-b947-722c3c7ccf1f</id>
+  <updated>2026-04-30T02:01:14.925903</updated>
+  <id>16b2a8c4-3ef6-4dcc-acf6-a21b0e1a53a5</id>
 
+  
+    <entry>
+      <title>spawn_future -- execution/spawn_future: LWG4540適用</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/spawn_future.html"/>
+      <id>d066058e7ebe6626df00a5ed65d81576a21c714b:reference/execution/execution/spawn_future.md</id>
+      <updated>2026-04-30T10:56:02+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/spawn_future.md b/reference/execution/execution/spawn_future.md
+index f462903ff..d3b28bda4 100644
+--- a/reference/execution/execution/spawn_future.md
++++ b/reference/execution/execution/spawn_future.md
+@@ -51,7 +51,8 @@ Senderアルゴリズム動作説明用のクラステンプレート[`impls-for
+ namespace std::execution {
+   template&amp;lt;&amp;gt;
+   struct impls-for&amp;lt;spawn_future_t&amp;gt; : default-impls {
+-    static constexpr auto start = see below;  // exposition only
++    static constexpr auto start = see below;      // exposition only
++    static constexpr auto get-state = see below;  // exposition only
+   };
+ }
+ ```
+@@ -61,24 +62,45 @@ namespace std::execution {
+ `impls-for&amp;lt;spawn_future_t&amp;gt;::start`メンバは、下記ラムダ式と等価な関数呼び出し可能なオブジェクトで初期化される。
+ 
+ ```cpp
+-[](auto&amp;amp; state, auto&amp;amp; rcvr) noexcept -&amp;gt; void {
+-  state-&amp;gt;consume(rcvr);
++[](auto&amp;amp; state, auto&amp;amp;) noexcept -&amp;gt; void {
++  state.run();
+ }
+ ```
+ 
++`impls-for&amp;lt;spawn_future_t&amp;gt;::get-state`メンバは、下記ラムダ式と等価な関数呼び出し可能なオブジェクトで初期化される。
++
++```cpp
++[]&amp;lt;class Sndr, class Rcvr&amp;gt;(Sndr sndr, Rcvr&amp;amp; rcvr) noexcept {
++  auto&amp;amp; [_, data] = sndr;
++  using state_ptr = remove_cvref_t&amp;lt;decltype(data)&amp;gt;;
++  return future-operation&amp;lt;state_ptr, Rcvr&amp;gt;(std::move(data), std::move(rcvr));
++}
++```
++* std::move[link /reference/utility/move.md]
++
+ 
+ ## 説明専用エンティティ
++### クラス`try-cancelable`
++```cpp
++namespace std::execution {
++  struct try-cancelable {                   // exposition only
++    virtual void try-cancel() noexcept = 0; // exposition only
++  };
++}
++```
++
+ ### クラステンプレート`spawn-future-state-base`
+ ```cpp
+ namespace std::execution {
+   template&amp;lt;class Completions&amp;gt;
+-  struct spawn-future-state-base;                                   // exposition only
++  struct spawn-future-state-base;                                 // exposition only
+ 
+   template&amp;lt;class... Sigs&amp;gt;
+-  struct spawn-future-state-base&amp;lt;completion_signatures&amp;lt;Sigs...&amp;gt;&amp;gt; {  // exposition only
+-    using variant-t = see below;                                    // exposition only
+-    variant-t result;                                               // exposition only
+-    virtual void complete() noexcept = 0;                           // exposition only
++  struct spawn-future-state-base&amp;lt;completion_signatures&amp;lt;Sigs...&amp;gt;&amp;gt;  // exposition only
++    : try-cancelable {
++    using variant-t = see below;                                  // exposition only
++    variant-t result;                                             // exposition only
++    virtual void complete() noexcept = 0;                         // exposition only
+   };
+ }
+ ```
+@@ -184,6 +206,11 @@ namespace std::execution {
+     void complete() noexcept override;                                      // exposition only
+     void consume(receiver auto&amp;amp; rcvr) noexcept;                             // exposition only
+     void abandon() noexcept;                                                // exposition only
++    void try-cancel() noexcept override {                                   // exposition only
++      ssource.request_stop();
++      try-set-stopped();
++    }
++    void try-set-stopped() noexcept;                                        // exposition only
+ 
+   private:
+     using assoc-t =                                                         // exposition only
+@@ -214,7 +241,7 @@ namespace std::execution {
+ * set_stopped[link set_stopped.md]
+ * std::move[link /reference/utility/move.md]
+ 
+-データ競合の存在を判定する目的において、`complete`, `consume`, `abandon`はアトミック操作として振る舞う。
++データ競合の存在を判定する目的において、`complete`, `consume`, `try-set-stopped`, `abandon`はアトミック操作として振る舞う。
+ `spawn-future-state`の特殊化である型の単一オブジェクトに対するこれらの操作は、単一の全順序で発生するように見える。
+ 
+ ```cpp
+@@ -222,8 +249,8 @@ void complete() noexcept;
+ ```
+ 
+ - 効果 :
+-    - `*this`に対するこの`complete`の呼び出しが`consume`もしくは`abandon`の呼び出しよりも前に発生するならば、効果を持たない。
+-    - そうではなく、`*this`に対する`consume`の呼び出しがこの`complete`の呼び出しよりも前に発生するならば、[Receiver](receiver.md)`rcvr`が登録され、そのReceiverは`consume(rcvr)`によって完了する。
++    - `*this`に対するこの`complete`の呼び出しが`consume`, `try-set-stopped`, `abandon`いずれかの呼び出しよりも前に発生するならば、効果を持たない。
++    - そうではなく、`*this`に対する`consume`の呼び出しがこの`complete`の呼び出しよりも前に発生し、かつ`*this`に対するこの`complete`の呼び出しよりも前に発生する`try-set-stopped`の呼び出しが存在しなければ、`consume(rcvr)`によって登録解除と完了する登録された[Receiver](receiver.md)`rcvr`が存在する。
+     - そうではないとき、`destroy`が呼び出される。
+ 
+ ```cpp
+@@ -232,7 +259,8 @@ void consume(receiver auto&amp;amp; rcvr) noexcept;
+ * receiver[link receiver.md]
+ 
+ - 効果 :
+-    - `*this`に対するこの`consume`の呼び出しが`complete`の呼び出しよりも前に発生するならば、`*this`に対してその後`complete`が呼び出されるとき`rcvr`が完了するよう登録される。
++    - `*this`に対するこの`consume`の呼び出しが`complete`の呼び出しよりも前に発生し、かつ`*this`に対するこの`consume`の呼び出しよりも前に発生する`try-set-stopped`の呼び出しが存在しなければ、`*this`に対してその後`complete`が呼び出されるとき`rcvr`が完了するよう登録される。
++    - そうではなく、`*this`に対するこの`consume`の呼び出しが`try-set-stopped`の呼び出しよりも後に発生し、かつ`*this`に対するこの`consume`の呼び出しよりも前に発生する`complete`の呼び出しが存在しなければ、`rcvr`は[`set_stopped`](set_stopped.md)`(std::move(rcvr))`により完了する。
+     - そうではないとき、下記のように`rcvr`が完了する :
+ 
+         ```cpp
+@@ -244,12 +272,21 @@ void consume(receiver auto&amp;amp; rcvr) noexcept;
+               }, std::move(tuple));
+             }
+           });
++        detroy();
+         ```
+         * visit[link /reference/variant/visit.md]
+         * monostate[link /reference/variant/monostate.md]
+         * apply[link /reference/tuple/apply.md]
+         * std::move[link /reference/utility/move.md]
+ 
++```cpp
++void try-set-stopped() noexcept;
++```
++
++- 効果 :
++    - `*this`に対する`consume`の呼び出しがこの`try-set-stopped`の呼び出しよりも前に発生し、かつ`*this`に対するこの`try-set-stopped`の呼び出しよりも前に発生する`complete`の呼び出しが存在しなければ、[`set_stopped`](set_stopped.md)`(std::move(rcvr)), destroy()`によって登録解除と完了する登録された[Receiver](receiver.md)`rcvr`が存在する。
++    - そうではないとき、効果を持たない。
++
+ ```cpp
+ void abandon() noexcept;
+ ```
+@@ -283,6 +320,98 @@ void destroy() noexcept;
+     * deallocate[link /reference/memory/allocator_traits/deallocate.md]
+     * std::move[link /reference/utility/move.md]
+ 
++### クラステンプレート`future-operation`
++
++```cpp
++namespace std::execution {
++  template&amp;lt;class StatePtr, class Rcvr&amp;gt;
++  struct future-operation {                              // exposition only
++    struct callback {                                    // exposition only
++      try-cancelable* state;                             // exposition only
++      
++      void operator()() noexcept {
++        state-&amp;gt;try-cancel();
++      };
++    };
++
++    using stop-token-t =                                 // exposition only
++      stop_token_of_t&amp;lt;env_of_t&amp;lt;Rcvr&amp;gt;&amp;gt;;
++
++    using stop-callback-t =                              // exposition only
++      stop_callback_for_t&amp;lt;stop-token-t, callback&amp;gt;;
++
++    struct receiver {                                    // exposition only
++      using receiver_concept = receiver_t;
++      future-operation* op;                              // exposition only
++
++      template&amp;lt;class... T&amp;gt;
++      void set_value(T&amp;amp;&amp;amp;... ts) &amp;amp;&amp;amp; noexcept {
++        op-&amp;gt;set-complete&amp;lt;set_value_t&amp;gt;(std::forward&amp;lt;T&amp;gt;(ts)...);
++      }
++
++      template&amp;lt;class E&amp;gt;
++      void set_error(E&amp;amp;&amp;amp; e) &amp;amp;&amp;amp; noexcept {
++        op-&amp;gt;set-complete&amp;lt;set_error_t&amp;gt;(std::forward&amp;lt;E&amp;gt;(e));
++      }
++
++      void set_stopped() &amp;amp;&amp;amp; noexcept {
++        op-&amp;gt;set-complete&amp;lt;set_stopped_t&amp;gt;();
++      }
++
++      env_of_t&amp;lt;Rcvr&amp;gt; get_env() const noexcept {
++        return execution::get_env(op-&amp;gt;rcvr);
++      }
++    };
++
++    Rcvr rcvr;                                       // exposition only
++    StatePtr state;                                  // exposition only
++    receiver inner;                                  // exposition only
++    optional&amp;lt;stop-callback-t&amp;gt; stopCallback;          // exposition only
++
++
++    future-operation(StatePtr state, Rcvr rcvr) noexcept // exposition only
++      : rcvr(std::move(rcvr)), state(std::move(state)), inner(this)
++    {}
++
++    future-operation(future-operation&amp;amp;&amp;amp;) = delete;
++
++    void run() &amp;amp; noexcept {                              // exposition only
++      constexpr bool nothrow =
++        is_nothrow_constructible_v&amp;lt;stop-callback-t, stop-token-t, callback&amp;gt;;
++      try {
++	      stopCallback.emplace(get_stop_token(rcvr), callback(state.get()));
++      }
++      catch (...) {
++        if constexpr (!nothrow) {
++          set_error(std::move(rcvr), current_exception());
++          return;
++        }
++      }
++
++      state.release()-&amp;gt;consume(inner);
++    }
++
++    template&amp;lt;class CPO, class... T&amp;gt;
++    void set-complete(T&amp;amp;&amp;amp;... ts) noexcept {              // exposition only
++      stopCallback.reset();
++      CPO{}(std::move(rcvr), std::forward&amp;lt;T&amp;gt;(ts)...);
++    }
++  };
++}
++```
++* stop_token_of_t[link ../stop_token_of_t.md]
++* env_of_t[link env_of_t.md]
++* receiver_t[link receiver.md]
++* set_value_t[link set_value.md]
++* set_error_t[link set_error.md]
++* set_stopped_t[link set_stopped.md]
++* execution::get_env[link get_env.md]
++* get_stop_token[link ../get_stop_token.md]
++* stop_callback_for_t[link /reference/stop_token/stop_callback_for_t.md]
++* is_nothrow_constructible_v[link /reference/type_traits/is_nothrow_constructible.md]
++* current_exception()[link /reference/exception/current_exception.md]
++* std::move[link /reference/utility/move.md]
++
+ 
+ ## 例
+ ```cpp example
+@@ -359,3 +488,4 @@ value=42
+ - [P3815R1 Add `scope_association` concept to P3149](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3815r1.html)
+ - [P3914R0 Assorted NB comment resolutions for Kona 2025](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3914r0.html), US 228-348
+ - [P3923R0 Additional NB comment resolutions for Kona 2025](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3923r0.html), US 227-346, 229-347
++- [LWG4540. `future-sender`s returned from `spawn_future` do not forward stop requests to spawned work](https://cplusplus.github.io/LWG/issue4540)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>cin -- feat({,w}c{in,out}): 対応する入出力変数への相互リンクを追加</title>
@@ -1031,230 +1280,6 @@ index fc83c74a0..0a01cc6a2 100644
  ## 参照
  - [P3149R11 `async_scope` - Creating scopes for non-sequential concurrency](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3149r11.html)
 +- [LWG4504. Wording problem in `{simple_}counting_scope`](https://cplusplus.github.io/LWG/issue4504)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>run_loop -- execution/run_loop: LWG4476適用</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/run_loop.html"/>
-      <id>8ba04f913aeb2162205355f5b8c86f88ef9d153a:reference/execution/execution/run_loop.md</id>
-      <updated>2026-04-23T21:23:31+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/run_loop.md b/reference/execution/execution/run_loop.md
-index 48b1f853c..7f4feeaba 100644
---- a/reference/execution/execution/run_loop.md
-+++ b/reference/execution/execution/run_loop.md
-@@ -121,3 +121,4 @@ success
- ## 参照
- - [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
- - [P3396R1 std::execution wording fixes](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3396r1.html)
-+- [LWG4476. `run_loop` should not have a `set_error` completion](https://cplusplus.github.io/LWG/issue4476)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>finish -- execution/run_loop: LWG4476適用</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/run_loop/finish.html"/>
-      <id>8ba04f913aeb2162205355f5b8c86f88ef9d153a:reference/execution/execution/run_loop/finish.md</id>
-      <updated>2026-04-23T21:23:31+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/run_loop/finish.md b/reference/execution/execution/run_loop/finish.md
-index fe72b5e9a..3a95d1c68 100644
---- a/reference/execution/execution/run_loop/finish.md
-+++ b/reference/execution/execution/run_loop/finish.md
-@@ -6,7 +6,7 @@
- * cpp26[meta cpp]
- 
- ```cpp
--void finish();
-+void finish() noexcept;
- ```
- 
- ## 概要
-@@ -21,6 +21,10 @@ void finish();
- 説明専用メンバ`state`を終了中(finishing)に変更する。
- 
- 
-+## 例外
-+投げない
-+
-+
- ## 同期操作
- メンバ関数`finish`および説明専用メンバ関数[`pop-front`, `push-back`](run.md)は不可分(atomically)に実行される。
- 
-@@ -64,3 +68,4 @@ int main()
- ## 参照
- - [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
- - [P3396R1 std::execution wording fixes](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3396r1.html)
-+- [LWG4476. `run_loop` should not have a `set_error` completion](https://cplusplus.github.io/LWG/issue4476)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>get_scheduler -- execution/run_loop: LWG4476適用</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/run_loop/get_scheduler.html"/>
-      <id>8ba04f913aeb2162205355f5b8c86f88ef9d153a:reference/execution/execution/run_loop/get_scheduler.md</id>
-      <updated>2026-04-23T21:23:31+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/run_loop/get_scheduler.md b/reference/execution/execution/run_loop/get_scheduler.md
-index cde02aa02..73d8a97b6 100644
---- a/reference/execution/execution/run_loop/get_scheduler.md
-+++ b/reference/execution/execution/run_loop/get_scheduler.md
-@@ -6,7 +6,7 @@
- * cpp26[meta cpp]
- 
- ```cpp
--run-loop-scheduler get_scheduler();
-+run-loop-scheduler get_scheduler() noexcept;
- ```
- * run-loop-scheduler[link run-loop-scheduler.md]
- 
-@@ -18,6 +18,10 @@ run-loop-scheduler get_scheduler();
- `run_loop`インスタンス上で作業を[スケジュール](../schedule.md)する[`run-loop-scheduler`](run-loop-scheduler.md)インスタンスを返す。
- 
- 
-+## 例外
-+投げない
-+
-+
- ## 例
- ```cpp example
- #include &amp;lt;cassert&amp;gt;
-@@ -83,3 +87,4 @@ int main()
- 
- ## 参照
- - [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
-+- [LWG4476. `run_loop` should not have a `set_error` completion](https://cplusplus.github.io/LWG/issue4476)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>run-loop-opstate -- execution/run_loop: LWG4476適用</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/run_loop/run-loop-opstate.html"/>
-      <id>8ba04f913aeb2162205355f5b8c86f88ef9d153a:reference/execution/execution/run_loop/run-loop-opstate.md</id>
-      <updated>2026-04-23T21:23:31+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/run_loop/run-loop-opstate.md b/reference/execution/execution/run_loop/run-loop-opstate.md
-index 8d5d921b6..892623743 100644
---- a/reference/execution/execution/run_loop/run-loop-opstate.md
-+++ b/reference/execution/execution/run_loop/run-loop-opstate.md
-@@ -21,9 +21,9 @@ struct run-loop-opstate;
- 
- ```cpp
- struct run-loop-opstate-base {  // exposition only
--  virtual void execute() = 0;   // exposition only
--  run_loop* loop;               // exposition only
--  run-loop-opstate-base* next;  // exposition only
-+  virtual void execute() noexcept = 0;  // exposition only
-+  run_loop* loop;                       // exposition only
-+  run-loop-opstate-base* next;          // exposition only
- };
- ```
- * run_loop[link ../run_loop.md]
-@@ -48,16 +48,9 @@ struct run-loop-opstate-base {  // exposition only
- - 式`start(o)`は下記と等価 :
- 
-     ```cpp
--    try {
--      o.loop-&amp;gt;push-back(addressof(o));
--    } catch(...) {
--      set_error(std::move(REC(o)), current_exception());
--    }
-+    o.loop-&amp;gt;push-back(addressof(o));
-     ```
-     * push-back[link run.md]
--    * set_error[link ../set_error.md]
--    * std::move[link /reference/utility/move.md]
--    * current_exception()[link /reference/exception/current_exception.md]
- 
- 
- ## バージョン
-@@ -73,3 +66,4 @@ struct run-loop-opstate-base {  // exposition only
- 
- ## 参照
- - [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
-+- [LWG4476. `run_loop` should not have a `set_error` completion](https://cplusplus.github.io/LWG/issue4476)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>run -- execution/run_loop: LWG4476適用</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/run_loop/run.html"/>
-      <id>8ba04f913aeb2162205355f5b8c86f88ef9d153a:reference/execution/execution/run_loop/run.md</id>
-      <updated>2026-04-23T21:23:31+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/run_loop/run.md b/reference/execution/execution/run_loop/run.md
-index c9a863bb1..5148992ba 100644
---- a/reference/execution/execution/run_loop/run.md
-+++ b/reference/execution/execution/run_loop/run.md
-@@ -6,7 +6,7 @@
- * cpp26[meta cpp]
- 
- ```cpp
--void run();
-+void run() noexcept;
- ```
- 
- ## 概要
-@@ -19,7 +19,7 @@ void run();
- ### 説明専用メンバ関数 `pop-front`
- 
- ```cpp
--run-loop-opstate-base* pop-front();
-+run-loop-opstate-base* pop-front() noexcept;
- ```
- * run-loop-opstate-base[link run-loop-opstate.md]
- 
-@@ -32,7 +32,7 @@ run-loop-opstate-base* pop-front();
- ### 説明専用メンバ関数 `push-back`
- 
- ```cpp
--void push-back(run-loop-opstate-base* item);
-+void push-back(run-loop-opstate-base* item) noexcept;
- ```
- * run-loop-opstate-base[link run-loop-opstate.md]
- 
-@@ -59,6 +59,10 @@ while (auto* op = pop-front()) {
- * execute()[link run-loop-opstate.md]
- 
- 
-+## 例外
-+投げない
-+
-+
- ## 同期操作
- `run`と[デストラクタ](op_destructor.md)以外のメンバ関数同時呼び出しは、データ競合を引き起こさない。
- 
-@@ -117,3 +121,4 @@ finished
- ## 参照
- - [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
- - [P3396R1 std::execution wording fixes](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3396r1.html)
-+- [LWG4476. `run_loop` should not have a `set_error` completion](https://cplusplus.github.io/LWG/issue4476)
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
