@@ -2,9 +2,144 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2026-05-14T16:31:13.505805</updated>
-  <id>7f2ab038-7ee0-4a2b-aea4-390bbaf84eb2</id>
+  <updated>2026-05-15T01:08:29.958656</updated>
+  <id>2863851e-e697-4ecc-b695-d5b9fd1760d7</id>
 
+  
+    <entry>
+      <title>コンストラクタ -- spanのinitializer_listをとるコンストラクタを削除 (close #1641)</title>
+      <link href="https://cpprefjp.github.io/reference/span/span/op_constructor.html"/>
+      <id>73e80bcc6e3d0a03e5cc8bf3862bc8fe2bc7d27b:reference/span/span/op_constructor.md</id>
+      <updated>2026-05-15T10:04:16+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/span/span/op_constructor.md b/reference/span/span/op_constructor.md
+index 166f30f1b..916718369 100644
+--- a/reference/span/span/op_constructor.md
++++ b/reference/span/span/op_constructor.md
+@@ -35,9 +35,6 @@ constexpr span(const span&amp;amp; other) noexcept = default;          // (8) C++20
+ template &amp;lt;class OtherElementType, size_t OtherExtent&amp;gt;
+ constexpr explicit(extent != dynamic_extent &amp;amp;&amp;amp; OtherExtent == dynamic_extent)
+   span(const span&amp;lt;OtherElementType, OtherExtent&amp;gt;&amp;amp; s) noexcept; // (9) C++20
+-
+-constexpr explicit(extent != dynamic_extent)
+-  span(std::initializer_list&amp;lt;value_type&amp;gt; il);                  // (10) C++26
+ ```
+ * size_t[link /reference/cstddef/size_t.md]
+ * array[link /reference/array/array.md]
+@@ -60,7 +57,6 @@ constexpr explicit(extent != dynamic_extent)
+     - 動的な要素数をもつ`span`同士の変換
+     - `span&amp;lt;T&amp;gt;`から`span&amp;lt;const T&amp;gt;`への変換
+     - バイト数が同じ暗黙の型変換が可能な要素型をもつ`span`同士の変換
+-- (10) : 初期化子リストから`span`オブジェクトを構築する
+ 
+ 
+ ## テンプレートパラメータ制約
+@@ -92,9 +88,6 @@ constexpr explicit(extent != dynamic_extent)
+ - (9) :
+     - `extent ==` [`dynamic_extent`](/reference/span/dynamic_extent.md) `|| OtherExtent ==` [`dynamic_extent`](/reference/span/dynamic_extent.md) `|| extent == OtherExtent`が`true`であること (受け取り側が[`dynamic_extent`](/reference/span/dynamic_extent.md)を持っていれば任意の`Extent`から変換できる)
+     - `OtherElementType(*)[]`型が`ElementType(*)[]`型に変換可能であること
+-- (10) :
+-    - [`is_const_v`](/reference/type_traits/is_const.md)`&amp;lt;element_type&amp;gt;`が`true`であること
+-        - (`std::span&amp;lt;const T&amp;gt;`に対してのみ使用できる)
+ 
+ 
+ ## 堅牢化された事前条件
+@@ -113,8 +106,6 @@ constexpr explicit(extent != dynamic_extent)
+     - [`std::is_const_v`](/reference/type_traits/is_const.md)`&amp;lt;element_type&amp;gt;` が `false`であるとき、型 `R` はコンセプト [`std::ranges::borrowed_range`](/reference/ranges/borrowed_range.md) のモデルであること
+ - (9) :
+     - `extent`が[`dynamic_extent`](/reference/span/dynamic_extent.md)と等値でない場合、`extent`は[`s.size()`](size.md)と等値になる
+-- (10) :
+-    - `extent`が[`dynamic_extent`](/reference/span/dynamic_extent.md)と等値でない場合、`extent`は[`il.size()`](/reference/initializer_list/initializer_list/size.md)と等値になる
+ 
+ 
+ ## 効果
+@@ -123,7 +114,6 @@ constexpr explicit(extent != dynamic_extent)
+ - (4), (5), (6) : 範囲`[`[`data`](/reference/iterator/data.md)`(arr),` [`data`](/reference/iterator/data.md)`(arr) + N)`を参照する`span`オブジェクトを構築する
+ - (7) : 範囲`[std::ranges::data(r), std::ranges::data(r) + std::ranges::size(r))`を参照する`span`オブジェクトを構築する
+ - (9) : 範囲`[s.`[`data()`](data.md)`, s.`[`data()`](data.md) `+ s.`[`size()`](size.md)`)`を参照する`span`オブジェクトを構築する
+-- (10) : 範囲`[il.`[`begin()`](/reference/initializer_list/initializer_list/begin.md)`, il.`[`begin()`](/reference/initializer_list/initializer_list/begin.md) `+ il.`[`size()`](/reference/initializer_list/initializer_list/size.md)`)`を参照する`span`オブジェクトを構築する
+ 
+ 
+ ## 事後条件
+@@ -140,16 +130,7 @@ constexpr explicit(extent != dynamic_extent)
+ 
+ 
+ ## 計算量
+-- (1)-(10) : 定数時間
+-
+-
+-## この機能が必要になった背景・経緯
+-- (10) :
+-    - [`std::string_view`](/reference/string_view/basic_string_view.md)が文字列リテラル (たとえば`&amp;#34;abc&amp;#34;`) をとれるのと同様に、`std::span`クラスも[`std::initializer_list`](/reference/initializer_list/initializer_list.md)をとれるようにした
+-
+-
+-## 備考
+-- (10) : `std::span&amp;lt;const int&amp;gt; v = {1, 2, 3};` のような使い方は初期化子リストの寿命が尽きてしまうので注意。関数のパラメータを`span`として受け取るような使い方が想定される
++- (1)-(9) : 定数時間
+ 
+ 
+ ## 例
+@@ -286,44 +267,6 @@ int main()
+ ```
+ 
+ 
+-### 初期化子リストからspanを構築する (C++26)
+-```cpp example
+-#include &amp;lt;iostream&amp;gt;
+-#include &amp;lt;span&amp;gt;
+-#include &amp;lt;vector&amp;gt;
+-
+-void print_list(std::span&amp;lt;const int&amp;gt; s) {
+-  bool first = true;
+-  for (const int&amp;amp; x : s) {
+-    if (first) {
+-      first = false;
+-    }
+-    else {
+-      std::cout &amp;lt;&amp;lt; &amp;#39;,&amp;#39;;
+-    }
+-    std::cout &amp;lt;&amp;lt; x;
+-  }
+-  std::cout &amp;lt;&amp;lt; std::endl;
+-}
+-
+-int main()
+-{
+-  std::vector&amp;lt;int&amp;gt; v = {1, 2, 3, 4, 5};
+-  print_list(v);
+-
+-  print_list({{3, 1, 4}}); // C++20からOK
+-  print_list({3, 1, 4});   // C++26からOK
+-}
+-```
+-
+-
+-#### 出力
+-```
+-1,2,3,4,5
+-3,1,4
+-3,1,4
+-```
+-
+ ## バージョン
+ ### 言語
+ - C++20
+@@ -343,6 +286,7 @@ int main()
+ - [P1976R2 Fixed-size `span` construction from dynamic range](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1976r2.html)
+ - [P2117R0 C++ Standard Library Issues Resolved Directly In Prague](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2117r0.html)
+ - [P2447R6 `std::span` over an initializer list](https://open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2447r6.html)
+-    - C++26から初期化子リストをとるコンストラクタが追加された
++    - [P4144R1 Remove `span`’s `initializer_list` constructor for C++26](https://open-std.org/jtc1/sc22/wg21/docs/papers/2023/p4144r1.html)
++    - C++26の策定中に一時期、初期化子リストをとるコンストラクタが追加されたが、その後削除された
+ - [P3471R4 Standard library hardening](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3471r4.html)
+ - [P3878R1 Standard library hardening should not use the &amp;#39;observe&amp;#39; semantic](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3878r1.html)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>静的リフレクション [P2996R13] -- reflection: スプライス式でのconst化に対応 (close #1627)</title>
@@ -5479,54 +5614,6 @@ index f4194d309..0d88b21b9 100644
  
  ## バージョン
  ### 言語
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>is_structural_type -- リンクミスを修正 #1620</title>
-      <link href="https://cpprefjp.github.io/reference/meta/is_structural_type.html"/>
-      <id>19c2903ccd4a1f583cbc6021331188aa15ec2958:reference/meta/is_structural_type.md</id>
-      <updated>2026-05-11T13:00:09+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/meta/is_structural_type.md b/reference/meta/is_structural_type.md
-index 74accb55c..9a800857e 100644
---- a/reference/meta/is_structural_type.md
-+++ b/reference/meta/is_structural_type.md
-@@ -76,4 +76,4 @@ int main() {
- 
- 
- ## 参照
--- [P3856R8 New reflection metafunction - is_structural_type (US NB comment 49)](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3856r8.html)
-+- [P3856R8 New reflection metafunction - is_structural_type (US NB comment 49)](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3856r8.pdf)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>is_structural -- リンクミスを修正 #1620</title>
-      <link href="https://cpprefjp.github.io/reference/type_traits/is_structural.html"/>
-      <id>19c2903ccd4a1f583cbc6021331188aa15ec2958:reference/type_traits/is_structural.md</id>
-      <updated>2026-05-11T13:00:09+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/type_traits/is_structural.md b/reference/type_traits/is_structural.md
-index 1ce0c6236..23c57da4a 100644
---- a/reference/type_traits/is_structural.md
-+++ b/reference/type_traits/is_structural.md
-@@ -78,4 +78,4 @@ int main() {
- 
- 
- ## 参照
--- [P3856R8 New reflection metafunction - is_structural_type (US NB comment 49)](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3856r8.html)
-+- [P3856R8 New reflection metafunction - is_structural_type (US NB comment 49)](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3856r8.pdf)
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
