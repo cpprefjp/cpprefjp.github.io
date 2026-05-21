@@ -2,9 +2,211 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2026-05-21T06:07:27.081968</updated>
-  <id>6b2de380-f34e-4391-93b5-515c98d0d2a3</id>
+  <updated>2026-05-21T07:04:35.137755</updated>
+  <id>46e684a2-fd16-4b57-a20a-b20fdb56efe4</id>
 
+  
+    <entry>
+      <title>コンストラクタ -- ranges : iterator/sentinelのユーザー定義コンストラクタをprivateに移動 (close #1633)</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/filter_view/iterator/op_constructor.html"/>
+      <id>eb379c363b23b4a7a3c685d106a615c7e8bf145e:reference/ranges/filter_view/iterator/op_constructor.md</id>
+      <updated>2026-05-21T16:00:02+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/filter_view/iterator/op_constructor.md b/reference/ranges/filter_view/iterator/op_constructor.md
+index 384af180f..06911a4f2 100644
+--- a/reference/ranges/filter_view/iterator/op_constructor.md
++++ b/reference/ranges/filter_view/iterator/op_constructor.md
+@@ -6,15 +6,21 @@
+ * cpp20[meta cpp]
+ 
+ ```cpp
+-iterator() requires default_initializable&amp;lt;iterator_t&amp;lt;V&amp;gt;&amp;gt; = default;    // (1)
++public:
++  iterator() requires default_initializable&amp;lt;iterator_t&amp;lt;V&amp;gt;&amp;gt; = default;  // (1)
+ 
+-constexpr iterator(filter_view&amp;amp; parent, iterator_t&amp;lt;V&amp;gt; current);        // (2)
++private:
++  constexpr iterator(filter_view&amp;amp; parent, iterator_t&amp;lt;V&amp;gt; current);      // (2) 説明専用
+ ```
+ 
+ ## 概要
+ 
+ [`filter_view::iterator`](../iterator.md)オブジェクトを構築する。
+ 
++- (1) : デフォルトコンストラクタ
++- (2) : `private`な説明専用コンストラクタ。[`filter_view`](../../filter_view.md)の[`begin()`](../begin.md)から呼び出される
++
++
+ ## 効果
+ 
+ - (1) : `current_`、`parent_`をデフォルト構築する
+@@ -27,14 +33,12 @@ constexpr iterator(filter_view&amp;amp; parent, iterator_t&amp;lt;V&amp;gt; current);        // (2)
+ #include &amp;lt;iostream&amp;gt;
+ 
+ int main() {
+-  using std::ranges::filter_view;
+-  using std::ranges::iterator_t;
+-
+   std::vector&amp;lt;int&amp;gt; vec = {0, 1, 2, 3, 4, 5};
+ 
+-  filter_view fv{vec, [](int x){ return x % 2 == 0; }};
++  std::ranges::filter_view fv{vec, [](int x){ return x % 2 == 0; }};
+ 
+-  iterator_t&amp;lt;decltype(fv)&amp;gt; i(fv, vec.begin());
++  // begin()を経由してイテレータを取得する
++  auto i = fv.begin();
+ 
+   std::cout &amp;lt;&amp;lt; *i &amp;lt;&amp;lt; &amp;#39;\n&amp;#39;;
+   i++;
+@@ -43,7 +47,7 @@ int main() {
+   std::cout &amp;lt;&amp;lt; *i &amp;lt;&amp;lt; &amp;#39;\n&amp;#39;;
+ }
+ ```
+-* iterator_t&amp;lt;decltype(fv)&amp;gt;[color ff0000]
++* fv.begin()[link ../begin.md]
+ 
+ ### 出力
+ ```
+@@ -65,3 +69,5 @@ int main() {
+ ## 参照
+ - [N4861 24.7.4 Filter view](https://timsong-cpp.github.io/cppwp/n4861/range.filter)
+ - [N4950 26.7.8 Filter view](https://timsong-cpp.github.io/cppwp/n4950/range.filter)
++- [P3059R2 Making user-defined constructors of view iterators/sentinels private](https://open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3059r2.html)
++    - C++26で、(2)のユーザー定義コンストラクタを`public`から`private`に移動
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>コンストラクタ -- ranges : iterator/sentinelのユーザー定義コンストラクタをprivateに移動 (close #1633)</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/filter_view/sentinel/op_constructor.html"/>
+      <id>eb379c363b23b4a7a3c685d106a615c7e8bf145e:reference/ranges/filter_view/sentinel/op_constructor.md</id>
+      <updated>2026-05-21T16:00:02+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/filter_view/sentinel/op_constructor.md b/reference/ranges/filter_view/sentinel/op_constructor.md
+index c320f1d1d..9f99a167a 100644
+--- a/reference/ranges/filter_view/sentinel/op_constructor.md
++++ b/reference/ranges/filter_view/sentinel/op_constructor.md
+@@ -6,14 +6,21 @@
+ * cpp20[meta cpp]
+ 
+ ```cpp
+-sentinel() = default;                             // (1)
+-constexpr explicit sentinel(filter_view&amp;amp; parent); // (2)
++public:
++  sentinel() = default;                             // (1)
++
++private:
++  constexpr explicit sentinel(filter_view&amp;amp; parent); // (2) 説明専用
+ ```
+ 
+ ## 概要
+ 
+ [`filter_view::sentinel`](../sentinel.md)オブジェクトを構築する。
+ 
++- (1) : デフォルトコンストラクタ
++- (2) : `private`な説明専用コンストラクタ。[`filter_view`](../../filter_view.md)の[`end()`](../end.md)から呼び出される
++
++
+ ## 効果
+ 
+ - (1) : `end_`をデフォルト構築する
+@@ -35,3 +42,5 @@ constexpr explicit sentinel(filter_view&amp;amp; parent); // (2)
+ ## 参照
+ - [N4861 24.7.4 Filter view](https://timsong-cpp.github.io/cppwp/n4861/range.filter)
+ - [N4950 26.7.8 Filter view](https://timsong-cpp.github.io/cppwp/n4950/range.filter)
++- [P3059R2 Making user-defined constructors of view iterators/sentinels private](https://open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3059r2.html)
++    - C++26で、(2)のユーザー定義コンストラクタを`public`から`private`に移動
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>iterator -- ranges : iterator/sentinelのユーザー定義コンストラクタをprivateに移動 (close #1633)</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/iota_view/iterator.html"/>
+      <id>eb379c363b23b4a7a3c685d106a615c7e8bf145e:reference/ranges/iota_view/iterator.md</id>
+      <updated>2026-05-21T16:00:02+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/iota_view/iterator.md b/reference/ranges/iota_view/iterator.md
+index 1bbe963b8..62e1c60f5 100644
+--- a/reference/ranges/iota_view/iterator.md
++++ b/reference/ranges/iota_view/iterator.md
+@@ -60,6 +60,8 @@ namespace std::ranges {
+   struct iota_view&amp;lt;W, Bound&amp;gt;::iterator {
+   private:
+     W value_ = W();
++    constexpr explicit iterator(W value) : value_(value) {
++    }
+   public:
+     using iterator_concept = decltype(get_iota_view_iterator_concept());
+     using iterator_category = input_iterator_tag;
+@@ -67,8 +69,6 @@ namespace std::ranges {
+     using difference_type = iota_diff_t&amp;lt;W&amp;gt;;
+ 
+     iterator() = default;
+-    constexpr explicit iterator(W value) : value_(value) {
+-    }
+ 
+     constexpr W operator*() const noexcept(is_nothrow_copy_constructible_v&amp;lt;W&amp;gt;) {
+       return value_;
+@@ -205,3 +205,5 @@ namespace std::ranges {
+ ## 参照
+ - [N4861 24 Ranges library](https://timsong-cpp.github.io/cppwp/n4861/ranges)
+ - [C++20 ranges](https://techbookfest.org/product/5134506308665344)
++- [P3059R2 Making user-defined constructors of view iterators/sentinels private](https://open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3059r2.html)
++    - C++26で、ユーザー定義のコンストラクタを`public`から`private`に移動
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>sentinel -- ranges : iterator/sentinelのユーザー定義コンストラクタをprivateに移動 (close #1633)</title>
+      <link href="https://cpprefjp.github.io/reference/ranges/iota_view/sentinel.html"/>
+      <id>eb379c363b23b4a7a3c685d106a615c7e8bf145e:reference/ranges/iota_view/sentinel.md</id>
+      <updated>2026-05-21T16:00:02+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/ranges/iota_view/sentinel.md b/reference/ranges/iota_view/sentinel.md
+index 888da36bb..4065d6d53 100644
+--- a/reference/ranges/iota_view/sentinel.md
++++ b/reference/ranges/iota_view/sentinel.md
+@@ -26,10 +26,10 @@ namespace std::ranges {
+   struct iota_view&amp;lt;W, Bound&amp;gt;::sentinel {
+   private:
+     Bound bound_ = Bound();
+-  public:
+-    sentinel() = default;
+     constexpr explicit sentinel(Bound bound): bound_{bound} {
+     }
++  public:
++    sentinel() = default;
+ 
+     friend constexpr bool operator==(const iterator&amp;amp; x, const sentinel&amp;amp; y) {
+       return x.value_ == y.bound_;
+@@ -65,3 +65,5 @@ namespace std::ranges {
+ ## 参照
+ - [N4861 24 Ranges library](https://timsong-cpp.github.io/cppwp/n4861/ranges)
+ - [C++20 ranges](https://techbookfest.org/product/5134506308665344)
++- [P3059R2 Making user-defined constructors of view iterators/sentinels private](https://open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3059r2.html)
++    - C++26で、ユーザー定義のコンストラクタを`public`から`private`に移動
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>C++26 -- C++26のreserve_hint関係に対応 (close #1427)</title>
@@ -10763,36 +10965,6 @@ index 000000000..cf0091b16
       <author>
         <name>Akira Takahashi</name>
         <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>reference_constructs_from_temporary -- reference_constructs_from_temporary : GCCのバグについて記載</title>
-      <link href="https://cpprefjp.github.io/reference/type_traits/reference_constructs_from_temporary.html"/>
-      <id>07133f4c68e89f0a4da1afaa36f2d5841bcf6f07:reference/type_traits/reference_constructs_from_temporary.md</id>
-      <updated>2026-05-19T11:39:44+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/type_traits/reference_constructs_from_temporary.md b/reference/type_traits/reference_constructs_from_temporary.md
-index c2236d735..c7ec2ae62 100644
---- a/reference/type_traits/reference_constructs_from_temporary.md
-+++ b/reference/type_traits/reference_constructs_from_temporary.md
-@@ -149,6 +149,11 @@ int main()
- - [Visual C++](/implementation.md#visual_cpp): ???
- 
- 
-+## 備考
-+- [Bug 63604 - [C++11] A direct-initialization of a reference should use explicit conversion functions](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=63604)
-+    - GCCでは参照の直接初期化に `explicit` な変換関数が使われないバグがあり、上の例がコンパイルエラーになる。
-+
-+
- ## 関連項目
- - [`reference_converts_from_temporary`](reference_converts_from_temporary.md)
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Raclamusi</name>
-        <email>raclamusi@gmail.com</email>
       </author>
     </entry>
   
