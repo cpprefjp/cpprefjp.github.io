@@ -2,9 +2,195 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2026-06-07T09:08:37.004315</updated>
-  <id>0feef85f-2327-4cec-a4ef-fe66f8341c62</id>
+  <updated>2026-06-07T09:34:28.101276</updated>
+  <id>8664d707-8f65-4349-8544-5b6ba2045ec5</id>
 
+  
+    <entry>
+      <title>execution -- execution: P4151R1対応(#1650)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution.html"/>
+      <id>115f17d4667a2a4d2f2e3dcec1a6cadb25f5f20d:reference/execution/execution.md</id>
+      <updated>2026-06-07T18:28:55+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution.md b/reference/execution/execution.md
+index cf5e3d776..bb6efdb6a 100644
+--- a/reference/execution/execution.md
++++ b/reference/execution/execution.md
+@@ -163,7 +163,7 @@ Senderコンシューマは名前空間 `std::this_thread` および名前空間
+ |------|------|----------------|
+ | [`execution::as_awaitable`](execution/as_awaitable.md) | Senderを[Awaitable型](/lang/cpp20/coroutines.md)へ変換 (customization point object) | C++26 |
+ | [`execution::with_awaitable_senders`](execution/with_awaitable_senders.md) | [Promise型](/lang/cpp20/coroutines.md)の基底クラス (class template) | C++26 |
+-| [`execution::affine_on`](execution/affine_on.md) | タスクコルーチンのScheduler Affinityを実現 (customization point object) | C++26 |
++| [`execution::affine`](execution/affine.md) | タスクコルーチンのScheduler Affinityを実現 (customization point object) | C++26 |
+ | [`execution::inline_scheduler`](execution/inline_scheduler.md) | インラインScheduler (class) | C++26 |
+ | [`execution::task_scheduler`](execution/task_scheduler.md) | 任意Scheduler型を保持するScheduler (class) | C++26 |
+ | [`execution::with_error`](execution/with_error.md) | タスクコルーチンからのエラー完了 (class template) | C++26 |
+@@ -207,3 +207,4 @@ Senderコンシューマは名前空間 `std::this_thread` および名前空間
+ - [P3986R1 A Wording Strategy for Inlinable Receivers](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3986r1.pdf)
+ - [P3826R5 Fix Sender Algorithm Customization](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3826r5.html)
+ - [P3941R4 Scheduler Affinity](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3941r4.html)
++- [P4151R1 Rename `affine_on`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4151r1.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>affine -- execution: P4151R1対応(#1650)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/affine.html"/>
+      <id>115f17d4667a2a4d2f2e3dcec1a6cadb25f5f20d:reference/execution/execution/affine.md</id>
+      <updated>2026-06-07T18:28:55+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/affine.md b/reference/execution/execution/affine.md
+new file mode 100644
+index 000000000..ef01a5042
+--- /dev/null
++++ b/reference/execution/execution/affine.md
+@@ -0,0 +1,94 @@
++# affine
++* execution[meta header]
++* cpo[meta id-type]
++* std::execution[meta namespace]
++* cpp26[meta cpp]
++
++```cpp
++namespace std::execution {
++  struct affine_t { unspecified };
++  inline constexpr affine_t affine{};
++}
++```
++* unspecified[italic]
++
++## 概要
++`affine`は、[Receiver](receiver.md)の[Scheduler](scheduler.md)上で完了させるSenderアダプタである。
++アダプト対象Senderが正しいScheduler上で完了すると判断できるとき、アルゴリズムはスケジューリング操作を回避できる。
++
++`affine`は[パイプ可能Senderアダプタオブジェクト](sender_adaptor_closure.md)であり、パイプライン記法をサポートする。
++
++
++## 効果
++説明用の式`sndr`に対して、`decltype((sndr))`が[`sender`](sender.md)を満たさないとき、呼び出し式`affine(sndr)`は不適格となる。
++
++そうでなければ、呼び出し式`affine(sndr)`は下記と等価。
++
++```cpp
++make-sender(affine, env&amp;lt;&amp;gt;(), sndr)
++```
++* make-sender[link make-sender.md]
++* env&amp;lt;&amp;gt;[link env.md]
++
++
++### Senderアルゴリズムタグ `affine`
++型が[`scheduler`](scheduler.md)のモデルである部分式`sch`に対して、説明用の式`UNSTOPPABLE-SCHEDULER(sch)`を、その型が[`scheduler`](scheduler.md)のモデルである式`e`とする。
++
++- 式[`schedule`](schedule.md)`(e)`は[`unstoppable`](unstoppable.md)`(`[`schedule`](schedule.md)`(sch))`と等価な式。
++- 任意の[クエリオブジェクト](../queryable.md)`q`と部分式のパック`args...`に対して、式`e.query(q, args...)`は`sch.query(q, args...)`と等価な式。
++- 式`e == UNSTOPPABLE-SCHEDULER(other)`は`sch == other`と等価な式。
++
++説明用の式`sndr`と`ev`に対して、[`sender-for`](sender-for.md)`&amp;lt;decltype((sndr)), affine_t&amp;gt; == false`のとき、式`affine.transform_sender(sndr, ev)`は不適格となる。
++
++そうでなければ、式`affine.transform_sender(sndr, ev)`は下記と等価。
++
++```cpp
++auto&amp;amp; [_, _, child] = sndr;
++if constexpr (requires { std::forward_like&amp;lt;Sndr&amp;gt;(child).affine(); }) {
++  return std::forward_like&amp;lt;Sndr&amp;gt;(child).affine();
++} else {
++  return continues_on(std::forward_like&amp;lt;Sndr&amp;gt;(child),
++                      UNSTOPPABLE-SCHEDULER(get_start_scheduler(ev)));
++}
++```
++* continues_on[link continues_on.md]
++* get_start_scheduler[link get_start_scheduler.md]
++
++
++## カスタマイゼーションポイント
++[Receiver](receiver.md)接続時に、関連付けられた実行ドメインに対して[`execution::transform_sender`](transform_sender.md)経由でSender変換が行われる。
++[デフォルト実行ドメイン](default_domain.md)では無変換。
++
++説明用の式`out_sndr`を`affine(sndr)`の戻り値[Sender](sender.md)とし、型`OutSndr`を`decltype((out_sndr))`とする。式`out_rcvr`を[環境](../queryable.md)`Env`に関連付けられた[Receiver](receiver.md)とする。[`get_start_scheduler`](get_start_scheduler.md)`(`[`get_env`](get_env.md)`(out_rcvr))`が不適格もしくは[`infallible-scheduler`](infallible-scheduler.md)`&amp;lt;Env&amp;gt;`を満たさないとき、式[`get_completion_signatures`](get_completion_signatures.md)`&amp;lt;OutSndr, Env&amp;gt;()`の評価は例外で終了する。`out_sndr`と`out_rcvr`との[接続(connect)](connect.md)結果[Operation State](operation_state.md)への左辺値参照を`op`としたとき、
++
++- 呼び出し[`start`](start.md)`(op)`は、現在の実行エージェント上で入力[Sender](sender.md)`sndr`を開始し、[Scheduler](scheduler.md)`sch`に関連付けられた実行リソースに属する実行エージェント上で`out_rcvr`の完了操作が実行される。
++- 現在の実行リソースが`sch`に関連付けられた実行リソースと同一のとき、[`start`](start.md)`(op)`の完了よりも前に`out_rcvr`の完了操作が呼ばれる可能性がある。
++
++
++## 備考
++`affine`は[タスクコルーチン](task.md)のScheduler Affinity実現に用いられる。
++詳細仕様は[`task::promise::await_transform`](task/promise_type/await_transform.md)を参照のこと。
++
++開始された[Scheduler](scheduler.md)上で再開(resume)されると分かっている[Sender](sender.md)に対して、処理系（標準ライブラリ実装）は`affine`メンバ関数を提供すべきである。そのようなSenderの例として、[`just`](just.md), [`just_error`](just_error.md), [`just_stopped`](just_stopped.md), [`read_env`](read_env.md), [`write_env`](write_env.md)等がある。
++
++
++## バージョン
++### 言語
++- C++26
++
++### 処理系
++- [Clang](/implementation.md#clang): ??
++- [GCC](/implementation.md#gcc): ??
++- [ICC](/implementation.md#icc): ??
++- [Visual C++](/implementation.md#visual_cpp): ??
++
++
++## 関連項目
++- [`execution::task`](task.md)
++
++
++## 参照
++- [P3552R3 Add a Coroutine Task Type](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html)
++- [P3826R5 Fix Sender Algorithm Customization](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3826r5.html)
++- [P3941R4 Scheduler Affinity](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3941r4.html)
++- [P4151R1 Rename `affine_on`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4151r1.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>await_transform -- execution: P4151R1対応(#1650)</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/task/promise_type/await_transform.html"/>
+      <id>115f17d4667a2a4d2f2e3dcec1a6cadb25f5f20d:reference/execution/execution/task/promise_type/await_transform.md</id>
+      <updated>2026-06-07T18:28:55+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/task/promise_type/await_transform.md b/reference/execution/execution/task/promise_type/await_transform.md
+index 263eda056..afc1af070 100644
+--- a/reference/execution/execution/task/promise_type/await_transform.md
++++ b/reference/execution/execution/task/promise_type/await_transform.md
+@@ -18,7 +18,7 @@ auto await_transform(Sender&amp;amp;&amp;amp; sndr); // (1)
+ 
+ ## 効果
+ [`same_as`](/reference/concepts/same_as.md)`&amp;lt;`[`inline_scheduler`](../../inline_scheduler.md)`,` [`start_scheduler_type`](../../task.md)`&amp;gt; == true`ならば、[`as_awaitable`](../../as_awaitable.md)`(std::forward&amp;lt;Sender&amp;gt;(sndr), *this)`を返す。
+-そうでなければ、[`as_awaitable`](../../as_awaitable.md)`(`[`affine_on`](../../affine_on.md)`(std::forward&amp;lt;Sender&amp;gt;(sndr)), *this)`を返す。
++そうでなければ、[`as_awaitable`](../../as_awaitable.md)`(`[`affine`](../../affine.md)`(std::forward&amp;lt;Sender&amp;gt;(sndr)), *this)`を返す。
+ 
+ 
+ ## バージョン
+@@ -34,10 +34,11 @@ auto await_transform(Sender&amp;amp;&amp;amp; sndr); // (1)
+ 
+ ## 関連項目
+ - [`execution::as_awaitable`](../../as_awaitable.md)
+-- [`execution::affine_on`](../../affine_on.md)
++- [`execution::affine`](../../affine.md)
+ - [`execution::inline_scheduler`](../../inline_scheduler.md)
+ 
+ 
+ ## 参照
+ - [P3552R3 Add a Coroutine Task Type](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html)
+ - [P3941R4 Scheduler Affinity](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3941r4.html)
++- [P4151R1 Rename `affine_on`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4151r1.pdf)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>task_scheduler -- execution/task_scheduler: P3927R2対応(#1649)</title>
@@ -861,31 +1047,6 @@ index 953a63e23..4b1a6bad8 100644
       <author>
         <name>suomesta</name>
         <email>shawn316michaels@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>get_start_scheduler -- execution/get_start_scheduler: 参照を修正(#1648)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/get_start_scheduler.html"/>
-      <id>ccd0fed2855e26859661b1d8e7ec89c2561784c9:reference/execution/execution/get_start_scheduler.md</id>
-      <updated>2026-06-07T10:45:20+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/get_start_scheduler.md b/reference/execution/execution/get_start_scheduler.md
-index b81c1dc87..f184e0d49 100644
---- a/reference/execution/execution/get_start_scheduler.md
-+++ b/reference/execution/execution/get_start_scheduler.md
-@@ -51,5 +51,4 @@ const修飾[クエリ可能オブジェクト](../queryable.md)`cenv`に対し
- 
- 
- ## 参照
--- [P2300R10 `std::execution`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
--- [P3826R5 Fix Sender Algorithm Customization](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3826r5.html)
-+- [P3941R4 Scheduler Affinity](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3941r4.html)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
       </author>
     </entry>
   
