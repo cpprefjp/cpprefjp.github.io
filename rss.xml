@@ -2,9 +2,107 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2026-06-08T17:38:11.194065</updated>
-  <id>fef55d17-04f3-4de8-a12b-2e26a9399fb5</id>
+  <updated>2026-06-09T03:42:45.540585</updated>
+  <id>b72a1393-952f-4844-91ca-8cc3878a9dd4</id>
 
+  
+    <entry>
+      <title>address -- atomic_ref::address : C++26で戻り値型が`void*`に変更になった (close #1631)</title>
+      <link href="https://cpprefjp.github.io/reference/atomic/atomic_ref/address.html"/>
+      <id>4a8f1a40317bb219e8a3aa594955cbef679b762d:reference/atomic/atomic_ref/address.md</id>
+      <updated>2026-06-09T12:37:47+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/atomic/atomic_ref/address.md b/reference/atomic/atomic_ref/address.md
+index dad2c19b6..9b89555bf 100644
+--- a/reference/atomic/atomic_ref/address.md
++++ b/reference/atomic/atomic_ref/address.md
+@@ -6,12 +6,15 @@
+ * cpp26[meta cpp]
+ 
+ ```cpp
+-constexpr T* address() const noexcept;
++constexpr address-return-type address() const noexcept;
+ ```
++* address-return-type[italic]
+ 
+ ## 概要
+ 参照しているオブジェクトのアドレスを取得する。
+ 
++戻り値型`address-return-type`は説明専用の型エイリアスであり、`COPYCV(T, void)*`と定義される。`COPYCV(T, void)`は、`T`の最上位のCV修飾を`void`に付加した型である。たとえば`atomic_ref&amp;lt;int&amp;gt;`では`void*`、`atomic_ref&amp;lt;const int&amp;gt;`では`const void*`を返す。
++
+ ### この関数を必要とする状況
+ #### データ構造の要素へのアトミックアクセス
+ 配列の各要素にアトミックアクセスする際、[`std::atomic`](/reference/atomic/atomic.md)オブジェクトでは以下のように記述する。
+@@ -29,7 +32,7 @@ int fetch_add_idx(std::atomic&amp;lt;int&amp;gt;* base, size_t i, int value) {
+ 
+ ```cpp
+ int fetch_add_idx(std::atomic_ref&amp;lt;int&amp;gt; base, size_t i, int value) {
+-  int* p = base.address();
++  int* p = static_cast&amp;lt;int*&amp;gt;(base.address());
+   return std::atomic_ref{*(p+i)}.fetch_add(value);
+ }
+ ```
+@@ -41,7 +44,7 @@ int fetch_add_idx(std::atomic_ref&amp;lt;int&amp;gt; base, size_t i, int value) {
+ ```cpp
+ void thread(atomic_ref&amp;lt;int&amp;gt;* data, atomic_ref&amp;lt;int&amp;gt; counter, int nthreads) {
+   data-&amp;gt;fetch_add(42, memory_order_relaxed);
+-  int* d = data-&amp;gt;address();       // dataへの生ポインタを取得
++  int* d = static_cast&amp;lt;int*&amp;gt;(data-&amp;gt;address()); // dataへの生ポインタを取得
+   data-&amp;gt;~atomic_ref();            // このスレッドのデータへのatomic_refを破棄する
+   int pos = counter.fetch_add(1); // データの破棄が完了したことを伝える
+   if (pos != (nthreads - 1))
+@@ -55,13 +58,26 @@ void thread(atomic_ref&amp;lt;int&amp;gt;* data, atomic_ref&amp;lt;int&amp;gt; counter, int nthreads) {
+ 
+ 
+ ## 戻り値
+-`*this`が参照するオブジェクトをアドレス値を返す
++`*this`が参照するオブジェクトを指すポインタを、`T`のCV修飾を引き継いだ`void`へのポインタとして返す
+ 
+ 
+ ## 例外
+ 投げない
+ 
+ 
++## 備考
++- 戻り値を`void`へのポインタとしているのは、参照先オブジェクトへの不用意なアクセスという誤用を防ぐためである
++    - この関数の主な用途は、ポインタ値そのもの（ハッシュ化や比較、配列のインデックス計算など）を使うことである。一方、参照先のオブジェクトを直接読み書きすると、同じオブジェクトを参照するほかの`atomic_ref`が生存している状況ではデータ競合となる
++    - 仮に戻り値が`T*`であれば、以下のように参照先を何気なく読み書きでき、アトミック性を壊すアクセスに気付きにくいという問題が起きる：
++    ```cpp
++    int x = 0;
++    std::atomic_ref ar{x};
++
++    int* p = ar.address(); // 戻り値型がT*であった場合、
++    int value = *p;        // 非アトミックな間接参照が容易にできてしまう
++    ```
++
++
+ ## 例
+ ```cpp example
+ #include &amp;lt;iostream&amp;gt;
+@@ -69,8 +85,8 @@ void thread(atomic_ref&amp;lt;int&amp;gt;* data, atomic_ref&amp;lt;int&amp;gt; counter, int nthreads) {
+ #include &amp;lt;thread&amp;gt;
+ 
+ void f(std::atomic_ref&amp;lt;int&amp;gt; ar, int i) {
+-  int* p = ar.address();
+-  std::atomic_ref{p + i}.fetch_add(1);
++  int* p = static_cast&amp;lt;int*&amp;gt;(ar.address());
++  std::atomic_ref{*(p + i)}.fetch_add(1);
+ }
+ 
+ int main()
+@@ -109,3 +125,5 @@ int main()
+ 
+ ## 参照
+ - [P2835R7 Expose `std::atomic_ref` &amp;#39;s object address](https://open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2835r7.html)
++- [P3936R1 Safer `atomic_ref::address` (FR-030-310)](https://open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3936r1.pdf)
++    - C++26で、誤用を防ぐために戻り値型を`T*`から`COPYCV(T, void)*`（`T`のCV修飾を引き継いだ`void`へのポインタ）に変更した
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>C++26 -- C++26対応として、C23標準ライブラリを追加 (#1657)</title>
@@ -13682,30 +13780,6 @@ index d790f6c30..58654862c 100644
  - [コルーチン](/lang/cpp20/coroutines.md)
  
  
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>receiver-of -- execution/receiver-of: meta exposition-onlyタグ追加(#1651)</title>
-      <link href="https://cpprefjp.github.io/reference/execution/execution/receiver-of.html"/>
-      <id>73888e94e8ea40ad0b4e3e46a3a71383b6ad510d:reference/execution/execution/receiver-of.md</id>
-      <updated>2026-06-08T01:01:17+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/receiver-of.md b/reference/execution/execution/receiver-of.md
-index bd4eeceda..a0720b991 100644
---- a/reference/execution/execution/receiver-of.md
-+++ b/reference/execution/execution/receiver-of.md
-@@ -1,4 +1,5 @@
- # receiver-of
-+* [meta exposition-only]
- * execution[meta header]
- * concept[meta id-type]
- * std::execution[meta namespace]
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
