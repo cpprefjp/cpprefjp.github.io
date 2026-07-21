@@ -2,9 +2,95 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2026-07-21T06:12:47.275276</updated>
-  <id>a96c034f-7c70-4b66-ae45-8db185e7f77f</id>
+  <updated>2026-07-21T06:23:03.202477</updated>
+  <id>76500d12-9f69-4abc-9013-be41f524ac80</id>
 
+  
+    <entry>
+      <title>スコープと名前探索の仕様整理 [P1787R6] -- C++23 スコープと名前探索の仕様整理  : 書き方整理として、提案ではなくC++23としてこういう仕様になったという書き方に変更</title>
+      <link href="https://cpprefjp.github.io/lang/cpp23/declarations_and_where_to_find_them.html"/>
+      <id>77c3847cccfd2a5fb1506556382dc99089e934ae:lang/cpp23/declarations_and_where_to_find_them.md</id>
+      <updated>2026-07-21T15:21:14+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp23/declarations_and_where_to_find_them.md b/lang/cpp23/declarations_and_where_to_find_them.md
+index d57d11f0f..ce7cf0dfd 100644
+--- a/lang/cpp23/declarations_and_where_to_find_them.md
++++ b/lang/cpp23/declarations_and_where_to_find_them.md
+@@ -13,14 +13,14 @@
+ C++では、スコープ([basic.scope])と名前探索([basic.lookup])に関する規格上の記述が、長年の機能追加によって分散・重複していた。
+ 用語の定義も曖昧かつ不整合な状態となっており、特にモジュール導入後は「名前探索は同一翻訳単位内の先行宣言に限られる」という暗黙の前提が成り立たなくなり、これらの章を整理する必要性が高まっていた。
+ 
+-P1787R6は、[basic.scope]と[basic.lookup]の章をまるごと書き直し、用語と規則を整備するための提案である。
++C++23では、[basic.scope]と[basic.lookup]の章がまるごと書き直され、用語と規則が整備された。
+ 変更の大部分は規格書の編集上の整理 (editorial reorganization) であり、新たに導入された言語機能はない。
+-ただしこの整理の過程で、長年解決されていなかった言語の不具合報告 (CWG issue) が63件、リフレクタ上で議論されていた問題が21件、まとめて解決される。
+-これに伴い、いくつかの観測可能な動作 (observable behavior) の変更も含まれる。
++ただしこの整理の過程で、長年解決されていなかった言語の不具合報告 (CWG issue) が63件、リフレクタ上で議論されていた問題が21件、まとめて解決された。
++これに伴い、いくつかの観測可能な動作 (observable behavior) の変更も含まれている。
+ 
+ ## 新しく導入された用語
+ 
+-P1787R6は、スコープと名前探索を記述するための語彙を再構築している。
++C++23では、スコープと名前探索を記述するための語彙が再構築された。
+ 主な新用語や関係のある用語と、それに対応する従来用語を以下に示す。
+ 
+ | 新しい用語 | 概要 | 従来の用語との対応 |
+@@ -32,7 +32,7 @@ P1787R6は、スコープと名前探索を記述するための語彙を再構
+ | 対象スコープ (target scope) | 宣言が所属するスコープ | 暗黙的に説明されていた概念を明示化 |
+ | 宣言位置 (locus) | 宣言がプログラム中に導入される位置 | 「point of declaration」を置き換える |
+ | 束縛する (bind) | 宣言が導入する名前を、対象スコープ内でその宣言と結びつけること | 名前と宣言の関係を明示化 |
+-| 先行する (precede) | 点Pにおいて宣言Xが「Pに先行する」という関係。Xの宣言位置がPより前にある場合、XがクラススコープにありPから到達可能 (reachable) な場合、Xが別の翻訳単位のモジュール経由でPから到達可能な場合 (export済みの宣言、もしくは同一モジュール内で内部リンケージを持たない宣言が対象。詳細な前提条件はP1787R6本文を参照) のいずれかを含む | モジュール導入後の到達可能性を含めて再定義 |
++| 先行する (precede) | 点Pにおいて宣言Xが「Pに先行する」という関係。Xの宣言位置がPより前にある場合、XがクラススコープにありPから到達可能 (reachable) な場合、Xが別の翻訳単位のモジュール経由でPから到達可能な場合 (export済みの宣言、もしくは同一モジュール内で内部リンケージを持たない宣言が対象。詳細な前提条件は規格を参照) のいずれかを含む | モジュール導入後の到達可能性を含めて再定義 |
+ | 単一探索 (single search) | あるスコープSと点Pに対して、Pに先行しSに名前Nが束縛されたすべての宣言を見つける基本操作 | 散在していた名前探索規則の最小単位として整理 |
+ | 探索文脈 (lookup context) | メンバ修飾名 (`.`/`-&amp;gt;`の右側の名前) では、関連オブジェクト式の型。それ以外の修飾名では、先行するnested-name-specifierが指し示す型・テンプレート・名前空間 | 修飾名探索の起点を明示化 |
+ | コンポーネント名 (component name) | unqualified-idを構成する根本の名前 (template-idの場合はそのテンプレート名)。テンプレート引数や`decltype`の中には再帰しない | 「型として現れる名前」という曖昧な表現を置き換える |
+@@ -45,7 +45,7 @@ P1787R6は、スコープと名前探索を記述するための語彙を再構
+ 
+ ## 観測可能な動作の変更
+ 
+-P1787R6の主目的は規格の整理であるが、その過程でCWG issueの解決を兼ねた、いくつかの観測可能な動作の変更が含まれている。
++この整理の主目的は規格の記述の整理であるが、その過程でCWG issueの解決を兼ねた、いくつかの観測可能な動作の変更が含まれている。
+ 
+ ### `using`宣言の参照先による置換
+ 
+@@ -133,22 +133,22 @@ void f(B* b) {
+ - **`&amp;lt;`トークンの曖昧性**: テンプレートIDか比較演算子かを判別するための規則が、名前探索の記述と絡み合っていた。
+ - **同一エンティティの判定**: 同じ名前の複数の宣言が同一のエンティティを導入するか、別のエンティティを導入するかを一貫した規則で判別できなかった。
+ 
+-P1787R6は、これらの問題を解決するために、新しい用語を導入したうえで、[basic.scope]と[basic.lookup]の章を全面的に書き直す。
+-63件のCWG issueと21件のリフレクタ議論で報告された問題が、この整理によって一括で解決される。
++C++23では、これらの問題を解決するために、新しい用語を導入したうえで、[basic.scope]と[basic.lookup]の章が全面的に書き直された。
++63件のCWG issueと21件のリフレクタ議論で報告された問題が、この整理によって一括で解決された。
+ 
+ ユーザーが書く通常のコードに与える影響は限定的だが、規格書を直接参照するC++ユーザー、コンパイラ実装者、ライブラリ実装者にとっては、本変更でC++の名前探索規則が初めて一貫した枠組みのもとに整理されたことになる。
+ 
+ 
+ ## 編集上の主な変更点
+ 
+-[basic.scope]と[basic.lookup]の章は全面的に書き直されている。
++[basic.scope]と[basic.lookup]の章は全面的に書き直された。
+ 編集上の主な変更点としては、以下が挙げられる：
+ 
+-- 「declarative region」の語を廃し、「scope」に統一する。
+-- 「point of declaration」の語を廃し、「locus」に置き換える。
+-- 「in scope」「global function」「global object」「overloaded function」といった曖昧な表現を削除する。
+-- 散在していた名前探索規則を、単一探索 (single search) などの基本操作の組み合わせとして再定義する。
+-- 名前探索は常に「名前」に対する操作として定義し、id-expressionやtype-idに対する操作とは区別する。
++- 「declarative region」の語が廃され、「scope」に統一された。
++- 「point of declaration」の語が廃され、「locus」に置き換えられた。
++- 「in scope」「global function」「global object」「overloaded function」といった曖昧な表現が削除された。
++- 散在していた名前探索規則が、単一探索 (single search) などの基本操作の組み合わせとして再定義された。
++- 名前探索は常に「名前」に対する操作として定義され、id-expressionやtype-idに対する操作とは区別されるようになった。
+ 
+ 
+ ## &amp;lt;a id=&amp;#34;relative-page&amp;#34; href=&amp;#34;#relative-page&amp;#34;&amp;gt;関連項目&amp;lt;/a&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>コンパイラの実装状況 -- 記事追加 &#34;スコープと名前探索の仕様整理 [P1787R6]&#34; (patch for issue #1023) (#1617)</title>
