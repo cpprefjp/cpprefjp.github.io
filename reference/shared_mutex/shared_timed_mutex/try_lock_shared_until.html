@@ -68,7 +68,7 @@
 
     </head>
     <body>
-<header data-kunai-mdinfo="{&#34;meta&#34;: {&#34;header&#34;: [&#34;shared_mutex&#34;], &#34;namespace&#34;: [&#34;std&#34;], &#34;class&#34;: [&#34;shared_timed_mutex&#34;], &#34;id-type&#34;: [&#34;function template&#34;], &#34;cpp&#34;: [&#34;cpp14&#34;]}, &#34;sources&#34;: [{&#34;id&#34;: &#34;ebeae4109beb12ca913630ebc19f698bc43fdcde&#34;, &#34;source&#34;: &#34;#include &lt;thread&gt;\n#include &lt;shared_mutex&gt;\n\nclass X {\n  mutable std::shared_timed_mutex mtx_;\n  int value_ = 0;\npublic:\n  // \u30e1\u30f3\u30d0\u5909\u6570value_\u3078\u306e\u66f8\u304d\u8fbc\u307f\u3092\u6392\u4ed6\u7684\u306b\u3059\u308b\n  void add_value(int value)\n  {\n    mtx_.lock(); // \u6392\u4ed6\u30ed\u30c3\u30af\u3092\u53d6\u5f97\u3059\u308b\n    value_ = value;\n    mtx_.unlock(); // \u6392\u4ed6\u30ed\u30c3\u30af\u3092\u624b\u653e\u3059\n  }\n\n  // \u30e1\u30f3\u30d0\u5909\u6570value_\u306e\u5024\u3092\u8aad\u307f\u8fbc\u3080\n  int get_value() const\n  {\n    int result = 0;\n\n    namespace chrono = std::chrono;\n\n    chrono::steady_clock::time_point tp = chrono::steady_clock::now();\n\n    // \u5171\u6709\u30ed\u30c3\u30af\u306e\u53d6\u5f97\u3092\u8a66\u307f\u308b(3\u79d2\u3067\u30bf\u30a4\u30e0\u30a2\u30a6\u30c8)\n    if (!mtx_.try_lock_shared_until(tp + std::chrono::seconds(3))) {\n      // \u5171\u6709\u30ed\u30c3\u30af\u306e\u53d6\u5f97\u306b\u5931\u6557\n      std::error_code ec(static_cast&lt;int&gt;(std::errc::device_or_resource_busy), std::generic_category());\n      throw std::system_error(ec);\n    }\n\n    result = value_;\n    mtx_.unlock_shared(); // \u5171\u6709\u30ed\u30c3\u30af\u3092\u624b\u653e\u3059\n    return result;\n  }\n};\n\nint main()\n{\n  X x;\n\n  std::thread t1([&amp;x]{ x.add_value(1); int value = x.get_value(); });\n  std::thread t2([&amp;x]{ x.add_value(2); int value = x.get_value(); });\n\n  t1.join();\n  t2.join();\n}\n&#34;}], &#34;page_id&#34;: [&#34;reference&#34;, &#34;shared_mutex&#34;, &#34;shared_timed_mutex&#34;, &#34;try_lock_shared_until&#34;]}">
+<header data-kunai-mdinfo="{&#34;meta&#34;: {&#34;header&#34;: [&#34;shared_mutex&#34;], &#34;namespace&#34;: [&#34;std&#34;], &#34;class&#34;: [&#34;shared_timed_mutex&#34;], &#34;id-type&#34;: [&#34;function template&#34;], &#34;cpp&#34;: [&#34;cpp14&#34;]}, &#34;sources&#34;: [{&#34;id&#34;: &#34;28b25637d243f209174651e88e45554b9d54a2b3&#34;, &#34;source&#34;: &#34;#include &lt;thread&gt;\n#include &lt;shared_mutex&gt;\n#include &lt;chrono&gt;\n#include &lt;system_error&gt;\n\nclass X {\n  mutable std::shared_timed_mutex mtx_;\n  int value_ = 0;\npublic:\n  // \u30e1\u30f3\u30d0\u5909\u6570value_\u3078\u306e\u66f8\u304d\u8fbc\u307f\u3092\u6392\u4ed6\u7684\u306b\u3059\u308b\n  void add_value(int value)\n  {\n    mtx_.lock(); // \u6392\u4ed6\u30ed\u30c3\u30af\u3092\u53d6\u5f97\u3059\u308b\n    value_ = value;\n    mtx_.unlock(); // \u6392\u4ed6\u30ed\u30c3\u30af\u3092\u624b\u653e\u3059\n  }\n\n  // \u30e1\u30f3\u30d0\u5909\u6570value_\u306e\u5024\u3092\u8aad\u307f\u8fbc\u3080\n  int get_value() const\n  {\n    int result = 0;\n\n    namespace chrono = std::chrono;\n\n    chrono::steady_clock::time_point tp = chrono::steady_clock::now();\n\n    // \u5171\u6709\u30ed\u30c3\u30af\u306e\u53d6\u5f97\u3092\u8a66\u307f\u308b(3\u79d2\u3067\u30bf\u30a4\u30e0\u30a2\u30a6\u30c8)\n    if (!mtx_.try_lock_shared_until(tp + std::chrono::seconds(3))) {\n      // \u5171\u6709\u30ed\u30c3\u30af\u306e\u53d6\u5f97\u306b\u5931\u6557\n      std::error_code ec(static_cast&lt;int&gt;(std::errc::device_or_resource_busy), std::generic_category());\n      throw std::system_error(ec);\n    }\n\n    result = value_;\n    mtx_.unlock_shared(); // \u5171\u6709\u30ed\u30c3\u30af\u3092\u624b\u653e\u3059\n    return result;\n  }\n};\n\nint main()\n{\n  X x;\n\n  std::thread t1([&amp;x]{ x.add_value(1); int value = x.get_value(); });\n  std::thread t2([&amp;x]{ x.add_value(2); int value = x.get_value(); });\n\n  t1.join();\n  t2.join();\n}\n&#34;}], &#34;page_id&#34;: [&#34;reference&#34;, &#34;shared_mutex&#34;, &#34;shared_timed_mutex&#34;, &#34;try_lock_shared_until&#34;]}">
   <nav class="navbar navbar-default" role="navigation">
     <div class="container-fluid">
       <div class="navbar-header">
@@ -201,12 +201,12 @@
     <p class="text-right"><small>
       最終更新日時:
       <time itemprop="datePublished" class="js-local-time"
-            datetime="2024-07-16T18:43:27+09:00">
-        2024年07月16日 18時43分27秒 (JST)
+            datetime="2026-07-22T16:08:23+09:00">
+        2026年07月22日 16時08分23秒 (JST)
       </time>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">raclamusi</span>
+        <span itemprop="name">rotarymars</span>
       </span>
       が更新
     </small></p>
@@ -271,8 +271,10 @@
 <h2><a class="cpprefjp-defined-word" data-desc="問題が発生したときに、現在実行位置を過去に通過・記録した位置に戻し、文脈情報を添えて紐づけられた処理(例外ハンドラー)を呼び出す仕組み。またはその事態">例外</a></h2>
 <p>時計クラス、<code><a href="../../chrono/time_point.html">time_point</a></code>クラス、<code><a href="../../chrono/duration.html">duration</a></code>クラスの構築が<a class="cpprefjp-defined-word" data-desc="問題が発生したときに、現在実行位置を過去に通過・記録した位置に戻し、文脈情報を添えて紐づけられた処理(例外ハンドラー)を呼び出す仕組み。またはその事態">例外</a>を送出する場合、この関数はそれらの<a class="cpprefjp-defined-word" data-desc="問題が発生したときに、現在実行位置を過去に通過・記録した位置に戻し、文脈情報を添えて紐づけられた処理(例外ハンドラー)を呼び出す仕組み。またはその事態">例外</a>を送出する。</p>
 <h2>例</h2>
-<p><div class="yata" id="ebeae4109beb12ca913630ebc19f698bc43fdcde"><div class="codehilite"><pre><span></span><code><span class="cp">#include <a href="../../thread.html">&lt;thread&gt;</a></span>
+<p><div class="yata" id="28b25637d243f209174651e88e45554b9d54a2b3"><div class="codehilite"><pre><span></span><code><span class="cp">#include <a href="../../thread.html">&lt;thread&gt;</a></span>
 <span class="cp">#include <a href="../../shared_mutex.html">&lt;shared_mutex&gt;</a></span>
+<span class="cp">#include <a href="../../chrono.html">&lt;chrono&gt;</a></span>
+<span class="cp">#include <a href="../../system_error.html">&lt;system_error&gt;</a></span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">X</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">mutable</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">shared_timed_mutex</span><span class="w"> </span><span class="n">mtx_</span><span class="p">;</span>
