@@ -201,12 +201,12 @@
     <p class="text-right"><small>
       最終更新日時:
       <time itemprop="datePublished" class="js-local-time"
-            datetime="2025-07-12T02:16:44+09:00">
-        2025年07月12日 02時16分44秒 (JST)
+            datetime="2026-08-12T15:06:28+09:00">
+        2026年08月12日 15時06分28秒 (JST)
       </time>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">Koichi Murase</span>
+        <span itemprop="name">Akira Takahashi</span>
       </span>
       が更新
     </small></p>
@@ -272,19 +272,23 @@
 </ul>
 <h2><a class="cpprefjp-defined-word" data-desc="関数呼び出し式の評価結果となるオブジェクト・値">戻り値</a></h2>
 <ul>
-<li>(1) :</li>
-</ul>
-<p><div class="codehilite"><pre><span></span><code><span class="k">return</span><span class="w"> </span><span class="n"><a href="wait_until.html">wait_until</a></span><span class="p">(</span><span class="n">lock</span><span class="p">,</span><span class="w"> </span><span class="n">chrono</span><span class="o">::</span><span class="n"><a href="../../chrono/steady_clock.html">steady_clock</a></span><span class="o">::</span><span class="n"><a href="../../chrono/steady_clock/now.html">now()</a></span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">rel_time</span><span class="p">);</span>
-</code></pre></div>
-</p>
-<p><code>rel_time</code>で指定された相対時間内に起床されない場合、タイムアウトとなり<code><a href="../cv_status.html">cv_status::timeout</a></code>が返る。そうでない場合は<code><a href="../cv_status.html">cv_status::no_timeout</a></code>が返る。</p>
+<li>
+<p>(1) :</p>
 <ul>
-<li>(2) :</li>
+<li>C++11 : <code><a href="wait_until.html">wait_until</a>(lock, chrono::steady_clock::now() + rel_time)</code> と等価。</li>
+<li>C++26 : <code><a href="wait_until.html">wait_until</a>(lock, chrono::steady_clock::now() +<a href="../../chrono/duration/ceil.html">chrono::ceil</a>&lt;chrono::steady_clock::duration&gt;(rel_time))</code> と等価。相対時間を整数の時間へ丸めてから加算することで、浮動小数点の<code>duration</code>を渡したときの精度の問題を回避する。</li>
 </ul>
-<p><div class="codehilite"><pre><span></span><code><span class="k">return</span><span class="w"> </span><span class="n"><a href="wait_until.html">wait_until</a></span><span class="p">(</span><span class="n">lock</span><span class="p">,</span><span class="w"> </span><span class="n">chrono</span><span class="o">::</span><span class="n"><a href="../../chrono/steady_clock.html">steady_clock</a></span><span class="o">::</span><span class="n"><a href="../../chrono/steady_clock/now.html">now()</a></span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">rel_time</span><span class="p">,</span><span class="w"> </span><span class="n"><a href="../../utility/move.html">std::move</a></span><span class="p">(</span><span class="n">pred</span><span class="p">));</span>
-</code></pre></div>
-</p>
+<p><code>rel_time</code>で指定された相対時間内に起床されない場合、タイムアウトとなり<code><a href="../cv_status.html">cv_status::timeout</a></code>が返る。そうでない場合は<code><a href="../cv_status.html">cv_status::no_timeout</a></code>が返る。</p>
+</li>
+<li>
+<p>(2) :</p>
+<ul>
+<li>C++11 : <code><a href="wait_until.html">wait_until</a>(lock, chrono::steady_clock::now() + rel_time,<a href="../../utility/move.html">std::move</a>(pred))</code> と等価。</li>
+<li>C++26 : <code><a href="wait_until.html">wait_until</a>(lock, chrono::steady_clock::now() +<a href="../../chrono/duration/ceil.html">chrono::ceil</a>&lt;chrono::steady_clock::duration&gt;(rel_time),<a href="../../utility/move.html">std::move</a>(pred))</code> と等価。</li>
+</ul>
 <p><code>pred()</code>が最初から<code>true</code>の場合、またはすでに期限が過ぎている場合、この関数はブロッキングしない</p>
+</li>
+</ul>
 <h2><a class="cpprefjp-defined-word" data-desc="関数等の意味論を構成する要素の1つ。Postconditions。関数を実行後に満たされている条件。契約属性の`[[ensures]]`に相当">事後条件</a></h2>
 <ul>
 <li><code>lock.<a href="../../mutex/unique_lock/owns_lock.html">owns_lock()</a> == true</code>であること</li>
@@ -404,6 +408,10 @@ process data
 <ul>
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#2093" target="_blank">LWG Issue 2093. Throws clause of <code>condition_variable::wait</code> with predicate</a></li>
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#2135" target="_blank">LWG Issue 2135. Unclear requirement for exceptions thrown in <code>condition_variable::wait()</code></a></li>
+<li><a href="https://cplusplus.github.io/LWG/issue3504" target="_blank">LWG Issue 3504. <code>condition_variable::wait_for</code> is overspecified</a><ul>
+<li>C++26で、相対時間を絶対時間へ変換する際に<code>ceil</code>で整数時間へ丸めるよう変更され、浮動小数点の<code>duration</code>での精度の問題が修正された。この変更は欠陥報告 (DR) であり、C++26より前のバージョンでもコンパイラが早期に対応している場合がある</li>
+</ul>
+</li>
 </ul></div>
 
       </div>
