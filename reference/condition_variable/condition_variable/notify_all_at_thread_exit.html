@@ -201,12 +201,12 @@
     <p class="text-right"><small>
       最終更新日時:
       <time itemprop="datePublished" class="js-local-time"
-            datetime="2026-07-22T16:08:23+09:00">
-        2026年07月22日 16時08分23秒 (JST)
+            datetime="2026-08-13T14:34:07+09:00">
+        2026年08月13日 14時34分07秒 (JST)
       </time>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">rotarymars</span>
+        <span itemprop="name">Akira Takahashi</span>
       </span>
       が更新
     </small></p>
@@ -263,11 +263,25 @@
 </ul>
 <h2>効果</h2>
 <p><code>lk</code>のロック所有権を（スレッドライブラリの）内部ストレージへと移し、スレッド終了時、スレッドローカルなデータを解放した後、<code>cond</code>を使って通知する。通知は以下のように行う：</p>
+<ul>
+<li>
+<p>C++11 :</p>
 <p><div class="codehilite"><pre><span></span><code><span class="c1">// ここでスレッドローカルストレージを解放</span>
 <span class="n"><a href="../../mutex/unique_lock/unlock.html">lk.unlock()</a></span><span class="p">;</span>
 <span class="n"><a href="notify_all.html">cond.notify_all()</a></span><span class="p">;</span>
 </code></pre></div>
 </p>
+</li>
+<li>
+<p>C++26 :</p>
+<p><div class="codehilite"><pre><span></span><code><span class="c1">// ここでスレッドローカルストレージを解放</span>
+<span class="n"><a href="notify_all.html">cond.notify_all()</a></span><span class="p">;</span>
+<span class="n"><a href="../../mutex/unique_lock/unlock.html">lk.unlock()</a></span><span class="p">;</span>
+</code></pre></div>
+</p>
+<p>通知（<code>notify_all()</code>）を先に行い、その後でロックを解放するよう順序が変更された。これにより、<code>lk</code>のロック解除を待っている別スレッドは、<code>notify_all()</code>の呼び出し完了後にはじめて起床できるため、デタッチされたスレッドで<code>cond</code>が破棄されて<code>notify_all()</code>が<a class="cpprefjp-defined-word" data-desc="dangling。寿命が尽きた無効なオブジェクトやメモリ領域を、ポインタ・参照・イテレータなどが指し続けている状態のこと。これらにアクセスすると未定義の動作を引き起こす">ダングリング</a>参照になる競合を避けられる。</p>
+</li>
+</ul>
 <h2><a class="cpprefjp-defined-word" data-desc="関数呼び出し式の評価結果となるオブジェクト・値">戻り値</a></h2>
 <p>なし</p>
 <h2>備考</h2>
@@ -354,6 +368,10 @@ data is ready: true
 <ul>
 <li><a href="../../../article/lib/at_thread_exit.html">_at_thread_exit系の関数が存在している理由</a></li>
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2010/n3070.html" target="_blank">N3070 - Handling Detached Threads and thread_local Variables</a></li>
+<li><a href="https://cplusplus.github.io/LWG/issue3343" target="_blank">LWG Issue 3343. Ordering of calls to <code>unlock()</code> and <code>notify_all()</code> in Effects element of <code>notify_all_at_thread_exit()</code> should be reversed</a><ul>
+<li>C++26で、通知処理の順序が<code>notify_all()</code>→<code>unlock()</code>へ変更された。デタッチされたスレッドで<code>cond</code>が破棄され<code>notify_all()</code>が<a class="cpprefjp-defined-word" data-desc="dangling。寿命が尽きた無効なオブジェクトやメモリ領域を、ポインタ・参照・イテレータなどが指し続けている状態のこと。これらにアクセスすると未定義の動作を引き起こす">ダングリング</a>参照となる競合を避けるためである。この変更は欠陥報告 (DR) であり、C++26より前のバージョンでもコンパイラが早期に対応している場合がある</li>
+</ul>
+</li>
 </ul></div>
 
       </div>
