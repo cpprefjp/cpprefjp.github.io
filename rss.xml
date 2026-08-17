@@ -2,9 +2,93 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2026-08-17T09:35:33.092433</updated>
-  <id>ca696d35-924f-4ca1-9d26-51969875ad2a</id>
+  <updated>2026-08-17T12:52:46.553802</updated>
+  <id>2e7d5719-8342-4f7f-a583-4f02ef5132f7</id>
 
+  
+    <entry>
+      <title>yield_value -- generator/promise_type/yield_value: LWG3899,4119説明を修正</title>
+      <link href="https://cpprefjp.github.io/reference/generator/generator/promise_type/yield_value.html"/>
+      <id>ed15e3315e3049b5dbb35fcaa988494a481e93e9:reference/generator/generator/promise_type/yield_value.md</id>
+      <updated>2026-08-17T21:49:31+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/generator/generator/promise_type/yield_value.md b/reference/generator/generator/promise_type/yield_value.md
+index 573079d50..6a6db34d7 100644
+--- a/reference/generator/generator/promise_type/yield_value.md
++++ b/reference/generator/generator/promise_type/yield_value.md
+@@ -16,9 +16,13 @@ template&amp;lt;class T2, class V2, class Alloc2, class Unused&amp;gt;
+   requires same_as&amp;lt;typename generator&amp;lt;T2, V2, Alloc2&amp;gt;::yielded, yielded&amp;gt;
+ auto yield_value(ranges::elements_of&amp;lt;generator&amp;lt;T2, V2, Alloc2&amp;gt;&amp;amp;&amp;amp;, Unused&amp;gt; g) noexcept; // (3)
+ 
++template&amp;lt;class T2, class V2, class Alloc2, class Unused&amp;gt;
++  requires same_as&amp;lt;typename generator&amp;lt;T2, V2, Alloc2&amp;gt;::yielded, yielded&amp;gt;
++auto yield_value(ranges::elements_of&amp;lt;generator&amp;lt;T2, V2, Alloc2&amp;gt;&amp;amp;, Unused&amp;gt; g) noexcept;  // (4)
++
+ template&amp;lt;ranges::input_range Rng, class Alloc&amp;gt;
+   requires convertible_to&amp;lt;ranges::range_reference_t&amp;lt;Rng&amp;gt;, yielded&amp;gt;
+-auto yield_value(ranges::elements_of&amp;lt;Rng, Alloc&amp;gt; r); // (4)
++auto yield_value(ranges::elements_of&amp;lt;Rng, Alloc&amp;gt; r); // (5)
+ ```
+ * generator[link ../../generator.md]
+ * yielded[link ../../generator.md]
+@@ -36,7 +40,8 @@ auto yield_value(ranges::elements_of&amp;lt;Rng, Alloc&amp;gt; r); // (4)
+ 
+ ## 事前条件
+ - (2) : Promiseオブジェクトが`*this`となる[コルーチンへのハンドル](/reference/coroutine/coroutine_handle.md)が、ある[`generator`オブジェクト](../../generator.md)`x`のアクティブスタック`x.active_`のトップにあること。
+-- (3) : Promiseオブジェクトが`*this`となる[コルーチンへのハンドル](/reference/coroutine/coroutine_handle.md)が、ある[`generator`オブジェクト](../../generator.md)`x`のアクティブスタック`x.active_`のトップにあること。ジェネレータ`g.range`に対応するコルーチンが、[初期サスペンドポイント](initial_suspend.md)にて中断されていること。
++- (3), (4) : Promiseオブジェクトが`*this`となる[コルーチンへのハンドル](/reference/coroutine/coroutine_handle.md)が、ある[`generator`オブジェクト](../../generator.md)`x`のアクティブスタック`x.active_`のトップにあること。ジェネレータ`g.range`に対応するコルーチンが、[初期サスペンドポイント](initial_suspend.md)にて中断されていること。
++- (5) : Promiseオブジェクトが`*this`となる[コルーチンへのハンドル](/reference/coroutine/coroutine_handle.md)が、ある[`generator`オブジェクト](../../generator.md)`x`のアクティブスタック`x.active_`のトップにあること。ジェネレータ`g.range`に対応するコルーチンが、[初期サスペンドポイント](initial_suspend.md)にて中断されていること。
+ 
+ 
+ ## 効果
+@@ -46,7 +51,7 @@ value_ = addressof(val)
+ ```
+ * value_[link ../promise_type.md]
+ 
+-(4) : 以下と等価
++(5) : 以下と等価
+ ```cpp
+ auto nested = [](allocator_arg_t, Alloc, ranges::iterator_t&amp;lt;Rng&amp;gt; i,
+                  ranges::sentinel_t&amp;lt;Rng&amp;gt; s)
+@@ -75,7 +80,7 @@ return yield_value(ranges::elements_of(nested(
+ - (2) : 以下の動作をする未規定の型の[Awaitableオブジェクト](/lang/cpp20/coroutines.md)
+     - `lval`で直接非リスト初期化された[`remove_cvref_t`](/reference/type_traits/remove_cvref.md)`&amp;lt;`[`yielded`](../../generator.md)`&amp;gt;`型オブジェクトを保持する。
+     - [説明専用メンバ`value_`](../promise_type.md)が保持オブジェクトを指してコルーチンを中断(suspend)するメンバ関数を持つ。
+-- (3) : 以下の動作をする未規定の型の[Awaitableオブジェクト](/lang/cpp20/coroutines.md)
++- (3), (4) : 以下の動作をする未規定の型の[Awaitableオブジェクト](/lang/cpp20/coroutines.md)
+     - Range[`g.range`](/reference/ranges/elements_of.md)の所有権を受け取る。
+     - メンバ関数`await_ready` : `false`を返す。
+     - メンバ関数`await_suspend` : `x`のアクティブスタック`*x.active_`に`g.range.`[`coroutine_`](/reference/coroutine/coroutine_handle.md)をpushしてから`g.range.coroutine_`を[再開(resume)](/reference/coroutine/coroutine_handle/resume.md)する。
+@@ -85,7 +90,7 @@ return yield_value(ranges::elements_of(nested(
+ ## 例外
+ - (1), (3), (4) : 投げない。
+ - (2) : 格納されるオブジェクトの初期化によって送出された例外。
+-
++- (5) : 効果の中で送出された例外。
+ 
+ ## 備考
+ ジェネレータコルーチンの`co_yield`式は`void`型となる。
+@@ -108,8 +113,8 @@ return yield_value(ranges::elements_of(nested(
+ 
+ ## 参照
+ - [LWG Issue 3894. `generator::promise_type::yield_value(ranges::elements_of&amp;lt;Rng, Alloc&amp;gt;)` should not be `noexcept`](https://cplusplus.github.io/LWG/issue3894)
+-    - C++26で、(4)から`noexcept`が削除された（効果内で例外を送出しうる`generator`の構築を行うため）
+-- [LWG Issue 3899. co_yielding elements of an lvalue generator is unnecessarily inefficient](https://cplusplus.github.io/LWG/issue3899)
+-    - C++26で、(4)の効果で用いるネストした`generator`の型を`generator&amp;lt;yielded, void, Alloc&amp;gt;`に変更し、左辺値`generator`の要素をco_yieldする際の非効率を解消した
+-- [LWG Issue 4119. `generator::promise_type::yield_value(ranges::elements_of&amp;lt;R, Alloc&amp;gt;)`&amp;#39;s nested generator may be ill-formed](https://cplusplus.github.io/LWG/issue4119)
+-    - LWG 3899と同じく、ネストした`generator`の型を`generator&amp;lt;yielded, void, Alloc&amp;gt;`とすることで、要素型が`generator`のValue型として不適格になる問題を回避する
++    - C++26で、(5)から`noexcept`が削除された（効果内で例外を送出しうる`generator`の構築を行うため）
++- [LWG Issue 3899. `co_yield`ing elements of an lvalue generator is unnecessarily inefficient](https://cplusplus.github.io/LWG/issue3899)
++    - C++26で、左辺値参照をとるオーバーロード(4)を追加し、左辺値`generator`の要素を`co_yield`する際の非効率性を解消する
++- [LWG Issue 4119. `generator::promise_type::yield_value(ranges::elements_of&amp;lt;R, Alloc&amp;gt;)`&amp;#39;s nested `generator` may be ill-formed](https://cplusplus.github.io/LWG/issue4119)
++    - C++26で、ネストした`generator`の型を`generator&amp;lt;yielded, void, Alloc&amp;gt;`とすることで、`generator`のValue型として不適格になる問題を回避する
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>yoh</name>
+        <email>kawasaki.liamg@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>fexcept_t -- Merge pull request #1733 from cpprefjp/cpp26_lib_issues9</title>
@@ -1441,38 +1525,6 @@ index be11c0bd2..524ea7c44 100644
       <link href="https://cpprefjp.github.io/reference/tuple/tuple/op_constructor.html"/>
       <id>17ca44eaf6817f1605cbebc715ae516eb9c4fa90:reference/tuple/tuple/op_constructor.md</id>
       <updated>2026-08-17T16:42:27+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/tuple/tuple/op_constructor.md b/reference/tuple/tuple/op_constructor.md
-index c7d02f134..b67f7041d 100644
---- a/reference/tuple/tuple/op_constructor.md
-+++ b/reference/tuple/tuple/op_constructor.md
-@@ -340,6 +340,7 @@ explicit(see below) constexpr
- - (14) :
-     - `I`をパラメータパック`0, 1, ..., (sizeof...(Types) - 1)`と定義して、
-     - C++23 : `!(`[`is_convertible_v`](/reference/type_traits/is_convertible.md)`&amp;lt;decltype(get&amp;lt;I&amp;gt;(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;UTuple&amp;gt;(u))), Types&amp;gt; &amp;amp;&amp;amp; ...)`である場合、この関数は`explicit`となる
-+    - C++26 : `(`[`reference_constructs_from_temporary_v`](/reference/type_traits/reference_constructs_from_temporary.md)`&amp;lt;Types, decltype(get&amp;lt;I&amp;gt;(`[`std::forward`](/reference/utility/forward.md)`&amp;lt;UTuple&amp;gt;(u)))&amp;gt; || ...)`である場合、この関数は削除定義される
- - (15) :
-     - C++20 : 対応するコンストラクタ (1) と同じ条件で`explicit`となる
- - (16) :
-@@ -452,3 +453,5 @@ int main()
-     - C++23 での (3) のコンストラクタの制約の変更（`disambiguating-constraint`等）について
- - [P2321R2 `zip`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2321r2.html#tuple)
-     - すべての要素が[プロキシ参照](/reference/iterator/indirectly_writable.md)の場合、[プロキシ参照](/reference/iterator/indirectly_writable.md)として使用できるようにする
-+- [LWG Issue 4045. `tuple` can create dangling references from `tuple-like`](https://cplusplus.github.io/LWG/issue4045)
-+    - C++26で、[`tuple-like`](../tuple-like.md)なオブジェクトから構築するコンストラクタ(14)について、いずれかの要素がダングリング参照を作成する場合に削除定義されることが規定された（C++23での`tuple-like`コンストラクタ導入時に欠けていた保護の追加）
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>コンストラクタ -- tupleのコンストラクタ : ダングリング参照になる場合に削除定義されることが規定された</title>
-      <link href="https://cpprefjp.github.io/reference/tuple/tuple/op_constructor.html"/>
-      <id>1f6b717db79a99b0717ddaeb925a962331fe0f23:reference/tuple/tuple/op_constructor.md</id>
-      <updated>2026-08-17T16:29:09+09:00</updated>
       
         <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/tuple/tuple/op_constructor.md b/reference/tuple/tuple/op_constructor.md
 index c7d02f134..b67f7041d 100644
