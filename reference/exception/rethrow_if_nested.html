@@ -189,8 +189,8 @@
     <p class="text-right"><small>
       最終更新日時:
       <time itemprop="datePublished" class="js-local-time"
-            datetime="2026-05-18T17:46:06+09:00">
-        2026年05月18日 17時46分06秒 (JST)
+            datetime="2026-08-24T18:04:36+09:00">
+        2026年08月24日 18時04分36秒 (JST)
       </time>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -246,11 +246,16 @@
 <h2>概要</h2>
 <p>入れ子になった<a class="cpprefjp-defined-word" data-desc="問題が発生したときに、現在実行位置を過去に通過・記録した位置に戻し、文脈情報を添えて紐づけられた処理(例外ハンドラー)を呼び出す仕組み。またはその事態">例外</a>が存在する場合に、入れ子になった<a class="cpprefjp-defined-word" data-desc="問題が発生したときに、現在実行位置を過去に通過・記録した位置に戻し、文脈情報を添えて紐づけられた処理(例外ハンドラー)を呼び出す仕組み。またはその事態">例外</a>を送出する</p>
 <h2>効果</h2>
-<p>型<code>E</code>が<code><a href="nested_exception.html">nested_exception</a></code>を継承した型だった場合、以下の処理を行う：</p>
-<p><div class="codehilite"><pre><span></span><code><span class="k">dynamic_cast</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="n"><a href="nested_exception.html">nested_exception</a></span><span class="o">&amp;&gt;</span><span class="p">(</span><span class="n">e</span><span class="p">).</span><span class="n"><a href="nested_exception/rethrow_nested.html">rethrow_nested()</a></span>
+<ul>
+<li>型<code>E</code>が多相的（polymorphic）なクラス型でない場合、または<code><a href="nested_exception.html">nested_exception</a></code>が<code>E</code>のアクセス不能もしくは曖昧な基底クラスである場合、何もしない。</li>
+<li>
+<p>そうでなければ、以下を行う：</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">dynamic_cast</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="n"><a href="nested_exception.html">nested_exception</a></span><span class="o">*&gt;</span><span class="p">(</span><span class="n"><a href="../memory/addressof.html">addressof</a></span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
+<span class="w">  </span><span class="n">p</span><span class="o">-&gt;</span><span class="n"><a href="nested_exception/rethrow_nested.html">rethrow_nested()</a></span><span class="p">;</span>
 </code></pre></div>
 </p>
-<p>そうでなければ何もしない。</p>
+</li>
+</ul>
 <h2><a class="cpprefjp-defined-word" data-desc="関数呼び出し式の評価結果となるオブジェクト・値">戻り値</a></h2>
 <p>なし</p>
 <h2>例</h2>
@@ -338,6 +343,16 @@ inner
 <ul>
 <li><a href="https://open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3842r2.pdf" target="_blank">P3842R2 A conservative fix for constexpr <code>uncaught_exceptions()</code> and <code>current_exception()</code></a><ul>
 <li>C++26の策定中に<code>constexpr</code>が追加されたが、本提案文書により巻き戻された (C++29で再検討予定)</li>
+</ul>
+</li>
+<li><a href="https://cplusplus.github.io/LWG/issue2484" target="_blank">LWG Issue 2484. <code>rethrow_if_nested()</code> is doubly unimplementable</a><ul>
+<li>型<code>E</code>が多相的でない場合は何もしないこと、および<code>e</code>の静的型が<code><a href="nested_exception.html">nested_exception</a></code>であるかそこからpublicかつ曖昧さなく派生している場合を対象とすることが規定された</li>
+<li>この修正は欠陥報告(DR)であり、C++11以降に遡及して適用される。 C++11時点の規定は「<code>e</code>の動的型が<code>nested_exception</code>から派生しているか」で判定するとしていたが、非多相なクラス型では動的型を判別する<code>dynamic_cast</code>自体が<a class="cpprefjp-defined-word" data-desc="プログラムが適格でないこと。コンパイルエラーなどになる" href="../../implementation-compliance.html#dfn-ill-formed">不適格</a>となるため、規定どおりに実装することが不可能だった。したがって処理系は当初からこの修正後の挙動（非多相型では何もしない）を採るしかなく、これと異なる観測可能な挙動が出荷されていたわけではない</li>
+</ul>
+</li>
+<li><a href="https://cplusplus.github.io/LWG/issue2784" target="_blank">LWG Issue 2784. Resolution to LWG 2484 is missing "otherwise, no effects" and is hard to parse</a><ul>
+<li>LWG 2484の解決を整理し、静的型の判定と動的型の判定を分離して、効果をポインタ版<code>dynamic_cast</code>とヌルチェックを用いる形に書き直した。あわせて、条件を満たさない場合は何もしないことが明記された</li>
+<li>この修正も欠陥報告(DR)であり、C++11以降に遡及して適用される。 LWG 2484と同じ規定を読みやすく書き換えたものであり、意図された挙動は変わらないため</li>
 </ul>
 </li>
 </ul></div>
