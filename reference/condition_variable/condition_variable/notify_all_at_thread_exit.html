@@ -201,8 +201,8 @@
     <p class="text-right"><small>
       最終更新日時:
       <time itemprop="datePublished" class="js-local-time"
-            datetime="2026-08-13T14:34:07+09:00">
-        2026年08月13日 14時34分07秒 (JST)
+            datetime="2026-08-26T10:40:21+09:00">
+        2026年08月26日 10時40分21秒 (JST)
       </time>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -282,6 +282,8 @@
 <p>通知（<code>notify_all()</code>）を先に行い、その後でロックを解放するよう順序が変更された。これにより、<code>lk</code>のロック解除を待っている別スレッドは、<code>notify_all()</code>の呼び出し完了後にはじめて起床できるため、デタッチされたスレッドで<code>cond</code>が破棄されて<code>notify_all()</code>が<a class="cpprefjp-defined-word" data-desc="dangling。寿命が尽きた無効なオブジェクトやメモリ領域を、ポインタ・参照・イテレータなどが指し続けている状態のこと。これらにアクセスすると未定義の動作を引き起こす">ダングリング</a>参照になる競合を避けられる。</p>
 </li>
 </ul>
+<h2><a class="cpprefjp-defined-word" data-desc="マルチスレッド実行時にリソースの所有権に基づいて実行順序を制御する操作">同期操作</a></h2>
+<p>暗黙に行われる<code>lk.<a href="../../mutex/unique_lock/unlock.html">unlock()</a></code>の呼び出しは、現在のスレッドに関連付けられたスレッドストレージ期間を持つ全てのオブジェクトの破棄より後に順序付けられる。</p>
 <h2><a class="cpprefjp-defined-word" data-desc="関数呼び出し式の評価結果となるオブジェクト・値">戻り値</a></h2>
 <p>なし</p>
 <h2>備考</h2>
@@ -368,6 +370,11 @@ data is ready: true
 <ul>
 <li><a href="../../../article/lib/at_thread_exit.html">_at_thread_exit系の関数が存在している理由</a></li>
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2010/n3070.html" target="_blank">N3070 - Handling Detached Threads and thread_local Variables</a></li>
+<li><a href="https://cplusplus.github.io/LWG/issue2140" target="_blank">LWG Issue 2140. Meaning of <code>notify_all_at_thread_exit</code> synchronization requirement?</a><ul>
+<li>C++14で、同期の規定が「スレッドローカル変数のデストラクタの完了が<code>cond</code>を待っているスレッドと同期する」から「暗黙の<code>unlock()</code>がスレッドストレージ期間のオブジェクトの破棄より後に順序付けられる」という形へ改められた</li>
+<li>この修正は欠陥報告(DR)であり、C++11以降に遡及して適用される。元の規定は待機側スレッドが起床する条件を<code>notify_all()</code>ではなくデストラクタの完了に結び付けており実装不可能であって、処理系は当初から現在の動作を採っていたため</li>
+</ul>
+</li>
 <li><a href="https://cplusplus.github.io/LWG/issue3343" target="_blank">LWG Issue 3343. Ordering of calls to <code>unlock()</code> and <code>notify_all()</code> in Effects element of <code>notify_all_at_thread_exit()</code> should be reversed</a><ul>
 <li>C++26で、通知処理の順序が<code>notify_all()</code>→<code>unlock()</code>へ変更された。デタッチされたスレッドで<code>cond</code>が破棄され<code>notify_all()</code>が<a class="cpprefjp-defined-word" data-desc="dangling。寿命が尽きた無効なオブジェクトやメモリ領域を、ポインタ・参照・イテレータなどが指し続けている状態のこと。これらにアクセスすると未定義の動作を引き起こす">ダングリング</a>参照となる競合を避けるためである。この変更は欠陥報告 (DR) であり、C++26より前のバージョンでもコンパイラが早期に対応している場合がある</li>
 </ul>
