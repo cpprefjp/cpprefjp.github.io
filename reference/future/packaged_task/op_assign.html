@@ -201,12 +201,12 @@
     <p class="text-right"><small>
       最終更新日時:
       <time itemprop="datePublished" class="js-local-time"
-            datetime="2025-07-12T02:16:44+09:00">
-        2025年07月12日 02時16分44秒 (JST)
+            datetime="2026-08-27T15:41:51+09:00">
+        2026年08月27日 15時41分51秒 (JST)
       </time>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">Koichi Murase</span>
+        <span itemprop="name">Akira Takahashi</span>
       </span>
       が更新
     </small></p>
@@ -262,13 +262,14 @@
 </ul>
 <h2>効果</h2>
 <ul>
-<li>(2) :<ol>
-<li>まず現在の共有状態が準備完了状態(<code><a href="../future_status.html">future_status::ready</a></code>)でなければ、error conditionとして<code><a href="../future_errc.html">broken_promise</a></code>を持つ<code><a href="../future_error.html">future_error</a></code><a class="cpprefjp-defined-word" data-desc="問題が発生したときに、現在実行位置を過去に通過・記録した位置に戻し、文脈情報を添えて紐づけられた処理(例外ハンドラー)を呼び出す仕組み。またはその事態">例外</a>オブジェクトを格納したのち、準備完了状態にする。ただし、実装によっては、この動作が行われない場合がある(備考を参照)。</li>
-<li>現在の共有状態を解放する。</li>
-<li><code>packaged_task(<a href="../../utility/move.html">std::move</a>(rhs)).swap(*this)</code>を行う。</li>
-</ol>
-</li>
+<li>(2) : <code>packaged_task(<a href="../../utility/move.html">std::move</a>(rhs)).swap(*this)</code>と等価。</li>
 </ul>
+<p>この結果として、以下が行われる：</p>
+<ol>
+<li><code>rhs</code>から一時オブジェクトをムーブ構築する。<code>rhs</code>は共有状態とタスクを持たなくなる。</li>
+<li>一時オブジェクトと<code>*this</code>を<code><a href="swap.html">swap</a></code>する。<code>*this</code>は<code>rhs</code>が持っていた共有状態とタスクを持ち、一時オブジェクトは<code>*this</code>が元々持っていた共有状態を持つ。</li>
+<li>一時オブジェクトの<a href="op_destructor.html">デストラクタ</a>によって、<code>*this</code>が元々持っていた共有状態が放棄される。すなわち、その共有状態が準備完了状態(<code><a href="../future_status.html">future_status::ready</a></code>)でなければ、error conditionとして<code><a href="../future_errc.html">broken_promise</a></code>を持つ<code><a href="../future_error.html">future_error</a></code><a class="cpprefjp-defined-word" data-desc="問題が発生したときに、現在実行位置を過去に通過・記録した位置に戻し、文脈情報を添えて紐づけられた処理(例外ハンドラー)を呼び出す仕組み。またはその事態">例外</a>オブジェクトを格納したのち準備完了状態にし、そのうえで共有状態を解放する。ただし、実装によっては、この動作が行われない場合がある(備考を参照)。</li>
+</ol>
 <h2><a class="cpprefjp-defined-word" data-desc="関数呼び出し式の評価結果となるオブジェクト・値">戻り値</a></h2>
 <ul>
 <li>(2) : <code>*this</code></li>
@@ -278,7 +279,7 @@
 <li>(2) : 投げない</li>
 </ul>
 <h2>備考</h2>
-<p>C++11の仕様では、ムーブ代入演算子の効果として古い共有状態は「放棄する(abandon)」ではなく「解放する(release)」となっているが、仕様の他の項目(Shared States, Class template promise, および Class template packaged_task内のvoid reset();)の記載との整合性を欠いており、「放棄する(abandon)」とする方が合理性があるため効果の項にはそのように記載した。</p>
+<p>C++11の仕様では、ムーブ代入演算子の効果として古い共有状態は「放棄する(abandon)」ではなく「解放する(release)」となっていたが、仕様の他の項目(Shared States, Class template promise, および Class template packaged_task内のvoid reset();)の記載との整合性を欠いていた。LWG Issue 4158によってこの不整合が解消され、「放棄する(abandon)」が正しいことが確定したため、効果の項にはそのように記載している。</p>
 <p>「(共有状態を)放棄する(abandon)」とは効果の項(2)の1と2が行われることをいい、「(共有状態を)解放する(release)」とは効果の項(2)の2のみが行われることである。通常、<code><a href="../promise.html">promise</a></code>および<code>packaged_task</code>は処理結果を提供する側であるため共有状態を所有しなくなるときには前者を行い、<code><a href="../future.html">future</a></code>および<code><a href="../shared_future.html">shared_future</a></code>は処理結果を受け取る側であるため共有状態を所有しなくなるときには後者を行う。</p>
 <p>なお、<code>operator=</code>の実際の実装では、ClangおよびGCCでは「放棄する(abandon)」の動作になっているが、Visual C++では「解放する(release)」の動作になっている。また、<code><a href="reset.html">reset</a></code>では、Clang,GCC,Visual C++のいずれも「放棄する(abandon)」の動作になっている。</p>
 <h2>例</h2>
@@ -317,6 +318,10 @@
 <h2>参照</h2>
 <ul>
 <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/lwg-defects.html#2067" target="_blank">LWG Issue 2067. <code>packaged_task</code> should have deleted copy c'tor with const parameter</a></li>
+<li><a href="https://cplusplus.github.io/LWG/issue4158" target="_blank">LWG Issue 4158. <code>packaged_task::operator=</code> should abandon its shared state</a><ul>
+<li>効果の記述が<code>packaged_task(std::move(rhs)).swap(*this)</code>と等価であるという形へ整理され、共有状態を「解放する(release)」のか「放棄する(abandon)」のかという規格内の不整合が解消された。規格としてはC++29のワーキングドラフトへ適用されたが、矛盾した文言の修正であるためC++11へ遡及して適用される</li>
+</ul>
+</li>
 </ul></div>
 
       </div>
