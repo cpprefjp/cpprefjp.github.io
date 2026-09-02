@@ -189,8 +189,8 @@
     <p class="text-right"><small>
       最終更新日時:
       <time itemprop="datePublished" class="js-local-time"
-            datetime="2026-08-12T17:16:46+09:00">
-        2026年08月12日 17時16分46秒 (JST)
+            datetime="2026-09-02T14:38:23+09:00">
+        2026年09月02日 14時38分23秒 (JST)
       </time>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -252,7 +252,8 @@
 <ul>
 <li><code><a href="../type_traits/is_convertible.html">is_convertible_v</a>&lt;S, <a href="full_extent_t.html">full_extent_t</a>&gt;</code>が<code>true</code></li>
 <li><code><a href="../type_traits/is_convertible.html">is_convertible_v</a>&lt;S, IndexType&gt;</code>が<code>true</code></li>
-<li><code>S</code>が<code><a href="strided_slice.html">strided_slice</a></code>の特殊化であり、<code>X</code>が<code>S::offset_type</code>, <code>S::extent_type</code>, <code>S::stride_type</code>を表すとき<code><a href="../type_traits/is_convertible.html">is_convertible_v</a>&lt;X, IndexType&gt;</code>がいずれも<code>true</code></li>
+<li><code>S</code>が<code><a href="extent_slice.html">extent_slice</a></code>の特殊化であり、<code>X</code>が<code>S::offset_type</code>, <code>S::extent_type</code>, <code>S::stride_type</code>を表すとき<code><a href="../type_traits/is_convertible.html">is_convertible_v</a>&lt;X, IndexType&gt;</code>がいずれも<code>true</code></li>
+<li><code>S</code>が<code><a href="range_slice.html">range_slice</a></code>の特殊化であり、<code>X</code>がメンバ変数<code>S::first</code>, <code>S::last</code>, <code>S::stride</code>の型を表すとき<code><a href="../type_traits/is_convertible.html">is_convertible_v</a>&lt;X, IndexType&gt;</code>がいずれも<code>true</code></li>
 <li>以下を全て満たす<ul>
 <li>型<code>S</code>のオブジェクト<code>s</code>に対して、宣言<code>auto [...ls] = std::move(s);</code>が有効</li>
 <li><code>sizeof...(ls)</code>が<code>2</code>に等しい</li>
@@ -266,34 +267,48 @@
 <ul>
 <li><code>S</code>が<code><a href="full_extent_t.html">full_extent_t</a></code></li>
 <li><code>S</code>が<code>IndexType</code>の正則<code>submdspan</code>インデクス型である</li>
-<li><code>S</code>が<code><a href="strided_slice.html">strided_slice</a></code>の特殊化であり、下記を全て満たす<ul>
+<li><code>S</code>が<code><a href="extent_slice.html">extent_slice</a></code>の特殊化であり、下記を全て満たす<ul>
 <li><code>S::offset_type</code>, <code>S::extent_type</code>, <code>S::stride_type</code>が、全て<code>IndexType</code>の正則<code>submdspan</code>インデクス型である</li>
-<li><code>S::stride_type</code>および<code>S::extent_type</code>がいずれも<code><a href="../utility/constant_wrapper.html">constant_wrapper</a></code>の特殊化であり、<code>S::stride_type::value</code>が<code>0</code>より大きい</li>
+<li><code>S::stride_type</code>および<code>S::extent_type</code>がいずれも<code><a href="../utility/constant_wrapper.html">constant_wrapper</a></code>の特殊化であるとき、<code>S::stride_type::value</code>が<code>0</code>より大きい</li>
 </ul>
 </li>
 </ul>
 <h3>縮約スライス型と<code>MAP_RANK</code></h3>
-<p>ある型が<code><a href="full_extent_t.html">full_extent_t</a></code>ないし<code><a href="strided_slice.html">strided_slice</a></code>の特殊化いずれでもないとき、縮約スライス型(collapsing slice type)となる。</p>
+<p>ある型が<code><a href="full_extent_t.html">full_extent_t</a></code>ないし<code><a href="extent_slice.html">extent_slice</a></code>の特殊化いずれでもないとき、縮約スライス型(collapsing slice type)となる。</p>
 <p>パック<code>p</code>と整数<code>i</code>に対して、説明用の<code>MAP_RANK(p, i)</code>を<code>0 &lt;= j &lt; i</code>のうち縮約スライス型ではない要素<code>p...[j]</code>の個数とする。</p>
+<h3><code>submdspan</code>スライス範囲</h3>
+<p><code><a href="extents.html">extents</a></code>の特殊化である型<code>E</code>のオブジェクト<code>e</code>と、<code>E::index_type</code>の正則<code>submdspan</code>スライス型である型<code>S</code>のオブジェクト<code>s</code>に対して、<code>e</code>の<code>k</code>番目次元に対する<code>s</code>の<code>submdspan</code>スライス範囲(<code>submdspan</code> slice range)は下記の半開区間となる。</p>
+<ul>
+<li><code>S</code>が<code><a href="full_extent_t.html">full_extent_t</a></code>のとき、<code>[0, <a href="extents/extent.html">e.extent</a>(k))</code></li>
+<li><code>S</code>が<code><a href="extent_slice.html">extent_slice</a></code>の特殊化であり、<code>E::index_type(s.extent)</code>が<code>0</code>のとき、<code>[E::index_type(s.offset), E::index_type(s.offset))</code>、そうでなければ、</li>
+<li><code>S</code>が<code><a href="extent_slice.html">extent_slice</a></code>の特殊化のとき、<code>[E::index_type(s.offset), E::index_type(s.offset + 1 + (s.extent - 1) * s.stride))</code>、そうでなければ、</li>
+<li><code>[E::index_type(s), E::index_type(s) + 1)</code></li>
+</ul>
 <h3>有効<code>submdspan</code>スライス型</h3>
 <p><code><a href="extents.html">extents</a></code>の特殊化である型<code>E</code>に対して、型<code>S</code>が<code>E::index_type</code>の正則スライス型であり、かつ<code>E::static_extent(k)</code>に等しい<code>x</code>に対して<code>x</code>が<code>dynamic_extent</code>に等しいか下記を満たすとき、型<code>S</code>は<code>E</code>の<code>k</code>番目次元の有効<code>submdspan</code>スライス型(valid <code>submdspan</code> slice type)となる。</p>
 <ul>
-<li><code>S</code>が<code><a href="strided_slice.html">strided_slice</a></code>の特殊化であるとき :<ul>
-<li><code>S::offset_type</code>が<code><a href="../utility/constant_wrapper.html">constant_wrapper</a></code>の特殊化であるとき、<code>S::offset_type::value</code>が<code>x</code>以下</li>
-<li><code>S::extent_type</code>が<code><a href="../utility/constant_wrapper.html">constant_wrapper</a></code>の特殊化であるとき、<code>S::extent_type::value</code>が<code>x</code>以下</li>
-<li><code>S::offset_type</code>および<code>S::extent_type</code>が<code><a href="../utility/constant_wrapper.html">constant_wrapper</a></code>の特殊化であるとき、<code>S::offset_type::value + S::extent_type::value</code>が<code>x</code>以下</li>
+<li>
+<p><code>S</code>が<code><a href="extent_slice.html">extent_slice</a></code>の特殊化であるとき、<code>o</code>, <code>e</code>, <code>t</code>を下記のように定めて :</p>
+<ul>
+<li><code>o</code>が<code>x</code>以下</li>
+<li><code>e</code>が<code>x</code>以下</li>
+<li><code>e</code>が<code>1</code>より大きいとき、<code>t</code>が<code>0</code>より大きい</li>
+<li><code>e</code>が<code>0</code>より大きいとき、<code>o + 1 + (e - 1) * t</code>が<code>x</code>以下</li>
 </ul>
+<p>ここで<code>o</code>は、<code>S::offset_type</code>が<code><a href="../utility/constant_wrapper.html">constant_wrapper</a></code>の特殊化であれば<code>S::offset_type::value</code>、そうでなければ<code>0</code>とする。<code>e</code>は、<code>S::extent_type</code>が<code><a href="../utility/constant_wrapper.html">constant_wrapper</a></code>の特殊化であれば<code>S::extent_type::value</code>、そうでなければ<code>0</code>とする。<code>t</code>は、<code>S::stride_type</code>が<code><a href="../utility/constant_wrapper.html">constant_wrapper</a></code>の特殊化であれば<code>S::stride_type::value</code>、そうでなければ<code>1</code>とする。</p>
 </li>
-<li><code>S</code>が<code><a href="../utility/constant_wrapper.html">constant_wrapper</a></code>の特殊化であるとき、<code>S::value</code>が<code>x</code>より小さい</li>
+<li>
+<p><code>S</code>が<code><a href="../utility/constant_wrapper.html">constant_wrapper</a></code>の特殊化であるとき、<code>S::value</code>が<code>x</code>より小さい</p>
+</li>
 </ul>
 <h3>有効<code>submdspan</code>スライス</h3>
 <p><code><a href="extents.html">extents</a></code>の特殊化である型<code>E</code>のオブジェクト<code>e</code>と、型<code>S</code>のオブジェクト<code>s</code>に対して、下記を満たすとき<code>s</code>は<code>e</code>の<code>k</code>番目次元の有効<code>submdspan</code>スライス(valid <code>submdspan</code> slice)となる。</p>
 <ul>
 <li><code>S</code>が<code>E</code>の<code>k</code>番目次元の有効<code>submdspan</code>スライス型</li>
 <li><code>e</code>の<code>k</code>番目区間が、<code>e</code>の<code>k</code>番目次元に対して<code>s</code>の<code>submdspan</code>スライス範囲を含む</li>
-<li><code>S</code>が<code><a href="strided_slice.html">strided_slice</a></code>の特殊化であるとき :<ul>
+<li><code>S</code>が<code><a href="extent_slice.html">extent_slice</a></code>の特殊化であるとき :<ul>
 <li><code>s.extent</code>が値<code>0</code>以上であり、かつ</li>
-<li><code>s.extent</code>が値<code>0</code>に等しい、もしくは<code>s.stride</code>が値<code>0</code>より大きい</li>
+<li><code>s.extent</code>が値<code>2</code>より小さい、もしくは<code>s.stride</code>が値<code>0</code>より大きい</li>
 </ul>
 </li>
 </ul>
@@ -319,7 +334,7 @@
 <h3>処理系</h3>
 <ul>
 <li><a href="../../implementation.html#clang">Clang</a>: ??</li>
-<li><a href="../../implementation.html#gcc">GCC</a>: ??</li>
+<li><a href="../../implementation.html#gcc">GCC</a>: 17 <span aria-label="検証済" role="img" title="検証済">✅</span></li>
 <li><a href="../../implementation.html#icc">ICC</a>: ??</li>
 <li><a href="../../implementation.html#visual_cpp">Visual C++</a>: ??</li>
 </ul>
@@ -332,6 +347,10 @@
 <li><a href="https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3663r3.html" target="_blank">P3663R3 Future-proof <code>submdspan_mapping</code></a></li>
 <li><a href="https://cplusplus.github.io/LWG/issue4491" target="_blank">LWG Issue 4491. Rename <code>submdspan_extents</code> and <code>submdspan_canonicalize_slices</code></a><ul>
 <li>この関数はC++26のリリース前に<code>submdspan_canonicalize_slices</code>から<code>canonical_slices</code>へ改名された</li>
+</ul>
+</li>
+<li><a href="https://open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3982r2.html" target="_blank">P3982R2 Split <code>strided_slice</code> into <code>extent_slice</code> and <code>range_slice</code> for C++26</a><ul>
+<li>C++26のリリース前に、<code>strided_slice</code>が<code><a href="extent_slice.html">extent_slice</a></code>へ改名されて<code>extent</code>メンバ変数の意味が変更され、<code><a href="range_slice.html">range_slice</a></code>が<code>submdspan</code>スライス型として追加された。これにともない、<code>submdspan</code>スライス範囲・有効<code>submdspan</code>スライス型・有効<code>submdspan</code>スライスの規定が更新された</li>
 </ul>
 </li>
 </ul></div>
