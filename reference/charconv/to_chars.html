@@ -189,12 +189,12 @@
     <p class="text-right"><small>
       最終更新日時:
       <time itemprop="datePublished" class="js-local-time"
-            datetime="2026-08-08T22:18:00+09:00">
-        2026年08月08日 22時18分00秒 (JST)
+            datetime="2026-09-02T11:57:54+09:00">
+        2026年09月02日 11時57分54秒 (JST)
       </time>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">rotarymars</span>
+        <span itemprop="name">Akira Takahashi</span>
       </span>
       が更新
     </small></p>
@@ -372,7 +372,11 @@
 </li>
 <li>
 <p>(2), (3), (4), (5) : Cロケールで<code>printf</code>によって行われたかのように浮動小数点数を文字列へ変換する。<br />
-    フォーマット指定子は<code>%f,%e</code>どちらかを出力文字列が最も短くなるように（両者が同じなら<code>%f</code>が優先）選択する。</p>
+    フォーマット指定子は以下のように選択する。</p>
+<ul>
+<li>C++17 : <code>%f</code>, <code>%e</code>のどちらかを、出力文字列が最も短くなるように選択する（両者が同じなら<code>%f</code>が優先）</li>
+<li>C++29 : 浮動小数点数型を<code>T</code>として、<code>value</code>の絶対値が<code>[l, u)</code>の範囲にあれば<code>%f</code>、そうでなければ<code>%e</code>を選択する。<code>l</code>は10<sup>-4</sup>に対応する<code>T</code>の値、<code>u</code>は<code><a href="../limits/numeric_limits/radix.html">std::numeric_limits&lt;T&gt;::radix</a></code>の<code><a href="../limits/numeric_limits/digits.html">std::numeric_limits&lt;T&gt;::digits</a>+ 1</code>乗を10の累乗へ切り下げた値に対応する<code>T</code>の値である</li>
+</ul>
 </li>
 <li>
 <p>(6), (7), (8), (9) : <code>fmt</code>によって指定されたフォーマット指定子を用いて、Cロケールで<code>printf</code>によって行われたかのように浮動小数点数を文字列へ変換する。<br />
@@ -416,6 +420,23 @@
 <li>MSVCでは浮動小数点数→10進文字列変換の実装に<a href="https://github.com/ulfjack/ryu" target="_blank">Ryu</a>というアルゴリズムを利用している。</li>
 <li>(1) : 実装によって全ての整数型（符号付、無し）および<code>char</code>の<a class="cpprefjp-defined-word" data-desc="同名の関数を異なる引数・テンプレート・制約などで複数定義すること。または同名の関数の集合">オーバーロード</a>が提供される</li>
 <li>(5), (9), (13) : 浮動小数点数型は<a class="cpprefjp-defined-word" data-desc="&lt;stdfloat&gt;で定義される内部表現の規定された浮動小数点数型" href="../stdfloat.html">拡張浮動小数点数型</a>を含む</li>
+<li>(2), (3), (4), (5) :<ul>
+<li>C++29での<code>[l, u)</code>は、<code>double</code>では<code>[10</code><sup><code>-4</code></sup><code>, 10</code><sup><code>16</code></sup><code>)</code>、<code>float</code>では<code>[10</code><sup><code>-4</code></sup><code>, 10</code><sup><code>7</code></sup><code>)</code>となる</li>
+<li>C++17の規則では出力文字列の長さで指定子を選択するため、値が近くても表記が大きく変わることがあった。C++29ではPythonやRustなど他言語と同様に値の範囲で選択するため、この不整合が解消される<ul>
+<li><code>100000.0</code>の変換結果<ul>
+<li>C++17 : <code>1e+05</code></li>
+<li>C++29 : <code>100000</code>（<code>120000.0</code>はどちらのバージョンでも<code>120000</code>であり、近い値どうしで表記が食い違わなくなる）</li>
+</ul>
+</li>
+<li><code>1234567890123456700000.0</code>の変換結果<ul>
+<li>C++17 : <code>1234567890123456774144</code>（意味のない桁を含む）</li>
+<li>C++29 : <code>1.2345678901234568e+22</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 <h2>例</h2>
 <h3>基本の使用例 (C++17)</h3>
@@ -652,6 +673,14 @@ z
 </li>
 <li><a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p1467r9.html" target="_blank">P1467R9 Extended floating-point types and standard names</a><ul>
 <li>C++23で<a class="cpprefjp-defined-word" data-desc="&lt;stdfloat&gt;で定義される内部表現の規定された浮動小数点数型" href="../stdfloat.html">拡張浮動小数点数型</a>に対応した</li>
+</ul>
+</li>
+<li><a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3505r4.html" target="_blank">P3505R4 Fix the default floating-point representation in <code>std::format</code></a><ul>
+<li>C++29で、(2), (3), (4), (5)のフォーマット指定子の選択が、出力文字列の長さによるものから<code>value</code>の値の範囲によるものへ変更された。この変更は<code><a href="../format/format.html">std::format()</a></code>で型指定を省略した場合の出力にも影響する。LEWGでは以前のバージョンへの欠陥報告 (DR) として扱うことが推奨されているため、処理系がC++29より前のモードでも新しい表現を採用する場合がある</li>
+</ul>
+</li>
+<li><a href="https://cplusplus.github.io/LWG/issue4602" target="_blank">LWG Issue 4602. Incorrect lower bound for the default floating-point representation</a><ul>
+<li>P3505R4が意図せず変更していた<code>l</code>, <code>u</code>の定義を、10<sup>-4</sup>などの値に最も近い<code>T</code>の値を指すという本来の設計へ戻す修正。C++29のワーキングドラフトへはまだ適用されていない (Readyステータス)</li>
 </ul>
 </li>
 <li><a href="https://ja.cppreference.com/w/c/io/fprintf" target="_blank">C言語リファレンス - fprintf</a></li>
