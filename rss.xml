@@ -2,9 +2,66 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2026-09-08T05:23:25.484362</updated>
-  <id>7db7b599-e8a2-4ed7-a5fd-6bf46244ca17</id>
+  <updated>2026-09-08T05:32:10.239038</updated>
+  <id>f327eb4e-227a-4828-8499-17c7ed508084</id>
 
+  
+    <entry>
+      <title>memory_order -- memory_order : C++29対応として、無から生じる値が表れない注記を追加 (close #1705)</title>
+      <link href="https://cpprefjp.github.io/reference/atomic/memory_order.html"/>
+      <id>0bb32f42e70adf9d3280012c627727a4d53bef7d:reference/atomic/memory_order.md</id>
+      <updated>2026-09-08T14:30:33+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/atomic/memory_order.md b/reference/atomic/memory_order.md
+index 798b084c0..e5ca42335 100644
+--- a/reference/atomic/memory_order.md
++++ b/reference/atomic/memory_order.md
+@@ -107,6 +107,32 @@ int main()
+ 複雑なconsume操作を正しく実装するC++コンパイラは登場せず、より単純なacquire操作として扱われていた。C++20では仕様再検討に伴う一時的な利用回避が宣言され、最終的には役に立たないとの判断からC++26で非推奨となった。
+ 
+ 
++### relaxed操作とout-of-thin-air（無から生じる）値
++`relaxed`は順序付けの効果を一切持たないが、それでも「out-of-thin-air値（無から生じる値）」は計算されるべきではない、と規格は推奨している。out-of-thin-air値とは、複数スレッドのアトミック操作が互いの結果に循環依存することで、プログラムのどこにも書かれていない値が理屈の上では「無から湧いて」しまう現象である。
++
++```cpp
++// x, yはatomic&amp;lt;int&amp;gt;で、初期値0とする
++
++// スレッド1:
++r1 = y.load(std::memory_order::relaxed);
++x.store(r1, std::memory_order::relaxed);
++
++// スレッド2:
++r2 = x.load(std::memory_order::relaxed);
++y.store(r2, std::memory_order::relaxed);
++```
++
++このプログラムでは、`relaxed`の順序付けの規則だけからは`r1 == r2 == 42`のような実行を排除できない。`y`への42の書き込みは`x`が42を格納する場合にのみ起こり、それは`y`が42を格納することに循環依存している。このような値の計算を実装は行うべきではない、という推奨である。
++
++C++29では、この推奨に加えて、通常の実装ではout-of-thin-air値がそもそも生じないことの根拠が注記として追加された。
++
++- 非volatileのアトミックアクセスをvolatile相当として扱う（ソースコードに書かれたとおりマシン命令へ変換する）実装は、未定義動作のないプログラムに対してout-of-thin-air値を生成しない
++- スレッド単位の解析のみで最適化を行う実装、すなわち同一オブジェクトへの非volatileアトミックアクセスの省略・マージや、異なるオブジェクトへのアトミックアクセスの並べ替えは（as-ifルールが許す範囲で）行うが、アトミックアクセスの発明はしない実装も、同様にout-of-thin-air値を生成しない
++- 物理マシンは投機実行を注意深く管理しており、ハードウェアのレベルでもout-of-thin-air値は生成されない
++
++現実のコンパイラとハードウェアはこれらの条件を満たしているため、実装がout-of-thin-air値の回避のために特別な対策をとる必要はなく、ユーザーコードの変更も不要である。
++
++
+ ## バージョン
+ ### 言語
+ - C++11
+@@ -133,3 +159,5 @@ int main()
+     - C++26で`memory_order::consume`列挙子を非推奨化。
+ - [LWG Issue 4521. Improve [atomics.order] p10 to have a consistent way with [intro.races]](https://cplusplus.github.io/LWG/issue4521)
+     - Read-Modify-Write操作が読み取る値の規定が、「変更順序において書き込みより前に書かれた最後の値」から「Read-Modify-Write操作の副作用の直前の副作用による値」という表現へ改められた。メモリモデルのほかの箇所と用語を揃えるためであり、規格としてはC++29のワーキングドラフトへ適用されたが、文言の明確化であるためC++11へ遡及して適用される
++- [P3692R4 How to Avoid OOTA Without Really Trying](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3692r4.pdf)
++    - C++29で、通常の実装ではout-of-thin-air値が生じないことの根拠が注記として追加された
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>operator-- -- C++29対応として、ライブラリ側のインクリメント・デクリメント演算子の= default対応 (close #1709)</title>
@@ -3559,481 +3616,6 @@ index 000000000..c9ecf59e4
 +- [P3091R6 Better Lookups for `map`, `unordered_map`, and `flat_map`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3091r6.html)
 +- [P4139R3 Better Name for Better Lookups in P3091](https://wg21.link/p4139r3)
 +    - 当初`get`という名前で提案されていたが、この提案の議論により`lookup`に変更された
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>C++29 -- error_code / error_category : C++29対応としてformatter特殊化を追加。エラーメッセージのエンコーディングを規定 (close #1700)</title>
-      <link href="https://cpprefjp.github.io/lang/cpp29.html"/>
-      <id>6ca95c905a7497917fa057c80a303c7d9d29023d:lang/cpp29.md</id>
-      <updated>2026-09-07T17:24:24+09:00</updated>
-      
-        <content type="html">&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;token&#34;&gt;C++29&lt;/span&gt;&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;h2&gt;概要&lt;/h2&gt;
-&lt;p&gt;C++29とは、2029年中に改訂される予定の、C++バージョンの通称である。&lt;/p&gt;
-&lt;p&gt;このバージョンは、策定中のためC++2dと呼ばれることがある。「(2020年代の4つ目のバージョンが) 202d年にリリースされる」という伏せ字として「d」が使われているが、3年周期に次のバージョンが策定されることが決まっているため、伏せ字になっている年数がずれることはない。&lt;/p&gt;
-&lt;h2&gt;言語機能&lt;/h2&gt;
-&lt;h3&gt;変数&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;言語機能&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;cpp29/clarify_the_behavior_of_floating-point_overflow.html&#34;&gt;浮動小数点演算のオーバーフローと無限大・NaNの扱いを明確化&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;無限大を表現できる浮動小数点型では、オーバーフローは未定義動作ではなく無限大を生成すると規定する。オーバーフローやNaNを新たに生成する演算は定数式にならず、無限大・NaNの伝播は定数式として扱える&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;文字列&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;言語機能&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;cpp29/more_named_universal_character_escapes.html&#34;&gt;名前付きユニバーサルキャラクタ名で使用できる別名を拡張&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;\N{…}&lt;/code&gt;に指定できる文字名の別名の分類制限を撤廃し、&lt;code&gt;\N{NBSP}&lt;/code&gt;のような略称 (abbreviation) なども使用できるようにする&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;制御構文&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;言語機能&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;cpp29/return_value_and_return_void_are_not_mutually_exclusive.html&#34;&gt;コルーチンのpromise型で&lt;code&gt;return_value&lt;/code&gt;と&lt;code&gt;return_void&lt;/code&gt;の両方の宣言を許可&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;1つのコルーチン内に、値をともなう&lt;code&gt;co_return&lt;/code&gt;文とともなわない&lt;code&gt;co_return&lt;/code&gt;文を混在させられるようにする&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;関数&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;言語機能&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;cpp29/lexical_order_for_lambdas.html&#34;&gt;ラムダ式のキャプチャが書かれた順に初期化されることを保証&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;明示的なキャプチャに対応するクロージャ型のメンバ変数が、キャプチャを書いた順に宣言・初期化され、逆順に破棄されることを保証する&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;cpp29/deallocation_functions_with_throwing_exception_specification_are_ill_formed.html&#34;&gt;例外を送出しうる例外指定をもつ解放関数を不適格とする&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;operator delete&lt;/code&gt;などの解放関数に、&lt;code&gt;noexcept(false)&lt;/code&gt;のような例外を送出しうる例外指定を付けることを&lt;a class=&#34;cpprefjp-defined-word&#34;&gt;不適格&lt;/a&gt;とする。解放関数からの例外送出による未定義動作へ到達する経路を、宣言の時点で排除する&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;クラス&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;言語機能&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;cpp29/designated-initializers_for_base_classes.html&#34;&gt;基底クラスのメンバ変数に対する指示付き初期化を許可&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;B{.a=1, .b=2}&lt;/code&gt;のように、集成体の指示付き初期化で基底クラスのメンバ変数を直接指定できるようにする。基底クラス部分を初期化する指示なし初期化子との混在も許可する&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;cpp29/defaulting_postfix_increment_and_decrement_operations.html&#34;&gt;後置インクリメント・デクリメント演算のdefault定義&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;後置&lt;code&gt;++&lt;/code&gt;／&lt;code&gt;--&lt;/code&gt;を&lt;code&gt;= default&lt;/code&gt;で定義（前置版から自動生成）できるようにする&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;cpp29/adding_restrictions_to_defaulted_assignment_operator_functions.html&#34;&gt;default定義できる代入演算子のシグネチャを制限&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;A&amp;amp; operator=(const A&amp;amp;) &amp;amp;&amp;amp; = default&lt;/code&gt;のような右辺値修飾やCV修飾された代入演算子のdefault定義を&lt;a class=&#34;cpprefjp-defined-word&#34;&gt;不適格&lt;/a&gt;とする。これらの代入演算子を自分で定義することは引き続きできる&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;cpp29/contracts_for_virtual_functions.html&#34;&gt;仮想関数への事前条件・事後条件の指定を許可&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;C++26で&lt;a class=&#34;cpprefjp-defined-word&#34;&gt;不適格&lt;/a&gt;とされていた、仮想関数への事前条件&lt;code&gt;pre&lt;/code&gt;・事後条件&lt;code&gt;post&lt;/code&gt;の指定を許可する。仮想関数呼び出しでは、静的に選択された関数と実際に呼び出される関数の両方のアサーションが評価される&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;テンプレート&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;言語機能&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;cpp29/language_linkage_for_templates.html&#34;&gt;extern &#34;C&#34;の中でのテンプレートの宣言を許可&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;テンプレートがC言語リンケージを持つことを禁止する規定を削除し、&lt;code&gt;extern &#34;C&#34;&lt;/code&gt;の中でテンプレートを宣言できるようにする。C言語リンケージの関数ポインタ型を、テンプレートパラメータに依存する形で書けるようになる&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;cpp29/conditional_noexcept_specifiers_in_compound_requirements.html&#34;&gt;requires式の複合要件で条件付き&lt;code&gt;noexcept&lt;/code&gt;指定を許可&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;requires式の複合要件で、&lt;code&gt;{ 式 } noexcept(定数式)&lt;/code&gt;形式の条件付き&lt;code&gt;noexcept&lt;/code&gt;指定を書けるようにする&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;cpp29/pack_indexing_for_template_names.html&#34;&gt;テンプレートテンプレートパラメータのパックへのインデックスアクセスを許可&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;テンプレートテンプレートパラメータのパックに&lt;code&gt;TT...[N]&lt;/code&gt;形式でインデックスアクセスできるようにする&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;定数式&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;言語機能&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;cpp29/consteval-only_values.html&#34;&gt;consteval-only型の規則をconsteval-only値の規則へ置き換え&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;リフレクションが実行時へ漏れることを防ぐ規則を、型ベースから値ベースへ変更する&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;並行・並列処理&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;言語機能&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;cpp29/nondeterministic_pointer_provenance.html&#34;&gt;整数からポインタへの変換とポインタの由来の扱いを規定&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;整数からポインタへの変換では、その整数へ変換できるポインタ値のうち、プログラムの動作が定義される値が選択されると規定する&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;cpp29/invalid_pointer_operations.html&#34;&gt;無効なポインタ値の読み書き・コピーを定義された動作とする&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;無効なポインタ値の使用のうち、間接参照は未定義動作、比較などは処理系定義のままとし、読み込み・書き込み・コピーなどそれ以外の操作を定義された動作とする&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;cpp29/pointer_lifetime-end_zap_proposed_solutions.html&#34;&gt;アトミック操作とvolatileアクセスでの無効なポインタ値の扱いを規定&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;アトミックポインタの操作やvolatileアクセスの結果が無効なポインタ値となる場合、整数への往復変換を経た有効なポインタ値になると規定する。解放と並行してポインタを扱うロックフリーアルゴリズムを定義された動作にする&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;プリプロセッサ&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;言語機能&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;cpp29/embed_offset_parameter.html&#34;&gt;&lt;code&gt;#embed&lt;/code&gt;に&lt;code&gt;offset&lt;/code&gt;パラメータを追加&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;#embed&lt;/code&gt;のパラメータとして、リソースの先頭から指定した要素数を読み飛ばす&lt;code&gt;offset&lt;/code&gt;を追加する&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;未定義動作&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;言語機能&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;cpp29/undefined_behavior_and_ifndr_annexes.html&#34;&gt;未定義動作とIFNDRの一覧を規格の付録に追加&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;コア言語で明示的に規定されているすべての未定義動作と、診断不要で&lt;a class=&#34;cpprefjp-defined-word&#34;&gt;不適格&lt;/a&gt; (IFNDR) となるすべての規則を、安定した名前・説明・コード例付きで列挙する参考情報の付録を追加する&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;ソースコード&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;言語機能&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href=&#34;cpp29/adjust_identifier_following_new_Unicode_recommendations.html&#34;&gt;数学互換記法の文字を識別子として許可&lt;/a&gt;&lt;/td&gt;
-&lt;td&gt;Unicodeの新しい勧告に従い、&lt;code&gt;∇f&lt;/code&gt;や&lt;code&gt;x²&lt;/code&gt;のような数学記法の文字（ID_Compat_Math_Start／Continueプロパティを持つ文字）を識別子に使用できるようにする&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;ライブラリ更新の概要&lt;/h2&gt;
-&lt;h3&gt;整数&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;任意定義だった&lt;code&gt;&lt;a href=&#34;../reference/cstdint/intptr_t.html&#34;&gt;std::intptr_t&lt;/a&gt;&lt;/code&gt; / &lt;code&gt;&lt;a href=&#34;../reference/cstdint/uintptr_t.html&#34;&gt;std::uintptr_t&lt;/a&gt;&lt;/code&gt;型を必須定義とする&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;文字列&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;../reference/format/format.html&#34;&gt;std::format()&lt;/a&gt;&lt;/code&gt;関数での浮動小数点数の規定の出力形式を修正&lt;ul&gt;
-&lt;li&gt;これまでの既定書式が最短文字数を基準としていたため、&lt;code&gt;100000.0&lt;/code&gt;→&lt;code&gt;&#34;1e+05&#34;&lt;/code&gt;なのに&lt;code&gt;120000.0&lt;/code&gt;→&lt;code&gt;&#34;120000&#34;&lt;/code&gt;と一貫していない出力になっていたのを修正&lt;/li&gt;
-&lt;li&gt;また、大きな値で&lt;code&gt;1234567890123456774144&lt;/code&gt;のような無意味な桁（garbage digits）がでる問題について、固定表記か指数表記かの切り替え基準を「値の大きさ（指数範囲 &lt;code&gt;[10⁻⁴, 10ⁿ)&lt;/code&gt;）」に変更して修正した&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;ビット操作&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;../reference/bit.html&#34;&gt;&amp;lt;bit&amp;gt;&lt;/a&gt;&lt;/code&gt;に、以下のビット操作関数を追加&lt;ul&gt;
-&lt;li&gt;ビット列の並びを反転する&lt;code&gt;&lt;a href=&#34;../reference/bit/bit_reverse.html&#34;&gt;std::bit_reverse()&lt;/a&gt;&lt;/code&gt;関数&lt;/li&gt;
-&lt;li&gt;指定した下位ビットパターンを繰り返す&lt;code&gt;&lt;a href=&#34;../reference/bit/bit_repeat.html&#34;&gt;std::bit_repeat()&lt;/a&gt;&lt;/code&gt;関数&lt;/li&gt;
-&lt;li&gt;指定したマスクで立っている一のビットを下位に詰める&lt;code&gt;&lt;a href=&#34;../reference/bit/bit_compress.html&#34;&gt;std::bit_compress()&lt;/a&gt;&lt;/code&gt;関数&lt;/li&gt;
-&lt;li&gt;下位ビットを指定したマスクが立っている位置へ展開する&lt;code&gt;&lt;a href=&#34;../reference/bit/bit_expand.html&#34;&gt;std::bit_expand()&lt;/a&gt;&lt;/code&gt;関数&lt;/li&gt;
-&lt;li&gt;未定義動作にならないビットシフト&lt;code&gt;&lt;a href=&#34;../reference/bit/shl.html&#34;&gt;std::shl()&lt;/a&gt;&lt;/code&gt;関数と&lt;code&gt;&lt;a href=&#34;../reference/bit/shr.html&#34;&gt;std::shr()&lt;/a&gt;&lt;/code&gt;関数&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;コンテナ&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;../reference/map/map.html&#34;&gt;std::map&lt;/a&gt;&lt;/code&gt; / &lt;code&gt;&lt;a href=&#34;../reference/unordered_map/unordered_map.html&#34;&gt;std::unordered_map&lt;/a&gt;&lt;/code&gt; / &lt;code&gt;&lt;a href=&#34;../reference/flat_map/flat_map.html&#34;&gt;std::flat_map&lt;/a&gt;&lt;/code&gt;クラスに、&lt;code&gt;&lt;a href=&#34;../reference/optional/optional.html&#34;&gt;std::optional&lt;/a&gt;&amp;lt;要素への参照&amp;gt;&lt;/code&gt;を返す検索メンバ関数&lt;code&gt;lookup()&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;../reference/ranges/view_interface.html&#34;&gt;std::ranges::view_interface&lt;/a&gt;&lt;/code&gt;クラスに、境界チェック付きでランダムアクセスをするメンバ関数&lt;code&gt;&lt;a href=&#34;../reference/ranges/view_interface/at.html&#34;&gt;at()&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;../reference/mdspan/mdspan.html&#34;&gt;std::mdspan&lt;/a&gt;&lt;/code&gt;クラス向けのアルゴリズムとして&lt;code&gt;&lt;a href=&#34;../reference/mdspan/copy.md.nolink&#34;&gt;std::copy()&lt;/a&gt;&lt;/code&gt;と&lt;code&gt;&lt;a href=&#34;../reference/mdspan/fill.md.nolink&#34;&gt;std::fill()&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;メモリ&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;../reference/memory.html&#34;&gt;&amp;lt;memory&amp;gt;&lt;/a&gt;&lt;/code&gt;ヘッダに、ポインタのタグ付けを行う&lt;code&gt;&lt;a href=&#34;../reference/memory/pointer_tag_pair.md.nolink&#34;&gt;std::pointer_tag_pair&lt;/a&gt;&lt;/code&gt;クラスとその関連機能を追加&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;エラーハンドリング&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;../reference/expected/expected.html&#34;&gt;std::expected&lt;/a&gt;&lt;/code&gt;クラスに、エラー値を保持しているかを判定するメンバ関数&lt;code&gt;&lt;a href=&#34;../reference/expected/expected/has_error.html&#34;&gt;has_error()&lt;/a&gt;&lt;/code&gt;を追加&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;../reference/system_error/error_code.html&#34;&gt;std::error_code&lt;/a&gt;&lt;/code&gt;クラスを&lt;code&gt;&lt;a href=&#34;../reference/format/format.html&#34;&gt;std::format()&lt;/a&gt;&lt;/code&gt;で出力できるよう、&lt;a href=&#34;../reference/system_error/error_code/formatter.html&#34;&gt;&lt;code&gt;formatter&lt;/code&gt;特殊化&lt;/a&gt;を追加。あわせて、カテゴリ名とエラーメッセージのエンコーディングが未規定だった問題を修正&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;並行・並列&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;../reference/thread/thread.html&#34;&gt;std::thread&lt;/a&gt;&lt;/code&gt;クラスと&lt;code&gt;&lt;a href=&#34;../reference/thread/jthread.html&#34;&gt;std::jthread&lt;/a&gt;&lt;/code&gt;クラスに、スレッド名とスタックサイズを設定する機能を追加&lt;/li&gt;
-&lt;li&gt;SIMDデータ用に連番を生成する&lt;code&gt;&lt;a href=&#34;../reference/simd/iota.html&#34;&gt;std::simd::iota&lt;/a&gt;&lt;/code&gt;変数テンプレートを追加&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;../reference/bit.html&#34;&gt;&amp;lt;bit&amp;gt;&lt;/a&gt;&lt;/code&gt;ヘッダと同様に、&lt;code&gt;&lt;a href=&#34;../reference/simd.html&#34;&gt;&amp;lt;simd&amp;gt;&lt;/a&gt;&lt;/code&gt;ヘッダにも、以下のビット操作関数を追加&lt;ul&gt;
-&lt;li&gt;ビット列の並びを反転する&lt;code&gt;&lt;a href=&#34;../reference/simd/bit_reverse.html&#34;&gt;std::simd::bit_reverse()&lt;/a&gt;&lt;/code&gt;関数&lt;/li&gt;
-&lt;li&gt;指定した下位ビットパターンを繰り返す&lt;code&gt;&lt;a href=&#34;../reference/simd/bit_repeat.html&#34;&gt;std::simd::bit_repeat()&lt;/a&gt;&lt;/code&gt;関数&lt;/li&gt;
-&lt;li&gt;指定したマスクで立っている一のビットを下位に詰める&lt;code&gt;&lt;a href=&#34;../reference/simd/bit_compress.html&#34;&gt;std::simd::bit_compress()&lt;/a&gt;&lt;/code&gt;関数&lt;/li&gt;
-&lt;li&gt;下位ビットを指定したマスクが立っている位置へ展開する&lt;code&gt;&lt;a href=&#34;../reference/simd/bit_expand.html&#34;&gt;std::simd::bit_expand()&lt;/a&gt;&lt;/code&gt;関数&lt;/li&gt;
-&lt;li&gt;未定義動作にならないビットシフト&lt;code&gt;&lt;a href=&#34;../reference/simd/shl.html&#34;&gt;std::simd::shl()&lt;/a&gt;&lt;/code&gt;関数と&lt;code&gt;&lt;a href=&#34;../reference/simd/shr.html&#34;&gt;std::simd::shr()&lt;/a&gt;&lt;/code&gt;関数&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;../reference/hazard_pointer.html&#34;&gt;&amp;lt;hazard_pointer&amp;gt;&lt;/a&gt;&lt;/code&gt;に、複数のハザードポインタをまとめて構築・破棄する&lt;code&gt;&lt;a href=&#34;../reference/hazard_pointer/make_hazard_pointer_batch.html&#34;&gt;std::make_hazard_pointer_batch()&lt;/a&gt;&lt;/code&gt;関数と&lt;code&gt;&lt;a href=&#34;../reference/hazard_pointer/clear_hazard_pointer_batch.html&#34;&gt;std::clear_hazard_pointer_batch()&lt;/a&gt;&lt;/code&gt;関数を追加&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;非推奨化&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;../reference/iostream.html&#34;&gt;&amp;lt;iostream&amp;gt;&lt;/a&gt;&lt;/code&gt;において、&lt;code&gt;signed char&lt;/code&gt; / &lt;code&gt;unsigned char&lt;/code&gt;の入出力を非推奨化。&lt;code&gt;&lt;a href=&#34;../reference/cstdint/int8_t.html&#34;&gt;std::int8_t&lt;/a&gt;&lt;/code&gt; / &lt;code&gt;&lt;a href=&#34;../reference/cstdint/uint8_t.html&#34;&gt;std::uint8_t&lt;/a&gt;&lt;/code&gt;の別名として扱われるこれらの型の入出力で、整数型であることを期待して予期せぬ結果を招く可能性があった&lt;/li&gt;
-&lt;/ul&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>message -- error_code / error_category : C++29対応としてformatter特殊化を追加。エラーメッセージのエンコーディングを規定 (close #1700)</title>
-      <link href="https://cpprefjp.github.io/reference/system_error/error_category/message.html"/>
-      <id>6ca95c905a7497917fa057c80a303c7d9d29023d:reference/system_error/error_category/message.md</id>
-      <updated>2026-09-07T17:24:24+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/system_error/error_category/message.md b/reference/system_error/error_category/message.md
-index 0b0283d1c..3478e6142 100644
---- a/reference/system_error/error_category/message.md
-+++ b/reference/system_error/error_category/message.md
-@@ -17,6 +17,9 @@ virtual string message(int ev) const = 0;
- ## 戻り値
- エラーコードを説明するメッセージを返す
- 
-+- C++11 : 文字列のエンコーディングは未規定（実装によってCロケールのエンコーディングだったり、Windowsのコードページ (ACP) だったりと移植可能に扱えなかった）
-+- C++29 : 文字列は、実行文字集合のマルチバイト文字列であると規定された
-+
- 
- ## 例
- ```cpp example
-@@ -54,3 +57,7 @@ Not a directory
- 
- 
- ## 参照
-+- [P3395R6 Fix encoding issues and add a `formatter` for `std::error_code`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3395r6.html)
-+    - C++29で、返される文字列のエンコーディングが規定された
-+- [LWG Issue 4156. `error_category` messages have unspecified encoding](https://cplusplus.github.io/LWG/issue4156)
-+    - エンコーディングが未規定であることを指摘したissue。P3395R6で解決された
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>name -- error_code / error_category : C++29対応としてformatter特殊化を追加。エラーメッセージのエンコーディングを規定 (close #1700)</title>
-      <link href="https://cpprefjp.github.io/reference/system_error/error_category/name.html"/>
-      <id>6ca95c905a7497917fa057c80a303c7d9d29023d:reference/system_error/error_category/name.md</id>
-      <updated>2026-09-07T17:24:24+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/system_error/error_category/name.md b/reference/system_error/error_category/name.md
-index 9f156908f..09f3c24c3 100644
---- a/reference/system_error/error_category/name.md
-+++ b/reference/system_error/error_category/name.md
-@@ -16,6 +16,9 @@ virtual const char* name() const noexcept = 0;
- ## 戻り値
- エラーの分類を示す文字列を返す
- 
-+- C++11 : 文字列のエンコーディングは未規定（実際には、各実装とも文字列リテラルで定義しており、通常の文字列リテラルのエンコーディングだった）
-+- C++29 : 文字列は、通常の文字列リテラルのエンコーディングであると規定された
-+
- 
- ## 例外
- 投げない
-@@ -57,3 +60,7 @@ system
- 
- 
- ## 参照
-+- [P3395R6 Fix encoding issues and add a `formatter` for `std::error_code`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3395r6.html)
-+    - C++29で、返される文字列のエンコーディングが規定された
-+- [LWG Issue 4156. `error_category` messages have unspecified encoding](https://cplusplus.github.io/LWG/issue4156)
-+    - エンコーディングが未規定であることを指摘したissue。P3395R6で解決された
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>error_code -- error_code / error_category : C++29対応としてformatter特殊化を追加。エラーメッセージのエンコーディングを規定 (close #1700)</title>
-      <link href="https://cpprefjp.github.io/reference/system_error/error_code.html"/>
-      <id>6ca95c905a7497917fa057c80a303c7d9d29023d:reference/system_error/error_code.md</id>
-      <updated>2026-09-07T17:24:24+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/system_error/error_code.md b/reference/system_error/error_code.md
-index 6e6486ae1..84a3a6462 100644
---- a/reference/system_error/error_code.md
-+++ b/reference/system_error/error_code.md
-@@ -52,6 +52,7 @@ namespace std {
- | 名前 | 説明 | 対応バージョン |
- |------|------|----------------|
- | `hash` | `error_code`での特殊化 | C++11 |
-+| [`formatter`](error_code/formatter.md) | [`std::formatter`](/reference/format/formatter.md)クラスの特殊化 | C++29 |
- 
- 
- ## 例
-@@ -102,3 +103,5 @@ Invalid argument
- 
- 
- ## 参照
-+- [P3395R6 Fix encoding issues and add a `formatter` for `std::error_code`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3395r6.html)
-+    - C++29で、[`std::format()`](/reference/format/format.md)用の[`formatter`](error_code/formatter.md)特殊化が追加された
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>formatter -- error_code / error_category : C++29対応としてformatter特殊化を追加。エラーメッセージのエンコーディングを規定 (close #1700)</title>
-      <link href="https://cpprefjp.github.io/reference/system_error/error_code/formatter.html"/>
-      <id>6ca95c905a7497917fa057c80a303c7d9d29023d:reference/system_error/error_code/formatter.md</id>
-      <updated>2026-09-07T17:24:24+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/system_error/error_code/formatter.md b/reference/system_error/error_code/formatter.md
-new file mode 100644
-index 000000000..70d2ed306
---- /dev/null
-+++ b/reference/system_error/error_code/formatter.md
-@@ -0,0 +1,79 @@
-+# formatter
-+* system_error[meta header]
-+* std[meta namespace]
-+* class[meta id-type]
-+* cpp29[meta cpp]
-+
-+```cpp
-+namespace std {
-+  template &amp;lt;class charT&amp;gt;
-+  struct formatter&amp;lt;error_code, charT&amp;gt;;
-+}
-+```
-+
-+## 概要
-+[`error_code`](../error_code.md)クラスに対する[`std::formatter`](/reference/format/formatter.md)クラステンプレートの特殊化。
-+
-+フォーマットフラグとしては、以下を使用できる：
-+
-+```
-+[[fill] [align] [width]] [?] [s]
-+```
-+
-+- デフォルトでは、[ストリーム出力](op_ostream.md)と同じ「カテゴリ名`:`エラー値」の形式（例：`generic:2`）で出力される
-+- `s`を指定すると、[`message()`](message.md)で得られるエラーメッセージが出力される
-+    - `charT`が`char`であり、通常の文字列リテラルのエンコーディングがUTF-8である場合、メッセージはUTF-8へ変換され、不正なバイト列はU+FFFD（置換文字）に置き換えられる
-+- `?`を指定すると、デバッグ出力としてエラーコード全体が引用符で囲まれたエスケープ文字列として出力される
-+    - カテゴリ名とエラー値を区切る`:`が、連想コンテナのフォーマット出力におけるキーと値の区切りの`:`と紛らわしくなることを避けられる
-+
-+
-+## 備考
-+- ストリーム出力の`operator&amp;lt;&amp;lt;`では、`std::setw()`などの入出力マニピュレータがカテゴリ名だけに適用されてしまう問題があった。この`formatter`特殊化では、幅や整列の指定はエラーコード全体に適用される
-+- エラー値のみを出力するためのフラグは提供されない。エラー値はカテゴリの情報がなければ有用性が低く、必要であれば`ec.`[`value()`](value.md)を直接フォーマットすればよいためである
-+
-+
-+## 例
-+```cpp
-+#include &amp;lt;format&amp;gt;
-+#include &amp;lt;iostream&amp;gt;
-+#include &amp;lt;system_error&amp;gt;
-+
-+int main()
-+{
-+  std::error_code ec = std::make_error_code(std::errc::no_such_file_or_directory);
-+
-+  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;{}&amp;#34;, ec) &amp;lt;&amp;lt; std::endl;
-+  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;[{:&amp;gt;12}]&amp;#34;, ec) &amp;lt;&amp;lt; std::endl;
-+  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;{:?}&amp;#34;, ec) &amp;lt;&amp;lt; std::endl;
-+  std::cout &amp;lt;&amp;lt; std::format(&amp;#34;{:s}&amp;#34;, ec) &amp;lt;&amp;lt; std::endl;
-+}
-+```
-+* std::make_error_code[link /reference/system_error/make_error_code.md]
-+* std::errc[link /reference/system_error/errc.md]
-+
-+### 出力例
-+```
-+generic:2
-+[   generic:2]
-+&amp;#34;generic:2&amp;#34;
-+No such file or directory
-+```
-+
-+
-+## バージョン
-+### 言語
-+- C++29
-+
-+### 処理系
-+- [Clang](/implementation.md#clang): ??
-+- [GCC](/implementation.md#gcc): ??
-+- [Visual C++](/implementation.md#visual_cpp): ??
-+
-+
-+## 関連項目
-+- [`std::format()`](/reference/format/format.md) (フォーマットの詳細)
-+- [`operator&amp;lt;&amp;lt;`](op_ostream.md)
-+
-+
-+## 参照
-+- [P3395R6 Fix encoding issues and add a `formatter` for `std::error_code`](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3395r6.html)
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>

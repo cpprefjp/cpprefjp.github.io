@@ -189,8 +189,8 @@
     <p class="text-right"><small>
       最終更新日時:
       <time itemprop="datePublished" class="js-local-time"
-            datetime="2026-08-27T16:44:32+09:00">
-        2026年08月27日 16時44分32秒 (JST)
+            datetime="2026-09-08T14:30:33+09:00">
+        2026年09月08日 14時30分33秒 (JST)
       </time>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -347,6 +347,27 @@ atomic変数においては、"release"操作によって書き込まれた値�
 <h3><code>consume</code>列挙値</h3>
 <p>非推奨化された<code>consume</code>列挙値の挙動はacquire操作と似ているが、それより弱い順序付けでの読み込みを行うことを指示する。acquire操作は後続の全ての操作に対して順序付けを行うのに対し、consume操作は読み込まれた値に依存(ただし条件分岐による依存は除く)する操作のみに順序付けを保証する点が異なる。
 複雑なconsume操作を正しく実装するC++コンパイラは登場せず、より単純なacquire操作として扱われていた。C++20では仕様再検討に伴う一時的な利用回避が宣言され、最終的には役に立たないとの判断からC++26で非推奨となった。</p>
+<h3>relaxed操作とout-of-thin-air（無から生じる）値</h3>
+<p><code>relaxed</code>は順序付けの効果を一切持たないが、それでも「out-of-thin-air値（無から生じる値）」は計算されるべきではない、と規格は推奨している。out-of-thin-air値とは、複数スレッドのアトミック操作が互いの結果に循環依存することで、プログラムのどこにも書かれていない値が理屈の上では「無から湧いて」しまう現象である。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="c1">// x, yはatomic&lt;int&gt;で、初期値0とする</span>
+
+<span class="c1">// スレッド1:</span>
+<span class="n">r1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">memory_order</span><span class="o">::</span><span class="n">relaxed</span><span class="p">);</span>
+<span class="n">x</span><span class="p">.</span><span class="n">store</span><span class="p">(</span><span class="n">r1</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">memory_order</span><span class="o">::</span><span class="n">relaxed</span><span class="p">);</span>
+
+<span class="c1">// スレッド2:</span>
+<span class="n">r2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">memory_order</span><span class="o">::</span><span class="n">relaxed</span><span class="p">);</span>
+<span class="n">y</span><span class="p">.</span><span class="n">store</span><span class="p">(</span><span class="n">r2</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">memory_order</span><span class="o">::</span><span class="n">relaxed</span><span class="p">);</span>
+</code></pre></div>
+</p>
+<p>このプログラムでは、<code>relaxed</code>の順序付けの規則だけからは<code>r1 == r2 == 42</code>のような実行を排除できない。<code>y</code>への42の書き込みは<code>x</code>が42を格納する場合にのみ起こり、それは<code>y</code>が42を格納することに循環依存している。このような値の計算を実装は行うべきではない、という推奨である。</p>
+<p>C++29では、この推奨に加えて、通常の実装ではout-of-thin-air値がそもそも生じないことの根拠が注記として追加された。</p>
+<ul>
+<li>非volatileのアトミックアクセスをvolatile相当として扱う（ソースコードに書かれたとおりマシン命令へ変換する）実装は、<a class="cpprefjp-defined-word" data-desc="未定義の動作。処理系は予期せぬ動作をする可能性がある。要するに動作保証対象外。undefined behavior (UB)。" href="../../implementation-compliance.html#dfn-undefined-behavior">未定義動作</a>のないプログラムに対してout-of-thin-air値を生成しない</li>
+<li>スレッド単位の解析のみで最適化を行う実装、すなわち同一オブジェクトへの非volatileアトミックアクセスの省略・マージや、異なるオブジェクトへのアトミックアクセスの並べ替えは（as-ifルールが許す範囲で）行うが、アトミックアクセスの発明はしない実装も、同様にout-of-thin-air値を生成しない</li>
+<li>物理マシンは投機実行を注意深く管理しており、ハードウェアのレベルでもout-of-thin-air値は生成されない</li>
+</ul>
+<p>現実のコンパイラとハードウェアはこれらの条件を満たしているため、実装がout-of-thin-air値の回避のために特別な対策をとる必要はなく、ユーザーコードの変更も不要である。</p>
 <h2>バージョン</h2>
 <h3>言語</h3>
 <ul>
@@ -379,6 +400,10 @@ atomic変数においては、"release"操作によって書き込まれた値�
 </li>
 <li><a href="https://cplusplus.github.io/LWG/issue4521" target="_blank">LWG Issue 4521. Improve [atomics.order] p10 to have a consistent way with [intro.races]</a><ul>
 <li>Read-Modify-Write操作が読み取る値の規定が、「変更順序において書き込みより前に書かれた最後の値」から「Read-Modify-Write操作の副作用の直前の副作用による値」という表現へ改められた。メモリモデルのほかの箇所と用語を揃えるためであり、規格としてはC++29のワーキングドラフトへ適用されたが、文言の明確化であるためC++11へ遡及して適用される</li>
+</ul>
+</li>
+<li><a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3692r4.pdf" target="_blank">P3692R4 How to Avoid OOTA Without Really Trying</a><ul>
+<li>C++29で、通常の実装ではout-of-thin-air値が生じないことの根拠が注記として追加された</li>
 </ul>
 </li>
 </ul></div>
