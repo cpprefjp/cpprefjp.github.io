@@ -2,9 +2,316 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2026-09-08T08:05:45.220642</updated>
-  <id>6cf7c980-313b-4237-80f0-cc7a224cdc65</id>
+  <updated>2026-09-08T11:51:17.435731</updated>
+  <id>e9774dfc-161f-4c1d-9fa7-385e1f05db72</id>
 
+  
+    <entry>
+      <title>ファイルを読み込む#embed命令を追加 [P1967R14] -- C++26 #embed : 仕様の抜け・誤りを修正</title>
+      <link href="https://cpprefjp.github.io/lang/cpp26/embed.html"/>
+      <id>4c8ab8910974c2ddb5682a3d5254b25eb69edf81:lang/cpp26/embed.md</id>
+      <updated>2026-09-08T20:49:05+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp26/embed.md b/lang/cpp26/embed.md
+index d13d8af42..60dff5cce 100644
+--- a/lang/cpp26/embed.md
++++ b/lang/cpp26/embed.md
+@@ -10,76 +10,244 @@
+ &amp;lt;!-- last lang caution --&amp;gt;
+ 
+ ## 概要
+-C++26では、`#embed`ディレクティブが追加される。
++C++26では、ファイルなどのリソースの内容をソースコードへ埋め込む`#embed`前処理ディレクティブが追加される。
+ 
+-これは、バイナリリソースを直接コード内に埋め込む機能を提供する。
++これによって、これまで実行時に読み込んでいた画像・音声・シェーダなどのバイナリリソースを、コンパイル時に読み込んで実行ファイルへ埋め込めるようになる。
++
++```cpp
++constexpr unsigned char image[] = {
++#embed &amp;#34;image.png&amp;#34;
++};
++```
++
++従来は、外部ツールでバイナリを`0x89, 0x50, ...`のようなソースコードへ変換してからインクルードする必要があった。この方法はビルド手順が複雑になるうえ、巨大な初期化子リストのコンパイルに長い時間とメモリを要していた。`#embed`は処理系がリソースを直接読み込むため、これらの問題を避けられる。
+ 
+-これにより、今までは実行時に読み込んでいたファイルなどがコンパイル時点で読み込まれ、実行ファイル内に埋め込むことができるようになる。
+ 
+ ## 仕様
+-`#embed`ディレクティブによって読み込まれたバイナリは、`constexpr unsigned char`配列として扱われる。
+-```cpp example
+-#include &amp;lt;iostream&amp;gt;
++### リソース
++`#embed`が読み込む対象は、規格では「ファイル」ではなく「リソース (resource)」と呼ばれ、翻訳環境からアクセスできるデータの供給源として定義されている。リソースをどのように特定・検索するかは処理系定義であるため、通常のファイル以外も対象となりうる。
+ 
+-int main() {
+-  constexpr unsigned char image_binary[] = {
+-    #embed &amp;#34;image.bin&amp;#34;
+-  };
+-  std::cout &amp;lt;&amp;lt; std::hex;
+-  for (unsigned char c : image_binary) {
+-    std::cout &amp;lt;&amp;lt; static_cast&amp;lt;int&amp;gt;(c) &amp;lt;&amp;lt; &amp;#39; &amp;#39;;
+-  }
+-  std::cout &amp;lt;&amp;lt; std::endl;
+-}
++- POSIXのキャラクタデバイスや疑似ファイル（`/dev/urandom`など）。このような「無限に読み出せるリソース」の存在が、読み込む要素数の上限を指定する`limit`パラメータが導入された動機となっている
++- 処理系が独自にサポートする、URIのような指定方法によるリソース（ネットワーク越しの取得や、認証・権限の確認をともなうものを含む）
++- ビルドシステムなどが提供する、実体がファイルではないリソース
++
++リソースは[`std::fgetc()`](/reference/cstdio/fgetc.md)によってバイナリファイルとして読み出されたかのように、先頭から1バイトずつ読み込まれる。
++
++
++### 構文
++`#embed`ディレクティブは、`#include`と同じ2つの形式でリソースを指定する。
++
++```cpp
++#embed &amp;lt;ヘッダ名&amp;gt;   // 処理系定義の場所からリソースを検索する
++#embed &amp;#34;ファイル名&amp;#34; // 名前でリソースを特定する。失敗した場合は&amp;lt;&amp;gt;形式と同じ検索を行う
+ ```
+-このプログラムは、`image.bin`をバイナリデータとして扱い、バイト列を出力している。
+ 
+-つまり、下のプログラムのように`#embed`を使用するとテキストファイルの中身をそのままchar配列に格納していることと同じになる。
+-```cpp example
+-int main() {
+-  constexpr char text[] = { 
+-    #embed &amp;#34;test.txt&amp;#34;
++リソースの検索方法は処理系定義であり、`#include`とは別の検索パスをもつことが推奨されている。リソースが見つからない場合、およびリソースを処理できない場合、プログラムは不適格となる。
++
++指定部分にマクロを使用することもできる。この場合、マクロを展開した結果からヘッダ名を形成する。
++
++```cpp
++#define RESOURCE &amp;#34;data.bin&amp;#34;
++#embed RESOURCE
++```
++
++### 置き換えの結果
++`#embed`ディレクティブは、`int`型の整数リテラルをカンマで区切ったリストへ置き換えられる。配列になるわけではないため、初期化子リストの中だけでなく、単一の値が必要な場所にも使用できる。
++
++```cpp
++constexpr unsigned char data[] = {
++#embed &amp;#34;data.bin&amp;#34;       // 複数の要素へ展開される
++};
++
++int i =
++#embed &amp;#34;single.bin&amp;#34;     // 1バイトのリソースであれば、単一の値としても使用できる
++;
++```
++
++リストの各要素はリソースの1バイトに対応し、その値は`unsigned char`で表現できる範囲となる。リソースのビット幅が[`CHAR_BIT`](/reference/climits/char_bit.md)の整数倍でない場合、プログラムは不適格となる。
++
++なお、`char`が符号付き型である処理系では、`128`以上のバイトを`char`の配列へ格納しようとすると縮小変換によってコンパイルエラーとなる。バイナリを格納する配列の要素型には`unsigned char`または[`std::byte`](/reference/cstddef/byte.md)を使用する。
++
++### 埋め込みパラメータ
++リソースの指定に続けて、以下のパラメータを指定できる。各パラメータは高々1回のみ指定でき、順序は問わない。
++
++| パラメータ | 説明 |
++|------------|------|
++| `limit(定数式)` | リストの要素数の上限を指定する |
++| `prefix(トークン列)` | リストの直前へトークン列を挿入する |
++| `suffix(トークン列)` | リストの直後へトークン列を挿入する |
++| `if_empty(トークン列)` | リソースが空である場合に、ディレクティブ全体をトークン列で置き換える |
++
++```cpp
++constexpr unsigned char data[] = {
++#embed &amp;#34;data.bin&amp;#34; limit(1024) prefix(0x01, 0x02,) suffix(, 0xFF) if_empty(0x00)
++};
++```
++
++- `limit`の引数は、条件付き取り込み（`#if`）と同じ規則で評価される整数定数式であり、`0`以上でなければならない。`defined`は使用できないが、`__has_include`は使用できる
++- `/dev/urandom`のような終端のないリソースを読み込む場合、`limit`を指定しなければ処理系がメモリを使い果たすまで読み込みを続けることになる
++- `prefix`と`suffix`のトークン列は任意の前処理トークン列であり、バイト値に限られない。上記のように、区切りのカンマも自分で書く必要がある
++- `prefix`と`suffix`は、リソースが空である場合には無視される
++- `if_empty`は、リソースが空ではない場合には無視される
++- リソースは、要素数が`0`である場合に空とみなされる。`limit(0)`を指定した場合や、[`offset`](/lang/cpp29/embed_offset_parameter.md)（C++29）でリソースの終端を越えた場合も空となる
++
++これらの標準のパラメータに加えて、`vendor::param`のように`::`で区切った形式の、処理系独自のパラメータを指定できる（条件付きサポート）。
++
++### `__has_embed`前処理演算子
++`#if`などの条件付き取り込みの中で、リソースが存在するかを検査できる。
++
++```cpp
++#if __has_embed(&amp;#34;data.bin&amp;#34;)
++// data.binが存在し、空でない場合の処理
++#endif
++```
++
++`__has_embed`は、[`__has_include`](/lang/cpp17/has_include.md)と同様の前処理演算子であり、`#embed`と同じ形式でリソースと埋め込みパラメータを受け取って、以下のいずれかの値へ置き換えられる。これらの値は、定義済みマクロとしても提供される。
++
++| 定義済みマクロ | 値 | 意味 |
++|----------------|----|------|
++| `__STDC_EMBED_NOT_FOUND__` | `0` | リソースが見つからない、または指定されたパラメータが未サポートである |
++| `__STDC_EMBED_FOUND__` | `1` | リソースが見つかり、空ではない |
++| `__STDC_EMBED_EMPTY__` | `2` | リソースが見つかり、空である |
++
++`__has_embed`では、未知の埋め込みパラメータを指定してもプログラムは不適格とはならず、「未サポート」として`__STDC_EMBED_NOT_FOUND__`が返る。この性質によって、処理系独自のパラメータが使用できるかを検査できる。
++
++### 機能テストマクロ
++- `__cpp_pp_embed`が`202502L`として定義される
++
++
++## 例
++### リソースを読み込む
++```cpp
++#include &amp;lt;print&amp;gt;
++
++int main()
++{
++  // ファイルの内容をバイト列として読み込む
++  constexpr unsigned char data[] = {
++#embed &amp;#34;data.bin&amp;#34;
+   };
++
++  std::println(&amp;#34;{} bytes&amp;#34;, sizeof(data));
+ }
+ ```
+-`#embed`ディレクティブは、他にもパラメータを受け付ける。
++
++### 埋め込みパラメータを使用する
++以下の例は、自身のソースファイルを読み込むことで、外部のファイルなしに動作を確認できるようにしている。
++
+ ```cpp example
+-int main() {
+-  constexpr unsigned char limited_data[] = {
+-    #embed &amp;#34;data.bin&amp;#34; limit(1024)
+-  };
+-  constexpr unsigned char prefixed_data[] = {
+-    #embed &amp;#34;data.bin&amp;#34; prefix(0x01, 0x02, 0x03)
++// ABCDEF
++#include &amp;lt;print&amp;gt;
++
++int main()
++{
++  // このソースファイルの先頭9バイト（1行目のコメント）を読み込む
++  constexpr unsigned char head[] = {
++#embed __FILE__ limit(9)
+   };
+-  constexpr unsigned char suffixed_data[] = {
+-    #embed &amp;#34;data.bin&amp;#34; suffix(0xFE, 0xFF)
++  std::println(&amp;#34;{}&amp;#34;, std::string_view{reinterpret_cast&amp;lt;const char*&amp;gt;(head), sizeof(head)});
++
++  // limit(0)によってリソースは空となるため、if_emptyのトークン列へ置き換えられる。
++  // このとき、prefixとsuffixは無視される
++  constexpr int marker[] = {
++#embed __FILE__ limit(0) prefix(1,) suffix(, 2) if_empty(42)
+   };
+-  constexpr unsigned char safe_data[] = {
+-    #embed &amp;#34;data.bin&amp;#34; if_empty(0x00)
++  std::println(&amp;#34;{} {}&amp;#34;, marker[0], sizeof(marker) / sizeof(int));
++
++  // 空ではない場合は、prefixとsuffixが適用され、if_emptyが無視される
++  constexpr unsigned char fixed[] = {
++#embed __FILE__ limit(2) prefix(0x01,) suffix(, 0x02) if_empty(42)
+   };
++  std::println(&amp;#34;{} {} {}&amp;#34;, fixed[0], fixed[3], sizeof(fixed));
+ }
+ ```
+-それぞれの変数では、以下のようになっている。
+-- `limit(1024)`では、読み込むバイトサイズを1024byteに制限する。もしファイルサイズが1024byteよりも大きければ、最初の1024バイトのみが読み込まれる。
+-- `prefix(0x01, 0x02, 0x03)`では、`data.bin`の内容の前に`0x01 0x02 0x03`のバイト列を追加している。
+-- `suffix(0xFE, 0xFF)`では、`data.bin`の内容のあとに`0xFE 0xFF`のバイト列を追加している。
+-- `if_empty(0x00)`では、`data.bin`が空であった場合、`0x00`のバイト列を格納している。
+ 
+-また、`#embed`ディレクティブは、複数のパラメータを**順不同**で組み合わせて指定することもできる。
++#### 出力
++```
++// ABCDEF
++42 1
++1 2 4
++```
+ 
++### ファイル以外のリソースを読み込む
+ ```cpp example
+-int main() {
+-  constexpr unsigned char combined_data[] = {
+-    #embed &amp;#34;data.bin&amp;#34; limit(1024) prefix(0x01, 0x02) suffix(0xFF) if_empty(0x00)
++#include &amp;lt;print&amp;gt;
++#include &amp;lt;random&amp;gt;
++#include &amp;lt;cstdint&amp;gt;
++
++int main()
++{
++  // コンパイル時に/dev/urandomから4バイトを読み込む。
++  // このリソースには終端がないため、limitの指定が必須となる
++  constexpr unsigned char seed_bytes[] = {
++#embed &amp;#34;/dev/urandom&amp;#34; limit(4)
+   };
++
++  // 読み込んだ4バイトを32ビットの値にまとめ、乱数エンジンのシードとする
++  std::uint32_t seed = 0;
++  for (unsigned char b : seed_bytes) {
++    seed = (seed &amp;lt;&amp;lt; 8) | b;
++  }
++
++  std::mt19937 engine{seed};
++  std::uniform_int_distribution&amp;lt;int&amp;gt; dist{1, 6};
++
++  std::println(&amp;#34;{}&amp;#34;, dist(engine));
+ }
+ ```
+-これは、`limit(1024)`でファイルサイズを1024バイトに制限し、`prefix(0x01, 0x02)`で先頭バイト列`0x01 0x02`を追加し、
+-`suffix(0xFF)`で末尾`0xFF`を追加し、`if_empty(0x00)`で空の場合は`0x00`を格納することになる。
++
++シードはコンパイル時に確定するため、生成される乱数列は実行のたびではなく、コンパイルのたびに変化する。
++
++#### 出力例
++```
++4
++```
++
++### `__has_embed`でリソースの有無を検査する
++```cpp example
++// ABCDEF
++#include &amp;lt;print&amp;gt;
++
++int main()
++{
++#if __has_embed(__FILE__) == __STDC_EMBED_FOUND__
++  std::println(&amp;#34;found&amp;#34;);
++#endif
++
++#if __has_embed(__FILE__ limit(0)) == __STDC_EMBED_EMPTY__
++  std::println(&amp;#34;empty&amp;#34;);
++#endif
++
++#if __has_embed(&amp;#34;no_such_resource.bin&amp;#34;) == __STDC_EMBED_NOT_FOUND__
++  std::println(&amp;#34;not found&amp;#34;);
++#endif
++}
++```
++
++#### 出力
++```
++found
++empty
++not found
++```
++
++
++## この機能が必要になった背景・経緯
++バイナリリソースをプログラムへ埋め込むという要求は古くからあり、実際には以下のような方法がとられてきた。
++
++- 外部ツールでバイナリを`0x89, 0x50, 0x4E, ...`のようなカンマ区切りのソースコードへ変換し、インクルードする
++- リンカのオプションや、アセンブラの`.incbin`のような処理系固有の機能を使用する
++- 実行時にファイルを読み込む
++
++このうち移植性のある方法は最初のものだが、生成されたソースは1バイトあたり数文字のテキストになるため、数MBのリソースでも巨大なファイルとなり、コンパイル時間とメモリ消費が大きな問題になっていた。処理系がリソースを直接読み込む`#embed`であれば、この変換自体が不要になる。
++
++この機能はC23で`&amp;lt;stdio.h&amp;gt;`とは独立した前処理ディレクティブとして先に標準化され、C++26でも同じ構文・意味論で取り込まれた。
+ 
+ 
+ ## &amp;lt;a id=&amp;#34;relative-page&amp;#34; href=&amp;#34;#relative-page&amp;#34;&amp;gt;関連項目&amp;lt;/a&amp;gt;
++- [C++17 `__has_include`](/lang/cpp17/has_include.md)
+ - [C++29 `#embed`に`offset`パラメータを追加](/lang/cpp29/embed_offset_parameter.md)
++- [`std::byte`](/reference/cstddef/byte.md)
+ 
+ 
+ ## 参照
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>syncstream -- syncstream : リンク追加</title>
@@ -2696,1149 +3003,6 @@ index 760c8149e..616c6954e 100644
  - [`mbsrtowcs`](mbsrtowcs.md): 逆方向の変換
  - [`wcrtomb`](wcrtomb.md): 1文字ずつ変換する
 +- [`std::wcstombs()`](/reference/cstdlib/wcstombs.md): 変換状態を引数で受け取らない、内部状態に依存するバージョン
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>clocale -- clocaleのマクロ周りを追加</title>
-      <link href="https://cpprefjp.github.io/reference/clocale.html"/>
-      <id>b37845cd1bf6da4bdb20b37731e4c359afd454dc:reference/clocale.md</id>
-      <updated>2026-09-08T16:51:45+09:00</updated>
-      
-        <content type="html">&lt;div class=&#34;header&#34;&gt;&amp;lt;clocale&amp;gt;&lt;/div&gt;&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;token&#34;&gt;clocale&lt;/span&gt;&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;&lt;code&gt;&amp;lt;clocale&amp;gt;&lt;/code&gt;ヘッダでは、ローカライゼーション（地域化）に関するクラス・関数を定義する。&lt;/p&gt;
-&lt;p&gt;これらの機能は基本的には、&lt;code&gt;std&lt;/code&gt;名前空間に属することを除いてC言語の標準ライブラリ&lt;code&gt;&amp;lt;locale.h&amp;gt;&lt;/code&gt;ヘッダと同じである。&lt;/p&gt;
-&lt;h2&gt;マクロ&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;cstddef/null.html&#34;&gt;NULL&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;ヌルポインタ定数に展開されるマクロ&lt;/td&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;clocale/lc_all.html&#34;&gt;LC_ALL&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;すべてのロケールカテゴリを一括指定するための定数&lt;/td&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;clocale/lc_collate.html&#34;&gt;LC_COLLATE&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;文字列の照合（比較）規則に関するロケールカテゴリ&lt;/td&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;clocale/lc_ctype.html&#34;&gt;LC_CTYPE&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;文字分類（大文字/小文字、数字、空白など）やマルチバイト文字の扱いに関するカテゴリ&lt;/td&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;clocale/lc_monetary.html&#34;&gt;LC_MONETARY&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;通貨表記に関するロケールカテゴリ&lt;/td&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;clocale/lc_numeric.html&#34;&gt;LC_NUMERIC&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;数値表記に関するロケールカテゴリ（小数点記号など）&lt;/td&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;clocale/lc_time.html&#34;&gt;LC_TIME&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;日付および時刻表記に関するロケールカテゴリ&lt;/td&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;構造体&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;clocale/lconv.html&#34;&gt;lconv&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;数値・通貨表示の書式設定をまとめた型&lt;/td&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;関数&lt;/h2&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;名前&lt;/th&gt;
-&lt;th&gt;説明&lt;/th&gt;
-&lt;th&gt;対応バージョン&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;clocale/setlocale.html&#34;&gt;setlocale&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;ロケールを変更、または現在のロケールを取得する。　&lt;/td&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;clocale/localeconv.html&#34;&gt;localeconv&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;現在のロケールに応じた数値・通貨表記情報を取得する。&lt;/td&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;関連項目&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&lt;a href=&#34;locale.html&#34;&gt;locale&lt;/a&gt;&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;参照&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&#34;https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0175r1.html&#34; target=&#34;_blank&#34;&gt;Synopses for the C library&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>LC_ALL -- clocaleのマクロ周りを追加</title>
-      <link href="https://cpprefjp.github.io/reference/clocale/lc_all.html"/>
-      <id>b37845cd1bf6da4bdb20b37731e4c359afd454dc:reference/clocale/lc_all.md</id>
-      <updated>2026-09-08T16:51:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/clocale/lc_all.md b/reference/clocale/lc_all.md
-new file mode 100644
-index 000000000..8b0361bd9
---- /dev/null
-+++ b/reference/clocale/lc_all.md
-@@ -0,0 +1,49 @@
-+# LC_ALL
-+* clocale[meta header]
-+* macro[meta id-type]
-+
-+```cpp
-+#define LC_ALL unspecified
-+```
-+* unspecified[italic]
-+
-+## 概要
-+すべてのロケールカテゴリを一括して指定するための定数。
-+
-+[`setlocale()`](setlocale.md)にこのカテゴリを指定すると、以下のすべてのカテゴリが同時に設定される。
-+
-+[`setlocale()`](setlocale.md)関数の`category`引数として指定する。値は`int`型の処理系定義の定数式であり、各カテゴリのマクロは互いに異なる値をもつ。
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;clocale&amp;gt;
-+#include &amp;lt;iostream&amp;gt;
-+
-+int main()
-+{
-+  // 全カテゴリのロケールをCロケールに設定する
-+  std::cout &amp;lt;&amp;lt; std::setlocale(LC_ALL, &amp;#34;C&amp;#34;) &amp;lt;&amp;lt; std::endl;
-+}
-+```
-+* LC_ALL[color ff0000]
-+* std::setlocale[link setlocale.md]
-+
-+### 出力
-+```
-+C
-+```
-+
-+
-+## バージョン
-+### 言語
-+- C++98
-+
-+
-+## 関連項目
-+- [`setlocale`](setlocale.md)
-+- [`LC_COLLATE`](lc_collate.md)
-+- [`LC_CTYPE`](lc_ctype.md)
-+- [`LC_MONETARY`](lc_monetary.md)
-+- [`LC_NUMERIC`](lc_numeric.md)
-+- [`LC_TIME`](lc_time.md)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>LC_COLLATE -- clocaleのマクロ周りを追加</title>
-      <link href="https://cpprefjp.github.io/reference/clocale/lc_collate.html"/>
-      <id>b37845cd1bf6da4bdb20b37731e4c359afd454dc:reference/clocale/lc_collate.md</id>
-      <updated>2026-09-08T16:51:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/clocale/lc_collate.md b/reference/clocale/lc_collate.md
-new file mode 100644
-index 000000000..b743cf670
---- /dev/null
-+++ b/reference/clocale/lc_collate.md
-@@ -0,0 +1,49 @@
-+# LC_COLLATE
-+* clocale[meta header]
-+* macro[meta id-type]
-+
-+```cpp
-+#define LC_COLLATE unspecified
-+```
-+* unspecified[italic]
-+
-+## 概要
-+文字列の照合（比較）規則に関するロケールカテゴリを指定するための定数。
-+
-+[`std::strcoll()`](/reference/cstring/strcoll.md)・[`std::strxfrm()`](/reference/cstring/strxfrm.md)・[`std::wcscoll()`](/reference/cwchar/wcscoll.md)・[`std::wcsxfrm()`](/reference/cwchar/wcsxfrm.md)の動作に影響する。
-+
-+[`setlocale()`](setlocale.md)関数の`category`引数として指定する。値は`int`型の処理系定義の定数式であり、各カテゴリのマクロは互いに異なる値をもつ。
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;clocale&amp;gt;
-+#include &amp;lt;iostream&amp;gt;
-+
-+int main()
-+{
-+  // 照合順序のロケールをCロケールに設定する
-+  std::cout &amp;lt;&amp;lt; std::setlocale(LC_COLLATE, &amp;#34;C&amp;#34;) &amp;lt;&amp;lt; std::endl;
-+}
-+```
-+* LC_COLLATE[color ff0000]
-+* std::setlocale[link setlocale.md]
-+
-+### 出力
-+```
-+C
-+```
-+
-+
-+## バージョン
-+### 言語
-+- C++98
-+
-+
-+## 関連項目
-+- [`setlocale`](setlocale.md)
-+- [`LC_ALL`](lc_all.md)
-+- [`LC_CTYPE`](lc_ctype.md)
-+- [`LC_MONETARY`](lc_monetary.md)
-+- [`LC_NUMERIC`](lc_numeric.md)
-+- [`LC_TIME`](lc_time.md)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>LC_CTYPE -- clocaleのマクロ周りを追加</title>
-      <link href="https://cpprefjp.github.io/reference/clocale/lc_ctype.html"/>
-      <id>b37845cd1bf6da4bdb20b37731e4c359afd454dc:reference/clocale/lc_ctype.md</id>
-      <updated>2026-09-08T16:51:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/clocale/lc_ctype.md b/reference/clocale/lc_ctype.md
-new file mode 100644
-index 000000000..54eee52ac
---- /dev/null
-+++ b/reference/clocale/lc_ctype.md
-@@ -0,0 +1,49 @@
-+# LC_CTYPE
-+* clocale[meta header]
-+* macro[meta id-type]
-+
-+```cpp
-+#define LC_CTYPE unspecified
-+```
-+* unspecified[italic]
-+
-+## 概要
-+文字の分類とマルチバイト文字の扱いに関するロケールカテゴリを指定するための定数。
-+
-+[`&amp;lt;cctype&amp;gt;`](/reference/cctype.md)の文字種別判定関数、[`&amp;lt;cwctype&amp;gt;`](/reference/cwchar.md)のワイド文字関数、および[`std::mbrtowc()`](/reference/cwchar/mbrtowc.md)などのマルチバイト文字変換関数の動作に影響する。
-+
-+[`setlocale()`](setlocale.md)関数の`category`引数として指定する。値は`int`型の処理系定義の定数式であり、各カテゴリのマクロは互いに異なる値をもつ。
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;clocale&amp;gt;
-+#include &amp;lt;iostream&amp;gt;
-+
-+int main()
-+{
-+  // 文字種別・マルチバイト変換のロケールをCロケールに設定する
-+  std::cout &amp;lt;&amp;lt; std::setlocale(LC_CTYPE, &amp;#34;C&amp;#34;) &amp;lt;&amp;lt; std::endl;
-+}
-+```
-+* LC_CTYPE[color ff0000]
-+* std::setlocale[link setlocale.md]
-+
-+### 出力
-+```
-+C
-+```
-+
-+
-+## バージョン
-+### 言語
-+- C++98
-+
-+
-+## 関連項目
-+- [`setlocale`](setlocale.md)
-+- [`LC_ALL`](lc_all.md)
-+- [`LC_COLLATE`](lc_collate.md)
-+- [`LC_MONETARY`](lc_monetary.md)
-+- [`LC_NUMERIC`](lc_numeric.md)
-+- [`LC_TIME`](lc_time.md)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>LC_MONETARY -- clocaleのマクロ周りを追加</title>
-      <link href="https://cpprefjp.github.io/reference/clocale/lc_monetary.html"/>
-      <id>b37845cd1bf6da4bdb20b37731e4c359afd454dc:reference/clocale/lc_monetary.md</id>
-      <updated>2026-09-08T16:51:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/clocale/lc_monetary.md b/reference/clocale/lc_monetary.md
-new file mode 100644
-index 000000000..c83324c2f
---- /dev/null
-+++ b/reference/clocale/lc_monetary.md
-@@ -0,0 +1,49 @@
-+# LC_MONETARY
-+* clocale[meta header]
-+* macro[meta id-type]
-+
-+```cpp
-+#define LC_MONETARY unspecified
-+```
-+* unspecified[italic]
-+
-+## 概要
-+通貨表記に関するロケールカテゴリを指定するための定数。
-+
-+[`localeconv()`](localeconv.md)が返す[`lconv`](lconv.md)構造体の、通貨に関するメンバの内容に影響する。
-+
-+[`setlocale()`](setlocale.md)関数の`category`引数として指定する。値は`int`型の処理系定義の定数式であり、各カテゴリのマクロは互いに異なる値をもつ。
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;clocale&amp;gt;
-+#include &amp;lt;iostream&amp;gt;
-+
-+int main()
-+{
-+  // 通貨表記のロケールをCロケールに設定する
-+  std::cout &amp;lt;&amp;lt; std::setlocale(LC_MONETARY, &amp;#34;C&amp;#34;) &amp;lt;&amp;lt; std::endl;
-+}
-+```
-+* LC_MONETARY[color ff0000]
-+* std::setlocale[link setlocale.md]
-+
-+### 出力
-+```
-+C
-+```
-+
-+
-+## バージョン
-+### 言語
-+- C++98
-+
-+
-+## 関連項目
-+- [`setlocale`](setlocale.md)
-+- [`LC_ALL`](lc_all.md)
-+- [`LC_COLLATE`](lc_collate.md)
-+- [`LC_CTYPE`](lc_ctype.md)
-+- [`LC_NUMERIC`](lc_numeric.md)
-+- [`LC_TIME`](lc_time.md)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>LC_NUMERIC -- clocaleのマクロ周りを追加</title>
-      <link href="https://cpprefjp.github.io/reference/clocale/lc_numeric.html"/>
-      <id>b37845cd1bf6da4bdb20b37731e4c359afd454dc:reference/clocale/lc_numeric.md</id>
-      <updated>2026-09-08T16:51:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/clocale/lc_numeric.md b/reference/clocale/lc_numeric.md
-new file mode 100644
-index 000000000..b1ae3f77a
---- /dev/null
-+++ b/reference/clocale/lc_numeric.md
-@@ -0,0 +1,49 @@
-+# LC_NUMERIC
-+* clocale[meta header]
-+* macro[meta id-type]
-+
-+```cpp
-+#define LC_NUMERIC unspecified
-+```
-+* unspecified[italic]
-+
-+## 概要
-+数値表記に関するロケールカテゴリを指定するための定数。
-+
-+小数点として使用される文字が変わるため、[`std::printf()`](/reference/cstdio/printf.md)や[`std::strtod()`](/reference/cstdlib/strtod.md)などの数値の入出力・変換に影響する。
-+
-+[`setlocale()`](setlocale.md)関数の`category`引数として指定する。値は`int`型の処理系定義の定数式であり、各カテゴリのマクロは互いに異なる値をもつ。
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;clocale&amp;gt;
-+#include &amp;lt;iostream&amp;gt;
-+
-+int main()
-+{
-+  // 数値表記のロケールをCロケールに設定する
-+  std::cout &amp;lt;&amp;lt; std::setlocale(LC_NUMERIC, &amp;#34;C&amp;#34;) &amp;lt;&amp;lt; std::endl;
-+}
-+```
-+* LC_NUMERIC[color ff0000]
-+* std::setlocale[link setlocale.md]
-+
-+### 出力
-+```
-+C
-+```
-+
-+
-+## バージョン
-+### 言語
-+- C++98
-+
-+
-+## 関連項目
-+- [`setlocale`](setlocale.md)
-+- [`LC_ALL`](lc_all.md)
-+- [`LC_COLLATE`](lc_collate.md)
-+- [`LC_CTYPE`](lc_ctype.md)
-+- [`LC_MONETARY`](lc_monetary.md)
-+- [`LC_TIME`](lc_time.md)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>LC_TIME -- clocaleのマクロ周りを追加</title>
-      <link href="https://cpprefjp.github.io/reference/clocale/lc_time.html"/>
-      <id>b37845cd1bf6da4bdb20b37731e4c359afd454dc:reference/clocale/lc_time.md</id>
-      <updated>2026-09-08T16:51:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/clocale/lc_time.md b/reference/clocale/lc_time.md
-new file mode 100644
-index 000000000..25bb9b06c
---- /dev/null
-+++ b/reference/clocale/lc_time.md
-@@ -0,0 +1,49 @@
-+# LC_TIME
-+* clocale[meta header]
-+* macro[meta id-type]
-+
-+```cpp
-+#define LC_TIME unspecified
-+```
-+* unspecified[italic]
-+
-+## 概要
-+日付および時刻の表記に関するロケールカテゴリを指定するための定数。
-+
-+[`std::strftime()`](/reference/ctime/strftime.md)や[`std::wcsftime()`](/reference/cwchar/wcsftime.md)による日時の書式化に影響する。
-+
-+[`setlocale()`](setlocale.md)関数の`category`引数として指定する。値は`int`型の処理系定義の定数式であり、各カテゴリのマクロは互いに異なる値をもつ。
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;clocale&amp;gt;
-+#include &amp;lt;iostream&amp;gt;
-+
-+int main()
-+{
-+  // 日時表記のロケールをCロケールに設定する
-+  std::cout &amp;lt;&amp;lt; std::setlocale(LC_TIME, &amp;#34;C&amp;#34;) &amp;lt;&amp;lt; std::endl;
-+}
-+```
-+* LC_TIME[color ff0000]
-+* std::setlocale[link setlocale.md]
-+
-+### 出力
-+```
-+C
-+```
-+
-+
-+## バージョン
-+### 言語
-+- C++98
-+
-+
-+## 関連項目
-+- [`setlocale`](setlocale.md)
-+- [`LC_ALL`](lc_all.md)
-+- [`LC_COLLATE`](lc_collate.md)
-+- [`LC_CTYPE`](lc_ctype.md)
-+- [`LC_MONETARY`](lc_monetary.md)
-+- [`LC_NUMERIC`](lc_numeric.md)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>lconv -- clocaleのマクロ周りを追加</title>
-      <link href="https://cpprefjp.github.io/reference/clocale/lconv.html"/>
-      <id>b37845cd1bf6da4bdb20b37731e4c359afd454dc:reference/clocale/lconv.md</id>
-      <updated>2026-09-08T16:51:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/clocale/lconv.md b/reference/clocale/lconv.md
-new file mode 100644
-index 000000000..6f6757ceb
---- /dev/null
-+++ b/reference/clocale/lconv.md
-@@ -0,0 +1,96 @@
-+# lconv
-+* clocale[meta header]
-+* std[meta namespace]
-+* class[meta id-type]
-+
-+```cpp
-+namespace std {
-+  struct lconv;
-+}
-+```
-+
-+## 概要
-+現在のロケールにおける、数値と通貨の書式設定の情報をまとめた構造体。
-+
-+[`localeconv()`](localeconv.md)関数によって、この構造体へのポインタを取得する。メンバの並び順は規定されておらず、処理系によって追加のメンバをもつこともある。
-+
-+文字列型のメンバが空文字列`&amp;#34;&amp;#34;`である場合、および`char`型のメンバが`CHAR_MAX`である場合は、その項目が現在のロケールでは利用できないことを表す。
-+
-+
-+## メンバ変数
-+### 数値の書式（`LC_NUMERIC`カテゴリ）
-+
-+| 名前 | 型 | 説明 |
-+|------|----|------|
-+| `decimal_point` | `char*` | 小数点として使用する文字列 |
-+| `thousands_sep` | `char*` | 整数部の桁区切りとして使用する文字列 |
-+| `grouping` | `char*` | 桁区切りの間隔。各要素が`char`型の数値であり、下位の桁から順に何桁ごとに区切るかを表す |
-+
-+### 通貨の書式（`LC_MONETARY`カテゴリ）
-+
-+| 名前 | 型 | 説明 |
-+|------|----|------|
-+| `mon_decimal_point` | `char*` | 通貨表記での小数点として使用する文字列 |
-+| `mon_thousands_sep` | `char*` | 通貨表記での桁区切りとして使用する文字列 |
-+| `mon_grouping` | `char*` | 通貨表記での桁区切りの間隔 |
-+| `positive_sign` | `char*` | 非負の通貨表記に使用する符号 |
-+| `negative_sign` | `char*` | 負の通貨表記に使用する符号 |
-+| `currency_symbol` | `char*` | ローカルの通貨記号 |
-+| `frac_digits` | `char` | ローカルの通貨表記での小数点以下の桁数 |
-+| `p_cs_precedes` | `char` | 非負の値で、通貨記号が数値の前に置かれるなら`1`、後ろなら`0` |
-+| `n_cs_precedes` | `char` | 負の値で、通貨記号が数値の前に置かれるなら`1`、後ろなら`0` |
-+| `p_sep_by_space` | `char` | 非負の値で、通貨記号と数値の間の空白の有無を表す |
-+| `n_sep_by_space` | `char` | 負の値で、通貨記号と数値の間の空白の有無を表す |
-+| `p_sign_posn` | `char` | 非負の値での符号の位置 |
-+| `n_sign_posn` | `char` | 負の値での符号の位置 |
-+| `int_curr_symbol` | `char*` | 国際的な通貨記号（ISO 4217に基づく3文字と区切り文字） |
-+| `int_frac_digits` | `char` | 国際的な通貨表記での小数点以下の桁数 |
-+| `int_p_cs_precedes` | `char` | 国際表記での、非負の値の通貨記号の位置 |
-+| `int_n_cs_precedes` | `char` | 国際表記での、負の値の通貨記号の位置 |
-+| `int_p_sep_by_space` | `char` | 国際表記での、非負の値の空白の有無 |
-+| `int_n_sep_by_space` | `char` | 国際表記での、負の値の空白の有無 |
-+| `int_p_sign_posn` | `char` | 国際表記での、非負の値の符号の位置 |
-+| `int_n_sign_posn` | `char` | 国際表記での、負の値の符号の位置 |
-+
-+
-+## 備考
-+- C++の機能としては、この構造体の情報は[`std::numpunct`](/reference/locale/numpunct.md)と[`std::moneypunct`](/reference/locale/moneypunct.md)のファセットとして提供される。型安全であり、複数のロケールを同時に扱えるため、C++では通常そちらを使用する
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;clocale&amp;gt;
-+#include &amp;lt;iostream&amp;gt;
-+
-+int main()
-+{
-+  std::setlocale(LC_ALL, &amp;#34;C&amp;#34;);
-+
-+  const std::lconv* lc = std::localeconv();
-+
-+  // Cロケールでは、小数点は&amp;#34;.&amp;#34;、桁区切りは&amp;#34;&amp;#34;（利用できない）
-+  std::cout &amp;lt;&amp;lt; lc-&amp;gt;decimal_point &amp;lt;&amp;lt; std::endl;
-+  std::cout &amp;lt;&amp;lt; (lc-&amp;gt;thousands_sep[0] == &amp;#39;\0&amp;#39;) &amp;lt;&amp;lt; std::endl;
-+}
-+```
-+* std::lconv[color ff0000]
-+* std::localeconv[link localeconv.md]
-+* std::setlocale[link setlocale.md]
-+
-+### 出力
-+```
-+.
-+1
-+```
-+
-+
-+## バージョン
-+### 言語
-+- C++98
-+
-+
-+## 関連項目
-+- [`localeconv`](localeconv.md)
-+- [`setlocale`](setlocale.md)
-+- [`std::numpunct`](/reference/locale/numpunct.md)
-+- [`std::moneypunct`](/reference/locale/moneypunct.md)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>localeconv -- clocaleのマクロ周りを追加</title>
-      <link href="https://cpprefjp.github.io/reference/clocale/localeconv.html"/>
-      <id>b37845cd1bf6da4bdb20b37731e4c359afd454dc:reference/clocale/localeconv.md</id>
-      <updated>2026-09-08T16:51:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/clocale/localeconv.md b/reference/clocale/localeconv.md
-new file mode 100644
-index 000000000..e35750cba
---- /dev/null
-+++ b/reference/clocale/localeconv.md
-@@ -0,0 +1,63 @@
-+# localeconv
-+* clocale[meta header]
-+* std[meta namespace]
-+* function[meta id-type]
-+
-+```cpp
-+namespace std {
-+  lconv* localeconv();
-+}
-+```
-+* lconv[link lconv.md]
-+
-+## 概要
-+現在のロケールにおける、数値と通貨の書式設定の情報を取得する。
-+
-+
-+## 戻り値
-+現在のロケールの情報が設定された[`lconv`](lconv.md)構造体へのポインタを返す。
-+
-+
-+## 備考
-+- 返されたポインタが指すオブジェクトを、プログラムから書き換えてはならない
-+- 返されたポインタが指すオブジェクトの内容は、後続の[`setlocale()`](setlocale.md)の呼び出しや、他の`localeconv()`の呼び出しによって上書きされる可能性がある
-+- この関数の呼び出しは、[`setlocale()`](setlocale.md)の呼び出しとデータ競合を起こす可能性がある
-+- C++の機能としては、同じ情報が[`std::numpunct`](/reference/locale/numpunct.md)と[`std::moneypunct`](/reference/locale/moneypunct.md)のファセットとして提供される
-+
-+
-+## 例
-+```cpp example
-+#include &amp;lt;clocale&amp;gt;
-+#include &amp;lt;iostream&amp;gt;
-+
-+int main()
-+{
-+  std::setlocale(LC_ALL, &amp;#34;C&amp;#34;);
-+
-+  const std::lconv* lc = std::localeconv();
-+
-+  std::cout &amp;lt;&amp;lt; &amp;#34;decimal_point: &amp;#34; &amp;lt;&amp;lt; lc-&amp;gt;decimal_point &amp;lt;&amp;lt; std::endl;
-+  std::cout &amp;lt;&amp;lt; &amp;#34;frac_digits: &amp;#34; &amp;lt;&amp;lt; static_cast&amp;lt;int&amp;gt;(lc-&amp;gt;frac_digits) &amp;lt;&amp;lt; std::endl;
-+}
-+```
-+* std::localeconv[color ff0000]
-+* std::lconv[link lconv.md]
-+* std::setlocale[link setlocale.md]
-+
-+### 出力
-+```
-+decimal_point: .
-+frac_digits: 127
-+```
-+
-+`frac_digits`が`CHAR_MAX`（多くの処理系では`127`）である場合、Cロケールのようにその項目が利用できないことを表す。
-+
-+
-+## バージョン
-+### 言語
-+- C++98
-+
-+
-+## 関連項目
-+- [`lconv`](lconv.md)
-+- [`setlocale`](setlocale.md)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>MB_CUR_MAX -- clocaleのマクロ周りを追加</title>
-      <link href="https://cpprefjp.github.io/reference/cstdlib/mb_cur_max.html"/>
-      <id>b37845cd1bf6da4bdb20b37731e4c359afd454dc:reference/cstdlib/mb_cur_max.md</id>
-      <updated>2026-09-08T16:51:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/cstdlib/mb_cur_max.md b/reference/cstdlib/mb_cur_max.md
-index 41738ed23..55d58b764 100644
---- a/reference/cstdlib/mb_cur_max.md
-+++ b/reference/cstdlib/mb_cur_max.md
-@@ -35,6 +35,8 @@ int main() {
-   }
- }
- ```
-+* LC_CTYPE[link /reference/clocale/lc_ctype.md]
-+* std::setlocale[link /reference/clocale/setlocale.md]
- 
- ### 出力例
- ```
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>mblen -- clocaleのマクロ周りを追加</title>
-      <link href="https://cpprefjp.github.io/reference/cstdlib/mblen.html"/>
-      <id>b37845cd1bf6da4bdb20b37731e4c359afd454dc:reference/cstdlib/mblen.md</id>
-      <updated>2026-09-08T16:51:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/cstdlib/mblen.md b/reference/cstdlib/mblen.md
-index a601673c1..e2c1f3dd7 100644
---- a/reference/cstdlib/mblen.md
-+++ b/reference/cstdlib/mblen.md
-@@ -14,7 +14,7 @@ namespace std {
- 
- 先頭以外の文字に関するバイト数は計算されない。
- 
--この関数は現在のロケールカテゴリー `LC_CTYPE` に依存してマルチバイト文字を解釈する。
-+この関数は現在のロケールカテゴリー [`LC_CTYPE`](/reference/clocale/lc_ctype.md) に依存してマルチバイト文字を解釈する。
- 
- `n`は解析に使用する最大バイト数を指定する。
- 
-@@ -76,6 +76,8 @@ int main() {
-   return 0;
- }
- ```
-+* LC_ALL[link /reference/clocale/lc_all.md]
-+* std::setlocale[link /reference/clocale/setlocale.md]
- 
- #### 出力例
- ```
-@@ -123,6 +125,8 @@ int main() {
- }
- ```
- * std::mbstate_t[link /reference/cwchar/mbstate_t.md]
-+* LC_ALL[link /reference/clocale/lc_all.md]
-+* std::setlocale[link /reference/clocale/setlocale.md]
- 
- 注意: この例は飽くまで `std::mblen` を用いて文字数を数える関数の例であるが、実用上は `std::mbrlen` を用いた実装にするのが安全である。
- 上の関数 `count_chars_mblen` はスレッドセーフでない他、呼び出し元でも `std::mblen` を使っている場合にその振る舞いを破壊する可能性がある。
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>strcoll -- clocaleのマクロ周りを追加</title>
-      <link href="https://cpprefjp.github.io/reference/cstring/strcoll.html"/>
-      <id>b37845cd1bf6da4bdb20b37731e4c359afd454dc:reference/cstring/strcoll.md</id>
-      <updated>2026-09-08T16:51:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/cstring/strcoll.md b/reference/cstring/strcoll.md
-index d9ea93d56..fbf5af923 100644
---- a/reference/cstring/strcoll.md
-+++ b/reference/cstring/strcoll.md
-@@ -14,7 +14,7 @@ namespace std {
- 
- 
- ## 効果
--現在のロケールの`LC_COLLATE`カテゴリに従って、`s1`が指す文字列と`s2`が指す文字列を比較する。
-+現在のロケールの[`LC_COLLATE`](/reference/clocale/lc_collate.md)カテゴリに従って、`s1`が指す文字列と`s2`が指す文字列を比較する。
- 
- 
- ## 戻り値
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>strxfrm -- clocaleのマクロ周りを追加</title>
-      <link href="https://cpprefjp.github.io/reference/cstring/strxfrm.html"/>
-      <id>b37845cd1bf6da4bdb20b37731e4c359afd454dc:reference/cstring/strxfrm.md</id>
-      <updated>2026-09-08T16:51:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/cstring/strxfrm.md b/reference/cstring/strxfrm.md
-index 856dcee82..af3124ba2 100644
---- a/reference/cstring/strxfrm.md
-+++ b/reference/cstring/strxfrm.md
-@@ -17,7 +17,7 @@ namespace std {
- 
- 
- ## 効果
--現在のロケールの`LC_COLLATE`カテゴリに従って`s2`が指す文字列を変換し、その結果を`s1`が指す配列へ、終端のヌル文字を含めて最大`n`文字コピーする。
-+現在のロケールの[`LC_COLLATE`](/reference/clocale/lc_collate.md)カテゴリに従って`s2`が指す文字列を変換し、その結果を`s1`が指す配列へ、終端のヌル文字を含めて最大`n`文字コピーする。
- 
- 戻り値が`n`以上である場合、`s1`が指す配列の内容は不定である。
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>mbrlen -- clocaleのマクロ周りを追加</title>
-      <link href="https://cpprefjp.github.io/reference/cwchar/mbrlen.html"/>
-      <id>b37845cd1bf6da4bdb20b37731e4c359afd454dc:reference/cwchar/mbrlen.md</id>
-      <updated>2026-09-08T16:51:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/cwchar/mbrlen.md b/reference/cwchar/mbrlen.md
-index b3ba4e0d9..88e55bcd7 100644
---- a/reference/cwchar/mbrlen.md
-+++ b/reference/cwchar/mbrlen.md
-@@ -57,6 +57,7 @@ int main()
- * std::mbstate_t[link mbstate_t.md]
- * std::setlocale[link /reference/clocale/setlocale.md]
- * std::size_t[link /reference/cstddef/size_t.md]
-+* LC_ALL[link /reference/clocale/lc_all.md]
- 
- ### 出力例
- ```
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>mbrtowc -- clocaleのマクロ周りを追加</title>
-      <link href="https://cpprefjp.github.io/reference/cwchar/mbrtowc.html"/>
-      <id>b37845cd1bf6da4bdb20b37731e4c359afd454dc:reference/cwchar/mbrtowc.md</id>
-      <updated>2026-09-08T16:51:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/cwchar/mbrtowc.md b/reference/cwchar/mbrtowc.md
-index eaf32920e..9802ac5ba 100644
---- a/reference/cwchar/mbrtowc.md
-+++ b/reference/cwchar/mbrtowc.md
-@@ -55,6 +55,8 @@ int main()
- ```
- * std::mbrtowc[color ff0000]
- * std::wcout[link /reference/iostream/wcout.md]
-+* LC_ALL[link /reference/clocale/lc_all.md]
-+* std::setlocale[link /reference/clocale/setlocale.md]
- 
- ### 出力例
- ```
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>mbsrtowcs -- clocaleのマクロ周りを追加</title>
-      <link href="https://cpprefjp.github.io/reference/cwchar/mbsrtowcs.html"/>
-      <id>b37845cd1bf6da4bdb20b37731e4c359afd454dc:reference/cwchar/mbsrtowcs.md</id>
-      <updated>2026-09-08T16:51:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/cwchar/mbsrtowcs.md b/reference/cwchar/mbsrtowcs.md
-index 201a82210..37b3830b9 100644
---- a/reference/cwchar/mbsrtowcs.md
-+++ b/reference/cwchar/mbsrtowcs.md
-@@ -48,6 +48,8 @@ int main()
- ```
- * std::mbsrtowcs[color ff0000]
- * std::wcout[link /reference/iostream/wcout.md]
-+* LC_ALL[link /reference/clocale/lc_all.md]
-+* std::setlocale[link /reference/clocale/setlocale.md]
- 
- ### 出力例
- ```
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>wcrtomb -- clocaleのマクロ周りを追加</title>
-      <link href="https://cpprefjp.github.io/reference/cwchar/wcrtomb.html"/>
-      <id>b37845cd1bf6da4bdb20b37731e4c359afd454dc:reference/cwchar/wcrtomb.md</id>
-      <updated>2026-09-08T16:51:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/cwchar/wcrtomb.md b/reference/cwchar/wcrtomb.md
-index 08fe821f3..dfa4981d7 100644
---- a/reference/cwchar/wcrtomb.md
-+++ b/reference/cwchar/wcrtomb.md
-@@ -49,6 +49,8 @@ int main()
- ```
- * std::wcrtomb[color ff0000]
- * std::wcout[link /reference/iostream/wcout.md]
-+* LC_ALL[link /reference/clocale/lc_all.md]
-+* std::setlocale[link /reference/clocale/setlocale.md]
- 
- ### 出力例
- ```
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>wcscoll -- clocaleのマクロ周りを追加</title>
-      <link href="https://cpprefjp.github.io/reference/cwchar/wcscoll.html"/>
-      <id>b37845cd1bf6da4bdb20b37731e4c359afd454dc:reference/cwchar/wcscoll.md</id>
-      <updated>2026-09-08T16:51:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/cwchar/wcscoll.md b/reference/cwchar/wcscoll.md
-index eeeac8e98..2c6bb77ec 100644
---- a/reference/cwchar/wcscoll.md
-+++ b/reference/cwchar/wcscoll.md
-@@ -18,7 +18,7 @@ namespace std {
- 
- 
- ## 備考
--- 文字コードの値で比較する[`wcscmp()`](wcscmp.md)と異なり、`LC_COLLATE`カテゴリのロケールに従って比較する
-+- 文字コードの値で比較する[`wcscmp()`](wcscmp.md)と異なり、[`LC_COLLATE`](/reference/clocale/lc_collate.md)カテゴリのロケールに従って比較する
- 
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>wcsrtombs -- clocaleのマクロ周りを追加</title>
-      <link href="https://cpprefjp.github.io/reference/cwchar/wcsrtombs.html"/>
-      <id>b37845cd1bf6da4bdb20b37731e4c359afd454dc:reference/cwchar/wcsrtombs.md</id>
-      <updated>2026-09-08T16:51:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/cwchar/wcsrtombs.md b/reference/cwchar/wcsrtombs.md
-index 0fd3e2f24..760c8149e 100644
---- a/reference/cwchar/wcsrtombs.md
-+++ b/reference/cwchar/wcsrtombs.md
-@@ -47,6 +47,8 @@ int main()
- ```
- * std::wcsrtombs[color ff0000]
- * std::wcout[link /reference/iostream/wcout.md]
-+* LC_ALL[link /reference/clocale/lc_all.md]
-+* std::setlocale[link /reference/clocale/setlocale.md]
- 
- ### 出力例
- ```
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>stod -- clocaleのマクロ周りを追加</title>
-      <link href="https://cpprefjp.github.io/reference/string/stod.html"/>
-      <id>b37845cd1bf6da4bdb20b37731e4c359afd454dc:reference/string/stod.md</id>
-      <updated>2026-09-08T16:51:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/stod.md b/reference/string/stod.md
-index df54f3a4d..d0c5c0fcd 100644
---- a/reference/string/stod.md
-+++ b/reference/string/stod.md
-@@ -41,7 +41,7 @@ namespace std {
- この関数は、[`setlocale()`](/reference/clocale/setlocale.md)関数により挙動が変化する。
- 
- - `strtod()`関数での文字列先頭の空白を読み飛ばす処理に、`&amp;lt;cctype&amp;gt;`の`isspace()`関数が使用される。
--- 小数点記号は`LC_NUMERIC`で指定されたものが使用される。
-+- 小数点記号は[`LC_NUMERIC`](/reference/clocale/lc_numeric.md)で指定されたものが使用される。
- 
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>stof -- clocaleのマクロ周りを追加</title>
-      <link href="https://cpprefjp.github.io/reference/string/stof.html"/>
-      <id>b37845cd1bf6da4bdb20b37731e4c359afd454dc:reference/string/stof.md</id>
-      <updated>2026-09-08T16:51:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/stof.md b/reference/string/stof.md
-index 76e86ab8c..5c2d4d74e 100644
---- a/reference/string/stof.md
-+++ b/reference/string/stof.md
-@@ -41,7 +41,7 @@ namespace std {
- この関数は、[`setlocale()`](/reference/clocale/setlocale.md)関数により挙動が変化する。
- 
- - `strtof()`関数での文字列先頭の空白を読み飛ばす処理に、`&amp;lt;cctype&amp;gt;`の`isspace()`関数が使用される。
--- 小数点記号は`LC_NUMERIC`で指定されたものが使用される。
-+- 小数点記号は[`LC_NUMERIC`](/reference/clocale/lc_numeric.md)で指定されたものが使用される。
- 
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>stold -- clocaleのマクロ周りを追加</title>
-      <link href="https://cpprefjp.github.io/reference/string/stold.html"/>
-      <id>b37845cd1bf6da4bdb20b37731e4c359afd454dc:reference/string/stold.md</id>
-      <updated>2026-09-08T16:51:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/string/stold.md b/reference/string/stold.md
-index 0d1e201d0..d704ce157 100644
---- a/reference/string/stold.md
-+++ b/reference/string/stold.md
-@@ -41,7 +41,7 @@ namespace std {
- この関数は、[`setlocale()`](/reference/clocale/setlocale.md)関数により挙動が変化する。
- 
- - `strtold()`関数での文字列先頭の空白を読み飛ばす処理に、`&amp;lt;cctype&amp;gt;`の`isspace()`関数が使用される。
--- 小数点記号は`LC_NUMERIC`で指定されたものが使用される。
-+- 小数点記号は[`LC_NUMERIC`](/reference/clocale/lc_numeric.md)で指定されたものが使用される。
- 
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>text_encoding -- clocaleのマクロ周りを追加</title>
-      <link href="https://cpprefjp.github.io/reference/text_encoding.html"/>
-      <id>b37845cd1bf6da4bdb20b37731e4c359afd454dc:reference/text_encoding.md</id>
-      <updated>2026-09-08T16:51:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/text_encoding.md b/reference/text_encoding.md
-index 2ac87ad44..c7d7a75d3 100644
---- a/reference/text_encoding.md
-+++ b/reference/text_encoding.md
-@@ -46,7 +46,7 @@ C++プログラムにおけるテキストエンコーディングは、大き
- 
- | プラットフォーム | 決定方法 |
- |----------------|---------|
--| Linux / macOS | POSIXロケール（空文字列`&amp;#34;&amp;#34;`）に関連付けられたエンコーディング。環境変数`LC_CTYPE`、`LC_ALL`、`LANG`から決定される。近年のLinux / macOSでは多くの場合UTF-8 |
-+| Linux / macOS | POSIXロケール（空文字列`&amp;#34;&amp;#34;`）に関連付けられたエンコーディング。環境変数[`LC_CTYPE`](/reference/clocale/lc_ctype.md)、[`LC_ALL`](/reference/clocale/lc_all.md)、`LANG`から決定される。近年のLinux / macOSでは多くの場合UTF-8 |
- | Windows | `GetACP()`が返すアクティブコードページ。日本語環境ではCP932（Shift_JIS系） |
- 
- 注意として、Windowsではコンソールのコードページ（`GetConsoleCP()`/`GetConsoleOutputCP()`で取得）が環境エンコーディングと異なる場合がある。`&amp;lt;text_encoding&amp;gt;`の環境エンコーディングはコンソールのコードページではなく、プロセスのアクティブコードページを返す。
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>environment -- clocaleのマクロ周りを追加</title>
-      <link href="https://cpprefjp.github.io/reference/text_encoding/text_encoding/environment.html"/>
-      <id>b37845cd1bf6da4bdb20b37731e4c359afd454dc:reference/text_encoding/text_encoding/environment.md</id>
-      <updated>2026-09-08T16:51:45+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/text_encoding/text_encoding/environment.md b/reference/text_encoding/text_encoding/environment.md
-index 7d3bb3409..a1557f8ca 100644
---- a/reference/text_encoding/text_encoding/environment.md
-+++ b/reference/text_encoding/text_encoding/environment.md
-@@ -47,7 +47,7 @@ POSIX実装では、空文字列`&amp;#34;&amp;#34;`で表されるPOSIXロケールに関連付
- ### 各プラットフォームでの決定方法
- 
- #### Linux
--環境変数`LC_CTYPE`、`LC_ALL`、`LANG`（この優先順位で）から決定される。近年のディストリビューションでは多くの場合UTF-8である。
-+環境変数[`LC_CTYPE`](/reference/clocale/lc_ctype.md)、[`LC_ALL`](/reference/clocale/lc_all.md)、`LANG`（この優先順位で）から決定される。近年のディストリビューションでは多くの場合UTF-8である。
- 
- 推奨実装として`/proc/self/environ`を解析することで、プログラム起動後の`setenv()`の影響を受けない初期の環境変数を取得できる。
- 
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
