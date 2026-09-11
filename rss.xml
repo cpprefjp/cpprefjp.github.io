@@ -2,9 +2,103 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2026-09-11T02:53:21.741685</updated>
-  <id>28348d30-542e-445c-9151-633cbb0db598</id>
+  <updated>2026-09-11T03:06:00.991328</updated>
+  <id>6e85caaf-4a18-4aae-8bd7-536c896d320b</id>
 
+  
+    <entry>
+      <title>equal -- algorithm/equal : 3引数版は範囲チェックされないのでクラッシュする恐れがあることの説明と例を記載</title>
+      <link href="https://cpprefjp.github.io/reference/algorithm/equal.html"/>
+      <id>e4a0b2e51f7a95c86f62006055bbd338ff202aa2:reference/algorithm/equal.md</id>
+      <updated>2026-09-11T12:03:49+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/equal.md b/reference/algorithm/equal.md
+index 0ebdff324..fc0d709a5 100644
+--- a/reference/algorithm/equal.md
++++ b/reference/algorithm/equal.md
+@@ -98,6 +98,11 @@ namespace std {
+ 2つのイテレータ範囲が要素数および各要素が等値であった場合、`true`を返す。
+ 
+ 
++## 事前条件
++- (1), (2), (5), (6) : `[first2, first2 + (last1 - first1))`が妥当なイテレータ範囲であること
++- (3), (4), (7), (8) : `[first2, last2)`が妥当なイテレータ範囲であること
++
++
+ ## 戻り値
+ `last2` が与えられている形式の場合、もし `last1 - first1 != last2 - first2` であれば、`false` を返す。  
+ そうでない場合、`[first1,last1)` 内のイテレータ `i` について、`*i == *(first2 + (i - first1))` もしくは `pred(*i, *(first2 + (i - first1))) != false` が全てのイテレータ `i` について満たされているのであれば `true` を返す。  
+@@ -112,10 +117,15 @@ namespace std {
+ 
+ 
+ ## 備考
++- (1), (2), (5), (6) : これらのオーバーロードは、`first2`から始まる範囲の長さを検査しない。`first2`側の要素数が`[first1, last1)`の要素数より少ない場合、範囲外アクセスによって動作は未定義となり、クラッシュする可能性がある
++    - `first2`側の範囲が`[first1, last1)`と同じかそれ以上の要素数をもつことが保証できない場合は、範囲の終端`last2`を受け取る(3), (4)を使用すること。(3), (4)は要素数が異なる場合に`false`を返す
+ - ランダムアクセスイテレータの範囲を使用する場合、状況によっては(1), (2)のバージョンよりも、(3), (4)を使用する方が効率がよくなることが期待できる。ランダムアクセスイテレータはイテレータ同士の差を定数時間で求められるため、イテレーションを行うことなく2つの範囲の要素数が異なることを検出できるためである
+ 
+ 
+ ## 例
++### 基本的な使い方 ((3), (4))
++2つのイテレータ範囲の終端をどちらも指定するバージョンである。要素数が異なる場合は`false`を返す。
++
+ ```cpp example
+ #include &amp;lt;algorithm&amp;gt;
+ #include &amp;lt;iostream&amp;gt;
+@@ -139,12 +149,46 @@ int main() {
+ ```
+ * std::equal[color ff0000]
+ 
+-### 出力
++#### 出力
+ ```
+ false
+ true
+ ```
+ 
++### 片方のイテレータ範囲の終端を指定しない場合 ((1), (2))
++`first2`から始まる範囲の終端を指定しないバージョンである。この範囲の長さは検査されないため、`first2`側の要素数が足りない場合は範囲外アクセスとなり、動作は未定義となる。
++
++```cpp example
++#include &amp;lt;algorithm&amp;gt;
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;vector&amp;gt;
++
++int main() {
++  std::vector&amp;lt;int&amp;gt; v1 = { 1, 2, 3 };
++  std::vector&amp;lt;int&amp;gt; v2 = { 1, 2, 3, 4 };
++  std::vector&amp;lt;int&amp;gt; v3 = { 1, 2 };
++
++  std::cout &amp;lt;&amp;lt; std::boolalpha;
++
++  // v2はv1と同じかそれ以上の要素数をもつことがわかっているため、安全に使用できる
++  std::cout &amp;lt;&amp;lt; std::equal(v1.begin(), v1.end(), v2.begin()) &amp;lt;&amp;lt; std::endl;
++
++  // 危険な例。
++  // v3の要素数はv1より少ないため、v3の範囲外にアクセスし、動作は未定義となる
++  // std::cout &amp;lt;&amp;lt; std::equal(v1.begin(), v1.end(), v3.begin()) &amp;lt;&amp;lt; std::endl;
++
++  // 終端を指定する(3)であれば、要素数が異なることを検出してfalseを返す
++  std::cout &amp;lt;&amp;lt; std::equal(v1.begin(), v1.end(), v3.begin(), v3.end()) &amp;lt;&amp;lt; std::endl;
++}
++```
++* std::equal[color ff0000]
++
++#### 出力
++```
++true
++false
++```
++
+ 
+ ## 実装例
+ ```cpp
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>コンストラクタ -- shared_ptrのコンストラクタ : aliasing constructorの例を追加</title>
@@ -252,313 +346,6 @@ index f1dc4a259..ea38c8794 100644
       <author>
         <name>yoh</name>
         <email>kawasaki.liamg@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>ファイルを読み込む#embed命令を追加 [P1967R14] -- C++26 #embed : 仕様の抜け・誤りを修正</title>
-      <link href="https://cpprefjp.github.io/lang/cpp26/embed.html"/>
-      <id>4c8ab8910974c2ddb5682a3d5254b25eb69edf81:lang/cpp26/embed.md</id>
-      <updated>2026-09-08T20:49:05+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp26/embed.md b/lang/cpp26/embed.md
-index d13d8af42..60dff5cce 100644
---- a/lang/cpp26/embed.md
-+++ b/lang/cpp26/embed.md
-@@ -10,76 +10,244 @@
- &amp;lt;!-- last lang caution --&amp;gt;
- 
- ## 概要
--C++26では、`#embed`ディレクティブが追加される。
-+C++26では、ファイルなどのリソースの内容をソースコードへ埋め込む`#embed`前処理ディレクティブが追加される。
- 
--これは、バイナリリソースを直接コード内に埋め込む機能を提供する。
-+これによって、これまで実行時に読み込んでいた画像・音声・シェーダなどのバイナリリソースを、コンパイル時に読み込んで実行ファイルへ埋め込めるようになる。
-+
-+```cpp
-+constexpr unsigned char image[] = {
-+#embed &amp;#34;image.png&amp;#34;
-+};
-+```
-+
-+従来は、外部ツールでバイナリを`0x89, 0x50, ...`のようなソースコードへ変換してからインクルードする必要があった。この方法はビルド手順が複雑になるうえ、巨大な初期化子リストのコンパイルに長い時間とメモリを要していた。`#embed`は処理系がリソースを直接読み込むため、これらの問題を避けられる。
- 
--これにより、今までは実行時に読み込んでいたファイルなどがコンパイル時点で読み込まれ、実行ファイル内に埋め込むことができるようになる。
- 
- ## 仕様
--`#embed`ディレクティブによって読み込まれたバイナリは、`constexpr unsigned char`配列として扱われる。
--```cpp example
--#include &amp;lt;iostream&amp;gt;
-+### リソース
-+`#embed`が読み込む対象は、規格では「ファイル」ではなく「リソース (resource)」と呼ばれ、翻訳環境からアクセスできるデータの供給源として定義されている。リソースをどのように特定・検索するかは処理系定義であるため、通常のファイル以外も対象となりうる。
- 
--int main() {
--  constexpr unsigned char image_binary[] = {
--    #embed &amp;#34;image.bin&amp;#34;
--  };
--  std::cout &amp;lt;&amp;lt; std::hex;
--  for (unsigned char c : image_binary) {
--    std::cout &amp;lt;&amp;lt; static_cast&amp;lt;int&amp;gt;(c) &amp;lt;&amp;lt; &amp;#39; &amp;#39;;
--  }
--  std::cout &amp;lt;&amp;lt; std::endl;
--}
-+- POSIXのキャラクタデバイスや疑似ファイル（`/dev/urandom`など）。このような「無限に読み出せるリソース」の存在が、読み込む要素数の上限を指定する`limit`パラメータが導入された動機となっている
-+- 処理系が独自にサポートする、URIのような指定方法によるリソース（ネットワーク越しの取得や、認証・権限の確認をともなうものを含む）
-+- ビルドシステムなどが提供する、実体がファイルではないリソース
-+
-+リソースは[`std::fgetc()`](/reference/cstdio/fgetc.md)によってバイナリファイルとして読み出されたかのように、先頭から1バイトずつ読み込まれる。
-+
-+
-+### 構文
-+`#embed`ディレクティブは、`#include`と同じ2つの形式でリソースを指定する。
-+
-+```cpp
-+#embed &amp;lt;ヘッダ名&amp;gt;   // 処理系定義の場所からリソースを検索する
-+#embed &amp;#34;ファイル名&amp;#34; // 名前でリソースを特定する。失敗した場合は&amp;lt;&amp;gt;形式と同じ検索を行う
- ```
--このプログラムは、`image.bin`をバイナリデータとして扱い、バイト列を出力している。
- 
--つまり、下のプログラムのように`#embed`を使用するとテキストファイルの中身をそのままchar配列に格納していることと同じになる。
--```cpp example
--int main() {
--  constexpr char text[] = { 
--    #embed &amp;#34;test.txt&amp;#34;
-+リソースの検索方法は処理系定義であり、`#include`とは別の検索パスをもつことが推奨されている。リソースが見つからない場合、およびリソースを処理できない場合、プログラムは不適格となる。
-+
-+指定部分にマクロを使用することもできる。この場合、マクロを展開した結果からヘッダ名を形成する。
-+
-+```cpp
-+#define RESOURCE &amp;#34;data.bin&amp;#34;
-+#embed RESOURCE
-+```
-+
-+### 置き換えの結果
-+`#embed`ディレクティブは、`int`型の整数リテラルをカンマで区切ったリストへ置き換えられる。配列になるわけではないため、初期化子リストの中だけでなく、単一の値が必要な場所にも使用できる。
-+
-+```cpp
-+constexpr unsigned char data[] = {
-+#embed &amp;#34;data.bin&amp;#34;       // 複数の要素へ展開される
-+};
-+
-+int i =
-+#embed &amp;#34;single.bin&amp;#34;     // 1バイトのリソースであれば、単一の値としても使用できる
-+;
-+```
-+
-+リストの各要素はリソースの1バイトに対応し、その値は`unsigned char`で表現できる範囲となる。リソースのビット幅が[`CHAR_BIT`](/reference/climits/char_bit.md)の整数倍でない場合、プログラムは不適格となる。
-+
-+なお、`char`が符号付き型である処理系では、`128`以上のバイトを`char`の配列へ格納しようとすると縮小変換によってコンパイルエラーとなる。バイナリを格納する配列の要素型には`unsigned char`または[`std::byte`](/reference/cstddef/byte.md)を使用する。
-+
-+### 埋め込みパラメータ
-+リソースの指定に続けて、以下のパラメータを指定できる。各パラメータは高々1回のみ指定でき、順序は問わない。
-+
-+| パラメータ | 説明 |
-+|------------|------|
-+| `limit(定数式)` | リストの要素数の上限を指定する |
-+| `prefix(トークン列)` | リストの直前へトークン列を挿入する |
-+| `suffix(トークン列)` | リストの直後へトークン列を挿入する |
-+| `if_empty(トークン列)` | リソースが空である場合に、ディレクティブ全体をトークン列で置き換える |
-+
-+```cpp
-+constexpr unsigned char data[] = {
-+#embed &amp;#34;data.bin&amp;#34; limit(1024) prefix(0x01, 0x02,) suffix(, 0xFF) if_empty(0x00)
-+};
-+```
-+
-+- `limit`の引数は、条件付き取り込み（`#if`）と同じ規則で評価される整数定数式であり、`0`以上でなければならない。`defined`は使用できないが、`__has_include`は使用できる
-+- `/dev/urandom`のような終端のないリソースを読み込む場合、`limit`を指定しなければ処理系がメモリを使い果たすまで読み込みを続けることになる
-+- `prefix`と`suffix`のトークン列は任意の前処理トークン列であり、バイト値に限られない。上記のように、区切りのカンマも自分で書く必要がある
-+- `prefix`と`suffix`は、リソースが空である場合には無視される
-+- `if_empty`は、リソースが空ではない場合には無視される
-+- リソースは、要素数が`0`である場合に空とみなされる。`limit(0)`を指定した場合や、[`offset`](/lang/cpp29/embed_offset_parameter.md)（C++29）でリソースの終端を越えた場合も空となる
-+
-+これらの標準のパラメータに加えて、`vendor::param`のように`::`で区切った形式の、処理系独自のパラメータを指定できる（条件付きサポート）。
-+
-+### `__has_embed`前処理演算子
-+`#if`などの条件付き取り込みの中で、リソースが存在するかを検査できる。
-+
-+```cpp
-+#if __has_embed(&amp;#34;data.bin&amp;#34;)
-+// data.binが存在し、空でない場合の処理
-+#endif
-+```
-+
-+`__has_embed`は、[`__has_include`](/lang/cpp17/has_include.md)と同様の前処理演算子であり、`#embed`と同じ形式でリソースと埋め込みパラメータを受け取って、以下のいずれかの値へ置き換えられる。これらの値は、定義済みマクロとしても提供される。
-+
-+| 定義済みマクロ | 値 | 意味 |
-+|----------------|----|------|
-+| `__STDC_EMBED_NOT_FOUND__` | `0` | リソースが見つからない、または指定されたパラメータが未サポートである |
-+| `__STDC_EMBED_FOUND__` | `1` | リソースが見つかり、空ではない |
-+| `__STDC_EMBED_EMPTY__` | `2` | リソースが見つかり、空である |
-+
-+`__has_embed`では、未知の埋め込みパラメータを指定してもプログラムは不適格とはならず、「未サポート」として`__STDC_EMBED_NOT_FOUND__`が返る。この性質によって、処理系独自のパラメータが使用できるかを検査できる。
-+
-+### 機能テストマクロ
-+- `__cpp_pp_embed`が`202502L`として定義される
-+
-+
-+## 例
-+### リソースを読み込む
-+```cpp
-+#include &amp;lt;print&amp;gt;
-+
-+int main()
-+{
-+  // ファイルの内容をバイト列として読み込む
-+  constexpr unsigned char data[] = {
-+#embed &amp;#34;data.bin&amp;#34;
-   };
-+
-+  std::println(&amp;#34;{} bytes&amp;#34;, sizeof(data));
- }
- ```
--`#embed`ディレクティブは、他にもパラメータを受け付ける。
-+
-+### 埋め込みパラメータを使用する
-+以下の例は、自身のソースファイルを読み込むことで、外部のファイルなしに動作を確認できるようにしている。
-+
- ```cpp example
--int main() {
--  constexpr unsigned char limited_data[] = {
--    #embed &amp;#34;data.bin&amp;#34; limit(1024)
--  };
--  constexpr unsigned char prefixed_data[] = {
--    #embed &amp;#34;data.bin&amp;#34; prefix(0x01, 0x02, 0x03)
-+// ABCDEF
-+#include &amp;lt;print&amp;gt;
-+
-+int main()
-+{
-+  // このソースファイルの先頭9バイト（1行目のコメント）を読み込む
-+  constexpr unsigned char head[] = {
-+#embed __FILE__ limit(9)
-   };
--  constexpr unsigned char suffixed_data[] = {
--    #embed &amp;#34;data.bin&amp;#34; suffix(0xFE, 0xFF)
-+  std::println(&amp;#34;{}&amp;#34;, std::string_view{reinterpret_cast&amp;lt;const char*&amp;gt;(head), sizeof(head)});
-+
-+  // limit(0)によってリソースは空となるため、if_emptyのトークン列へ置き換えられる。
-+  // このとき、prefixとsuffixは無視される
-+  constexpr int marker[] = {
-+#embed __FILE__ limit(0) prefix(1,) suffix(, 2) if_empty(42)
-   };
--  constexpr unsigned char safe_data[] = {
--    #embed &amp;#34;data.bin&amp;#34; if_empty(0x00)
-+  std::println(&amp;#34;{} {}&amp;#34;, marker[0], sizeof(marker) / sizeof(int));
-+
-+  // 空ではない場合は、prefixとsuffixが適用され、if_emptyが無視される
-+  constexpr unsigned char fixed[] = {
-+#embed __FILE__ limit(2) prefix(0x01,) suffix(, 0x02) if_empty(42)
-   };
-+  std::println(&amp;#34;{} {} {}&amp;#34;, fixed[0], fixed[3], sizeof(fixed));
- }
- ```
--それぞれの変数では、以下のようになっている。
--- `limit(1024)`では、読み込むバイトサイズを1024byteに制限する。もしファイルサイズが1024byteよりも大きければ、最初の1024バイトのみが読み込まれる。
--- `prefix(0x01, 0x02, 0x03)`では、`data.bin`の内容の前に`0x01 0x02 0x03`のバイト列を追加している。
--- `suffix(0xFE, 0xFF)`では、`data.bin`の内容のあとに`0xFE 0xFF`のバイト列を追加している。
--- `if_empty(0x00)`では、`data.bin`が空であった場合、`0x00`のバイト列を格納している。
- 
--また、`#embed`ディレクティブは、複数のパラメータを**順不同**で組み合わせて指定することもできる。
-+#### 出力
-+```
-+// ABCDEF
-+42 1
-+1 2 4
-+```
- 
-+### ファイル以外のリソースを読み込む
- ```cpp example
--int main() {
--  constexpr unsigned char combined_data[] = {
--    #embed &amp;#34;data.bin&amp;#34; limit(1024) prefix(0x01, 0x02) suffix(0xFF) if_empty(0x00)
-+#include &amp;lt;print&amp;gt;
-+#include &amp;lt;random&amp;gt;
-+#include &amp;lt;cstdint&amp;gt;
-+
-+int main()
-+{
-+  // コンパイル時に/dev/urandomから4バイトを読み込む。
-+  // このリソースには終端がないため、limitの指定が必須となる
-+  constexpr unsigned char seed_bytes[] = {
-+#embed &amp;#34;/dev/urandom&amp;#34; limit(4)
-   };
-+
-+  // 読み込んだ4バイトを32ビットの値にまとめ、乱数エンジンのシードとする
-+  std::uint32_t seed = 0;
-+  for (unsigned char b : seed_bytes) {
-+    seed = (seed &amp;lt;&amp;lt; 8) | b;
-+  }
-+
-+  std::mt19937 engine{seed};
-+  std::uniform_int_distribution&amp;lt;int&amp;gt; dist{1, 6};
-+
-+  std::println(&amp;#34;{}&amp;#34;, dist(engine));
- }
- ```
--これは、`limit(1024)`でファイルサイズを1024バイトに制限し、`prefix(0x01, 0x02)`で先頭バイト列`0x01 0x02`を追加し、
--`suffix(0xFF)`で末尾`0xFF`を追加し、`if_empty(0x00)`で空の場合は`0x00`を格納することになる。
-+
-+シードはコンパイル時に確定するため、生成される乱数列は実行のたびではなく、コンパイルのたびに変化する。
-+
-+#### 出力例
-+```
-+4
-+```
-+
-+### `__has_embed`でリソースの有無を検査する
-+```cpp example
-+// ABCDEF
-+#include &amp;lt;print&amp;gt;
-+
-+int main()
-+{
-+#if __has_embed(__FILE__) == __STDC_EMBED_FOUND__
-+  std::println(&amp;#34;found&amp;#34;);
-+#endif
-+
-+#if __has_embed(__FILE__ limit(0)) == __STDC_EMBED_EMPTY__
-+  std::println(&amp;#34;empty&amp;#34;);
-+#endif
-+
-+#if __has_embed(&amp;#34;no_such_resource.bin&amp;#34;) == __STDC_EMBED_NOT_FOUND__
-+  std::println(&amp;#34;not found&amp;#34;);
-+#endif
-+}
-+```
-+
-+#### 出力
-+```
-+found
-+empty
-+not found
-+```
-+
-+
-+## この機能が必要になった背景・経緯
-+バイナリリソースをプログラムへ埋め込むという要求は古くからあり、実際には以下のような方法がとられてきた。
-+
-+- 外部ツールでバイナリを`0x89, 0x50, 0x4E, ...`のようなカンマ区切りのソースコードへ変換し、インクルードする
-+- リンカのオプションや、アセンブラの`.incbin`のような処理系固有の機能を使用する
-+- 実行時にファイルを読み込む
-+
-+このうち移植性のある方法は最初のものだが、生成されたソースは1バイトあたり数文字のテキストになるため、数MBのリソースでも巨大なファイルとなり、コンパイル時間とメモリ消費が大きな問題になっていた。処理系がリソースを直接読み込む`#embed`であれば、この変換自体が不要になる。
-+
-+この機能はC23で`&amp;lt;stdio.h&amp;gt;`とは独立した前処理ディレクティブとして先に標準化され、C++26でも同じ構文・意味論で取り込まれた。
- 
- 
- ## &amp;lt;a id=&amp;#34;relative-page&amp;#34; href=&amp;#34;#relative-page&amp;#34;&amp;gt;関連項目&amp;lt;/a&amp;gt;
-+- [C++17 `__has_include`](/lang/cpp17/has_include.md)
- - [C++29 `#embed`に`offset`パラメータを追加](/lang/cpp29/embed_offset_parameter.md)
-+- [`std::byte`](/reference/cstddef/byte.md)
- 
- 
- ## 参照
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
       </author>
     </entry>
   
