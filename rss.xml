@@ -2,9 +2,272 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2026-09-11T04:09:03.106150</updated>
-  <id>d8576dcb-b525-4a2f-b81c-7f3a6947a634</id>
+  <updated>2026-09-11T04:38:15.869092</updated>
+  <id>89f7ca03-42dc-4d03-9dfb-a7d181fe75ce</id>
 
+  
+    <entry>
+      <title>空オブジェクトに対する最適化を支援する属性[[no_unique_address]] [P0840R2] -- no_unique_address : 用途を調査して、説明と例を追加 (close #1544)</title>
+      <link href="https://cpprefjp.github.io/lang/cpp20/language_support_for_empty_objects.html"/>
+      <id>b323fa1ccf1abe808f6c45a49c7c77d1c5967654:lang/cpp20/language_support_for_empty_objects.md</id>
+      <updated>2026-09-11T13:36:13+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/language_support_for_empty_objects.md b/lang/cpp20/language_support_for_empty_objects.md
+index 5579a0fb2..9f5f0b089 100644
+--- a/lang/cpp20/language_support_for_empty_objects.md
++++ b/lang/cpp20/language_support_for_empty_objects.md
+@@ -31,9 +31,28 @@ class A
+ 
+ * `[[no_unique_address]]`属性の付いた同じ型または同じ型のサブオブジェクトを持つ非静的メンバ変数が複数ある場合、それらに共通するサブオブジェクトは互いに異なるアドレスに配置される。
+ 
+-* `[[no_unique_address]]`属性を指定しても、実際に空オブジェクトでない場合は効果がない。
++* 潜在的に重なるサブオブジェクトは、ほかのサブオブジェクトの末尾のパディングに配置される可能性もある。そのため、空でない型のメンバに指定した場合でも、クラス全体のサイズが小さくなることがある。
++
++* `[[no_unique_address]]`属性は最適化を許可するものであり、実際にサブオブジェクトが重なるかどうかは処理系のABIに依存する。
++
++
++## 用途
++`[[no_unique_address]]`属性には、おもに以下の用途がある。
++
++- 状態を持たないクラスのオブジェクトをメンバとして保持する
++    - アロケータ、削除子、比較関数、ハッシュ関数、関数オブジェクトなど、空になりやすい型を、継承を使わずにサイズ0で保持できる
++    - テンプレート引数によって空になったりならなかったりする型でも、特殊化を用意することなく、どちらの場合でも最適なレイアウトが得られる
++- 継承できない型のオブジェクトを保持する
++    - `final`が指定されたクラスや`union`は基底クラスにできないため、EBOを適用できない。`[[no_unique_address]]`属性であれば適用できる
++- 型の異なる複数の空のメンバをまとめる
++    - 型が異なる空のメンバは、すべて同じアドレスに配置できる
++- メンバ型の末尾のパディングを再利用する
++    - [`std::optional`](/reference/optional/optional.md)のように値とフラグ (タグ) を併せて保持する型で、値の型が持つ末尾のパディングにフラグを収められる場合がある
++- 標準ライブラリでも、[`std::ranges::in_out_result`](/reference/algorithm/ranges_in_out_result.md)などのRangeアルゴリズムの戻り値型や、[`std::ranges::elements_of`](/reference/ranges/elements_of.md)のメンバに指定されている
++
+ 
+ ## 例
++### 基本的な使い方
+ ```cpp example
+ #include &amp;lt;iostream&amp;gt;
+ 
+@@ -57,18 +76,18 @@ bool is_same_addr(void* x, void* y){
+ 
+ int main()
+ {
+-  std::cout &amp;lt;&amp;lt; sizeof(A) &amp;lt;&amp;lt; &amp;#39;\n&amp;#39;;
+-  std::cout &amp;lt;&amp;lt; sizeof(B) &amp;lt;&amp;lt; &amp;#39;\n&amp;#39;;
++  std::cout &amp;lt;&amp;lt; sizeof(A) &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; sizeof(B) &amp;lt;&amp;lt; std::endl;
+   A a;
+   B b;
+   std::cout &amp;lt;&amp;lt; std::boolalpha;
+-  std::cout &amp;lt;&amp;lt; is_same_addr(&amp;amp;a.e, &amp;amp;a.c) &amp;lt;&amp;lt; &amp;#39;\n&amp;#39;;
+-  std::cout &amp;lt;&amp;lt; is_same_addr(&amp;amp;b.e, &amp;amp;b.c) &amp;lt;&amp;lt; &amp;#39;\n&amp;#39;;
++  std::cout &amp;lt;&amp;lt; is_same_addr(&amp;amp;a.e, &amp;amp;a.c) &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; is_same_addr(&amp;amp;b.e, &amp;amp;b.c) &amp;lt;&amp;lt; std::endl;
+   return 0;
+ }
+ ```
+ 
+-### 出力例
++#### 出力例
+ ```
+ 2
+ 1
+@@ -76,6 +95,164 @@ false
+ true
+ ```
+ 
++### 状態を持たないクラスのオブジェクトをメンバとして保持する
++アロケータや削除子のような、状態を持たない (空になりやすい) 型を、継承を使わずにメンバとして保持できる。
++
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;memory&amp;gt;
++
++template &amp;lt;class T, class Deleter = std::default_delete&amp;lt;T&amp;gt;&amp;gt;
++class my_unique_ptr {
++  T* ptr_;
++  [[no_unique_address]] Deleter deleter_;
++
++public:
++  explicit my_unique_ptr(T* ptr) : ptr_(ptr), deleter_() {}
++  ~my_unique_ptr() { deleter_(ptr_); }
++};
++
++int main()
++{
++  std::cout &amp;lt;&amp;lt; std::boolalpha;
++
++  // 削除子が空であるため、ポインタひとつ分のサイズに収まる
++  std::cout &amp;lt;&amp;lt; (sizeof(my_unique_ptr&amp;lt;int&amp;gt;) == sizeof(int*)) &amp;lt;&amp;lt; std::endl;
++}
++```
++* std::default_delete[link /reference/memory/default_delete.md]
++
++#### 出力例
++```
++true
++```
++
++テンプレート引数によって空になったりならなかったりする型でも、特殊化を用意することなく、どちらの場合でも最適なレイアウトが得られる。
++
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++#include &amp;lt;memory&amp;gt;
++
++// 状態を持つ簡易的なアロケータ
++template &amp;lt;class T&amp;gt;
++class arena_allocator {
++  std::byte* buffer_;
++
++public:
++  using value_type = T;
++
++  explicit arena_allocator(std::byte* buffer) : buffer_(buffer) {}
++
++  T* allocate(std::size_t) { return reinterpret_cast&amp;lt;T*&amp;gt;(buffer_); }
++  void deallocate(T*, std::size_t) {}
++};
++
++template &amp;lt;class T, class Allocator = std::allocator&amp;lt;T&amp;gt;&amp;gt;
++class my_vector {
++  T* ptr_ = nullptr;
++  [[no_unique_address]] Allocator alloc_;
++
++public:
++  explicit my_vector(const Allocator&amp;amp; alloc = Allocator()) : alloc_(alloc) {}
++};
++
++int main()
++{
++  // std::allocatorは状態を持たないため、ポインタひとつ分のサイズに収まる
++  std::cout &amp;lt;&amp;lt; sizeof(my_vector&amp;lt;int&amp;gt;) &amp;lt;&amp;lt; std::endl;
++
++  // 状態を持つアロケータの場合は、そのぶんのサイズが必要になる
++  std::cout &amp;lt;&amp;lt; sizeof(my_vector&amp;lt;int, arena_allocator&amp;lt;int&amp;gt;&amp;gt;) &amp;lt;&amp;lt; std::endl;
++}
++```
++* std::byte[link /reference/cstddef/byte.md]
++
++#### 出力例
++```
++8
++16
++```
++
++### 継承できない型のオブジェクトを保持する
++`final`が指定されたクラスは基底クラスにできないため、EBOを適用できない。`[[no_unique_address]]`属性であれば適用できる。
++
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++
++class Empty final {}; // finalなので、継承によるEBOは適用できない
++
++struct A {
++  Empty e;
++  char c;
++};
++
++struct B {
++  [[no_unique_address]] Empty e;
++  char c;
++};
++
++int main()
++{
++  std::cout &amp;lt;&amp;lt; sizeof(A) &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; sizeof(B) &amp;lt;&amp;lt; std::endl;
++}
++```
++
++#### 出力例
++```
++2
++1
++```
++
++### 末尾のパディングを再利用する
++メンバの型が末尾にパディングを持つ場合、そのパディングに後続のメンバを配置できる。値とフラグを併せて保持する[`optional`](/reference/optional/optional.md)のような型で、フラグのぶんだけサイズが大きくなることを避けられる。
++
++```cpp example
++#include &amp;lt;iostream&amp;gt;
++
++struct Data {
++  int id;
++  char kind;
++
++  // ユーザー定義のデストラクタにより、トリビアルにコピー可能ではなくなる
++  ~Data() {}
++};
++
++struct A {
++  Data data;
++  bool has_value;
++};
++
++struct B {
++  [[no_unique_address]] Data data;
++  bool has_value;
++};
++
++int main()
++{
++  std::cout &amp;lt;&amp;lt; sizeof(Data) &amp;lt;&amp;lt; std::endl;
++  std::cout &amp;lt;&amp;lt; sizeof(A) &amp;lt;&amp;lt; std::endl;
++
++  // has_valueがDataの末尾のパディングに配置され、Dataと同じサイズになる
++  std::cout &amp;lt;&amp;lt; sizeof(B) &amp;lt;&amp;lt; std::endl;
++}
++```
++
++#### 出力例
++```
++8
++12
++8
++```
++
++
++## 備考
++- `[[no_unique_address]]`属性は最適化を許可するものであり、実際にサブオブジェクトが重なるかどうかは処理系のABIに依存する。
++- Itanium C++ ABIを採用するGCCとClangでは、メンバ型の末尾のパディングの再利用は、その型がトリビアルにコピー可能でない場合に行われる。
++- Visual C++は、既存のABIとの互換性を維持するために、標準の`[[no_unique_address]]`属性を無視する。同等の効果を得るには、独自の`[[msvc::no_unique_address]]`属性を使用する。
++- `[[no_unique_address]]`属性を指定したメンバは潜在的に重なるサブオブジェクトであるため、トリビアルにコピー可能な型であっても、そのメンバのバイト列を[`memcpy()`](/reference/cstring/memcpy.md)関数などでコピーして復元することは、規格上保証されない。末尾のパディングにほかのメンバが配置されている場合、そのメンバを破壊してしまう。
++
++
+ ## この機能が必要になった背景・経緯
+ 
+ ジェネリックなコードでは、空の型がよく使われる。
+@@ -97,8 +274,8 @@ class A
+ 
+ int main()
+ {
+-  std::cout &amp;lt;&amp;lt; sizeof(Empty) &amp;lt;&amp;lt; &amp;#39;\n&amp;#39;; // 1
+-  std::cout &amp;lt;&amp;lt; sizeof(A) &amp;lt;&amp;lt; &amp;#39;\n&amp;#39;;     // 2
++  std::cout &amp;lt;&amp;lt; sizeof(Empty) &amp;lt;&amp;lt; std::endl; // 1
++  std::cout &amp;lt;&amp;lt; sizeof(A) &amp;lt;&amp;lt; std::endl;     // 2
+   return 0;
+ }
+ ```
+@@ -117,7 +294,7 @@ class B: Empty
+ 
+ int main()
+ {
+-  std::cout &amp;lt;&amp;lt; sizeof(B) &amp;lt;&amp;lt; &amp;#39;\n&amp;#39;; // 1
++  std::cout &amp;lt;&amp;lt; sizeof(B) &amp;lt;&amp;lt; std::endl; // 1
+   return 0;
+ }
+ ```
+@@ -133,3 +310,5 @@ int main()
+ 
+ ## 参照
+ - [P0840R2 Language support for empty objects](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0840r2.html)
++- [Microsoft-specific attributes - Microsoft Learn](https://learn.microsoft.com/en-us/cpp/cpp/attributes?view=msvc-170)
++    - Visual C++独自の`[[msvc::no_unique_address]]`属性について
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>std.compat -- 動作確認されていないICCを削除</title>
@@ -69099,32 +69362,6 @@ index e88014428..89c3dc74a 100644
       <author>
         <name>Akira Takahashi</name>
         <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>bit_width -- bit/bit_width: fix markup</title>
-      <link href="https://cpprefjp.github.io/reference/bit/bit_width.html"/>
-      <id>f8cde7645cdb8c46dcfbdf2f2d6cf1c716da1138:reference/bit/bit_width.md</id>
-      <updated>2026-09-11T00:52:51+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/bit/bit_width.md b/reference/bit/bit_width.md
-index 0b9c37ed2..83f1755c4 100644
---- a/reference/bit/bit_width.md
-+++ b/reference/bit/bit_width.md
-@@ -89,6 +89,6 @@ int main()
- ## 参照
- - [P0556R3 Integral power-of-2 operations](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0556r3.html)
- - [P1956R1 On the names of low-level bit manipulation functions](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1956r1.pdf)
---- `std::log2p1`から`std::bit_width`に名称変更。変更前の関数名`log2p1`の`p1`は、1を足す (plus one) ことを示していた。
-+    - `std::log2p1`から`std::bit_width`に名称変更。変更前の関数名`log2p1`の`p1`は、1を足す (plus one) ことを示していた。
- - [LWG Issue 3656. Inconsistent bit operations returning a count](https://wg21.cmeerw.net/lwg/issue3656)
-     - 戻り値の型を`T`から`int`に変更
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yoh</name>
-        <email>kawasaki.liamg@gmail.com</email>
       </author>
     </entry>
   
