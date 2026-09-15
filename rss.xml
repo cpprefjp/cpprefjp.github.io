@@ -2,9 +2,77 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2026-09-15T07:07:30.860462</updated>
-  <id>75bf7dc4-5dab-4af7-a174-dba14a7be441</id>
+  <updated>2026-09-15T07:18:00.359297</updated>
+  <id>919fb5b9-6fb8-4e65-a580-1c586d875cde</id>
 
+  
+    <entry>
+      <title>コンパイル時アサート [N1720] -- if constexpr周りの整理 #1260</title>
+      <link href="https://cpprefjp.github.io/lang/cpp11/static_assert.html"/>
+      <id>6b0724b0e03136e3503aef084ffadd8ac2c6b31b:lang/cpp11/static_assert.md</id>
+      <updated>2026-09-15T16:15:49+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp11/static_assert.md b/lang/cpp11/static_assert.md
+index 8787129d1..eb2c73cd8 100644
+--- a/lang/cpp11/static_assert.md
++++ b/lang/cpp11/static_assert.md
+@@ -38,7 +38,7 @@ static_assert(定数式, 文字列リテラル);
+ - この宣言は、名前空間スコープ、ブロックスコープ、メンバ宣言といった場所で記述できる
+ - 定数式が真であると評価された場合は何も効果がない。定数式が偽であると評価された場合は、指定された文字列リテラルを含む診断メッセージがコンパイラによって問題報告される。ただし、基本ソース文字集合に含まれない文字集合は、診断メッセージに表示することはコンパイラに要求されない
+ - `static_assert`宣言では、新たな型やオブジェクトは宣言しない。また、実行時にサイズや時間コストは発生しない
+-- (CWG 2518が適用された環境): template文(もしくは適切な特殊化や[C++17 constexpr if 文](/lang/cpp17/if_constexpr.md)の中の文)が実際にインスタンス化されるまで、`static_assert`文の宣言は遅延される。
++- (CWG 2518が適用された環境): 失敗する`static_assert`宣言があっても、その宣言自体が実体化されない限りコンパイルエラーにはならない。テンプレートが実体化されない場合と、[C++17 constexpr if 文](/lang/cpp17/if_constexpr.md)の廃棄文に含まれる場合がこれに該当する。
+     - [C++17 constexpr if 文](/lang/cpp17/if_constexpr.md)の解説を参照
+ 
+ ## 例
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
+  
+    <entry>
+      <title>constexpr if 文 [P0292R2] -- if constexpr周りの整理 #1260</title>
+      <link href="https://cpprefjp.github.io/lang/cpp17/if_constexpr.html"/>
+      <id>6b0724b0e03136e3503aef084ffadd8ac2c6b31b:lang/cpp17/if_constexpr.md</id>
+      <updated>2026-09-15T16:15:49+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp17/if_constexpr.md b/lang/cpp17/if_constexpr.md
+index d18207ac8..b5a3ae3cc 100644
+--- a/lang/cpp17/if_constexpr.md
++++ b/lang/cpp17/if_constexpr.md
+@@ -102,7 +102,7 @@ int main()
+ 
+ ### `static_assert`宣言に関する例外
+ 
+-後に述べる2段階名前探索に関する注意点とは関係なく、C++23以降、もしくはCWG 2518が適用された環境においては、template文(もしくは適切な特殊化や`constexpr if`文の中の文)が実際に実体化されない限り、`static_assert`宣言による失敗は無視される。
++後に述べる2段階名前探索に関する注意点とは関係なく、C++23以降、もしくはCWG 2518が適用された環境においては、失敗する`static_assert`宣言があっても、その宣言自体が実体化されない限りコンパイルエラーにはならない。テンプレートが実体化されない場合と、`constexpr if`文の廃棄文に含まれる場合がこれに該当する。
+ 
+ ```cpp example
+ #include &amp;lt;cstdint&amp;gt;
+@@ -149,11 +149,11 @@ int main()
+ }
+ ```
+ 
+-なぜならば廃棄文はテンプレートの実体化を防ぐ (依存名の検証をしない) だけで、非依存名は検証されるからである。この例の[`static_assert`](/lang/cpp11/static_assert.md)に渡す条件式はテンプレートパラメータに依存していないので、テンプレートの宣言時に検証され、エラーとなる。
++なぜならば廃棄文はテンプレートの実体化を防ぐ (依存名の検証をしない) だけで、非依存名は検証されるからである。この例の[`static_assert`](/lang/cpp11/static_assert.md)に渡す条件式はテンプレートパラメータに依存していないので、テンプレートの定義時に検証され、エラーとなる。
+ 
+ #### CWG 2518が適用されていない環境での回避策
+ 
+-言い換えれば`static_assert`に渡す条件式が依存名ならばテンプレートの宣言時に検証されず、テンプレート実体化まで評価を遅らせることができる。
++言い換えれば`static_assert`に渡す条件式が依存名ならばテンプレートの定義時に検証されず、テンプレート実体化まで評価を遅らせることができる。
+ 
+ ```cpp example
+ #include &amp;lt;type_traits&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>constexpr if 文 [P0292R2] -- Merge pull request #1260 from cpprefjp/refactor/cwg2518</title>
@@ -373,57 +441,6 @@ index 1f4ab34e9..6d93d39cc 100644
    [=](int k = n) {};            // error: n is not odr-usable due to being
                                  // outside the block scope of the lambda-expression
    [&amp;amp;] { [n]{ return n; }; };    // OK
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>yumetodo</name>
-        <email>yume-wikijp@live.jp</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>暗黙のラムダキャプチャを簡略化 [P0588R1] -- feat: P0588R1で追加されたodr-usableについて記述</title>
-      <link href="https://cpprefjp.github.io/lang/cpp20/simplifying_implicit_lambda_capture.html"/>
-      <id>51022b16e885b1294391276a21c8577006c08e9d:lang/cpp20/simplifying_implicit_lambda_capture.md</id>
-      <updated>2023-01-11T00:44:41+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/simplifying_implicit_lambda_capture.md b/lang/cpp20/simplifying_implicit_lambda_capture.md
-index 8fbce21ed..1f4ab34e9 100644
---- a/lang/cpp20/simplifying_implicit_lambda_capture.md
-+++ b/lang/cpp20/simplifying_implicit_lambda_capture.md
-@@ -29,12 +29,31 @@ void f() {
- }
- ```
- 
--構造化束縛で導入された名前はラムダ式でキャプチャできない、と明記された。しかしその後、「[構造化束縛を拡張して通常の変数宣言のように使用できるようにする](extending_structured_bindings_to_be_more_like_variable_declarations.md)」の仕様でそれが可能となったため、この仕様変更は打ち消された。
-+本提案では一旦、構造化束縛で導入された名前はラムダ式でキャプチャできない、と明記された。その後、「[構造化束縛を拡張して通常の変数宣言のように使用できるようにする](extending_structured_bindings_to_be_more_like_variable_declarations.md)」の仕様でそれが可能となったため、この部分は打ち消された。
- 
-+## 仕様
-+
-+odr-usable(=ある名前の定義がその場所で見つかるか)という用語を導入して、lamda式でキャプチャできるものの増加に対して、規格文面の整理が行われた。
-+
-+ローカル変数のように、ローカルでodr-usedされる時に、その場所ではodr-usableでないとき、そのプログラムは適格ではない。
-+
-+```cpp
-+void f(int n) {
-+  [] { n = 1; };                // error: nが使われようとしているのはlambda式の中なので、odr-usableではない
-+  struct A {
-+    void f() { n = 2; }         // error: nが使われようとしているのは関数定義スコープの中なので、odr-usableではない
-+  };
-+  void g(int = n);              // error: nが使われ用としているのはlambda式以外の関数引数スコープの中なので、odr-usableではない
-+  [=](int k = n) {};            // error: n is not odr-usable due to being
-+                                // outside the block scope of the lambda-expression
-+  [&amp;amp;] { [n]{ return n; }; };    // OK
-+}
-+```
- 
- ## &amp;lt;a id=&amp;#34;relative-page&amp;#34; href=&amp;#34;#relative-page&amp;#34;&amp;gt;関連項目&amp;lt;/a&amp;gt;
- - [C++17 構造化束縛](/lang/cpp17/structured_bindings.md)
- - [C++20 構造化束縛を拡張して通常の変数宣言のように使用できるようにする](extending_structured_bindings_to_be_more_like_variable_declarations.md)
-+- [C++20 構造化束縛した変数の参照キャプチャを許可](reference_capture_of_structured_bindings.md)
- 
- ## 参照
- - [P0588R1 Simplifying implicit lambda capture](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0588r1.html)
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
