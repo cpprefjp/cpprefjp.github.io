@@ -2,9 +2,161 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2026-09-15T06:22:29.107441</updated>
-  <id>fb975c30-af08-4d73-bd3b-90c6302f8903</id>
+  <updated>2026-09-15T06:30:23.477724</updated>
+  <id>e1919239-e979-4848-ac60-5ab7bc8878d8</id>
 
+  
+    <entry>
+      <title>静的リフレクション [P2996R13] -- C++26静的リフレクション : コマンドラインオプションを解析する例を追加</title>
+      <link href="https://cpprefjp.github.io/lang/cpp26/reflection.html"/>
+      <id>5254c5fe3d6ed3ed835b88b098796dc8642b7775:lang/cpp26/reflection.md</id>
+      <updated>2026-09-15T15:28:04+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp26/reflection.md b/lang/cpp26/reflection.md
+index 139cadca4..5d1ac0fec 100644
+--- a/lang/cpp26/reflection.md
++++ b/lang/cpp26/reflection.md
+@@ -617,6 +617,133 @@ sampling_rate: 1.5は0以上1以下でなければならない
+ ```
+ 
+ 
++### アノテーションからコマンドラインオプションを解析する
++アノテーションはメンバ変数の検証だけでなく、宣言からコードを生成する用途にも使える。以下の例では、Rustの[clap](https://docs.rs/clap/)のように、コマンドラインオプションの短縮名と説明をアノテーションでメンバ変数に付加し、そこからヘルプメッセージの生成と引数の解析の両方を行う。
++
++オプションを追加したいときは`Args`にメンバ変数とアノテーションを足すだけでよく、ヘルプメッセージと解析処理のどちらにも手を入れる必要がない。
++
++```cpp example
++#include &amp;lt;meta&amp;gt;
++#include &amp;lt;format&amp;gt;
++#include &amp;lt;print&amp;gt;
++#include &amp;lt;stdexcept&amp;gt;
++#include &amp;lt;string&amp;gt;
++#include &amp;lt;string_view&amp;gt;
++
++// オプションの短縮名を表すアノテーション
++struct Short {
++  char name;
++};
++
++// オプションの説明を表すアノテーション
++struct Help {
++  const char* text;
++};
++
++struct Args {
++  [[=Short{&amp;#39;n&amp;#39;}, =Help{std::define_static_string(&amp;#34;挨拶する相手の名前&amp;#34;)}]]
++  std::string name;
++
++  [[=Short{&amp;#39;c&amp;#39;}, =Help{std::define_static_string(&amp;#34;挨拶を繰り返す回数&amp;#34;)}]]
++  int count = 1;
++};
++
++void assign(std::string&amp;amp; member, std::string_view value) {
++  member = value;
++}
++
++void assign(int&amp;amp; member, std::string_view value) {
++  member = std::stoi(std::string{value});
++}
++
++// アノテーションからヘルプメッセージを生成する
++template &amp;lt;class T&amp;gt;
++void print_help() {
++  std::println(&amp;#34;オプション:&amp;#34;);
++  template for (constexpr auto m :
++      std::define_static_array(std::meta::nonstatic_data_members_of(^^T,
++          std::meta::access_context::unchecked()))) {
++    static constexpr auto shorts = std::define_static_array(
++      std::meta::annotations_of_with_type(m, ^^Short));
++    static constexpr auto helps = std::define_static_array(
++      std::meta::annotations_of_with_type(m, ^^Help));
++
++    std::println(&amp;#34;  -{}, --{:&amp;lt;8} {}&amp;#34;,
++                 [:std::meta::constant_of(shorts[0]):].name,
++                 std::meta::identifier_of(m),
++                 [:std::meta::constant_of(helps[0]):].text);
++  }
++}
++
++// アノテーションをもとにコマンドライン引数を解析する
++template &amp;lt;class T&amp;gt;
++T parse(int argc, const char* const* argv) {
++  T args{};
++  for (int i = 1; i &amp;lt; argc; ++i) {
++    std::string_view arg = argv[i];
++    bool matched = false;
++
++    template for (constexpr auto m :
++        std::define_static_array(std::meta::nonstatic_data_members_of(^^T,
++            std::meta::access_context::unchecked()))) {
++      static constexpr auto shorts = std::define_static_array(
++        std::meta::annotations_of_with_type(m, ^^Short));
++      constexpr std::string_view long_name = std::meta::identifier_of(m);
++      constexpr char short_name = [:std::meta::constant_of(shorts[0]):].name;
++
++      bool is_long = arg.starts_with(&amp;#34;--&amp;#34;) &amp;amp;&amp;amp; arg.substr(2) == long_name;
++      bool is_short = arg.size() == 2 &amp;amp;&amp;amp; arg[0] == &amp;#39;-&amp;#39; &amp;amp;&amp;amp; arg[1] == short_name;
++
++      if (is_long || is_short) {
++        if (++i == argc) {
++          throw std::invalid_argument{std::format(&amp;#34;{}: 値が指定されていない&amp;#34;, arg)};
++        }
++        assign(args.[:m:], argv[i]);
++        matched = true;
++        break;
++      }
++    }
++
++    if (!matched) {
++      throw std::invalid_argument{std::format(&amp;#34;{}: 不明なオプション&amp;#34;, arg)};
++    }
++  }
++  return args;
++}
++
++int main() {
++  print_help&amp;lt;Args&amp;gt;();
++
++  // コマンドライン引数を模したデータ
++  const char* argv[] = {&amp;#34;greet&amp;#34;, &amp;#34;--name&amp;#34;, &amp;#34;wg21&amp;#34;, &amp;#34;-c&amp;#34;, &amp;#34;3&amp;#34;};
++  Args args = parse&amp;lt;Args&amp;gt;(5, argv);
++
++  for (int i = 0; i &amp;lt; args.count; ++i) {
++    std::println(&amp;#34;Hello {}&amp;#34;, args.name);
++  }
++}
++```
++* std::meta::nonstatic_data_members_of[link /reference/meta/nonstatic_data_members_of.md]
++* std::meta::access_context::unchecked[link /reference/meta/access_context/unchecked.md]
++* std::meta::annotations_of_with_type[link /reference/meta/annotations_of_with_type.md]
++* std::meta::constant_of[link /reference/meta/constant_of.md]
++* std::meta::identifier_of[link /reference/meta/identifier_of.md]
++* std::format[link /reference/format/format.md]
++* std::stoi[link /reference/string/stoi.md]
++* std::invalid_argument[link /reference/stdexcept.md]
++* starts_with[link /reference/string_view/basic_string_view/starts_with.md]
++
++#### 出力
++```
++オプション:
++  -n, --name     挨拶する相手の名前
++  -c, --count    挨拶を繰り返す回数
++Hello wg21
++Hello wg21
++Hello wg21
++```
++
++
+ ## &amp;lt;a id=&amp;#34;relative-page&amp;#34; href=&amp;#34;#relative-page&amp;#34;&amp;gt;関連項目&amp;lt;/a&amp;gt;
+ - [`&amp;lt;meta&amp;gt;`ヘッダ](/reference/meta.md)
+ - [C++26 コンパイル時のタプルやリストを展開処理する`template for`文](/lang/cpp26/expansion_statements.md)
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>静的リフレクション [P2996R13] -- C++26静的リフレクション : 値の範囲チェックの例を追加</title>
@@ -4578,358 +4730,6 @@ index b28d05bc3..628d0d6e2 100644
  - [Visual C++](/implementation.md#visual_cpp): ??
  
  
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>機能テストマクロ -- shl, shr : GCCで実装された</title>
-      <link href="https://cpprefjp.github.io/lang/cpp29/feature_test_macros.html"/>
-      <id>f1f9c8003f38865129bdb87f161023cfd96a8dd3:lang/cpp29/feature_test_macros.md</id>
-      <updated>2026-09-14T13:07:06+09:00</updated>
-      
-        <content type="html">&lt;h1 itemprop=&#34;name&#34;&gt;&lt;span class=&#34;token&#34;&gt;機能テストマクロ&lt;/span&gt;&lt;span class=&#34;cpp cpp29&#34; title=&#34;C++29で追加&#34;&gt;(C++29)&lt;/span&gt;&lt;/h1&gt;
-&lt;div itemprop=&#34;articleBody&#34;&gt;&lt;p&gt;
-&lt;/p&gt;
-&lt;p&gt;このページはC++29に採用された言語機能の変更を解説しています。&lt;/p&gt;
-&lt;p&gt;のちのC++規格でさらに変更される場合があるため&lt;a href=&#34;#relative-page&#34;&gt;関連項目&lt;/a&gt;を参照してください。&lt;/p&gt;
-&lt;p&gt;
-&lt;/p&gt;
-&lt;h2&gt;概要&lt;/h2&gt;
-&lt;h3&gt;言語&lt;/h3&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;マクロ名&lt;/th&gt;
-&lt;th&gt;値&lt;/th&gt;
-&lt;th&gt;機能&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;__cpp_concepts&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;202606L&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;a href=&#34;conditional_noexcept_specifiers_in_compound_requirements.html&#34;&gt;requires式の複合要件で条件付き&lt;code&gt;noexcept&lt;/code&gt;指定を許可&lt;/a&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;__cpp_consteval&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;202606L&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;a href=&#34;consteval-only_values.html&#34;&gt;consteval-only型の規則をconsteval-only値の規則へ置き換え&lt;/a&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;__cpp_contracts&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;202606L&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;a href=&#34;contracts_for_virtual_functions.html&#34;&gt;仮想関数への事前条件・事後条件の指定を許可&lt;/a&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;__cpp_impl_coroutine&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;202606L&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;a href=&#34;return_value_and_return_void_are_not_mutually_exclusive.html&#34;&gt;コルーチンのpromise型で&lt;code&gt;return_value&lt;/code&gt;と&lt;code&gt;return_void&lt;/code&gt;の両方の宣言を許可&lt;/a&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;__cpp_designated_initializers&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;202606L&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;a href=&#34;designated-initializers_for_base_classes.html&#34;&gt;基底クラスのメンバ変数に対する指示付き初期化を許可&lt;/a&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;__cpp_named_character_escapes&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;202606L&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;a href=&#34;more_named_universal_character_escapes.html&#34;&gt;名前付きユニバーサルキャラクタ名で使用できる別名を拡張&lt;/a&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;__cpp_pack_indexing&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;202606L&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;a href=&#34;pack_indexing_for_template_names.html&#34;&gt;テンプレートテンプレートパラメータのパックへのインデックスアクセスを許可&lt;/a&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;__cpp_pp_embed&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;202606L&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;a href=&#34;embed_offset_parameter.html&#34;&gt;&lt;code&gt;#embed&lt;/code&gt;に&lt;code&gt;offset&lt;/code&gt;パラメータを追加&lt;/a&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;ライブラリ&lt;/h3&gt;
-&lt;p&gt;ライブラリの機能テストマクロは全て&lt;code&gt;&lt;a href=&#34;../../reference/version.html&#34;&gt;&amp;lt;version&amp;gt;&lt;/a&gt;&lt;/code&gt;でも提供される。&lt;/p&gt;
-&lt;table border=&#34;1&#34; bordercolor=&#34;#888&#34; style=&#34;border-collapse:collapse&#34;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;マクロ名&lt;/th&gt;
-&lt;th&gt;値&lt;/th&gt;
-&lt;th&gt;機能&lt;/th&gt;
-&lt;th&gt;ヘッダ&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;__cpp_lib_bitops&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;202606L&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;../../reference/bit.html&#34;&gt;&amp;lt;bit&amp;gt;&lt;/a&gt;&lt;/code&gt;に、シフト量が負であってもビット幅以上であっても未定義動作にならないシフト&lt;code&gt;&lt;a href=&#34;../../reference/bit/shl.html&#34;&gt;std::shl()&lt;/a&gt;&lt;/code&gt;・&lt;code&gt;&lt;a href=&#34;../../reference/bit/shr.html&#34;&gt;std::shr()&lt;/a&gt;&lt;/code&gt;関数を追加&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;../../reference/bit.html&#34;&gt;&amp;lt;bit&amp;gt;&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;__cpp_lib_expected&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;202606L&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;../../reference/expected/expected.html&#34;&gt;std::expected&lt;/a&gt;&lt;/code&gt;に、エラー値を保持しているかを判定する&lt;code&gt;&lt;a href=&#34;../../reference/expected/expected/has_error.html&#34;&gt;has_error()&lt;/a&gt;&lt;/code&gt;メンバ関数を追加&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;../../reference/expected.html&#34;&gt;&amp;lt;expected&amp;gt;&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;__cpp_lib_hazard_pointer&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;202606L&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;../../reference/hazard_pointer.html&#34;&gt;&amp;lt;hazard_pointer&amp;gt;&lt;/a&gt;&lt;/code&gt;に、複数のハザードポインタをまとめて構築・破棄する&lt;code&gt;&lt;a href=&#34;../../reference/hazard_pointer/make_hazard_pointer_batch.html&#34;&gt;std::make_hazard_pointer_batch()&lt;/a&gt;&lt;/code&gt;関数と&lt;code&gt;&lt;a href=&#34;../../reference/hazard_pointer/clear_hazard_pointer_batch.html&#34;&gt;std::clear_hazard_pointer_batch()&lt;/a&gt;&lt;/code&gt;関数を追加&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;../../reference/hazard_pointer.html&#34;&gt;&amp;lt;hazard_pointer&amp;gt;&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;__cpp_lib_map_lookup&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;202606L&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;../../reference/map/map.html&#34;&gt;std::map&lt;/a&gt;&lt;/code&gt;・&lt;code&gt;&lt;a href=&#34;../../reference/unordered_map/unordered_map.html&#34;&gt;std::unordered_map&lt;/a&gt;&lt;/code&gt;・&lt;code&gt;&lt;a href=&#34;../../reference/flat_map/flat_map.html&#34;&gt;std::flat_map&lt;/a&gt;&lt;/code&gt;に、指定したキーを持つ要素を&lt;code&gt;optional&lt;/code&gt;として取得する&lt;code&gt;lookup()&lt;/code&gt;メンバ関数を追加&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;../../reference/map.html&#34;&gt;&amp;lt;map&amp;gt;&lt;/a&gt;&lt;/code&gt;, &lt;code&gt;&lt;a href=&#34;../../reference/unordered_map.html&#34;&gt;&amp;lt;unordered_map&amp;gt;&lt;/a&gt;&lt;/code&gt;, &lt;code&gt;&lt;a href=&#34;../../reference/flat_map.html&#34;&gt;&amp;lt;flat_map&amp;gt;&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;__cpp_lib_mdspan_copy&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;202606L&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;../../reference/mdspan.html&#34;&gt;&amp;lt;mdspan&amp;gt;&lt;/a&gt;&lt;/code&gt;に、多次元配列ビューをコピーする&lt;code&gt;&lt;a href=&#34;../../reference/mdspan/copy.html&#34;&gt;std::copy()&lt;/a&gt;&lt;/code&gt;と値を代入する&lt;code&gt;&lt;a href=&#34;../../reference/mdspan/fill.html&#34;&gt;std::fill()&lt;/a&gt;&lt;/code&gt;を追加&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;../../reference/mdspan.html&#34;&gt;&amp;lt;mdspan&amp;gt;&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;__cpp_lib_pointer_tag_pair&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;202606L&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;../../reference/memory.html&#34;&gt;&amp;lt;memory&amp;gt;&lt;/a&gt;&lt;/code&gt;に、ポインタの下位ビットへタグ値を格納する&lt;code&gt;&lt;a href=&#34;../../reference/memory/pointer_tag_pair.html&#34;&gt;std::pointer_tag_pair&lt;/a&gt;&lt;/code&gt;を追加&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;../../reference/memory.html&#34;&gt;&amp;lt;memory&amp;gt;&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;__cpp_lib_simd&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;202606L&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;../../reference/simd.html&#34;&gt;&amp;lt;simd&amp;gt;&lt;/a&gt;&lt;/code&gt;に、SIMDデータ用の連番を生成する&lt;code&gt;&lt;a href=&#34;../../reference/simd/iota.html&#34;&gt;std::simd::iota&lt;/a&gt;&lt;/code&gt;変数テンプレートなどを追加&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;../../reference/simd.html&#34;&gt;&amp;lt;simd&amp;gt;&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;__cpp_lib_simd_bitops&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;202607L&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;../../reference/simd.html&#34;&gt;&amp;lt;simd&amp;gt;&lt;/a&gt;&lt;/code&gt;に、ビット列を操作する&lt;code&gt;&lt;a href=&#34;../../reference/simd/bit_reverse.html&#34;&gt;bit_reverse()&lt;/a&gt;&lt;/code&gt;・&lt;code&gt;&lt;a href=&#34;../../reference/simd/bit_repeat.html&#34;&gt;bit_repeat()&lt;/a&gt;&lt;/code&gt;・&lt;code&gt;&lt;a href=&#34;../../reference/simd/bit_compress.html&#34;&gt;bit_compress()&lt;/a&gt;&lt;/code&gt;・&lt;code&gt;&lt;a href=&#34;../../reference/simd/bit_expand.html&#34;&gt;bit_expand()&lt;/a&gt;&lt;/code&gt;関数と、未定義動作にならないシフト&lt;code&gt;&lt;a href=&#34;../../reference/simd/shl.html&#34;&gt;shl()&lt;/a&gt;&lt;/code&gt;・&lt;code&gt;&lt;a href=&#34;../../reference/simd/shr.html&#34;&gt;shr()&lt;/a&gt;&lt;/code&gt;関数を追加&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;../../reference/simd.html&#34;&gt;&amp;lt;simd&amp;gt;&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;__cpp_lib_thread_attributes&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;202606L&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;../../reference/thread/thread.html&#34;&gt;std::thread&lt;/a&gt;&lt;/code&gt;と&lt;code&gt;&lt;a href=&#34;../../reference/thread/jthread.html&#34;&gt;std::jthread&lt;/a&gt;&lt;/code&gt;に、スレッド名を設定する&lt;code&gt;&lt;a href=&#34;../../reference/thread/thread/name_hint.html&#34;&gt;name_hint&lt;/a&gt;&lt;/code&gt;とスタックサイズを設定する&lt;code&gt;&lt;a href=&#34;../../reference/thread/thread/stack_size_hint.html&#34;&gt;stack_size_hint&lt;/a&gt;&lt;/code&gt;のスレッド属性を追加&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;../../reference/thread.html&#34;&gt;&amp;lt;thread&amp;gt;&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;__cpp_lib_to_chars&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;202606L&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;../../reference/charconv/to_chars.html&#34;&gt;std::to_chars()&lt;/a&gt;&lt;/code&gt;の浮動小数点数に対する既定表現を、値の範囲によって固定小数表記と指数表記を選択するよう変更&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;../../reference/charconv.html&#34;&gt;&amp;lt;charconv&amp;gt;&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;code&gt;__cpp_lib_view_interface&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;202606L&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;../../reference/ranges/view_interface.html&#34;&gt;std::ranges::view_interface&lt;/a&gt;&lt;/code&gt;に、範囲チェックをともなって要素へアクセスする&lt;code&gt;&lt;a href=&#34;../../reference/ranges/view_interface/at.html&#34;&gt;at()&lt;/a&gt;&lt;/code&gt;メンバ関数を追加&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;&lt;a href=&#34;../../reference/ranges.html&#34;&gt;&amp;lt;ranges&amp;gt;&lt;/a&gt;&lt;/code&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;参照&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://isocpp.org/std/standing-documents/sd-6-sg10-feature-test-recommendations&#34; target=&#34;_blank&#34;&gt;SD-FeatureTest: Feature-Test Macros and Policies - isocpp&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3950r1.pdf&#34; target=&#34;_blank&#34;&gt;P3950R1 &lt;code&gt;return_value&lt;/code&gt; &amp;amp; &lt;code&gt;return_void&lt;/code&gt; Are Not Mutually Exclusive&lt;/a&gt;&lt;ul&gt;
-&lt;li&gt;C++29で&lt;code&gt;__cpp_impl_coroutine&lt;/code&gt;が&lt;code&gt;202606L&lt;/code&gt;に更新された&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4101r1.html&#34; target=&#34;_blank&#34;&gt;P4101R1 Consteval-only Values for C++26&lt;/a&gt;&lt;ul&gt;
-&lt;li&gt;C++29で&lt;code&gt;__cpp_consteval&lt;/code&gt;が&lt;code&gt;202606L&lt;/code&gt;に更新された&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3540r3.html&#34; target=&#34;_blank&#34;&gt;P3540R3 &lt;code&gt;#embed&lt;/code&gt; offset parameter&lt;/a&gt;&lt;ul&gt;
-&lt;li&gt;C++29で&lt;code&gt;__cpp_pp_embed&lt;/code&gt;が&lt;code&gt;202606L&lt;/code&gt;に更新された&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p2287r6.html&#34; target=&#34;_blank&#34;&gt;P2287R6 Designated-initializers for Base Classes&lt;/a&gt;&lt;ul&gt;
-&lt;li&gt;C++29で&lt;code&gt;__cpp_designated_initializers&lt;/code&gt;が&lt;code&gt;202606L&lt;/code&gt;に更新された&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3733r1.html&#34; target=&#34;_blank&#34;&gt;P3733R1 More named universal character escapes&lt;/a&gt;&lt;ul&gt;
-&lt;li&gt;C++29で&lt;code&gt;__cpp_named_character_escapes&lt;/code&gt;が&lt;code&gt;202606L&lt;/code&gt;に更新された&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3097r3.pdf&#34; target=&#34;_blank&#34;&gt;P3097R3 Contracts for C++: Virtual functions&lt;/a&gt;&lt;ul&gt;
-&lt;li&gt;C++29で&lt;code&gt;__cpp_contracts&lt;/code&gt;が&lt;code&gt;202606L&lt;/code&gt;に更新された&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3822r2.html&#34; target=&#34;_blank&#34;&gt;P3822R2 Conditional noexcept specifiers in compound requirements&lt;/a&gt;&lt;ul&gt;
-&lt;li&gt;C++29で&lt;code&gt;__cpp_concepts&lt;/code&gt;が&lt;code&gt;202606L&lt;/code&gt;に更新された&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3670r4.pdf&#34; target=&#34;_blank&#34;&gt;P3670R4 Pack Indexing for Template Names&lt;/a&gt;&lt;ul&gt;
-&lt;li&gt;C++29で&lt;code&gt;__cpp_pack_indexing&lt;/code&gt;が&lt;code&gt;202606L&lt;/code&gt;に更新された&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3798r1.html&#34; target=&#34;_blank&#34;&gt;P3798R1 The &lt;code&gt;unexpected&lt;/code&gt; in &lt;code&gt;std::expected&lt;/code&gt;&lt;/a&gt;&lt;ul&gt;
-&lt;li&gt;C++29で&lt;code&gt;__cpp_lib_expected&lt;/code&gt;が&lt;code&gt;202606L&lt;/code&gt;に更新された&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3428r4.pdf&#34; target=&#34;_blank&#34;&gt;P3428R4 Hazard Pointer Batches&lt;/a&gt;&lt;ul&gt;
-&lt;li&gt;C++29で&lt;code&gt;__cpp_lib_hazard_pointer&lt;/code&gt;が&lt;code&gt;202606L&lt;/code&gt;に更新された&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3091r6.html&#34; target=&#34;_blank&#34;&gt;P3091R6 Better Lookups for &lt;code&gt;map&lt;/code&gt;, &lt;code&gt;unordered_map&lt;/code&gt;, and &lt;code&gt;flat_map&lt;/code&gt;&lt;/a&gt;&lt;ul&gt;
-&lt;li&gt;C++29で&lt;code&gt;__cpp_lib_map_lookup&lt;/code&gt;が追加された&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3242r4.html&#34; target=&#34;_blank&#34;&gt;P3242R4 Copy and fill for &lt;code&gt;mdspan&lt;/code&gt;&lt;/a&gt;&lt;ul&gt;
-&lt;li&gt;C++29で&lt;code&gt;__cpp_lib_mdspan_copy&lt;/code&gt;が追加された&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3125r6.html&#34; target=&#34;_blank&#34;&gt;P3125R6 constexpr pointer tagging&lt;/a&gt;&lt;ul&gt;
-&lt;li&gt;C++29で&lt;code&gt;__cpp_lib_pointer_tag_pair&lt;/code&gt;が追加された&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3319r6.pdf&#34; target=&#34;_blank&#34;&gt;P3319R6 Add an iota object for simd (and more)&lt;/a&gt;&lt;ul&gt;
-&lt;li&gt;C++29で&lt;code&gt;__cpp_lib_simd&lt;/code&gt;が&lt;code&gt;202606L&lt;/code&gt;に更新された&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3772r2.html&#34; target=&#34;_blank&#34;&gt;P3772R2 std::simd overloads for bit permutations&lt;/a&gt;&lt;ul&gt;
-&lt;li&gt;C++29で&lt;code&gt;__cpp_lib_simd_bitops&lt;/code&gt;が追加された&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3793r2.html&#34; target=&#34;_blank&#34;&gt;P3793R2 Better shifting&lt;/a&gt;&lt;ul&gt;
-&lt;li&gt;C++29で&lt;code&gt;__cpp_lib_bitops&lt;/code&gt;が&lt;code&gt;202606L&lt;/code&gt;に更新された&lt;/li&gt;
-&lt;li&gt;C++29で&lt;code&gt;__cpp_lib_simd_bitops&lt;/code&gt;が追加された&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p2019r9.pdf&#34; target=&#34;_blank&#34;&gt;P2019R9 Thread attributes&lt;/a&gt;&lt;ul&gt;
-&lt;li&gt;C++29で&lt;code&gt;__cpp_lib_thread_attributes&lt;/code&gt;が追加された&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3505r4.html&#34; target=&#34;_blank&#34;&gt;P3505R4 Fix the default floating-point representation in &lt;code&gt;std::format&lt;/code&gt;&lt;/a&gt;&lt;ul&gt;
-&lt;li&gt;C++29で&lt;code&gt;__cpp_lib_to_chars&lt;/code&gt;が&lt;code&gt;202606L&lt;/code&gt;に更新された&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3052r2.html&#34; target=&#34;_blank&#34;&gt;P3052R2 &lt;code&gt;view_interface::at()&lt;/code&gt;&lt;/a&gt;&lt;ul&gt;
-&lt;li&gt;C++29で&lt;code&gt;__cpp_lib_view_interface&lt;/code&gt;が追加された&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;&lt;/div&gt;</content>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>shl -- shl, shr : GCCで実装された</title>
-      <link href="https://cpprefjp.github.io/reference/bit/shl.html"/>
-      <id>f1f9c8003f38865129bdb87f161023cfd96a8dd3:reference/bit/shl.md</id>
-      <updated>2026-09-14T13:07:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/bit/shl.md b/reference/bit/shl.md
-index 69df0cba1..605a93c40 100644
---- a/reference/bit/shl.md
-+++ b/reference/bit/shl.md
-@@ -62,7 +62,7 @@ int main()
- 
- ### 処理系
- - [Clang](/implementation.md#clang): 22 [mark noimpl]
--- [GCC](/implementation.md#gcc): 16.1 [mark noimpl]
-+- [GCC](/implementation.md#gcc): 17 [mark verified]
- - [Visual C++](/implementation.md#visual_cpp): 2026 Update 2 [mark noimpl]
- 
- 
-@@ -72,5 +72,5 @@ int main()
- 
- 
- ## 参照
--- [P3793R1 Better shifting](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3793r1.html)
-+- [P3793R2 Better shifting](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3793r2.html)
-     - C++29で追加された
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>shr -- shl, shr : GCCで実装された</title>
-      <link href="https://cpprefjp.github.io/reference/bit/shr.html"/>
-      <id>f1f9c8003f38865129bdb87f161023cfd96a8dd3:reference/bit/shr.md</id>
-      <updated>2026-09-14T13:07:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/bit/shr.md b/reference/bit/shr.md
-index 2e414907c..cf308e02c 100644
---- a/reference/bit/shr.md
-+++ b/reference/bit/shr.md
-@@ -64,7 +64,7 @@ int main()
- 
- ### 処理系
- - [Clang](/implementation.md#clang): 22 [mark noimpl]
--- [GCC](/implementation.md#gcc): 16.1 [mark noimpl]
-+- [GCC](/implementation.md#gcc): 17 [mark verified]
- - [Visual C++](/implementation.md#visual_cpp): 2026 Update 2 [mark noimpl]
- 
- 
-@@ -74,5 +74,5 @@ int main()
- 
- 
- ## 参照
--- [P3793R1 Better shifting](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3793r1.html)
-+- [P3793R2 Better shifting](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3793r2.html)
-     - C++29で追加された
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>shl -- shl, shr : GCCで実装された</title>
-      <link href="https://cpprefjp.github.io/reference/simd/shl.html"/>
-      <id>f1f9c8003f38865129bdb87f161023cfd96a8dd3:reference/simd/shl.md</id>
-      <updated>2026-09-14T13:07:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/simd/shl.md b/reference/simd/shl.md
-index f3a4ad737..abb9601f5 100644
---- a/reference/simd/shl.md
-+++ b/reference/simd/shl.md
-@@ -91,5 +91,5 @@ int main()
- 
- 
- ## 参照
--- [P3793R1 Better shifting](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3793r1.html)
-+- [P3793R2 Better shifting](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3793r2.html)
-     - C++29で`&amp;lt;bit&amp;gt;`ヘッダにスカラー版、`&amp;lt;simd&amp;gt;`ヘッダに`std::simd`版の`shl`が追加された
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>shr -- shl, shr : GCCで実装された</title>
-      <link href="https://cpprefjp.github.io/reference/simd/shr.html"/>
-      <id>f1f9c8003f38865129bdb87f161023cfd96a8dd3:reference/simd/shr.md</id>
-      <updated>2026-09-14T13:07:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/simd/shr.md b/reference/simd/shr.md
-index 25a8d65d4..ba86971f1 100644
---- a/reference/simd/shr.md
-+++ b/reference/simd/shr.md
-@@ -91,5 +91,5 @@ int main()
- 
- 
- ## 参照
--- [P3793R1 Better shifting](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3793r1.html)
-+- [P3793R2 Better shifting](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3793r2.html)
-     - C++29で`&amp;lt;bit&amp;gt;`ヘッダにスカラー版、`&amp;lt;simd&amp;gt;`ヘッダに`std::simd`版の`shr`が追加された
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
