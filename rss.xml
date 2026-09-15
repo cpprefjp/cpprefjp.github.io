@@ -2,9 +2,192 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2026-09-15T06:58:15.014576</updated>
-  <id>a06047fa-9a5e-4614-906e-8c0ebc8f9bf3</id>
+  <updated>2026-09-15T07:07:30.860462</updated>
+  <id>75bf7dc4-5dab-4af7-a174-dba14a7be441</id>
 
+  
+    <entry>
+      <title>constexpr if 文 [P0292R2] -- Merge pull request #1260 from cpprefjp/refactor/cwg2518</title>
+      <link href="https://cpprefjp.github.io/lang/cpp17/if_constexpr.html"/>
+      <id>437e7550bfa7198efb270a555edb0cf7f3c4b12e:lang/cpp17/if_constexpr.md</id>
+      <updated>2026-09-15T16:05:27+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp17/if_constexpr.md b/lang/cpp17/if_constexpr.md
+index e67a44ecd..d18207ac8 100644
+--- a/lang/cpp17/if_constexpr.md
++++ b/lang/cpp17/if_constexpr.md
+@@ -76,57 +76,57 @@ void f(Out&amp;amp; o, A1 const&amp;amp; a1, A2 const&amp;amp; a2)
+ それでも記述が実際にしたい処理に比べて不必要に複雑になる。
+ constexpr if文の導入によりそのような複雑な手法を用いずに素直に条件付きのコンパイルを実現できるようになった。
+ 
+-### 2段階名前探索における注意点
+-
+-`constexpr if`文で、実行されない方の`statement`は廃棄文(discarded statement)となり、文の実体化を防ぐ。言い換えると、2段階名前探索における依存名(dependent name)は、廃棄文の場合検証されない。また文が実体化されないのだから通常のif文と同じくもちろん実行時に実行もされない。つまり次の例は意図と異なる挙動を示す。
++`constexpr if`文の条件式内は実体化が起きる。したがって実体化するとコンパイルエラーになるものは書いてはいけない。
+ 
+ ```cpp example
+ #include &amp;lt;type_traits&amp;gt;
++#include &amp;lt;iostream&amp;gt;
++
++struct Hoge {
++  using type = int;
++};
+ 
+ template &amp;lt;typename T&amp;gt;
+-void f(T)
++void f()
+ {
+-  if constexpr (std::is_same_v&amp;lt;T, int&amp;gt;)
+-  {
+-    // Tがintのときのみ評価されてほしい
+-    // 実際は常に評価される
+-    static_assert(false);
++  if constexpr (std::is_same_v&amp;lt;typename T::type, int&amp;gt; || std::is_same_v&amp;lt;typename T::value_type, int&amp;gt;) {
++    std::cout &amp;lt;&amp;lt; &amp;#34;is int&amp;#34; &amp;lt;&amp;lt; std::endl;
+   }
+ }
+ 
+ int main()
+ {
+-  f(2.4);
+-  f(3);
++  f&amp;lt;Hoge&amp;gt;(); //error: Hoge::value_typeは存在しないのでif constexpr文の条件式がコンパイルエラーになる
+ }
+ ```
+ 
+-なぜならば廃棄文はテンプレートの実体化を防ぐ (依存名の検証をしない) だけで、非依存名は検証されるからである。この例の[`static_assert`](/lang/cpp11/static_assert.md)に渡す条件式はテンプレートパラメータに依存していないので、テンプレートの宣言時に検証され、エラーとなる。言い換えれば`static_assert`に渡す条件式が依存名ならばテンプレートの宣言時に検証されず、テンプレート実体化まで評価を遅らせることができる。
+-
+-```cpp example
+-#include &amp;lt;type_traits&amp;gt;
++### `static_assert`宣言に関する例外
+ 
+-template &amp;lt;typename T&amp;gt;
+-constexpr bool false_v = false;
++後に述べる2段階名前探索に関する注意点とは関係なく、C++23以降、もしくはCWG 2518が適用された環境においては、template文(もしくは適切な特殊化や`constexpr if`文の中の文)が実際に実体化されない限り、`static_assert`宣言による失敗は無視される。
+ 
+-template &amp;lt;typename T&amp;gt;
+-void f(T)
+-{
+-  if constexpr (std::is_same_v&amp;lt;T, int&amp;gt;)
+-  {
+-    // Tがintのときのみ評価される
+-    static_assert(false_v&amp;lt;T&amp;gt;);
++```cpp example
++#include &amp;lt;cstdint&amp;gt;
++template &amp;lt;class T&amp;gt;
++void f(T t) {
++  if constexpr (sizeof(T) == sizeof(std::int32_t)) {
++    use(t);
++  } else {
++    static_assert(false, &amp;#34;must be 32bit&amp;#34;);
+   }
+ }
+ 
+-int main()
+-{
+-  f(2.4);
+-  f(3);
++void g(std::int8_t c) {
++  std::int32_t n = 0;
++  f(n); // OK: nはstd::int32_t型なので`use(t);`のほうが実体化されるために、static_assert宣言の失敗は無視される。
++  f(c); // error: cはstd::int8_t型なので、static_assert宣言は失敗し、&amp;#34;must be 32bit&amp;#34;とコンパイラが診断メッセージを出力する
+ }
+ ```
+ 
+-上の例では`false_v`を作ったが、ラムダ式でも同様のことができる。ラムダ式はそれが記述された位置から見て最小のスコープ (ブロックスコープ／クラススコープ／名前空間スコープ) で宣言されるクラスとして扱われる。例えば、下の例では`f()`という関数テンプレート内で宣言される。関数テンプレート内のクラスは依存名になるため、テンプレートの宣言時に検証されず、テンプレート実体化まで評価を遅らせることができる。
++### 2段階名前探索における注意点
++
++`constexpr if`文で、実行されない方の`statement`は廃棄文(discarded statement)となり、文の実体化を防ぐ。言い換えると、2段階名前探索における依存名(dependent name)は、廃棄文の場合検証されない。また文が実体化されないのだから通常のif文と同じくもちろん実行時に実行もされない。
++
++CWG 2518が適用されていない環境においては`static_assert`を用いる時に直感的ではない挙動を示していた。
+ 
+ ```cpp example
+ #include &amp;lt;type_traits&amp;gt;
+@@ -136,8 +136,9 @@ void f(T)
+ {
+   if constexpr (std::is_same_v&amp;lt;T, int&amp;gt;)
+   {
+-    // Tがintのときのみ評価される
+-    static_assert([]{return false;}());
++    // Tがintのときのみ評価されてほしい
++    // 実際は常に評価される
++    static_assert(false);
+   }
+ }
+ 
+@@ -148,51 +149,32 @@ int main()
+ }
+ ```
+ 
+-`constexpr if`文の条件式内は実体化が起きる。したがって実体化するとコンパイルエラーになるものは書いてはいけない。
++なぜならば廃棄文はテンプレートの実体化を防ぐ (依存名の検証をしない) だけで、非依存名は検証されるからである。この例の[`static_assert`](/lang/cpp11/static_assert.md)に渡す条件式はテンプレートパラメータに依存していないので、テンプレートの宣言時に検証され、エラーとなる。
++
++#### CWG 2518が適用されていない環境での回避策
++
++言い換えれば`static_assert`に渡す条件式が依存名ならばテンプレートの宣言時に検証されず、テンプレート実体化まで評価を遅らせることができる。
+ 
+ ```cpp example
+ #include &amp;lt;type_traits&amp;gt;
+-#include &amp;lt;iostream&amp;gt;
+ 
+-struct Hoge {
+-  using type = int;
+-};
++template &amp;lt;typename T&amp;gt;
++constexpr bool false_v = false;
+ 
+ template &amp;lt;typename T&amp;gt;
+-void f()
++void f(T)
+ {
+-  if constexpr (std::is_same_v&amp;lt;typename T::type, int&amp;gt; || std::is_same_v&amp;lt;typename T::value_type, int&amp;gt;) {
+-    std::cout &amp;lt;&amp;lt; &amp;#34;is int&amp;#34; &amp;lt;&amp;lt; std::endl;
++  if constexpr (std::is_same_v&amp;lt;T, int&amp;gt;)
++  {
++    // Tがintのときのみ評価される
++    static_assert(false_v&amp;lt;T&amp;gt;);
+   }
+ }
+ 
+ int main()
+ {
+-  f&amp;lt;Hoge&amp;gt;(); //error: Hoge::value_typeは存在しないのでif constexpr文の条件式がコンパイルエラーになる
+-}
+-```
+-
+-### (CWG 2518が適用された環境) `static_assert`文に関する例外
+-
+-上に述べたように、`constexpr if`文の中の文は廃棄文においても、非依存名の検証を行う。このため特に`static_assert`文を使う時に直感的ではない挙動を示していた。
+-
+-C++23以降、もしくはCWG 2518が適用された環境においては、template文(もしくは適切な特殊化や`constexpr if`文の中の文)が実際にインスタンス化されるまで、`static_assert`文の宣言は遅延される。
+-
+-```cpp example
+-#include &amp;lt;cstdint&amp;gt;
+-template &amp;lt;class T&amp;gt;
+-void f(T t) {
+-  if constexpr (sizeof(T) == sizeof(std::int32_t)) {
+-    use(t);
+-  } else {
+-    static_assert(false, &amp;#34;must be 32bit&amp;#34;);
+-  }
+-}
+-
+-void g(std::int8_t c) {
+-  std::int32_t n = 0;
+-  f(n); // OK: nはstd::int32_t型なので`use(t);`のほうがインスタンス化されるために、static_assert文は宣言されない。
+-  f(c); // error: cはstd::int8_t型なので、static_assert文は宣言され、&amp;#34;must be 32bit&amp;#34;とコンパイラが診断メッセージを出力する
++  f(2.4);
++  f(3);
+ }
+ ```
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>暗黙のラムダキャプチャを簡略化 [P0588R1] -- Merge pull request #1756 from cpprefjp/fix_odr_usable</title>
@@ -246,136 +429,6 @@ index 8fbce21ed..1f4ab34e9 100644
       <author>
         <name>yumetodo</name>
         <email>yume-wikijp@live.jp</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>静的リフレクション [P2996R13] -- C++26静的リフレクション : JSONにシリアライズする例を追加</title>
-      <link href="https://cpprefjp.github.io/lang/cpp26/reflection.html"/>
-      <id>866071a29d207aee88a6f27f4c6eed8b46bda022:lang/cpp26/reflection.md</id>
-      <updated>2026-09-15T15:32:31+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp26/reflection.md b/lang/cpp26/reflection.md
-index 5d1ac0fec..e9ad33faa 100644
---- a/lang/cpp26/reflection.md
-+++ b/lang/cpp26/reflection.md
-@@ -744,6 +744,111 @@ Hello wg21
- ```
- 
- 
-+### JSONにシリアライズする
-+リフレクションでメンバ変数を走査すれば、クラスごとにシリアライズ関数を書かなくてもJSONへ変換できる。さらにアノテーションを併用することで、JSON上の表現だけをクラスの定義から制御できる。
-+
-+以下の例では、キー名を変更する`Rename`と、シリアライズの対象から外す`Skip`を定義する。どちらもC++のコード上での使い方には影響せず、JSONへの変換方法だけを指定する。
-+
-+```cpp example
-+#include &amp;lt;meta&amp;gt;
-+#include &amp;lt;concepts&amp;gt;
-+#include &amp;lt;format&amp;gt;
-+#include &amp;lt;print&amp;gt;
-+#include &amp;lt;string&amp;gt;
-+#include &amp;lt;string_view&amp;gt;
-+
-+// JSONのキー名を変更するアノテーション
-+struct Rename {
-+  const char* name;
-+};
-+
-+// シリアライズの対象から外すアノテーション
-+struct Skip {};
-+
-+struct Address {
-+  std::string city;
-+  int postal_code;
-+};
-+
-+struct Person {
-+  [[=Rename{std::define_static_string(&amp;#34;first name&amp;#34;)}]] std::string first;
-+  [[=Rename{std::define_static_string(&amp;#34;last name&amp;#34;)}]] std::string last;
-+  int age;
-+  Address address;                    // ネストしたクラスも再帰的に変換される
-+  [[=Skip{}]] std::string password;   // シリアライズしない
-+};
-+
-+template &amp;lt;class T&amp;gt;
-+std::string to_json(const T&amp;amp; value) {
-+  if constexpr (std::integral&amp;lt;T&amp;gt; || std::floating_point&amp;lt;T&amp;gt;) {
-+    return std::format(&amp;#34;{}&amp;#34;, value);
-+  }
-+  else if constexpr (std::convertible_to&amp;lt;T, std::string_view&amp;gt;) {
-+    return std::format(&amp;#34;\&amp;#34;{}\&amp;#34;&amp;#34;, value);
-+  }
-+  else {
-+    std::string result = &amp;#34;{&amp;#34;;
-+    bool is_first = true;
-+
-+    template for (constexpr auto m :
-+        std::define_static_array(std::meta::nonstatic_data_members_of(^^T,
-+            std::meta::access_context::unchecked()))) {
-+      static constexpr auto skips = std::define_static_array(
-+        std::meta::annotations_of_with_type(m, ^^Skip));
-+
-+      if constexpr (skips.size() == 0) {
-+        static constexpr auto renames = std::define_static_array(
-+          std::meta::annotations_of_with_type(m, ^^Rename));
-+
-+        // Renameアノテーションがあればその名前を、なければメンバ変数名をキーにする
-+        constexpr std::string_view key = [] {
-+          if constexpr (renames.size() &amp;gt; 0) {
-+            return std::string_view{[:std::meta::constant_of(renames[0]):].name};
-+          }
-+          else {
-+            return std::meta::identifier_of(m);
-+          }
-+        }();
-+
-+        if (!is_first) {
-+          result += &amp;#39;,&amp;#39;;
-+        }
-+        is_first = false;
-+        result += std::format(&amp;#34;\&amp;#34;{}\&amp;#34;:{}&amp;#34;, key, to_json(value.[:m:]));
-+      }
-+    }
-+    return result + &amp;#39;}&amp;#39;;
-+  }
-+}
-+
-+int main() {
-+  Person person{
-+    .first = &amp;#34;Taro&amp;#34;,
-+    .last = &amp;#34;Yamada&amp;#34;,
-+    .age = 30,
-+    .address = {.city = &amp;#34;Tokyo&amp;#34;, .postal_code = 1000001},
-+    .password = &amp;#34;secret&amp;#34;
-+  };
-+
-+  std::println(&amp;#34;{}&amp;#34;, to_json(person));
-+}
-+```
-+* std::meta::nonstatic_data_members_of[link /reference/meta/nonstatic_data_members_of.md]
-+* std::meta::access_context::unchecked[link /reference/meta/access_context/unchecked.md]
-+* std::meta::annotations_of_with_type[link /reference/meta/annotations_of_with_type.md]
-+* std::meta::constant_of[link /reference/meta/constant_of.md]
-+* std::meta::identifier_of[link /reference/meta/identifier_of.md]
-+* std::format[link /reference/format/format.md]
-+* std::integral[link /reference/concepts/integral.md]
-+* std::floating_point[link /reference/concepts/floating_point.md]
-+* std::convertible_to[link /reference/concepts/convertible_to.md]
-+
-+#### 出力
-+```
-+{&amp;#34;first name&amp;#34;:&amp;#34;Taro&amp;#34;,&amp;#34;last name&amp;#34;:&amp;#34;Yamada&amp;#34;,&amp;#34;age&amp;#34;:30,&amp;#34;address&amp;#34;:{&amp;#34;city&amp;#34;:&amp;#34;Tokyo&amp;#34;,&amp;#34;postal_code&amp;#34;:1000001}}
-+```
-+
-+
- ## &amp;lt;a id=&amp;#34;relative-page&amp;#34; href=&amp;#34;#relative-page&amp;#34;&amp;gt;関連項目&amp;lt;/a&amp;gt;
- - [`&amp;lt;meta&amp;gt;`ヘッダ](/reference/meta.md)
- - [C++26 コンパイル時のタプルやリストを展開処理する`template for`文](/lang/cpp26/expansion_statements.md)
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
       </author>
     </entry>
   
