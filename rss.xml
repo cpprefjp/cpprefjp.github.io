@@ -2,9 +2,41 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2026-09-15T09:54:17.521131</updated>
-  <id>f84e6f2b-df41-4b34-bde4-570b32664fb8</id>
+  <updated>2026-09-15T10:40:36.727506</updated>
+  <id>0704612a-f39a-4327-923b-2f96b1a0c56e</id>
 
+  
+    <entry>
+      <title>コンストラクタ -- fix in ambiguous convertion</title>
+      <link href="https://cpprefjp.github.io/reference/chrono/zoned_time/op_constructor.html"/>
+      <id>359eb1e0a84e5cb5851c7dc5bb18006365427c54:reference/chrono/zoned_time/op_constructor.md</id>
+      <updated>2026-09-15T19:38:38+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/chrono/zoned_time/op_constructor.md b/reference/chrono/zoned_time/op_constructor.md
+index 2d85d1059..a7926e226 100644
+--- a/reference/chrono/zoned_time/op_constructor.md
++++ b/reference/chrono/zoned_time/op_constructor.md
+@@ -111,7 +111,12 @@ zoned_time(string_view name,
+ 
+ ## 備考
+ - [`local_time`](/reference/chrono/local_time.md)型のローカル時間を受け取るコンストラクタでは、[`sys_time`](/reference/chrono/sys_time.md)型のシステム時間への変換が行われ、システム時間としてメンバ変数に保持される
+-- (9), (10) : ローカル時間からシステム時間への変換があいまいになる場合、早い時間側の候補に変換される
++- (9), (10) : [`choose`](/reference/chrono/choose.md)を指定しないため、変換に失敗する場合は[`to_sys()`](/reference/chrono/time_zone/to_sys.md)から例外が送出される
++    - ローカル時間からシステム時間への変換があいまいになる場合、[`ambiguous_local_time`](/reference/chrono/ambiguous_local_time.md)例外を送出する
++    - 指定されたローカル時間が存在しない場合、[`nonexistent_local_time`](/reference/chrono/nonexistent_local_time.md)例外を送出する
++- (11), (12) : [`choose`](/reference/chrono/choose.md)を指定するため、あいまいなローカル時間・存在しないローカル時間が指定されてもこれらの例外は送出されない
++    - あいまいなローカル時間の場合、`c`で指定した側の候補に変換される
++    - 存在しないローカル時間の場合、`c`の値にかかわらず、変換結果は同じ時間点となる
+ 
+ 
+ ### 例
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>rotarymars</name>
+        <email>s.goto2050@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>duration -- fix in wrong explanation</title>
@@ -605,86 +637,6 @@ index e67a44ecd..d18207ac8 100644
  }
  ```
  
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>暗黙のラムダキャプチャを簡略化 [P0588R1] -- Merge pull request #1756 from cpprefjp/fix_odr_usable</title>
-      <link href="https://cpprefjp.github.io/lang/cpp20/simplifying_implicit_lambda_capture.html"/>
-      <id>23cccdd3c5dbd8f73bdbab529be955a46922e9bf:lang/cpp20/simplifying_implicit_lambda_capture.md</id>
-      <updated>2026-09-15T15:56:06+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp20/simplifying_implicit_lambda_capture.md b/lang/cpp20/simplifying_implicit_lambda_capture.md
-index 8fbce21ed..41c705232 100644
---- a/lang/cpp20/simplifying_implicit_lambda_capture.md
-+++ b/lang/cpp20/simplifying_implicit_lambda_capture.md
-@@ -29,12 +29,60 @@ void f() {
- }
- ```
- 
--構造化束縛で導入された名前はラムダ式でキャプチャできない、と明記された。しかしその後、「[構造化束縛を拡張して通常の変数宣言のように使用できるようにする](extending_structured_bindings_to_be_more_like_variable_declarations.md)」の仕様でそれが可能となったため、この仕様変更は打ち消された。
-+本提案では一旦、構造化束縛で導入された名前はラムダ式でキャプチャできない、と明記された。その後、「[構造化束縛を拡張して通常の変数宣言のように使用できるようにする](extending_structured_bindings_to_be_more_like_variable_declarations.md)」の仕様でそれが可能となったため、この部分は打ち消された。
-+
-+## 仕様
-+ラムダ式がどのローカル変数をキャプチャできるか、またそれをどこで使用できるかを規定するために、odr-usableという用語が導入された。
-+
-+ローカル変数、関数のパラメータ、構造化束縛で導入された名前、`*this`のように、関数のローカルな文脈に属するものをローカルエンティティ (*local entity*) と呼ぶ。ローカルエンティティは、その宣言から使用する地点までの間に挟まるスコープが、すべて以下のいずれかである場合に、その地点でodr-usableとなる。
-+
-+- ブロックスコープ (`{}`で囲まれた文のスコープ)
-+- ラムダ式の関数パラメータスコープ (ラムダ式のパラメータを宣言できる範囲) であり、そのラムダ式がそのローカルエンティティを明示的にキャプチャしているかデフォルトキャプチャをもっていて、かつそのラムダ式の本体のブロックスコープも、使用する地点までの間に挟まっている
-+
-+odr-usableではないローカルエンティティをodr-usedした場合、そのプログラムは不適格となる。
-+
-+```cpp
-+void f(int n) {
-+  [] { n = 1; };               // エラー: nをキャプチャしていないため、odr-usableではない
-+  [&amp;amp;] { n = 1; };              // OK: nをキャプチャしており、ラムダ式の本体の中で使用している
-+
-+  struct A {
-+    void g() { n = 2; }        // エラー: ローカルクラスのスコープと、そのメンバ関数の
-+  };                           //         関数パラメータスコープが挟まる
-+
-+  void g(int = n);             // エラー: ラムダ式ではない関数の関数パラメータスコープが挟まる
-+
-+  [=](int k = n) {};           // エラー: ラムダ式の関数パラメータスコープは挟まるが、
-+                               //         本体のブロックスコープは挟まらない
-+
-+  [&amp;amp;] { [n]{ return n; }; };   // OK: 内側のラムダ式は、外側のラムダ式の本体の中にある
-+}
-+```
-+
-+### ラムダ式のデフォルト引数で外側のローカル変数を使用できない理由
-+キャプチャが効くのはラムダ式の本体の中だけであり、パラメータの宣言はその外側にある。そのため`[=](int k = n) {}`の`n`は、キャプチャしたコピーではなく、外側の`n`そのものを指す。
-+
-+デフォルト引数が評価されるのは、ラムダ式を書いた場所ではなく、クロージャオブジェクトを呼び出した場所である。クロージャオブジェクトはそれを作った関数の外へ持ち出せるため、仮にこれを許すと、すでに生存期間の終わったローカル変数を読むことになりうる。
-+
-+```cpp
-+auto f(int n) {
-+  return [=](int k = n) { return k; };  // エラー
-+}
-+
-+int main() {
-+  auto g = f(3);
-+  g();  // 仮に適格だとすると、ここで関数f()のパラメータnを読むことになる
-+}
-+```
- 
- 
- ## &amp;lt;a id=&amp;#34;relative-page&amp;#34; href=&amp;#34;#relative-page&amp;#34;&amp;gt;関連項目&amp;lt;/a&amp;gt;
- - [C++17 構造化束縛](/lang/cpp17/structured_bindings.md)
- - [C++20 構造化束縛を拡張して通常の変数宣言のように使用できるようにする](extending_structured_bindings_to_be_more_like_variable_declarations.md)
-+- [C++20 構造化束縛した変数の参照キャプチャを許可](reference_capture_of_structured_bindings.md)
- 
- ## 参照
- - [P0588R1 Simplifying implicit lambda capture](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0588r1.html)
-+    - C++20で、ラムダ式での暗黙のキャプチャの規定が整理され、odr-usableが導入された
-+- [CWG Issue 2380. capture-default makes too many references odr-usable](https://cplusplus.github.io/CWG/issues/2380.html)
-+    - C++20の策定中に、odr-usableの条件へ「ラムダ式の本体のブロックスコープも挟まっていること」が追加された。この条件がないと、デフォルトキャプチャを書くだけでラムダ式のパラメータのデフォルト引数から外側のローカル変数を使用できてしまっていた
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
