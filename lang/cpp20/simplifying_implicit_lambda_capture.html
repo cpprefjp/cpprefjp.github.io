@@ -189,12 +189,12 @@
     <p class="text-right"><small>
       最終更新日時:
       <time itemprop="datePublished" class="js-local-time"
-            datetime="2025-07-10T10:26:30+09:00">
-        2025年07月10日 10時26分30秒 (JST)
+            datetime="2026-09-15T15:54:51+09:00">
+        2026年09月15日 15時54分51秒 (JST)
       </time>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">Koichi Murase</span>
+        <span itemprop="name">Akira Takahashi</span>
       </span>
       が更新
     </small></p>
@@ -261,15 +261,61 @@
 <span class="p">}</span>
 </code></pre></div>
 </p>
-<p>構造化束縛で導入された名前はラムダ式でキャプチャできない、と明記された。しかしその後、「<a href="extending_structured_bindings_to_be_more_like_variable_declarations.html">構造化束縛を拡張して通常の変数宣言のように使用できるようにする</a>」の仕様でそれが可能となったため、この仕様変更は打ち消された。</p>
+<p>本提案では一旦、構造化束縛で導入された名前はラムダ式でキャプチャできない、と明記された。その後、「<a href="extending_structured_bindings_to_be_more_like_variable_declarations.html">構造化束縛を拡張して通常の変数宣言のように使用できるようにする</a>」の仕様でそれが可能となったため、この部分は打ち消された。</p>
+<h2>仕様</h2>
+<p>ラムダ式がどのローカル変数をキャプチャできるか、またそれをどこで使用できるかを規定するために、odr-usableという用語が導入された。</p>
+<p>ローカル変数、関数のパラメータ、構造化束縛で導入された名前、<code>*this</code>のように、関数のローカルな文脈に属するものをローカルエンティティ (<em>local entity</em>) と呼ぶ。ローカルエンティティは、その宣言から使用する地点までの間に挟まるスコープが、すべて以下のいずれかである場合に、その地点でodr-usableとなる。</p>
+<ul>
+<li>ブロックスコープ (<code>{}</code>で囲まれた文のスコープ)</li>
+<li>ラムダ式の関数パラメータスコープ (ラムダ式のパラメータを宣言できる範囲) であり、そのラムダ式がそのローカルエンティティを明示的にキャプチャしているかデフォルトキャプチャをもっていて、かつそのラムダ式の本体のブロックスコープも、使用する地点までの間に挟まっている</li>
+</ul>
+<p>odr-usableではないローカルエンティティをodr-usedした場合、そのプログラムは<a class="cpprefjp-defined-word" data-desc="プログラムが適格でないこと。コンパイルエラーなどになる" href="../../implementation-compliance.html#dfn-ill-formed">不適格</a>となる。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">f</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">[]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="p">};</span><span class="w">               </span><span class="c1">// エラー: nをキャプチャしていないため、odr-usableではない</span>
+<span class="w">  </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="p">};</span><span class="w">              </span><span class="c1">// OK: nをキャプチャしており、ラムダ式の本体の中で使用している</span>
+
+<span class="w">  </span><span class="k">struct</span><span class="w"> </span><span class="nc">A</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">g</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span><span class="w"> </span><span class="p">}</span><span class="w">        </span><span class="c1">// エラー: ローカルクラスのスコープと、そのメンバ関数の</span>
+<span class="w">  </span><span class="p">};</span><span class="w">                           </span><span class="c1">//         関数パラメータスコープが挟まる</span>
+
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">g</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="p">);</span><span class="w">             </span><span class="c1">// エラー: ラムダ式ではない関数の関数パラメータスコープが挟まる</span>
+
+<span class="w">  </span><span class="p">[</span><span class="o">=</span><span class="p">](</span><span class="kt">int</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{};</span><span class="w">           </span><span class="c1">// エラー: ラムダ式の関数パラメータスコープは挟まるが、</span>
+<span class="w">                               </span><span class="c1">//         本体のブロックスコープは挟まらない</span>
+
+<span class="w">  </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">[</span><span class="n">n</span><span class="p">]{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="p">};</span><span class="w"> </span><span class="p">};</span><span class="w">   </span><span class="c1">// OK: 内側のラムダ式は、外側のラムダ式の本体の中にある</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
+<h3>ラムダ式のデフォルト引数で外側のローカル変数を使用できない理由</h3>
+<p>キャプチャが効くのはラムダ式の本体の中だけであり、パラメータの宣言はその外側にある。そのため<code>[=](int k = n) {}</code>の<code>n</code>は、キャプチャしたコピーではなく、外側の<code>n</code>そのものを指す。</p>
+<p>デフォルト引数が評価されるのは、ラムダ式を書いた場所ではなく、クロージャオブジェクトを呼び出した場所である。クロージャオブジェクトはそれを作った関数の外へ持ち出せるため、仮にこれを許すと、すでに生存期間の終わったローカル変数を読むことになりうる。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">auto</span><span class="w"> </span><span class="n">f</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">[</span><span class="o">=</span><span class="p">](</span><span class="kt">int</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">k</span><span class="p">;</span><span class="w"> </span><span class="p">};</span><span class="w">  </span><span class="c1">// エラー</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="n">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">g</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">f</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
+<span class="w">  </span><span class="n">g</span><span class="p">();</span><span class="w">  </span><span class="c1">// 仮に適格だとすると、ここで関数f()のパラメータnを読むことになる</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
 <h2><a href="#relative-page" id="relative-page">関連項目</a></h2>
 <ul>
 <li><a href="../cpp17/structured_bindings.html">C++17 構造化束縛</a></li>
 <li><a href="extending_structured_bindings_to_be_more_like_variable_declarations.html">C++20 構造化束縛を拡張して通常の変数宣言のように使用できるようにする</a></li>
+<li><a href="reference_capture_of_structured_bindings.html">C++20 構造化束縛した変数の参照キャプチャを許可</a></li>
 </ul>
 <h2>参照</h2>
 <ul>
-<li><a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0588r1.html" target="_blank">P0588R1 Simplifying implicit lambda capture</a></li>
+<li><a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0588r1.html" target="_blank">P0588R1 Simplifying implicit lambda capture</a><ul>
+<li>C++20で、ラムダ式での暗黙のキャプチャの規定が整理され、odr-usableが導入された</li>
+</ul>
+</li>
+<li><a href="https://cplusplus.github.io/CWG/issues/2380.html" target="_blank">CWG Issue 2380. capture-default makes too many references odr-usable</a><ul>
+<li>C++20の策定中に、odr-usableの条件へ「ラムダ式の本体のブロックスコープも挟まっていること」が追加された。この条件がないと、デフォルトキャプチャを書くだけでラムダ式のパラメータのデフォルト引数から外側のローカル変数を使用できてしまっていた</li>
+</ul>
+</li>
 </ul></div>
 
       </div>
