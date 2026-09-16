@@ -2,9 +2,36 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2026-09-15T18:24:12.152847</updated>
-  <id>50576c6c-b19d-4d32-b099-b0cd19b81dec</id>
+  <updated>2026-09-16T01:56:08.415564</updated>
+  <id>296840ba-a07a-4f57-a37e-212c3c4d2ac0</id>
 
+  
+    <entry>
+      <title>atomic_store_or -- atomic_store_or : 出力の間違いを修正</title>
+      <link href="https://cpprefjp.github.io/reference/atomic/atomic_store_or.html"/>
+      <id>b9fc76bb279738bd15e3e1bce573f6659fe2717d:reference/atomic/atomic_store_or.md</id>
+      <updated>2026-09-16T10:54:02+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/atomic/atomic_store_or.md b/reference/atomic/atomic_store_or.md
+index 44de359f8..15d164703 100644
+--- a/reference/atomic/atomic_store_or.md
++++ b/reference/atomic/atomic_store_or.md
+@@ -76,7 +76,7 @@ int main()
+ 
+ ### 出力
+ ```
+-0b0101
++0b1101
+ ```
+ 
+ 
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>コンストラクタ -- fix in ambiguous convertion</title>
@@ -454,189 +481,6 @@ index d18207ac8..b5a3ae3cc 100644
  
  ```cpp example
  #include &amp;lt;type_traits&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>constexpr if 文 [P0292R2] -- Merge pull request #1260 from cpprefjp/refactor/cwg2518</title>
-      <link href="https://cpprefjp.github.io/lang/cpp17/if_constexpr.html"/>
-      <id>437e7550bfa7198efb270a555edb0cf7f3c4b12e:lang/cpp17/if_constexpr.md</id>
-      <updated>2026-09-15T16:05:27+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp17/if_constexpr.md b/lang/cpp17/if_constexpr.md
-index e67a44ecd..d18207ac8 100644
---- a/lang/cpp17/if_constexpr.md
-+++ b/lang/cpp17/if_constexpr.md
-@@ -76,57 +76,57 @@ void f(Out&amp;amp; o, A1 const&amp;amp; a1, A2 const&amp;amp; a2)
- それでも記述が実際にしたい処理に比べて不必要に複雑になる。
- constexpr if文の導入によりそのような複雑な手法を用いずに素直に条件付きのコンパイルを実現できるようになった。
- 
--### 2段階名前探索における注意点
--
--`constexpr if`文で、実行されない方の`statement`は廃棄文(discarded statement)となり、文の実体化を防ぐ。言い換えると、2段階名前探索における依存名(dependent name)は、廃棄文の場合検証されない。また文が実体化されないのだから通常のif文と同じくもちろん実行時に実行もされない。つまり次の例は意図と異なる挙動を示す。
-+`constexpr if`文の条件式内は実体化が起きる。したがって実体化するとコンパイルエラーになるものは書いてはいけない。
- 
- ```cpp example
- #include &amp;lt;type_traits&amp;gt;
-+#include &amp;lt;iostream&amp;gt;
-+
-+struct Hoge {
-+  using type = int;
-+};
- 
- template &amp;lt;typename T&amp;gt;
--void f(T)
-+void f()
- {
--  if constexpr (std::is_same_v&amp;lt;T, int&amp;gt;)
--  {
--    // Tがintのときのみ評価されてほしい
--    // 実際は常に評価される
--    static_assert(false);
-+  if constexpr (std::is_same_v&amp;lt;typename T::type, int&amp;gt; || std::is_same_v&amp;lt;typename T::value_type, int&amp;gt;) {
-+    std::cout &amp;lt;&amp;lt; &amp;#34;is int&amp;#34; &amp;lt;&amp;lt; std::endl;
-   }
- }
- 
- int main()
- {
--  f(2.4);
--  f(3);
-+  f&amp;lt;Hoge&amp;gt;(); //error: Hoge::value_typeは存在しないのでif constexpr文の条件式がコンパイルエラーになる
- }
- ```
- 
--なぜならば廃棄文はテンプレートの実体化を防ぐ (依存名の検証をしない) だけで、非依存名は検証されるからである。この例の[`static_assert`](/lang/cpp11/static_assert.md)に渡す条件式はテンプレートパラメータに依存していないので、テンプレートの宣言時に検証され、エラーとなる。言い換えれば`static_assert`に渡す条件式が依存名ならばテンプレートの宣言時に検証されず、テンプレート実体化まで評価を遅らせることができる。
--
--```cpp example
--#include &amp;lt;type_traits&amp;gt;
-+### `static_assert`宣言に関する例外
- 
--template &amp;lt;typename T&amp;gt;
--constexpr bool false_v = false;
-+後に述べる2段階名前探索に関する注意点とは関係なく、C++23以降、もしくはCWG 2518が適用された環境においては、template文(もしくは適切な特殊化や`constexpr if`文の中の文)が実際に実体化されない限り、`static_assert`宣言による失敗は無視される。
- 
--template &amp;lt;typename T&amp;gt;
--void f(T)
--{
--  if constexpr (std::is_same_v&amp;lt;T, int&amp;gt;)
--  {
--    // Tがintのときのみ評価される
--    static_assert(false_v&amp;lt;T&amp;gt;);
-+```cpp example
-+#include &amp;lt;cstdint&amp;gt;
-+template &amp;lt;class T&amp;gt;
-+void f(T t) {
-+  if constexpr (sizeof(T) == sizeof(std::int32_t)) {
-+    use(t);
-+  } else {
-+    static_assert(false, &amp;#34;must be 32bit&amp;#34;);
-   }
- }
- 
--int main()
--{
--  f(2.4);
--  f(3);
-+void g(std::int8_t c) {
-+  std::int32_t n = 0;
-+  f(n); // OK: nはstd::int32_t型なので`use(t);`のほうが実体化されるために、static_assert宣言の失敗は無視される。
-+  f(c); // error: cはstd::int8_t型なので、static_assert宣言は失敗し、&amp;#34;must be 32bit&amp;#34;とコンパイラが診断メッセージを出力する
- }
- ```
- 
--上の例では`false_v`を作ったが、ラムダ式でも同様のことができる。ラムダ式はそれが記述された位置から見て最小のスコープ (ブロックスコープ／クラススコープ／名前空間スコープ) で宣言されるクラスとして扱われる。例えば、下の例では`f()`という関数テンプレート内で宣言される。関数テンプレート内のクラスは依存名になるため、テンプレートの宣言時に検証されず、テンプレート実体化まで評価を遅らせることができる。
-+### 2段階名前探索における注意点
-+
-+`constexpr if`文で、実行されない方の`statement`は廃棄文(discarded statement)となり、文の実体化を防ぐ。言い換えると、2段階名前探索における依存名(dependent name)は、廃棄文の場合検証されない。また文が実体化されないのだから通常のif文と同じくもちろん実行時に実行もされない。
-+
-+CWG 2518が適用されていない環境においては`static_assert`を用いる時に直感的ではない挙動を示していた。
- 
- ```cpp example
- #include &amp;lt;type_traits&amp;gt;
-@@ -136,8 +136,9 @@ void f(T)
- {
-   if constexpr (std::is_same_v&amp;lt;T, int&amp;gt;)
-   {
--    // Tがintのときのみ評価される
--    static_assert([]{return false;}());
-+    // Tがintのときのみ評価されてほしい
-+    // 実際は常に評価される
-+    static_assert(false);
-   }
- }
- 
-@@ -148,51 +149,32 @@ int main()
- }
- ```
- 
--`constexpr if`文の条件式内は実体化が起きる。したがって実体化するとコンパイルエラーになるものは書いてはいけない。
-+なぜならば廃棄文はテンプレートの実体化を防ぐ (依存名の検証をしない) だけで、非依存名は検証されるからである。この例の[`static_assert`](/lang/cpp11/static_assert.md)に渡す条件式はテンプレートパラメータに依存していないので、テンプレートの宣言時に検証され、エラーとなる。
-+
-+#### CWG 2518が適用されていない環境での回避策
-+
-+言い換えれば`static_assert`に渡す条件式が依存名ならばテンプレートの宣言時に検証されず、テンプレート実体化まで評価を遅らせることができる。
- 
- ```cpp example
- #include &amp;lt;type_traits&amp;gt;
--#include &amp;lt;iostream&amp;gt;
- 
--struct Hoge {
--  using type = int;
--};
-+template &amp;lt;typename T&amp;gt;
-+constexpr bool false_v = false;
- 
- template &amp;lt;typename T&amp;gt;
--void f()
-+void f(T)
- {
--  if constexpr (std::is_same_v&amp;lt;typename T::type, int&amp;gt; || std::is_same_v&amp;lt;typename T::value_type, int&amp;gt;) {
--    std::cout &amp;lt;&amp;lt; &amp;#34;is int&amp;#34; &amp;lt;&amp;lt; std::endl;
-+  if constexpr (std::is_same_v&amp;lt;T, int&amp;gt;)
-+  {
-+    // Tがintのときのみ評価される
-+    static_assert(false_v&amp;lt;T&amp;gt;);
-   }
- }
- 
- int main()
- {
--  f&amp;lt;Hoge&amp;gt;(); //error: Hoge::value_typeは存在しないのでif constexpr文の条件式がコンパイルエラーになる
--}
--```
--
--### (CWG 2518が適用された環境) `static_assert`文に関する例外
--
--上に述べたように、`constexpr if`文の中の文は廃棄文においても、非依存名の検証を行う。このため特に`static_assert`文を使う時に直感的ではない挙動を示していた。
--
--C++23以降、もしくはCWG 2518が適用された環境においては、template文(もしくは適切な特殊化や`constexpr if`文の中の文)が実際にインスタンス化されるまで、`static_assert`文の宣言は遅延される。
--
--```cpp example
--#include &amp;lt;cstdint&amp;gt;
--template &amp;lt;class T&amp;gt;
--void f(T t) {
--  if constexpr (sizeof(T) == sizeof(std::int32_t)) {
--    use(t);
--  } else {
--    static_assert(false, &amp;#34;must be 32bit&amp;#34;);
--  }
--}
--
--void g(std::int8_t c) {
--  std::int32_t n = 0;
--  f(n); // OK: nはstd::int32_t型なので`use(t);`のほうがインスタンス化されるために、static_assert文は宣言されない。
--  f(c); // error: cはstd::int8_t型なので、static_assert文は宣言され、&amp;#34;must be 32bit&amp;#34;とコンパイラが診断メッセージを出力する
-+  f(2.4);
-+  f(3);
- }
- ```
- 
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
