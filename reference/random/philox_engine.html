@@ -205,12 +205,12 @@
     <p class="text-right"><small>
       最終更新日時:
       <time itemprop="datePublished" class="js-local-time"
-            datetime="2026-09-19T20:19:03+09:00">
-        2026年09月19日 20時19分03秒 (JST)
+            datetime="2026-09-20T18:47:50+09:00">
+        2026年09月20日 18時47分50秒 (JST)
       </time>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">rotarymars</span>
+        <span itemprop="name">Akira Takahashi</span>
       </span>
       が更新
     </small></p>
@@ -345,8 +345,8 @@ if (i == n){
 <ol>
 <li>
 <p>シーケンス $V$ の要素には以下の計算が適用される：
-    $$ X'_{2 \cdot k} = mulhi(V_{2 \cdot k},\ M_{n/2-1-k},\ w)\ xor\ key_k^q\ xor\ V_{2 \cdot k + 1} $$
-    $$ X'_{2 \cdot k + 1} = mullo(V_{2 \cdot k},\ M_{n/2-1-k},\ w) $$</p>
+    $$ X'_{2 \cdot k} = mulhi(V_{2 \cdot k},\ M_{k},\ w)\ xor\ key_k^q\ xor\ V_{2 \cdot k + 1} $$
+    $$ X'_{2 \cdot k + 1} = mullo(V_{2 \cdot k},\ M_{k},\ w) $$</p>
 </li>
 <li>
 <p>ここで以下のように定義する：</p>
@@ -356,7 +356,7 @@ if (i == n){
 <li><code>q</code>は0, …, r - 1のラウンドのインデックスである</li>
 <li>$ key_k^q $ はラウンド<code>q</code>の<code>k</code>番目のラウンドキーであり、 $ key_k^q = \left( K_{k}\ +\ q \cdot C_{k} \right)\ mod\ 2^{w} $</li>
 <li>$ K_{k} $ はシードで一度生成されたキーであり、<code><a href="philox_engine/seed.html">seed()</a></code>関数が呼ばれない限り固定である</li>
-<li>$ M_{k} $ は<code>multipliers</code>である（上式のとおり、<code>k</code>番目の語には $ M_{n/2-1-k} $ を用いる）</li>
+<li>$ M_{k} $ は<code>multipliers[k]</code>である</li>
 <li>$ C_{k} $ は<code>round_consts</code>である</li>
 </ul>
 </li>
@@ -386,6 +386,7 @@ if (i == n){
 <h3><a class="cpprefjp-defined-word" data-desc="関数等の意味論を構成する要素の1つ。Mandates。満たさなければプログラムが不適格となる要件。この要件は、オーバーロード解決によって選択された関数内での`static_assert`の定数条件式や、関数に対するdelete宣言などで表現できる">適格要件</a></h3>
 <ul>
 <li><code>sizeof...(consts) == n</code>が<code>true</code>であること</li>
+<li><code>n == 2 || n == 4</code>が<code>true</code>であること</li>
 <li><code>0 &lt; r</code>が<code>true</code>であること</li>
 <li><code>0 &lt; w &amp;&amp; w &lt;= <a href="../limits/numeric_limits.html">numeric_limits</a>&lt;UIntType&gt;::<a href="../limits/numeric_limits/digits.html">digits</a></code>が<code>true</code>であること</li>
 </ul>
@@ -637,13 +638,13 @@ if (i == n){
 </div></p>
 <h4>出力例</h4>
 <p><pre><code>0.8202247,0.18554558,0.8234037
-0.4850654,0.9281539,0.43299365
 0.26559144,0.98589313,0.31661463
+0.4850654,0.9281539,0.43299365
 0.88831127,0.4234704,0.9224362
-0.0027833676,0.14429614,0.8929877
-0.6186795,0.6290597,0.46478647
-0.17204352,0.54567194,0.1469554
-0.7067667,0.48607737,0.6880201
+0.19449306,0.33466616,0.8031837
+0.6061549,0.045408495,0.59267986
+0.20787095,0.72108454,0.30999956
+0.8719399,0.6067308,0.41063035
 </code></pre></p>
 <h2>バージョン</h2>
 <h3>言語</h3>
@@ -671,7 +672,13 @@ if (i == n){
 </ul>
 </li>
 <li><a href="https://cplusplus.github.io/LWG/issue4134" target="_blank">LWG Issue 4134. Issue with Philox algorithm specification</a><ul>
-<li>C++26で、ワード置換関数<code>f(j)</code>のテーブルが修正された（<code>n=4</code>の順列を<code>2, 1, 0, 3</code>に訂正し、<code>philox_engine</code>が対応しない<code>n=8</code>・<code>n=16</code>の行を削除）</li>
+<li>C++26で、アルゴリズムの規定が参照実装に合わせて修正された。P2075R6の記述はPhiloxの原論文に沿っていたが、原論文の記述が参照実装と食い違っていたため、規定どおりに実装すると<code>philox4x32</code>の10000番目の値が規格の要求値と一致しなかった。修正は以下の4点からなり、これらは一体で等価な定式化になっている<ul>
+<li>ワード置換関数<code>f_n(j)</code>のテーブルを修正した（<code>n=4</code>の順列を<code>0, 3, 2, 1</code>から<code>2, 1, 0, 3</code>へ訂正し、参照実装の存在しない<code>n=8</code>・<code>n=16</code>の行を削除）</li>
+<li>ラウンド関数の2つの式を入れ替え、被乗数を $ V_{2 \cdot k + 1} $ から $ V_{2 \cdot k} $ へ変更した</li>
+<li><a class="cpprefjp-defined-word" data-desc="関数等の意味論を構成する要素の1つ。Mandates。満たさなければプログラムが不適格となる要件。この要件は、オーバーロード解決によって選択された関数内での`static_assert`の定数条件式や、関数に対するdelete宣言などで表現できる">適格要件</a>を<code>n == 2 || n == 4</code>に変更した</li>
+<li><code><a href="philox4x32.html">philox4x32</a></code>・<code><a href="philox4x64.html">philox4x64</a></code>の定数の並びを変更した（$ M_{0} $ と $ M_{1} $ が入れ替わった）</li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a href="https://cplusplus.github.io/LWG/issue4153" target="_blank">LWG Issue 4153. Fix extra "-1" for <code>philox_engine::max()</code></a><ul>
