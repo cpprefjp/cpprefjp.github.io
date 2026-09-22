@@ -28,11 +28,11 @@
         <meta property="og:url" content="https://cpprefjp.github.io/reference/type_traits/is_within_lifetime.html" />
         <meta property="og:site_name" content="cpprefjp - C++日本語リファレンス" />
         <meta property="og:type" content="article" />
-        <meta property="og:description" content="共用体の指定されたメンバがアクティブかを定数式で判定する。" />
+        <meta property="og:description" content="" />
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:title" content="std::is_within_lifetime - cpprefjp C++日本語リファレンス" />
         <meta name="twitter:url" content="https://cpprefjp.github.io/reference/type_traits/is_within_lifetime.html" />
-        <meta name="twitter:description" content="共用体の指定されたメンバがアクティブかを定数式で判定する。" />
+        <meta name="twitter:description" content="" />
 
         
   <link rel="alternate" type="application/atom+xml" title="Atom" href="https://cpprefjp.github.io/rss.xml" />
@@ -189,12 +189,12 @@
     <p class="text-right"><small>
       最終更新日時:
       <time itemprop="datePublished" class="js-local-time"
-            datetime="2026-09-16T12:43:04+09:00">
-        2026年09月16日 12時43分04秒 (JST)
+            datetime="2026-09-22T13:54:52+09:00">
+        2026年09月22日 13時54分52秒 (JST)
       </time>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span itemprop="name">Akira Takahashi</span>
+        <span itemprop="name">onihusube</span>
       </span>
       が更新
     </small></p>
@@ -244,8 +244,9 @@
 </code></pre></div>
 </p>
 <h2>概要</h2>
-<p>共用体の指定されたメンバがアクティブかを定数式で判定する。</p>
-<p>定数式では非アクティブな共用体メンバへのアクセスができないため、以下のような非アクティブなメンバの値を使用してアクティブメンバを判定する方法が使用できない。</p>
+<p>定数式において、<code>p</code>に配置されているオブジェクトが有効期間内にあり、かつ<code>const U*</code>のポインタへキャスト可能かどうかを判定する。</p>
+<h3>共用体のアクティブメンバ判定</h3>
+<p>この関数は主に、共用体の指定されたメンバがアクティブかを定数式中で判定するためのものである。定数式では非アクティブな共用体メンバへのアクセスができないため、以下のような非アクティブなメンバの値を使用してアクティブメンバを判定する方法が使用できない。</p>
 <p><div class="codehilite"><pre><span></span><code><span class="k">struct</span><span class="w"> </span><span class="nc">OptBool</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">union</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">b</span><span class="p">;</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">c</span><span class="p">;</span><span class="w"> </span><span class="p">};</span>
 
@@ -263,6 +264,23 @@
 </code></pre></div>
 </p>
 <p>この関数を使用することで、コンパイル時に指定メンバがアクティブかを判定することができる。</p>
+<h3>ダウンキャスト可能かどうかの判定</h3>
+<p>第一テンプレートパラメータ<code>U</code>は<code>T</code>のポインタを<code>U</code>のポインタへキャスト可能かどうかを判定するためのもので、主に<code>T</code>から<code>U</code>へのダウンキャストが定数式中で可能かどうかを判定するために使用する。</p>
+<p><div class="codehilite"><pre><span></span><code><span class="k">struct</span><span class="w"> </span><span class="nc">Base</span><span class="w"> </span><span class="p">{};</span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">Derived</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">Base</span><span class="w"> </span><span class="p">{};</span>
+
+<span class="k">consteval</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">f</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">Base</span><span class="w"> </span><span class="n">b</span><span class="p">{};</span>
+<span class="w">  </span><span class="n">Derived</span><span class="w"> </span><span class="n">d</span><span class="p">{};</span>
+<span class="w">  </span><span class="n">Base</span><span class="o">*</span><span class="w"> </span><span class="n">d_ptr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">d</span><span class="p">;</span>
+
+<span class="w">  </span><span class="c1">// d_ptrはDerivedのポインタにダウンキャスト可能</span>
+<span class="w">  </span><span class="n"><a href="../cassert/assert.html">assert</a></span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">is_within_lifetime</span><span class="o">&lt;</span><span class="n">Derived</span><span class="o">&gt;</span><span class="p">(</span><span class="n">d_ptr</span><span class="p">));</span>
+<span class="w">  </span><span class="c1">// &amp;bはDerivedにダウンキャスト不可</span>
+<span class="w">  </span><span class="n"><a href="../cassert/assert.html">assert</a></span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">is_within_lifetime</span><span class="o">&lt;</span><span class="n">Derived</span><span class="o">&gt;</span><span class="p">(</span><span class="o">&amp;</span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+</p>
 <h2><a class="cpprefjp-defined-word" data-desc="関数等の意味論を構成する要素の1つ。Mandates。満たさなければプログラムが不適格となる要件。この要件は、オーバーロード解決によって選択された関数内での`static_assert`の定数条件式や、関数に対するdelete宣言などで表現できる">適格要件</a></h2>
 <p><code>static_cast&lt;const volatile U*&gt;(p)</code>が<a class="cpprefjp-defined-word" data-desc="プログラムが文法規則・診断対象の意味規則・単一定義規則を満たすこと" href="../../implementation-compliance.html#dfn-well-formed">適格</a>であること。</p>
 <h2><a class="cpprefjp-defined-word" data-desc="関数呼び出し式の評価結果となるオブジェクト・値">戻り値</a></h2>
