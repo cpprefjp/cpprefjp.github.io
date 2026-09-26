@@ -189,8 +189,8 @@
     <p class="text-right"><small>
       最終更新日時:
       <time itemprop="datePublished" class="js-local-time"
-            datetime="2026-09-25T22:08:17+09:00">
-        2026年09月25日 22時08分17秒 (JST)
+            datetime="2026-09-26T12:42:38+09:00">
+        2026年09月26日 12時42分38秒 (JST)
       </time>
       <br/>
       <span itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -293,25 +293,29 @@
 <p>また、コンストラクタなどの制約には説明専用コンセプト<code><a href="tagging-compatible-pointee.html">tagging-compatible-pointee</a></code>を使用する。</p>
 <h2>備考</h2>
 <h3>応用事例</h3>
-<p>ポインタタギングは広く使われている手法である。代表的な応用例を以下に挙げる。</p>
+<p>ポインタタギングは広く使われている手法である。用途は、タグに何を持たせるかで3つに分かれる。</p>
+<p>ひとつめは、ポインタに付随する情報を持たせる使い方である。ポインタは常にポインタであり、タグはそれとは別の意味をもつ小さなデータになる。</p>
 <ul>
-<li>LLVMは<code>PointerIntPair</code>と<code>PointerUnion</code>として同種のクラスを提供している。本クラスと同じく、指す先のアライメントから使えるビット数を求め、下位ビットへ小さな整数値や型の判別情報を格納する<ul>
-<li><a href="https://llvm.org/docs/ProgrammersManual.html#the-pointerintpair-class" target="_blank">The PointerIntPair class - LLVM Programmer's Manual</a></li>
+<li>LLVMの<code><a href="https://llvm.org/docs/ProgrammersManual.html#the-pointerintpair-class" target="_blank">PointerIntPair</a></code>は、本クラスと同じく、指す先のアライメントから使えるビット数を求め、下位ビットへ小さな整数値を格納する</li>
+<li><a href="https://github.com/python/cpython/blob/main/InternalDocs/garbage_collector.md" target="_blank">CPythonのガベージコレクタ</a>は、収集対象のオブジェクトをつなぐ双方向リストのポインタにフラグを埋め込む。<code>_gc_prev</code>の下位2ビットに「収集中か」と「ファイナライズ済みか」を格納し、収集の最中は<code>_gc_next</code>の最下位ビットに「到達不能と暫定判定されたか」を格納する。オブジェクト1個あたりの追加メモリを増やさずにフラグを持たせるための最適化である</li>
+<li><code><a href="../atomic/atomic.html">std::atomic</a>&lt;<a href="shared_ptr.html">std::shared_ptr</a>&lt;T&gt;&gt;</code>のlibstdc++とMSVCの実装は、制御ブロックへのポインタの最下位ビットをスピンロックのフラグに使用する。指す先のオブジェクトへのポインタではなく制御ブロックへのポインタを選ぶのは、制御ブロックの確保をライブラリ側が行うためアライメントを保証できるからである (<a href="https://devblogs.microsoft.com/oldnewthing/20241219-00/?p=110663" target="_blank">Inside STL: The atomic shared_ptr - The Old New Thing</a>)</li>
+<li><a href="https://github.com/bminor/glibc/blob/master/malloc/malloc.c" target="_blank">glibcの<code>malloc</code></a>は、チャンクヘッダの下位3ビットに<code>PREV_INUSE</code>・<code>IS_MMAPPED</code>・<code>NON_MAIN_ARENA</code>のフラグを格納する。ビットを間借りしているのはポインタではなくサイズのフィールドであり、チャンクサイズが常にアライメントの倍数になることを使っている</li>
 </ul>
-</li>
-<li>CPythonのガベージコレクタは、収集対象のオブジェクトをつなぐ双方向リストのポインタにフラグを埋め込む。<code>_gc_prev</code>の下位2ビットに「収集中か」と「ファイナライズ済みか」を格納し、収集の最中は<code>_gc_next</code>の最下位ビットに「到達不能と暫定判定されたか」を格納する。オブジェクト1個あたりの追加メモリを増やさずにフラグを持たせるための最適化である<ul>
-<li><a href="https://github.com/python/cpython/blob/main/InternalDocs/garbage_collector.md" target="_blank">Garbage collector design - CPython Internals Docs</a></li>
+<p>ふたつめは、指す先の型を判別する使い方である。ポインタであることは確定しているが、どの型のオブジェクトを指しているかをタグで表す。</p>
+<ul>
+<li>LLVMの<code><a href="https://llvm.org/docs/ProgrammersManual.html#the-pointerunion-class" target="_blank">PointerUnion</a></code>は、複数のポインタ型のいずれかを保持し、どの型であるかを下位ビットで区別する</li>
+<li>レイトレーシングのpbrtは、形状やマテリアルなど多数の型を仮想関数なしで扱うために<code><a href="https://pbr-book.org/4ed/Utilities/Containers_and_Memory_Management" target="_blank">TaggedPointer</a></code>を使う。こちらは下位ビットではなく上位7ビット (ビット57以上) に型の番号を格納し、128種類までの型を判別して、型に応じた処理を呼び分ける</li>
+<li><a href="https://gitlab.haskell.org/ghc/ghc/-/wikis/commentary/rts/haskell-execution/pointer-tagging" target="_blank">GHC (Haskell)</a>は、クロージャへのポインタの下位ビット (64ビット環境で3ビット、32ビット環境で2ビット) に、データ構築子の番号や関数のアリティを格納する。クロージャを辿らずに構築子を判定できるため、間接ジャンプを減らせる (<a href="https://simonmar.github.io/bib/papers/ptr-tagging.pdf" target="_blank">Faster laziness using dynamic pointer tagging</a>)</li>
 </ul>
-</li>
-<li><code><a href="../atomic/atomic.html">std::atomic</a>&lt;<a href="shared_ptr.html">std::shared_ptr</a>&lt;T&gt;&gt;</code>のlibstdc++とMSVCの実装は、制御ブロックへのポインタの最下位ビットをスピンロックのフラグに使用する。指す先のオブジェクトへのポインタではなく制御ブロックへのポインタを選ぶのは、制御ブロックの確保をライブラリ側が行うためアライメントを保証できるからである<ul>
-<li><a href="https://devblogs.microsoft.com/oldnewthing/20241219-00/?p=110663" target="_blank">Inside STL: The atomic shared_ptr - The Old New Thing</a></li>
+<p>みっつめは、ポインタか即値かを判別する使い方である。1ワードにポインタと小さな値のどちらかを入れ、どちらであるかをタグで表す。</p>
+<ul>
+<li><a href="https://github.com/ruby/ruby/blob/master/include/ruby/internal/special_consts.h" target="_blank">Rubyの<code>VALUE</code></a>は、最下位ビットが1ならFixnum、下位2ビットが<code>10</code>ならFlonumというように、下位3ビットで即値かどうかを判別する。いずれのビットも立っていなければオブジェクトへのポインタである</li>
+<li><a href="https://ocaml.org/manual/5.3/intfc.html" target="_blank">OCamlの<code>value</code></a>は、最下位ビットが1なら63ビット (32ビット環境では31ビット) の整数、0ならヒープ上のブロックへのポインタとする</li>
+<li><a href="https://v8.dev/blog/pointer-compression" target="_blank">V8 (JavaScript)</a>は、最下位ビットが0ならSmi (small integer)、1ならヒープオブジェクトへのポインタとする</li>
 </ul>
-</li>
-<li>レイトレーシングのpbrtは、形状やマテリアルなど多数の型を仮想関数なしで扱うために<code>TaggedPointer</code>を使う。こちらは下位ビットではなく上位7ビット (ビット57以上) に型の番号を格納し、128種類までの型を判別して、型に応じた処理を呼び分ける<ul>
-<li><a href="https://pbr-book.org/4ed/Utilities/Containers_and_Memory_Management" target="_blank">B.4.4 Tagged Pointers - Physically Based Rendering</a></li>
-</ul>
-</li>
-</ul>
+<p>本クラスが保持するのはポインタとタグの組なので、直接あてはまるのはひとつめとふたつめである。みっつめの即値との判別は、ポインタを置く領域に整数そのものを入れるため、本クラスでは表現されない。</p>
+<h3>タグを埋め込む位置</h3>
+<p>アライメントによって常に0になる下位ビットを使う方法は、指す先の型がわかれば何ビット空いているかが決まるため、移植しやすい。本クラスが提供するのもこの方法である。</p>
 <p>pbrtのように上位ビットを使う方法は、アドレス空間が64ビット全体を使わないことに依存するため、対象とする環境を限定する。上位ビットを無視するハードウェア機構としては、IntelのLAM (linear address masking)、AMDのUAI (upper address ignore)、ARMのTBI (top byte ignore) などがある。</p>
 <h2>メンバ関数</h2>
 <h3>構築・破棄</h3>
