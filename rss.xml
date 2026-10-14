@@ -2,9 +2,71 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2026-10-14T02:14:00.688553</updated>
-  <id>d265eae4-b3d0-4f49-beff-aa0f0dbfea7c</id>
+  <updated>2026-10-14T06:58:44.347326</updated>
+  <id>c0447b1f-bb24-4e17-a3f2-1cb8b97b7c26</id>
 
+  
+    <entry>
+      <title>契約プログラミング [P2900R14] -- C++26 契約 : GCCのコンパイルオプションを記載</title>
+      <link href="https://cpprefjp.github.io/lang/cpp26/contracts.html"/>
+      <id>08d9f03486aeb51deaf079ae0c04c80c7c8ca78a:lang/cpp26/contracts.md</id>
+      <updated>2026-10-14T15:57:16+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/lang/cpp26/contracts.md b/lang/cpp26/contracts.md
+index facc4a9d8..2e4d1e5e4 100644
+--- a/lang/cpp26/contracts.md
++++ b/lang/cpp26/contracts.md
+@@ -372,10 +372,7 @@ int f()
+ #### 評価セマンティクスの選択
+ 契約アサーションの個別の評価に対してどの評価セマンティクスが使用されるかを選択するメカニズムは実装定義である。コンパイル時オプション、実行時設定、またはその組み合わせで指定できる。
+ 
+-GCCでの例：
+-```bash
+-g++ -std=c++26 -fcontracts -fcontract-semantic=observe main.cpp
+-```
++処理系ごとの指定方法は、[コンパイルオプション](#compile-options)を参照。
+ 
+ #### 契約述語のチェック
+ チェックセマンティクス（`observe`、`enforce`、`quick-enforce`）では、述語が評価され、`bool`に文脈変換される。述語が`true`に評価されると、契約違反は識別されない。述語が`false`に評価されるか、述語の評価が例外で終了すると、契約違反が識別される。
+@@ -565,6 +562,31 @@ void f(int x) pre(might_throw(x));  // 例外発生時は契約違反
+ - **事後条件**: 契約プログラミングは事後条件を簡潔に記述できるが、`assert`マクロでは困難
+ - **標準化**: 契約プログラミングはC++標準の一部であり、`assert`はCから継承されたマクロである
+ 
++## &amp;lt;a id=&amp;#34;compile-options&amp;#34; href=&amp;#34;#compile-options&amp;#34;&amp;gt;コンパイルオプション&amp;lt;/a&amp;gt;
++契約アサーションをどの評価セマンティクスで評価するかは実装定義であり、処理系が提供するコンパイルオプションで指定する。
++
++### GCC
++| オプション | 説明 |
++|------------|------|
++| `-fcontracts`                           | 契約プログラミング機能を有効にする。`-std=c++26`を指定した場合は暗黙に有効となる |
++| `-fcontract-evaluation-semantic=`       | 評価セマンティクスを`ignore`、`observe`、`enforce`、`quick_enforce`のいずれかに指定する。デフォルトは`enforce` |
++| `-fcontracts-client-check=`             | 呼び出し側でチェックするアサーションを`none`、`pre`、`all`のいずれかに指定する。デフォルトは`none` |
++| `-fcontracts-definition-check=`         | 定義側でのチェックを`on`、`off`のいずれかに指定する。デフォルトは`on` |
++| `-fcontract-checks-outlined`            | 事前条件・事後条件のチェックを関数本体に展開せず、別の関数として切り出して呼び出す |
++| `-fcontract-disable-optimized-checks`   | `-fcontract-checks-outlined`で切り出した関数に対する最適化を抑制する |
++| `-fcontracts-conservative-ipa`          | 翻訳単位ごとに評価セマンティクスが異なりうることを前提として、インライン関数に対する手続き間解析を抑制する。デフォルトで有効 |
++
++```bash
++# 契約アサーションをobserveセマンティクスで評価する
++g++ -std=c++26 -fcontracts -fcontract-evaluation-semantic=observe main.cpp
++```
++
++- 評価セマンティクスは、コンパイル時に翻訳単位ごとに決定される。契約アサーションごとに指定する方法や、実行時に切り替える方法は提供されていない
++    - 翻訳単位ごとに異なるセマンティクスを指定した場合、関数を定義した翻訳単位のセマンティクスが適用される
++- 契約違反ハンドラのデフォルトの実装は`libstdc++exp`ライブラリが提供する。このライブラリは、コマンドラインに`-fcontracts`を指定した場合に自動的にリンクされる。`-std=c++26`によって暗黙に有効化した場合はリンクされないため、`-lstdc++exp`オプションを指定する必要がある
++- GCC 15以前の`-fcontracts`は、C++26に採用されたP2900とは異なる仕様 (N4820、P1332、P1429) の実験的な実装であり、`-fcontract-build-level`や`-fcontract-role`などの別のオプションを提供していた
++
++
+ ## 例
+ 
+ ### 基本的な使用例
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>Akira Takahashi</name>
+        <email>faithandbrave@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>標準ライブラリ要件 -- requirements : コンセプトになっている要件を削除</title>
@@ -3864,340 +3926,6 @@ index 7444bc120..f9fd1cb2d 100644
  - 実装は、プログラムがデバッガによって監視されているかどうかを判定するために、必要に応じて即時クエリを実行する
  - Windowsまたは同等のシステムでは、この関数の動作はWin32関数の`::IsDebuggerPresent()`を呼び出すことで実現できる
  - POSIX環境では、監視親プロセスをチェックすることで実現できる。その際、監視親プロセスがデバッガであるかどうかは最善の努力で判定する
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>count -- multimapのerase(key)がすべての要素を削除するために対数時間 + 同じキーの要素数の線形時間がかかるので、回避策を記載</title>
-      <link href="https://cpprefjp.github.io/reference/map/multimap/count.html"/>
-      <id>a7b6c4509014e270aad0921d19385bac4d5c467a:reference/map/multimap/count.md</id>
-      <updated>2026-10-09T12:31:16+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/map/multimap/count.md b/reference/map/multimap/count.md
-index 8924853b5..5b963ffba 100644
---- a/reference/map/multimap/count.md
-+++ b/reference/map/multimap/count.md
-@@ -33,6 +33,10 @@ log(size()) + count(x)
- * size()[link size.md]
- 
- 
-+## 備考
-+- 要素の有無を調べるだけであれば、この関数ではなく[`contains()`](contains.md)メンバ関数を使用する。この関数は等価なキーをもつ要素の個数に対して線形時間がかかるが、[`contains()`](contains.md)は対数時間である
-+
-+
- ## 例
- ```cpp example
- #include &amp;lt;iostream&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>erase -- multimapのerase(key)がすべての要素を削除するために対数時間 + 同じキーの要素数の線形時間がかかるので、回避策を記載</title>
-      <link href="https://cpprefjp.github.io/reference/map/multimap/erase.html"/>
-      <id>a7b6c4509014e270aad0921d19385bac4d5c467a:reference/map/multimap/erase.md</id>
-      <updated>2026-10-09T12:31:16+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/map/multimap/erase.md b/reference/map/multimap/erase.md
-index d05b777d3..8990d3710 100644
---- a/reference/map/multimap/erase.md
-+++ b/reference/map/multimap/erase.md
-@@ -63,6 +63,15 @@ constexpr iterator erase(const_iterator first, const_iterator last); // (5) C++2
- ## 備考
- - (1) : C++17で再追加されたこのオーバーロードは、それ以前の言語バージョンから使用できる可能性がある
- - (1), (2) : この関数に、範囲外のイテレータ (終端イテレータを含む) を指定した場合の動作は未定義
-+- (3), (4) : 等価なキーをもつ要素が複数ある場合、そのすべてが削除される。1個だけ削除したい場合は、[`find()`](find.md)メンバ関数で得たイテレータを(1), (2)に渡す
-+    ```cpp
-+    if (auto it = mm.find(x); it != mm.end()) {
-+      mm.erase(it);
-+    }
-+    ```
-+
-+    - キーを指定して削除する場合は等価なキーをもつ要素の個数に対して線形時間がかかるが、イテレータを指定して削除する場合は定数時間である
-+    - [`find()`](find.md)が[`end()`](end.md)を返した場合に、そのイテレータを渡すと動作は未定義となる
- - 削除された要素を指すイテレータ、および、参照のみ無効になる。なお、規格書に明確な記載は無いが、削除された要素を指すポインタも無効になる。
- - ループ中で `multimap` の要素を削除するためには、C++98 までは以下のようなコードを書く必要があった。
-     ```cpp
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>count -- multimapのerase(key)がすべての要素を削除するために対数時間 + 同じキーの要素数の線形時間がかかるので、回避策を記載</title>
-      <link href="https://cpprefjp.github.io/reference/set/multiset/count.html"/>
-      <id>a7b6c4509014e270aad0921d19385bac4d5c467a:reference/set/multiset/count.md</id>
-      <updated>2026-10-09T12:31:16+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/set/multiset/count.md b/reference/set/multiset/count.md
-index d31e70157..1424fa026 100644
---- a/reference/set/multiset/count.md
-+++ b/reference/set/multiset/count.md
-@@ -35,7 +35,7 @@ log(size()) + count(x)
- 
- ## 備考
- - (2) : この関数がオーバーロード解決に参加する条件は、[`find()`](find.md)メンバ関数の備考欄を参照。
--- [`std::multiset`](/reference/set/multiset.md)クラスとの共通インタフェースを使用する必要がなければ、この関数の代わりに[`contains()`](contains.md)メンバ関数を使用することを推奨する
-+- 要素の有無を調べるだけであれば、この関数ではなく[`contains()`](contains.md)メンバ関数を使用する。この関数は等価なキーをもつ要素の個数に対して線形時間がかかるが、[`contains()`](contains.md)は対数時間である
- 
- 
- ## 例
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>erase -- multimapのerase(key)がすべての要素を削除するために対数時間 + 同じキーの要素数の線形時間がかかるので、回避策を記載</title>
-      <link href="https://cpprefjp.github.io/reference/set/multiset/erase.html"/>
-      <id>a7b6c4509014e270aad0921d19385bac4d5c467a:reference/set/multiset/erase.md</id>
-      <updated>2026-10-09T12:31:16+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/set/multiset/erase.md b/reference/set/multiset/erase.md
-index f209661a0..55ec5ffb4 100644
---- a/reference/set/multiset/erase.md
-+++ b/reference/set/multiset/erase.md
-@@ -63,6 +63,15 @@ constexpr iterator erase(const_iterator first, const_iterator last); // (5) C++2
- ## 備考
- - (1) : C++17で再追加されたこのオーバーロードは、それ以前の言語バージョンから使用できる可能性がある
- - (1), (2) : この関数に、範囲外のイテレータ (終端イテレータを含む) を指定した場合の動作は未定義
-+- (3), (4) : 等価なキーをもつ要素が複数ある場合、そのすべてが削除される。1個だけ削除したい場合は、[`find()`](find.md)メンバ関数で得たイテレータを(1), (2)に渡す
-+    ```cpp
-+    if (auto it = ms.find(x); it != ms.end()) {
-+      ms.erase(it);
-+    }
-+    ```
-+
-+    - キーを指定して削除する場合は等価なキーをもつ要素の個数に対して線形時間がかかるが、イテレータを指定して削除する場合は定数時間である
-+    - [`find()`](find.md)が[`end()`](end.md)を返した場合に、そのイテレータを渡すと動作は未定義となる
- - 削除された要素を指すイテレータ、および、参照のみ無効になる。なお、規格書に明確な記載は無いが、削除された要素を指すポインタも無効になる。
- - ループ中で `multiset` の要素を削除するためには、C++98 までは以下のようなコードを書く必要があった。
-     ```cpp
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>erase -- multimapのerase(key)がすべての要素を削除するために対数時間 + 同じキーの要素数の線形時間がかかるので、回避策を記載</title>
-      <link href="https://cpprefjp.github.io/reference/unordered_map/unordered_map/erase.html"/>
-      <id>a7b6c4509014e270aad0921d19385bac4d5c467a:reference/unordered_map/unordered_map/erase.md</id>
-      <updated>2026-10-09T12:31:16+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/unordered_map/unordered_map/erase.md b/reference/unordered_map/unordered_map/erase.md
-index 93ea4526a..5097a6cc9 100644
---- a/reference/unordered_map/unordered_map/erase.md
-+++ b/reference/unordered_map/unordered_map/erase.md
-@@ -22,6 +22,11 @@ constexpr iterator erase(const_iterator first, const_iterator last); // (4) C++2
- ## 概要
- 指定された要素を削除する
- 
-+- (1) : 指定されたイテレータが指す要素を削除する
-+- (2) : 指定された読み取り専用イテレータが指す要素を削除する
-+- (3) : 指定されたキー`k`と等価なキーをもつ要素を削除する
-+- (4) : 指定されたイテレータ範囲`[first, last)`の要素をすべて削除する
-+
- 
- ## 要件
- - `position` は、有効で、かつ、間接参照可能な（dereferenceable、つまり [`cend`](cend.md)`()` ではない）当該コンテナを指す読み取り専用イテレータでなければならない。
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>count -- multimapのerase(key)がすべての要素を削除するために対数時間 + 同じキーの要素数の線形時間がかかるので、回避策を記載</title>
-      <link href="https://cpprefjp.github.io/reference/unordered_map/unordered_multimap/count.html"/>
-      <id>a7b6c4509014e270aad0921d19385bac4d5c467a:reference/unordered_map/unordered_multimap/count.md</id>
-      <updated>2026-10-09T12:31:16+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/unordered_map/unordered_multimap/count.md b/reference/unordered_map/unordered_multimap/count.md
-index 8e65f7e8b..32be09556 100644
---- a/reference/unordered_map/unordered_multimap/count.md
-+++ b/reference/unordered_map/unordered_multimap/count.md
-@@ -50,6 +50,10 @@ constexpr size_type count(const K&amp;amp; k) const; // (2) C++26
- - 最悪： [`size`](size.md) について線形時間
- 
- 
-+## 備考
-+- 要素の有無を調べるだけであれば、この関数ではなく[`contains()`](contains.md)メンバ関数を使用する。この関数は等価なキーをもつ要素の個数に対して平均的に比例するが、[`contains()`](contains.md)は平均的に定数時間である
-+
-+
- ## 例
- ```cpp example
- #include &amp;lt;iostream&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>erase -- multimapのerase(key)がすべての要素を削除するために対数時間 + 同じキーの要素数の線形時間がかかるので、回避策を記載</title>
-      <link href="https://cpprefjp.github.io/reference/unordered_map/unordered_multimap/erase.html"/>
-      <id>a7b6c4509014e270aad0921d19385bac4d5c467a:reference/unordered_map/unordered_multimap/erase.md</id>
-      <updated>2026-10-09T12:31:16+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/unordered_map/unordered_multimap/erase.md b/reference/unordered_map/unordered_multimap/erase.md
-index 1844508be..da979aa01 100644
---- a/reference/unordered_map/unordered_multimap/erase.md
-+++ b/reference/unordered_map/unordered_multimap/erase.md
-@@ -22,6 +22,11 @@ constexpr iterator erase(const_iterator first, const_iterator last); // (4) C++2
- ## 概要
- 指定された要素を削除する
- 
-+- (1) : 指定されたイテレータが指す要素を削除する
-+- (2) : 指定された読み取り専用イテレータが指す要素を削除する
-+- (3) : 指定されたキー`k`と等価なキーをもつ要素をすべて削除する
-+- (4) : 指定されたイテレータ範囲`[first, last)`の要素をすべて削除する
-+
- 
- ## 要件
- - `position` は、有効で、かつ、間接参照可能な（dereferenceable、つまり [`cend`](cend.md)`()` ではない）当該コンテナを指す読み取り専用イテレータでなければならない。
-@@ -58,6 +63,15 @@ constexpr iterator erase(const_iterator first, const_iterator last); // (4) C++2
- 
- ## 備考
- - 削除された要素を指すイテレータ、および、参照のみ無効になる。なお、規格書に明確な記載は無いが、削除された要素を指すポインタも無効になる。
-+- (3) : 等価なキーをもつ要素が複数ある場合、そのすべてが削除される。1個だけ削除したい場合は、[`find()`](find.md)メンバ関数で得たイテレータを(1), (2)に渡す
-+    ```cpp
-+    if (auto it = umm.find(x); it != umm.end()) {
-+      umm.erase(it);
-+    }
-+    ```
-+
-+    - キーを指定して削除する場合は等価なキーをもつ要素の個数に平均的に比例するが、イテレータを指定して削除する場合は平均的に定数時間である
-+    - [`find()`](find.md)が[`end()`](end.md)を返した場合に、そのイテレータを渡すと動作は未定義となる
- - 削除されなかった要素の相対順序は維持される。
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>count -- multimapのerase(key)がすべての要素を削除するために対数時間 + 同じキーの要素数の線形時間がかかるので、回避策を記載</title>
-      <link href="https://cpprefjp.github.io/reference/unordered_set/unordered_multiset/count.html"/>
-      <id>a7b6c4509014e270aad0921d19385bac4d5c467a:reference/unordered_set/unordered_multiset/count.md</id>
-      <updated>2026-10-09T12:31:16+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/unordered_set/unordered_multiset/count.md b/reference/unordered_set/unordered_multiset/count.md
-index ea33f1bdd..02100d4c0 100644
---- a/reference/unordered_set/unordered_multiset/count.md
-+++ b/reference/unordered_set/unordered_multiset/count.md
-@@ -45,6 +45,10 @@ constexpr size_type count(const K&amp;amp; k) const; // (2) C++26
- - 最悪： [`size`](size.md) について線形時間
- 
- 
-+## 備考
-+- 要素の有無を調べるだけであれば、この関数ではなく[`contains()`](contains.md)メンバ関数を使用する。この関数は等価なキーをもつ要素の個数に対して平均的に比例するが、[`contains()`](contains.md)は平均的に定数時間である
-+
-+
- ## 例
- ```cpp example
- #include &amp;lt;iostream&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>erase -- multimapのerase(key)がすべての要素を削除するために対数時間 + 同じキーの要素数の線形時間がかかるので、回避策を記載</title>
-      <link href="https://cpprefjp.github.io/reference/unordered_set/unordered_multiset/erase.html"/>
-      <id>a7b6c4509014e270aad0921d19385bac4d5c467a:reference/unordered_set/unordered_multiset/erase.md</id>
-      <updated>2026-10-09T12:31:16+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/unordered_set/unordered_multiset/erase.md b/reference/unordered_set/unordered_multiset/erase.md
-index 6b6ba5aea..56ffe478e 100644
---- a/reference/unordered_set/unordered_multiset/erase.md
-+++ b/reference/unordered_set/unordered_multiset/erase.md
-@@ -22,6 +22,11 @@ constexpr iterator erase(const_iterator first, const_iterator last); // (4) C++2
- ## 概要
- 指定された要素を削除する
- 
-+- (1) : 指定されたイテレータが指す要素を削除する
-+- (2) : 指定された読み取り専用イテレータが指す要素を削除する
-+- (3) : 指定されたキー`k`と等価なキーをもつ要素をすべて削除する
-+- (4) : 指定されたイテレータ範囲`[first, last)`の要素をすべて削除する
-+
- 
- ## 要件
- - `position` は、有効で、かつ、間接参照可能な（dereferenceable、つまり [`cend`](cend.md)`()` ではない）当該コンテナを指す読み取り専用イテレータでなければならない。
-@@ -58,6 +63,15 @@ constexpr iterator erase(const_iterator first, const_iterator last); // (4) C++2
- 
- ## 備考
- - 削除された要素を指すイテレータ、および、参照のみ無効になる。なお、規格書に明確な記載は無いが、削除された要素を指すポインタも無効になる。
-+- (3) : 等価なキーをもつ要素が複数ある場合、そのすべてが削除される。1個だけ削除したい場合は、[`find()`](find.md)メンバ関数で得たイテレータを(1), (2)に渡す
-+    ```cpp
-+    if (auto it = ums.find(x); it != ums.end()) {
-+      ums.erase(it);
-+    }
-+    ```
-+
-+    - キーを指定して削除する場合は等価なキーをもつ要素の個数に平均的に比例するが、イテレータを指定して削除する場合は平均的に定数時間である
-+    - [`find()`](find.md)が[`end()`](end.md)を返した場合に、そのイテレータを渡すと動作は未定義となる
- - 削除されなかった要素の相対順序は維持される。
- 
- 
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>Akira Takahashi</name>
-        <email>faithandbrave@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>erase -- multimapのerase(key)がすべての要素を削除するために対数時間 + 同じキーの要素数の線形時間がかかるので、回避策を記載</title>
-      <link href="https://cpprefjp.github.io/reference/unordered_set/unordered_set/erase.html"/>
-      <id>a7b6c4509014e270aad0921d19385bac4d5c467a:reference/unordered_set/unordered_set/erase.md</id>
-      <updated>2026-10-09T12:31:16+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/unordered_set/unordered_set/erase.md b/reference/unordered_set/unordered_set/erase.md
-index 8499b11fe..be972de92 100644
---- a/reference/unordered_set/unordered_set/erase.md
-+++ b/reference/unordered_set/unordered_set/erase.md
-@@ -22,6 +22,11 @@ constexpr iterator erase(const_iterator first, const_iterator last); // (4) C++2
- ## 概要
- 指定された要素を削除する
- 
-+- (1) : 指定されたイテレータが指す要素を削除する
-+- (2) : 指定された読み取り専用イテレータが指す要素を削除する
-+- (3) : 指定されたキー`k`と等価なキーをもつ要素を削除する
-+- (4) : 指定されたイテレータ範囲`[first, last)`の要素をすべて削除する
-+
- 
- ## 要件
- - `position` は、有効で、かつ、間接参照可能な（dereferenceable、つまり [`cend`](cend.md)`()` ではない）当該コンテナを指す読み取り専用イテレータでなければならない。
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
