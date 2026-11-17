@@ -2,9 +2,72 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>cpprefjp - C++日本語リファレンス</title>
   <link href="https://cpprefjp.github.io" />
-  <updated>2026-11-16T23:29:11.416879</updated>
-  <id>34469031-191f-4da2-86ae-56043e73ba27</id>
+  <updated>2026-11-17T02:33:57.930522</updated>
+  <id>515c274b-8a4a-46e0-a1bd-5ab4ded4ad13</id>
 
+  
+    <entry>
+      <title>get_scheduler -- fixing run_loop::get_scheduler wrong sample</title>
+      <link href="https://cpprefjp.github.io/reference/execution/execution/run_loop/get_scheduler.html"/>
+      <id>67bcea5323c1b0660a09f282cc80d297e92f8805:reference/execution/execution/run_loop/get_scheduler.md</id>
+      <updated>2026-11-17T11:31:47+09:00</updated>
+      
+        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/execution/execution/run_loop/get_scheduler.md b/reference/execution/execution/run_loop/get_scheduler.md
+index f7f1fe023..b767fea65 100644
+--- a/reference/execution/execution/run_loop/get_scheduler.md
++++ b/reference/execution/execution/run_loop/get_scheduler.md
+@@ -27,6 +27,7 @@ run-loop-scheduler get_scheduler() noexcept;
+ #include &amp;lt;cassert&amp;gt;
+ #include &amp;lt;concepts&amp;gt;
+ #include &amp;lt;execution&amp;gt;
++#include &amp;lt;stop_token&amp;gt;
+ namespace ex = std::execution;
+ 
+ int main()
+@@ -38,10 +39,16 @@ int main()
+   ex::sender auto sndr = ex::schedule(sch);
+ 
+   // スケジュールSenderの完了シグネチャ集合を確認
+-  using Sigs = ex::completion_signatures_of_t&amp;lt;decltype(sndr)&amp;gt;;
+-  static_assert(std::same_as&amp;lt;Sigs,
++  // 停止要求を受け付けない環境では、値完了のみとなる
++  using Sigs1 = ex::completion_signatures_of_t&amp;lt;decltype(sndr), ex::env&amp;lt;&amp;gt;&amp;gt;;
++  static_assert(std::same_as&amp;lt;Sigs1,
++    ex::completion_signatures&amp;lt;ex::set_value_t()&amp;gt;&amp;gt;);
++
++  // 停止要求を受け付ける環境では、停止完了も含まれる
++  using Env = ex::env&amp;lt;ex::prop&amp;lt;std::get_stop_token_t, std::inplace_stop_token&amp;gt;&amp;gt;;
++  using Sigs2 = ex::completion_signatures_of_t&amp;lt;decltype(sndr), Env&amp;gt;;
++  static_assert(std::same_as&amp;lt;Sigs2,
+     ex::completion_signatures&amp;lt;ex::set_value_t(),
+-                              ex::set_error_t(std::exception_ptr),
+                               ex::set_stopped_t()&amp;gt;&amp;gt;);
+ 
+   // スケジュールSender属性の値完了Schedulerを確認
+@@ -56,12 +63,14 @@ int main()
+ * ex::schedule[link ../schedule.md]
+ * ex::completion_signatures_of_t[link ../completion_signatures_of_t.md]
+ * ex::completion_signatures[link ../completion_signatures.md]
++* ex::env[link ../env.md]
+ * ex::set_value_t[link ../set_value.md]
+-* ex::set_error_t[link ../set_error.md]
++* ex::prop[link ../prop.md]
++* std::get_stop_token_t[link /reference/execution/get_stop_token.md]
++* std::inplace_stop_token[link /reference/stop_token/inplace_stop_token.md]
+ * ex::set_stopped_t[link ../set_stopped.md]
+ * ex::get_completion_scheduler[link ../get_completion_scheduler.md]
+ * ex::get_env[link ../get_env.md]
+-* std::exception_ptr[link /reference/exception/exception_ptr.md]
+ 
+ ### 出力
+ ```
+&lt;/code&gt;&lt;/pre&gt;</summary>
+      
+      <author>
+        <name>rotarymars</name>
+        <email>s.goto2050@gmail.com</email>
+      </author>
+    </entry>
   
     <entry>
       <title>invoke_default_contract_violation_handler -- fixing invoke_default_contract_violation_handler wrong note</title>
@@ -153,115 +216,6 @@ index 392293bf9..2599e9517 100644
  }
  ```
  * std::replace_copy_if[color ff0000]
-&lt;/code&gt;&lt;/pre&gt;</summary>
-      
-      <author>
-        <name>rotarymars</name>
-        <email>s.goto2050@gmail.com</email>
-      </author>
-    </entry>
-  
-    <entry>
-      <title>move_backward -- fixing wrong overload</title>
-      <link href="https://cpprefjp.github.io/reference/algorithm/ranges_move_backward.html"/>
-      <id>ca9366bb1d08bf88defb0af4d68827028cd39d9f:reference/algorithm/ranges_move_backward.md</id>
-      <updated>2026-11-15T14:31:38+09:00</updated>
-      
-        <summary type="html">&lt;pre&gt;&lt;code&gt;diff --git a/reference/algorithm/ranges_move_backward.md b/reference/algorithm/ranges_move_backward.md
-index 8217661a9..61c473d5c 100644
---- a/reference/algorithm/ranges_move_backward.md
-+++ b/reference/algorithm/ranges_move_backward.md
-@@ -21,43 +21,17 @@ namespace std::ranges {
-   constexpr move_backward_result&amp;lt;borrowed_iterator_t&amp;lt;R&amp;gt;, I&amp;gt;
-     move_backward(R&amp;amp;&amp;amp; r,
-                   I result);            // (2) C++20
--
--  template &amp;lt;execution-policy Ep,
--            random_access_iterator I1,
--            sized_sentinel_for&amp;lt;I1&amp;gt; S1,
--            random_access_iterator I2&amp;gt;
--    requires indirectly_movable&amp;lt;I1, I2&amp;gt;
--  move_backward_result&amp;lt;I1, I2&amp;gt;
--    move_backward(Ep&amp;amp;&amp;amp; exec,
--                  I1 first,
--                  S1 last,
--                  I2 result);           // (3) C++26
--
--  template &amp;lt;execution-policy Ep,
--            sized-random-access-range R,
--            random_access_iterator I&amp;gt;
--    requires indirectly_movable&amp;lt;iterator_t&amp;lt;R&amp;gt;, I&amp;gt;
--  move_backward_result&amp;lt;borrowed_iterator_t&amp;lt;R&amp;gt;, I&amp;gt;
--    move_backward(Ep&amp;amp;&amp;amp; exec,
--                  R&amp;amp;&amp;amp; r,
--                  I result);            // (4) C++26
- }
- ```
- * move_backward_result[link ranges_in_out_result.md]
- * indirectly_movable[link /reference/iterator/indirectly_movable.md]
- * borrowed_iterator_t[link /reference/ranges/borrowed_iterator_t.md]
--* execution-policy[link /reference/execution/execution-policy.md]
--* random_access_iterator[link /reference/iterator/random_access_iterator.md]
--* sized_sentinel_for[link /reference/iterator/sized_sentinel_for.md]
--* sized-random-access-range[link /reference/ranges/sized-random-access-range.md]
- 
- ## 概要
- 指定された範囲の要素を後ろからムーブする。
- 
- - (1): イテレータ範囲を指定する
- - (2): Rangeを直接指定する
--- (3): (1)の並列アルゴリズム版。実行ポリシーを指定する
--- (4): (2)の並列アルゴリズム版。実行ポリシーを指定する
- 
- ## 事前条件
- `result` は `(first,last]` の範囲に含まれてはならない。
-@@ -87,7 +61,6 @@ move_backward_result {
- 
- 
- ## 例
--### 基本的な使い方
- ```cpp example
- #include &amp;lt;algorithm&amp;gt;
- #include &amp;lt;iostream&amp;gt;
-@@ -131,33 +104,6 @@ int main() {
- 2
- ```
- 
--### 並列アルゴリズムの例 (C++26)
--```cpp example
--#include &amp;lt;algorithm&amp;gt;
--#include &amp;lt;execution&amp;gt;
--#include &amp;lt;iostream&amp;gt;
--#include &amp;lt;vector&amp;gt;
--
--int main() {
--  std::vector&amp;lt;int&amp;gt; v = {1, 2, 3, 0, 0};
--
--  // 並列に先頭3要素を後方へムーブ
--  std::ranges::move_backward(std::execution::par,
--                             v.begin(), v.begin() + 3, v.end());
--
--  for (int x : v) {
--    std::cout &amp;lt;&amp;lt; x &amp;lt;&amp;lt; &amp;#39; &amp;#39;;
--  }
--  std::cout &amp;lt;&amp;lt; std::endl;
--}
--```
--* std::ranges::move_backward[color ff0000]
--
--#### 出力
--```
--1 2 1 2 3
--```
--
- ## バージョン
- ### 言語
- - C++20
-@@ -169,4 +115,3 @@ int main() {
- 
- ## 参照
- - [N4861 25 Algorithms library](https://timsong-cpp.github.io/cppwp/n4861/algorithms)
--- [P3179R9 C++ parallel range algorithms](https://open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3179r9.html)
 &lt;/code&gt;&lt;/pre&gt;</summary>
       
       <author>
